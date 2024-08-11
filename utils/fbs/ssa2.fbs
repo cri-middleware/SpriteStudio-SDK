@@ -1,0 +1,31 @@
+include "common_ssfb2.fbs";
+
+namespace ss.ssfb2;
+
+table DataAnimationExtendSplit {	// Ver.3.0 -
+	name_project:string;
+	cellmap_project:[DataExtendInformationFile];
+	animation_project:[DataExtendInformationFile];
+	effect_project:[DataExtendInformationFile];
+	soundlist_project:[DataExtendInformationFile];
+	fontbitmap_project:[DataExtendInformationFile];
+	sequence_project:[DataExtendInformationFile];
+	texture_external_project:[DataExtendInformationFile];
+}
+
+table DataAnimationSplit {		// Ver.3.0 -
+    version:DataVersion;
+    name:string;
+    table_parts:[DataModelParts];
+    catalog_parts:Catalog;
+    table_animation:[LibraryDataAnimation];
+    table_animation_parts_setup:[DataSetup];
+
+    extend_split:DataAnimationExtendSplit;		// Ver.3.0 -
+}
+
+
+// Split-Format : Animation
+file_identifier "SSA2";
+root_type DataAnimationSplit;
+

@@ -1,0 +1,93 @@
+include "common_ssfb2.fbs";
+
+namespace ss.ssfb2;
+
+table DataCellMap {
+//    version:uint;			// - Ver.2.x
+    version:DataVersion;	// Ver.3.0 -
+
+    index_texture:[short];
+    table_cell_map:[LibraryDataCellMap];
+}
+
+table DataAnimation {
+//    version:uint;				// - Ver.2.x
+    version:DataVersion;		// Ver.3.0 -
+    name:string;
+    table_parts:[DataModelParts];
+    catalog_parts:Catalog;
+    table_animation:[LibraryDataAnimation];
+    table_animation_parts_setup:[DataSetup];
+}
+
+table DataEffect {
+//    version:uint;				// - Ver.2.x
+    version:DataVersion;		// Ver.3.0 -
+    name:string;
+//    flag_data:DataEffectFlagBit;
+    flag_data:int;
+
+    seed_random:int;
+    version_renderer:int;
+
+    count_max_particle:int;
+    count_frame_per_second:int;
+
+    scale_layout:Vector2;
+
+    table_parts:[DataEffectParts];
+    table_emitter:[DataEffectEmitter];
+    table_index_emitter_order_draw:[int];
+}
+
+table SequencePack {
+//    version:uint;				// - Ver.2.x
+    version:DataVersion;		// Ver.3.0 -
+    name:string;
+    sequenceList:[DataSequence];
+}
+
+table FontBitmap {
+    version:DataVersion;
+    name:string;
+
+    name_face:string;
+    size:ushort;
+    padding_l:ushort;
+    padding_r:ushort;
+    padding_u:ushort;
+    padding_d:ushort;
+    base:short;
+    height_line:short;
+    scale:Vector2;
+	spacing:Vector2;
+    size_texture_original:Vector2;
+
+    name_texture:[string];
+    table_data:[LibraryDataFontGryphBitmap];
+}
+
+table DataSoundList {			// Ver.3.0 -
+    version:DataVersion;
+    name:string;
+    table_data:[LibraryDataSound];
+}
+
+table ProjectData {
+//    version:uint;				// - Ver.2.x
+    version:DataVersion;		// Ver.3.0 -
+    name:string;
+    cell_map:DataCellMap;
+    animation:[DataAnimation];
+    effect:[DataEffect];
+    sequence:[SequencePack];
+    name_texture:[string];
+    name_texture_external:[string];
+    name_font_bitmap:[string];
+}
+
+
+// Marged-Format
+file_identifier "SFB2";
+root_type ProjectData;
+

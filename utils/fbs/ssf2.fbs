@@ -1,0 +1,35 @@
+include "common_ssfb2.fbs";
+
+namespace ss.ssfb2;
+
+table DataFontBitmapExtendSplit {	// Ver.3.0 -
+	name_project:string;
+}
+
+table DataFontBitmapSplit {		// Ver.3.0 -
+    version:DataVersion;
+    name:string;
+
+    name_face:string;
+    size:ushort;
+    padding_l:ushort;
+    padding_r:ushort;
+    padding_u:ushort;
+    padding_d:ushort;
+    base:short;
+    height_line:short;
+    scale:Vector2;
+	spacing:Vector2;
+    size_texture_original:Vector2;
+
+    name_texture:[string];
+    table_data:[LibraryDataFontGryphBitmap];
+
+    extend_split:DataFontBitmapExtendSplit;
+}
+
+
+// Split-Format : Font-Bitmap
+file_identifier "SSF2";
+root_type DataFontBitmapSplit;
+
