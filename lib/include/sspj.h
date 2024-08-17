@@ -17,15 +17,15 @@ namespace SpriteStudio {
     public:
         class Information {
         public:
-            std::filesystem::path sspj;
+            std::filesystem::path sspj_path;
             std::string NameDirectory() const {
-                return sspj.parent_path().string();
+                return sspj_path.parent_path().string();
             };
             std::string NameFileBody() const {
-                return sspj.filename().stem().string();
+                return sspj_path.filename().stem().string();
             };
             std::string NameFileExtension() const {
-                return sspj.filename().extension().string();
+                return sspj_path.filename().extension().string();
             };
 
             // Library_SpriteStudio6.Data.Texture.KindWrap WrapTexture;
@@ -35,8 +35,15 @@ namespace SpriteStudio {
             bool FlagCorrectShaderPremultipliedAlpha;
             bool FlagVertexAnimeFloat;
 
+            std::string NameDirectoryBaseTexture;
+            // SSCE::Information.Texture[] TableInformationTexture;
+            // std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
 
-            std::string nameDirectoryBaseSSCE;
+            // public LibraryEditor_SpriteStudio6.Import.SSCE.Information.Texture[] TableInformationTextureExternal;
+            // public List<TextureExternal> ListTextureExternal;	/* Temporary ... Accumulating list for determine TableInformationTextureExternal. Valid during analyzing SSxx-s. */
+
+
+            std::string NameDirectoryBaseSSCE;
             std::vector<SSCE::Information> tableInformationSSCE;
             std::vector<std::string> tableNameCellMapDataProject;
 
