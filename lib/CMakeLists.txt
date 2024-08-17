@@ -70,10 +70,18 @@ set(PROJECTDEPS_HEADERS
 
 set(SsConverter2Lib_SRCS
         src/SSConverter2Lib.cpp
+        src/sspj.cpp
 )
 
 set(SsConverter2Lib_HEADERS
         include/SSConverter2Lib.h
+        include/sspj.h
+        include/ssae.h
+        include/ssce.h
+        include/ssee.h
+        include/ssqe.h
+        include/ssse.h
+        include/fnt.h
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

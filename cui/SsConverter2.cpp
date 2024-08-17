@@ -11,6 +11,8 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     auto inputName = inputPath.filename().stem().string();
     auto inputExt = inputPath.filename().extension().string();
 
+    SpriteStudio::SSPJ sspj;
+    sspj.parser(inputPath);
 }
 
 int main(int argc, char *argv[]) {

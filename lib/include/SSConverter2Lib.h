@@ -8,3 +8,5 @@
 #include "ssf2_generated.h"
 #include "ssfb2_generated.h"
 #include "sss2_generated.h"
+
+#include "sspj.h"
