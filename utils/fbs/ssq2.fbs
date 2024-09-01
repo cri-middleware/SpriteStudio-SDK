@@ -1,0 +1,22 @@
+include "common_ssfb2.fbs";
+
+namespace ss.ssfb2;
+
+table DataSequencPackeExtendSplit {	// Ver.3.0 -
+	name_project:string;
+	animation_project:[DataExtendInformationFile];
+}
+
+table DataSequencePackSplit {		// Ver.3.0 -
+    version:DataVersion;
+    name:string;
+    sequenceList:[DataSequence];
+
+    extend_split:DataSequencPackeExtendSplit;		// Ver.3.0 -
+}
+
+
+// Split-Format : Sequence-TypePack
+file_identifier "SSQ2";
+root_type DataSequencePackSplit;
+
