@@ -1,8 +1,8 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/initialize.cmake)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.25)
-project(SsConverter2Lib)
+project(SsConverter3Lib)
 
-INITIALIZE(SsConverter2Lib_EXTEND_SRCS)
+INITIALIZE(SsConverter3Lib_EXTEND_SRCS)
 
 PREPARE()
 
@@ -68,23 +68,23 @@ set(PROJECTDEPS_HEADERS
         ${flatbuffers_HEADERS}
 )
 
-set(SsConverter2Lib_SRCS
-        src/SSConverter2Lib.cpp
+set(SsConverter3Lib_SRCS
+        src/SSConverter3Lib.cpp
         src/sspj.cpp
 )
 
-set(SsConverter2Lib_HEADERS
-        include/SSConverter2Lib.h
-        include/sspj.h
-        include/ssae.h
-        include/ssce.h
-        include/ssee.h
-        include/ssqe.h
-        include/ssse.h
-        include/fnt.h
+set(SsConverter3Lib_HEADERS
+        include/SSConverter3Lib/SSConverter3Lib.h
+        include/SSConverter3Lib/sspj.h
+        include/SSConverter3Lib/ssae.h
+        include/SSConverter3Lib/ssce.h
+        include/SSConverter3Lib/ssee.h
+        include/SSConverter3Lib/ssqe.h
+        include/SSConverter3Lib/ssse.h
+        include/SSConverter3Lib/fnt.h
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-add_library(${PROJECT_NAME} ${SsConverter2Lib_SRCS} ${SsConverter2Lib_HEADERS} ${SsConverter2Lib_EXTEND_SRCS} ${PROJECTDEPS_SRCS} ${PROJECTDEPS_HEADERS})
+add_library(${PROJECT_NAME} ${SsConverter3Lib_SRCS} ${SsConverter3Lib_HEADERS} ${SsConverter3Lib_EXTEND_SRCS} ${PROJECTDEPS_SRCS} ${PROJECTDEPS_HEADERS})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${flatbuffers_SOURCE_DIR}/include)

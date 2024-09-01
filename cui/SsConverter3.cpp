@@ -2,7 +2,7 @@
 #include <iostream>
 #include <filesystem>
 
-#include "include/SSConverter2Lib.h"
+#include <SSConverter3Lib/SSConverter3Lib.h>
 #include <argparse/argparse.hpp>
 
 

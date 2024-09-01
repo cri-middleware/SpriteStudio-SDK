@@ -1,8 +1,8 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/initialize.cmake)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.25)
-project(SsConverter2)
+project(SsConverter3Cui)
 
-INITIALIZE(SsConverter2_EXTEND_SRCS)
+INITIALIZE(SsConverter3Cui_EXTEND_SRCS)
 
 PREPARE()
 
@@ -18,19 +18,19 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(argparse)
 include_directories(${argparse_SOURCE_DIR}/include)
 
-if(NOT TARGET SsConverter2Lib)
+if(NOT TARGET SsConverter3Lib)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib ${PROJECT_NAME}_lib)
 endif()
 
-set(SsConverter2_SRCS
-        SsConverter2.cpp
+set(SsConverter3Cui_SRCS
+        SsConverter3.cpp
 )
 
-set(SsConverter2_HEADERS
+set(SsConverter3Cui_HEADERS
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
-add_executable(${PROJECT_NAME} ${SsConverter2_SRCS} ${SsConverter2_HEADERS} ${SsConverter2_EXTEND_SRCS})
-target_link_libraries(${PROJECT_NAME} PRIVATE SsConverter2Lib)
+add_executable(SsConverter3 ${SsConverter3Cui_SRCS} ${SsConverter3Cui_HEADERS} ${SsConverter3Cui_EXTEND_SRCS})
+target_link_libraries(SsConverter3 PRIVATE SsConverter3Lib)

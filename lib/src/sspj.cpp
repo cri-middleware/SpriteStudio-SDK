@@ -1,4 +1,4 @@
-#include "sspj.h"
+#include "SSConverter3Lib/sspj.h"
 #include "pugixml/pugixml.hpp"
 #include "SSException.h"
 
