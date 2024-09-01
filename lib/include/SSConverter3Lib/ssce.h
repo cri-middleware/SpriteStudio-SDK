@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include "ssc2_generated.h"
+#include "ssfb2/ssc2_generated.h"
 
 namespace SpriteStudio {
     class SSCE {

@@ -10,7 +10,7 @@
 #include "ssqe.h"
 #include "ssse.h"
 #include "fnt.h"
-#include "ssfb2_generated.h"
+#include "ssfb2/ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSPJ {
