@@ -35,13 +35,14 @@ std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::filesystem::path &ssp
 
     auto getValueText = [&nodeRoot](const std::string &query) -> std::tuple<std::string, pugi::xml_node> {
         std::string text;
-        pugi::xml_node* node;
+        pugi::xml_node node;
         if (auto xpath_node = nodeRoot.select_node(query.c_str())) {
             if (auto value = xpath_node.node().text().as_string()) {
                 text = std::string(value);
+                node = xpath_node.node();
             }
         }
-        return std::make_tuple(text, nodeRoot);
+        return std::make_tuple(text, node);
     };
     std::string valueText;
     pugi::xml_node node;
@@ -82,19 +83,19 @@ std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::filesystem::path &ssp
 
     std::tie(valueText, node) = getValueText("settings/convertImageToPMA");
     if (!valueText.empty()) {
-        information->FlagConvertImagePremultipliedAlpha = node.text().as_bool();
+        information->FlagConvertImagePremultipliedAlpha = node.text().as_int();
     }
 
     std::tie(valueText, node) = getValueText("settings/blendImageAsPMA");
     if (!valueText.empty()) {
-        auto value = node.text().as_bool();
+        auto value = node.text().as_int();
         information->FlagBlendImagePremultipliedAlpha = value;
         information->FlagCorrectShaderPremultipliedAlpha = value;
     }
 
     std::tie(valueText, node) = getValueText("settings/vertexAnimeFloat");
     if (!valueText.empty()) {
-        information->FlagVertexAnimeFloat = node.text().as_bool();
+        information->FlagVertexAnimeFloat = node.text().as_int();
     }
 
     /*
@@ -113,6 +114,34 @@ std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::filesystem::path &ssp
             // TODO:
         }
     }
+
+    auto getList = [&nodeRoot](const std::string &query)  {
+        return nodeRoot.select_nodes(query.c_str());
+    };
+
+    auto xpath_node_set = getList("cellmapNames/value");
+    if (xpath_node_set.empty()) {
+        information->TableNameSSCE = {};
+    } else {
+        for(const auto& xpath_node : xpath_node_set) {
+            auto value = std::string(xpath_node.node().text().as_string());
+            auto path = std::filesystem::path(information->NameDirectoryBaseSSCE) / std::filesystem::path(value);
+            information->TableNameSSCE.push_back(path.string());
+        }
+    }
+    information->tableInformationSSCE.reserve(information->TableNameSSCE.size());
+
+    xpath_node_set = getList("animepackNames/value");
+    if (xpath_node_set.empty()) {
+        information->TableNameSSAE = {};
+    } else {
+        for (const auto& xpath_node : xpath_node_set) {
+            auto value = std::string(xpath_node.node().text().as_string());
+            auto path = std::filesystem::path(information->NameDirectoryBaseSSAE) / std::filesystem::path(value);
+            information->TableNameSSAE.push_back(path.string());
+        }
+    }
+    information->TableInformationSSAE.reserve(information->TableNameSSAE.size());
 
     return information;
 }

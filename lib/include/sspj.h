@@ -45,10 +45,12 @@ namespace SpriteStudio {
 
             std::string NameDirectoryBaseSSCE;
             std::vector<SSCE::Information> tableInformationSSCE;
+            std::vector<std::string> TableNameSSCE;	/* Temporary */
             std::vector<std::string> tableNameCellMapDataProject;
 
             std::string NameDirectoryBaseSSAE;
             std::vector<SSAE::Information> TableInformationSSAE;
+            std::vector<std::string> TableNameSSAE;
             std::vector<int> QueueConvertSSAE;
             std::vector<std::string> TableNameAnimationDataProject;
 
