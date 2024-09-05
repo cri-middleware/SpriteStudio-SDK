@@ -13,6 +13,26 @@
 #include "ssfb2/ssfb2_generated.h"
 
 namespace SpriteStudio {
+    enum class KindWrap : uint8_t {
+        Clamp = 0,
+        Repeart,
+        Mirror, // Unsupported
+    };
+
+    enum class KindFilter : uint8_t {
+        Nearest = 0,
+        Linear,
+        Bilinear,
+    };
+
+    enum class KindCoordUnit : int8_t {
+        Invalid = -1,
+        Rate,
+        Pix,
+
+        Terminator,
+    };
+
     class SSPJ {
     public:
         class Information {
@@ -28,19 +48,19 @@ namespace SpriteStudio {
                 return sspj_path.filename().extension().string();
             };
 
-            // Library_SpriteStudio6.Data.Texture.KindWrap WrapTexture;
-            // Library_SpriteStudio6.Data.Texture.KindFilter FilterTexture;
+            KindWrap WrapTexture;
+            KindFilter FilterTexture;
             bool FlagConvertImagePremultipliedAlpha;
             bool FlagBlendImagePremultipliedAlpha;
             bool FlagCorrectShaderPremultipliedAlpha;
             bool FlagVertexAnimeFloat;
 
             std::string NameDirectoryBaseTexture;
-            // SSCE::Information.Texture[] TableInformationTexture;
-            // std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
+            //SSCE::Information.Texture[] TableInformationTexture;
+            //std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
 
-            // public LibraryEditor_SpriteStudio6.Import.SSCE.Information.Texture[] TableInformationTextureExternal;
-            // public List<TextureExternal> ListTextureExternal;	/* Temporary ... Accumulating list for determine TableInformationTextureExternal. Valid during analyzing SSxx-s. */
+            // SSCE::Information::Texture[] TableInformationTextureExternal;
+            // std::vector<TextureExternal> ListTextureExternal;	/* Temporary ... Accumulating list for determine TableInformationTextureExternal. Valid during analyzing SSxx-s. */
 
 
             std::string NameDirectoryBaseSSCE;
@@ -56,10 +76,12 @@ namespace SpriteStudio {
 
             std::string NameDirectoryBaseSSEE;
             std::vector<SSEE::Information> TableInformationSSEE;
+            std::vector<std::string> TableNameSSEE; /* Temporary */
             std::vector<std::string> TableNameEffectDataProject;
 
             std::string NameDirectoryBaseSSQE;
             std::vector<SSQE::Information> TableInformationSSQE;
+            std::vector<std::string> TableNameSSQE;
             std::vector<std::string> TableNameSequencePackDataProject;
 
             std::string NameDirectoryBaseSSSE;
@@ -68,6 +90,7 @@ namespace SpriteStudio {
 
             std::string NameDirectoryBaseFnt;
             std::vector<Fnt::Information> TableInformationFnt;
+            std::vector<std::string> TableNameFnt;
             std::vector<std::string> TableNameFontBitmapDataProject;
 
             std::vector<std::string> TableNameTextureProject;
@@ -75,9 +98,19 @@ namespace SpriteStudio {
 
             ss::ssfb2::DataCellMapT dataCellMapT;
             ss::ssfb2::ProjectDataT projectDataT;
+
+            std::string Signal;
+            KindCoordUnit CoordUnit;
         };
 
     public:
+        SSPJ();
+        ~SSPJ();
+
         std::shared_ptr<SSPJ::Information> parser(const std::filesystem::path &sspj);
+
+    private:
+        struct Impl;
+        std::unique_ptr<Impl> pImpl;
     };
 }
