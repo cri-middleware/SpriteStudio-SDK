@@ -12,7 +12,7 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     auto inputExt = inputPath.filename().extension().string();
 
     SpriteStudio::SSPJ sspj;
-    sspj.parser(inputPath);
+    sspj.parser(inputPath.string());
 }
 
 int main(int argc, char *argv[]) {

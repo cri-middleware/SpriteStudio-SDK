@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "SSConverter3Lib/sspj.h"
 #include "pugixml/pugixml.hpp"
 #include "SSException.h"
@@ -9,12 +11,24 @@ struct SSPJ::Impl {
     void parserValues(std::shared_ptr<SSPJ::Information> &information, const pugi::xml_node& nodeRoot);
 };
 
+std::string SSPJ::Information::NameDirectory() {
+    return std::filesystem::path(sspj_path).parent_path().string();
+}
+
+std::string SSPJ::Information::NameFileBody() {
+    return std::filesystem::path(sspj_path).filename().stem().string();
+}
+
+std::string SSPJ::Information::NameFileExtension() {
+    return std::filesystem::path(sspj_path).filename().extension().string();
+}
+
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
 
 }
 SSPJ::~SSPJ() = default;
 
-std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::filesystem::path &sspj) {
+std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::string &sspj) {
     pugi::xml_document doc;
     auto result = doc.load_file(sspj.c_str());
     if (!result) {

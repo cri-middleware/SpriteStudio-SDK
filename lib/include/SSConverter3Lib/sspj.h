@@ -1,8 +1,7 @@
 #pragma once
 
+#include <string>
 #include <vector>
-#include <filesystem>
-#include <memory>
 
 #include "ssce.h"
 #include "ssae.h"
@@ -37,16 +36,10 @@ namespace SpriteStudio {
     public:
         class Information {
         public:
-            std::filesystem::path sspj_path;
-            std::string NameDirectory() const {
-                return sspj_path.parent_path().string();
-            };
-            std::string NameFileBody() const {
-                return sspj_path.filename().stem().string();
-            };
-            std::string NameFileExtension() const {
-                return sspj_path.filename().extension().string();
-            };
+            std::string sspj_path;
+            std::string NameDirectory();
+            std::string NameFileBody();
+            std::string NameFileExtension();
 
             KindWrap WrapTexture;
             KindFilter FilterTexture;
@@ -107,7 +100,7 @@ namespace SpriteStudio {
         SSPJ();
         ~SSPJ();
 
-        std::shared_ptr<SSPJ::Information> parser(const std::filesystem::path &sspj);
+        std::shared_ptr<SSPJ::Information> parser(const std::string &sspj);
 
     private:
         struct Impl;
