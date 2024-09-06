@@ -71,6 +71,7 @@ set(PROJECTDEPS_HEADERS
 set(SsConverter3Lib_SRCS
         src/SSConverter3Lib.cpp
         src/sspj.cpp
+        src/ssse.cpp
 )
 
 set(SsConverter3Lib_HEADERS

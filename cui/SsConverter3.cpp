@@ -7,12 +7,22 @@
 
 
 void convert(const std::filesystem::path &inputPath, const std::filesystem::path &outputDirPath) {
-    std::cout << inputPath << " " << outputDirPath;
     auto inputName = inputPath.filename().stem().string();
     auto inputExt = inputPath.filename().extension().string();
 
+    std::cout << "inputPath: " << inputPath << std::endl;
+    std::cout << "outputDirPath: " << outputDirPath << std::endl;;
+    std::cout << "inputName: " << inputName << std::endl;
+    std::cout << "inputExt: " << inputExt << std::endl;
+
     SpriteStudio::SSPJ sspj;
-    sspj.parser(inputPath.string());
+    auto information = sspj.parser(inputPath.string());
+
+    // read Audio pack (SSSE)
+    for (int i=0; i<information->TableNameSSSE.size(); i++) {
+        SpriteStudio::SSSE ssse;
+        information->TableInformationSSSE[i] = ssse.parse(information->TableNameSSSE[i], information);
+    }
 }
 
 int main(int argc, char *argv[]) {

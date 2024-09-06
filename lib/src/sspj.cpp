@@ -7,20 +7,20 @@
 using namespace SpriteStudio;
 
 struct SSPJ::Impl {
-    void parserSettings(std::shared_ptr<SSPJ::Information> &information, const std::filesystem::path &sspj, const pugi::xml_node& nodeRoot);
-    void parserValues(std::shared_ptr<SSPJ::Information> &information, const pugi::xml_node& nodeRoot);
+    void parserSettings(std::shared_ptr<SSPJInformation> &information, const std::filesystem::path &sspj_path, const pugi::xml_node& nodeRoot);
+    void parserValues(std::shared_ptr<SSPJInformation> &information, const pugi::xml_node& nodeRoot);
 };
 
-std::string SSPJ::Information::NameDirectory() {
-    return std::filesystem::path(sspj_path).parent_path().string();
+std::string SSPJInformation::NameDirectory() const {
+    return std::filesystem::path(sspj).parent_path().string();
 }
 
-std::string SSPJ::Information::NameFileBody() {
-    return std::filesystem::path(sspj_path).filename().stem().string();
+std::string SSPJInformation::NameFileBody() const {
+    return std::filesystem::path(sspj).filename().stem().string();
 }
 
-std::string SSPJ::Information::NameFileExtension() {
-    return std::filesystem::path(sspj_path).filename().extension().string();
+std::string SSPJInformation::NameFileExtension() const {
+    return std::filesystem::path(sspj).filename().extension().string();
 }
 
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
@@ -28,7 +28,7 @@ SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
 }
 SSPJ::~SSPJ() = default;
 
-std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::string &sspj) {
+std::shared_ptr<SSPJInformation> SSPJ::parser(const std::string &sspj) {
     pugi::xml_document doc;
     auto result = doc.load_file(sspj.c_str());
     if (!result) {
@@ -46,15 +46,15 @@ std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::string &sspj) {
     }
     auto versionText = std::string(attr.value());
 
-    auto information = std::make_shared<SSPJ::Information>();
+    auto information = std::make_shared<SSPJInformation>();
     if (information == nullptr) {
         throw SSException("not enough memory", -1);
     }
-    information->sspj_path = sspj;
+    information->sspj = sspj;
+    auto sspj_path = std::filesystem::path(sspj);
 
     // settings
-    pImpl->parserSettings(information, sspj, nodeRoot);
-
+    pImpl->parserSettings(information, sspj_path, nodeRoot);
 
     // cellmap
     pImpl->parserValues(information, nodeRoot);
@@ -62,7 +62,7 @@ std::shared_ptr<SSPJ::Information> SSPJ::parser(const std::string &sspj) {
     return information;
 }
 
-void SSPJ::Impl::parserSettings(std::shared_ptr<SSPJ::Information> &information, const std::filesystem::path &sspj, const pugi::xml_node& nodeRoot) {
+void SSPJ::Impl::parserSettings(std::shared_ptr<SSPJInformation> &information, const std::filesystem::path &sspj_path, const pugi::xml_node& nodeRoot) {
     auto n = nodeRoot.child("settings");
     auto getValueText = [&n](const std::string &query) -> std::tuple<std::string, pugi::xml_node> {
         std::string text;
@@ -78,20 +78,28 @@ void SSPJ::Impl::parserSettings(std::shared_ptr<SSPJ::Information> &information,
     std::string valueText;
     pugi::xml_node node;
     std::tie(valueText, node) = getValueText("imageBaseDirectory");
-    information->NameDirectoryBaseTexture = valueText.empty() ? information->NameDirectory() : (sspj / std::filesystem::path(valueText)).string();
+    information->NameDirectoryBaseTexture = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
 
     std::tie(valueText, node) = getValueText("cellMapBaseDirectory");
-    information->NameDirectoryBaseSSCE = valueText.empty() ? information->NameDirectory() : (sspj / std::filesystem::path(valueText)).string();
+    information->NameDirectoryBaseSSCE = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
 
     std::tie(valueText, node) = getValueText("animeBaseDirectory");
-    information->NameDirectoryBaseSSAE = valueText.empty() ? information->NameDirectory() : (sspj / std::filesystem::path(valueText)).string();
+    information->NameDirectoryBaseSSAE = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
 
     std::tie(valueText, node) = getValueText("effectBaseDirectory");
-    information->NameDirectoryBaseSSEE = valueText.empty() ? information->NameDirectory() : (sspj / std::filesystem::path(valueText)).string();
+    information->NameDirectoryBaseSSEE = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
 
-    information->NameDirectoryBaseSSQE = information->NameDirectory();
+    // std::tie(valueText, node) = getValueText("sequenceBaseDirectory");
+    valueText = "";
+    information->NameDirectoryBaseSSQE = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
 
-    information->NameDirectoryBaseSSSE = information->NameDirectory();
+    // std::tie(valueText, node) = getValueText("audiopackBaseDirectory");
+    valueText = "";
+    information->NameDirectoryBaseSSSE = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
+
+    // std::tie(valueText, node) = getValueText("charmapBaseDirectory");
+    valueText = "";
+    information->NameDirectoryBaseFnt = valueText.empty() ? information->NameDirectory() : (sspj_path / std::filesystem::path(valueText)).string();
 
     std::tie(valueText, node) = getValueText("wrapMode");
     if (valueText == "repeat") {
@@ -144,7 +152,7 @@ void SSPJ::Impl::parserSettings(std::shared_ptr<SSPJ::Information> &information,
     }
 }
 
-void SSPJ::Impl::parserValues(std::shared_ptr<SSPJ::Information> &information, const pugi::xml_node& nodeRoot) {
+void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, const pugi::xml_node& nodeRoot) {
     auto getList = [&nodeRoot](const std::string &query)  {
         return nodeRoot.select_nodes(query.c_str());
     };
@@ -215,5 +223,19 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJ::Information> &information, c
     information->TableInformationFnt.reserve(information->TableNameFnt.size());
 
     // get Sound-List FileNames
-    // TODO: impl
+    xpath_node_set = getList("audiopackNames/value");
+    if(xpath_node_set.empty()) {
+        information->TableInformationSSSE = {};
+    } else {
+        for (const auto& xpath_node : xpath_node_set) {
+            auto value = std::string(xpath_node.node().text().as_string());
+            auto path = std::filesystem::path(information->NameDirectoryBaseSSSE) / std::filesystem::path(value);
+            information->TableNameSSSE.push_back(path.string());
+        }
+    }
+    information->TableInformationSSSE.reserve(information->TableNameSSSE.size());
+
+
+    // get External-Texture List FileNames
+    // TODO: Impl
 }

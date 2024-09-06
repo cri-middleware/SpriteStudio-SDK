@@ -10,3 +10,5 @@
 #include "ssfb2/sss2_generated.h"
 
 #include "sspj.h"
+#include "ssse.h"
+
