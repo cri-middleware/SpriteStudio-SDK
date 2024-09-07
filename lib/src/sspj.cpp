@@ -20,7 +20,20 @@ std::string SSPJInformation::NameFileBody() const {
 }
 
 std::string SSPJInformation::NameFileExtension() const {
-    return std::filesystem::path(sspj).filename().extension().string();
+    return std::filesystem::path(sspj).filename().extension().string().substr(1);
+}
+
+int SSPJInformation::addTexture(const std::string &nameTexture) {
+    int index;
+    auto result = std::find(ListNameTexture.begin(), ListNameTexture.end(), nameTexture);
+    if (result != ListNameTexture.end()) {
+        ListNameTexture.push_back(nameTexture);
+        index = ListNameTexture.size() - 1;
+    } else {
+        index = std::distance(ListNameTexture.begin(), result);
+    }
+
+    return index;
 }
 
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
@@ -168,7 +181,6 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, con
             information->TableNameSSCE.push_back(path.string());
         }
     }
-    information->tableInformationSSCE.reserve(information->TableNameSSCE.size());
 
     // get anime pack names
     xpath_node_set = getList("animepackNames/value");
@@ -181,7 +193,6 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, con
             information->TableNameSSAE.push_back(path.string());
         }
     }
-    information->TableInformationSSAE.reserve(information->TableNameSSAE.size());
 
     // get effect file names
     xpath_node_set = getList("effectFileNames/value");
@@ -194,7 +205,6 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, con
             information->TableNameSSEE.push_back(path.string());
         }
     }
-    information->TableInformationSSEE.reserve(information->TableNameSSEE.size());
 
     // get Sequence FileNames
     xpath_node_set = getList("sequencepackNames/value");
@@ -207,7 +217,6 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, con
             information->TableNameSSQE.push_back(path.string());
         }
     }
-    information->TableInformationSSQE.reserve(information->TableNameSSQE.size());
 
     // get Bitmap-Font FileNames
     xpath_node_set = getList("charmapNames/value");
@@ -220,7 +229,6 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, con
             information->TableNameFnt.push_back(path.string());
         }
     }
-    information->TableInformationFnt.reserve(information->TableNameFnt.size());
 
     // get Sound-List FileNames
     xpath_node_set = getList("audiopackNames/value");
@@ -233,7 +241,6 @@ void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, con
             information->TableNameSSSE.push_back(path.string());
         }
     }
-    information->TableInformationSSSE.reserve(information->TableNameSSSE.size());
 
 
     // get External-Texture List FileNames

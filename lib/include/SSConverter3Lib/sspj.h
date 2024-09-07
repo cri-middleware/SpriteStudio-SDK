@@ -3,16 +3,18 @@
 #include <string>
 #include <vector>
 
-#include "ssce.h"
 #include "ssae.h"
 #include "ssee.h"
 #include "ssqe.h"
-#include "fnt.h"
 #include "ssfb2/ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSSE;
     class SSSEInformation;
+    class Fnt;
+    class FntInformation;
+    class SSCE;
+    class SSCEInformation;
 
     enum class KindWrap : uint8_t {
         Clamp = 0,
@@ -50,14 +52,14 @@ namespace SpriteStudio {
 
         std::string NameDirectoryBaseTexture;
         //SSCE::Information.Texture[] TableInformationTexture;
-        //std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
+        std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
 
         // SSCE::Information::Texture[] TableInformationTextureExternal;
         // std::vector<TextureExternal> ListTextureExternal;	/* Temporary ... Accumulating list for determine TableInformationTextureExternal. Valid during analyzing SSxx-s. */
 
 
         std::string NameDirectoryBaseSSCE;
-        std::vector<SSCE::Information> tableInformationSSCE;
+        std::vector<std::shared_ptr<SSCEInformation>> TableInformationSSCE;
         std::vector<std::string> TableNameSSCE;	/* Temporary */
         std::vector<std::string> tableNameCellMapDataProject;
 
@@ -83,7 +85,7 @@ namespace SpriteStudio {
         std::vector<std::string> TableNameSoundListDataProject;
 
         std::string NameDirectoryBaseFnt;
-        std::vector<Fnt::Information> TableInformationFnt;
+        std::vector<std::shared_ptr<FntInformation>> TableInformationFnt;
         std::vector<std::string> TableNameFnt;
         std::vector<std::string> TableNameFontBitmapDataProject;
 
@@ -95,6 +97,9 @@ namespace SpriteStudio {
 
         std::string Signal;
         KindCoordUnit CoordUnit;
+
+    public:
+        int addTexture(const std::string& nameTexture);
     };
 
     class SSPJ {

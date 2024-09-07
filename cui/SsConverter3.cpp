@@ -8,7 +8,7 @@
 
 void convert(const std::filesystem::path &inputPath, const std::filesystem::path &outputDirPath) {
     auto inputName = inputPath.filename().stem().string();
-    auto inputExt = inputPath.filename().extension().string();
+    auto inputExt = inputPath.filename().extension().stem().string().substr(1);
 
     std::cout << "inputPath: " << inputPath << std::endl;
     std::cout << "outputDirPath: " << outputDirPath << std::endl;;
@@ -22,6 +22,18 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     for (int i=0; i<information->TableNameSSSE.size(); i++) {
         SpriteStudio::SSSE ssse;
         information->TableInformationSSSE[i] = ssse.parse(information->TableNameSSSE[i], information);
+    }
+
+    // read Font-Bitmap (Fnt)
+    for (int i=0; i<information->TableNameFnt.size(); i++) {
+        SpriteStudio::Fnt fnt;
+        information->TableInformationFnt[i] = fnt.parse(information->TableNameFnt[i], information);
+    }
+
+    // read CellMap(SSCE) & Collect Texture-FileNames
+    for (int i=0; i<information->TableNameSSCE.size(); i++) {
+        SpriteStudio::SSCE ssce;
+        information->TableInformationSSCE[i] = ssce.parse(information->TableNameSSCE[i], information);
     }
 }
 
