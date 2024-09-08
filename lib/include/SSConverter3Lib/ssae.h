@@ -1,7 +1,7 @@
 #pragma once
 
 #include "version.h"
-#include "ssfb2/ssfb2_generated.h"
+#include "ssfb2/common_ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSPJInformation;

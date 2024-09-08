@@ -11,12 +11,11 @@ namespace SpriteStudio {
         {static_cast<uint32_t>(SSEEVersion::CODE_020000), VersionToStringMap.at(static_cast<uint32_t>(SSEEVersion::CODE_020000))},
     };
 
+    class SSEEInformation {
+
+    };
+
     class SSEE {
-    public:
-        class Information {
-
-        };
-
     public:
 
     };

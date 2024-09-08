@@ -13,11 +13,10 @@ namespace SpriteStudio {
         {static_cast<uint32_t>(SSQEVersion::CODE_020000), VersionToStringMap.at(static_cast<uint32_t>(SSQEVersion::CODE_020000))},
     };
 
-    class SSQE {
-    public:
-        class Information {
-        };
+    class SSQEInformation {
+    };
 
+    class SSQE {
     public:
 
     };

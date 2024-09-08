@@ -4,8 +4,6 @@
 #include <vector>
 
 #include "version.h"
-#include "ssee.h"
-#include "ssqe.h"
 #include "ssfb2/ssfb2_generated.h"
 
 namespace SpriteStudio {
@@ -17,6 +15,10 @@ namespace SpriteStudio {
     class SSCEInformation;
     class SSAE;
     class SSAEInformation;
+    class SSEE;
+    class SSEEInformation;
+    class SSQE;
+    class SSQEInformation;
 
     enum class KindWrap : uint8_t {
         Clamp = 0,
@@ -93,12 +95,12 @@ namespace SpriteStudio {
         std::vector<std::string> TableNameAnimationDataProject;
 
         std::string NameDirectoryBaseSSEE;
-        std::vector<SSEE::Information> TableInformationSSEE;
+        std::vector<std::shared_ptr<SSEEInformation>> TableInformationSSEE;
         std::vector<std::string> TableNameSSEE; /* Temporary */
         std::vector<std::string> TableNameEffectDataProject;
 
         std::string NameDirectoryBaseSSQE;
-        std::vector<SSQE::Information> TableInformationSSQE;
+        std::vector<std::shared_ptr<SSQEInformation>> TableInformationSSQE;
         std::vector<std::string> TableNameSSQE;
         std::vector<std::string> TableNameSequencePackDataProject;
 

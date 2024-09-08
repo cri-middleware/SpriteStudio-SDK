@@ -14,3 +14,5 @@
 #include "fnt.h"
 #include "ssce.h"
 #include "ssae.h"
+#include "ssee.h"
+#include "ssqe.h"
