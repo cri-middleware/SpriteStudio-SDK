@@ -75,6 +75,8 @@ set(SsConverter3Lib_SRCS
         src/fnt.cpp
         src/ssce.cpp
         src/ssae.cpp
+        src/ssee.cpp
+        src/ssqe.cpp
         src/util.cpp
         src/util.h
 )

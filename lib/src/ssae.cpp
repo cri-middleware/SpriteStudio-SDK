@@ -16,20 +16,21 @@ struct SSAE::Impl {
     void parseSettings(const std::shared_ptr<SSAEInformation>& ssaeInfo, const pugi::xml_node& node);
     std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> parsePartData(const std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>>& tableParts, const pugi::xml_node& node);
 
-    ss::ssfb2::DataModelPartsKindFeature getPartType(const std::string& valueText);
-    std::tuple<ss::ssfb2::KindCollision, int> getCollisionType(const std::string& valueText, float Collider_SizeZ);
+    static ss::ssfb2::DataModelPartsKindFeature getPartType(const std::string& valueText);
+
+    static std::tuple<ss::ssfb2::KindCollision, int> getCollisionType(const std::string& valueText, float Collider_SizeZ);
 };
 
 std::string SSAEInformation::NameDirectory() const {
-    return std::filesystem::path(ssae).parent_path().string();
+    return util::getNameDirectory(ssae);
 }
 
 std::string SSAEInformation::NameFileBody() const {
-    return std::filesystem::path(ssae).filename().stem().string();
+    return util::getNameFileBody(ssae);
 }
 
 std::string SSAEInformation::NameFileExtension() const {
-    return std::filesystem::path(ssae).filename().extension().string().substr(1);
+    return util::getNameFileExtension(ssae);
 }
 
 SSAE::SSAE() : pImpl(std::make_unique<Impl>()) {
@@ -196,9 +197,7 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> SSAE::Impl::parsePa
 ss::ssfb2::DataModelPartsKindFeature SSAE::Impl::getPartType(const std::string &valueText) {
     ss::ssfb2::DataModelPartsKindFeature feature;
 
-    if (valueText == "null") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Null;
-    } else if (valueText == "normal") {
+    if (valueText == "normal") {
         feature = ss::ssfb2::DataModelPartsKindFeature::Normal;
     } else if (valueText == "instance") {
         feature = ss::ssfb2::DataModelPartsKindFeature::Instance;
@@ -231,6 +230,7 @@ ss::ssfb2::DataModelPartsKindFeature SSAE::Impl::getPartType(const std::string &
     } else if (valueText == "nines") {
         feature = ss::ssfb2::DataModelPartsKindFeature::Nine_Slice;
     } else {
+        // Null or others
         feature = ss::ssfb2::DataModelPartsKindFeature::Null;
     }
 
@@ -241,10 +241,7 @@ std::tuple<ss::ssfb2::KindCollision, int> SSAE::Impl::getCollisionType(const std
     ss::ssfb2::KindCollision collision;
     auto sizeCollision = 0.0f;
 
-    if (valueText == "none") {
-        collision = ss::ssfb2::KindCollision::Non;
-        sizeCollision = 0.0f;
-    } else if (valueText == "quad") {
+    if (valueText == "quad") {
         collision = ss::ssfb2::KindCollision::Square;
         sizeCollision = Collider_SizeZ;
     } else if (valueText == "aabb") {
@@ -260,6 +257,7 @@ std::tuple<ss::ssfb2::KindCollision, int> SSAE::Impl::getCollisionType(const std
         collision = ss::ssfb2::KindCollision::CircleScaleMaximum;
         sizeCollision = Collider_SizeZ;
     } else {
+        // Non or others
         collision = ss::ssfb2::KindCollision::Non;
         sizeCollision = 0.0f;
     }

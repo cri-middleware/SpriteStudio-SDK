@@ -1,5 +1,10 @@
 #pragma once
 
+#include <cstdint>
+#include <map>
+
+#include "version.h"
+
 namespace SpriteStudio {
     class SSPJInformation;
 
@@ -12,6 +17,12 @@ namespace SpriteStudio {
     };
 
     class SSEEInformation {
+        std::string ssee;
+        std::string NameDirectory() const;
+        std::string NameFileBody() const;
+        std::string NameFileExtension() const;
+
+        SSEEVersion version;
 
     };
 

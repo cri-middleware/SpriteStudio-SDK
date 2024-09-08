@@ -13,15 +13,15 @@ struct SSPJ::Impl {
 };
 
 std::string SSPJInformation::NameDirectory() const {
-    return std::filesystem::path(sspj).parent_path().string();
+    return util::getNameDirectory(sspj);
 }
 
 std::string SSPJInformation::NameFileBody() const {
-    return std::filesystem::path(sspj).filename().stem().string();
+    return util::getNameFileBody(sspj);
 }
 
 std::string SSPJInformation::NameFileExtension() const {
-    return std::filesystem::path(sspj).filename().extension().string().substr(1);
+    return util::getNameFileExtension(sspj);
 }
 
 int SSPJInformation::addTexture(const std::string &nameTexture) {

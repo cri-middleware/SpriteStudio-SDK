@@ -18,15 +18,15 @@ struct SSCE::Impl {
 };
 
 std::string SSCEInformation::NameDirectory() const {
-    return std::filesystem::path(ssce).parent_path().string();
+    return util::getNameDirectory(ssce);
 }
 
 std::string SSCEInformation::NameFileBody() const {
-    return std::filesystem::path(ssce).filename().stem().string();
+    return util::getNameFileBody(ssce);
 }
 
 std::string SSCEInformation::NameFileExtension() const {
-    return std::filesystem::path(ssce).filename().extension().string().substr(1);
+    return util::getNameFileExtension(ssce);
 }
 
 SSCE::SSCE() : pImpl(std::make_unique<SSCE::Impl>()) {

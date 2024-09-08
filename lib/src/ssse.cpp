@@ -8,15 +8,15 @@
 using namespace SpriteStudio;
 
 std::string SSSEInformation::NameDirectory() {
-    return std::filesystem::path(ssse).parent_path().string();
+    return util::getNameDirectory(ssse);
 }
 
 std::string SSSEInformation::NameFileBody() {
-    return std::filesystem::path(ssse).filename().stem().string();
+    return util::getNameFileBody(ssse);
 }
 
 std::string SSSEInformation::NameFileExtension() {
-    return std::filesystem::path(ssse).filename().extension().string().substr(1);
+    return util::getNameFileExtension(ssse);
 }
 
 std::shared_ptr<SSSEInformation> SSSE::parse(const std::string& ssse, const std::shared_ptr<SSPJInformation> &sspjInfo) {
