@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "version.h"
 #include "ssee.h"
 #include "ssqe.h"
 #include "ssfb2/ssfb2_generated.h"
@@ -43,6 +44,8 @@ namespace SpriteStudio {
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
+
+        Version version;
 
         KindWrap WrapTexture;
         KindFilter FilterTexture;
@@ -108,7 +111,7 @@ namespace SpriteStudio {
         SSPJ();
         ~SSPJ();
 
-        std::shared_ptr<SSPJInformation> parser(const std::string &sspj);
+        std::shared_ptr<SSPJInformation> parse(const std::string &sspj);
 
     private:
         struct Impl;

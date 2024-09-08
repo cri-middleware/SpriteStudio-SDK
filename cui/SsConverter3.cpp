@@ -16,33 +16,33 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     std::cout << "inputExt: " << inputExt << std::endl;
 
     SpriteStudio::SSPJ sspj;
-    auto information = sspj.parser(inputPath.string());
+    auto sspjInfo = sspj.parse(inputPath.string());
 
     // read Audio pack (SSSE)
-    information->TableInformationSSSE = {};
-    for (int i=0; i<information->TableNameSSSE.size(); i++) {
+    sspjInfo->TableInformationSSSE = {};
+    for (int i=0; i<sspjInfo->TableNameSSSE.size(); i++) {
         SpriteStudio::SSSE ssse;
-        information->TableInformationSSSE.push_back(ssse.parse(information->TableNameSSSE[i], information));
+        sspjInfo->TableInformationSSSE.push_back(ssse.parse(sspjInfo->TableNameSSSE[i], sspjInfo));
     }
 
     // read Font-Bitmap (Fnt)
-    information->TableInformationFnt = {};
-    for (int i=0; i<information->TableNameFnt.size(); i++) {
+    sspjInfo->TableInformationFnt = {};
+    for (int i=0; i<sspjInfo->TableNameFnt.size(); i++) {
         SpriteStudio::Fnt fnt;
-        information->TableInformationFnt.push_back(fnt.parse(information->TableNameFnt[i], information));
+        sspjInfo->TableInformationFnt.push_back(fnt.parse(sspjInfo->TableNameFnt[i], sspjInfo));
     }
 
     // read CellMap(SSCE) & Collect Texture-FileNames
-    information->TableInformationSSCE = {};
-    for (int i=0; i<information->TableNameSSCE.size(); i++) {
+    sspjInfo->TableInformationSSCE = {};
+    for (int i=0; i<sspjInfo->TableNameSSCE.size(); i++) {
         SpriteStudio::SSCE ssce;
-        information->TableInformationSSCE.push_back(ssce.parse(information->TableNameSSCE[i], information));
+        sspjInfo->TableInformationSSCE.push_back(ssce.parse(sspjInfo->TableNameSSCE[i], sspjInfo));
     }
 
-    information->TableInformationSSAE = {};
-    for (int i=0; i<information->TableNameSSAE.size(); i++) {
+    sspjInfo->TableInformationSSAE = {};
+    for (int i=0; i<sspjInfo->TableNameSSAE.size(); i++) {
         SpriteStudio::SSAE ssae;
-        information->TableInformationSSAE.push_back(ssae.parse(information->TableNameSSAE[i], information));
+        sspjInfo->TableInformationSSAE.push_back(ssae.parse(sspjInfo->TableNameSSAE[i], sspjInfo));
     }
 }
 

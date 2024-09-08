@@ -75,10 +75,13 @@ set(SsConverter3Lib_SRCS
         src/fnt.cpp
         src/ssce.cpp
         src/ssae.cpp
+        src/util.cpp
+        src/util.h
 )
 
 set(SsConverter3Lib_HEADERS
         include/SSConverter3Lib/SSConverter3Lib.h
+        include/SSConverter3Lib/version.h
         include/SSConverter3Lib/sspj.h
         include/SSConverter3Lib/ssae.h
         include/SSConverter3Lib/ssce.h

@@ -3,12 +3,13 @@
 #include "SSConverter3Lib/sspj.h"
 #include "pugixml/pugixml.hpp"
 #include "SSException.h"
+#include "util.h"
 
 using namespace SpriteStudio;
 
 struct SSPJ::Impl {
-    void parserSettings(std::shared_ptr<SSPJInformation> &information, const std::filesystem::path &sspj_path, const pugi::xml_node& nodeRoot);
-    void parserValues(std::shared_ptr<SSPJInformation> &information, const pugi::xml_node& nodeRoot);
+    void parseSettings(std::shared_ptr<SSPJInformation> &information, const std::filesystem::path &sspj_path, const pugi::xml_node& nodeRoot);
+    void parseValues(std::shared_ptr<SSPJInformation> &information, const pugi::xml_node& nodeRoot);
 };
 
 std::string SSPJInformation::NameDirectory() const {
@@ -28,9 +29,9 @@ int SSPJInformation::addTexture(const std::string &nameTexture) {
     auto result = std::find(ListNameTexture.begin(), ListNameTexture.end(), nameTexture);
     if (result != ListNameTexture.end()) {
         ListNameTexture.push_back(nameTexture);
-        index = ListNameTexture.size() - 1;
+        index = static_cast<int>(ListNameTexture.size() - 1);
     } else {
-        index = std::distance(ListNameTexture.begin(), result);
+        index = static_cast<int>(std::distance(ListNameTexture.begin(), result));
     }
 
     return index;
@@ -41,7 +42,12 @@ SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
 }
 SSPJ::~SSPJ() = default;
 
-std::shared_ptr<SSPJInformation> SSPJ::parser(const std::string &sspj) {
+std::shared_ptr<SSPJInformation> SSPJ::parse(const std::string &sspj) {
+    auto sspj_path = std::filesystem::path(sspj);
+    if (!std::filesystem::exists(sspj_path)) {
+        throw SSException("not found a ssae file: " + sspj, -1);
+    }
+
     pugi::xml_document doc;
     auto result = doc.load_file(sspj.c_str());
     if (!result) {
@@ -53,39 +59,35 @@ std::shared_ptr<SSPJInformation> SSPJ::parser(const std::string &sspj) {
         throw SSException("invalid sspj format", -1);
     }
 
+    auto sspjInfo = std::make_shared<SSPJInformation>();
+    if (sspjInfo == nullptr) {
+        throw SSException("not enough memory", -1);
+    }
+    sspjInfo->sspj = sspj;
+
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
         throw SSException("invalid sspj format", -1);
     }
-    auto versionText = std::string(attr.value());
-
-    auto information = std::make_shared<SSPJInformation>();
-    if (information == nullptr) {
-        throw SSException("not enough memory", -1);
+    auto versionText = std::string(attr.as_string());
+    sspjInfo->version = util::getVersion(versionText);
+    if (sspjInfo->version == Version::ERROR) {
+        throw SSException("Unknown Version: " + versionText, -1);
     }
-    information->sspj = sspj;
-    auto sspj_path = std::filesystem::path(sspj);
 
     // settings
-    pImpl->parserSettings(information, sspj_path, nodeRoot);
+    pImpl->parseSettings(sspjInfo, sspj_path, nodeRoot.child("settings"));
 
     // cellmap
-    pImpl->parserValues(information, nodeRoot);
+    pImpl->parseValues(sspjInfo, nodeRoot);
 
-    return information;
+    return sspjInfo;
 }
 
-void SSPJ::Impl::parserSettings(std::shared_ptr<SSPJInformation> &information, const std::filesystem::path &sspj_path, const pugi::xml_node& nodeRoot) {
-    auto n = nodeRoot.child("settings");
-    auto getValueText = [&n](const std::string &query) -> std::tuple<std::string, pugi::xml_node> {
-        std::string text;
-        pugi::xml_node node;
-        if (auto xpath_node = n.select_node(query.c_str())) {
-            if (auto value = xpath_node.node().text().as_string()) {
-                text = std::string(value);
-                node = xpath_node.node();
-            }
-        }
+void SSPJ::Impl::parseSettings(std::shared_ptr<SSPJInformation> &information, const std::filesystem::path &sspj_path, const pugi::xml_node& nodeRoot) {
+    auto getValueText = [&nodeRoot](const std::string &name) -> std::tuple<std::string, pugi::xml_node> {
+        pugi::xml_node node = nodeRoot.child(name.c_str());
+        auto text = std::string(node.text().as_string());
         return std::make_tuple(text, node);
     };
     std::string valueText;
@@ -165,7 +167,7 @@ void SSPJ::Impl::parserSettings(std::shared_ptr<SSPJInformation> &information, c
     }
 }
 
-void SSPJ::Impl::parserValues(std::shared_ptr<SSPJInformation> &information, const pugi::xml_node& nodeRoot) {
+void SSPJ::Impl::parseValues(std::shared_ptr<SSPJInformation> &information, const pugi::xml_node& nodeRoot) {
     auto getList = [&nodeRoot](const std::string &query)  {
         return nodeRoot.select_nodes(query.c_str());
     };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "version.h"
 #include "ssfb2/ssfb2_generated.h"
 
 namespace SpriteStudio {
@@ -11,6 +12,8 @@ namespace SpriteStudio {
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
+
+        Version version;
 
         ss::ssfb2::LibraryDataAnimationT data;
         std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>> TableParts;

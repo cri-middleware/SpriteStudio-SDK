@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "version.h"
 #include "ssfb2/ssc2_generated.h"
 #include "ssfb2/ssfb2_generated.h"
 
@@ -17,6 +18,8 @@ namespace SpriteStudio {
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
+
+        Version version;
 
         int IndexTexture;
         int SizePixelX;	/* Temporary */

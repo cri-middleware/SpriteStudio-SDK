@@ -1,0 +1,25 @@
+#pragma once
+#include <cstdint>
+#include <string>
+#include <map>
+
+namespace SpriteStudio {
+    enum class Version : uint32_t {
+        ERROR = 0x00000000,
+        CODE_020000 = 0x00020000,	/* after SS6.0.0 beta */
+        CODE_020001 = 0x00020001,	/* after SS6.0.0 */
+        CODE_020003 = 0x00020003,	/* after SS6.2.0 */
+        CODE_020004 = 0x00020004,	/* after SS6.3.0 */
+
+        CODE_020100 = 0x00020100,	/* after SS7.1.0 */
+    };
+
+    // enum値と文字列の対応を定義するmap
+    const std::map<Version, std::string> VersionToStringMap = {
+        {Version::CODE_020000, "2.00.00"},
+        {Version::CODE_020001, "2.00.01"},
+        {Version::CODE_020003, "2.00.03"},
+        {Version::CODE_020004, "2.00.04"},
+        {Version::CODE_020100, "2.01.00"},
+    };
+}

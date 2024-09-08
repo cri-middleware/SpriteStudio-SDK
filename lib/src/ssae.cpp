@@ -5,6 +5,8 @@
 
 #include "SSException.h"
 #include "SSConverter3Lib/ssae.h"
+
+#include "util.h"
 #include "pugixml/pugixml.hpp"
 #include "SSConverter3Lib/sspj.h"
 
@@ -53,7 +55,21 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
     }
 
     auto ssaeInfo = std::make_shared<SSAEInformation>();
+    if (ssaeInfo == nullptr) {
+        throw SSException("not enough memory", -1);
+    }
     ssaeInfo->ssae = ssae;
+
+    auto attr = nodeRoot.attribute("version");
+    if (attr.empty()) {
+        throw SSException("invalid ssce format", -1);
+    }
+    auto versionText = std::string(attr.as_string());
+    ssaeInfo->version = util::getVersion(versionText);
+    if (ssaeInfo->version == Version::ERROR) {
+        throw SSException("Unknown Version: " + versionText, -1);
+    }
+
 
     std::string valueText;
     pugi::xml_node node;

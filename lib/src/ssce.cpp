@@ -4,6 +4,8 @@
 
 #include "SSException.h"
 #include "SSConverter3Lib/ssce.h"
+
+#include "util.h"
 #include "pugixml/pugixml.hpp"
 #include "SSConverter3Lib/sspj.h"
 
@@ -53,6 +55,17 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
         throw SSException("not enough memory", -1);
     }
     ssceInfo->ssce = ssce;
+
+    auto attr = nodeRoot.attribute("version");
+    if (attr.empty()) {
+        throw SSException("invalid ssce format", -1);
+    }
+    auto versionText = std::string(attr.as_string());
+    ssceInfo->version = util::getVersion(versionText);
+    if (ssceInfo->version == Version::ERROR) {
+        throw SSException("Unknown Version: " + versionText, -1);
+    }
+
 
     std::string valueText;
     pugi::xml_node node;
