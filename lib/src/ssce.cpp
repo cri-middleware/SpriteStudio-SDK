@@ -61,8 +61,8 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
         throw SSException("invalid ssce format", -1);
     }
     auto versionText = std::string(attr.as_string());
-    ssceInfo->version = util::getVersion(versionText);
-    if (ssceInfo->version == Version::ERROR) {
+    ssceInfo->version = static_cast<SSCEVersion>(util::getVersion(versionText, SSCEVersionMap));
+    if (ssceInfo->version == SSCEVersion::ERROR) {
         throw SSException("Unknown Version: " + versionText, -1);
     }
 

@@ -70,8 +70,8 @@ std::shared_ptr<SSPJInformation> SSPJ::parse(const std::string &sspj) {
         throw SSException("invalid sspj format", -1);
     }
     auto versionText = std::string(attr.as_string());
-    sspjInfo->version = util::getVersion(versionText);
-    if (sspjInfo->version == Version::ERROR) {
+    sspjInfo->version = static_cast<SSPJVersion>(util::getVersion(versionText, SSPJVersionMap));
+    if (sspjInfo->version == SSPJVersion::ERROR) {
         throw SSException("Unknown Version: " + versionText, -1);
     }
 

@@ -9,6 +9,14 @@
 namespace SpriteStudio {
     class SSPJInformation;
 
+    enum class SSCEVersion : uint32_t {
+        ERROR = static_cast<uint32_t>(Version::ERROR),
+        CODE_020000 = static_cast<uint32_t>(Version::CODE_020000),
+    };
+    const std::map<uint32_t, std::string> SSCEVersionMap = {
+        {static_cast<uint32_t>(SSCEVersion::CODE_020000), VersionToStringMap.at(static_cast<uint32_t>(SSCEVersion::CODE_020000))},
+    };
+
     class SSCEInformation {
     public:
         ss::ssfb2::LibraryDataCellMapT Data;
@@ -19,7 +27,7 @@ namespace SpriteStudio {
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
 
-        Version version;
+        SSCEVersion version;
 
         int IndexTexture;
         int SizePixelX;	/* Temporary */

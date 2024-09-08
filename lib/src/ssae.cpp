@@ -65,8 +65,8 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
         throw SSException("invalid ssce format", -1);
     }
     auto versionText = std::string(attr.as_string());
-    ssaeInfo->version = util::getVersion(versionText);
-    if (ssaeInfo->version == Version::ERROR) {
+    ssaeInfo->version = static_cast<SSAEVersion>(util::getVersion(versionText, SSAEVersionMap));
+    if (ssaeInfo->version == SSAEVersion::ERROR) {
         throw SSException("Unknown Version: " + versionText, -1);
     }
 

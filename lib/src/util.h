@@ -6,6 +6,6 @@
 namespace SpriteStudio {
     class util {
     public:
-        static Version getVersion(const std::string &valueText);
+        static uint32_t getVersion(const std::string &valueText, const std::map<uint32_t, std::string>& map);
     };
 }

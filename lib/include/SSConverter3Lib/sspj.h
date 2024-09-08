@@ -38,6 +38,25 @@ namespace SpriteStudio {
         Terminator,
     };
 
+
+    enum class SSPJVersion : uint32_t {
+        ERROR = static_cast<uint32_t>(Version::ERROR),
+        CODE_020000 = static_cast<uint32_t>(Version::CODE_020000),
+        CODE_020001 = static_cast<uint32_t>(Version::CODE_020001),
+        CODE_020003 = static_cast<uint32_t>(Version::CODE_020003),
+        CODE_020004 = static_cast<uint32_t>(Version::CODE_020004),
+
+        CODE_020100 = static_cast<uint32_t>(Version::CODE_020100),
+    };
+    const std::map<uint32_t, std::string> SSPJVersionMap = {
+        {static_cast<uint32_t>(SSPJVersion::CODE_020000), VersionToStringMap.at(static_cast<uint32_t>(SSPJVersion::CODE_020000))},
+        {static_cast<uint32_t>(SSPJVersion::CODE_020001), VersionToStringMap.at(static_cast<uint32_t>(SSPJVersion::CODE_020001))},
+        {static_cast<uint32_t>(SSPJVersion::CODE_020003), VersionToStringMap.at(static_cast<uint32_t>(SSPJVersion::CODE_020003))},
+        {static_cast<uint32_t>(SSPJVersion::CODE_020004), VersionToStringMap.at(static_cast<uint32_t>(SSPJVersion::CODE_020004))},
+
+        {static_cast<uint32_t>(SSPJVersion::CODE_020100), VersionToStringMap.at(static_cast<uint32_t>(SSPJVersion::CODE_020100))},
+    };
+
     class SSPJInformation {
     public:
         std::string sspj;
@@ -45,7 +64,7 @@ namespace SpriteStudio {
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
 
-        Version version;
+        SSPJVersion version;
 
         KindWrap WrapTexture;
         KindFilter FilterTexture;

@@ -9,6 +9,14 @@
 namespace SpriteStudio {
     class SSPJInformation;
 
+    enum class SSSEVersion : uint32_t {
+        ERROR = static_cast<uint32_t>(Version::ERROR),
+        CODE_010000 = static_cast<uint32_t>(Version::CODE_010000),
+    };
+    const std::map<uint32_t, std::string> SSSEVersionMap = {
+        {static_cast<uint32_t>(SSSEVersion::CODE_010000), VersionToStringMap.at(static_cast<uint32_t>(SSSEVersion::CODE_010000))},
+    };
+
     class SSSEInformation {
     public:
         std::string ssse;
