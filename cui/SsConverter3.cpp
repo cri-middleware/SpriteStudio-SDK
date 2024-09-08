@@ -19,21 +19,30 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     auto information = sspj.parser(inputPath.string());
 
     // read Audio pack (SSSE)
+    information->TableInformationSSSE = {};
     for (int i=0; i<information->TableNameSSSE.size(); i++) {
         SpriteStudio::SSSE ssse;
-        information->TableInformationSSSE[i] = ssse.parse(information->TableNameSSSE[i], information);
+        information->TableInformationSSSE.push_back(ssse.parse(information->TableNameSSSE[i], information));
     }
 
     // read Font-Bitmap (Fnt)
+    information->TableInformationFnt = {};
     for (int i=0; i<information->TableNameFnt.size(); i++) {
         SpriteStudio::Fnt fnt;
-        information->TableInformationFnt[i] = fnt.parse(information->TableNameFnt[i], information);
+        information->TableInformationFnt.push_back(fnt.parse(information->TableNameFnt[i], information));
     }
 
     // read CellMap(SSCE) & Collect Texture-FileNames
+    information->TableInformationSSCE = {};
     for (int i=0; i<information->TableNameSSCE.size(); i++) {
         SpriteStudio::SSCE ssce;
-        information->TableInformationSSCE[i] = ssce.parse(information->TableNameSSCE[i], information);
+        information->TableInformationSSCE.push_back(ssce.parse(information->TableNameSSCE[i], information));
+    }
+
+    information->TableInformationSSAE = {};
+    for (int i=0; i<information->TableNameSSAE.size(); i++) {
+        SpriteStudio::SSAE ssae;
+        information->TableInformationSSAE.push_back(ssae.parse(information->TableNameSSAE[i], information));
     }
 }
 

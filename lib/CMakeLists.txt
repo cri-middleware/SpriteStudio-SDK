@@ -74,6 +74,7 @@ set(SsConverter3Lib_SRCS
         src/ssse.cpp
         src/fnt.cpp
         src/ssce.cpp
+        src/ssae.cpp
 )
 
 set(SsConverter3Lib_HEADERS
