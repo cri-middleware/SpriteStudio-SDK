@@ -7,12 +7,12 @@ namespace SpriteStudio {
     enum class Version : uint32_t {
         ERROR = 0x00000000,
         CODE_010000 = 0x00010000,
-        CODE_020000 = 0x00020000, /* after SS6.0.0 beta */
-        CODE_020001 = 0x00020001, /* after SS6.0.0 */
-        CODE_020003 = 0x00020003, /* after SS6.2.0 */
-        CODE_020004 = 0x00020004, /* after SS6.3.0 */
-
-        CODE_020100 = 0x00020100, /* after SS7.1.0 */
+        CODE_020000 = 0x00020000,
+        CODE_020001 = 0x00020001,
+        CODE_020003 = 0x00020003,
+        CODE_020004 = 0x00020004,
+        CODE_020100 = 0x00020100,
+        CODE_020101 = 0x00020101,
     };
 
     // enum値と文字列の対応を定義するmap
@@ -23,5 +23,6 @@ namespace SpriteStudio {
         {static_cast<uint32_t>(Version::CODE_020003), "2.00.03"},
         {static_cast<uint32_t>(Version::CODE_020004), "2.00.04"},
         {static_cast<uint32_t>(Version::CODE_020100), "2.01.00"},
+        {static_cast<uint32_t>(Version::CODE_020100), "2.01.01"},
     };
 }

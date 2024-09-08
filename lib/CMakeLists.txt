@@ -79,6 +79,8 @@ set(SsConverter3Lib_SRCS
         src/ssqe.cpp
         src/util.cpp
         src/util.h
+        src/error.cpp
+        src/error.h
 )
 
 set(SsConverter3Lib_HEADERS

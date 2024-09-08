@@ -5,11 +5,13 @@
 #include "SSException.h"
 #include "SSConverter3Lib/ssce.h"
 
+#include "error.h"
 #include "util.h"
 #include "pugixml/pugixml.hpp"
 #include "SSConverter3Lib/sspj.h"
 
 using namespace SpriteStudio;
+const char* tag = "ssce";
 
 struct SSCE::Impl {
     std::shared_ptr<ss::ssfb2::CellT> parseCell(const pugi::xml_node& node);
@@ -36,7 +38,7 @@ SSCE::~SSCE() = default;
 std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssce_path = std::filesystem::path(ssce);
     if (!std::filesystem::exists(ssce_path)) {
-        throw SSException("not found a ssse file: " + ssce, -1);
+        throw error::getException(tag, "not found a ssse file: " + ssce, -1);
     }
 
     pugi::xml_document doc;
@@ -63,7 +65,7 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
     auto versionText = std::string(attr.as_string());
     ssceInfo->version = static_cast<SSCEVersion>(util::getVersion(versionText, SSCEVersionMap));
     if (ssceInfo->version == SSCEVersion::ERROR) {
-        throw SSException("Unknown Version: " + versionText, -1);
+        throw error::getException(tag, "Unknown Version: " + versionText + " of ssce: " + ssce, -1);
     }
 
 

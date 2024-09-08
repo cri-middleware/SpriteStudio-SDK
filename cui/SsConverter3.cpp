@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
             auto outputPath = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
             convert(filePath, outputPath);
         } catch(std::exception &e) {
+            std::cerr << e.what() << std::endl;
             return 1;
         }
     }
