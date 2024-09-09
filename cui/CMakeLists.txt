@@ -34,3 +34,13 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../lib)
 
 add_executable(SsConverter3 ${SsConverter3Cui_SRCS} ${SsConverter3Cui_HEADERS} ${SsConverter3Cui_EXTEND_SRCS})
 target_link_libraries(SsConverter3 PRIVATE SsConverter3Lib)
+
+if (ENABLE_CTEST)
+    enable_testing()
+    add_test(NAME allAttributeV6 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/SsConverter3 ${CMAKE_CURRENT_SOURCE_DIR}/../test_data/allAttributeV6/allAttributeV6.sspj)
+    add_test(NAME allAttributeV7 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/SsConverter3 ${CMAKE_CURRENT_SOURCE_DIR}/../test_data/allAttributeV7/allAttributeV7.sspj)
+    add_test(NAME allPartsV6 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/SsConverter3 ${CMAKE_CURRENT_SOURCE_DIR}/../test_data/allPartsV6/allPartsV6.sspj)
+    add_test(NAME allPartsV7 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/SsConverter3 ${CMAKE_CURRENT_SOURCE_DIR}/../test_data/allPartsV7/allPartsV7.sspj)
+    add_test(NAME effect_allcheck COMMAND ${CMAKE_CURRENT_BINARY_DIR}/SsConverter3 ${CMAKE_CURRENT_SOURCE_DIR}/../test_data/effect_allcheck/effect_allcheck.sspj)
+    add_test(NAME MeshBone COMMAND ${CMAKE_CURRENT_BINARY_DIR}/SsConverter3 ${CMAKE_CURRENT_SOURCE_DIR}/../test_data/MeshBone/knight.sspj)
+endif ()
