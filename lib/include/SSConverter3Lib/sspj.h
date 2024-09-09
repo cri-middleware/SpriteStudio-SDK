@@ -125,6 +125,7 @@ namespace SpriteStudio {
 
     public:
         int addTexture(const std::string& nameTexture);
+        int addTextureExternal(const std::string& nameTexture, int indexTexture, int flagTexture);
     };
 
     class SSPJ {

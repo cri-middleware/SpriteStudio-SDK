@@ -9,8 +9,10 @@
 #include "util.h"
 #include "pugixml/pugixml.hpp"
 #include "SSConverter3Lib/sspj.h"
+#include "error.h"
 
 using namespace SpriteStudio;
+const DocPartType DOC_PART = DocPartType::SSAE;
 
 struct SSAE::Impl {
     void parseSettings(const std::shared_ptr<SSAEInformation>& ssaeInfo, const pugi::xml_node& node);
@@ -41,7 +43,7 @@ SSAE::~SSAE() = default;
 std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssae_path = std::filesystem::path(ssae);
     if (!std::filesystem::exists(ssae_path)) {
-        throw SSException("not found a ssae file: " + ssae, -1);
+        throw error::getException(DOC_PART, "not found a file: " + ssae, -1);
     }
 
     pugi::xml_document doc;

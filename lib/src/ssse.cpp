@@ -2,10 +2,13 @@
 
 #include "SSException.h"
 #include "SSConverter3Lib/ssse.h"
+
+#include "error.h"
 #include "pugixml/pugixml.hpp"
 #include "util.h"
 
 using namespace SpriteStudio;
+const DocPartType DOC_PART = DocPartType::SSSE;
 
 std::string SSSEInformation::NameDirectory() {
     return util::getNameDirectory(ssse);
@@ -22,28 +25,28 @@ std::string SSSEInformation::NameFileExtension() {
 std::shared_ptr<SSSEInformation> SSSE::parse(const std::string& ssse, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssse_path = std::filesystem::path(ssse);
     if (!std::filesystem::exists(ssse_path)) {
-        throw SSException("not found a ssse file: " + ssse, -1);
+        throw error::getException(DOC_PART, "not found a file: " + ssse, -1);
     }
 
     pugi::xml_document doc;
     auto result = doc.load_file(ssse_path.c_str());
     if (!result) {
-        throw SSException("failed loading a ssse file", -1);
+        throw error::getException(DOC_PART, "failed loading a file: " + ssse, -1);
     }
 
     auto nodeRoot = doc.first_child();
     if (std::string(nodeRoot.name()) != "SpriteStudioSoundList") {
-        throw SSException("invalid ssse format", -1);
+        throw error::getException(DOC_PART, "invalid format: " + ssse, -1);
     }
 
     auto ssseInfo = std::make_shared<SSSEInformation>();
     if (ssseInfo == nullptr) {
-        throw SSException("not enough memory", -1);
+        throw error::getException(DOC_PART,"not enough memory", -1);
     }
 
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
-        throw SSException("invalid sspj format", -1);
+        throw error::getException(DOC_PART, "invalid format: " + ssse, -1);
     }
     auto versionText = std::string(attr.as_string());
 
@@ -75,7 +78,7 @@ std::shared_ptr<SSSEInformation> SSSE::parse(const std::string& ssse, const std:
     auto xpath_node_set = getList("table/sounds/value");
     std::vector<std::shared_ptr<ss::ssfb2::LibraryDataSoundT>> tableSound = {};
     if (xpath_node_set.empty()) {
-        throw SSException("not found cell nodes", -1);
+        throw error::getException(DOC_PART, "not found cell nodes: " + ssse, -1);
     } else {
         for(const auto& xpath_node : xpath_node_set) {
             node = xpath_node.node();

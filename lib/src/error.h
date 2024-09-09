@@ -1,16 +1,24 @@
 #pragma once
+#include <map>
 #include <string>
 
 #include "SSException.h"
 
 namespace SpriteStudio {
-    enum class XmlType : uint32_t {
+    enum class DocPartType : uint32_t {
         SSPJ,
-
+        SSCE,
+        SSAE,
+        SSEE,
+        SSQE,
+        SSSE,
+        FNT,
     };
+
+
     class error {
     public:
-        static std::string getErrorMessage(const std::string& tag, const std::string& message);
-        static SSException getException(const std::string& tag, const std::string& message, int code);
+        static std::string getErrorMessage(DocPartType docPartType, const std::string& message);
+        static SSException getException(DocPartType docPartType, const std::string& message, int code);
     };
 }
