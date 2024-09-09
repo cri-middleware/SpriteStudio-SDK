@@ -80,7 +80,7 @@ namespace SpriteStudio {
         std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
 
         // SSCE::Information::Texture[] TableInformationTextureExternal;
-        // std::vector<TextureExternal> ListTextureExternal;	/* Temporary ... Accumulating list for determine TableInformationTextureExternal. Valid during analyzing SSxx-s. */
+        std::vector<std::tuple<std::string, int, int>> ListTextureExternal;	/* Temporary ... Accumulating list for determine TableInformationTextureExternal. Valid during analyzing SSxx-s. */
 
 
         std::string NameDirectoryBaseSSCE;

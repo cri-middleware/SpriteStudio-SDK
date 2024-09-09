@@ -4,6 +4,7 @@
 #include <map>
 
 #include "version.h"
+#include "ssfb2/common_ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSPJInformation;
@@ -19,16 +20,25 @@ namespace SpriteStudio {
     };
 
     class SSQEInformation {
+    public:
         std::string ssqe;
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
 
         SSQEVersion version;
+
+        std::string Name;
+        std::string ExportPath;
+        std::vector<std::shared_ptr<ss::ssfb2::DataSequenceT>> SequenceList;
+
+        // public List<InUseAnimation> ListInUseAnimation; // TODO: impl
+
+        // public LibraryEditor_SpriteStudio6.Import.Assets<Script_SpriteStudio6_DataSequence> DataSequenceSS6PU;
     };
 
     class SSQE {
     public:
-
+        std::shared_ptr<SSQEInformation> parse(const std::string& ssqe, const std::shared_ptr<SSPJInformation> &sspjInfo);
     };
 }

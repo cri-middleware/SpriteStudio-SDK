@@ -82,6 +82,40 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     for (auto& f : ssaeFeatures) {
         sspjInfo->TableInformationSSAE.push_back(f.get());
     }
+
+    // TODO: impl
+    /*
+    std::vector<std::future<std::shared_ptr<SpriteStudio::SSEEInformation>>> sseeFeatures;
+    for (int i=0; i<sspjInfo->TableNameSSEE.size(); i++) {
+        auto sseeStr = sspjInfo->TableNameSSEE[i];
+        sseeFeatures.push_back(
+            std::async(std::launch::async, [sseeStr, &sspjInfo] {
+                SpriteStudio::SSEE ssee;
+                return ssee.parse(sseeStr, sspjInfo);
+            })
+        );
+    }
+    sspjInfo->TableInformationSSEE = {};
+    for (auto& f : sseeFeatures) {
+        sspjInfo->TableInformationSSEE.push_back(f.get());
+    }
+    */
+
+    std::vector<std::future<std::shared_ptr<SpriteStudio::SSQEInformation>>> ssqeFeatures;
+    for (int i=0; i<sspjInfo->TableNameSSQE.size(); i++) {
+        auto ssqeStr = sspjInfo->TableNameSSQE[i];
+        ssqeFeatures.push_back(
+            std::async(std::launch::async, [ssqeStr, &sspjInfo] {
+                SpriteStudio::SSQE ssqe;
+                return ssqe.parse(ssqeStr, sspjInfo);
+            })
+        );
+    }
+    sspjInfo->TableInformationSSQE = {};
+    for (auto& f : ssqeFeatures) {
+        sspjInfo->TableInformationSSQE.push_back(f.get());
+    }
+
 }
 
 int main(int argc, char *argv[]) {

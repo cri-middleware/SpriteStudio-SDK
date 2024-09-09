@@ -11,11 +11,14 @@ namespace SpriteStudio {
 
     enum class SSCEVersion : uint32_t {
         ERROR = static_cast<uint32_t>(Version::ERROR),
+        CODE_010001 = static_cast<uint32_t>(Version::CODE_010001),
         CODE_020000 = static_cast<uint32_t>(Version::CODE_020000),
         CODE_020101 = static_cast<uint32_t>(Version::CODE_020101),
     };
     const std::map<uint32_t, std::string> SSCEVersionMap = {
+        {static_cast<uint32_t>(SSCEVersion::CODE_010001), VersionToStringMap.at(static_cast<uint32_t>(SSCEVersion::CODE_010001))},
         {static_cast<uint32_t>(SSCEVersion::CODE_020000), VersionToStringMap.at(static_cast<uint32_t>(SSCEVersion::CODE_020000))},
+        {static_cast<uint32_t>(SSCEVersion::CODE_020101), VersionToStringMap.at(static_cast<uint32_t>(SSCEVersion::CODE_020101))},
     };
 
     class SSCEInformation {

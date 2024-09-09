@@ -29,7 +29,7 @@ std::string SSPJInformation::NameFileExtension() const {
 int SSPJInformation::addTexture(const std::string &nameTexture) {
     int index;
     auto result = std::find(ListNameTexture.begin(), ListNameTexture.end(), nameTexture);
-    if (result != ListNameTexture.end()) {
+    if (result == ListNameTexture.end()) {
         ListNameTexture.push_back(nameTexture);
         index = static_cast<int>(ListNameTexture.size() - 1);
     } else {
@@ -40,7 +40,17 @@ int SSPJInformation::addTexture(const std::string &nameTexture) {
 }
 
 int SSPJInformation::addTextureExternal(const std::string &nameTexture, int indexTexture, int flagTexture) {
+    int index;
+    auto item = std::make_tuple(nameTexture, indexTexture, flagTexture);
+    auto result = std::find(ListTextureExternal.begin(), ListTextureExternal.end(), item);
+    if (result == ListTextureExternal.end()) {
+        ListTextureExternal.push_back(item);
+        index = static_cast<int>(ListTextureExternal.size() - 1);
+    } else {
+        index = static_cast<int>(std::distance(ListTextureExternal.begin(), result));
+    }
 
+    return index;
 }
 
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
@@ -84,7 +94,6 @@ std::shared_ptr<SSPJInformation> SSPJ::parse(const std::string &sspj) {
     // settings
     pImpl->parseSettings(sspjInfo, sspj_path, nodeRoot.child("settings"));
 
-    // cellmap
     pImpl->parseValues(sspjInfo, nodeRoot);
 
     return sspjInfo;
@@ -250,7 +259,14 @@ void SSPJ::Impl::parseValues(std::shared_ptr<SSPJInformation> &information, cons
         }
     }
 
-
     // get External-Texture List FileNames
-    // TODO: Impl
+    xpath_node_set = getList("ExternalTextures/files/value");
+    for (const auto& xpath_node : xpath_node_set) {
+        auto node = xpath_node.node();
+        auto pathTexture = std::string(node.child("PathName").text().as_string());
+        auto index = node.child("index").text().as_int();
+        auto flags = node.child("flags").text().as_int();
+        information->addTextureExternal(pathTexture, index, flags);
+    }
+
 }
