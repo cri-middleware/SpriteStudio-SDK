@@ -22,11 +22,22 @@ const std::map<DocPartType, uint32_t> DocPartTypeErrorBitFieldMap = {
     { DocPartType::FNT,  0x00400000 },
 };
 
-std::string error::getErrorMessage(DocPartType docPartType, const std::string &message) {
-    return "Error: " + DocPartTypeStringMap.at(docPartType) + ": " + message;
+const std::map<PhaseType, std::string> PhaseTypeStringMap = {
+    {PhaseType::PARSE, "parse"},
+    {PhaseType::CONVERT, "convert"},
+};
+
+const std::map<PhaseType, uint32_t> PhaseTypeBitFieldMap = {
+    {PhaseType::PARSE, 0x01000000},
+    {PhaseType::CONVERT, 0x02000000},
+};
+
+std::string error::getErrorMessage(PhaseType phaseType, DocPartType docPartType, const std::string& message) {
+    return "Error: Phase: " + PhaseTypeStringMap.at(phaseType) + " Type: " + DocPartTypeStringMap.at(docPartType) + ": " + message;
 }
 
-SSException error::getException(DocPartType docPartType, const std::string &message, int code) {
-    std::string msg = getErrorMessage(docPartType, message);
-    return SSException(msg, DocPartTypeErrorBitFieldMap.at(docPartType) | code);
+SSException error::getException(PhaseType phaseType, DocPartType docPartType, const std::string &message, int code) {
+    std::string msg = getErrorMessage(phaseType, docPartType, message);
+    int combineCode = static_cast<int>(PhaseTypeBitFieldMap.at(phaseType)) | static_cast<int>(DocPartTypeErrorBitFieldMap.at(docPartType)) | code;
+    return SSException(msg, combineCode);
 }

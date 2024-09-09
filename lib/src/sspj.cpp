@@ -7,6 +7,7 @@
 #include "error.h"
 
 using namespace SpriteStudio;
+const PhaseType PHASE = PhaseType::PARSE;
 const DocPartType DOC_PART = DocPartType::SSPJ;
 
 struct SSPJ::Impl {
@@ -61,34 +62,34 @@ SSPJ::~SSPJ() = default;
 std::shared_ptr<SSPJInformation> SSPJ::parse(const std::string &sspj) {
     auto sspj_path = std::filesystem::path(sspj);
     if (!std::filesystem::exists(sspj_path)) {
-        throw error::getException(DOC_PART, "not found a file: " + sspj, -1);
+        throw error::getException(PHASE, DOC_PART, "not found a file: " + sspj, -1);
     }
 
     pugi::xml_document doc;
     auto result = doc.load_file(sspj.c_str());
     if (!result) {
-        throw error::getException(DOC_PART, "failed loading a file: " + sspj, -1);
+        throw error::getException(PHASE, DOC_PART, "failed loading a file: " + sspj, -1);
     }
 
     auto nodeRoot = doc.first_child();
     if (std::string(nodeRoot.name()) != "SpriteStudioProject") {
-        throw error::getException(DOC_PART, "invalid format: " + sspj, -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + sspj, -1);
     }
 
     auto sspjInfo = std::make_shared<SSPJInformation>();
     if (sspjInfo == nullptr) {
-        throw error::getException(DOC_PART,"not enough memory", -1);
+        throw error::getException(PHASE, DOC_PART,"not enough memory", -1);
     }
     sspjInfo->sspj = sspj;
 
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
-        throw error::getException(DOC_PART, "invalid format: " + sspj, -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + sspj, -1);
     }
     auto versionText = std::string(attr.as_string());
     sspjInfo->version = static_cast<SSPJVersion>(util::getVersion(versionText, SSPJVersionMap));
     if (sspjInfo->version == SSPJVersion::ERROR) {
-        throw error::getException(DOC_PART, "Unknown Version: " + versionText + " file: " + sspj, -1);
+        throw error::getException(PHASE, DOC_PART, "Unknown Version: " + versionText + " file: " + sspj, -1);
     }
 
     // settings

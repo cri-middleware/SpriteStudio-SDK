@@ -12,6 +12,7 @@
 #include "error.h"
 
 using namespace SpriteStudio;
+const PhaseType PHASE = PhaseType::PARSE;
 const DocPartType DOC_PART = DocPartType::SSAE;
 
 struct SSAE::Impl {
@@ -43,7 +44,7 @@ SSAE::~SSAE() = default;
 std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssae_path = std::filesystem::path(ssae);
     if (!std::filesystem::exists(ssae_path)) {
-        throw error::getException(DOC_PART, "not found a file: " + ssae, -1);
+        throw error::getException(PHASE, DOC_PART, "not found a file: " + ssae, -1);
     }
 
     pugi::xml_document doc;

@@ -8,6 +8,7 @@
 #include "util.h"
 
 using namespace SpriteStudio;
+const PhaseType PHASE = PhaseType::PARSE;
 const DocPartType DOC_PART = DocPartType::SSQE;
 
 std::string SSQEInformation::NameDirectory() const {
@@ -25,18 +26,18 @@ std::string SSQEInformation::NameFileExtension() const {
 std::shared_ptr<SSQEInformation> SSQE::parse(const std::string &ssqe, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssqe_path = std::filesystem::path(ssqe);
     if (!std::filesystem::exists(ssqe_path)) {
-        throw error::getException(DOC_PART, "not found a file: " + ssqe, -1);
+        throw error::getException(PHASE, DOC_PART, "not found a file: " + ssqe, -1);
     }
 
     pugi::xml_document doc;
     auto result = doc.load_file(ssqe_path.c_str());
     if (!result) {
-        throw error::getException(DOC_PART, "failed loading a file: " + ssqe, -1);
+        throw error::getException(PHASE, DOC_PART, "failed loading a file: " + ssqe, -1);
     }
 
     auto nodeRoot = doc.first_child();
     if (std::string(nodeRoot.name()) != "SpriteStudioSequencePack") {
-        throw error::getException(DOC_PART, "invalid format: " + ssqe, -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + ssqe, -1);
     }
 
     auto ssqeInfo = std::make_shared<SSQEInformation>();
@@ -47,12 +48,12 @@ std::shared_ptr<SSQEInformation> SSQE::parse(const std::string &ssqe, const std:
 
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
-        throw error::getException(DOC_PART, "invalid format: " + ssqe, -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + ssqe, -1);
     }
     auto versionText = std::string(attr.as_string());
     ssqeInfo->version = static_cast<SSQEVersion>(util::getVersion(versionText, SSQEVersionMap));
     if (ssqeInfo->version == SSQEVersion::ERROR) {
-        throw error::getException(DOC_PART, "Unknown Version: " + versionText + " file: " + ssqe, -1);
+        throw error::getException(PHASE, DOC_PART, "Unknown Version: " + versionText + " file: " + ssqe, -1);
     }
 
     auto getValueText = [&nodeRoot](const std::string &query) -> std::tuple<std::string, pugi::xml_node> {

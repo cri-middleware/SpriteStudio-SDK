@@ -11,6 +11,7 @@
 #include "SSConverter3Lib/sspj.h"
 
 using namespace SpriteStudio;
+const PhaseType PHASE = PhaseType::PARSE;
 const DocPartType DOC_PART = DocPartType::SSCE;
 
 struct SSCE::Impl {
@@ -38,18 +39,18 @@ SSCE::~SSCE() = default;
 std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssce_path = std::filesystem::path(ssce);
     if (!std::filesystem::exists(ssce_path)) {
-        throw error::getException(DOC_PART, "not found a file: " + ssce, -1);
+        throw error::getException(PHASE, DOC_PART, "not found a file: " + ssce, -1);
     }
 
     pugi::xml_document doc;
     auto result = doc.load_file(ssce_path.c_str());
     if (!result) {
-        throw error::getException(DOC_PART, "failed loading a file: " + ssce, -1);
+        throw error::getException(PHASE, DOC_PART, "failed loading a file: " + ssce, -1);
     }
 
     auto nodeRoot = doc.first_child();
     if (std::string(nodeRoot.name()) != "SpriteStudioCellMap") {
-        throw error::getException(DOC_PART, "invalid format: " + ssce, -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + ssce, -1);
     }
 
     auto ssceInfo = std::make_shared<SSCEInformation>();
@@ -60,12 +61,12 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
 
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
-        throw error::getException(DOC_PART, "invalid format: " + ssce, -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + ssce, -1);
     }
     auto versionText = std::string(attr.as_string());
     ssceInfo->version = static_cast<SSCEVersion>(util::getVersion(versionText, SSCEVersionMap));
     if (ssceInfo->version == SSCEVersion::ERROR) {
-        throw error::getException(DOC_PART, "Unknown Version: " + versionText + " file: " + ssce, -1);
+        throw error::getException(PHASE, DOC_PART, "Unknown Version: " + versionText + " file: " + ssce, -1);
     }
 
 
@@ -160,7 +161,7 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
     // get Cells
     auto xpath_node_set = getList("cells/cell");
     if (xpath_node_set.empty()) {
-        throw error::getException(DOC_PART,"not found cell nodes: " + ssce, -1);
+        throw error::getException(PHASE, DOC_PART,"not found cell nodes: " + ssce, -1);
     }
     std::vector<std::shared_ptr<ss::ssfb2::CellT>> listCell;
     for(const auto& xpath_node : xpath_node_set) {
@@ -185,7 +186,7 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
 
     valueText = std::string(node.child("name").text().as_string());
     if (valueText.empty()) {
-        throw error::getException(DOC_PART, "unnamed cell was found: ", -1);
+        throw error::getException(PHASE, DOC_PART, "unnamed cell was found: ", -1);
     }
     cell->name = valueText;
 
