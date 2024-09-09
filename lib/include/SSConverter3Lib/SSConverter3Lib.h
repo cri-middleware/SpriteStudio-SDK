@@ -1,18 +1,10 @@
 #pragma once
 
-#include "ssfb2/common_ssfb2_generated.h"
-#include "ssfb2/sse2_generated.h"
-#include "ssfb2/ssa2_generated.h"
-#include "ssfb2/ssc2_generated.h"
-#include "ssfb2/ssq2_generated.h"
-#include "ssfb2/ssf2_generated.h"
-#include "ssfb2/ssfb2_generated.h"
-#include "ssfb2/sss2_generated.h"
+#include <string>
 
-#include "sspj.h"
-#include "ssse.h"
-#include "fnt.h"
-#include "ssce.h"
-#include "ssae.h"
-#include "ssee.h"
-#include "ssqe.h"
+namespace SpriteStudio {
+    class SSConverter3Lib {
+    public:
+        static void convert(const std::string &input, const std::string &outputDir);
+    };
+}
