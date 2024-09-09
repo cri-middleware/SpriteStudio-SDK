@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <filesystem>
+#include <future>
 
 #include <SSConverter3Lib/SSConverter3Lib.h>
 #include <argparse/argparse.hpp>
@@ -19,30 +20,67 @@ void convert(const std::filesystem::path &inputPath, const std::filesystem::path
     auto sspjInfo = sspj.parse(inputPath.string());
 
     // read Audio pack (SSSE)
-    sspjInfo->TableInformationSSSE = {};
+    std::vector<std::future<std::shared_ptr<SpriteStudio::SSSEInformation>>> ssseFeatures;
     for (int i=0; i<sspjInfo->TableNameSSSE.size(); i++) {
-        SpriteStudio::SSSE ssse;
-        sspjInfo->TableInformationSSSE.push_back(ssse.parse(sspjInfo->TableNameSSSE[i], sspjInfo));
+        auto ssseStr = sspjInfo->TableNameSSSE[i];
+        ssseFeatures.push_back(
+            std::async(std::launch::async, [ssseStr, &sspjInfo] {
+                SpriteStudio::SSSE ssse;
+                return ssse.parse(ssseStr, sspjInfo);
+            })
+        );
+    }
+    sspjInfo->TableInformationSSSE = {};
+    for (auto& f : ssseFeatures) {
+        sspjInfo->TableInformationSSSE.push_back(f.get());
     }
 
     // read Font-Bitmap (Fnt)
-    sspjInfo->TableInformationFnt = {};
+    std::vector<std::future<std::shared_ptr<SpriteStudio::FntInformation>>> fntFeatures;
     for (int i=0; i<sspjInfo->TableNameFnt.size(); i++) {
-        SpriteStudio::Fnt fnt;
-        sspjInfo->TableInformationFnt.push_back(fnt.parse(sspjInfo->TableNameFnt[i], sspjInfo));
+        auto fntStr = sspjInfo->TableNameFnt[i];
+        fntFeatures.push_back(
+            std::async(std::launch::async, [fntStr, &sspjInfo] {
+                SpriteStudio::Fnt fnt;
+                return fnt.parse(fntStr, sspjInfo);
+            })
+        );
     }
+    sspjInfo->TableInformationFnt = {};
+    for (auto & f : fntFeatures) {
+        sspjInfo->TableInformationFnt.push_back(f.get());
+    }
+
 
     // read CellMap(SSCE) & Collect Texture-FileNames
-    sspjInfo->TableInformationSSCE = {};
+    std::vector<std::future<std::shared_ptr<SpriteStudio::SSCEInformation>>> ssceFeatures;
     for (int i=0; i<sspjInfo->TableNameSSCE.size(); i++) {
-        SpriteStudio::SSCE ssce;
-        sspjInfo->TableInformationSSCE.push_back(ssce.parse(sspjInfo->TableNameSSCE[i], sspjInfo));
+        auto ssceStr = sspjInfo->TableNameSSCE[i];
+        ssceFeatures.push_back(
+            std::async(std::launch::async, [ssceStr, &sspjInfo] {
+                SpriteStudio::SSCE ssce;
+                return ssce.parse(ssceStr, sspjInfo);
+            })
+        );
+    }
+    sspjInfo->TableInformationSSCE = {};
+    for (auto& f : ssceFeatures) {
+        sspjInfo->TableInformationSSCE.push_back(f.get());
     }
 
-    sspjInfo->TableInformationSSAE = {};
+    std::vector<std::future<std::shared_ptr<SpriteStudio::SSAEInformation>>> ssaeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSAE.size(); i++) {
-        SpriteStudio::SSAE ssae;
-        sspjInfo->TableInformationSSAE.push_back(ssae.parse(sspjInfo->TableNameSSAE[i], sspjInfo));
+        auto ssaeStr = sspjInfo->TableNameSSAE[i];
+        ssaeFeatures.push_back(
+            std::async(std::launch::async, [ssaeStr, &sspjInfo] {
+                SpriteStudio::SSAE ssae;
+                return ssae.parse(ssaeStr, sspjInfo);
+            })
+        );
+    }
+    sspjInfo->TableInformationSSAE = {};
+    for (auto& f : ssaeFeatures) {
+        sspjInfo->TableInformationSSAE.push_back(f.get());
     }
 }
 
