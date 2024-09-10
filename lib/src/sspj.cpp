@@ -28,6 +28,7 @@ std::string SSPJInformation::NameFileExtension() const {
 }
 
 int SSPJInformation::addTexture(const std::string &nameTexture) {
+    std::lock_guard<std::mutex> lock(m);
     int index;
     auto result = std::find(ListNameTexture.begin(), ListNameTexture.end(), nameTexture);
     if (result == ListNameTexture.end()) {
@@ -41,6 +42,7 @@ int SSPJInformation::addTexture(const std::string &nameTexture) {
 }
 
 int SSPJInformation::addTextureExternal(const std::string &nameTexture, int indexTexture, int flagTexture) {
+    std::lock_guard<std::mutex> lock(m);
     int index;
     auto item = std::make_tuple(nameTexture, indexTexture, flagTexture);
     auto result = std::find(ListTextureExternal.begin(), ListTextureExternal.end(), item);

@@ -21,8 +21,6 @@ struct SSConverter3Lib::Impl {
 };
 
 std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath) {
-    int max_threads = std::thread::hardware_concurrency();
-
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());
 

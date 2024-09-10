@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "version.h"
 #include "ssfb2/ssfb2_generated.h"
@@ -124,6 +125,7 @@ namespace SpriteStudio {
         KindCoordUnit CoordUnit;
 
     public:
+        std::mutex m;
         int addTexture(const std::string& nameTexture);
         int addTextureExternal(const std::string& nameTexture, int indexTexture, int flagTexture);
     };

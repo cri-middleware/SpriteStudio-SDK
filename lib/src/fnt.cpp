@@ -5,7 +5,6 @@
 
 #include "error.h"
 #include "util.h"
-#include "SSConverter3Lib/SSConverter3Lib.h"
 
 using namespace SpriteStudio;
 const PhaseType PHASE = PhaseType::PARSE;
