@@ -22,6 +22,9 @@ struct SSAE::Impl {
     static ss::ssfb2::DataModelPartsKindFeature getPartType(const std::string& valueText);
 
     static std::tuple<ss::ssfb2::KindCollision, int> getCollisionType(const std::string& valueText, float Collider_SizeZ);
+
+    static ss::ssfb2::KindOperationBlend getAlphaBlendType(const std::string& valueText);
+
 };
 
 std::string SSAEInformation::NameDirectory() const {
@@ -187,12 +190,44 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> SSAE::Impl::parsePa
 
     /* Get "Inheritance" Datas */
     // TODO: impl
-    valueText = std::string(node.child("inheritType").text().as_string());
-    ss::ssfb2::AnimationAttributeFlagBit status = ss::ssfb2::AnimationAttributeFlagBit::CLEAR;
-    if (valueText == "self") {
+    //valueText = std::string(node.child("inheritType").text().as_string());
+    //ss::ssfb2::AnimationAttributeFlagBit status = ss::ssfb2::AnimationAttributeFlagBit::CLEAR;
+    //if (valueText == "self") {
+    //}
+    //artData->status = status;
 
+    // get Target-Blending
+    valueText = std::string(node.child("alphaBlendType").text().as_string());
+    partData->operation_blend_target = getAlphaBlendType(valueText);
+
+    // get Parts Show(Hide)
+    auto valueBool = node.child("show").text().as_bool(false);
+    if (valueBool) {
+        partData->status = static_cast<ss::ssfb2::AnimationAttributeFlagBit>(static_cast<uint32_t>(partData->status) | static_cast<uint32_t>(ss::ssfb2::AnimationAttributeFlagBit::HIDE));
     }
-    partData->status = status;
+
+    // get Mask-Targeting
+    valueBool = node.child("maskInfluence").text().as_bool(false);
+    if (valueBool) {
+        partData->status = static_cast<ss::ssfb2::AnimationAttributeFlagBit>(static_cast<uint32_t>(partData->status) | static_cast<uint32_t>(ss::ssfb2::AnimationAttributeFlagBit::MASK));
+    }
+
+    // UnderControl Data Get
+    if (partData->feature == ss::ssfb2::DataModelPartsKindFeature::Instance) {
+        valueText = std::string(node.child("refAnimePack").text().as_string());
+        if (!valueText.empty()) {
+            // partData->name_under_control = valueText;
+
+            valueText = std::string(node.child("refAnime").text().as_string());
+            partData->name_animation_under_control = valueText.empty() ? "" : valueText;
+        }
+    } else if (partData->feature == ss::ssfb2::DataModelPartsKindFeature::Effect) {
+        valueText = std::string(node.child("refEffectName").text().as_string());
+        if (!valueText.empty()) {
+            // partData->name_under_control = valueText; // TODO: impl
+            partData->name_animation_under_control = "";
+        }
+    }
 
     return std::make_tuple(indexPart, partData);
 }
@@ -266,4 +301,29 @@ std::tuple<ss::ssfb2::KindCollision, int> SSAE::Impl::getCollisionType(const std
     }
 
     return std::make_tuple(collision, sizeCollision);
+}
+
+ss::ssfb2::KindOperationBlend SSAE::Impl::getAlphaBlendType(const std::string &valueText) {
+    ss::ssfb2::KindOperationBlend operationBlend;
+
+    if (valueText == "mul") {
+        operationBlend = ss::ssfb2::KindOperationBlend::MulNa;
+    } else if (valueText == "add") {
+        operationBlend = ss::ssfb2::KindOperationBlend::Add;
+    } else if (valueText == "sub") {
+        operationBlend = ss::ssfb2::KindOperationBlend::Sub;
+    } else if (valueText == "mulalpha" || valueText == "mul2") {
+        operationBlend = ss::ssfb2::KindOperationBlend::Mul;
+    } else if (valueText == "screen" || valueText == "screen2") {
+        operationBlend = ss::ssfb2::KindOperationBlend::Scr;
+    } else if (valueText == "exclusion") {
+        operationBlend = ss::ssfb2::KindOperationBlend::Exc;
+    } else if (valueText == "invert") {
+        operationBlend = ss::ssfb2::KindOperationBlend::Inv;
+    } else {
+        // "mix", "div2", "overlay2", else
+        operationBlend = ss::ssfb2::KindOperationBlend::Mix;
+    }
+
+    return operationBlend;
 }

@@ -1,0 +1,9 @@
+#pragma once
+#include <string>
+#include <filesystem>
+
+constexpr std::string_view ROOTDIR = "@TEST_ROOT_DIR@";
+constexpr std::string_view TESTDATADIR = "@TEST_DATA_DIR@";
+
+constexpr std::string_view sspj_files[] = {
+@SSPJ_FILE_LIST@};

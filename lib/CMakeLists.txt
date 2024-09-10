@@ -104,19 +104,18 @@ add_library(${PROJECT_NAME} ${SsConverter3Lib_SRCS} ${SsConverter3Lib_HEADERS} $
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${flatbuffers_SOURCE_DIR}/include)
 
-# if (ENABLE_CTEST)
-#     include(FetchContent)
-#     FetchContent_Declare(
-#             Catch2
-#             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-#             GIT_TAG        v3.7.0
-#     )
-#     FetchContent_MakeAvailable(Catch2)
-#
-#     add_executable(lib_tests tests/lib_tests.cpp)
-#
-#     target_link_libraries(lib_tests PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
-#     target_link_libraries(lib_tests PRIVATE ${PROJECT_NAME})
-#
-#     add_test(NAME LoaderUnitTests COMMAND lib_tests)
-# endif()
+if (ENABLE_CTEST)
+    INITIALIZE_TEST()
+
+    enable_testing()
+
+    # Create an executable target for your unit test
+    add_executable(lib_tests tests/lib_tests.cpp)
+
+    # Link your library and Catch2 to the test executable
+    target_link_libraries(lib_tests PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
+    target_link_libraries(lib_tests PRIVATE ${PROJECT_NAME})
+
+    # Define the test and specify the command to run
+    add_test(NAME converterTests COMMAND lib_tests)
+endif()

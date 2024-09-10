@@ -1,5 +1,7 @@
 include_guard()
 
+set(MACROS_DIR ${CMAKE_CURRENT_LIST_DIR})
+
 macro(OPTIONS)
     # ===================================================
     option(ENABLE_CCACHE "Enable ccache?" ON)
@@ -76,4 +78,32 @@ macro(INITIALIZE EXTEND_SOURCE_VAR)
         #endif()
     endif()
 
+endmacro()
+
+macro(INITIALIZE_TEST)
+    set(custom_cache_dir "${CMAKE_SOURCE_DIR}/.cache")
+    include(FetchContent)
+    FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG        v3.7.0
+            SOURCE_DIR     ${custom_cache_dir}/Catch2
+    )
+    FetchContent_MakeAvailable(Catch2)
+
+    # test data directory setting
+
+    get_filename_component(TEST_ROOT_DIR ${MACROS_DIR} DIRECTORY)
+    set(TEST_DATA_DIR "${TEST_ROOT_DIR}/test_data")
+
+    file(GLOB_RECURSE SSPJ_FOUND_FILES "${TEST_DATA_DIR}/*.sspj")
+    set(SSPJ_FILE_LIST "")
+    foreach(FILE_PATH ${SSPJ_FOUND_FILES})
+        file(RELATIVE_PATH RELATIVE_PATH "${TEST_DATA_DIR}" "${FILE_PATH}")
+        set(SSPJ_FILE_LIST "${SSPJ_FILE_LIST}\"${RELATIVE_PATH}\",\n")
+    endforeach()
+
+    configure_file(${MACROS_DIR}/test_config.h.in tests/test_config.h @ONLY)
+    include_directories(${CMAKE_CURRENT_BINARY_DIR}/tests)
+    include_directories(${MACROS_DIR})
 endmacro()
