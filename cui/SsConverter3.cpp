@@ -47,10 +47,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    auto output = program.present("-o");
     for(const auto& file : files) {
         try {
             auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
-            auto output = program.present("-o");
             auto outputPath = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
             SpriteStudio::SSConverter3Lib::convert(filePath.c_str(), outputPath.c_str());
         } catch(std::exception &e) {

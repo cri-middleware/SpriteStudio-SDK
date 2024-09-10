@@ -22,7 +22,6 @@ struct SSConverter3Lib::Impl {
 
 std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath) {
     int max_threads = std::thread::hardware_concurrency();
-    printf("max_threads:%d\n", max_threads);
 
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());
@@ -45,6 +44,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     for (auto& f : ssseFeatures) {
         sspjInfo->TableInformationSSSE.push_back(f.get());
     }
+    ssseFeatures.clear();
 
     // read Font-Bitmap (Fnt)
     std::vector<std::future<std::shared_ptr<SpriteStudio::FntInformation>>> fntFeatures;
@@ -64,7 +64,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     for (auto & f : fntFeatures) {
         sspjInfo->TableInformationFnt.push_back(f.get());
     }
-
+    fntFeatures.clear();
 
     // read CellMap(SSCE) & Collect Texture-FileNames
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSCEInformation>>> ssceFeatures;
@@ -84,6 +84,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     for (auto& f : ssceFeatures) {
         sspjInfo->TableInformationSSCE.push_back(f.get());
     }
+    ssceFeatures.clear();
 
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSAEInformation>>> ssaeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSAE.size(); i++) {
@@ -102,6 +103,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     for (auto& f : ssaeFeatures) {
         sspjInfo->TableInformationSSAE.push_back(f.get());
     }
+    ssaeFeatures.clear();
 
     // TODO: impl
     /*
@@ -138,6 +140,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     for (auto& f : ssqeFeatures) {
         sspjInfo->TableInformationSSQE.push_back(f.get());
     }
+    ssqeFeatures.clear();
 
     return sspjInfo;
 }
