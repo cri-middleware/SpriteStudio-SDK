@@ -42,6 +42,7 @@ SSAE::SSAE() : pImpl(std::make_unique<Impl>()) {
 SSAE::~SSAE() = default;
 
 std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std::shared_ptr<SSPJInformation> &sspjInfo) {
+    printf("ssae start: %s\n", ssae.c_str());
     auto ssae_path = std::filesystem::path(ssae);
     if (!std::filesystem::exists(ssae_path)) {
         throw error::getException(PHASE, DOC_PART, "not found a file: " + ssae, -1);
@@ -98,6 +99,7 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
     ssaeInfo->TableParts = tableParts;
 
     pImpl->parseSettings(ssaeInfo, nodeRoot.child("settings"));
+    printf("ssae end: %s\n", ssae.c_str());
     return ssaeInfo;
 }
 

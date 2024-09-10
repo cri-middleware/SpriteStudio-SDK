@@ -6,6 +6,8 @@ INITIALIZE(SsConverter3Lib_EXTEND_SRCS)
 
 PREPARE()
 
+CCACHE()
+
 # pugixml
 set(PugiXml_SRCS
         src/pugixml/pugixml.cpp
@@ -81,6 +83,8 @@ set(SsConverter3Lib_SRCS
         src/util.h
         src/error.cpp
         src/error.h
+        src/simpleSemaphore.cpp
+        src/simpleSemaphore.h
 )
 
 set(SsConverter3Lib_HEADERS
@@ -99,3 +103,20 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 add_library(${PROJECT_NAME} ${SsConverter3Lib_SRCS} ${SsConverter3Lib_HEADERS} ${SsConverter3Lib_EXTEND_SRCS} ${PROJECTDEPS_SRCS} ${PROJECTDEPS_HEADERS})
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${flatbuffers_SOURCE_DIR}/include)
+
+# if (ENABLE_CTEST)
+#     include(FetchContent)
+#     FetchContent_Declare(
+#             Catch2
+#             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+#             GIT_TAG        v3.7.0
+#     )
+#     FetchContent_MakeAvailable(Catch2)
+#
+#     add_executable(lib_tests tests/lib_tests.cpp)
+#
+#     target_link_libraries(lib_tests PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
+#     target_link_libraries(lib_tests PRIVATE ${PROJECT_NAME})
+#
+#     add_test(NAME LoaderUnitTests COMMAND lib_tests)
+# endif()

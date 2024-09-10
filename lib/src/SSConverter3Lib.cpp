@@ -12,19 +12,17 @@
 #include "SSConverter3Lib/ssee.h"
 #include "SSConverter3Lib/ssqe.h"
 
+#include "simpleSemaphore.h"
+
 using namespace SpriteStudio;
 
-void SSConverter3Lib::convert(const std::string &input, const std::string &outputDir) {
-    auto inputPath = std::filesystem::path(input);
-    auto outputDirPath = std::filesystem::path(outputDir);
+struct SSConverter3Lib::Impl {
+    std::shared_ptr<SSPJInformation> parseSSPJ(const std::filesystem::path &inputPath);
+};
 
-    auto inputName = inputPath.filename().stem().string();
-    auto inputExt = inputPath.filename().extension().stem().string().substr(1);
-
-    std::cout << "inputPath: " << inputPath << std::endl;
-    std::cout << "outputDirPath: " << outputDirPath << std::endl;;
-    std::cout << "inputName: " << inputName << std::endl;
-    std::cout << "inputExt: " << inputExt << std::endl;
+std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath) {
+    int max_threads = std::thread::hardware_concurrency();
+    printf("max_threads:%d\n", max_threads);
 
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());
@@ -33,10 +31,13 @@ void SSConverter3Lib::convert(const std::string &input, const std::string &outpu
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSSEInformation>>> ssseFeatures;
     for (int i=0; i<sspjInfo->TableNameSSSE.size(); i++) {
         auto ssseStr = sspjInfo->TableNameSSSE[i];
+        simpleSemaphore::getInstance()->aquire();
         ssseFeatures.push_back(
             std::async(std::launch::async, [ssseStr, &sspjInfo] {
                 SpriteStudio::SSSE ssse;
-                return ssse.parse(ssseStr, sspjInfo);
+                auto item = ssse.parse(ssseStr, sspjInfo);
+                simpleSemaphore::getInstance()->release();
+                return item;
             })
         );
     }
@@ -49,10 +50,13 @@ void SSConverter3Lib::convert(const std::string &input, const std::string &outpu
     std::vector<std::future<std::shared_ptr<SpriteStudio::FntInformation>>> fntFeatures;
     for (int i=0; i<sspjInfo->TableNameFnt.size(); i++) {
         auto fntStr = sspjInfo->TableNameFnt[i];
+        simpleSemaphore::getInstance()->aquire();
         fntFeatures.push_back(
             std::async(std::launch::async, [fntStr, &sspjInfo] {
                 SpriteStudio::Fnt fnt;
-                return fnt.parse(fntStr, sspjInfo);
+                auto item = fnt.parse(fntStr, sspjInfo);
+                simpleSemaphore::getInstance()->release();
+                return item;
             })
         );
     }
@@ -66,10 +70,13 @@ void SSConverter3Lib::convert(const std::string &input, const std::string &outpu
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSCEInformation>>> ssceFeatures;
     for (int i=0; i<sspjInfo->TableNameSSCE.size(); i++) {
         auto ssceStr = sspjInfo->TableNameSSCE[i];
+        simpleSemaphore::getInstance()->aquire();
         ssceFeatures.push_back(
             std::async(std::launch::async, [ssceStr, &sspjInfo] {
                 SpriteStudio::SSCE ssce;
-                return ssce.parse(ssceStr, sspjInfo);
+                auto item = ssce.parse(ssceStr, sspjInfo);
+                simpleSemaphore::getInstance()->release();
+                return item;
             })
         );
     }
@@ -81,10 +88,13 @@ void SSConverter3Lib::convert(const std::string &input, const std::string &outpu
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSAEInformation>>> ssaeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSAE.size(); i++) {
         auto ssaeStr = sspjInfo->TableNameSSAE[i];
+        simpleSemaphore::getInstance()->aquire();
         ssaeFeatures.push_back(
             std::async(std::launch::async, [ssaeStr, &sspjInfo] {
                 SpriteStudio::SSAE ssae;
-                return ssae.parse(ssaeStr, sspjInfo);
+                auto item = ssae.parse(ssaeStr, sspjInfo);
+                simpleSemaphore::getInstance()->release();
+                return item;
             })
         );
     }
@@ -114,10 +124,13 @@ void SSConverter3Lib::convert(const std::string &input, const std::string &outpu
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSQEInformation>>> ssqeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSQE.size(); i++) {
         auto ssqeStr = sspjInfo->TableNameSSQE[i];
+        simpleSemaphore::getInstance()->aquire();
         ssqeFeatures.push_back(
             std::async(std::launch::async, [ssqeStr, &sspjInfo] {
                 SpriteStudio::SSQE ssqe;
-                return ssqe.parse(ssqeStr, sspjInfo);
+                auto item = ssqe.parse(ssqeStr, sspjInfo);
+                simpleSemaphore::getInstance()->release();
+                return item;
             })
         );
     }
@@ -126,4 +139,16 @@ void SSConverter3Lib::convert(const std::string &input, const std::string &outpu
         sspjInfo->TableInformationSSQE.push_back(f.get());
     }
 
+    return sspjInfo;
+}
+
+std::unique_ptr<SSConverter3Lib::Impl> SSConverter3Lib::pImpl = std::make_unique<Impl>();
+
+void SSConverter3Lib::convert(const std::string &input, const std::string &outputDir) {
+    auto inputPath = std::filesystem::path(input);
+    auto outputDirPath = outputDir.empty() ? inputPath.parent_path() : std::filesystem::path(outputDir);
+    std::cout << "inputPath: " << inputPath << std::endl;
+    std::cout << "outputDirPath: " << outputDirPath << std::endl;
+
+    auto sspjInfo = SSConverter3Lib::pImpl->parseSSPJ(inputPath);
 }
