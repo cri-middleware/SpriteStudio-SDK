@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <SSConverter3Lib/SSConverter3Lib.h>
 #include <catch2/catch_test_macros.hpp>
 

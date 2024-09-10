@@ -113,7 +113,7 @@ if (ENABLE_CTEST)
     add_executable(lib_tests tests/lib_tests.cpp)
 
     # Link your library and Catch2 to the test executable
-    target_link_libraries(lib_tests PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
+    target_link_libraries(lib_tests PRIVATE Catch2::Catch2WithMain)
     target_link_libraries(lib_tests PRIVATE ${PROJECT_NAME})
 
     # Define the test and specify the command to run

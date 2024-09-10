@@ -81,13 +81,11 @@ macro(INITIALIZE EXTEND_SOURCE_VAR)
 endmacro()
 
 macro(INITIALIZE_TEST)
-    set(custom_cache_dir "${CMAKE_SOURCE_DIR}/.cache")
     include(FetchContent)
     FetchContent_Declare(
             Catch2
             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
             GIT_TAG        v3.7.0
-            SOURCE_DIR     ${custom_cache_dir}/Catch2
     )
     FetchContent_MakeAvailable(Catch2)
 
