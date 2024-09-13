@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
             auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
             auto outputPath = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
             SpriteStudio::SSConverter3Lib::convert(filePath.c_str(), outputPath.c_str());
-        } catch(std::exception &e) {
+        } catch(const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return 1;
         }

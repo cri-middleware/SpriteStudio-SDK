@@ -13,6 +13,7 @@
 #include "SSConverter3Lib/ssqe.h"
 
 #include "simpleSemaphore.h"
+#include "SSException.h"
 
 using namespace SpriteStudio;
 
@@ -36,7 +37,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
                     auto item = ssse.parse(ssseStr, sspjInfo);
                     simpleSemaphore::getInstance()->release();
                     return item;
-                } catch (std::exception &e) {
+                } catch (const SSException& e) {
                     simpleSemaphore::getInstance()->release();
                     throw e;
                 }
@@ -61,7 +62,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
                     auto item = fnt.parse(fntStr, sspjInfo);
                     simpleSemaphore::getInstance()->release();
                     return item;
-                } catch (std::exception &e) {
+                } catch (const SSException& e) {
                     simpleSemaphore::getInstance()->release();
                     throw e;
                 }
@@ -86,7 +87,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
                     auto item = ssce.parse(ssceStr, sspjInfo);
                     simpleSemaphore::getInstance()->release();
                     return item;
-                } catch (std::exception &e) {
+                } catch (const SSException& e) {
                     simpleSemaphore::getInstance()->release();
                     throw e;
                 }
@@ -110,7 +111,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
                     auto item = ssae.parse(ssaeStr, sspjInfo);
                     simpleSemaphore::getInstance()->release();
                     return item;
-                } catch (std::exception &e) {
+                } catch (const SSException& e) {
                     simpleSemaphore::getInstance()->release();
                     throw e;
                 }
@@ -134,7 +135,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
                     auto item = ssee.parse(sseeStr, sspjInfo);
                     simpleSemaphore::getInstance()->release();
                     return item;
-                } catch (std::exception& e) {
+                } catch (const SSException& e) {
                     simpleSemaphore::getInstance()->release();
                     throw e;
                 }
@@ -158,7 +159,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
                     auto item = ssqe.parse(ssqeStr, sspjInfo);
                     simpleSemaphore::getInstance()->release();
                     return item;
-                } catch (std::exception& e) {
+                } catch (const SSException& e) {
                     simpleSemaphore::getInstance()->release();
                     throw e;
                 }
