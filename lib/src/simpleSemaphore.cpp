@@ -4,10 +4,13 @@ using namespace SpriteStudio;
 
 std::shared_ptr<simpleSemaphore> simpleSemaphore::instance;
 
-void simpleSemaphore::aquire() {
+bool simpleSemaphore::acquire() {
     std::unique_lock<std::mutex> lock(m);
-    cv.wait(lock, [this] { return runningTask < maxThreads; });
+    if (!cv.wait_for(lock, timeout, [this] { return runningTask < maxThreads; })) {
+        return false;
+    }
     runningTask++;
+    return true;
 }
 
 void simpleSemaphore::release() {

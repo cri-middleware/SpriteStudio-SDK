@@ -15,14 +15,15 @@ namespace SpriteStudio {
             return instance;
         }
 
-        void aquire();
+        bool acquire();
         void release();
 
     private:
-        int maxThreads = std::thread::hardware_concurrency();
+        const int maxThreads = std::thread::hardware_concurrency();
         std::condition_variable cv;
         int runningTask{0};
         std::mutex m;
+        std::chrono::milliseconds timeout{std::chrono::milliseconds::max()};
 
         static std::shared_ptr<simpleSemaphore> instance;
     };

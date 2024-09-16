@@ -29,7 +29,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSSEInformation>>> ssseFeatures;
     for (int i=0; i<sspjInfo->TableNameSSSE.size(); i++) {
         auto ssseStr = sspjInfo->TableNameSSSE[i];
-        simpleSemaphore::getInstance()->aquire();
+        simpleSemaphore::getInstance()->acquire();
         ssseFeatures.push_back(
             std::async(std::launch::async, [ssseStr, &sspjInfo] {
                 try {
@@ -54,7 +54,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     std::vector<std::future<std::shared_ptr<SpriteStudio::FntInformation>>> fntFeatures;
     for (int i=0; i<sspjInfo->TableNameFnt.size(); i++) {
         auto fntStr = sspjInfo->TableNameFnt[i];
-        simpleSemaphore::getInstance()->aquire();
+        simpleSemaphore::getInstance()->acquire();
         fntFeatures.push_back(
             std::async(std::launch::async, [fntStr, &sspjInfo] {
                 try {
@@ -79,7 +79,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSCEInformation>>> ssceFeatures;
     for (int i=0; i<sspjInfo->TableNameSSCE.size(); i++) {
         auto ssceStr = sspjInfo->TableNameSSCE[i];
-        simpleSemaphore::getInstance()->aquire();
+        simpleSemaphore::getInstance()->acquire();
         ssceFeatures.push_back(
             std::async(std::launch::async, [ssceStr, &sspjInfo] {
                 try {
@@ -103,7 +103,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSAEInformation>>> ssaeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSAE.size(); i++) {
         auto ssaeStr = sspjInfo->TableNameSSAE[i];
-        simpleSemaphore::getInstance()->aquire();
+        simpleSemaphore::getInstance()->acquire();
         ssaeFeatures.push_back(
             std::async(std::launch::async, [ssaeStr, &sspjInfo] {
                 try {
@@ -127,7 +127,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSEEInformation>>> sseeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSEE.size(); i++) {
         auto sseeStr = sspjInfo->TableNameSSEE[i];
-        simpleSemaphore::getInstance()->aquire();
+        simpleSemaphore::getInstance()->acquire();
         sseeFeatures.push_back(
             std::async(std::launch::async, [sseeStr, &sspjInfo] {
                 try {
@@ -151,7 +151,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSQEInformation>>> ssqeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSQE.size(); i++) {
         auto ssqeStr = sspjInfo->TableNameSSQE[i];
-        simpleSemaphore::getInstance()->aquire();
+        simpleSemaphore::getInstance()->acquire();
         ssqeFeatures.push_back(
             std::async(std::launch::async, [ssqeStr, &sspjInfo] {
                 try {
