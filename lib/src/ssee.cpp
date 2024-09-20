@@ -6,6 +6,7 @@
 #include "pugixml/pugixml.hpp"
 #include "SSException.h"
 #include "util.h"
+#include "SSConverter3Lib/sspj.h"
 
 using namespace SpriteStudio;
 const PhaseType PHASE = PhaseType::PARSE;
@@ -24,8 +25,12 @@ std::string SSEEInformation::NameFileExtension() const {
 }
 
 struct SSEE::Impl {
+    std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node);
+    void parsePartsEmitter(const std::shared_ptr<SSEEInformation>& sseeInfo, const pugi::xml_node& node);
+    void parsePartsEmitter(pugi::xml_node node, const std::shared_ptr<SSEEInformation>& sseeInfo, const std::shared_ptr<ss::ssfb2::DataEffectPartsT>& dataEffectParts,
+                           ss::ssfb2::KindOperationBlendEffect operationBlendTarget, const std::string& cellmap, const std::string& cell, int index_parts);
 
-    std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> parseParts(const pugi::xml_node& node);
+    std::mutex m;
 };
 
 SSEE::SSEE(): pImpl(std::make_unique<Impl>()) {
@@ -33,7 +38,7 @@ SSEE::SSEE(): pImpl(std::make_unique<Impl>()) {
 
 SSEE::~SSEE() = default;
 
-std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std::shared_ptr<SSPJInformation> &sharedsspjInfo) {
+std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto file = ssee;
     auto ssee_path = std::filesystem::path(ssee);
     if (!std::filesystem::exists(ssee_path)) {
@@ -88,7 +93,7 @@ std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std:
         node = xpath_node.node();
         int indexParts;
         std::shared_ptr<ss::ssfb2::DataEffectPartsT> parts;
-        std::tie(indexParts, parts) = pImpl->parseParts(node);
+        std::tie(indexParts, parts) = pImpl->parseParts(sseeInfo, sspjInfo, node);
         tableParts[indexParts] = parts;
     }
     sseeInfo->TableParts = tableParts;
@@ -98,16 +103,87 @@ std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std:
     return sseeInfo;
 }
 
-std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseParts(const pugi::xml_node &node) {
+std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node) {
     std::string valueText;
 
     auto dataEffectParts = std::make_shared<ss::ssfb2::DataEffectPartsT>();
     // get Part-ID
     auto indexParts = node.child("arrayIndex").text().as_int();
 
+    dataEffectParts->id = indexParts;
     dataEffectParts->name = std::string(node.child("name").text().as_string());
     dataEffectParts->id_parent = node.child("parentIndex").text().as_int();
-    // TODO: impl
+    if (dataEffectParts->id_parent >= 0) {
+        std::lock_guard<std::mutex> lock(m);
+        auto partsParent = sseeInfo->TableParts[dataEffectParts->id_parent];
+        partsParent->table_id_child.push_back(indexParts);
+    }
+
+    auto behaviorNode = node.child("behavior");
+    if (behaviorNode == nullptr)  throw error::getException(PHASE, DOC_PART, "not found behavior tag", -1);
+
+    auto operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Non;
+    valueText = behaviorNode.child("BlendType").text().as_string();
+    if (valueText == "Mix") {
+        operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
+    } else if (valueText == "Add") {
+        operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Add;
+    } else {
+        operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
+    }
+
+    auto nameCellMap = std::string(behaviorNode.child("CellMapName").text().as_string());
+    auto nameCell = std::string(behaviorNode.child("CellName").text().as_string());
+
+    valueText = std::string(node.child("type").text().as_string());
+    if (valueText == "Root") {
+        if (dataEffectParts->name.empty()) {
+            dataEffectParts->name = "Root";
+        }
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Root);
+        dataEffectParts->index_emitter = -1; // null TODO: impl
+    } else if (valueText == "Emmiter") {
+        if (dataEffectParts->name.empty()) {
+            dataEffectParts->name = "Emitter";
+        }
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Emitter);
+        auto indexCellMap = sspjInfo->indexGetFileName(sspjInfo->TableNameSSCE, nameCellMap);
+        // TODO: impl
+        /*
+        parsePartsEmitter(node, sseeInfo, dataEffectParts,
+                          operationBlendTarget,
+                          indexCellMap,
+                          nameCell,
+                          indexParts);
+            */
+    } else if (valueText == "Particle") {
+        if (dataEffectParts->name.empty()) {
+            dataEffectParts->name = "Particle";
+        }
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Particle);
+        dataEffectParts->index_emitter = -1; // null TODO: impl
+    } else {
+        if (dataEffectParts->name.empty()) {
+            dataEffectParts->name = "Error";
+        }
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Terminator); // Error
+        dataEffectParts->index_emitter = -1; // null TODO: impl
+    }
 
     return std::make_tuple(indexParts, dataEffectParts);
 }
+
+/*
+void SSEE::Impl::parsePartsEmitter(pugi::xml_node node, const std::shared_ptr<SSEEInformation> &sseeInfo, const std::shared_ptr<ss::ssfb2::DataEffectPartsT> &dataEffectParts,
+    ss::ssfb2::KindOperationBlendEffect operationBlendTarget, int indexCellMap,
+    const std::string &cell, int index_parts) {
+
+    auto dataEffectEmitter = std::make_shared<ss::ssfb2::DataEffectEmitterT>();
+    if (dataEffectEmitter == nullptr) throw error::getException(PHASE, DOC_PART, "not enough memory", -1);
+
+    dataEffectEmitter->flag_data = static_cast<uint32_t>(ss::ssfb2::DataEffectEmitterFlagBit::Clear);
+    dataEffectEmitter->operation_blend_target = static_cast<uint32_t>(operationBlendTarget);
+    dataEffectEmitter->index_cell_map = indexCellMap;
+    dataEffectEmitter->index_cell = -1;
+}
+*/

@@ -7,7 +7,10 @@
 
 TEST_CASE( "convert sspj files", "[SSConverter3Lib]" ) {
     for (const auto& sspj_file : sspj_files) {
+
         auto sspj_path = std::filesystem::path(TESTDATADIR) / std::filesystem::path(sspj_file);
-        SpriteStudio::SSConverter3Lib::convert(sspj_path);
+        SECTION(sspj_path.filename().string()) {
+            SpriteStudio::SSConverter3Lib::convert(sspj_path);
+        }
     }
 }

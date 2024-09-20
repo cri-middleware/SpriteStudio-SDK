@@ -32,9 +32,21 @@ namespace SpriteStudio {
         std::string ExportPath;
         std::vector<std::shared_ptr<ss::ssfb2::DataSequenceT>> SequenceList;
 
-        // public List<InUseAnimation> ListInUseAnimation; // TODO: impl
+        class InUseAnimation {
+        public:
+            std::string NameAnimationPack;
+            int IndexAnimationPack;
+            std::string NameAnimation;
+        };
+        std::vector<std::shared_ptr<InUseAnimation>> ListInUseAnimation;
 
-        // public LibraryEditor_SpriteStudio6.Import.Assets<Script_SpriteStudio6_DataSequence> DataSequenceSS6PU;
+        // public LibraryEditor_SpriteStudio6.Import.Assets<Script_SpriteStudio6_DataSequence> DataSequenceSS6PU; // TODO: impl
+
+        void InUseAnimationAdd(const std::string& nameAnimationPack, const std::string& nameAnimation);
+        void InUseAnimationIndexing(const std::shared_ptr<SSPJInformation> &sspjInfo);
+
+    private:
+        std::mutex m;
     };
 
     class SSQE {

@@ -5,6 +5,7 @@
 #include "SSException.h"
 #include "util.h"
 #include "error.h"
+#include "SSConverter3Lib/ssae.h"
 
 using namespace SpriteStudio;
 const PhaseType PHASE = PhaseType::PARSE;
@@ -53,6 +54,26 @@ int SSPJInformation::addTextureExternal(const std::string &nameTexture, int inde
         index = static_cast<int>(std::distance(ListTextureExternal.begin(), result));
     }
 
+    return index;
+}
+
+int SSPJInformation::indexGetFileName(const std::vector<std::string> &tableNameFile, const std::string &nameFile) {
+    int index = -1;
+    auto result = std::find(tableNameFile.begin(), tableNameFile.end(), nameFile);
+    if (result != tableNameFile.end()) {
+        index = std::distance(tableNameFile.begin(), result);
+    }
+    return index;
+}
+
+int SSPJInformation::indexGetAnimation(const std::string &name) {
+    int index = -1;
+    auto result = std::find_if(TableInformationSSAE.begin(), TableInformationSSAE.end(), [name] (const std::shared_ptr<SSAEInformation>& item) {
+        return name == item->NameFileBody();
+    });
+    if (result != TableInformationSSAE.end()) {
+        index = std::distance(TableInformationSSAE.begin(), result);
+    }
     return index;
 }
 

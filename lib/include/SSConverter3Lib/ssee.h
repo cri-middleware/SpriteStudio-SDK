@@ -46,7 +46,7 @@ namespace SpriteStudio {
         SSEE();
         ~SSEE();
 
-        std::shared_ptr<SSEEInformation> parse(const std::string& ssee, const std::shared_ptr<SSPJInformation>& sharedsspjInfo);
+        std::shared_ptr<SSEEInformation> parse(const std::string& ssee, const std::shared_ptr<SSPJInformation>& sspjInfo);
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

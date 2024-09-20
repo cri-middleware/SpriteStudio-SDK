@@ -18,10 +18,10 @@
 using namespace SpriteStudio;
 
 struct SSConverter3Lib::Impl {
-    std::shared_ptr<SSPJInformation> parseSSPJ(const std::filesystem::path &inputPath);
+    std::shared_ptr<SSPJInformation> parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options);
 };
 
-std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath) {
+std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options) {
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());
 
@@ -124,6 +124,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     }
     ssaeFeatures.clear();
 
+    /*
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSEEInformation>>> sseeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSEE.size(); i++) {
         auto sseeStr = sspjInfo->TableNameSSEE[i];
@@ -147,6 +148,7 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
         sspjInfo->TableInformationSSEE.push_back(f.get());
     }
     sseeFeatures.clear();
+    */
 
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSQEInformation>>> ssqeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSQE.size(); i++) {
@@ -177,11 +179,11 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
 
 std::unique_ptr<SSConverter3Lib::Impl> SSConverter3Lib::pImpl = std::make_unique<Impl>();
 
-void SSConverter3Lib::convert(const std::string &input, const std::string &outputDir) {
+void SSConverter3Lib::convert(const std::string &input, const ConvertOptions& options) {
     auto inputPath = std::filesystem::path(input);
-    auto outputDirPath = outputDir.empty() ? inputPath.parent_path() : std::filesystem::path(outputDir);
+    auto outputDirPath = options.outputDir.empty() ? inputPath.parent_path() : std::filesystem::path(options.outputDir);
     std::cout << "inputPath: " << inputPath << std::endl;
     std::cout << "outputDirPath: " << outputDirPath << std::endl;
 
-    auto sspjInfo = SSConverter3Lib::pImpl->parseSSPJ(inputPath);
+    auto sspjInfo = SSConverter3Lib::pImpl->parseSSPJ(inputPath, options);
 }

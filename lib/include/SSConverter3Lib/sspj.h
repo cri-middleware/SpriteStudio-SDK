@@ -125,9 +125,13 @@ namespace SpriteStudio {
         KindCoordUnit CoordUnit;
 
     public:
-        std::mutex m;
         int addTexture(const std::string& nameTexture);
         int addTextureExternal(const std::string& nameTexture, int indexTexture, int flagTexture);
+        int indexGetFileName(const std::vector<std::string>& tableNameFile, const std::string& nameFile);
+        int indexGetAnimation(const std::string& name);
+
+    private:
+        std::mutex m;
     };
 
     class SSPJ {

@@ -6,6 +6,7 @@
 #include "pugixml/pugixml.hpp"
 #include "SSException.h"
 #include "util.h"
+#include "SSConverter3Lib/sspj.h"
 
 using namespace SpriteStudio;
 const PhaseType PHASE = PhaseType::PARSE;
@@ -21,6 +22,30 @@ std::string SSQEInformation::NameFileBody() const {
 
 std::string SSQEInformation::NameFileExtension() const {
     return util::getNameFileExtension(ssqe);
+}
+
+void SSQEInformation::InUseAnimationAdd(const std::string &nameAnimationPack, const std::string &nameAnimation) {
+    std::lock_guard<std::mutex> lock(m);
+
+    auto item = std::make_shared<InUseAnimation>();
+    item->NameAnimationPack = nameAnimationPack;
+    item->NameAnimation = nameAnimation;
+
+    auto result = std::find(ListInUseAnimation.begin(), ListInUseAnimation.end(), item);
+
+    if(result == ListInUseAnimation.end()){
+        ListInUseAnimation.push_back(item);
+    }
+}
+
+void SSQEInformation::InUseAnimationIndexing(const std::shared_ptr<SSPJInformation> &sspjInfo) {
+    std::lock_guard<std::mutex> lock(m);
+    for (auto& data : ListInUseAnimation) {
+        auto nameAnimationPack = data->NameAnimationPack;
+        if(!nameAnimationPack.empty()) {
+            data->IndexAnimationPack = sspjInfo->indexGetAnimation(nameAnimationPack);
+        }
+    }
 }
 
 std::shared_ptr<SSQEInformation> SSQE::parse(const std::string &ssqe, const std::shared_ptr<SSPJInformation> &sspjInfo) {
@@ -102,9 +127,9 @@ std::shared_ptr<SSQEInformation> SSQE::parse(const std::string &ssqe, const std:
             details->refAnimePack = std::string(list_node.child("refAnimePack").text().as_string());
             details->refAnime = std::string(list_node.child("refAnime").text().as_string());
             details->repeatCount = list_node.child("repeatCount").text().as_int();
-
-            // informationSSQE.InUseAnimationAdd(detail.RefAnimePack, detail.RefAnime); // TODO: impl
             dataSequence->valueList.push_back(details);
+
+            ssqeInfo->InUseAnimationAdd(details->refAnimePack, details->refAnime);
         }
 
         ssqeInfo->SequenceList.push_back(dataSequence);

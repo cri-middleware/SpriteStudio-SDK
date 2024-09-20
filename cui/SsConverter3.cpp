@@ -15,6 +15,10 @@ int main(int argc, char *argv[]) {
             .help("sspj files")
             .remaining();
 
+    program.add_argument("-d", "--debug")
+            .flag()
+            .help("debug flag");
+
     try {
         program.parse_args(argc, argv);
     }
@@ -39,6 +43,10 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
+    bool debugMode = false;
+    if (program["--debug"] == true) {
+        debugMode = true;
+    }
     for(const auto& file : files) {
         auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
         if (!std::filesystem::exists(filePath)) {
@@ -52,7 +60,7 @@ int main(int argc, char *argv[]) {
         try {
             auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
             auto outputPath = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
-            SpriteStudio::SSConverter3Lib::convert(filePath.c_str(), outputPath.c_str());
+            SpriteStudio::SSConverter3Lib::convert(filePath.string(), SpriteStudio::ConvertOptions{debugMode, outputPath.string()});
         } catch(const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return 1;
