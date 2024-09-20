@@ -18,6 +18,8 @@ namespace SpriteStudio {
     enum class PhaseType : uint32_t {
         PARSE,
         CONVERT,
+        COMPRESS,
+        PACKING,
     };
 
     class error {

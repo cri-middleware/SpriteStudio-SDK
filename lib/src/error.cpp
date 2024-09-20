@@ -23,13 +23,17 @@ const std::map<DocPartType, uint32_t> DocPartTypeErrorBitFieldMap = {
 };
 
 const std::map<PhaseType, std::string> PhaseTypeStringMap = {
-    {PhaseType::PARSE, "parse"},
-    {PhaseType::CONVERT, "convert"},
+    { PhaseType::PARSE, "parse" },
+    { PhaseType::CONVERT, "convert" },
+    { PhaseType::COMPRESS, "compress" },
+    { PhaseType::PACKING, "packing" },
 };
 
 const std::map<PhaseType, uint32_t> PhaseTypeBitFieldMap = {
-    {PhaseType::PARSE, 0x01000000},
-    {PhaseType::CONVERT, 0x02000000},
+    { PhaseType::PARSE, 0x01000000 },
+    { PhaseType::CONVERT, 0x02000000 },
+    { PhaseType::COMPRESS, 0x04000000 },
+    { PhaseType::PACKING, 0x08000000 },
 };
 
 std::string error::getErrorMessage(PhaseType phaseType, DocPartType docPartType, const std::string& message) {
