@@ -898,56 +898,6 @@ inline const char *EnumNameKindOperationBlend(KindOperationBlend e) {
   return EnumNamesKindOperationBlend()[index];
 }
 
-enum class AnimationAttributeFlagBit : int32_t {
-  CLEAR = 0,
-  ID_PARTS_NEXTDRAW = 4095,
-  ID_PARTS_NEXTPREDRAW = 16773120,
-  FLIP_TEXTURE_Y = 16777216,
-  FLIP_TEXTURE_X = 33554432,
-  FLIP_Y = 67108864,
-  FLIP_X = 134217728,
-  HIDE = 536870912,
-  VALID = 1073741824,
-  INITIAL = 1090519039,
-  MASK = 1879048191,
-  MIN = CLEAR,
-  MAX = MASK
-};
-
-inline const AnimationAttributeFlagBit (&EnumValuesAnimationAttributeFlagBit())[11] {
-  static const AnimationAttributeFlagBit values[] = {
-    AnimationAttributeFlagBit::CLEAR,
-    AnimationAttributeFlagBit::ID_PARTS_NEXTDRAW,
-    AnimationAttributeFlagBit::ID_PARTS_NEXTPREDRAW,
-    AnimationAttributeFlagBit::FLIP_TEXTURE_Y,
-    AnimationAttributeFlagBit::FLIP_TEXTURE_X,
-    AnimationAttributeFlagBit::FLIP_Y,
-    AnimationAttributeFlagBit::FLIP_X,
-    AnimationAttributeFlagBit::HIDE,
-    AnimationAttributeFlagBit::VALID,
-    AnimationAttributeFlagBit::INITIAL,
-    AnimationAttributeFlagBit::MASK
-  };
-  return values;
-}
-
-inline const char *EnumNameAnimationAttributeFlagBit(AnimationAttributeFlagBit e) {
-  switch (e) {
-    case AnimationAttributeFlagBit::CLEAR: return "CLEAR";
-    case AnimationAttributeFlagBit::ID_PARTS_NEXTDRAW: return "ID_PARTS_NEXTDRAW";
-    case AnimationAttributeFlagBit::ID_PARTS_NEXTPREDRAW: return "ID_PARTS_NEXTPREDRAW";
-    case AnimationAttributeFlagBit::FLIP_TEXTURE_Y: return "FLIP_TEXTURE_Y";
-    case AnimationAttributeFlagBit::FLIP_TEXTURE_X: return "FLIP_TEXTURE_X";
-    case AnimationAttributeFlagBit::FLIP_Y: return "FLIP_Y";
-    case AnimationAttributeFlagBit::FLIP_X: return "FLIP_X";
-    case AnimationAttributeFlagBit::HIDE: return "HIDE";
-    case AnimationAttributeFlagBit::VALID: return "VALID";
-    case AnimationAttributeFlagBit::INITIAL: return "INITIAL";
-    case AnimationAttributeFlagBit::MASK: return "MASK";
-    default: return "";
-  }
-}
-
 enum class KindModeSort : uint8_t {
   Priority = 0,
   PositionZ = 1,
@@ -3317,7 +3267,7 @@ struct DataModelPartsT : public ::flatbuffers::NativeTable {
   int32_t margin_r_nineslice = 0;
   int32_t margin_u_nineslice = 0;
   int32_t margin_d_nineslice = 0;
-  ss::ssfb2::AnimationAttributeFlagBit status = ss::ssfb2::AnimationAttributeFlagBit::CLEAR;
+  int32_t status = 0;
   DataModelPartsT() = default;
   DataModelPartsT(const DataModelPartsT &o);
   DataModelPartsT(DataModelPartsT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -3520,11 +3470,11 @@ struct DataModelParts FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_margin_d_nineslice(int32_t _margin_d_nineslice = 0) {
     return SetField<int32_t>(VT_MARGIN_D_NINESLICE, _margin_d_nineslice, 0);
   }
-  ss::ssfb2::AnimationAttributeFlagBit status() const {
-    return static_cast<ss::ssfb2::AnimationAttributeFlagBit>(GetField<int32_t>(VT_STATUS, 0));
+  int32_t status() const {
+    return GetField<int32_t>(VT_STATUS, 0);
   }
-  bool mutate_status(ss::ssfb2::AnimationAttributeFlagBit _status = static_cast<ss::ssfb2::AnimationAttributeFlagBit>(0)) {
-    return SetField<int32_t>(VT_STATUS, static_cast<int32_t>(_status), 0);
+  bool mutate_status(int32_t _status = 0) {
+    return SetField<int32_t>(VT_STATUS, _status, 0);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -3655,8 +3605,8 @@ struct DataModelPartsBuilder {
   void add_margin_d_nineslice(int32_t margin_d_nineslice) {
     fbb_.AddElement<int32_t>(DataModelParts::VT_MARGIN_D_NINESLICE, margin_d_nineslice, 0);
   }
-  void add_status(ss::ssfb2::AnimationAttributeFlagBit status) {
-    fbb_.AddElement<int32_t>(DataModelParts::VT_STATUS, static_cast<int32_t>(status), 0);
+  void add_status(int32_t status) {
+    fbb_.AddElement<int32_t>(DataModelParts::VT_STATUS, status, 0);
   }
   explicit DataModelPartsBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -3698,7 +3648,7 @@ inline ::flatbuffers::Offset<DataModelParts> CreateDataModelParts(
     int32_t margin_r_nineslice = 0,
     int32_t margin_u_nineslice = 0,
     int32_t margin_d_nineslice = 0,
-    ss::ssfb2::AnimationAttributeFlagBit status = ss::ssfb2::AnimationAttributeFlagBit::CLEAR) {
+    int32_t status = 0) {
   DataModelPartsBuilder builder_(_fbb);
   builder_.add_status(status);
   builder_.add_margin_d_nineslice(margin_d_nineslice);
@@ -3765,7 +3715,7 @@ inline ::flatbuffers::Offset<DataModelParts> CreateDataModelPartsDirect(
     int32_t margin_r_nineslice = 0,
     int32_t margin_u_nineslice = 0,
     int32_t margin_d_nineslice = 0,
-    ss::ssfb2::AnimationAttributeFlagBit status = ss::ssfb2::AnimationAttributeFlagBit::CLEAR) {
+    int32_t status = 0) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
   auto table_id_children__ = table_id_children ? _fbb.CreateVector<int32_t>(*table_id_children) : 0;
   auto name_animation_under_control__ = name_animation_under_control ? _fbb.CreateString(name_animation_under_control) : 0;

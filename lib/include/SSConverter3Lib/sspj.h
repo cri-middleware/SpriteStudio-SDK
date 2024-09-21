@@ -129,6 +129,7 @@ namespace SpriteStudio {
         int addTextureExternal(const std::string& nameTexture, int indexTexture, int flagTexture);
         int indexGetFileName(const std::vector<std::string>& tableNameFile, const std::string& nameFile);
         int indexGetAnimation(const std::string& name);
+        int indexGetFontBitmap(const std::string& name);
 
     private:
         std::mutex m;

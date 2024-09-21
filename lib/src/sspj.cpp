@@ -77,6 +77,39 @@ int SSPJInformation::indexGetAnimation(const std::string &name) {
     return index;
 }
 
+int SSPJInformation::indexGetFontBitmap(const std::string &name) {
+    if (name.empty()) {
+        return -1;
+    }
+
+    // TODO: impl
+    /*
+    // MEMO: Comparison are always made in lower-case, but storage is in original.
+    // MEMO: Path-separators are normalized.
+    string nameNormalized = Utility.File.PathNormalize(name);
+    string nameLower = Utility.File.PathNormalize(nameNormalized.ToLower());
+    if(null == ListNameFontBitmap)
+    {
+        ListNameFontBitmap = new List<string>();
+    }
+    else
+    {
+        int count = ListNameFontBitmap.Count;
+        for(int i=0; i<count; i++)
+        {
+            if(ListNameFontBitmap[i].ToLower() == nameLower)
+            {
+                return(i);
+            }
+        }
+    }
+    int index = ListNameFontBitmap.Count;
+    ListNameFontBitmap.Add(Utility.File.PathNormalize(nameNormalized));
+    */
+
+    return -1;
+}
+
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
 
 }

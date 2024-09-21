@@ -17,7 +17,7 @@ const DocPartType DOC_PART = DocPartType::SSAE;
 
 struct SSAE::Impl {
     void parseSettings(const std::shared_ptr<SSAEInformation>& ssaeInfo, const pugi::xml_node& node);
-    std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> parsePartData(const std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>>& tableParts, const pugi::xml_node& node);
+    std::tuple<int, std::shared_ptr<SSAEPartsInformation>> parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node& node);
 
     static ss::ssfb2::DataModelPartsKindFeature getPartType(const std::string& valueText);
 
@@ -25,6 +25,7 @@ struct SSAE::Impl {
 
     static ss::ssfb2::KindOperationBlend getAlphaBlendType(const std::string& valueText);
 
+    static std::shared_ptr<ss::ssfb2::ColorLabelT>  getColorLabel(const std::string& valueText);
 };
 
 std::string SSAEInformation::NameDirectory() const {
@@ -45,20 +46,21 @@ SSAE::SSAE() : pImpl(std::make_unique<Impl>()) {
 SSAE::~SSAE() = default;
 
 std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std::shared_ptr<SSPJInformation> &sspjInfo) {
+    auto file = ssae;
     auto ssae_path = std::filesystem::path(ssae);
     if (!std::filesystem::exists(ssae_path)) {
-        throw error::getException(PHASE, DOC_PART, "not found a file: " + ssae, -1);
+        throw error::getException(PHASE, DOC_PART, "not found a file: " + file, -1);
     }
 
     pugi::xml_document doc;
     auto result = doc.load_file(ssae_path.c_str());
     if (!result) {
-        throw SSException("failed loading a ssae file", -1);
+        throw error::getException(PHASE, DOC_PART, "failed loading a file: " + file, -1);
     }
 
     auto nodeRoot = doc.first_child();
     if (std::string(nodeRoot.name()) != "SpriteStudioAnimePack") {
-        throw SSException("invalid sspj format", -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + file, -1);
     }
 
     auto ssaeInfo = std::make_shared<SSAEInformation>();
@@ -69,12 +71,12 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
 
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
-        throw SSException("invalid ssce format", -1);
+        throw error::getException(PHASE, DOC_PART, "invalid format: " + file, -1);
     }
     auto versionText = std::string(attr.as_string());
     ssaeInfo->version = static_cast<SSAEVersion>(util::getVersion(versionText, SSAEVersionMap));
     if (ssaeInfo->version == SSAEVersion::ERROR) {
-        throw SSException("Unknown Version: " + versionText, -1);
+        throw error::getException(PHASE, DOC_PART, "Unknown Version: " + versionText + " file: " + file, -1);
     }
 
 
@@ -89,13 +91,13 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
         throw SSException("PartList-Node Not Found", -1);
     }
 
-    auto tableParts = std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>>(xpath_node_set.size());
+    auto tableParts = std::vector<std::shared_ptr<SSAEPartsInformation>>(xpath_node_set.size());
     for(const auto& xpath_node : xpath_node_set) {
         int index;
-        std::shared_ptr<ss::ssfb2::DataModelPartsT> partData;
+        std::shared_ptr<SSAEPartsInformation> partData;
 
         node = xpath_node.node();
-        std::tie(index, partData) = pImpl->parsePartData(tableParts, node);
+        std::tie(index, partData) = pImpl->parsePartData(ssaeInfo, tableParts, node);
         tableParts[index] = partData;
     }
     ssaeInfo->TableParts = tableParts;
@@ -148,12 +150,14 @@ void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo,
     ssaeInfo->data.depth_ik = valueInt;
 }
 
-std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> SSAE::Impl::parsePartData(const std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>>& tableParts, const pugi::xml_node &node) {
+std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node &node) {
     int valueInt;
     std::string valueText;
+    bool valueBool;
 
     int indexPart;
-    auto partData = std::make_shared<ss::ssfb2::DataModelPartsT>();
+    auto partData = std::make_shared<SSAEPartsInformation>();
+    partData->data = std::make_shared<ss::ssfb2::DataModelPartsT>();
 
     valueInt = node.child("arrayIndex").text().as_int(-1);
     if (valueInt < 0) {
@@ -165,18 +169,18 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> SSAE::Impl::parsePa
     if(valueText.empty()) {
         throw SSException("Invalid", -1);
     }
-    partData->name = valueText;
+    partData->data->name = valueText;
 
     valueInt = node.child("parentIndex").text().as_int(-1);
-    partData->id_parent = valueInt;
-    if (partData->id_parent >= 0) {
-        auto parentParts = tableParts[partData->id_parent];
-        parentParts->table_id_children.push_back(indexPart);
+    partData->data->id_parent = valueInt;
+    if (partData->data->id_parent >= 0) {
+        auto parentParts = tableParts[partData->data->id_parent];
+        parentParts->data->table_id_children.push_back(indexPart);
     }
 
     // get Parts-Type
     valueText = std::string(node.child("type").text().as_string());
-    partData->feature = this->getPartType(valueText);
+    partData->data->feature = this->getPartType(valueText);
 
     // get "Collision" Data
     valueText = std::string(node.child("boundsType").text().as_string());
@@ -185,49 +189,142 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataModelPartsT>> SSAE::Impl::parsePa
     auto sizeCollision = 0.0f;
 
     std::tie(collision, sizeCollision) = getCollisionType(valueText, Collider_SizeZ);
-    partData->shape_collision = collision;
-    partData->size_collision = sizeCollision;
+    partData->data->shape_collision = collision;
+    partData->data->size_collision = sizeCollision;
 
-    /* Get "Inheritance" Datas */
-    // TODO: impl
-    //valueText = std::string(node.child("inheritType").text().as_string());
-    //ss::ssfb2::AnimationAttributeFlagBit status = ss::ssfb2::AnimationAttributeFlagBit::CLEAR;
-    //if (valueText == "self") {
-    //}
-    //artData->status = status;
+    // get "Inheritance" Data
+    valueText = std::string(node.child("inheritType").text().as_string());
+    if (valueText == "self") {
+        partData->Inheritance = SSAEPartsInformation::KindInheritance_SELF;
+        partData->FlagInheritance =
+                static_cast<SSAEPartsInformation::FlagBitInheritance>(static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_PRESET) |
+                                                                      static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_FLIP_X) |
+                                                                      static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_FLIP_Y) |
+                                                                      static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_SHOW_HIDE));
+        auto ineheritRatesNode = node.child("ineheritRates");
+        valueBool = ineheritRatesNode.child("ALPH").text().as_bool();
+        if (!valueBool) {
+            partData->FlagInheritance =
+                    static_cast<SSAEPartsInformation::FlagBitInheritance>(
+                        static_cast<uint32_t>(partData->FlagInheritance) & ~static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_OPACITY_RATE)
+                    );
+        }
+
+        valueBool = ineheritRatesNode.child("FLPH").text().as_bool();
+        if (!valueBool) {
+            partData->FlagInheritance =
+                    static_cast<SSAEPartsInformation::FlagBitInheritance>(
+                        static_cast<uint32_t>(partData->FlagInheritance) & ~static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_FLIP_X)
+                    );
+        }
+
+        valueBool = ineheritRatesNode.child("FLPV").text().as_bool();
+        if (!valueBool) {
+            partData->FlagInheritance =
+                    static_cast<SSAEPartsInformation::FlagBitInheritance>(
+                        static_cast<uint32_t>(partData->FlagInheritance) & ~static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_FLIP_Y)
+                    );
+        }
+
+        valueBool = ineheritRatesNode.child("HIDE").text().as_bool();
+        if (!valueBool) {
+            partData->FlagInheritance =
+                    static_cast<SSAEPartsInformation::FlagBitInheritance>(
+                        static_cast<uint32_t>(partData->FlagInheritance) & ~static_cast<uint32_t>(SSAEPartsInformation::FlagBitInheritance_SHOW_HIDE)
+                    );
+        }
+    } else {
+        // (valueText == "parent") or else
+        if (partData->data->id == 0) {
+            partData->Inheritance = SSAEPartsInformation::KindInheritance_SELF;
+            partData->FlagInheritance = SSAEPartsInformation::FlagBitInheritance_PRESET;
+        } else {
+            partData->Inheritance = SSAEPartsInformation::KindInheritance_PARENT;
+            partData->FlagInheritance = SSAEPartsInformation::FlagBitInheritance_CLEAR;
+        }
+    }
 
     // get Target-Blending
     valueText = std::string(node.child("alphaBlendType").text().as_string());
-    partData->operation_blend_target = getAlphaBlendType(valueText);
+    partData->data->operation_blend_target = getAlphaBlendType(valueText);
 
     // get Parts Show(Hide)
-    auto valueBool = node.child("show").text().as_bool(false);
-    if (valueBool) {
-        partData->status = static_cast<ss::ssfb2::AnimationAttributeFlagBit>(static_cast<uint32_t>(partData->status) | static_cast<uint32_t>(ss::ssfb2::AnimationAttributeFlagBit::HIDE));
-    }
+    valueBool = node.child("show").text().as_bool(false);
+    partData->FlagHide = valueBool;
 
     // get Mask-Targeting
     valueBool = node.child("maskInfluence").text().as_bool(false);
-    if (valueBool) {
-        partData->status = static_cast<ss::ssfb2::AnimationAttributeFlagBit>(static_cast<uint32_t>(partData->status) | static_cast<uint32_t>(ss::ssfb2::AnimationAttributeFlagBit::MASK));
-    }
+    partData->FlagMasking = valueBool;
 
     // UnderControl Data Get
-    if (partData->feature == ss::ssfb2::DataModelPartsKindFeature::Instance) {
+    if (partData->data->feature == ss::ssfb2::DataModelPartsKindFeature::Instance) {
         valueText = std::string(node.child("refAnimePack").text().as_string());
         if (!valueText.empty()) {
             // partData->name_under_control = valueText;
 
             valueText = std::string(node.child("refAnime").text().as_string());
-            partData->name_animation_under_control = valueText.empty() ? "" : valueText;
+            partData->data->name_animation_under_control = valueText.empty() ? "" : valueText;
         }
-    } else if (partData->feature == ss::ssfb2::DataModelPartsKindFeature::Effect) {
+    } else if (partData->data->feature == ss::ssfb2::DataModelPartsKindFeature::Effect) {
         valueText = std::string(node.child("refEffectName").text().as_string());
         if (!valueText.empty()) {
             // partData->name_under_control = valueText; // TODO: impl
-            partData->name_animation_under_control = "";
+            partData->data->name_animation_under_control = "";
         }
     }
+
+    // get Color-Label
+    valueText = std::string(node.child("colorLabel").text().as_string());
+    partData->data->label_color = getColorLabel(valueText);
+
+    // get Bone-Data
+    partData->LengthBone = node.child("boneLength").text().as_float(0.0f);
+
+    valueText = std::string(node.child("bonePosition").text().as_string());
+    partData->PositionXBone = partData->PositionYBone = 0.0f;
+    if (!valueText.empty()) {
+        std::istringstream iss(valueText);
+        std::string x,y;
+
+        if (std::getline(iss, x, ' ') && std::getline(iss, y)) {
+            partData->PositionXBone = std::stof(x);
+            partData->PositionYBone = std::stof(y);
+        }
+    }
+
+    partData->RotateZBone = node.child("boneRotation").text().as_float(0.0f);
+
+    partData->FlagVerbose = node.child("verbose").text().as_bool(false);
+    if (partData->FlagVerbose == false) {
+        /* MEMO: "Verbose" is always "true" when parents are "true". */
+        auto informationPartsParent = partData;
+        bool verbose = false;
+        while (informationPartsParent->data->id_parent >= 0) {
+            informationPartsParent = tableParts[informationPartsParent->data->id_parent];
+            if(true == informationPartsParent->FlagVerbose) {
+                verbose = true;
+                break;
+            }
+        }
+        partData->FlagVerbose = verbose;
+    }
+
+    // clear Status
+    partData->data->status = 0;
+
+    // get "Text" data
+    valueText = std::string(node.child("text").text().as_string(""));
+    partData->data->text = valueText;
+
+    valueBool = node.child("textBitmap").text().as_bool(false);
+    if (valueBool) {
+        partData->data->status |= 0x00000010; // BITMAP TODO: impl
+    }
+
+    valueText = std::string(node.child("textFamily").text().as_string(""));
+    partData->data->name_family_font_text = valueText;
+
+
 
     return std::make_tuple(indexPart, partData);
 }
@@ -326,4 +423,40 @@ ss::ssfb2::KindOperationBlend SSAE::Impl::getAlphaBlendType(const std::string &v
     }
 
     return operationBlend;
+}
+
+std::shared_ptr<ss::ssfb2::ColorLabelT> SSAE::Impl::getColorLabel(const std::string &valueText) {
+    auto colorLabel = std::make_shared<ss::ssfb2::ColorLabelT>();
+    colorLabel->color = nullptr;
+
+    if (valueText.empty()) {
+        colorLabel->form = ss::ssfb2::ColorLabelKindForm::Non;
+    } else {
+        if (valueText == "Red") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Red;
+        } else if (valueText == "Orange") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Orange;
+        } else if (valueText == "Yellow") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Yellow;
+        } else if (valueText == "Green") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Green;
+        } else if (valueText == "Blue") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Blue;
+        } else if (valueText == "Violet") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Violet;
+        } else if (valueText == "Gray") {
+            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Gray;
+        } else {
+            auto color = std::make_shared<ss::ssfb2::Color32T>();
+
+            auto argb = std::stoul(valueText, 0, 16);
+            color->a = (argb >> 24) & 0xff;
+            color->r = (argb >> 16) & 0xff;
+            color->g = (argb >> 8) & 0xff;
+            color->b = argb & 0xff;
+            colorLabel->color = color;
+        }
+    }
+
+    return colorLabel;
 }

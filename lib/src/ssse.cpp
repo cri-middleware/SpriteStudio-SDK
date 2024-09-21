@@ -92,7 +92,7 @@ std::shared_ptr<SSSEInformation> SSSE::parse(const std::string& ssse, const std:
             data->path = valueText;
 
             auto valueLong = node.child("msec").text().as_llong();
-            data->time_total = valueLong * (1.0f / 1000.0f); // msec -> sec
+            data->time_total = static_cast<float>(valueLong) * (1.0f / 1000.0f); // msec -> sec
             tableSound.push_back(data);
         }
     }

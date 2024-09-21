@@ -24,6 +24,48 @@ namespace SpriteStudio {
         {static_cast<uint32_t>(SSAEVersion::CODE_020100), VersionToStringMap.at(static_cast<uint32_t>(SSAEVersion::CODE_020100))},
     };
 
+
+    class SSAEPartsInformation {
+    public:
+        std::shared_ptr<ss::ssfb2::DataModelPartsT> data;
+
+        int IndexCellMapMeshBind;
+        int IndexCellMeshBind;
+
+        float LengthBone;
+        float PositionXBone;
+        float PositionYBone;
+        float RotateZBone;
+
+        enum KindInheritance {
+            KindInheritance_PARENT = 0,
+            KindInheritance_SELF
+        };
+        KindInheritance Inheritance;
+        enum FlagBitInheritance {
+            FlagBitInheritance_OPACITY_RATE = 0x000000001,
+            FlagBitInheritance_SHOW_HIDE = 0x000000002,
+            FlagBitInheritance_FLIP_X = 0x000000010,
+            FlagBitInheritance_FLIP_Y = 0x000000020,
+
+            FlagBitInheritance_CLEAR = 0x00000000,
+            FlagBitInheritance_ALL = FlagBitInheritance_OPACITY_RATE
+                | FlagBitInheritance_SHOW_HIDE
+                | FlagBitInheritance_FLIP_X
+                | FlagBitInheritance_FLIP_Y,
+            FlagBitInheritance_PRESET = FlagBitInheritance_OPACITY_RATE
+        };
+        FlagBitInheritance FlagInheritance;
+
+        std::vector<int> ListIndexPartsChild;
+
+        bool FlagHide;
+        bool FlagMasking;
+        bool FlagVerbose;
+
+        bool FlagDeform;
+    };
+
     class SSAEInformation {
     public:
         std::string ssae;
@@ -34,7 +76,7 @@ namespace SpriteStudio {
         SSAEVersion version;
 
         ss::ssfb2::LibraryDataAnimationT data;
-        std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>> TableParts;
+        std::vector<std::shared_ptr<SSAEPartsInformation>> TableParts;
     };
 
     class SSAE {
