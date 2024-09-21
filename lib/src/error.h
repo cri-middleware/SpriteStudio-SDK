@@ -28,5 +28,6 @@ namespace SpriteStudio {
     public:
         static std::string getErrorMessage(PhaseType phaseType, DocPartType docPartType, const std::string& message);
         static SSException getException(PhaseType phaseType, DocPartType docPartType, const std::string& message, int code);
+        static std::string getPhaseName(PhaseType phaseType);
     };
 }

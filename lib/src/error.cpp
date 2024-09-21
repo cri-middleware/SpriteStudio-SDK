@@ -45,3 +45,7 @@ SSException error::getException(PhaseType phaseType, DocPartType docPartType, co
     int combineCode = static_cast<int>(PhaseTypeBitFieldMap.at(phaseType)) | static_cast<int>(DocPartTypeErrorBitFieldMap.at(docPartType)) | code;
     return SSException(msg, combineCode);
 }
+
+std::string error::getPhaseName(PhaseType phaseType) {
+    return PhaseTypeStringMap.at(phaseType);
+}

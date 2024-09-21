@@ -45,24 +45,28 @@ int main(int argc, char *argv[]) {
     }
 
     // validate
-    if (auto fn = program.present("-o")) {
-        auto outPath = std::filesystem::weakly_canonical(std::filesystem::absolute(*fn));
+    auto output = program.present("-o");
+    std::filesystem::path outPath;
+    if (output) {
+        outPath = std::filesystem::weakly_canonical(std::filesystem::absolute(*output));
         if (!std::filesystem::exists(outPath)) {
-            std::cerr << u8"not found the output directory: " + *fn << std::endl;
+            std::cerr << u8"not found the output directory: " + *output << std::endl;
             return 1;
         }
     }
 
     SpriteStudio::ConvertOptions convertOptions;
-    convertOptions.progressCallback = [](const std::string& taskName, int progress, int maxProgress) {
-        std::cout << taskName << " : " << progress << "/" << maxProgress << std::endl;
-    };
     if (program["--debug"] == true) {
         convertOptions.debugMode = true;
     }
     if (program["--split"] == true) {
         convertOptions.split = true;
     }
+    convertOptions.progressCallback = [&convertOptions](const std::string& taskName, int progress, int maxProgress) {
+        if (convertOptions.debugMode) {
+            std::cout << taskName << " : " << progress << "/" << maxProgress << std::endl;
+        }
+    };
     for(const auto& file : files) {
         auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
         if (!std::filesystem::exists(filePath)) {
@@ -71,11 +75,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    auto output = program.present("-o");
     for(const auto& file : files) {
         try {
             auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
-            convertOptions.outputDir = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
+            convertOptions.outputDir = output ? outPath : filePath.parent_path();
             SpriteStudio::SSConverter3Lib::convert(filePath.string(), convertOptions);
         } catch(const std::exception &e) {
             std::cerr << e.what() << std::endl;

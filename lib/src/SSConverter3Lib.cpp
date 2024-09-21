@@ -24,6 +24,9 @@ struct SSConverter3Lib::Impl {
 };
 
 std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options) {
+    PhaseType phase = PhaseType::PARSE;
+    std::string phaseName = error::getPhaseName(phase);
+
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());
 
@@ -64,7 +67,7 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
 
         progress++;
         if (options.progressCallback) {
-            options.progressCallback(item->NameFile(), progress, progressMax);
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
     ssseFeatures.clear();
@@ -94,7 +97,7 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
         sspjInfo->TableInformationFnt.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback(item->NameFile(), progress, progressMax);
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
     fntFeatures.clear();
@@ -124,7 +127,7 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
         sspjInfo->TableInformationSSCE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback(item->NameFile(), progress, progressMax);
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
     ssceFeatures.clear();
@@ -153,7 +156,7 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
         sspjInfo->TableInformationSSAE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback(item->NameFile(), progress, progressMax);
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
     ssaeFeatures.clear();
@@ -182,7 +185,7 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
         sspjInfo->TableInformationSSEE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback(item->NameFile(), progress, progressMax);
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
     sseeFeatures.clear();
@@ -211,7 +214,7 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
         sspjInfo->TableInformationSSQE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback(item->NameFile(), progress, progressMax);
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
     ssqeFeatures.clear();
