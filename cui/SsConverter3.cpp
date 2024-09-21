@@ -5,6 +5,10 @@
 #include <SSConverter3Lib/SSConverter3Lib.h>
 #include <argparse/argparse.hpp>
 
+#include <indicators/progress_bar.hpp>
+
+using namespace indicators;
+
 int main(int argc, char *argv[]) {
     auto prog_name = std::filesystem::path(argv[0]);
     argparse::ArgumentParser program(prog_name.filename().string());
@@ -62,11 +66,6 @@ int main(int argc, char *argv[]) {
     if (program["--split"] == true) {
         convertOptions.split = true;
     }
-    convertOptions.progressCallback = [&convertOptions](const std::string& taskName, int progress, int maxProgress) {
-        if (convertOptions.debugMode) {
-            std::cout << taskName << " : " << progress << "/" << maxProgress << std::endl;
-        }
-    };
     for(const auto& file : files) {
         auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
         if (!std::filesystem::exists(filePath)) {
@@ -79,7 +78,26 @@ int main(int argc, char *argv[]) {
         try {
             auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
             convertOptions.outputDir = output ? outPath : filePath.parent_path();
+
+            ProgressBar bar{
+                option::BarWidth{80},
+                option::Start{"["},
+                option::End{"]"},
+                option::ForegroundColor{Color::white}  ,
+                option::FontStyles{std::vector<FontStyle>{FontStyle::bold}},
+                option::PostfixText{filePath.filename().string()},
+            };
+            convertOptions.progressCallback = [&convertOptions, &bar, &filePath](const std::string& taskName, int progress, int maxProgress) {
+                if (convertOptions.debugMode) {
+                    std::cout << taskName << " : " << progress << "/" << maxProgress << std::endl;
+                } else {
+                    bar.set_progress(static_cast<size_t>((static_cast<float>(progress) / static_cast<float>(maxProgress)) * 100.0f));
+                    bar.set_option(option::PostfixText{ filePath.filename().string() + " " + std::to_string(progress) + "/" + std::to_string(maxProgress)});
+                }
+            };
+
             SpriteStudio::SSConverter3Lib::convert(filePath.string(), convertOptions);
+            bar.set_progress(100);
         } catch(const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return 1;

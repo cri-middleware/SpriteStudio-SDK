@@ -18,6 +18,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(argparse)
 include_directories(${argparse_SOURCE_DIR}/include)
 
+message("fetch indicators")
+FetchContent_Declare(
+        indicators
+        GIT_REPOSITORY https://github.com/p-ranav/indicators
+        GIT_TAG        v2.3
+)
+FetchContent_MakeAvailable(indicators)
+include_directories(${indicators_SOURCE_DIR}/include)
+
 if(NOT TARGET SsConverter3Lib)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib ${PROJECT_NAME}_lib)
 endif()
