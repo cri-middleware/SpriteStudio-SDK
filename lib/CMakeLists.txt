@@ -85,6 +85,8 @@ set(SsConverter3Lib_SRCS
         src/error.h
         src/simpleSemaphore.cpp
         src/simpleSemaphore.h
+        src/phase.cpp
+        src/phase.h
 )
 
 set(SsConverter3Lib_HEADERS

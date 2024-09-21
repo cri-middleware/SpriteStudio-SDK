@@ -5,6 +5,7 @@
 
 #include "SSConverter3Lib/SSConverter3Lib.h"
 
+#include "phase.h"
 #include "error.h"
 #include "SSConverter3Lib/sspj.h"
 #include "SSConverter3Lib/ssse.h"
@@ -25,7 +26,7 @@ struct SSConverter3Lib::Impl {
 
 std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options) {
     PhaseType phase = PhaseType::PARSE;
-    std::string phaseName = error::getPhaseName(phase);
+    std::string phaseName = phase::getPhaseName(phase);
 
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());

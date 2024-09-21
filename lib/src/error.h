@@ -2,32 +2,13 @@
 #include <map>
 #include <string>
 
+#include "phase.h"
 #include "SSException.h"
 
 namespace SpriteStudio {
-    enum class DocPartType : uint32_t {
-        SSPJ,
-        SSCE,
-        SSAE,
-        SSEE,
-        SSQE,
-        SSSE,
-        FNT,
-    };
-
-    enum class PhaseType : uint32_t {
-        PARSE,
-        CONVERT,
-        COMPRESS,
-        PACKING,
-
-        MAX = PACKING,
-    };
-
     class error {
     public:
         static std::string getErrorMessage(PhaseType phaseType, DocPartType docPartType, const std::string& message);
         static SSException getException(PhaseType phaseType, DocPartType docPartType, const std::string& message, int code);
-        static std::string getPhaseName(PhaseType phaseType);
     };
 }
