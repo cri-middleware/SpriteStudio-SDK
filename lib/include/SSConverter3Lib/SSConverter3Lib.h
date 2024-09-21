@@ -7,7 +7,9 @@ namespace SpriteStudio {
     class ConvertOptions {
     public:
         bool debugMode{false};
+        bool split{false};
         std::string outputDir;
+        std::function<void(const std::string& taskName, int progress, int maxProgress)> progressCallback;
     };
 
     class SSConverter3Lib {

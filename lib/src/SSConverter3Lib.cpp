@@ -4,6 +4,8 @@
 #include <future>
 
 #include "SSConverter3Lib/SSConverter3Lib.h"
+
+#include "error.h"
 #include "SSConverter3Lib/sspj.h"
 #include "SSConverter3Lib/ssse.h"
 #include "SSConverter3Lib/fnt.h"
@@ -18,12 +20,23 @@
 using namespace SpriteStudio;
 
 struct SSConverter3Lib::Impl {
-    std::shared_ptr<SSPJInformation> parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options);
+    std::tuple<std::shared_ptr<SSPJInformation>, int, int> parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options);
 };
 
-std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options) {
+std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options) {
     SpriteStudio::SSPJ sspj;
     auto sspjInfo = sspj.parse(inputPath.string());
+
+    int progressMax = sspjInfo->TableNameSSSE.size() +
+                      sspjInfo->TableNameFnt.size() +
+                      sspjInfo->TableNameSSCE.size() +
+                      sspjInfo->TableNameSSAE.size() +
+                      sspjInfo->TableNameSSEE.size() +
+                      sspjInfo->TableNameSSQE.size();
+    progressMax *=  static_cast<int>(PhaseType::MAX);
+    // progressMax += 1 + 1 + 1; // TODO: avoid magic number
+
+    int progress = 0;
 
     // read Audio pack (SSSE)
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSSEInformation>>> ssseFeatures;
@@ -47,6 +60,10 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     sspjInfo->TableInformationSSSE = {};
     for (auto& f : ssseFeatures) {
         sspjInfo->TableInformationSSSE.push_back(f.get());
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback("", progress, progressMax);
+        }
     }
     ssseFeatures.clear();
 
@@ -72,6 +89,10 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     sspjInfo->TableInformationFnt = {};
     for (auto & f : fntFeatures) {
         sspjInfo->TableInformationFnt.push_back(f.get());
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback("", progress, progressMax);
+        }
     }
     fntFeatures.clear();
 
@@ -97,6 +118,10 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     sspjInfo->TableInformationSSCE = {};
     for (auto& f : ssceFeatures) {
         sspjInfo->TableInformationSSCE.push_back(f.get());
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback("", progress, progressMax);
+        }
     }
     ssceFeatures.clear();
 
@@ -121,6 +146,10 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     sspjInfo->TableInformationSSAE = {};
     for (auto& f : ssaeFeatures) {
         sspjInfo->TableInformationSSAE.push_back(f.get());
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback("", progress, progressMax);
+        }
     }
     ssaeFeatures.clear();
 
@@ -146,6 +175,10 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     sspjInfo->TableInformationSSEE = {};
     for (auto& f : sseeFeatures) {
         sspjInfo->TableInformationSSEE.push_back(f.get());
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback("", progress, progressMax);
+        }
     }
     sseeFeatures.clear();
     */
@@ -171,10 +204,14 @@ std::shared_ptr<SSPJInformation> SSConverter3Lib::Impl::parseSSPJ(const std::fil
     sspjInfo->TableInformationSSQE = {};
     for (auto& f : ssqeFeatures) {
         sspjInfo->TableInformationSSQE.push_back(f.get());
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback("", progress, progressMax);
+        }
     }
     ssqeFeatures.clear();
 
-    return sspjInfo;
+    return std::make_tuple(sspjInfo, progress, progressMax);
 }
 
 std::unique_ptr<SSConverter3Lib::Impl> SSConverter3Lib::pImpl = std::make_unique<Impl>();
@@ -182,8 +219,11 @@ std::unique_ptr<SSConverter3Lib::Impl> SSConverter3Lib::pImpl = std::make_unique
 void SSConverter3Lib::convert(const std::string &input, const ConvertOptions& options) {
     auto inputPath = std::filesystem::path(input);
     auto outputDirPath = options.outputDir.empty() ? inputPath.parent_path() : std::filesystem::path(options.outputDir);
-    std::cout << "inputPath: " << inputPath << std::endl;
-    std::cout << "outputDirPath: " << outputDirPath << std::endl;
+    if (options.debugMode) {
+        std::cout << "inputPath: " << inputPath << std::endl;
+        std::cout << "outputDirPath: " << outputDirPath << std::endl;
+    }
 
-    auto sspjInfo = SSConverter3Lib::pImpl->parseSSPJ(inputPath, options);
+    auto [sspjInfo, progress, progressMax] = SSConverter3Lib::pImpl->parseSSPJ(inputPath, options);
+
 }

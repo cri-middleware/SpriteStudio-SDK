@@ -20,6 +20,8 @@ namespace SpriteStudio {
         CONVERT,
         COMPRESS,
         PACKING,
+
+        MAX = PACKING,
     };
 
     class error {

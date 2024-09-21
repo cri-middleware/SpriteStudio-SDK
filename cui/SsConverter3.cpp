@@ -6,7 +6,8 @@
 #include <argparse/argparse.hpp>
 
 int main(int argc, char *argv[]) {
-    argparse::ArgumentParser program("program_name");
+    auto prog_name = std::filesystem::path(argv[0]);
+    argparse::ArgumentParser program(prog_name.filename().string());
 
     program.add_argument("-o", "--output")
             .help("set output directory path (default: the same parent directory of a sspj file)");
@@ -14,6 +15,10 @@ int main(int argc, char *argv[]) {
     program.add_argument("files")
             .help("sspj files")
             .remaining();
+
+    program.add_argument("-s", "--split")
+            .flag()
+            .help("split a ssfb file converted from one sspj file to each animation packs");
 
     program.add_argument("-d", "--debug")
             .flag()
@@ -31,8 +36,12 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> files;
     try {
         files = program.get<std::vector<std::string>>("files");
-    } catch (std::logic_error& e) {
-        return 0;
+        if (files.empty()) {
+            throw std::logic_error("no files");
+        }
+    } catch (const std::exception& e) {
+        std::cerr << program.help().str() << std::endl;
+        return 1;
     }
 
     // validate
@@ -43,9 +52,16 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-    bool debugMode = false;
+
+    SpriteStudio::ConvertOptions convertOptions;
+    convertOptions.progressCallback = [](const std::string& taskName, int progress, int maxProgress) {
+        std::cout << taskName << " : " << progress << "/" << maxProgress << std::endl;
+    };
     if (program["--debug"] == true) {
-        debugMode = true;
+        convertOptions.debugMode = true;
+    }
+    if (program["--split"] == true) {
+        convertOptions.split = true;
     }
     for(const auto& file : files) {
         auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
@@ -59,8 +75,8 @@ int main(int argc, char *argv[]) {
     for(const auto& file : files) {
         try {
             auto filePath = std::filesystem::weakly_canonical(std::filesystem::absolute(file));
-            auto outputPath = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
-            SpriteStudio::SSConverter3Lib::convert(filePath.string(), SpriteStudio::ConvertOptions{debugMode, outputPath.string()});
+            convertOptions.outputDir = output ? std::filesystem::weakly_canonical(std::filesystem::absolute(*output)) : filePath.parent_path();
+            SpriteStudio::SSConverter3Lib::convert(filePath.string(), convertOptions);
         } catch(const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return 1;
