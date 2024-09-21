@@ -24,8 +24,12 @@ std::string SSEEInformation::NameFileExtension() const {
     return util::getNameFileExtension(ssee);
 }
 
+std::string SSEEInformation::NameFile() const {
+    return util::getFileName(ssee);
+}
+
 struct SSEE::Impl {
-    std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node);
+    std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::vector<std::shared_ptr<ss::ssfb2::DataEffectPartsT>>& tableParts, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node);
     void parsePartsEmitter(const std::shared_ptr<SSEEInformation>& sseeInfo, const pugi::xml_node& node);
     void parsePartsEmitter(pugi::xml_node node, const std::shared_ptr<SSEEInformation>& sseeInfo, const std::shared_ptr<ss::ssfb2::DataEffectPartsT>& dataEffectParts,
                            ss::ssfb2::KindOperationBlendEffect operationBlendTarget, const std::string& cellmap, const std::string& cell, int index_parts);
@@ -93,7 +97,7 @@ std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std:
         node = xpath_node.node();
         int indexParts;
         std::shared_ptr<ss::ssfb2::DataEffectPartsT> parts;
-        std::tie(indexParts, parts) = pImpl->parseParts(sseeInfo, sspjInfo, node);
+        std::tie(indexParts, parts) = pImpl->parseParts(sseeInfo, tableParts, sspjInfo, node);
         tableParts[indexParts] = parts;
     }
     sseeInfo->TableParts = tableParts;
@@ -103,7 +107,7 @@ std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std:
     return sseeInfo;
 }
 
-std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node) {
+std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::vector<std::shared_ptr<ss::ssfb2::DataEffectPartsT>>& tableParts, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node) {
     std::string valueText;
 
     auto dataEffectParts = std::make_shared<ss::ssfb2::DataEffectPartsT>();
@@ -112,28 +116,32 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseP
 
     dataEffectParts->id = indexParts;
     dataEffectParts->name = std::string(node.child("name").text().as_string());
-    dataEffectParts->id_parent = node.child("parentIndex").text().as_int();
-    if (dataEffectParts->id_parent >= 0) {
+    auto id_parent = node.child("parentIndex").text().as_int();
+    if (id_parent >= 0) {
         std::lock_guard<std::mutex> lock(m);
-        auto partsParent = sseeInfo->TableParts[dataEffectParts->id_parent];
+        const auto& partsParent = tableParts[dataEffectParts->id_parent];
         partsParent->table_id_child.push_back(indexParts);
-    }
 
-    auto behaviorNode = node.child("behavior");
-    if (behaviorNode == nullptr)  throw error::getException(PHASE, DOC_PART, "not found behavior tag", -1);
+        dataEffectParts->id_parent = id_parent;
+    }
 
     auto operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Non;
-    valueText = behaviorNode.child("BlendType").text().as_string();
-    if (valueText == "Mix") {
-        operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
-    } else if (valueText == "Add") {
-        operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Add;
-    } else {
-        operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
-    }
+    std::string nameCellMap;
+    std::string nameCell;
+    auto behaviorNode = node.child("behavior");
+    if (behaviorNode) {
+        valueText = behaviorNode.child("BlendType").text().as_string();
+        if (valueText == "Mix") {
+            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
+        } else if (valueText == "Add") {
+            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Add;
+        } else {
+            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
+        }
 
-    auto nameCellMap = std::string(behaviorNode.child("CellMapName").text().as_string());
-    auto nameCell = std::string(behaviorNode.child("CellName").text().as_string());
+        nameCellMap = std::string(behaviorNode.child("CellMapName").text().as_string());
+        nameCell = std::string(behaviorNode.child("CellName").text().as_string());
+    }
 
     valueText = std::string(node.child("type").text().as_string());
     if (valueText == "Root") {

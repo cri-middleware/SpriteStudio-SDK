@@ -10,6 +10,7 @@ namespace SpriteStudio {
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
+        std::string NameFile() const;
     };
 
     class Fnt {

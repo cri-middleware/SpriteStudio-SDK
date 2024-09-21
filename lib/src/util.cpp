@@ -25,3 +25,7 @@ std::string util::getNameFileBody(const std::string &file_path) {
 std::string util::getNameFileExtension(const std::string &file_path) {
     return std::filesystem::path(file_path).filename().extension().string().substr(1);
 }
+
+std::string util::getFileName(const std::string &file_path) {
+    return std::filesystem::path(file_path).filename();
+}

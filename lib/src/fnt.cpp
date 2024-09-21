@@ -26,6 +26,10 @@ std::string FntInformation::NameFileExtension() const {
     return util::getNameFileExtension(fnt);
 }
 
+std::string FntInformation::NameFile() const {
+    return util::getFileName(fnt);
+}
+
 Fnt::Fnt() : pImpl(std::make_unique<Impl>()){
 }
 

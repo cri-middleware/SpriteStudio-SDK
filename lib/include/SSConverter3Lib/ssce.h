@@ -26,10 +26,11 @@ namespace SpriteStudio {
         ss::ssfb2::LibraryDataCellMapT Data;
         ss::ssfb2::DataCellmapExtendSplitT DataCellmapExtendSplitT;
 
-        std::string ssce;
+        std::string file;
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
+        std::string NameFile() const;
 
         SSCEVersion version;
 

@@ -40,6 +40,10 @@ std::string SSAEInformation::NameFileExtension() const {
     return util::getNameFileExtension(ssae);
 }
 
+std::string SSAEInformation::NameFile() const {
+    return util::getFileName(ssae);
+}
+
 SSAE::SSAE() : pImpl(std::make_unique<Impl>()) {
 }
 

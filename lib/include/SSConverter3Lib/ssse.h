@@ -23,6 +23,7 @@ namespace SpriteStudio {
         std::string NameDirectory();
         std::string NameFileBody();
         std::string NameFileExtension();
+        std::string NameFile();
 
         Version version;
 

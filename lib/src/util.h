@@ -10,5 +10,6 @@ namespace SpriteStudio {
         static std::string getNameDirectory(const std::string& file_path);
         static std::string getNameFileBody(const std::string& file_path);
         static std::string getNameFileExtension(const std::string& file_path);
+        static std::string getFileName(const std::string & file_path);
     };
 }

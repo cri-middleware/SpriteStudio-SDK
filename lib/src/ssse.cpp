@@ -23,6 +23,10 @@ std::string SSSEInformation::NameFileExtension() {
     return util::getNameFileExtension(ssse);
 }
 
+std::string SSSEInformation::NameFile() {
+    return util::getFileName(ssse);
+}
+
 std::shared_ptr<SSSEInformation> SSSE::parse(const std::string& ssse, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     auto ssse_path = std::filesystem::path(ssse);
     if (!std::filesystem::exists(ssse_path)) {

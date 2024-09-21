@@ -9,7 +9,7 @@ namespace SpriteStudio {
         bool debugMode{false};
         bool split{false};
         std::string outputDir;
-        std::function<void(const std::string& taskName, int progress, int maxProgress)> progressCallback;
+        std::function<void(const std::string& taskName, int progress, int maxProgress)> progressCallback{nullptr};
     };
 
     class SSConverter3Lib {

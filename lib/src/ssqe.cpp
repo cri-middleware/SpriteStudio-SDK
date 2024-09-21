@@ -24,6 +24,10 @@ std::string SSQEInformation::NameFileExtension() const {
     return util::getNameFileExtension(ssqe);
 }
 
+std::string SSQEInformation::NameFile() const {
+    return util::getFileName(ssqe);
+}
+
 void SSQEInformation::InUseAnimationAdd(const std::string &nameAnimationPack, const std::string &nameAnimation) {
     std::lock_guard<std::mutex> lock(m);
 

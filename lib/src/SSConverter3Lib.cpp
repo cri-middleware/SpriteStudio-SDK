@@ -59,10 +59,12 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     sspjInfo->TableInformationSSSE = {};
     for (auto& f : ssseFeatures) {
-        sspjInfo->TableInformationSSSE.push_back(f.get());
+        auto item = f.get();
+        sspjInfo->TableInformationSSSE.push_back(item);
+
         progress++;
         if (options.progressCallback) {
-            options.progressCallback("", progress, progressMax);
+            options.progressCallback(item->NameFile(), progress, progressMax);
         }
     }
     ssseFeatures.clear();
@@ -88,10 +90,11 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     sspjInfo->TableInformationFnt = {};
     for (auto & f : fntFeatures) {
-        sspjInfo->TableInformationFnt.push_back(f.get());
+        auto item = f.get();
+        sspjInfo->TableInformationFnt.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback("", progress, progressMax);
+            options.progressCallback(item->NameFile(), progress, progressMax);
         }
     }
     fntFeatures.clear();
@@ -117,10 +120,11 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     sspjInfo->TableInformationSSCE = {};
     for (auto& f : ssceFeatures) {
-        sspjInfo->TableInformationSSCE.push_back(f.get());
+        auto item = f.get();
+        sspjInfo->TableInformationSSCE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback("", progress, progressMax);
+            options.progressCallback(item->NameFile(), progress, progressMax);
         }
     }
     ssceFeatures.clear();
@@ -145,15 +149,15 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     sspjInfo->TableInformationSSAE = {};
     for (auto& f : ssaeFeatures) {
-        sspjInfo->TableInformationSSAE.push_back(f.get());
+        auto item = f.get();
+        sspjInfo->TableInformationSSAE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback("", progress, progressMax);
+            options.progressCallback(item->NameFile(), progress, progressMax);
         }
     }
     ssaeFeatures.clear();
 
-    /*
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSEEInformation>>> sseeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSEE.size(); i++) {
         auto sseeStr = sspjInfo->TableNameSSEE[i];
@@ -174,14 +178,14 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     sspjInfo->TableInformationSSEE = {};
     for (auto& f : sseeFeatures) {
-        sspjInfo->TableInformationSSEE.push_back(f.get());
+        auto item = f.get();
+        sspjInfo->TableInformationSSEE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback("", progress, progressMax);
+            options.progressCallback(item->NameFile(), progress, progressMax);
         }
     }
     sseeFeatures.clear();
-    */
 
     std::vector<std::future<std::shared_ptr<SpriteStudio::SSQEInformation>>> ssqeFeatures;
     for (int i=0; i<sspjInfo->TableNameSSQE.size(); i++) {
@@ -203,10 +207,11 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     sspjInfo->TableInformationSSQE = {};
     for (auto& f : ssqeFeatures) {
-        sspjInfo->TableInformationSSQE.push_back(f.get());
+        auto item = f.get();
+        sspjInfo->TableInformationSSQE.push_back(item);
         progress++;
         if (options.progressCallback) {
-            options.progressCallback("", progress, progressMax);
+            options.progressCallback(item->NameFile(), progress, progressMax);
         }
     }
     ssqeFeatures.clear();

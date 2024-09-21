@@ -21,15 +21,19 @@ struct SSCE::Impl {
 };
 
 std::string SSCEInformation::NameDirectory() const {
-    return util::getNameDirectory(ssce);
+    return util::getNameDirectory(file);
 }
 
 std::string SSCEInformation::NameFileBody() const {
-    return util::getNameFileBody(ssce);
+    return util::getNameFileBody(file);
 }
 
 std::string SSCEInformation::NameFileExtension() const {
-    return util::getNameFileExtension(ssce);
+    return util::getNameFileExtension(file);
+}
+
+std::string SSCEInformation::NameFile() const {
+    return util::getFileName(file);
 }
 
 SSCE::SSCE() : pImpl(std::make_unique<SSCE::Impl>()) {
@@ -57,7 +61,7 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
     if (ssceInfo == nullptr) {
         throw SSException("not enough memory", -1);
     }
-    ssceInfo->ssce = ssce;
+    ssceInfo->file = ssce;
 
     auto attr = nodeRoot.attribute("version");
     if (attr.empty()) {
