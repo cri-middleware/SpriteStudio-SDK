@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
             convertOptions.outputDir = output ? outPath : filePath.parent_path();
 
             ProgressBar bar{
-                option::BarWidth{80},
+                option::BarWidth{40},
                 option::Start{"["},
                 option::End{"]"},
                 option::ForegroundColor{Color::white}  ,
