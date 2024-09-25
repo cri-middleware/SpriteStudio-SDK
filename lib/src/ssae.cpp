@@ -17,7 +17,7 @@ const DocPartType DOC_PART = DocPartType::SSAE;
 
 struct SSAE::Impl {
     void parseSettings(const std::shared_ptr<SSAEInformation>& ssaeInfo, const pugi::xml_node& node);
-    std::tuple<int, std::shared_ptr<SSAEPartsInformation>> parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node& node);
+    std::tuple<int, std::shared_ptr<SSAEPartsInformation>> parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node& node, const std::shared_ptr<SSPJInformation> &sspjInfo);
 
     static ss::ssfb2::DataModelPartsKindFeature getPartType(const std::string& valueText);
 
@@ -101,7 +101,7 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
         std::shared_ptr<SSAEPartsInformation> partData;
 
         node = xpath_node.node();
-        std::tie(index, partData) = pImpl->parsePartData(ssaeInfo, tableParts, node);
+        std::tie(index, partData) = pImpl->parsePartData(ssaeInfo, tableParts, node, sspjInfo);
         tableParts[index] = partData;
     }
     ssaeInfo->TableParts = tableParts;
@@ -154,7 +154,7 @@ void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo,
     ssaeInfo->data.depth_ik = valueInt;
 }
 
-std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node &node) {
+std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node &node, const std::shared_ptr<SSPJInformation> &sspjInfo) {
     int valueInt;
     std::string valueText;
     bool valueBool;
@@ -178,13 +178,13 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     valueInt = node.child("parentIndex").text().as_int(-1);
     partData->data->id_parent = valueInt;
     if (partData->data->id_parent >= 0) {
-        auto parentParts = tableParts[partData->data->id_parent];
+        const auto& parentParts = tableParts[partData->data->id_parent];
         parentParts->data->table_id_children.push_back(indexPart);
     }
 
     // get Parts-Type
     valueText = std::string(node.child("type").text().as_string());
-    partData->data->feature = this->getPartType(valueText);
+    partData->data->feature = getPartType(valueText);
 
     // get "Collision" Data
     valueText = std::string(node.child("boundsType").text().as_string());
@@ -329,6 +329,118 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     partData->data->name_family_font_text = valueText;
 
 
+    valueText = std::string(node.child("textCharMap").text().as_string());
+    partData->data->index_bitmap_font_text = sspjInfo->indexGetFontBitmap(valueText);
+
+    partData->data->size_font_text = node.child("textSize").text().as_float(0.0f);
+
+    partData->data->space_text = node.child("textSize").text().as_float(0.0f);
+
+    partData->data->size_x_text = node.child("textWidth").text().as_int(-1);
+
+    partData->data->size_y_text = node.child("textHeight").text().as_int(-1);
+
+    if (node.child("textSmooth").text().as_bool(false)) {
+        partData->data->status |= 0x00000020; // SMOOTH_TEXTURE TODO: impl
+    }
+
+    if (node.child("textMask").text().as_bool(false)) {
+        partData->data->status |= 0x00000001; // MASK TODO: impl
+    }
+
+
+    auto anchor = node.child("eAnchor").text().as_int(-1);
+    if (anchor != -1) {
+        switch (anchor) {
+            case 0x00:	/*  0 : 0000-0000 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::LU;
+            break;
+            case 0x01:	/* 16 : 0000-0001 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::CU;
+            break;
+            case 0x02:	/* 32 : 0000-0010 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::RU;
+            break;
+
+            case 0x10:	/*  1 : 0001-0000 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::LC;
+            break;
+            case 0x11:	/* 17 : 0001-0001 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::CC;
+            break;
+            case 0x12:	/* 33 : 0001-0010 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::RC;
+            break;
+
+            case 0x20:	/*  2 : 0010-0000 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::LD;
+            break;
+            case 0x21:	/* 18 : 0010-0001 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::CD;
+            break;
+            case 0x22:	/* 34 : 0010-0010 */
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::RD;
+            break;
+
+            default:
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::LU;
+            break;
+        }
+    } else {
+        switch (partData->data->feature) {
+            case ss::ssfb2::DataModelPartsKindFeature::Text:
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::LU;
+            break;
+
+            case ss::ssfb2::DataModelPartsKindFeature::Root:
+            case ss::ssfb2::DataModelPartsKindFeature::Null:
+            case ss::ssfb2::DataModelPartsKindFeature::Normal:
+            case ss::ssfb2::DataModelPartsKindFeature::Instance:
+            case ss::ssfb2::DataModelPartsKindFeature::Effect:
+            case ss::ssfb2::DataModelPartsKindFeature::Mask:
+            case ss::ssfb2::DataModelPartsKindFeature::Joint:
+            case ss::ssfb2::DataModelPartsKindFeature::Bone:
+            case ss::ssfb2::DataModelPartsKindFeature::MoveNode:
+            case ss::ssfb2::DataModelPartsKindFeature::Constraint:
+            case ss::ssfb2::DataModelPartsKindFeature::BonePoint:
+            case ss::ssfb2::DataModelPartsKindFeature::Mesh:
+            case ss::ssfb2::DataModelPartsKindFeature::Transform_Constraint:
+            case ss::ssfb2::DataModelPartsKindFeature::Camera:
+            case ss::ssfb2::DataModelPartsKindFeature::Audio:
+            case ss::ssfb2::DataModelPartsKindFeature::Shape:
+            case ss::ssfb2::DataModelPartsKindFeature::Nine_Slice:
+            default:
+                partData->data->anchor_text = ss::ssfb2::KindAnchorText::NON;
+            break;
+        }
+    }
+
+    // get "Shape" data
+    valueText = std::string(node.child("shapeType").text().as_string(""));
+    partData->data->shape = ss::ssfb2::KindShape::Non;
+    if (!valueText.empty()) {
+        if (valueText == "rectangle") {
+            partData->data->shape = ss::ssfb2::KindShape::Rectangle;
+        }
+    }
+
+    // MEMO: "Mask" status is shared between "Shape" and "Text".
+    if (node.child("shapeMask").text().as_bool(false)) {
+        partData->data->status |= 0x00000001; // MASK TODO: impl
+    }
+
+    partData->data->margin_l_nineslice = node.child("ninesMarginL").text().as_int(-1);
+    partData->data->margin_r_nineslice = node.child("ninesMarginR").text().as_int(-1);
+    partData->data->margin_u_nineslice = node.child("ninesMarginT").text().as_int(-1);
+    partData->data->margin_d_nineslice = node.child("ninesMarginB").text().as_int(-1);
+
+    if (node.child("ninesFillMode").text().as_bool(false)) {
+        partData->data->status |= 0x00000100; // MODE_TILE_NINE_SLICE TODO: impl
+    }
+
+    if (node.child("ninesMask").text().as_bool(false)) {
+        partData->data->status |= 0x00000001; // MASK TODO: impl
+    }
 
     return std::make_tuple(indexPart, partData);
 }

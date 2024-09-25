@@ -124,6 +124,9 @@ namespace SpriteStudio {
         std::string Signal;
         KindCoordUnit CoordUnit;
 
+        std::vector<std::string> ListNameFontBitmap;
+        std::vector<std::string> TableNameFontBitmap;
+
     public:
         int addTexture(const std::string& nameTexture);
         int addTextureExternal(const std::string& nameTexture, int indexTexture, int flagTexture);

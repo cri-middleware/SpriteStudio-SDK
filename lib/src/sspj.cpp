@@ -82,32 +82,19 @@ int SSPJInformation::indexGetFontBitmap(const std::string &name) {
         return -1;
     }
 
-    // TODO: impl
-    /*
-    // MEMO: Comparison are always made in lower-case, but storage is in original.
-    // MEMO: Path-separators are normalized.
-    string nameNormalized = Utility.File.PathNormalize(name);
-    string nameLower = Utility.File.PathNormalize(nameNormalized.ToLower());
-    if(null == ListNameFontBitmap)
-    {
-        ListNameFontBitmap = new List<string>();
-    }
-    else
-    {
-        int count = ListNameFontBitmap.Count;
-        for(int i=0; i<count; i++)
-        {
-            if(ListNameFontBitmap[i].ToLower() == nameLower)
-            {
-                return(i);
-            }
-        }
-    }
-    int index = ListNameFontBitmap.Count;
-    ListNameFontBitmap.Add(Utility.File.PathNormalize(nameNormalized));
-    */
+    std::string lowerResult;
+    std::transform(name.begin(), name.end(), lowerResult.begin(), ::tolower);
 
-    return -1;
+    int index = -1;
+    auto result = std::find(ListNameFontBitmap.begin(), ListNameFontBitmap.end(), lowerResult);
+    if (result == ListNameFontBitmap.end()) {
+        ListNameFontBitmap.push_back(lowerResult);
+        index = static_cast<int>(ListNameTexture.size() - 1);
+    } else {
+        index = static_cast<int>(std::distance(ListNameTexture.begin(), result));
+    }
+
+    return index;
 }
 
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {
