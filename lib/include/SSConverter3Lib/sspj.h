@@ -5,7 +5,9 @@
 #include <mutex>
 
 #include "version.h"
-#include "ssfb2/ssfb2_generated.h"
+#include "ssfb2/type_base_generated.h"
+#include "ssfb2/Data/common_ssfb2_generated.h"
+#include "ssfb2/Data/ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSSE;

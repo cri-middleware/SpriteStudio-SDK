@@ -92,6 +92,7 @@ set(SsConverter3Lib_SRCS
 set(SsConverter3Lib_HEADERS
         include/SSConverter3Lib/SSConverter3Lib.h
         include/SSConverter3Lib/version.h
+
         include/SSConverter3Lib/sspj.h
         include/SSConverter3Lib/ssae.h
         include/SSConverter3Lib/ssce.h
@@ -99,6 +100,16 @@ set(SsConverter3Lib_HEADERS
         include/SSConverter3Lib/ssqe.h
         include/SSConverter3Lib/ssse.h
         include/SSConverter3Lib/fnt.h
+
+        include/SSConverter3Lib/ssfb2/type_base_generated.h
+        include/SSConverter3Lib/ssfb2/Data/common_ssfb2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/ssc2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/ssf2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/ssq2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/ssa2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/sse2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/ssfb2_generated.h
+        include/SSConverter3Lib/ssfb2/Data/sss2_generated.h
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

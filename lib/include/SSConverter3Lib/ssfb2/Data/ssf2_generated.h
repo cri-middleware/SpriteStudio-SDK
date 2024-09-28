@@ -104,7 +104,7 @@ inline ::flatbuffers::Offset<DataFontBitmapExtendSplit> CreateDataFontBitmapExte
 
 struct DataFontBitmapSplitT : public ::flatbuffers::NativeTable {
   typedef DataFontBitmapSplit TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::string name_face{};
   uint16_t size = 0;
@@ -114,9 +114,9 @@ struct DataFontBitmapSplitT : public ::flatbuffers::NativeTable {
   uint16_t padding_d = 0;
   int16_t base = 0;
   int16_t height_line = 0;
-  std::shared_ptr<ss::ssfb2::Vector2T> scale{};
-  std::shared_ptr<ss::ssfb2::Vector2T> spacing{};
-  std::shared_ptr<ss::ssfb2::Vector2T> size_texture_original{};
+  std::shared_ptr<ss::ssfb2::Vector2> scale{};
+  std::shared_ptr<ss::ssfb2::Vector2> spacing{};
+  std::shared_ptr<ss::ssfb2::Vector2> size_texture_original{};
   std::vector<std::string> name_texture{};
   std::vector<std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>> table_data{};
   std::shared_ptr<ss::ssfb2::DataFontBitmapExtendSplitT> extend_split{};
@@ -149,10 +149,10 @@ struct DataFontBitmapSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
     VT_EXTEND_SPLIT = 34
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -209,22 +209,22 @@ struct DataFontBitmapSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
     return SetField<int16_t>(VT_HEIGHT_LINE, _height_line, 0);
   }
   const ss::ssfb2::Vector2 *scale() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SCALE);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SCALE);
   }
   ss::ssfb2::Vector2 *mutable_scale() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SCALE);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SCALE);
   }
   const ss::ssfb2::Vector2 *spacing() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SPACING);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SPACING);
   }
   ss::ssfb2::Vector2 *mutable_spacing() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SPACING);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SPACING);
   }
   const ss::ssfb2::Vector2 *size_texture_original() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
   }
   ss::ssfb2::Vector2 *mutable_size_texture_original() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_NAME_TEXTURE);
@@ -246,8 +246,7 @@ struct DataFontBitmapSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_NAME_FACE) &&
@@ -259,12 +258,9 @@ struct DataFontBitmapSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
            VerifyField<uint16_t>(verifier, VT_PADDING_D, 2) &&
            VerifyField<int16_t>(verifier, VT_BASE, 2) &&
            VerifyField<int16_t>(verifier, VT_HEIGHT_LINE, 2) &&
-           VerifyOffset(verifier, VT_SCALE) &&
-           verifier.VerifyTable(scale()) &&
-           VerifyOffset(verifier, VT_SPACING) &&
-           verifier.VerifyTable(spacing()) &&
-           VerifyOffset(verifier, VT_SIZE_TEXTURE_ORIGINAL) &&
-           verifier.VerifyTable(size_texture_original()) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SCALE, 4) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SPACING, 4) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SIZE_TEXTURE_ORIGINAL, 4) &&
            VerifyOffset(verifier, VT_NAME_TEXTURE) &&
            verifier.VerifyVector(name_texture()) &&
            verifier.VerifyVectorOfStrings(name_texture()) &&
@@ -284,8 +280,8 @@ struct DataFontBitmapSplitBuilder {
   typedef DataFontBitmapSplit Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataFontBitmapSplit::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataFontBitmapSplit::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataFontBitmapSplit::VT_NAME, name);
@@ -314,14 +310,14 @@ struct DataFontBitmapSplitBuilder {
   void add_height_line(int16_t height_line) {
     fbb_.AddElement<int16_t>(DataFontBitmapSplit::VT_HEIGHT_LINE, height_line, 0);
   }
-  void add_scale(::flatbuffers::Offset<ss::ssfb2::Vector2> scale) {
-    fbb_.AddOffset(DataFontBitmapSplit::VT_SCALE, scale);
+  void add_scale(const ss::ssfb2::Vector2 *scale) {
+    fbb_.AddStruct(DataFontBitmapSplit::VT_SCALE, scale);
   }
-  void add_spacing(::flatbuffers::Offset<ss::ssfb2::Vector2> spacing) {
-    fbb_.AddOffset(DataFontBitmapSplit::VT_SPACING, spacing);
+  void add_spacing(const ss::ssfb2::Vector2 *spacing) {
+    fbb_.AddStruct(DataFontBitmapSplit::VT_SPACING, spacing);
   }
-  void add_size_texture_original(::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original) {
-    fbb_.AddOffset(DataFontBitmapSplit::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
+  void add_size_texture_original(const ss::ssfb2::Vector2 *size_texture_original) {
+    fbb_.AddStruct(DataFontBitmapSplit::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
   }
   void add_name_texture(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture) {
     fbb_.AddOffset(DataFontBitmapSplit::VT_NAME_TEXTURE, name_texture);
@@ -345,7 +341,7 @@ struct DataFontBitmapSplitBuilder {
 
 inline ::flatbuffers::Offset<DataFontBitmapSplit> CreateDataFontBitmapSplit(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> name_face = 0,
     uint16_t size = 0,
@@ -355,9 +351,9 @@ inline ::flatbuffers::Offset<DataFontBitmapSplit> CreateDataFontBitmapSplit(
     uint16_t padding_d = 0,
     int16_t base = 0,
     int16_t height_line = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> spacing = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original = 0,
+    const ss::ssfb2::Vector2 *scale = nullptr,
+    const ss::ssfb2::Vector2 *spacing = nullptr,
+    const ss::ssfb2::Vector2 *size_texture_original = nullptr,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>>> table_data = 0,
     ::flatbuffers::Offset<ss::ssfb2::DataFontBitmapExtendSplit> extend_split = 0) {
@@ -388,7 +384,7 @@ struct DataFontBitmapSplit::Traits {
 
 inline ::flatbuffers::Offset<DataFontBitmapSplit> CreateDataFontBitmapSplitDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const char *name_face = nullptr,
     uint16_t size = 0,
@@ -398,9 +394,9 @@ inline ::flatbuffers::Offset<DataFontBitmapSplit> CreateDataFontBitmapSplitDirec
     uint16_t padding_d = 0,
     int16_t base = 0,
     int16_t height_line = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> spacing = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original = 0,
+    const ss::ssfb2::Vector2 *scale = nullptr,
+    const ss::ssfb2::Vector2 *spacing = nullptr,
+    const ss::ssfb2::Vector2 *size_texture_original = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>> *table_data = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::DataFontBitmapExtendSplit> extend_split = 0) {
@@ -494,7 +490,7 @@ inline bool operator!=(const DataFontBitmapSplitT &lhs, const DataFontBitmapSpli
 
 
 inline DataFontBitmapSplitT::DataFontBitmapSplitT(const DataFontBitmapSplitT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         name_face(o.name_face),
         size(o.size),
@@ -504,9 +500,9 @@ inline DataFontBitmapSplitT::DataFontBitmapSplitT(const DataFontBitmapSplitT &o)
         padding_d(o.padding_d),
         base(o.base),
         height_line(o.height_line),
-        scale((o.scale) ? new ss::ssfb2::Vector2T(*o.scale) : nullptr),
-        spacing((o.spacing) ? new ss::ssfb2::Vector2T(*o.spacing) : nullptr),
-        size_texture_original((o.size_texture_original) ? new ss::ssfb2::Vector2T(*o.size_texture_original) : nullptr),
+        scale((o.scale) ? new ss::ssfb2::Vector2(*o.scale) : nullptr),
+        spacing((o.spacing) ? new ss::ssfb2::Vector2(*o.spacing) : nullptr),
+        size_texture_original((o.size_texture_original) ? new ss::ssfb2::Vector2(*o.size_texture_original) : nullptr),
         name_texture(o.name_texture),
         extend_split((o.extend_split) ? new ss::ssfb2::DataFontBitmapExtendSplitT(*o.extend_split) : nullptr) {
   table_data.reserve(o.table_data.size());
@@ -542,7 +538,7 @@ inline DataFontBitmapSplitT *DataFontBitmapSplit::UnPack(const ::flatbuffers::re
 inline void DataFontBitmapSplit::UnPackTo(DataFontBitmapSplitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = name_face(); if (_e) _o->name_face = _e->str(); }
   { auto _e = size(); _o->size = _e; }
@@ -552,9 +548,9 @@ inline void DataFontBitmapSplit::UnPackTo(DataFontBitmapSplitT *_o, const ::flat
   { auto _e = padding_d(); _o->padding_d = _e; }
   { auto _e = base(); _o->base = _e; }
   { auto _e = height_line(); _o->height_line = _e; }
-  { auto _e = scale(); if (_e) { if(_o->scale) { _e->UnPackTo(_o->scale.get(), _resolver); } else { _o->scale = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale) { _o->scale.reset(); } }
-  { auto _e = spacing(); if (_e) { if(_o->spacing) { _e->UnPackTo(_o->spacing.get(), _resolver); } else { _o->spacing = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->spacing) { _o->spacing.reset(); } }
-  { auto _e = size_texture_original(); if (_e) { if(_o->size_texture_original) { _e->UnPackTo(_o->size_texture_original.get(), _resolver); } else { _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->size_texture_original) { _o->size_texture_original.reset(); } }
+  { auto _e = scale(); if (_e) _o->scale = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = spacing(); if (_e) _o->spacing = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = size_texture_original(); if (_e) _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
   { auto _e = name_texture(); if (_e) { _o->name_texture.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_texture[_i] = _e->Get(_i)->str(); } } else { _o->name_texture.resize(0); } }
   { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataFontBitmapExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
@@ -568,7 +564,7 @@ inline ::flatbuffers::Offset<DataFontBitmapSplit> CreateDataFontBitmapSplit(::fl
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataFontBitmapSplitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _name_face = _o->name_face.empty() ? 0 : _fbb.CreateString(_o->name_face);
   auto _size = _o->size;
@@ -578,9 +574,9 @@ inline ::flatbuffers::Offset<DataFontBitmapSplit> CreateDataFontBitmapSplit(::fl
   auto _padding_d = _o->padding_d;
   auto _base = _o->base;
   auto _height_line = _o->height_line;
-  auto _scale = _o->scale ? CreateVector2(_fbb, _o->scale.get(), _rehasher) : 0;
-  auto _spacing = _o->spacing ? CreateVector2(_fbb, _o->spacing.get(), _rehasher) : 0;
-  auto _size_texture_original = _o->size_texture_original ? CreateVector2(_fbb, _o->size_texture_original.get(), _rehasher) : 0;
+  auto _scale = _o->scale ? _o->scale.get() : nullptr;
+  auto _spacing = _o->spacing ? _o->spacing.get() : nullptr;
+  auto _size_texture_original = _o->size_texture_original ? _o->size_texture_original.get() : nullptr;
   auto _name_texture = _o->name_texture.size() ? _fbb.CreateVectorOfStrings(_o->name_texture) : 0;
   auto _table_data = _o->table_data.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>> (_o->table_data.size(), [](size_t i, _VectorArgs *__va) { return CreateLibraryDataFontGryphBitmap(*__va->__fbb, __va->__o->table_data[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _extend_split = _o->extend_split ? CreateDataFontBitmapExtendSplit(_fbb, _o->extend_split.get(), _rehasher) : 0;

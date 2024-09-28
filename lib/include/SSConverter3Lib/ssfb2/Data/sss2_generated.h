@@ -104,7 +104,7 @@ inline ::flatbuffers::Offset<DataSoundListExtendSplit> CreateDataSoundListExtend
 
 struct DataSoundListSplitT : public ::flatbuffers::NativeTable {
   typedef DataSoundListSplit TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::vector<std::shared_ptr<ss::ssfb2::LibraryDataSoundT>> table_data{};
   std::shared_ptr<ss::ssfb2::DataSoundListExtendSplitT> extend_split{};
@@ -125,10 +125,10 @@ struct DataSoundListSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
     VT_EXTEND_SPLIT = 10
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -150,8 +150,7 @@ struct DataSoundListSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_TABLE_DATA) &&
@@ -170,8 +169,8 @@ struct DataSoundListSplitBuilder {
   typedef DataSoundListSplit Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataSoundListSplit::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataSoundListSplit::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataSoundListSplit::VT_NAME, name);
@@ -195,7 +194,7 @@ struct DataSoundListSplitBuilder {
 
 inline ::flatbuffers::Offset<DataSoundListSplit> CreateDataSoundListSplit(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataSound>>> table_data = 0,
     ::flatbuffers::Offset<ss::ssfb2::DataSoundListExtendSplit> extend_split = 0) {
@@ -214,7 +213,7 @@ struct DataSoundListSplit::Traits {
 
 inline ::flatbuffers::Offset<DataSoundListSplit> CreateDataSoundListSplitDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataSound>> *table_data = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::DataSoundListExtendSplit> extend_split = 0) {
@@ -282,7 +281,7 @@ inline bool operator!=(const DataSoundListSplitT &lhs, const DataSoundListSplitT
 
 
 inline DataSoundListSplitT::DataSoundListSplitT(const DataSoundListSplitT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         extend_split((o.extend_split) ? new ss::ssfb2::DataSoundListExtendSplitT(*o.extend_split) : nullptr) {
   table_data.reserve(o.table_data.size());
@@ -306,7 +305,7 @@ inline DataSoundListSplitT *DataSoundListSplit::UnPack(const ::flatbuffers::reso
 inline void DataSoundListSplit::UnPackTo(DataSoundListSplitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataSoundT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataSoundListExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
@@ -320,7 +319,7 @@ inline ::flatbuffers::Offset<DataSoundListSplit> CreateDataSoundListSplit(::flat
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataSoundListSplitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _table_data = _o->table_data.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::LibraryDataSound>> (_o->table_data.size(), [](size_t i, _VectorArgs *__va) { return CreateLibraryDataSound(*__va->__fbb, __va->__o->table_data[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _extend_split = _o->extend_split ? CreateDataSoundListExtendSplit(_fbb, _o->extend_split.get(), _rehasher) : 0;

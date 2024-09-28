@@ -104,7 +104,7 @@ inline ::flatbuffers::Offset<DataCellmapExtendSplit> CreateDataCellmapExtendSpli
 
 struct DataCellMapSplitT : public ::flatbuffers::NativeTable {
   typedef DataCellMapSplit TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::string filename_texture{};
   std::shared_ptr<ss::ssfb2::LibraryDataCellMapT> cell_map{};
@@ -127,10 +127,10 @@ struct DataCellMapSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_EXTEND_SPLIT = 12
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -158,8 +158,7 @@ struct DataCellMapSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_FILENAME_TEXTURE) &&
@@ -179,8 +178,8 @@ struct DataCellMapSplitBuilder {
   typedef DataCellMapSplit Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataCellMapSplit::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataCellMapSplit::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataCellMapSplit::VT_NAME, name);
@@ -207,7 +206,7 @@ struct DataCellMapSplitBuilder {
 
 inline ::flatbuffers::Offset<DataCellMapSplit> CreateDataCellMapSplit(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> filename_texture = 0,
     ::flatbuffers::Offset<ss::ssfb2::LibraryDataCellMap> cell_map = 0,
@@ -228,7 +227,7 @@ struct DataCellMapSplit::Traits {
 
 inline ::flatbuffers::Offset<DataCellMapSplit> CreateDataCellMapSplitDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const char *filename_texture = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::LibraryDataCellMap> cell_map = 0,
@@ -299,7 +298,7 @@ inline bool operator!=(const DataCellMapSplitT &lhs, const DataCellMapSplitT &rh
 
 
 inline DataCellMapSplitT::DataCellMapSplitT(const DataCellMapSplitT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         filename_texture(o.filename_texture),
         cell_map((o.cell_map) ? new ss::ssfb2::LibraryDataCellMapT(*o.cell_map) : nullptr),
@@ -324,7 +323,7 @@ inline DataCellMapSplitT *DataCellMapSplit::UnPack(const ::flatbuffers::resolver
 inline void DataCellMapSplit::UnPackTo(DataCellMapSplitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = filename_texture(); if (_e) _o->filename_texture = _e->str(); }
   { auto _e = cell_map(); if (_e) { if(_o->cell_map) { _e->UnPackTo(_o->cell_map.get(), _resolver); } else { _o->cell_map = std::shared_ptr<ss::ssfb2::LibraryDataCellMapT>(_e->UnPack(_resolver)); } } else if (_o->cell_map) { _o->cell_map.reset(); } }
@@ -339,7 +338,7 @@ inline ::flatbuffers::Offset<DataCellMapSplit> CreateDataCellMapSplit(::flatbuff
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataCellMapSplitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _filename_texture = _o->filename_texture.empty() ? 0 : _fbb.CreateString(_o->filename_texture);
   auto _cell_map = _o->cell_map ? CreateLibraryDataCellMap(_fbb, _o->cell_map.get(), _rehasher) : 0;

@@ -4,7 +4,8 @@
 #include <map>
 
 #include "version.h"
-#include "ssfb2/common_ssfb2_generated.h"
+#include "ssfb2/type_base_generated.h"
+#include "ssfb2/Data/common_ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSPJInformation;
@@ -32,7 +33,7 @@ namespace SpriteStudio {
         SSEEVersion version;
 
         int VersionRenderer;
-        ss::ssfb2::Vector2T ScaleLayout;
+        ss::ssfb2::Vector2 ScaleLayout;
         int SeedRandom;
         bool FlagLockSeed;
         int FramePerSecond;

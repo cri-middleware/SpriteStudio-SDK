@@ -19,13 +19,13 @@ struct SSAE::Impl {
     void parseSettings(const std::shared_ptr<SSAEInformation>& ssaeInfo, const pugi::xml_node& node);
     std::tuple<int, std::shared_ptr<SSAEPartsInformation>> parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node& node, const std::shared_ptr<SSPJInformation> &sspjInfo);
 
-    static ss::ssfb2::DataModelPartsKindFeature getPartType(const std::string& valueText);
+    static ss::ssfb2::KindFeatureParts getPartType(const std::string& valueText);
 
     static std::tuple<ss::ssfb2::KindCollision, int> getCollisionType(const std::string& valueText, float Collider_SizeZ);
 
     static ss::ssfb2::KindOperationBlend getAlphaBlendType(const std::string& valueText);
 
-    static std::shared_ptr<ss::ssfb2::ColorLabelT>  getColorLabel(const std::string& valueText);
+    static std::shared_ptr<ss::ssfb2::ColorLabel>  getColorLabel(const std::string& valueText);
 };
 
 std::string SSAEInformation::NameDirectory() const {
@@ -123,11 +123,11 @@ void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo,
     ss::ssfb2::KindModeSort sort;
     valueText = std::string(node.child("sortMode").text().as_string());
     if (valueText == "prio") {
-        sort = ss::ssfb2::KindModeSort::Priority;
+        sort = ss::ssfb2::KindModeSort::PRIORITY;
     } else if (valueText == "z") {
-        sort = ss::ssfb2::KindModeSort::PositionZ;
+        sort = ss::ssfb2::KindModeSort::POSITIONZ;
     } else {
-        sort = ss::ssfb2::KindModeSort::Priority;
+        sort = ss::ssfb2::KindModeSort::PRIORITY;
     }
     ssaeInfo->data.mode_sort = sort;
 
@@ -188,7 +188,7 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
 
     // get "Collision" Data
     valueText = std::string(node.child("boundsType").text().as_string());
-    float Collider_SizeZ = 0.0f; // TODO: impl
+    float Collider_SizeZ = 0.0f; // TODO: impl to get an external class
     ss::ssfb2::KindCollision collision;
     auto sizeCollision = 0.0f;
 
@@ -261,7 +261,7 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     partData->FlagMasking = valueBool;
 
     // UnderControl Data Get
-    if (partData->data->feature == ss::ssfb2::DataModelPartsKindFeature::Instance) {
+    if (partData->data->feature == ss::ssfb2::KindFeatureParts::INSTANCE) {
         valueText = std::string(node.child("refAnimePack").text().as_string());
         if (!valueText.empty()) {
             // partData->name_under_control = valueText;
@@ -269,7 +269,7 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
             valueText = std::string(node.child("refAnime").text().as_string());
             partData->data->name_animation_under_control = valueText.empty() ? "" : valueText;
         }
-    } else if (partData->data->feature == ss::ssfb2::DataModelPartsKindFeature::Effect) {
+    } else if (partData->data->feature == ss::ssfb2::KindFeatureParts::EFFECT) {
         valueText = std::string(node.child("refEffectName").text().as_string());
         if (!valueText.empty()) {
             // partData->name_under_control = valueText; // TODO: impl
@@ -314,7 +314,7 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     }
 
     // clear Status
-    partData->data->status = 0;
+    // partData->data->status = 0; // TODO: impl
 
     // get "Text" data
     valueText = std::string(node.child("text").text().as_string(""));
@@ -322,7 +322,7 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
 
     valueBool = node.child("textBitmap").text().as_bool(false);
     if (valueBool) {
-        partData->data->status |= 0x00000010; // BITMAP TODO: impl
+        // partData->data->status |= 0x00000010; // BITMAP TODO: impl
     }
 
     valueText = std::string(node.child("textFamily").text().as_string(""));
@@ -341,11 +341,11 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     partData->data->size_y_text = node.child("textHeight").text().as_int(-1);
 
     if (node.child("textSmooth").text().as_bool(false)) {
-        partData->data->status |= 0x00000020; // SMOOTH_TEXTURE TODO: impl
+        // partData->data->status |= 0x00000020; // SMOOTH_TEXTURE TODO: impl
     }
 
     if (node.child("textMask").text().as_bool(false)) {
-        partData->data->status |= 0x00000001; // MASK TODO: impl
+        // partData->data->status |= 0x00000001; // MASK TODO: impl
     }
 
 
@@ -388,27 +388,27 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
         }
     } else {
         switch (partData->data->feature) {
-            case ss::ssfb2::DataModelPartsKindFeature::Text:
+            case ss::ssfb2::KindFeatureParts::TEXT:
                 partData->data->anchor_text = ss::ssfb2::KindAnchorText::LU;
             break;
 
-            case ss::ssfb2::DataModelPartsKindFeature::Root:
-            case ss::ssfb2::DataModelPartsKindFeature::Null:
-            case ss::ssfb2::DataModelPartsKindFeature::Normal:
-            case ss::ssfb2::DataModelPartsKindFeature::Instance:
-            case ss::ssfb2::DataModelPartsKindFeature::Effect:
-            case ss::ssfb2::DataModelPartsKindFeature::Mask:
-            case ss::ssfb2::DataModelPartsKindFeature::Joint:
-            case ss::ssfb2::DataModelPartsKindFeature::Bone:
-            case ss::ssfb2::DataModelPartsKindFeature::MoveNode:
-            case ss::ssfb2::DataModelPartsKindFeature::Constraint:
-            case ss::ssfb2::DataModelPartsKindFeature::BonePoint:
-            case ss::ssfb2::DataModelPartsKindFeature::Mesh:
-            case ss::ssfb2::DataModelPartsKindFeature::Transform_Constraint:
-            case ss::ssfb2::DataModelPartsKindFeature::Camera:
-            case ss::ssfb2::DataModelPartsKindFeature::Audio:
-            case ss::ssfb2::DataModelPartsKindFeature::Shape:
-            case ss::ssfb2::DataModelPartsKindFeature::Nine_Slice:
+            case ss::ssfb2::KindFeatureParts::ROOT:
+            case ss::ssfb2::KindFeatureParts::NULL_:
+            case ss::ssfb2::KindFeatureParts::NORMAL:
+            case ss::ssfb2::KindFeatureParts::INSTANCE:
+            case ss::ssfb2::KindFeatureParts::EFFECT:
+            case ss::ssfb2::KindFeatureParts::MASK:
+            case ss::ssfb2::KindFeatureParts::JOINT:
+            case ss::ssfb2::KindFeatureParts::BONE:
+            case ss::ssfb2::KindFeatureParts::MOVENODE:
+            case ss::ssfb2::KindFeatureParts::CONSTRAINT:
+            case ss::ssfb2::KindFeatureParts::BONEPOINT:
+            case ss::ssfb2::KindFeatureParts::MESH:
+            case ss::ssfb2::KindFeatureParts::TRANSFORM_CONSTRAINT:
+            case ss::ssfb2::KindFeatureParts::CAMERA:
+            case ss::ssfb2::KindFeatureParts::AUDIO:
+            case ss::ssfb2::KindFeatureParts::SHAPE:
+            case ss::ssfb2::KindFeatureParts::NINE_SLICE:
             default:
                 partData->data->anchor_text = ss::ssfb2::KindAnchorText::NON;
             break;
@@ -417,16 +417,16 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
 
     // get "Shape" data
     valueText = std::string(node.child("shapeType").text().as_string(""));
-    partData->data->shape = ss::ssfb2::KindShape::Non;
+    partData->data->shape = ss::ssfb2::KindShape::NON;
     if (!valueText.empty()) {
         if (valueText == "rectangle") {
-            partData->data->shape = ss::ssfb2::KindShape::Rectangle;
+            partData->data->shape = ss::ssfb2::KindShape::RECTANGLE;
         }
     }
 
     // MEMO: "Mask" status is shared between "Shape" and "Text".
     if (node.child("shapeMask").text().as_bool(false)) {
-        partData->data->status |= 0x00000001; // MASK TODO: impl
+        // partData->data->status |= 0x00000001; // MASK TODO: impl
     }
 
     partData->data->margin_l_nineslice = node.child("ninesMarginL").text().as_int(-1);
@@ -435,54 +435,54 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     partData->data->margin_d_nineslice = node.child("ninesMarginB").text().as_int(-1);
 
     if (node.child("ninesFillMode").text().as_bool(false)) {
-        partData->data->status |= 0x00000100; // MODE_TILE_NINE_SLICE TODO: impl
+        // partData->data->status |= 0x00000100; // MODE_TILE_NINE_SLICE TODO: impl
     }
 
     if (node.child("ninesMask").text().as_bool(false)) {
-        partData->data->status |= 0x00000001; // MASK TODO: impl
+        // partData->data->status |= 0x00000001; // MASK TODO: impl
     }
 
     return std::make_tuple(indexPart, partData);
 }
 
-ss::ssfb2::DataModelPartsKindFeature SSAE::Impl::getPartType(const std::string &valueText) {
-    ss::ssfb2::DataModelPartsKindFeature feature;
+ss::ssfb2::KindFeatureParts SSAE::Impl::getPartType(const std::string &valueText) {
+    ss::ssfb2::KindFeatureParts feature;
 
     if (valueText == "normal") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Normal;
+        feature = ss::ssfb2::KindFeatureParts::NORMAL;
     } else if (valueText == "instance") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Instance;
+        feature = ss::ssfb2::KindFeatureParts::INSTANCE;
     } else if (valueText == "effect") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Effect;
+        feature = ss::ssfb2::KindFeatureParts::EFFECT;
     } else if (valueText == "mask") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Mask;
+        feature = ss::ssfb2::KindFeatureParts::MASK;
     } else if (valueText == "mesh") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Mesh;
+        feature = ss::ssfb2::KindFeatureParts::MESH;
     } else if (valueText == "joint") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Joint;
+        feature = ss::ssfb2::KindFeatureParts::JOINT;
     } else if (valueText == "armature") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Bone;
+        feature = ss::ssfb2::KindFeatureParts::BONE;
     } else if (valueText == "movenode") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::MoveNode;
+        feature = ss::ssfb2::KindFeatureParts::MOVENODE;
     } else if (valueText == "constraint") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Constraint;
+        feature = ss::ssfb2::KindFeatureParts::CONSTRAINT;
     } else if (valueText == "bonepoint") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::BonePoint;
+        feature = ss::ssfb2::KindFeatureParts::BONEPOINT;
     } else if (valueText == "transformconstraint") /* 仮: Yuzu. */ {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Transform_Constraint;
+        feature = ss::ssfb2::KindFeatureParts::TRANSFORM_CONSTRAINT;
     } else if (valueText == "camera") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Camera;
+        feature = ss::ssfb2::KindFeatureParts::CAMERA;
     } else if (valueText == "ssaudio") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Audio;
+        feature = ss::ssfb2::KindFeatureParts::AUDIO;
     } else if (valueText == "shape") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Shape;
+        feature = ss::ssfb2::KindFeatureParts::SHAPE;
     } else if (valueText == "text") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Text;
+        feature = ss::ssfb2::KindFeatureParts::TEXT;
     } else if (valueText == "nines") {
-        feature = ss::ssfb2::DataModelPartsKindFeature::Nine_Slice;
+        feature = ss::ssfb2::KindFeatureParts::NINE_SLICE;
     } else {
         // Null or others
-        feature = ss::ssfb2::DataModelPartsKindFeature::Null;
+        feature = ss::ssfb2::KindFeatureParts::NULL_;
     }
 
     return feature;
@@ -493,23 +493,23 @@ std::tuple<ss::ssfb2::KindCollision, int> SSAE::Impl::getCollisionType(const std
     auto sizeCollision = 0.0f;
 
     if (valueText == "quad") {
-        collision = ss::ssfb2::KindCollision::Square;
+        collision = ss::ssfb2::KindCollision::SQUARE;
         sizeCollision = Collider_SizeZ;
     } else if (valueText == "aabb") {
-        collision = ss::ssfb2::KindCollision::Aabb;
+        collision = ss::ssfb2::KindCollision::AABB;
         sizeCollision = Collider_SizeZ;
     } else if (valueText == "circle") {
-        collision = ss::ssfb2::KindCollision::Circle;
+        collision = ss::ssfb2::KindCollision::CIRCLE;
         sizeCollision = Collider_SizeZ;
     } else if (valueText == "circle_smin") {
-        collision = ss::ssfb2::KindCollision::CircleScaleMinimum;
+        collision = ss::ssfb2::KindCollision::CIRCLE_SCALE_MINIMUM;
         sizeCollision = Collider_SizeZ;
     } else if (valueText == "circle_smax") {
-        collision = ss::ssfb2::KindCollision::CircleScaleMaximum;
+        collision = ss::ssfb2::KindCollision::CIRCLE_SCALE_MAXIMUM;
         sizeCollision = Collider_SizeZ;
     } else {
         // Non or others
-        collision = ss::ssfb2::KindCollision::Non;
+        collision = ss::ssfb2::KindCollision::NON;
         sizeCollision = 0.0f;
     }
 
@@ -520,59 +520,56 @@ ss::ssfb2::KindOperationBlend SSAE::Impl::getAlphaBlendType(const std::string &v
     ss::ssfb2::KindOperationBlend operationBlend;
 
     if (valueText == "mul") {
-        operationBlend = ss::ssfb2::KindOperationBlend::MulNa;
+        operationBlend = ss::ssfb2::KindOperationBlend::MULNA;
     } else if (valueText == "add") {
-        operationBlend = ss::ssfb2::KindOperationBlend::Add;
+        operationBlend = ss::ssfb2::KindOperationBlend::ADD;
     } else if (valueText == "sub") {
-        operationBlend = ss::ssfb2::KindOperationBlend::Sub;
+        operationBlend = ss::ssfb2::KindOperationBlend::SUB;
     } else if (valueText == "mulalpha" || valueText == "mul2") {
-        operationBlend = ss::ssfb2::KindOperationBlend::Mul;
+        operationBlend = ss::ssfb2::KindOperationBlend::MUL;
     } else if (valueText == "screen" || valueText == "screen2") {
-        operationBlend = ss::ssfb2::KindOperationBlend::Scr;
+        operationBlend = ss::ssfb2::KindOperationBlend::SCR;
     } else if (valueText == "exclusion") {
-        operationBlend = ss::ssfb2::KindOperationBlend::Exc;
+        operationBlend = ss::ssfb2::KindOperationBlend::EXC;
     } else if (valueText == "invert") {
-        operationBlend = ss::ssfb2::KindOperationBlend::Inv;
+        operationBlend = ss::ssfb2::KindOperationBlend::INV;
     } else {
         // "mix", "div2", "overlay2", else
-        operationBlend = ss::ssfb2::KindOperationBlend::Mix;
+        operationBlend = ss::ssfb2::KindOperationBlend::MIX;
     }
 
     return operationBlend;
 }
 
-std::shared_ptr<ss::ssfb2::ColorLabelT> SSAE::Impl::getColorLabel(const std::string &valueText) {
-    auto colorLabel = std::make_shared<ss::ssfb2::ColorLabelT>();
-    colorLabel->color = nullptr;
+std::shared_ptr<ss::ssfb2::ColorLabel> SSAE::Impl::getColorLabel(const std::string &valueText) {
+    ss::ssfb2::KindFormColorLabel form = ss::ssfb2::KindFormColorLabel::NON;
+    ss::ssfb2::Color32 color;
 
     if (valueText.empty()) {
-        colorLabel->form = ss::ssfb2::ColorLabelKindForm::Non;
+        form = ss::ssfb2::KindFormColorLabel::NON;
     } else {
         if (valueText == "Red") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Red;
+            form = ss::ssfb2::KindFormColorLabel::RED;
         } else if (valueText == "Orange") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Orange;
+            form = ss::ssfb2::KindFormColorLabel::ORANGE;
         } else if (valueText == "Yellow") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Yellow;
+            form = ss::ssfb2::KindFormColorLabel::YELLOW;
         } else if (valueText == "Green") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Green;
+            form = ss::ssfb2::KindFormColorLabel::GREEN;
         } else if (valueText == "Blue") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Blue;
+            form = ss::ssfb2::KindFormColorLabel::BLUE;
         } else if (valueText == "Violet") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Violet;
+            form = ss::ssfb2::KindFormColorLabel::VIOLET;
         } else if (valueText == "Gray") {
-            colorLabel->form = ss::ssfb2::ColorLabelKindForm::Gray;
+            form = ss::ssfb2::KindFormColorLabel::GRAY;
         } else {
-            auto color = std::make_shared<ss::ssfb2::Color32T>();
-
             auto argb = std::stoul(valueText, 0, 16);
-            color->a = (argb >> 24) & 0xff;
-            color->r = (argb >> 16) & 0xff;
-            color->g = (argb >> 8) & 0xff;
-            color->b = argb & 0xff;
-            colorLabel->color = color;
+            color.mutate_a((argb >> 24) & 0xff);
+            color.mutate_r((argb >> 16) & 0xff);
+            color.mutate_g((argb >> 8) & 0xff);
+            color.mutate_b(argb & 0xff);
         }
     }
 
-    return colorLabel;
+    return std::make_shared<ss::ssfb2::ColorLabel>(form, color);
 }

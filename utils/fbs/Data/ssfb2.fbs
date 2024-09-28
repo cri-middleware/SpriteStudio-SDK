@@ -44,7 +44,7 @@ table SequencePack {
 //    version:uint;				// - Ver.2.x
     version:DataVersion;		// Ver.3.0 -
     name:string;
-    sequenceList:[DataSequence];
+    sequence_list:[DataSequence];
 }
 
 table FontBitmap {
@@ -81,6 +81,8 @@ table ProjectData {
     animation:[DataAnimation];
     effect:[DataEffect];
     sequence:[SequencePack];
+    soundlist:[DataSoundList];
+    fontbitmap:[FontBitmap];
     name_texture:[string];
     name_texture_external:[string];
     name_font_bitmap:[string];

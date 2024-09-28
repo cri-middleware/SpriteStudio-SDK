@@ -10,7 +10,7 @@ table DataSequencPackeExtendSplit {	// Ver.3.0 -
 table DataSequencePackSplit {		// Ver.3.0 -
     version:DataVersion;
     name:string;
-    sequenceList:[DataSequence];
+    sequence_list:[DataSequence];
 
     extend_split:DataSequencPackeExtendSplit;		// Ver.3.0 -
 }

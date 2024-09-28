@@ -241,7 +241,7 @@ inline ::flatbuffers::Offset<DataAnimationExtendSplit> CreateDataAnimationExtend
 
 struct DataAnimationSplitT : public ::flatbuffers::NativeTable {
   typedef DataAnimationSplit TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>> table_parts{};
   std::shared_ptr<ss::ssfb2::CatalogT> catalog_parts{};
@@ -268,10 +268,10 @@ struct DataAnimationSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
     VT_EXTEND_SPLIT = 16
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -311,8 +311,7 @@ struct DataAnimationSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_TABLE_PARTS) &&
@@ -339,8 +338,8 @@ struct DataAnimationSplitBuilder {
   typedef DataAnimationSplit Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataAnimationSplit::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataAnimationSplit::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataAnimationSplit::VT_NAME, name);
@@ -373,7 +372,7 @@ struct DataAnimationSplitBuilder {
 
 inline ::flatbuffers::Offset<DataAnimationSplit> CreateDataAnimationSplit(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataModelParts>>> table_parts = 0,
     ::flatbuffers::Offset<ss::ssfb2::Catalog> catalog_parts = 0,
@@ -398,7 +397,7 @@ struct DataAnimationSplit::Traits {
 
 inline ::flatbuffers::Offset<DataAnimationSplit> CreateDataAnimationSplitDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataModelParts>> *table_parts = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::Catalog> catalog_parts = 0,
@@ -535,7 +534,7 @@ inline bool operator!=(const DataAnimationSplitT &lhs, const DataAnimationSplitT
 
 
 inline DataAnimationSplitT::DataAnimationSplitT(const DataAnimationSplitT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         catalog_parts((o.catalog_parts) ? new ss::ssfb2::CatalogT(*o.catalog_parts) : nullptr),
         extend_split((o.extend_split) ? new ss::ssfb2::DataAnimationExtendSplitT(*o.extend_split) : nullptr) {
@@ -567,7 +566,7 @@ inline DataAnimationSplitT *DataAnimationSplit::UnPack(const ::flatbuffers::reso
 inline void DataAnimationSplit::UnPackTo(DataAnimationSplitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataModelPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
   { auto _e = catalog_parts(); if (_e) { if(_o->catalog_parts) { _e->UnPackTo(_o->catalog_parts.get(), _resolver); } else { _o->catalog_parts = std::shared_ptr<ss::ssfb2::CatalogT>(_e->UnPack(_resolver)); } } else if (_o->catalog_parts) { _o->catalog_parts.reset(); } }
@@ -584,7 +583,7 @@ inline ::flatbuffers::Offset<DataAnimationSplit> CreateDataAnimationSplit(::flat
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataAnimationSplitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _table_parts = _o->table_parts.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataModelParts>> (_o->table_parts.size(), [](size_t i, _VectorArgs *__va) { return CreateDataModelParts(*__va->__fbb, __va->__o->table_parts[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _catalog_parts = _o->catalog_parts ? CreateCatalog(_fbb, _o->catalog_parts.get(), _rehasher) : 0;

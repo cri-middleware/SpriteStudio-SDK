@@ -124,16 +124,16 @@ std::shared_ptr<SSQEInformation> SSQE::parse(const std::string &ssqe, const std:
         dataSequence->type = type;
 
         auto list_node_set = node.select_nodes("list/value");
-        dataSequence->valueList = {};
+        dataSequence->value_list = {};
         for (const auto& list_xpath_node : list_node_set) {
             auto details = std::shared_ptr<ss::ssfb2::DataSequenceDetailsT>();
             auto list_node = list_xpath_node.node();
-            details->refAnimePack = std::string(list_node.child("refAnimePack").text().as_string());
-            details->refAnime = std::string(list_node.child("refAnime").text().as_string());
-            details->repeatCount = list_node.child("repeatCount").text().as_int();
-            dataSequence->valueList.push_back(details);
+            details->ref_anime_pack = std::string(list_node.child("refAnimePack").text().as_string());
+            details->ref_anime = std::string(list_node.child("refAnime").text().as_string());
+            details->repeat_count = list_node.child("repeatCount").text().as_int();
+            dataSequence->value_list.push_back(details);
 
-            ssqeInfo->InUseAnimationAdd(details->refAnimePack, details->refAnime);
+            ssqeInfo->InUseAnimationAdd(details->ref_anime_pack, details->ref_anime);
         }
 
         ssqeInfo->SequenceList.push_back(dataSequence);

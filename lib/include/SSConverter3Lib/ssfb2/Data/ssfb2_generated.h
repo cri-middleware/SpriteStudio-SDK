@@ -63,7 +63,7 @@ bool operator!=(const ProjectDataT &lhs, const ProjectDataT &rhs);
 
 struct DataCellMapT : public ::flatbuffers::NativeTable {
   typedef DataCellMap TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::vector<int16_t> index_texture{};
   std::vector<std::shared_ptr<ss::ssfb2::LibraryDataCellMapT>> table_cell_map{};
   DataCellMapT() = default;
@@ -82,10 +82,10 @@ struct DataCellMap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TABLE_CELL_MAP = 8
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::Vector<int16_t> *index_texture() const {
     return GetPointer<const ::flatbuffers::Vector<int16_t> *>(VT_INDEX_TEXTURE);
@@ -101,8 +101,7 @@ struct DataCellMap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_INDEX_TEXTURE) &&
            verifier.VerifyVector(index_texture()) &&
            VerifyOffset(verifier, VT_TABLE_CELL_MAP) &&
@@ -119,8 +118,8 @@ struct DataCellMapBuilder {
   typedef DataCellMap Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataCellMap::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataCellMap::VT_VERSION, version);
   }
   void add_index_texture(::flatbuffers::Offset<::flatbuffers::Vector<int16_t>> index_texture) {
     fbb_.AddOffset(DataCellMap::VT_INDEX_TEXTURE, index_texture);
@@ -141,7 +140,7 @@ struct DataCellMapBuilder {
 
 inline ::flatbuffers::Offset<DataCellMap> CreateDataCellMap(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::Vector<int16_t>> index_texture = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataCellMap>>> table_cell_map = 0) {
   DataCellMapBuilder builder_(_fbb);
@@ -158,7 +157,7 @@ struct DataCellMap::Traits {
 
 inline ::flatbuffers::Offset<DataCellMap> CreateDataCellMapDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const std::vector<int16_t> *index_texture = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataCellMap>> *table_cell_map = nullptr) {
   auto index_texture__ = index_texture ? _fbb.CreateVector<int16_t>(*index_texture) : 0;
@@ -174,7 +173,7 @@ inline ::flatbuffers::Offset<DataCellMap> CreateDataCellMapDirect(
 
 struct DataAnimationT : public ::flatbuffers::NativeTable {
   typedef DataAnimation TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::vector<std::shared_ptr<ss::ssfb2::DataModelPartsT>> table_parts{};
   std::shared_ptr<ss::ssfb2::CatalogT> catalog_parts{};
@@ -199,10 +198,10 @@ struct DataAnimation FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TABLE_ANIMATION_PARTS_SETUP = 14
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -236,8 +235,7 @@ struct DataAnimation FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_TABLE_PARTS) &&
@@ -262,8 +260,8 @@ struct DataAnimationBuilder {
   typedef DataAnimation Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataAnimation::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataAnimation::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataAnimation::VT_NAME, name);
@@ -293,7 +291,7 @@ struct DataAnimationBuilder {
 
 inline ::flatbuffers::Offset<DataAnimation> CreateDataAnimation(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataModelParts>>> table_parts = 0,
     ::flatbuffers::Offset<ss::ssfb2::Catalog> catalog_parts = 0,
@@ -316,7 +314,7 @@ struct DataAnimation::Traits {
 
 inline ::flatbuffers::Offset<DataAnimation> CreateDataAnimationDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataModelParts>> *table_parts = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::Catalog> catalog_parts = 0,
@@ -340,14 +338,14 @@ inline ::flatbuffers::Offset<DataAnimation> CreateDataAnimationDirect(
 
 struct DataEffectT : public ::flatbuffers::NativeTable {
   typedef DataEffect TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   int32_t flag_data = 0;
   int32_t seed_random = 0;
   int32_t version_renderer = 0;
   int32_t count_max_particle = 0;
   int32_t count_frame_per_second = 0;
-  std::shared_ptr<ss::ssfb2::Vector2T> scale_layout{};
+  std::shared_ptr<ss::ssfb2::Vector2> scale_layout{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectPartsT>> table_parts{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectEmitterT>> table_emitter{};
   std::vector<int32_t> table_index_emitter_order_draw{};
@@ -375,10 +373,10 @@ struct DataEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TABLE_INDEX_EMITTER_ORDER_DRAW = 24
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -417,10 +415,10 @@ struct DataEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<int32_t>(VT_COUNT_FRAME_PER_SECOND, _count_frame_per_second, 0);
   }
   const ss::ssfb2::Vector2 *scale_layout() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
   }
   ss::ssfb2::Vector2 *mutable_scale_layout() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *table_parts() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *>(VT_TABLE_PARTS);
@@ -442,8 +440,7 @@ struct DataEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyField<int32_t>(verifier, VT_FLAG_DATA, 4) &&
@@ -451,8 +448,7 @@ struct DataEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_VERSION_RENDERER, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_MAX_PARTICLE, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_FRAME_PER_SECOND, 4) &&
-           VerifyOffset(verifier, VT_SCALE_LAYOUT) &&
-           verifier.VerifyTable(scale_layout()) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SCALE_LAYOUT, 4) &&
            VerifyOffset(verifier, VT_TABLE_PARTS) &&
            verifier.VerifyVector(table_parts()) &&
            verifier.VerifyVectorOfTables(table_parts()) &&
@@ -472,8 +468,8 @@ struct DataEffectBuilder {
   typedef DataEffect Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataEffect::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataEffect::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataEffect::VT_NAME, name);
@@ -493,8 +489,8 @@ struct DataEffectBuilder {
   void add_count_frame_per_second(int32_t count_frame_per_second) {
     fbb_.AddElement<int32_t>(DataEffect::VT_COUNT_FRAME_PER_SECOND, count_frame_per_second, 0);
   }
-  void add_scale_layout(::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout) {
-    fbb_.AddOffset(DataEffect::VT_SCALE_LAYOUT, scale_layout);
+  void add_scale_layout(const ss::ssfb2::Vector2 *scale_layout) {
+    fbb_.AddStruct(DataEffect::VT_SCALE_LAYOUT, scale_layout);
   }
   void add_table_parts(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>>> table_parts) {
     fbb_.AddOffset(DataEffect::VT_TABLE_PARTS, table_parts);
@@ -518,14 +514,14 @@ struct DataEffectBuilder {
 
 inline ::flatbuffers::Offset<DataEffect> CreateDataEffect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     int32_t flag_data = 0,
     int32_t seed_random = 0,
     int32_t version_renderer = 0,
     int32_t count_max_particle = 0,
     int32_t count_frame_per_second = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout = 0,
+    const ss::ssfb2::Vector2 *scale_layout = nullptr,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>>> table_parts = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>>> table_emitter = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_index_emitter_order_draw = 0) {
@@ -551,14 +547,14 @@ struct DataEffect::Traits {
 
 inline ::flatbuffers::Offset<DataEffect> CreateDataEffectDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     int32_t flag_data = 0,
     int32_t seed_random = 0,
     int32_t version_renderer = 0,
     int32_t count_max_particle = 0,
     int32_t count_frame_per_second = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout = 0,
+    const ss::ssfb2::Vector2 *scale_layout = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *table_parts = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>> *table_emitter = nullptr,
     const std::vector<int32_t> *table_index_emitter_order_draw = nullptr) {
@@ -585,9 +581,9 @@ inline ::flatbuffers::Offset<DataEffect> CreateDataEffectDirect(
 
 struct SequencePackT : public ::flatbuffers::NativeTable {
   typedef SequencePack TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
-  std::vector<std::shared_ptr<ss::ssfb2::DataSequenceT>> sequenceList{};
+  std::vector<std::shared_ptr<ss::ssfb2::DataSequenceT>> sequence_list{};
   SequencePackT() = default;
   SequencePackT(const SequencePackT &o);
   SequencePackT(SequencePackT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -601,13 +597,13 @@ struct SequencePack FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VERSION = 4,
     VT_NAME = 6,
-    VT_SEQUENCELIST = 8
+    VT_SEQUENCE_LIST = 8
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -615,21 +611,20 @@ struct SequencePack FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   ::flatbuffers::String *mutable_name() {
     return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequenceList() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCELIST);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequence_list() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCE_LIST);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *mutable_sequenceList() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCELIST);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *mutable_sequence_list() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCE_LIST);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyOffset(verifier, VT_SEQUENCELIST) &&
-           verifier.VerifyVector(sequenceList()) &&
-           verifier.VerifyVectorOfTables(sequenceList()) &&
+           VerifyOffset(verifier, VT_SEQUENCE_LIST) &&
+           verifier.VerifyVector(sequence_list()) &&
+           verifier.VerifyVectorOfTables(sequence_list()) &&
            verifier.EndTable();
   }
   SequencePackT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -641,14 +636,14 @@ struct SequencePackBuilder {
   typedef SequencePack Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(SequencePack::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(SequencePack::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(SequencePack::VT_NAME, name);
   }
-  void add_sequenceList(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequenceList) {
-    fbb_.AddOffset(SequencePack::VT_SEQUENCELIST, sequenceList);
+  void add_sequence_list(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequence_list) {
+    fbb_.AddOffset(SequencePack::VT_SEQUENCE_LIST, sequence_list);
   }
   explicit SequencePackBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -663,11 +658,11 @@ struct SequencePackBuilder {
 
 inline ::flatbuffers::Offset<SequencePack> CreateSequencePack(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequenceList = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequence_list = 0) {
   SequencePackBuilder builder_(_fbb);
-  builder_.add_sequenceList(sequenceList);
+  builder_.add_sequence_list(sequence_list);
   builder_.add_name(name);
   builder_.add_version(version);
   return builder_.Finish();
@@ -680,23 +675,23 @@ struct SequencePack::Traits {
 
 inline ::flatbuffers::Offset<SequencePack> CreateSequencePackDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequenceList = nullptr) {
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequence_list = nullptr) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
-  auto sequenceList__ = sequenceList ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>(*sequenceList) : 0;
+  auto sequence_list__ = sequence_list ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>(*sequence_list) : 0;
   return ss::ssfb2::CreateSequencePack(
       _fbb,
       version,
       name__,
-      sequenceList__);
+      sequence_list__);
 }
 
 ::flatbuffers::Offset<SequencePack> CreateSequencePack(::flatbuffers::FlatBufferBuilder &_fbb, const SequencePackT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct FontBitmapT : public ::flatbuffers::NativeTable {
   typedef FontBitmap TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::string name_face{};
   uint16_t size = 0;
@@ -706,9 +701,9 @@ struct FontBitmapT : public ::flatbuffers::NativeTable {
   uint16_t padding_d = 0;
   int16_t base = 0;
   int16_t height_line = 0;
-  std::shared_ptr<ss::ssfb2::Vector2T> scale{};
-  std::shared_ptr<ss::ssfb2::Vector2T> spacing{};
-  std::shared_ptr<ss::ssfb2::Vector2T> size_texture_original{};
+  std::shared_ptr<ss::ssfb2::Vector2> scale{};
+  std::shared_ptr<ss::ssfb2::Vector2> spacing{};
+  std::shared_ptr<ss::ssfb2::Vector2> size_texture_original{};
   std::vector<std::string> name_texture{};
   std::vector<std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>> table_data{};
   FontBitmapT() = default;
@@ -739,10 +734,10 @@ struct FontBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TABLE_DATA = 32
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -799,22 +794,22 @@ struct FontBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<int16_t>(VT_HEIGHT_LINE, _height_line, 0);
   }
   const ss::ssfb2::Vector2 *scale() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SCALE);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SCALE);
   }
   ss::ssfb2::Vector2 *mutable_scale() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SCALE);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SCALE);
   }
   const ss::ssfb2::Vector2 *spacing() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SPACING);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SPACING);
   }
   ss::ssfb2::Vector2 *mutable_spacing() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SPACING);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SPACING);
   }
   const ss::ssfb2::Vector2 *size_texture_original() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
   }
   ss::ssfb2::Vector2 *mutable_size_texture_original() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_NAME_TEXTURE);
@@ -830,8 +825,7 @@ struct FontBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_NAME_FACE) &&
@@ -843,12 +837,9 @@ struct FontBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<uint16_t>(verifier, VT_PADDING_D, 2) &&
            VerifyField<int16_t>(verifier, VT_BASE, 2) &&
            VerifyField<int16_t>(verifier, VT_HEIGHT_LINE, 2) &&
-           VerifyOffset(verifier, VT_SCALE) &&
-           verifier.VerifyTable(scale()) &&
-           VerifyOffset(verifier, VT_SPACING) &&
-           verifier.VerifyTable(spacing()) &&
-           VerifyOffset(verifier, VT_SIZE_TEXTURE_ORIGINAL) &&
-           verifier.VerifyTable(size_texture_original()) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SCALE, 4) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SPACING, 4) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SIZE_TEXTURE_ORIGINAL, 4) &&
            VerifyOffset(verifier, VT_NAME_TEXTURE) &&
            verifier.VerifyVector(name_texture()) &&
            verifier.VerifyVectorOfStrings(name_texture()) &&
@@ -866,8 +857,8 @@ struct FontBitmapBuilder {
   typedef FontBitmap Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(FontBitmap::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(FontBitmap::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(FontBitmap::VT_NAME, name);
@@ -896,14 +887,14 @@ struct FontBitmapBuilder {
   void add_height_line(int16_t height_line) {
     fbb_.AddElement<int16_t>(FontBitmap::VT_HEIGHT_LINE, height_line, 0);
   }
-  void add_scale(::flatbuffers::Offset<ss::ssfb2::Vector2> scale) {
-    fbb_.AddOffset(FontBitmap::VT_SCALE, scale);
+  void add_scale(const ss::ssfb2::Vector2 *scale) {
+    fbb_.AddStruct(FontBitmap::VT_SCALE, scale);
   }
-  void add_spacing(::flatbuffers::Offset<ss::ssfb2::Vector2> spacing) {
-    fbb_.AddOffset(FontBitmap::VT_SPACING, spacing);
+  void add_spacing(const ss::ssfb2::Vector2 *spacing) {
+    fbb_.AddStruct(FontBitmap::VT_SPACING, spacing);
   }
-  void add_size_texture_original(::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original) {
-    fbb_.AddOffset(FontBitmap::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
+  void add_size_texture_original(const ss::ssfb2::Vector2 *size_texture_original) {
+    fbb_.AddStruct(FontBitmap::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
   }
   void add_name_texture(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture) {
     fbb_.AddOffset(FontBitmap::VT_NAME_TEXTURE, name_texture);
@@ -924,7 +915,7 @@ struct FontBitmapBuilder {
 
 inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmap(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::String> name_face = 0,
     uint16_t size = 0,
@@ -934,9 +925,9 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmap(
     uint16_t padding_d = 0,
     int16_t base = 0,
     int16_t height_line = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> spacing = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original = 0,
+    const ss::ssfb2::Vector2 *scale = nullptr,
+    const ss::ssfb2::Vector2 *spacing = nullptr,
+    const ss::ssfb2::Vector2 *size_texture_original = nullptr,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>>> table_data = 0) {
   FontBitmapBuilder builder_(_fbb);
@@ -965,7 +956,7 @@ struct FontBitmap::Traits {
 
 inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmapDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const char *name_face = nullptr,
     uint16_t size = 0,
@@ -975,9 +966,9 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmapDirect(
     uint16_t padding_d = 0,
     int16_t base = 0,
     int16_t height_line = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> spacing = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original = 0,
+    const ss::ssfb2::Vector2 *scale = nullptr,
+    const ss::ssfb2::Vector2 *spacing = nullptr,
+    const ss::ssfb2::Vector2 *size_texture_original = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>> *table_data = nullptr) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
@@ -1007,7 +998,7 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmapDirect(
 
 struct DataSoundListT : public ::flatbuffers::NativeTable {
   typedef DataSoundList TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::vector<std::shared_ptr<ss::ssfb2::LibraryDataSoundT>> table_data{};
   DataSoundListT() = default;
@@ -1026,10 +1017,10 @@ struct DataSoundList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TABLE_DATA = 8
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -1045,8 +1036,7 @@ struct DataSoundList FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_TABLE_DATA) &&
@@ -1063,8 +1053,8 @@ struct DataSoundListBuilder {
   typedef DataSoundList Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataSoundList::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataSoundList::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataSoundList::VT_NAME, name);
@@ -1085,7 +1075,7 @@ struct DataSoundListBuilder {
 
 inline ::flatbuffers::Offset<DataSoundList> CreateDataSoundList(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataSound>>> table_data = 0) {
   DataSoundListBuilder builder_(_fbb);
@@ -1102,7 +1092,7 @@ struct DataSoundList::Traits {
 
 inline ::flatbuffers::Offset<DataSoundList> CreateDataSoundListDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataSound>> *table_data = nullptr) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
@@ -1118,12 +1108,14 @@ inline ::flatbuffers::Offset<DataSoundList> CreateDataSoundListDirect(
 
 struct ProjectDataT : public ::flatbuffers::NativeTable {
   typedef ProjectData TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   std::shared_ptr<ss::ssfb2::DataCellMapT> cell_map{};
   std::vector<std::shared_ptr<ss::ssfb2::DataAnimationT>> animation{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectT>> effect{};
   std::vector<std::shared_ptr<ss::ssfb2::SequencePackT>> sequence{};
+  std::vector<std::shared_ptr<ss::ssfb2::DataSoundListT>> soundlist{};
+  std::vector<std::shared_ptr<ss::ssfb2::FontBitmapT>> fontbitmap{};
   std::vector<std::string> name_texture{};
   std::vector<std::string> name_texture_external{};
   std::vector<std::string> name_font_bitmap{};
@@ -1144,15 +1136,17 @@ struct ProjectData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_ANIMATION = 10,
     VT_EFFECT = 12,
     VT_SEQUENCE = 14,
-    VT_NAME_TEXTURE = 16,
-    VT_NAME_TEXTURE_EXTERNAL = 18,
-    VT_NAME_FONT_BITMAP = 20
+    VT_SOUNDLIST = 16,
+    VT_FONTBITMAP = 18,
+    VT_NAME_TEXTURE = 20,
+    VT_NAME_TEXTURE_EXTERNAL = 22,
+    VT_NAME_FONT_BITMAP = 24
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -1184,6 +1178,18 @@ struct ProjectData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::SequencePack>> *mutable_sequence() {
     return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::SequencePack>> *>(VT_SEQUENCE);
   }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>> *soundlist() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>> *>(VT_SOUNDLIST);
+  }
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>> *mutable_soundlist() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>> *>(VT_SOUNDLIST);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>> *fontbitmap() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>> *>(VT_FONTBITMAP);
+  }
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>> *mutable_fontbitmap() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>> *>(VT_FONTBITMAP);
+  }
   const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_NAME_TEXTURE);
   }
@@ -1204,8 +1210,7 @@ struct ProjectData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_CELL_MAP) &&
@@ -1219,6 +1224,12 @@ struct ProjectData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyOffset(verifier, VT_SEQUENCE) &&
            verifier.VerifyVector(sequence()) &&
            verifier.VerifyVectorOfTables(sequence()) &&
+           VerifyOffset(verifier, VT_SOUNDLIST) &&
+           verifier.VerifyVector(soundlist()) &&
+           verifier.VerifyVectorOfTables(soundlist()) &&
+           VerifyOffset(verifier, VT_FONTBITMAP) &&
+           verifier.VerifyVector(fontbitmap()) &&
+           verifier.VerifyVectorOfTables(fontbitmap()) &&
            VerifyOffset(verifier, VT_NAME_TEXTURE) &&
            verifier.VerifyVector(name_texture()) &&
            verifier.VerifyVectorOfStrings(name_texture()) &&
@@ -1239,8 +1250,8 @@ struct ProjectDataBuilder {
   typedef ProjectData Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(ProjectData::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(ProjectData::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(ProjectData::VT_NAME, name);
@@ -1256,6 +1267,12 @@ struct ProjectDataBuilder {
   }
   void add_sequence(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::SequencePack>>> sequence) {
     fbb_.AddOffset(ProjectData::VT_SEQUENCE, sequence);
+  }
+  void add_soundlist(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>>> soundlist) {
+    fbb_.AddOffset(ProjectData::VT_SOUNDLIST, soundlist);
+  }
+  void add_fontbitmap(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>>> fontbitmap) {
+    fbb_.AddOffset(ProjectData::VT_FONTBITMAP, fontbitmap);
   }
   void add_name_texture(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture) {
     fbb_.AddOffset(ProjectData::VT_NAME_TEXTURE, name_texture);
@@ -1279,12 +1296,14 @@ struct ProjectDataBuilder {
 
 inline ::flatbuffers::Offset<ProjectData> CreateProjectData(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     ::flatbuffers::Offset<ss::ssfb2::DataCellMap> cell_map = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataAnimation>>> animation = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffect>>> effect = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::SequencePack>>> sequence = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>>> soundlist = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>>> fontbitmap = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture_external = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_font_bitmap = 0) {
@@ -1292,6 +1311,8 @@ inline ::flatbuffers::Offset<ProjectData> CreateProjectData(
   builder_.add_name_font_bitmap(name_font_bitmap);
   builder_.add_name_texture_external(name_texture_external);
   builder_.add_name_texture(name_texture);
+  builder_.add_fontbitmap(fontbitmap);
+  builder_.add_soundlist(soundlist);
   builder_.add_sequence(sequence);
   builder_.add_effect(effect);
   builder_.add_animation(animation);
@@ -1308,12 +1329,14 @@ struct ProjectData::Traits {
 
 inline ::flatbuffers::Offset<ProjectData> CreateProjectDataDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::DataCellMap> cell_map = 0,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataAnimation>> *animation = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffect>> *effect = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::SequencePack>> *sequence = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>> *soundlist = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>> *fontbitmap = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture_external = nullptr,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *name_font_bitmap = nullptr) {
@@ -1321,6 +1344,8 @@ inline ::flatbuffers::Offset<ProjectData> CreateProjectDataDirect(
   auto animation__ = animation ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataAnimation>>(*animation) : 0;
   auto effect__ = effect ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffect>>(*effect) : 0;
   auto sequence__ = sequence ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::SequencePack>>(*sequence) : 0;
+  auto soundlist__ = soundlist ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>>(*soundlist) : 0;
+  auto fontbitmap__ = fontbitmap ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>>(*fontbitmap) : 0;
   auto name_texture__ = name_texture ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*name_texture) : 0;
   auto name_texture_external__ = name_texture_external ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*name_texture_external) : 0;
   auto name_font_bitmap__ = name_font_bitmap ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*name_font_bitmap) : 0;
@@ -1332,6 +1357,8 @@ inline ::flatbuffers::Offset<ProjectData> CreateProjectDataDirect(
       animation__,
       effect__,
       sequence__,
+      soundlist__,
+      fontbitmap__,
       name_texture__,
       name_texture_external__,
       name_font_bitmap__);
@@ -1353,7 +1380,7 @@ inline bool operator!=(const DataCellMapT &lhs, const DataCellMapT &rhs) {
 
 
 inline DataCellMapT::DataCellMapT(const DataCellMapT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         index_texture(o.index_texture) {
   table_cell_map.reserve(o.table_cell_map.size());
   for (const auto &table_cell_map_ : o.table_cell_map) { table_cell_map.emplace_back((table_cell_map_) ? new ss::ssfb2::LibraryDataCellMapT(*table_cell_map_) : nullptr); }
@@ -1375,7 +1402,7 @@ inline DataCellMapT *DataCellMap::UnPack(const ::flatbuffers::resolver_function_
 inline void DataCellMap::UnPackTo(DataCellMapT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = index_texture(); if (_e) { _o->index_texture.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->index_texture[_i] = _e->Get(_i); } } else { _o->index_texture.resize(0); } }
   { auto _e = table_cell_map(); if (_e) { _o->table_cell_map.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_cell_map[_i]) { _e->Get(_i)->UnPackTo(_o->table_cell_map[_i].get(), _resolver); } else { _o->table_cell_map[_i] = std::shared_ptr<ss::ssfb2::LibraryDataCellMapT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_cell_map.resize(0); } }
 }
@@ -1388,7 +1415,7 @@ inline ::flatbuffers::Offset<DataCellMap> CreateDataCellMap(::flatbuffers::FlatB
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataCellMapT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _index_texture = _o->index_texture.size() ? _fbb.CreateVector(_o->index_texture) : 0;
   auto _table_cell_map = _o->table_cell_map.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::LibraryDataCellMap>> (_o->table_cell_map.size(), [](size_t i, _VectorArgs *__va) { return CreateLibraryDataCellMap(*__va->__fbb, __va->__o->table_cell_map[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateDataCellMap(
@@ -1415,7 +1442,7 @@ inline bool operator!=(const DataAnimationT &lhs, const DataAnimationT &rhs) {
 
 
 inline DataAnimationT::DataAnimationT(const DataAnimationT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         catalog_parts((o.catalog_parts) ? new ss::ssfb2::CatalogT(*o.catalog_parts) : nullptr) {
   table_parts.reserve(o.table_parts.size());
@@ -1445,7 +1472,7 @@ inline DataAnimationT *DataAnimation::UnPack(const ::flatbuffers::resolver_funct
 inline void DataAnimation::UnPackTo(DataAnimationT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataModelPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
   { auto _e = catalog_parts(); if (_e) { if(_o->catalog_parts) { _e->UnPackTo(_o->catalog_parts.get(), _resolver); } else { _o->catalog_parts = std::shared_ptr<ss::ssfb2::CatalogT>(_e->UnPack(_resolver)); } } else if (_o->catalog_parts) { _o->catalog_parts.reset(); } }
@@ -1461,7 +1488,7 @@ inline ::flatbuffers::Offset<DataAnimation> CreateDataAnimation(::flatbuffers::F
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataAnimationT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _table_parts = _o->table_parts.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataModelParts>> (_o->table_parts.size(), [](size_t i, _VectorArgs *__va) { return CreateDataModelParts(*__va->__fbb, __va->__o->table_parts[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _catalog_parts = _o->catalog_parts ? CreateCatalog(_fbb, _o->catalog_parts.get(), _rehasher) : 0;
@@ -1499,14 +1526,14 @@ inline bool operator!=(const DataEffectT &lhs, const DataEffectT &rhs) {
 
 
 inline DataEffectT::DataEffectT(const DataEffectT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         flag_data(o.flag_data),
         seed_random(o.seed_random),
         version_renderer(o.version_renderer),
         count_max_particle(o.count_max_particle),
         count_frame_per_second(o.count_frame_per_second),
-        scale_layout((o.scale_layout) ? new ss::ssfb2::Vector2T(*o.scale_layout) : nullptr),
+        scale_layout((o.scale_layout) ? new ss::ssfb2::Vector2(*o.scale_layout) : nullptr),
         table_index_emitter_order_draw(o.table_index_emitter_order_draw) {
   table_parts.reserve(o.table_parts.size());
   for (const auto &table_parts_ : o.table_parts) { table_parts.emplace_back((table_parts_) ? new ss::ssfb2::DataEffectPartsT(*table_parts_) : nullptr); }
@@ -1538,14 +1565,14 @@ inline DataEffectT *DataEffect::UnPack(const ::flatbuffers::resolver_function_t 
 inline void DataEffect::UnPackTo(DataEffectT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = flag_data(); _o->flag_data = _e; }
   { auto _e = seed_random(); _o->seed_random = _e; }
   { auto _e = version_renderer(); _o->version_renderer = _e; }
   { auto _e = count_max_particle(); _o->count_max_particle = _e; }
   { auto _e = count_frame_per_second(); _o->count_frame_per_second = _e; }
-  { auto _e = scale_layout(); if (_e) { if(_o->scale_layout) { _e->UnPackTo(_o->scale_layout.get(), _resolver); } else { _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale_layout) { _o->scale_layout.reset(); } }
+  { auto _e = scale_layout(); if (_e) _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
   { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataEffectPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
   { auto _e = table_emitter(); if (_e) { _o->table_emitter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_emitter[_i]) { _e->Get(_i)->UnPackTo(_o->table_emitter[_i].get(), _resolver); } else { _o->table_emitter[_i] = std::shared_ptr<ss::ssfb2::DataEffectEmitterT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_emitter.resize(0); } }
   { auto _e = table_index_emitter_order_draw(); if (_e) { _o->table_index_emitter_order_draw.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_emitter_order_draw[_i] = _e->Get(_i); } } else { _o->table_index_emitter_order_draw.resize(0); } }
@@ -1559,14 +1586,14 @@ inline ::flatbuffers::Offset<DataEffect> CreateDataEffect(::flatbuffers::FlatBuf
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataEffectT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _flag_data = _o->flag_data;
   auto _seed_random = _o->seed_random;
   auto _version_renderer = _o->version_renderer;
   auto _count_max_particle = _o->count_max_particle;
   auto _count_frame_per_second = _o->count_frame_per_second;
-  auto _scale_layout = _o->scale_layout ? CreateVector2(_fbb, _o->scale_layout.get(), _rehasher) : 0;
+  auto _scale_layout = _o->scale_layout ? _o->scale_layout.get() : nullptr;
   auto _table_parts = _o->table_parts.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> (_o->table_parts.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffectParts(*__va->__fbb, __va->__o->table_parts[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_emitter = _o->table_emitter.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>> (_o->table_emitter.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffectEmitter(*__va->__fbb, __va->__o->table_emitter[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_index_emitter_order_draw = _o->table_index_emitter_order_draw.size() ? _fbb.CreateVector(_o->table_index_emitter_order_draw) : 0;
@@ -1590,7 +1617,7 @@ inline bool operator==(const SequencePackT &lhs, const SequencePackT &rhs) {
   return
       ((lhs.version == rhs.version) || (lhs.version && rhs.version && *lhs.version == *rhs.version)) &&
       (lhs.name == rhs.name) &&
-      (lhs.sequenceList.size() == rhs.sequenceList.size() && std::equal(lhs.sequenceList.cbegin(), lhs.sequenceList.cend(), rhs.sequenceList.cbegin(), [](std::shared_ptr<ss::ssfb2::DataSequenceT> const &a, std::shared_ptr<ss::ssfb2::DataSequenceT> const &b) { return (a == b) || (a && b && *a == *b); }));
+      (lhs.sequence_list.size() == rhs.sequence_list.size() && std::equal(lhs.sequence_list.cbegin(), lhs.sequence_list.cend(), rhs.sequence_list.cbegin(), [](std::shared_ptr<ss::ssfb2::DataSequenceT> const &a, std::shared_ptr<ss::ssfb2::DataSequenceT> const &b) { return (a == b) || (a && b && *a == *b); }));
 }
 
 inline bool operator!=(const SequencePackT &lhs, const SequencePackT &rhs) {
@@ -1599,16 +1626,16 @@ inline bool operator!=(const SequencePackT &lhs, const SequencePackT &rhs) {
 
 
 inline SequencePackT::SequencePackT(const SequencePackT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name) {
-  sequenceList.reserve(o.sequenceList.size());
-  for (const auto &sequenceList_ : o.sequenceList) { sequenceList.emplace_back((sequenceList_) ? new ss::ssfb2::DataSequenceT(*sequenceList_) : nullptr); }
+  sequence_list.reserve(o.sequence_list.size());
+  for (const auto &sequence_list_ : o.sequence_list) { sequence_list.emplace_back((sequence_list_) ? new ss::ssfb2::DataSequenceT(*sequence_list_) : nullptr); }
 }
 
 inline SequencePackT &SequencePackT::operator=(SequencePackT o) FLATBUFFERS_NOEXCEPT {
   std::swap(version, o.version);
   std::swap(name, o.name);
-  std::swap(sequenceList, o.sequenceList);
+  std::swap(sequence_list, o.sequence_list);
   return *this;
 }
 
@@ -1621,9 +1648,9 @@ inline SequencePackT *SequencePack::UnPack(const ::flatbuffers::resolver_functio
 inline void SequencePack::UnPackTo(SequencePackT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = sequenceList(); if (_e) { _o->sequenceList.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequenceList[_i]) { _e->Get(_i)->UnPackTo(_o->sequenceList[_i].get(), _resolver); } else { _o->sequenceList[_i] = std::shared_ptr<ss::ssfb2::DataSequenceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->sequenceList.resize(0); } }
+  { auto _e = sequence_list(); if (_e) { _o->sequence_list.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequence_list[_i]) { _e->Get(_i)->UnPackTo(_o->sequence_list[_i].get(), _resolver); } else { _o->sequence_list[_i] = std::shared_ptr<ss::ssfb2::DataSequenceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->sequence_list.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<SequencePack> SequencePack::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const SequencePackT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -1634,14 +1661,14 @@ inline ::flatbuffers::Offset<SequencePack> CreateSequencePack(::flatbuffers::Fla
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const SequencePackT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
-  auto _sequenceList = _o->sequenceList.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> (_o->sequenceList.size(), [](size_t i, _VectorArgs *__va) { return CreateDataSequence(*__va->__fbb, __va->__o->sequenceList[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _sequence_list = _o->sequence_list.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> (_o->sequence_list.size(), [](size_t i, _VectorArgs *__va) { return CreateDataSequence(*__va->__fbb, __va->__o->sequence_list[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateSequencePack(
       _fbb,
       _version,
       _name,
-      _sequenceList);
+      _sequence_list);
 }
 
 
@@ -1670,7 +1697,7 @@ inline bool operator!=(const FontBitmapT &lhs, const FontBitmapT &rhs) {
 
 
 inline FontBitmapT::FontBitmapT(const FontBitmapT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         name_face(o.name_face),
         size(o.size),
@@ -1680,9 +1707,9 @@ inline FontBitmapT::FontBitmapT(const FontBitmapT &o)
         padding_d(o.padding_d),
         base(o.base),
         height_line(o.height_line),
-        scale((o.scale) ? new ss::ssfb2::Vector2T(*o.scale) : nullptr),
-        spacing((o.spacing) ? new ss::ssfb2::Vector2T(*o.spacing) : nullptr),
-        size_texture_original((o.size_texture_original) ? new ss::ssfb2::Vector2T(*o.size_texture_original) : nullptr),
+        scale((o.scale) ? new ss::ssfb2::Vector2(*o.scale) : nullptr),
+        spacing((o.spacing) ? new ss::ssfb2::Vector2(*o.spacing) : nullptr),
+        size_texture_original((o.size_texture_original) ? new ss::ssfb2::Vector2(*o.size_texture_original) : nullptr),
         name_texture(o.name_texture) {
   table_data.reserve(o.table_data.size());
   for (const auto &table_data_ : o.table_data) { table_data.emplace_back((table_data_) ? new ss::ssfb2::LibraryDataFontGryphBitmapT(*table_data_) : nullptr); }
@@ -1716,7 +1743,7 @@ inline FontBitmapT *FontBitmap::UnPack(const ::flatbuffers::resolver_function_t 
 inline void FontBitmap::UnPackTo(FontBitmapT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = name_face(); if (_e) _o->name_face = _e->str(); }
   { auto _e = size(); _o->size = _e; }
@@ -1726,9 +1753,9 @@ inline void FontBitmap::UnPackTo(FontBitmapT *_o, const ::flatbuffers::resolver_
   { auto _e = padding_d(); _o->padding_d = _e; }
   { auto _e = base(); _o->base = _e; }
   { auto _e = height_line(); _o->height_line = _e; }
-  { auto _e = scale(); if (_e) { if(_o->scale) { _e->UnPackTo(_o->scale.get(), _resolver); } else { _o->scale = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale) { _o->scale.reset(); } }
-  { auto _e = spacing(); if (_e) { if(_o->spacing) { _e->UnPackTo(_o->spacing.get(), _resolver); } else { _o->spacing = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->spacing) { _o->spacing.reset(); } }
-  { auto _e = size_texture_original(); if (_e) { if(_o->size_texture_original) { _e->UnPackTo(_o->size_texture_original.get(), _resolver); } else { _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->size_texture_original) { _o->size_texture_original.reset(); } }
+  { auto _e = scale(); if (_e) _o->scale = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = spacing(); if (_e) _o->spacing = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = size_texture_original(); if (_e) _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
   { auto _e = name_texture(); if (_e) { _o->name_texture.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_texture[_i] = _e->Get(_i)->str(); } } else { _o->name_texture.resize(0); } }
   { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
 }
@@ -1741,7 +1768,7 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmap(::flatbuffers::FlatBuf
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const FontBitmapT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _name_face = _o->name_face.empty() ? 0 : _fbb.CreateString(_o->name_face);
   auto _size = _o->size;
@@ -1751,9 +1778,9 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmap(::flatbuffers::FlatBuf
   auto _padding_d = _o->padding_d;
   auto _base = _o->base;
   auto _height_line = _o->height_line;
-  auto _scale = _o->scale ? CreateVector2(_fbb, _o->scale.get(), _rehasher) : 0;
-  auto _spacing = _o->spacing ? CreateVector2(_fbb, _o->spacing.get(), _rehasher) : 0;
-  auto _size_texture_original = _o->size_texture_original ? CreateVector2(_fbb, _o->size_texture_original.get(), _rehasher) : 0;
+  auto _scale = _o->scale ? _o->scale.get() : nullptr;
+  auto _spacing = _o->spacing ? _o->spacing.get() : nullptr;
+  auto _size_texture_original = _o->size_texture_original ? _o->size_texture_original.get() : nullptr;
   auto _name_texture = _o->name_texture.size() ? _fbb.CreateVectorOfStrings(_o->name_texture) : 0;
   auto _table_data = _o->table_data.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>> (_o->table_data.size(), [](size_t i, _VectorArgs *__va) { return CreateLibraryDataFontGryphBitmap(*__va->__fbb, __va->__o->table_data[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateFontBitmap(
@@ -1789,7 +1816,7 @@ inline bool operator!=(const DataSoundListT &lhs, const DataSoundListT &rhs) {
 
 
 inline DataSoundListT::DataSoundListT(const DataSoundListT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name) {
   table_data.reserve(o.table_data.size());
   for (const auto &table_data_ : o.table_data) { table_data.emplace_back((table_data_) ? new ss::ssfb2::LibraryDataSoundT(*table_data_) : nullptr); }
@@ -1811,7 +1838,7 @@ inline DataSoundListT *DataSoundList::UnPack(const ::flatbuffers::resolver_funct
 inline void DataSoundList::UnPackTo(DataSoundListT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataSoundT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
 }
@@ -1824,7 +1851,7 @@ inline ::flatbuffers::Offset<DataSoundList> CreateDataSoundList(::flatbuffers::F
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataSoundListT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _table_data = _o->table_data.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::LibraryDataSound>> (_o->table_data.size(), [](size_t i, _VectorArgs *__va) { return CreateLibraryDataSound(*__va->__fbb, __va->__o->table_data[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateDataSoundList(
@@ -1843,6 +1870,8 @@ inline bool operator==(const ProjectDataT &lhs, const ProjectDataT &rhs) {
       (lhs.animation.size() == rhs.animation.size() && std::equal(lhs.animation.cbegin(), lhs.animation.cend(), rhs.animation.cbegin(), [](std::shared_ptr<ss::ssfb2::DataAnimationT> const &a, std::shared_ptr<ss::ssfb2::DataAnimationT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.effect.size() == rhs.effect.size() && std::equal(lhs.effect.cbegin(), lhs.effect.cend(), rhs.effect.cbegin(), [](std::shared_ptr<ss::ssfb2::DataEffectT> const &a, std::shared_ptr<ss::ssfb2::DataEffectT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.sequence.size() == rhs.sequence.size() && std::equal(lhs.sequence.cbegin(), lhs.sequence.cend(), rhs.sequence.cbegin(), [](std::shared_ptr<ss::ssfb2::SequencePackT> const &a, std::shared_ptr<ss::ssfb2::SequencePackT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.soundlist.size() == rhs.soundlist.size() && std::equal(lhs.soundlist.cbegin(), lhs.soundlist.cend(), rhs.soundlist.cbegin(), [](std::shared_ptr<ss::ssfb2::DataSoundListT> const &a, std::shared_ptr<ss::ssfb2::DataSoundListT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.fontbitmap.size() == rhs.fontbitmap.size() && std::equal(lhs.fontbitmap.cbegin(), lhs.fontbitmap.cend(), rhs.fontbitmap.cbegin(), [](std::shared_ptr<ss::ssfb2::FontBitmapT> const &a, std::shared_ptr<ss::ssfb2::FontBitmapT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.name_texture == rhs.name_texture) &&
       (lhs.name_texture_external == rhs.name_texture_external) &&
       (lhs.name_font_bitmap == rhs.name_font_bitmap);
@@ -1854,7 +1883,7 @@ inline bool operator!=(const ProjectDataT &lhs, const ProjectDataT &rhs) {
 
 
 inline ProjectDataT::ProjectDataT(const ProjectDataT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         cell_map((o.cell_map) ? new ss::ssfb2::DataCellMapT(*o.cell_map) : nullptr),
         name_texture(o.name_texture),
@@ -1866,6 +1895,10 @@ inline ProjectDataT::ProjectDataT(const ProjectDataT &o)
   for (const auto &effect_ : o.effect) { effect.emplace_back((effect_) ? new ss::ssfb2::DataEffectT(*effect_) : nullptr); }
   sequence.reserve(o.sequence.size());
   for (const auto &sequence_ : o.sequence) { sequence.emplace_back((sequence_) ? new ss::ssfb2::SequencePackT(*sequence_) : nullptr); }
+  soundlist.reserve(o.soundlist.size());
+  for (const auto &soundlist_ : o.soundlist) { soundlist.emplace_back((soundlist_) ? new ss::ssfb2::DataSoundListT(*soundlist_) : nullptr); }
+  fontbitmap.reserve(o.fontbitmap.size());
+  for (const auto &fontbitmap_ : o.fontbitmap) { fontbitmap.emplace_back((fontbitmap_) ? new ss::ssfb2::FontBitmapT(*fontbitmap_) : nullptr); }
 }
 
 inline ProjectDataT &ProjectDataT::operator=(ProjectDataT o) FLATBUFFERS_NOEXCEPT {
@@ -1875,6 +1908,8 @@ inline ProjectDataT &ProjectDataT::operator=(ProjectDataT o) FLATBUFFERS_NOEXCEP
   std::swap(animation, o.animation);
   std::swap(effect, o.effect);
   std::swap(sequence, o.sequence);
+  std::swap(soundlist, o.soundlist);
+  std::swap(fontbitmap, o.fontbitmap);
   std::swap(name_texture, o.name_texture);
   std::swap(name_texture_external, o.name_texture_external);
   std::swap(name_font_bitmap, o.name_font_bitmap);
@@ -1890,12 +1925,14 @@ inline ProjectDataT *ProjectData::UnPack(const ::flatbuffers::resolver_function_
 inline void ProjectData::UnPackTo(ProjectDataT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = cell_map(); if (_e) { if(_o->cell_map) { _e->UnPackTo(_o->cell_map.get(), _resolver); } else { _o->cell_map = std::shared_ptr<ss::ssfb2::DataCellMapT>(_e->UnPack(_resolver)); } } else if (_o->cell_map) { _o->cell_map.reset(); } }
   { auto _e = animation(); if (_e) { _o->animation.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->animation[_i]) { _e->Get(_i)->UnPackTo(_o->animation[_i].get(), _resolver); } else { _o->animation[_i] = std::shared_ptr<ss::ssfb2::DataAnimationT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->animation.resize(0); } }
   { auto _e = effect(); if (_e) { _o->effect.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->effect[_i]) { _e->Get(_i)->UnPackTo(_o->effect[_i].get(), _resolver); } else { _o->effect[_i] = std::shared_ptr<ss::ssfb2::DataEffectT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->effect.resize(0); } }
   { auto _e = sequence(); if (_e) { _o->sequence.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequence[_i]) { _e->Get(_i)->UnPackTo(_o->sequence[_i].get(), _resolver); } else { _o->sequence[_i] = std::shared_ptr<ss::ssfb2::SequencePackT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->sequence.resize(0); } }
+  { auto _e = soundlist(); if (_e) { _o->soundlist.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->soundlist[_i]) { _e->Get(_i)->UnPackTo(_o->soundlist[_i].get(), _resolver); } else { _o->soundlist[_i] = std::shared_ptr<ss::ssfb2::DataSoundListT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->soundlist.resize(0); } }
+  { auto _e = fontbitmap(); if (_e) { _o->fontbitmap.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->fontbitmap[_i]) { _e->Get(_i)->UnPackTo(_o->fontbitmap[_i].get(), _resolver); } else { _o->fontbitmap[_i] = std::shared_ptr<ss::ssfb2::FontBitmapT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->fontbitmap.resize(0); } }
   { auto _e = name_texture(); if (_e) { _o->name_texture.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_texture[_i] = _e->Get(_i)->str(); } } else { _o->name_texture.resize(0); } }
   { auto _e = name_texture_external(); if (_e) { _o->name_texture_external.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_texture_external[_i] = _e->Get(_i)->str(); } } else { _o->name_texture_external.resize(0); } }
   { auto _e = name_font_bitmap(); if (_e) { _o->name_font_bitmap.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_font_bitmap[_i] = _e->Get(_i)->str(); } } else { _o->name_font_bitmap.resize(0); } }
@@ -1909,12 +1946,14 @@ inline ::flatbuffers::Offset<ProjectData> CreateProjectData(::flatbuffers::FlatB
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ProjectDataT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _cell_map = _o->cell_map ? CreateDataCellMap(_fbb, _o->cell_map.get(), _rehasher) : 0;
   auto _animation = _o->animation.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataAnimation>> (_o->animation.size(), [](size_t i, _VectorArgs *__va) { return CreateDataAnimation(*__va->__fbb, __va->__o->animation[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _effect = _o->effect.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffect>> (_o->effect.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffect(*__va->__fbb, __va->__o->effect[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _sequence = _o->sequence.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::SequencePack>> (_o->sequence.size(), [](size_t i, _VectorArgs *__va) { return CreateSequencePack(*__va->__fbb, __va->__o->sequence[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _soundlist = _o->soundlist.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSoundList>> (_o->soundlist.size(), [](size_t i, _VectorArgs *__va) { return CreateDataSoundList(*__va->__fbb, __va->__o->soundlist[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _fontbitmap = _o->fontbitmap.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::FontBitmap>> (_o->fontbitmap.size(), [](size_t i, _VectorArgs *__va) { return CreateFontBitmap(*__va->__fbb, __va->__o->fontbitmap[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _name_texture = _o->name_texture.size() ? _fbb.CreateVectorOfStrings(_o->name_texture) : 0;
   auto _name_texture_external = _o->name_texture_external.size() ? _fbb.CreateVectorOfStrings(_o->name_texture_external) : 0;
   auto _name_font_bitmap = _o->name_font_bitmap.size() ? _fbb.CreateVectorOfStrings(_o->name_font_bitmap) : 0;
@@ -1926,6 +1965,8 @@ inline ::flatbuffers::Offset<ProjectData> CreateProjectData(::flatbuffers::FlatB
       _animation,
       _effect,
       _sequence,
+      _soundlist,
+      _fontbitmap,
       _name_texture,
       _name_texture_external,
       _name_font_bitmap);

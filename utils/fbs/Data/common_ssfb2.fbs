@@ -1,0 +1,272 @@
+include "../type_base.fbs";
+
+namespace ss.ssfb2;
+
+// --------------------------------------------------------------------- [Data: Animation]
+table Catalog {
+    table_id_parts_null:[ushort];
+    table_id_parts_normal:[ushort];
+    table_id_parts_instance:[ushort];
+    table_id_parts_effect:[ushort];
+    table_id_parts_mask:[ushort];
+    table_id_parts_joint:[ushort];
+    table_id_parts_bone:[ushort];
+    table_id_parts_move_node:[ushort];
+    table_id_parts_constraint:[ushort];
+    table_id_parts_bone_point:[ushort];
+    table_id_parts_mesh:[ushort];
+    table_id_parts_transform_constraint:[ushort];
+    table_id_parts_camera:[ushort];
+    table_id_parts_audio:[ushort];
+    table_id_parts_shape:[ushort];
+    table_id_parts_text:[ushort];
+    table_id_parts_nine_slice:[ushort];
+}
+
+table CodeValueContainer {
+    table_code:[int];
+}
+
+table ContainerStatus {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[int];
+    tabel_accessory:[float];
+}
+
+table ContainerCell {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeCell];
+    tabel_accessory:[float];
+}
+
+table ContainerInt {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[int];
+    tabel_accessory:[float];
+}
+
+table ContainerFloat {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[float];
+    tabel_accessory:[float];
+}
+
+table ContainerVector2 {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[Vector2];
+    tabel_accessory:[float];
+}
+
+table ContainerVector3 {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[Vector3];
+    tabel_accessory:[float];
+}
+
+table ContainerPartsColor {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributePartsColor];
+    tabel_accessory:[float];
+}
+
+table ContainerVertexCorrection {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeVertexCorrection];
+    tabel_accessory:[float];
+}
+
+table ContainerSkew {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeSkew];
+    tabel_accessory:[float];
+}
+
+table ContainerUserData {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeUserData];
+    tabel_accessory:[float];
+}
+
+table ContainerInstance {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeInstance];
+    tabel_accessory:[float];
+}
+
+table ContainerEffect {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeEffect];
+    tabel_accessory:[float];
+}
+
+table ContainerDeform {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeDeform];
+    tabel_accessory:[float];
+
+    count_vertex_mesh:int;
+    tabel_index_vertex:[int];
+}
+
+table ContainerShader {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeShader];
+    tabel_accessory:[float];
+}
+
+table ContainerSignal {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeSignal];
+    tabel_accessory:[float];
+}
+
+table ContainerAudio {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeAudio];
+    tabel_accessory:[float];
+}
+
+table ContainerChangeTexture {
+    type_pack:KindTypePack;
+    tabel_code_value:[CodeValueContainer];
+    tabel_value:[AnimationAttributeChangeTexture];
+    tabel_accessory:[float];
+}
+
+table DataAnimationParts {
+    status_parts:FlagBitStatusDataAnimationParts;
+
+    status:ContainerStatus;
+    cell:ContainerCell;
+    position:ContainerVector3;
+    rotation:ContainerVector3;
+    scaling:ContainerVector2;
+    scaling_local:ContainerVector2;
+    rate_opacity:ContainerFloat;
+    priority:ContainerInt;
+    parts_color:ContainerPartsColor;
+    vertex_correction:ContainerVertexCorrection;
+    skew:ContainerSkew;
+    offset_pivot:ContainerVector2;
+    position_anchor:ContainerVector2;
+    size_force:ContainerVector2;
+    position_texture:ContainerVector2;
+    rotation_texture:ContainerFloat;
+    scaling_texture:ContainerVector2;
+    radius_collision:ContainerFloat;
+    user_data:ContainerUserData;
+    instance:ContainerInstance;
+    effect:ContainerEffect;
+    deform:ContainerDeform;
+    shader:ContainerShader;
+    signal:ContainerSignal;
+    audio:ContainerAudio;
+    change_texture:ContainerChangeTexture;
+}
+
+table LibraryDataAnimation {
+    name:string;
+    frame_per_second:int;
+    count_frame:int;
+
+    size_canvas_x:int;
+    size_canvas_y:int;
+
+    frame_valid_start:int;
+    frame_valid_end:int;
+    count_frame_valid:int;
+
+    depth_ik:int;
+    mode_sort:KindModeSort;
+
+    table_label:[Label];
+    table_parts:[DataAnimationParts];
+}
+
+// --------------------------------------------------------------------- [Data: Effect]
+table DataEffectParts {
+    name:string;
+
+    id:ushort;
+    id_parent:ushort;
+    table_id_child:[int];
+
+//  feature:KindFeaturePartsDataEffect;
+    feature:ushort;
+    index_emitter:ushort;
+}
+
+table DataEffectEmitter {
+//  flag_data:FlagBitEmitterDataEffect;
+    flag_data:uint;
+
+//  operation_blend_target:KindOperationBlendEffect;
+    operation_blend_target:uint;
+
+    index_cell_map:ushort;
+    index_cell:ushort;
+
+    angle:RangeFloat;
+
+    gravity_directional:Vector2;
+    gravity_point_position:Vector2;
+    gravity_point_power:float;
+
+    position:RangeVector2;
+
+    rotation:RangeFloat;
+    rotation_fluctuation:RangeFloat;
+    rotation_fluctuation_rate:float;
+    rotation_fluctuation_rate_time:float;
+
+    rate_tangential_acceleration:RangeFloat;
+
+    scale_start:RangeVector2;
+    scale_rate_start:RangeFloat;
+
+    scale_end:RangeVector2;
+    scale_rate_end:RangeFloat;
+
+    delay:int;
+
+    color_vertex:RangeColor;
+    color_vertex_fluctuation:RangeColor;
+
+    alpha_fade_start:float;
+    alpha_fade_end:float;
+
+    speed:RangeFloat;
+    speed_fluctuation:RangeFloat;
+
+    turn_direction_fluctuation:float;
+
+    seed_random:long;
+
+    duration_emitter:int;
+    interval:int;
+    duration_particle:RangeFloat;
+
+    count_particle_max:int;
+    count_particle_emit:int;
+
+    count_parts_maximum:int;
+    table_pattern_emit:[PatternEmit];
+    table_pattern_offset:[int];
+    table_seed_particle:[long];
+}

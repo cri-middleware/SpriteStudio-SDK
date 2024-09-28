@@ -4,7 +4,7 @@
 #include <map>
 
 #include "version.h"
-#include "ssfb2/common_ssfb2_generated.h"
+#include "ssfb2/type_base_generated.h"
 
 namespace SpriteStudio {
     class SSPJInformation;

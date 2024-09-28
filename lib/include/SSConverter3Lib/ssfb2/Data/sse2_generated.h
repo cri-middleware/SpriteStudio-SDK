@@ -127,14 +127,14 @@ inline ::flatbuffers::Offset<DataEffectExtendSplit> CreateDataEffectExtendSplitD
 
 struct DataEffectSplitT : public ::flatbuffers::NativeTable {
   typedef DataEffectSplit TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
   int32_t flag_data = 0;
   int32_t seed_random = 0;
   int32_t version_renderer = 0;
   int32_t count_max_particle = 0;
   int32_t count_frame_per_second = 0;
-  std::shared_ptr<ss::ssfb2::Vector2T> scale_layout{};
+  std::shared_ptr<ss::ssfb2::Vector2> scale_layout{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectPartsT>> table_parts{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectEmitterT>> table_emitter{};
   std::vector<int32_t> table_index_emitter_order_draw{};
@@ -164,10 +164,10 @@ struct DataEffectSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_EXTEND_SPLIT = 26
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -206,10 +206,10 @@ struct DataEffectSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<int32_t>(VT_COUNT_FRAME_PER_SECOND, _count_frame_per_second, 0);
   }
   const ss::ssfb2::Vector2 *scale_layout() const {
-    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
+    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
   }
   ss::ssfb2::Vector2 *mutable_scale_layout() {
-    return GetPointer<ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
+    return GetStruct<ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *table_parts() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *>(VT_TABLE_PARTS);
@@ -237,8 +237,7 @@ struct DataEffectSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
            VerifyField<int32_t>(verifier, VT_FLAG_DATA, 4) &&
@@ -246,8 +245,7 @@ struct DataEffectSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_VERSION_RENDERER, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_MAX_PARTICLE, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_FRAME_PER_SECOND, 4) &&
-           VerifyOffset(verifier, VT_SCALE_LAYOUT) &&
-           verifier.VerifyTable(scale_layout()) &&
+           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SCALE_LAYOUT, 4) &&
            VerifyOffset(verifier, VT_TABLE_PARTS) &&
            verifier.VerifyVector(table_parts()) &&
            verifier.VerifyVectorOfTables(table_parts()) &&
@@ -269,8 +267,8 @@ struct DataEffectSplitBuilder {
   typedef DataEffectSplit Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataEffectSplit::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataEffectSplit::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataEffectSplit::VT_NAME, name);
@@ -290,8 +288,8 @@ struct DataEffectSplitBuilder {
   void add_count_frame_per_second(int32_t count_frame_per_second) {
     fbb_.AddElement<int32_t>(DataEffectSplit::VT_COUNT_FRAME_PER_SECOND, count_frame_per_second, 0);
   }
-  void add_scale_layout(::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout) {
-    fbb_.AddOffset(DataEffectSplit::VT_SCALE_LAYOUT, scale_layout);
+  void add_scale_layout(const ss::ssfb2::Vector2 *scale_layout) {
+    fbb_.AddStruct(DataEffectSplit::VT_SCALE_LAYOUT, scale_layout);
   }
   void add_table_parts(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>>> table_parts) {
     fbb_.AddOffset(DataEffectSplit::VT_TABLE_PARTS, table_parts);
@@ -318,14 +316,14 @@ struct DataEffectSplitBuilder {
 
 inline ::flatbuffers::Offset<DataEffectSplit> CreateDataEffectSplit(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     int32_t flag_data = 0,
     int32_t seed_random = 0,
     int32_t version_renderer = 0,
     int32_t count_max_particle = 0,
     int32_t count_frame_per_second = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout = 0,
+    const ss::ssfb2::Vector2 *scale_layout = nullptr,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>>> table_parts = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>>> table_emitter = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_index_emitter_order_draw = 0,
@@ -353,14 +351,14 @@ struct DataEffectSplit::Traits {
 
 inline ::flatbuffers::Offset<DataEffectSplit> CreateDataEffectSplitDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
     int32_t flag_data = 0,
     int32_t seed_random = 0,
     int32_t version_renderer = 0,
     int32_t count_max_particle = 0,
     int32_t count_frame_per_second = 0,
-    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout = 0,
+    const ss::ssfb2::Vector2 *scale_layout = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *table_parts = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>> *table_emitter = nullptr,
     const std::vector<int32_t> *table_index_emitter_order_draw = nullptr,
@@ -463,14 +461,14 @@ inline bool operator!=(const DataEffectSplitT &lhs, const DataEffectSplitT &rhs)
 
 
 inline DataEffectSplitT::DataEffectSplitT(const DataEffectSplitT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         flag_data(o.flag_data),
         seed_random(o.seed_random),
         version_renderer(o.version_renderer),
         count_max_particle(o.count_max_particle),
         count_frame_per_second(o.count_frame_per_second),
-        scale_layout((o.scale_layout) ? new ss::ssfb2::Vector2T(*o.scale_layout) : nullptr),
+        scale_layout((o.scale_layout) ? new ss::ssfb2::Vector2(*o.scale_layout) : nullptr),
         table_index_emitter_order_draw(o.table_index_emitter_order_draw),
         extend_split((o.extend_split) ? new ss::ssfb2::DataEffectExtendSplitT(*o.extend_split) : nullptr) {
   table_parts.reserve(o.table_parts.size());
@@ -504,14 +502,14 @@ inline DataEffectSplitT *DataEffectSplit::UnPack(const ::flatbuffers::resolver_f
 inline void DataEffectSplit::UnPackTo(DataEffectSplitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = flag_data(); _o->flag_data = _e; }
   { auto _e = seed_random(); _o->seed_random = _e; }
   { auto _e = version_renderer(); _o->version_renderer = _e; }
   { auto _e = count_max_particle(); _o->count_max_particle = _e; }
   { auto _e = count_frame_per_second(); _o->count_frame_per_second = _e; }
-  { auto _e = scale_layout(); if (_e) { if(_o->scale_layout) { _e->UnPackTo(_o->scale_layout.get(), _resolver); } else { _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale_layout) { _o->scale_layout.reset(); } }
+  { auto _e = scale_layout(); if (_e) _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
   { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataEffectPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
   { auto _e = table_emitter(); if (_e) { _o->table_emitter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_emitter[_i]) { _e->Get(_i)->UnPackTo(_o->table_emitter[_i].get(), _resolver); } else { _o->table_emitter[_i] = std::shared_ptr<ss::ssfb2::DataEffectEmitterT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_emitter.resize(0); } }
   { auto _e = table_index_emitter_order_draw(); if (_e) { _o->table_index_emitter_order_draw.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_emitter_order_draw[_i] = _e->Get(_i); } } else { _o->table_index_emitter_order_draw.resize(0); } }
@@ -526,14 +524,14 @@ inline ::flatbuffers::Offset<DataEffectSplit> CreateDataEffectSplit(::flatbuffer
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataEffectSplitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
   auto _flag_data = _o->flag_data;
   auto _seed_random = _o->seed_random;
   auto _version_renderer = _o->version_renderer;
   auto _count_max_particle = _o->count_max_particle;
   auto _count_frame_per_second = _o->count_frame_per_second;
-  auto _scale_layout = _o->scale_layout ? CreateVector2(_fbb, _o->scale_layout.get(), _rehasher) : 0;
+  auto _scale_layout = _o->scale_layout ? _o->scale_layout.get() : nullptr;
   auto _table_parts = _o->table_parts.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> (_o->table_parts.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffectParts(*__va->__fbb, __va->__o->table_parts[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_emitter = _o->table_emitter.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>> (_o->table_emitter.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffectEmitter(*__va->__fbb, __va->__o->table_emitter[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_index_emitter_order_draw = _o->table_index_emitter_order_draw.size() ? _fbb.CreateVector(_o->table_index_emitter_order_draw) : 0;

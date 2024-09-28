@@ -36,9 +36,10 @@ Fnt::Fnt() : pImpl(std::make_unique<Impl>()){
 Fnt::~Fnt() = default;
 
 std::shared_ptr<SpriteStudio::FntInformation> SpriteStudio::Fnt::parse(const std::string &fnt, const std::shared_ptr<SSPJInformation> &sspjInfo) {
+    auto file = fnt;
     auto fnt_path = std::filesystem::path(fnt);
     if (!std::filesystem::exists(fnt_path)) {
-        throw error::getException(PHASE, DOC_PART, "not found a fnt file: " + fnt, -1);
+        throw error::getException(PHASE, DOC_PART, "not found a file: " + file, -1);
     }
 
     auto fntInfo = std::make_shared<FntInformation>();
@@ -48,6 +49,7 @@ std::shared_ptr<SpriteStudio::FntInformation> SpriteStudio::Fnt::parse(const std
     fntInfo->fnt = fnt;
 
     // TODO: impl parse fnt
+
 
     return fntInfo;
 }

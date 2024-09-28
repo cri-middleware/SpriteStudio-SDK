@@ -16,7 +16,7 @@ const DocPartType DOC_PART = DocPartType::SSCE;
 
 struct SSCE::Impl {
     std::shared_ptr<ss::ssfb2::CellT> parseCell(const pugi::xml_node& node);
-    std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> parseMeshCoordinate(const pugi::xpath_node_set& xpath_nodes);
+    std::vector<ss::ssfb2::Vector2> parseMeshCoordinate(const pugi::xpath_node_set& xpath_nodes);
     std::vector<uint16_t> parseMeshIndices(const pugi::xpath_node_set& xpath_nodes);
 };
 
@@ -183,10 +183,10 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
     std::istringstream iss;
 
     auto cell = std::make_shared<ss::ssfb2::CellT>();
-    auto rectangle = std::make_shared<ss::ssfb2::RectT>();
-    auto pivot = std::make_shared<ss::ssfb2::Vector2T>();
-    auto sizeUntrimmed = std::make_shared<ss::ssfb2::Vector2T>();
-    auto mesh = std::make_shared<ss::ssfb2::DataMeshT>();
+    auto rectangle = std::make_shared<ss::ssfb2::Rect>();
+    auto pivot = std::make_shared<ss::ssfb2::Vector2>();
+    auto sizeUntrimmed = std::make_shared<ss::ssfb2::Vector2>();
+    auto mesh = std::make_shared<ss::ssfb2::DataMeshCellT>();
 
     valueText = std::string(node.child("name").text().as_string());
     if (valueText.empty()) {
@@ -204,8 +204,8 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
         // Data Broken ?
         throw SSException("No-coordinates cell is found. Name: " + cell->name, -1);
     }
-    rectangle->x_min = std::stof(x);
-    rectangle->y_min = std::stof(y);
+    rectangle->mutate_x_min(std::stof(x));
+    rectangle->mutate_y_min(std::stof(y));
 
     valueText = std::string(node.child("size").text().as_string());
     if (valueText.empty()) {
@@ -217,8 +217,8 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
         // Data Broken ?
         throw SSException("No-size cell is found. Name: " + cell->name, -1);
     }
-    rectangle->x_max = std::stof(width);
-    rectangle->y_max = std::stof(height);
+    rectangle->mutate_x_max(std::stof(width));
+    rectangle->mutate_y_max(std::stof(height));
 
     bool flagRotated = node.child("rotated").text().as_bool();
     if (flagRotated) {
@@ -241,8 +241,8 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
         pivotNormalizeY = pivotNormalizeX;
         pivotNormalizeX = temp;
     }
-    pivot->x = rectangle->x_max * (pivotNormalizeX + 0.5f);
-    pivot->y = rectangle->y_max * (-pivotNormalizeY + 0.5f);
+    pivot->mutate_x(rectangle->x_max() * (pivotNormalizeX + 0.5f));
+    pivot->mutate_y(rectangle->y_max() * (-pivotNormalizeY + 0.5f));
 
     auto sizeUntrimmedX = 0.0f;
     auto sizeUntrimmedY = 0.0f;
@@ -260,8 +260,8 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
             }
         }
     }
-    sizeUntrimmed->x = sizeUntrimmedX;
-    sizeUntrimmed->y = sizeUntrimmedY;
+    sizeUntrimmed->mutate_x(sizeUntrimmedX);
+    sizeUntrimmed->mutate_y(sizeUntrimmedY);
 
     // Mesh
     valueBool = node.child("ismesh").text().as_bool();
@@ -277,23 +277,23 @@ std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &no
     return cell;
 }
 
-std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> SSCE::Impl::parseMeshCoordinate(const pugi::xpath_node_set &xpath_nodes) {
-    auto lst = std::vector<std::shared_ptr<ss::ssfb2::Vector2T>>();
+std::vector<ss::ssfb2::Vector2> SSCE::Impl::parseMeshCoordinate(const pugi::xpath_node_set &xpath_nodes) {
+    auto lst = std::vector<ss::ssfb2::Vector2>();
 
     for (const auto& xpath_node : xpath_nodes) {
-        auto item = std::make_shared<ss::ssfb2::Vector2T>();
+        ss::ssfb2::Vector2 item;
         auto valueText = std::string(xpath_node.node().text().as_string());
         std::istringstream iss(valueText);
 
         std::string x, y;
         if (std::getline(iss, x, ' ') && std::getline(iss, y)) {
-            item->x = std::stof(x);
-            item->y = std::stof(y);
+            item.mutate_x(std::stof(x));
+            item.mutate_y(std::stof(y));
         }
         lst.push_back(item);
     }
 
-    return lst;
+    return std::move(lst);
 }
 
 std::vector<uint16_t> SSCE::Impl::parseMeshIndices(const pugi::xpath_node_set &xpath_nodes) {

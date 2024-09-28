@@ -85,8 +85,8 @@ std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std:
     sseeInfo->FlagLockSeed = effectDataNode.child("effectDataNode.child").text().as_bool();
     sseeInfo->FramePerSecond = effectDataNode.child("fps").text().as_int();
     sseeInfo->VersionRenderer = effectDataNode.child("renderVersion").text().as_int();
-    sseeInfo->ScaleLayout.x = effectDataNode.child("layoutScaleX").text().as_float() / 100.0f;
-    sseeInfo->ScaleLayout.y = effectDataNode.child("layoutScaleY").text().as_float() / 100.0f;
+    sseeInfo->ScaleLayout.mutate_x(effectDataNode.child("layoutScaleX").text().as_float() / 100.0f);
+    sseeInfo->ScaleLayout.mutate_y(effectDataNode.child("layoutScaleY").text().as_float() / 100.0f);
 
     auto xpath_node_set = effectDataNode.select_nodes("nodeList/node");
     if (xpath_node_set.empty()) {
@@ -125,18 +125,18 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseP
         dataEffectParts->id_parent = id_parent;
     }
 
-    auto operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Non;
+    auto operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::NON;
     std::string nameCellMap;
     std::string nameCell;
     auto behaviorNode = node.child("behavior");
     if (behaviorNode) {
         valueText = behaviorNode.child("BlendType").text().as_string();
         if (valueText == "Mix") {
-            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
+            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::MIX;
         } else if (valueText == "Add") {
-            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Add;
+            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::ADD;
         } else {
-            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::Mix;
+            operationBlendTarget = ss::ssfb2::KindOperationBlendEffect::MIX;
         }
 
         nameCellMap = std::string(behaviorNode.child("CellMapName").text().as_string());
@@ -148,13 +148,13 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseP
         if (dataEffectParts->name.empty()) {
             dataEffectParts->name = "Root";
         }
-        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Root);
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::ROOT);
         dataEffectParts->index_emitter = -1; // null TODO: impl
     } else if (valueText == "Emmiter") {
         if (dataEffectParts->name.empty()) {
             dataEffectParts->name = "Emitter";
         }
-        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Emitter);
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::EMITTER);
         auto indexCellMap = sspjInfo->indexGetFileName(sspjInfo->TableNameSSCE, nameCellMap);
         // TODO: impl
         /*
@@ -168,13 +168,13 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseP
         if (dataEffectParts->name.empty()) {
             dataEffectParts->name = "Particle";
         }
-        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Particle);
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::PARTICLE);
         dataEffectParts->index_emitter = -1; // null TODO: impl
     } else {
         if (dataEffectParts->name.empty()) {
             dataEffectParts->name = "Error";
         }
-        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::DataEffectPartsKindFeature::Terminator); // Error
+        dataEffectParts->feature = static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::TERMINATOR); // Error
         dataEffectParts->index_emitter = -1; // null TODO: impl
     }
 

@@ -127,9 +127,9 @@ inline ::flatbuffers::Offset<DataSequencPackeExtendSplit> CreateDataSequencPacke
 
 struct DataSequencePackSplitT : public ::flatbuffers::NativeTable {
   typedef DataSequencePackSplit TableType;
-  std::shared_ptr<ss::ssfb2::DataVersionT> version{};
+  std::shared_ptr<ss::ssfb2::DataVersion> version{};
   std::string name{};
-  std::vector<std::shared_ptr<ss::ssfb2::DataSequenceT>> sequenceList{};
+  std::vector<std::shared_ptr<ss::ssfb2::DataSequenceT>> sequence_list{};
   std::shared_ptr<ss::ssfb2::DataSequencPackeExtendSplitT> extend_split{};
   DataSequencePackSplitT() = default;
   DataSequencePackSplitT(const DataSequencePackSplitT &o);
@@ -144,14 +144,14 @@ struct DataSequencePackSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_VERSION = 4,
     VT_NAME = 6,
-    VT_SEQUENCELIST = 8,
+    VT_SEQUENCE_LIST = 8,
     VT_EXTEND_SPLIT = 10
   };
   const ss::ssfb2::DataVersion *version() const {
-    return GetPointer<const ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<const ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   ss::ssfb2::DataVersion *mutable_version() {
-    return GetPointer<ss::ssfb2::DataVersion *>(VT_VERSION);
+    return GetStruct<ss::ssfb2::DataVersion *>(VT_VERSION);
   }
   const ::flatbuffers::String *name() const {
     return GetPointer<const ::flatbuffers::String *>(VT_NAME);
@@ -159,11 +159,11 @@ struct DataSequencePackSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   ::flatbuffers::String *mutable_name() {
     return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequenceList() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCELIST);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequence_list() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCE_LIST);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *mutable_sequenceList() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCELIST);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *mutable_sequence_list() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *>(VT_SEQUENCE_LIST);
   }
   const ss::ssfb2::DataSequencPackeExtendSplit *extend_split() const {
     return GetPointer<const ss::ssfb2::DataSequencPackeExtendSplit *>(VT_EXTEND_SPLIT);
@@ -173,13 +173,12 @@ struct DataSequencePackSplit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Ta
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyOffset(verifier, VT_VERSION) &&
-           verifier.VerifyTable(version()) &&
+           VerifyField<ss::ssfb2::DataVersion>(verifier, VT_VERSION, 1) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyOffset(verifier, VT_SEQUENCELIST) &&
-           verifier.VerifyVector(sequenceList()) &&
-           verifier.VerifyVectorOfTables(sequenceList()) &&
+           VerifyOffset(verifier, VT_SEQUENCE_LIST) &&
+           verifier.VerifyVector(sequence_list()) &&
+           verifier.VerifyVectorOfTables(sequence_list()) &&
            VerifyOffset(verifier, VT_EXTEND_SPLIT) &&
            verifier.VerifyTable(extend_split()) &&
            verifier.EndTable();
@@ -193,14 +192,14 @@ struct DataSequencePackSplitBuilder {
   typedef DataSequencePackSplit Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_version(::flatbuffers::Offset<ss::ssfb2::DataVersion> version) {
-    fbb_.AddOffset(DataSequencePackSplit::VT_VERSION, version);
+  void add_version(const ss::ssfb2::DataVersion *version) {
+    fbb_.AddStruct(DataSequencePackSplit::VT_VERSION, version);
   }
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DataSequencePackSplit::VT_NAME, name);
   }
-  void add_sequenceList(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequenceList) {
-    fbb_.AddOffset(DataSequencePackSplit::VT_SEQUENCELIST, sequenceList);
+  void add_sequence_list(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequence_list) {
+    fbb_.AddOffset(DataSequencePackSplit::VT_SEQUENCE_LIST, sequence_list);
   }
   void add_extend_split(::flatbuffers::Offset<ss::ssfb2::DataSequencPackeExtendSplit> extend_split) {
     fbb_.AddOffset(DataSequencePackSplit::VT_EXTEND_SPLIT, extend_split);
@@ -218,13 +217,13 @@ struct DataSequencePackSplitBuilder {
 
 inline ::flatbuffers::Offset<DataSequencePackSplit> CreateDataSequencePackSplit(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequenceList = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>> sequence_list = 0,
     ::flatbuffers::Offset<ss::ssfb2::DataSequencPackeExtendSplit> extend_split = 0) {
   DataSequencePackSplitBuilder builder_(_fbb);
   builder_.add_extend_split(extend_split);
-  builder_.add_sequenceList(sequenceList);
+  builder_.add_sequence_list(sequence_list);
   builder_.add_name(name);
   builder_.add_version(version);
   return builder_.Finish();
@@ -237,17 +236,17 @@ struct DataSequencePackSplit::Traits {
 
 inline ::flatbuffers::Offset<DataSequencePackSplit> CreateDataSequencePackSplitDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<ss::ssfb2::DataVersion> version = 0,
+    const ss::ssfb2::DataVersion *version = nullptr,
     const char *name = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequenceList = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> *sequence_list = nullptr,
     ::flatbuffers::Offset<ss::ssfb2::DataSequencPackeExtendSplit> extend_split = 0) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
-  auto sequenceList__ = sequenceList ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>(*sequenceList) : 0;
+  auto sequence_list__ = sequence_list ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>>(*sequence_list) : 0;
   return ss::ssfb2::CreateDataSequencePackSplit(
       _fbb,
       version,
       name__,
-      sequenceList__,
+      sequence_list__,
       extend_split);
 }
 
@@ -311,7 +310,7 @@ inline bool operator==(const DataSequencePackSplitT &lhs, const DataSequencePack
   return
       ((lhs.version == rhs.version) || (lhs.version && rhs.version && *lhs.version == *rhs.version)) &&
       (lhs.name == rhs.name) &&
-      (lhs.sequenceList.size() == rhs.sequenceList.size() && std::equal(lhs.sequenceList.cbegin(), lhs.sequenceList.cend(), rhs.sequenceList.cbegin(), [](std::shared_ptr<ss::ssfb2::DataSequenceT> const &a, std::shared_ptr<ss::ssfb2::DataSequenceT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.sequence_list.size() == rhs.sequence_list.size() && std::equal(lhs.sequence_list.cbegin(), lhs.sequence_list.cend(), rhs.sequence_list.cbegin(), [](std::shared_ptr<ss::ssfb2::DataSequenceT> const &a, std::shared_ptr<ss::ssfb2::DataSequenceT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       ((lhs.extend_split == rhs.extend_split) || (lhs.extend_split && rhs.extend_split && *lhs.extend_split == *rhs.extend_split));
 }
 
@@ -321,17 +320,17 @@ inline bool operator!=(const DataSequencePackSplitT &lhs, const DataSequencePack
 
 
 inline DataSequencePackSplitT::DataSequencePackSplitT(const DataSequencePackSplitT &o)
-      : version((o.version) ? new ss::ssfb2::DataVersionT(*o.version) : nullptr),
+      : version((o.version) ? new ss::ssfb2::DataVersion(*o.version) : nullptr),
         name(o.name),
         extend_split((o.extend_split) ? new ss::ssfb2::DataSequencPackeExtendSplitT(*o.extend_split) : nullptr) {
-  sequenceList.reserve(o.sequenceList.size());
-  for (const auto &sequenceList_ : o.sequenceList) { sequenceList.emplace_back((sequenceList_) ? new ss::ssfb2::DataSequenceT(*sequenceList_) : nullptr); }
+  sequence_list.reserve(o.sequence_list.size());
+  for (const auto &sequence_list_ : o.sequence_list) { sequence_list.emplace_back((sequence_list_) ? new ss::ssfb2::DataSequenceT(*sequence_list_) : nullptr); }
 }
 
 inline DataSequencePackSplitT &DataSequencePackSplitT::operator=(DataSequencePackSplitT o) FLATBUFFERS_NOEXCEPT {
   std::swap(version, o.version);
   std::swap(name, o.name);
-  std::swap(sequenceList, o.sequenceList);
+  std::swap(sequence_list, o.sequence_list);
   std::swap(extend_split, o.extend_split);
   return *this;
 }
@@ -345,9 +344,9 @@ inline DataSequencePackSplitT *DataSequencePackSplit::UnPack(const ::flatbuffers
 inline void DataSequencePackSplit::UnPackTo(DataSequencePackSplitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = version(); if (_e) { if(_o->version) { _e->UnPackTo(_o->version.get(), _resolver); } else { _o->version = std::shared_ptr<ss::ssfb2::DataVersionT>(_e->UnPack(_resolver)); } } else if (_o->version) { _o->version.reset(); } }
+  { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = sequenceList(); if (_e) { _o->sequenceList.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequenceList[_i]) { _e->Get(_i)->UnPackTo(_o->sequenceList[_i].get(), _resolver); } else { _o->sequenceList[_i] = std::shared_ptr<ss::ssfb2::DataSequenceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->sequenceList.resize(0); } }
+  { auto _e = sequence_list(); if (_e) { _o->sequence_list.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequence_list[_i]) { _e->Get(_i)->UnPackTo(_o->sequence_list[_i].get(), _resolver); } else { _o->sequence_list[_i] = std::shared_ptr<ss::ssfb2::DataSequenceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->sequence_list.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataSequencPackeExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
 }
 
@@ -359,15 +358,15 @@ inline ::flatbuffers::Offset<DataSequencePackSplit> CreateDataSequencePackSplit(
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataSequencePackSplitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _version = _o->version ? CreateDataVersion(_fbb, _o->version.get(), _rehasher) : 0;
+  auto _version = _o->version ? _o->version.get() : nullptr;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
-  auto _sequenceList = _o->sequenceList.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> (_o->sequenceList.size(), [](size_t i, _VectorArgs *__va) { return CreateDataSequence(*__va->__fbb, __va->__o->sequenceList[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _sequence_list = _o->sequence_list.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataSequence>> (_o->sequence_list.size(), [](size_t i, _VectorArgs *__va) { return CreateDataSequence(*__va->__fbb, __va->__o->sequence_list[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _extend_split = _o->extend_split ? CreateDataSequencPackeExtendSplit(_fbb, _o->extend_split.get(), _rehasher) : 0;
   return ss::ssfb2::CreateDataSequencePackSplit(
       _fbb,
       _version,
       _name,
-      _sequenceList,
+      _sequence_list,
       _extend_split);
 }
 
