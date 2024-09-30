@@ -34,32 +34,32 @@ table DataExtendInformationFile {
 }
 
 // --------------------------------------------------------------------- [Base-Types: Tuple]
-struct Vector2 {
+table Vector2 {
     x:float;
     y:float;
 }
 
-struct Vector3 {
+table Vector3 {
     x:float;
     y:float;
     z:float;
 }
 
-struct Rect {
+table Rect {
     x_min:float;
     y_min:float;
     x_max:float;
     y_max:float;
 }
 
-struct Color32 {
+table Color32 {
     r:ubyte;
     g:ubyte;
     b:ubyte;
     a:ubyte;
 }
 
-struct Color {
+table Color {
     r:float;
     g:float;
     b:float;
@@ -114,7 +114,7 @@ table LibraryDataCellMap {
 // --------------------------------------------------------------------- [Data-Types: Animation]
 enum KindFeatureParts : ubyte {
     ROOT = 0,               // Root-Parts (Subspecies of "NULL"-Parts)
-    NULL_,
+    NULL_PARTS,
     NORMAL,
 
     INSTANCE,
@@ -341,12 +341,12 @@ table Label {
     frame:ushort;
 }
 
-struct ColorLabel {
+table ColorLabel {
     form:KindFormColorLabel;
     color:Color32;
 }
 
-struct BindMeshBone {
+table BindMeshBone {
     index:ushort;
     weight:float;
     coordinate_offset:Vector3;
@@ -363,12 +363,11 @@ table BindMesh {
     count_vertex_deform:int;
 }
 
-struct AnimationAttributeCell {
+table AnimationAttributeCell {
     index_cell_map:int;
     index_cell:int;
 }
 
-// struct AnimationAttributePartsColor {
 table AnimationAttributePartsColor {
     bound:short;
     operation:short;
@@ -376,7 +375,6 @@ table AnimationAttributePartsColor {
     rate_alpha:[float];
 }
 
-// struct AnimationAttributeVertexCorrection {
 table AnimationAttributeVertexCorrection {
     coordinate:[Vector2];
 }
@@ -419,7 +417,7 @@ table AnimationAttributeInstance {
     label_end:string;
 }
 
-struct AnimationAttributeEffect {
+table AnimationAttributeEffect {
     flags:int;
     frame_start:int;
     rate_time:float;
@@ -434,13 +432,13 @@ table AnimationAttributeShader {
     parameter:[float];
 }
 
-struct AnimationAttributeAudio {
+table AnimationAttributeAudio {
     id:short;
     index:short;
     count_play:short;
 }
 
-struct AnimationAttributeChangeTexture {
+table AnimationAttributeChangeTexture {
     index_texture:short;
 }
 
@@ -589,22 +587,22 @@ enum FlagBitEmitterDataEffect : uint {
     MASK_VALID = 0x7fffffff,
 }
 
-struct RangeFloat {
+table RangeFloat {
     main:float;
     sub:float;
 }
 
-struct RangeVector2 {
+table RangeVector2 {
     main:Vector2;
     sub:Vector2;
 }
 
-struct RangeColor {
+table RangeColor {
     main:Color;
     sub:Color;
 }
 
-struct PatternEmit {
+table PatternEmit {
     index_generate:int;
     duration:int;
     cycle:int;

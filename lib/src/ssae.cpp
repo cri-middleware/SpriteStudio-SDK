@@ -25,7 +25,7 @@ struct SSAE::Impl {
 
     static ss::ssfb2::KindOperationBlend getAlphaBlendType(const std::string& valueText);
 
-    static std::shared_ptr<ss::ssfb2::ColorLabel>  getColorLabel(const std::string& valueText);
+    static std::shared_ptr<ss::ssfb2::ColorLabelT>  getColorLabel(const std::string& valueText);
 };
 
 std::string SSAEInformation::NameDirectory() const {
@@ -393,7 +393,7 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
             break;
 
             case ss::ssfb2::KindFeatureParts::ROOT:
-            case ss::ssfb2::KindFeatureParts::NULL_:
+            case ss::ssfb2::KindFeatureParts::NULL_PARTS:
             case ss::ssfb2::KindFeatureParts::NORMAL:
             case ss::ssfb2::KindFeatureParts::INSTANCE:
             case ss::ssfb2::KindFeatureParts::EFFECT:
@@ -482,7 +482,7 @@ ss::ssfb2::KindFeatureParts SSAE::Impl::getPartType(const std::string &valueText
         feature = ss::ssfb2::KindFeatureParts::NINE_SLICE;
     } else {
         // Null or others
-        feature = ss::ssfb2::KindFeatureParts::NULL_;
+        feature = ss::ssfb2::KindFeatureParts::NULL_PARTS;
     }
 
     return feature;
@@ -541,35 +541,34 @@ ss::ssfb2::KindOperationBlend SSAE::Impl::getAlphaBlendType(const std::string &v
     return operationBlend;
 }
 
-std::shared_ptr<ss::ssfb2::ColorLabel> SSAE::Impl::getColorLabel(const std::string &valueText) {
-    ss::ssfb2::KindFormColorLabel form = ss::ssfb2::KindFormColorLabel::NON;
-    ss::ssfb2::Color32 color;
+std::shared_ptr<ss::ssfb2::ColorLabelT> SSAE::Impl::getColorLabel(const std::string &valueText) {
+    auto colorLabel = std::make_shared<ss::ssfb2::ColorLabelT>();
 
     if (valueText.empty()) {
-        form = ss::ssfb2::KindFormColorLabel::NON;
+        colorLabel->form = ss::ssfb2::KindFormColorLabel::NON;
     } else {
         if (valueText == "Red") {
-            form = ss::ssfb2::KindFormColorLabel::RED;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::RED;
         } else if (valueText == "Orange") {
-            form = ss::ssfb2::KindFormColorLabel::ORANGE;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::ORANGE;
         } else if (valueText == "Yellow") {
-            form = ss::ssfb2::KindFormColorLabel::YELLOW;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::YELLOW;
         } else if (valueText == "Green") {
-            form = ss::ssfb2::KindFormColorLabel::GREEN;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::GREEN;
         } else if (valueText == "Blue") {
-            form = ss::ssfb2::KindFormColorLabel::BLUE;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::BLUE;
         } else if (valueText == "Violet") {
-            form = ss::ssfb2::KindFormColorLabel::VIOLET;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::VIOLET;
         } else if (valueText == "Gray") {
-            form = ss::ssfb2::KindFormColorLabel::GRAY;
+            colorLabel->form = ss::ssfb2::KindFormColorLabel::GRAY;
         } else {
             auto argb = std::stoul(valueText, 0, 16);
-            color.mutate_a((argb >> 24) & 0xff);
-            color.mutate_r((argb >> 16) & 0xff);
-            color.mutate_g((argb >> 8) & 0xff);
-            color.mutate_b(argb & 0xff);
+            colorLabel->color->a = (argb >> 24) & 0xff;
+            colorLabel->color->r = (argb >> 16) & 0xff;
+            colorLabel->color->g = (argb >> 8) & 0xff;
+            colorLabel->color->b = (argb & 0xff);
         }
     }
 
-    return std::make_shared<ss::ssfb2::ColorLabel>(form, color);
+    return colorLabel;
 }

@@ -29,124 +29,124 @@ table CodeValueContainer {
 
 table ContainerStatus {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[int];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[int];
+    table_accessory:[float];
 }
 
 table ContainerCell {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeCell];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeCell];
+    table_accessory:[float];
 }
 
 table ContainerInt {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[int];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[int];
+    table_accessory:[float];
 }
 
 table ContainerFloat {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[float];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[float];
+    table_accessory:[float];
 }
 
 table ContainerVector2 {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[Vector2];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[Vector2];
+    table_accessory:[float];
 }
 
 table ContainerVector3 {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[Vector3];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[Vector3];
+    table_accessory:[float];
 }
 
 table ContainerPartsColor {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributePartsColor];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributePartsColor];
+    table_accessory:[float];
 }
 
 table ContainerVertexCorrection {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeVertexCorrection];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeVertexCorrection];
+    table_accessory:[float];
 }
 
 table ContainerSkew {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeSkew];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeSkew];
+    table_accessory:[float];
 }
 
 table ContainerUserData {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeUserData];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeUserData];
+    table_accessory:[float];
 }
 
 table ContainerInstance {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeInstance];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeInstance];
+    table_accessory:[float];
 }
 
 table ContainerEffect {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeEffect];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeEffect];
+    table_accessory:[float];
 }
 
 table ContainerDeform {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeDeform];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeDeform];
+    table_accessory:[float];
 
     count_vertex_mesh:int;
-    tabel_index_vertex:[int];
+    table_index_vertex:[int];
 }
 
 table ContainerShader {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeShader];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeShader];
+    table_accessory:[float];
 }
 
 table ContainerSignal {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeSignal];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeSignal];
+    table_accessory:[float];
 }
 
 table ContainerAudio {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeAudio];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeAudio];
+    table_accessory:[float];
 }
 
 table ContainerChangeTexture {
     type_pack:KindTypePack;
-    tabel_code_value:[CodeValueContainer];
-    tabel_value:[AnimationAttributeChangeTexture];
-    tabel_accessory:[float];
+    table_code_value:[CodeValueContainer];
+    table_value:[AnimationAttributeChangeTexture];
+    table_accessory:[float];
 }
 
 table DataAnimationParts {

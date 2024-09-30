@@ -23,14 +23,24 @@ struct DataExtendInformationFileBuilder;
 struct DataExtendInformationFileT;
 
 struct Vector2;
+struct Vector2Builder;
+struct Vector2T;
 
 struct Vector3;
+struct Vector3Builder;
+struct Vector3T;
 
 struct Rect;
+struct RectBuilder;
+struct RectT;
 
 struct Color32;
+struct Color32Builder;
+struct Color32T;
 
 struct Color;
+struct ColorBuilder;
+struct ColorT;
 
 struct DataMeshCell;
 struct DataMeshCellBuilder;
@@ -49,8 +59,12 @@ struct LabelBuilder;
 struct LabelT;
 
 struct ColorLabel;
+struct ColorLabelBuilder;
+struct ColorLabelT;
 
 struct BindMeshBone;
+struct BindMeshBoneBuilder;
+struct BindMeshBoneT;
 
 struct BindMeshVertex;
 struct BindMeshVertexBuilder;
@@ -61,6 +75,8 @@ struct BindMeshBuilder;
 struct BindMeshT;
 
 struct AnimationAttributeCell;
+struct AnimationAttributeCellBuilder;
+struct AnimationAttributeCellT;
 
 struct AnimationAttributePartsColor;
 struct AnimationAttributePartsColorBuilder;
@@ -95,6 +111,8 @@ struct AnimationAttributeInstanceBuilder;
 struct AnimationAttributeInstanceT;
 
 struct AnimationAttributeEffect;
+struct AnimationAttributeEffectBuilder;
+struct AnimationAttributeEffectT;
 
 struct AnimationAttributeDeform;
 struct AnimationAttributeDeformBuilder;
@@ -105,8 +123,12 @@ struct AnimationAttributeShaderBuilder;
 struct AnimationAttributeShaderT;
 
 struct AnimationAttributeAudio;
+struct AnimationAttributeAudioBuilder;
+struct AnimationAttributeAudioT;
 
 struct AnimationAttributeChangeTexture;
+struct AnimationAttributeChangeTextureBuilder;
+struct AnimationAttributeChangeTextureT;
 
 struct DataModelParts;
 struct DataModelPartsBuilder;
@@ -117,12 +139,20 @@ struct DataSetupBuilder;
 struct DataSetupT;
 
 struct RangeFloat;
+struct RangeFloatBuilder;
+struct RangeFloatT;
 
 struct RangeVector2;
+struct RangeVector2Builder;
+struct RangeVector2T;
 
 struct RangeColor;
+struct RangeColorBuilder;
+struct RangeColorT;
 
 struct PatternEmit;
+struct PatternEmitBuilder;
+struct PatternEmitT;
 
 struct DataSequenceDetails;
 struct DataSequenceDetailsBuilder;
@@ -144,16 +174,16 @@ bool operator==(const DataVersion &lhs, const DataVersion &rhs);
 bool operator!=(const DataVersion &lhs, const DataVersion &rhs);
 bool operator==(const DataExtendInformationFileT &lhs, const DataExtendInformationFileT &rhs);
 bool operator!=(const DataExtendInformationFileT &lhs, const DataExtendInformationFileT &rhs);
-bool operator==(const Vector2 &lhs, const Vector2 &rhs);
-bool operator!=(const Vector2 &lhs, const Vector2 &rhs);
-bool operator==(const Vector3 &lhs, const Vector3 &rhs);
-bool operator!=(const Vector3 &lhs, const Vector3 &rhs);
-bool operator==(const Rect &lhs, const Rect &rhs);
-bool operator!=(const Rect &lhs, const Rect &rhs);
-bool operator==(const Color32 &lhs, const Color32 &rhs);
-bool operator!=(const Color32 &lhs, const Color32 &rhs);
-bool operator==(const Color &lhs, const Color &rhs);
-bool operator!=(const Color &lhs, const Color &rhs);
+bool operator==(const Vector2T &lhs, const Vector2T &rhs);
+bool operator!=(const Vector2T &lhs, const Vector2T &rhs);
+bool operator==(const Vector3T &lhs, const Vector3T &rhs);
+bool operator!=(const Vector3T &lhs, const Vector3T &rhs);
+bool operator==(const RectT &lhs, const RectT &rhs);
+bool operator!=(const RectT &lhs, const RectT &rhs);
+bool operator==(const Color32T &lhs, const Color32T &rhs);
+bool operator!=(const Color32T &lhs, const Color32T &rhs);
+bool operator==(const ColorT &lhs, const ColorT &rhs);
+bool operator!=(const ColorT &lhs, const ColorT &rhs);
 bool operator==(const DataMeshCellT &lhs, const DataMeshCellT &rhs);
 bool operator!=(const DataMeshCellT &lhs, const DataMeshCellT &rhs);
 bool operator==(const CellT &lhs, const CellT &rhs);
@@ -162,16 +192,16 @@ bool operator==(const LibraryDataCellMapT &lhs, const LibraryDataCellMapT &rhs);
 bool operator!=(const LibraryDataCellMapT &lhs, const LibraryDataCellMapT &rhs);
 bool operator==(const LabelT &lhs, const LabelT &rhs);
 bool operator!=(const LabelT &lhs, const LabelT &rhs);
-bool operator==(const ColorLabel &lhs, const ColorLabel &rhs);
-bool operator!=(const ColorLabel &lhs, const ColorLabel &rhs);
-bool operator==(const BindMeshBone &lhs, const BindMeshBone &rhs);
-bool operator!=(const BindMeshBone &lhs, const BindMeshBone &rhs);
+bool operator==(const ColorLabelT &lhs, const ColorLabelT &rhs);
+bool operator!=(const ColorLabelT &lhs, const ColorLabelT &rhs);
+bool operator==(const BindMeshBoneT &lhs, const BindMeshBoneT &rhs);
+bool operator!=(const BindMeshBoneT &lhs, const BindMeshBoneT &rhs);
 bool operator==(const BindMeshVertexT &lhs, const BindMeshVertexT &rhs);
 bool operator!=(const BindMeshVertexT &lhs, const BindMeshVertexT &rhs);
 bool operator==(const BindMeshT &lhs, const BindMeshT &rhs);
 bool operator!=(const BindMeshT &lhs, const BindMeshT &rhs);
-bool operator==(const AnimationAttributeCell &lhs, const AnimationAttributeCell &rhs);
-bool operator!=(const AnimationAttributeCell &lhs, const AnimationAttributeCell &rhs);
+bool operator==(const AnimationAttributeCellT &lhs, const AnimationAttributeCellT &rhs);
+bool operator!=(const AnimationAttributeCellT &lhs, const AnimationAttributeCellT &rhs);
 bool operator==(const AnimationAttributePartsColorT &lhs, const AnimationAttributePartsColorT &rhs);
 bool operator!=(const AnimationAttributePartsColorT &lhs, const AnimationAttributePartsColorT &rhs);
 bool operator==(const AnimationAttributeVertexCorrectionT &lhs, const AnimationAttributeVertexCorrectionT &rhs);
@@ -188,28 +218,28 @@ bool operator==(const AnimationAttributeSignalT &lhs, const AnimationAttributeSi
 bool operator!=(const AnimationAttributeSignalT &lhs, const AnimationAttributeSignalT &rhs);
 bool operator==(const AnimationAttributeInstanceT &lhs, const AnimationAttributeInstanceT &rhs);
 bool operator!=(const AnimationAttributeInstanceT &lhs, const AnimationAttributeInstanceT &rhs);
-bool operator==(const AnimationAttributeEffect &lhs, const AnimationAttributeEffect &rhs);
-bool operator!=(const AnimationAttributeEffect &lhs, const AnimationAttributeEffect &rhs);
+bool operator==(const AnimationAttributeEffectT &lhs, const AnimationAttributeEffectT &rhs);
+bool operator!=(const AnimationAttributeEffectT &lhs, const AnimationAttributeEffectT &rhs);
 bool operator==(const AnimationAttributeDeformT &lhs, const AnimationAttributeDeformT &rhs);
 bool operator!=(const AnimationAttributeDeformT &lhs, const AnimationAttributeDeformT &rhs);
 bool operator==(const AnimationAttributeShaderT &lhs, const AnimationAttributeShaderT &rhs);
 bool operator!=(const AnimationAttributeShaderT &lhs, const AnimationAttributeShaderT &rhs);
-bool operator==(const AnimationAttributeAudio &lhs, const AnimationAttributeAudio &rhs);
-bool operator!=(const AnimationAttributeAudio &lhs, const AnimationAttributeAudio &rhs);
-bool operator==(const AnimationAttributeChangeTexture &lhs, const AnimationAttributeChangeTexture &rhs);
-bool operator!=(const AnimationAttributeChangeTexture &lhs, const AnimationAttributeChangeTexture &rhs);
+bool operator==(const AnimationAttributeAudioT &lhs, const AnimationAttributeAudioT &rhs);
+bool operator!=(const AnimationAttributeAudioT &lhs, const AnimationAttributeAudioT &rhs);
+bool operator==(const AnimationAttributeChangeTextureT &lhs, const AnimationAttributeChangeTextureT &rhs);
+bool operator!=(const AnimationAttributeChangeTextureT &lhs, const AnimationAttributeChangeTextureT &rhs);
 bool operator==(const DataModelPartsT &lhs, const DataModelPartsT &rhs);
 bool operator!=(const DataModelPartsT &lhs, const DataModelPartsT &rhs);
 bool operator==(const DataSetupT &lhs, const DataSetupT &rhs);
 bool operator!=(const DataSetupT &lhs, const DataSetupT &rhs);
-bool operator==(const RangeFloat &lhs, const RangeFloat &rhs);
-bool operator!=(const RangeFloat &lhs, const RangeFloat &rhs);
-bool operator==(const RangeVector2 &lhs, const RangeVector2 &rhs);
-bool operator!=(const RangeVector2 &lhs, const RangeVector2 &rhs);
-bool operator==(const RangeColor &lhs, const RangeColor &rhs);
-bool operator!=(const RangeColor &lhs, const RangeColor &rhs);
-bool operator==(const PatternEmit &lhs, const PatternEmit &rhs);
-bool operator!=(const PatternEmit &lhs, const PatternEmit &rhs);
+bool operator==(const RangeFloatT &lhs, const RangeFloatT &rhs);
+bool operator!=(const RangeFloatT &lhs, const RangeFloatT &rhs);
+bool operator==(const RangeVector2T &lhs, const RangeVector2T &rhs);
+bool operator!=(const RangeVector2T &lhs, const RangeVector2T &rhs);
+bool operator==(const RangeColorT &lhs, const RangeColorT &rhs);
+bool operator!=(const RangeColorT &lhs, const RangeColorT &rhs);
+bool operator==(const PatternEmitT &lhs, const PatternEmitT &rhs);
+bool operator!=(const PatternEmitT &lhs, const PatternEmitT &rhs);
 bool operator==(const DataSequenceDetailsT &lhs, const DataSequenceDetailsT &rhs);
 bool operator!=(const DataSequenceDetailsT &lhs, const DataSequenceDetailsT &rhs);
 bool operator==(const DataSequenceT &lhs, const DataSequenceT &rhs);
@@ -364,7 +394,7 @@ inline const char *EnumNameLibraryDataCellMapFlagBitStatus(LibraryDataCellMapFla
 
 enum class KindFeatureParts : uint8_t {
   ROOT = 0,
-  NULL_ = 1,
+  NULL_PARTS = 1,
   NORMAL = 2,
   INSTANCE = 3,
   EFFECT = 4,
@@ -389,7 +419,7 @@ enum class KindFeatureParts : uint8_t {
 inline const KindFeatureParts (&EnumValuesKindFeatureParts())[19] {
   static const KindFeatureParts values[] = {
     KindFeatureParts::ROOT,
-    KindFeatureParts::NULL_,
+    KindFeatureParts::NULL_PARTS,
     KindFeatureParts::NORMAL,
     KindFeatureParts::INSTANCE,
     KindFeatureParts::EFFECT,
@@ -414,7 +444,7 @@ inline const KindFeatureParts (&EnumValuesKindFeatureParts())[19] {
 inline const char * const *EnumNamesKindFeatureParts() {
   static const char * const names[20] = {
     "ROOT",
-    "NULL_",
+    "NULL_PARTS",
     "NORMAL",
     "INSTANCE",
     "EFFECT",
@@ -1357,786 +1387,6 @@ struct DataVersion::Traits {
   using type = DataVersion;
 };
 
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Vector2 FLATBUFFERS_FINAL_CLASS {
- private:
-  float x_;
-  float y_;
-
- public:
-  struct Traits;
-  Vector2()
-      : x_(0),
-        y_(0) {
-  }
-  Vector2(float _x, float _y)
-      : x_(::flatbuffers::EndianScalar(_x)),
-        y_(::flatbuffers::EndianScalar(_y)) {
-  }
-  float x() const {
-    return ::flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    ::flatbuffers::WriteScalar(&x_, _x);
-  }
-  float y() const {
-    return ::flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    ::flatbuffers::WriteScalar(&y_, _y);
-  }
-};
-FLATBUFFERS_STRUCT_END(Vector2, 8);
-
-inline bool operator==(const Vector2 &lhs, const Vector2 &rhs) {
-  return
-      (lhs.x() == rhs.x()) &&
-      (lhs.y() == rhs.y());
-}
-
-inline bool operator!=(const Vector2 &lhs, const Vector2 &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct Vector2::Traits {
-  using type = Vector2;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Vector3 FLATBUFFERS_FINAL_CLASS {
- private:
-  float x_;
-  float y_;
-  float z_;
-
- public:
-  struct Traits;
-  Vector3()
-      : x_(0),
-        y_(0),
-        z_(0) {
-  }
-  Vector3(float _x, float _y, float _z)
-      : x_(::flatbuffers::EndianScalar(_x)),
-        y_(::flatbuffers::EndianScalar(_y)),
-        z_(::flatbuffers::EndianScalar(_z)) {
-  }
-  float x() const {
-    return ::flatbuffers::EndianScalar(x_);
-  }
-  void mutate_x(float _x) {
-    ::flatbuffers::WriteScalar(&x_, _x);
-  }
-  float y() const {
-    return ::flatbuffers::EndianScalar(y_);
-  }
-  void mutate_y(float _y) {
-    ::flatbuffers::WriteScalar(&y_, _y);
-  }
-  float z() const {
-    return ::flatbuffers::EndianScalar(z_);
-  }
-  void mutate_z(float _z) {
-    ::flatbuffers::WriteScalar(&z_, _z);
-  }
-};
-FLATBUFFERS_STRUCT_END(Vector3, 12);
-
-inline bool operator==(const Vector3 &lhs, const Vector3 &rhs) {
-  return
-      (lhs.x() == rhs.x()) &&
-      (lhs.y() == rhs.y()) &&
-      (lhs.z() == rhs.z());
-}
-
-inline bool operator!=(const Vector3 &lhs, const Vector3 &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct Vector3::Traits {
-  using type = Vector3;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Rect FLATBUFFERS_FINAL_CLASS {
- private:
-  float x_min_;
-  float y_min_;
-  float x_max_;
-  float y_max_;
-
- public:
-  struct Traits;
-  Rect()
-      : x_min_(0),
-        y_min_(0),
-        x_max_(0),
-        y_max_(0) {
-  }
-  Rect(float _x_min, float _y_min, float _x_max, float _y_max)
-      : x_min_(::flatbuffers::EndianScalar(_x_min)),
-        y_min_(::flatbuffers::EndianScalar(_y_min)),
-        x_max_(::flatbuffers::EndianScalar(_x_max)),
-        y_max_(::flatbuffers::EndianScalar(_y_max)) {
-  }
-  float x_min() const {
-    return ::flatbuffers::EndianScalar(x_min_);
-  }
-  void mutate_x_min(float _x_min) {
-    ::flatbuffers::WriteScalar(&x_min_, _x_min);
-  }
-  float y_min() const {
-    return ::flatbuffers::EndianScalar(y_min_);
-  }
-  void mutate_y_min(float _y_min) {
-    ::flatbuffers::WriteScalar(&y_min_, _y_min);
-  }
-  float x_max() const {
-    return ::flatbuffers::EndianScalar(x_max_);
-  }
-  void mutate_x_max(float _x_max) {
-    ::flatbuffers::WriteScalar(&x_max_, _x_max);
-  }
-  float y_max() const {
-    return ::flatbuffers::EndianScalar(y_max_);
-  }
-  void mutate_y_max(float _y_max) {
-    ::flatbuffers::WriteScalar(&y_max_, _y_max);
-  }
-};
-FLATBUFFERS_STRUCT_END(Rect, 16);
-
-inline bool operator==(const Rect &lhs, const Rect &rhs) {
-  return
-      (lhs.x_min() == rhs.x_min()) &&
-      (lhs.y_min() == rhs.y_min()) &&
-      (lhs.x_max() == rhs.x_max()) &&
-      (lhs.y_max() == rhs.y_max());
-}
-
-inline bool operator!=(const Rect &lhs, const Rect &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct Rect::Traits {
-  using type = Rect;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(1) Color32 FLATBUFFERS_FINAL_CLASS {
- private:
-  uint8_t r_;
-  uint8_t g_;
-  uint8_t b_;
-  uint8_t a_;
-
- public:
-  struct Traits;
-  Color32()
-      : r_(0),
-        g_(0),
-        b_(0),
-        a_(0) {
-  }
-  Color32(uint8_t _r, uint8_t _g, uint8_t _b, uint8_t _a)
-      : r_(::flatbuffers::EndianScalar(_r)),
-        g_(::flatbuffers::EndianScalar(_g)),
-        b_(::flatbuffers::EndianScalar(_b)),
-        a_(::flatbuffers::EndianScalar(_a)) {
-  }
-  uint8_t r() const {
-    return ::flatbuffers::EndianScalar(r_);
-  }
-  void mutate_r(uint8_t _r) {
-    ::flatbuffers::WriteScalar(&r_, _r);
-  }
-  uint8_t g() const {
-    return ::flatbuffers::EndianScalar(g_);
-  }
-  void mutate_g(uint8_t _g) {
-    ::flatbuffers::WriteScalar(&g_, _g);
-  }
-  uint8_t b() const {
-    return ::flatbuffers::EndianScalar(b_);
-  }
-  void mutate_b(uint8_t _b) {
-    ::flatbuffers::WriteScalar(&b_, _b);
-  }
-  uint8_t a() const {
-    return ::flatbuffers::EndianScalar(a_);
-  }
-  void mutate_a(uint8_t _a) {
-    ::flatbuffers::WriteScalar(&a_, _a);
-  }
-};
-FLATBUFFERS_STRUCT_END(Color32, 4);
-
-inline bool operator==(const Color32 &lhs, const Color32 &rhs) {
-  return
-      (lhs.r() == rhs.r()) &&
-      (lhs.g() == rhs.g()) &&
-      (lhs.b() == rhs.b()) &&
-      (lhs.a() == rhs.a());
-}
-
-inline bool operator!=(const Color32 &lhs, const Color32 &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct Color32::Traits {
-  using type = Color32;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) Color FLATBUFFERS_FINAL_CLASS {
- private:
-  float r_;
-  float g_;
-  float b_;
-  float a_;
-
- public:
-  struct Traits;
-  Color()
-      : r_(0),
-        g_(0),
-        b_(0),
-        a_(0) {
-  }
-  Color(float _r, float _g, float _b, float _a)
-      : r_(::flatbuffers::EndianScalar(_r)),
-        g_(::flatbuffers::EndianScalar(_g)),
-        b_(::flatbuffers::EndianScalar(_b)),
-        a_(::flatbuffers::EndianScalar(_a)) {
-  }
-  float r() const {
-    return ::flatbuffers::EndianScalar(r_);
-  }
-  void mutate_r(float _r) {
-    ::flatbuffers::WriteScalar(&r_, _r);
-  }
-  float g() const {
-    return ::flatbuffers::EndianScalar(g_);
-  }
-  void mutate_g(float _g) {
-    ::flatbuffers::WriteScalar(&g_, _g);
-  }
-  float b() const {
-    return ::flatbuffers::EndianScalar(b_);
-  }
-  void mutate_b(float _b) {
-    ::flatbuffers::WriteScalar(&b_, _b);
-  }
-  float a() const {
-    return ::flatbuffers::EndianScalar(a_);
-  }
-  void mutate_a(float _a) {
-    ::flatbuffers::WriteScalar(&a_, _a);
-  }
-};
-FLATBUFFERS_STRUCT_END(Color, 16);
-
-inline bool operator==(const Color &lhs, const Color &rhs) {
-  return
-      (lhs.r() == rhs.r()) &&
-      (lhs.g() == rhs.g()) &&
-      (lhs.b() == rhs.b()) &&
-      (lhs.a() == rhs.a());
-}
-
-inline bool operator!=(const Color &lhs, const Color &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct Color::Traits {
-  using type = Color;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(1) ColorLabel FLATBUFFERS_FINAL_CLASS {
- private:
-  uint8_t form_;
-  ss::ssfb2::Color32 color_;
-
- public:
-  struct Traits;
-  ColorLabel()
-      : form_(0),
-        color_() {
-  }
-  ColorLabel(ss::ssfb2::KindFormColorLabel _form, const ss::ssfb2::Color32 &_color)
-      : form_(::flatbuffers::EndianScalar(static_cast<uint8_t>(_form))),
-        color_(_color) {
-  }
-  ss::ssfb2::KindFormColorLabel form() const {
-    return static_cast<ss::ssfb2::KindFormColorLabel>(::flatbuffers::EndianScalar(form_));
-  }
-  void mutate_form(ss::ssfb2::KindFormColorLabel _form) {
-    ::flatbuffers::WriteScalar(&form_, static_cast<uint8_t>(_form));
-  }
-  const ss::ssfb2::Color32 &color() const {
-    return color_;
-  }
-  ss::ssfb2::Color32 &mutable_color() {
-    return color_;
-  }
-};
-FLATBUFFERS_STRUCT_END(ColorLabel, 5);
-
-inline bool operator==(const ColorLabel &lhs, const ColorLabel &rhs) {
-  return
-      (lhs.form() == rhs.form()) &&
-      (lhs.color() == rhs.color());
-}
-
-inline bool operator!=(const ColorLabel &lhs, const ColorLabel &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct ColorLabel::Traits {
-  using type = ColorLabel;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) BindMeshBone FLATBUFFERS_FINAL_CLASS {
- private:
-  uint16_t index_;
-  int16_t padding0__;
-  float weight_;
-  ss::ssfb2::Vector3 coordinate_offset_;
-
- public:
-  struct Traits;
-  BindMeshBone()
-      : index_(0),
-        padding0__(0),
-        weight_(0),
-        coordinate_offset_() {
-    (void)padding0__;
-  }
-  BindMeshBone(uint16_t _index, float _weight, const ss::ssfb2::Vector3 &_coordinate_offset)
-      : index_(::flatbuffers::EndianScalar(_index)),
-        padding0__(0),
-        weight_(::flatbuffers::EndianScalar(_weight)),
-        coordinate_offset_(_coordinate_offset) {
-    (void)padding0__;
-  }
-  uint16_t index() const {
-    return ::flatbuffers::EndianScalar(index_);
-  }
-  void mutate_index(uint16_t _index) {
-    ::flatbuffers::WriteScalar(&index_, _index);
-  }
-  float weight() const {
-    return ::flatbuffers::EndianScalar(weight_);
-  }
-  void mutate_weight(float _weight) {
-    ::flatbuffers::WriteScalar(&weight_, _weight);
-  }
-  const ss::ssfb2::Vector3 &coordinate_offset() const {
-    return coordinate_offset_;
-  }
-  ss::ssfb2::Vector3 &mutable_coordinate_offset() {
-    return coordinate_offset_;
-  }
-};
-FLATBUFFERS_STRUCT_END(BindMeshBone, 20);
-
-inline bool operator==(const BindMeshBone &lhs, const BindMeshBone &rhs) {
-  return
-      (lhs.index() == rhs.index()) &&
-      (lhs.weight() == rhs.weight()) &&
-      (lhs.coordinate_offset() == rhs.coordinate_offset());
-}
-
-inline bool operator!=(const BindMeshBone &lhs, const BindMeshBone &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct BindMeshBone::Traits {
-  using type = BindMeshBone;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) AnimationAttributeCell FLATBUFFERS_FINAL_CLASS {
- private:
-  int32_t index_cell_map_;
-  int32_t index_cell_;
-
- public:
-  struct Traits;
-  AnimationAttributeCell()
-      : index_cell_map_(0),
-        index_cell_(0) {
-  }
-  AnimationAttributeCell(int32_t _index_cell_map, int32_t _index_cell)
-      : index_cell_map_(::flatbuffers::EndianScalar(_index_cell_map)),
-        index_cell_(::flatbuffers::EndianScalar(_index_cell)) {
-  }
-  int32_t index_cell_map() const {
-    return ::flatbuffers::EndianScalar(index_cell_map_);
-  }
-  void mutate_index_cell_map(int32_t _index_cell_map) {
-    ::flatbuffers::WriteScalar(&index_cell_map_, _index_cell_map);
-  }
-  int32_t index_cell() const {
-    return ::flatbuffers::EndianScalar(index_cell_);
-  }
-  void mutate_index_cell(int32_t _index_cell) {
-    ::flatbuffers::WriteScalar(&index_cell_, _index_cell);
-  }
-};
-FLATBUFFERS_STRUCT_END(AnimationAttributeCell, 8);
-
-inline bool operator==(const AnimationAttributeCell &lhs, const AnimationAttributeCell &rhs) {
-  return
-      (lhs.index_cell_map() == rhs.index_cell_map()) &&
-      (lhs.index_cell() == rhs.index_cell());
-}
-
-inline bool operator!=(const AnimationAttributeCell &lhs, const AnimationAttributeCell &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct AnimationAttributeCell::Traits {
-  using type = AnimationAttributeCell;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) AnimationAttributeEffect FLATBUFFERS_FINAL_CLASS {
- private:
-  int32_t flags_;
-  int32_t frame_start_;
-  float rate_time_;
-
- public:
-  struct Traits;
-  AnimationAttributeEffect()
-      : flags_(0),
-        frame_start_(0),
-        rate_time_(0) {
-  }
-  AnimationAttributeEffect(int32_t _flags, int32_t _frame_start, float _rate_time)
-      : flags_(::flatbuffers::EndianScalar(_flags)),
-        frame_start_(::flatbuffers::EndianScalar(_frame_start)),
-        rate_time_(::flatbuffers::EndianScalar(_rate_time)) {
-  }
-  int32_t flags() const {
-    return ::flatbuffers::EndianScalar(flags_);
-  }
-  void mutate_flags(int32_t _flags) {
-    ::flatbuffers::WriteScalar(&flags_, _flags);
-  }
-  int32_t frame_start() const {
-    return ::flatbuffers::EndianScalar(frame_start_);
-  }
-  void mutate_frame_start(int32_t _frame_start) {
-    ::flatbuffers::WriteScalar(&frame_start_, _frame_start);
-  }
-  float rate_time() const {
-    return ::flatbuffers::EndianScalar(rate_time_);
-  }
-  void mutate_rate_time(float _rate_time) {
-    ::flatbuffers::WriteScalar(&rate_time_, _rate_time);
-  }
-};
-FLATBUFFERS_STRUCT_END(AnimationAttributeEffect, 12);
-
-inline bool operator==(const AnimationAttributeEffect &lhs, const AnimationAttributeEffect &rhs) {
-  return
-      (lhs.flags() == rhs.flags()) &&
-      (lhs.frame_start() == rhs.frame_start()) &&
-      (lhs.rate_time() == rhs.rate_time());
-}
-
-inline bool operator!=(const AnimationAttributeEffect &lhs, const AnimationAttributeEffect &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct AnimationAttributeEffect::Traits {
-  using type = AnimationAttributeEffect;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(2) AnimationAttributeAudio FLATBUFFERS_FINAL_CLASS {
- private:
-  int16_t id_;
-  int16_t index_;
-  int16_t count_play_;
-
- public:
-  struct Traits;
-  AnimationAttributeAudio()
-      : id_(0),
-        index_(0),
-        count_play_(0) {
-  }
-  AnimationAttributeAudio(int16_t _id, int16_t _index, int16_t _count_play)
-      : id_(::flatbuffers::EndianScalar(_id)),
-        index_(::flatbuffers::EndianScalar(_index)),
-        count_play_(::flatbuffers::EndianScalar(_count_play)) {
-  }
-  int16_t id() const {
-    return ::flatbuffers::EndianScalar(id_);
-  }
-  void mutate_id(int16_t _id) {
-    ::flatbuffers::WriteScalar(&id_, _id);
-  }
-  int16_t index() const {
-    return ::flatbuffers::EndianScalar(index_);
-  }
-  void mutate_index(int16_t _index) {
-    ::flatbuffers::WriteScalar(&index_, _index);
-  }
-  int16_t count_play() const {
-    return ::flatbuffers::EndianScalar(count_play_);
-  }
-  void mutate_count_play(int16_t _count_play) {
-    ::flatbuffers::WriteScalar(&count_play_, _count_play);
-  }
-};
-FLATBUFFERS_STRUCT_END(AnimationAttributeAudio, 6);
-
-inline bool operator==(const AnimationAttributeAudio &lhs, const AnimationAttributeAudio &rhs) {
-  return
-      (lhs.id() == rhs.id()) &&
-      (lhs.index() == rhs.index()) &&
-      (lhs.count_play() == rhs.count_play());
-}
-
-inline bool operator!=(const AnimationAttributeAudio &lhs, const AnimationAttributeAudio &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct AnimationAttributeAudio::Traits {
-  using type = AnimationAttributeAudio;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(2) AnimationAttributeChangeTexture FLATBUFFERS_FINAL_CLASS {
- private:
-  int16_t index_texture_;
-
- public:
-  struct Traits;
-  AnimationAttributeChangeTexture()
-      : index_texture_(0) {
-  }
-  AnimationAttributeChangeTexture(int16_t _index_texture)
-      : index_texture_(::flatbuffers::EndianScalar(_index_texture)) {
-  }
-  int16_t index_texture() const {
-    return ::flatbuffers::EndianScalar(index_texture_);
-  }
-  void mutate_index_texture(int16_t _index_texture) {
-    ::flatbuffers::WriteScalar(&index_texture_, _index_texture);
-  }
-};
-FLATBUFFERS_STRUCT_END(AnimationAttributeChangeTexture, 2);
-
-inline bool operator==(const AnimationAttributeChangeTexture &lhs, const AnimationAttributeChangeTexture &rhs) {
-  return
-      (lhs.index_texture() == rhs.index_texture());
-}
-
-inline bool operator!=(const AnimationAttributeChangeTexture &lhs, const AnimationAttributeChangeTexture &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct AnimationAttributeChangeTexture::Traits {
-  using type = AnimationAttributeChangeTexture;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) RangeFloat FLATBUFFERS_FINAL_CLASS {
- private:
-  float main_;
-  float sub_;
-
- public:
-  struct Traits;
-  RangeFloat()
-      : main_(0),
-        sub_(0) {
-  }
-  RangeFloat(float _main, float _sub)
-      : main_(::flatbuffers::EndianScalar(_main)),
-        sub_(::flatbuffers::EndianScalar(_sub)) {
-  }
-  float main() const {
-    return ::flatbuffers::EndianScalar(main_);
-  }
-  void mutate_main(float _main) {
-    ::flatbuffers::WriteScalar(&main_, _main);
-  }
-  float sub() const {
-    return ::flatbuffers::EndianScalar(sub_);
-  }
-  void mutate_sub(float _sub) {
-    ::flatbuffers::WriteScalar(&sub_, _sub);
-  }
-};
-FLATBUFFERS_STRUCT_END(RangeFloat, 8);
-
-inline bool operator==(const RangeFloat &lhs, const RangeFloat &rhs) {
-  return
-      (lhs.main() == rhs.main()) &&
-      (lhs.sub() == rhs.sub());
-}
-
-inline bool operator!=(const RangeFloat &lhs, const RangeFloat &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct RangeFloat::Traits {
-  using type = RangeFloat;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) RangeVector2 FLATBUFFERS_FINAL_CLASS {
- private:
-  ss::ssfb2::Vector2 main_;
-  ss::ssfb2::Vector2 sub_;
-
- public:
-  struct Traits;
-  RangeVector2()
-      : main_(),
-        sub_() {
-  }
-  RangeVector2(const ss::ssfb2::Vector2 &_main, const ss::ssfb2::Vector2 &_sub)
-      : main_(_main),
-        sub_(_sub) {
-  }
-  const ss::ssfb2::Vector2 &main() const {
-    return main_;
-  }
-  ss::ssfb2::Vector2 &mutable_main() {
-    return main_;
-  }
-  const ss::ssfb2::Vector2 &sub() const {
-    return sub_;
-  }
-  ss::ssfb2::Vector2 &mutable_sub() {
-    return sub_;
-  }
-};
-FLATBUFFERS_STRUCT_END(RangeVector2, 16);
-
-inline bool operator==(const RangeVector2 &lhs, const RangeVector2 &rhs) {
-  return
-      (lhs.main() == rhs.main()) &&
-      (lhs.sub() == rhs.sub());
-}
-
-inline bool operator!=(const RangeVector2 &lhs, const RangeVector2 &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct RangeVector2::Traits {
-  using type = RangeVector2;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) RangeColor FLATBUFFERS_FINAL_CLASS {
- private:
-  ss::ssfb2::Color main_;
-  ss::ssfb2::Color sub_;
-
- public:
-  struct Traits;
-  RangeColor()
-      : main_(),
-        sub_() {
-  }
-  RangeColor(const ss::ssfb2::Color &_main, const ss::ssfb2::Color &_sub)
-      : main_(_main),
-        sub_(_sub) {
-  }
-  const ss::ssfb2::Color &main() const {
-    return main_;
-  }
-  ss::ssfb2::Color &mutable_main() {
-    return main_;
-  }
-  const ss::ssfb2::Color &sub() const {
-    return sub_;
-  }
-  ss::ssfb2::Color &mutable_sub() {
-    return sub_;
-  }
-};
-FLATBUFFERS_STRUCT_END(RangeColor, 32);
-
-inline bool operator==(const RangeColor &lhs, const RangeColor &rhs) {
-  return
-      (lhs.main() == rhs.main()) &&
-      (lhs.sub() == rhs.sub());
-}
-
-inline bool operator!=(const RangeColor &lhs, const RangeColor &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct RangeColor::Traits {
-  using type = RangeColor;
-};
-
-FLATBUFFERS_MANUALLY_ALIGNED_STRUCT(4) PatternEmit FLATBUFFERS_FINAL_CLASS {
- private:
-  int32_t index_generate_;
-  int32_t duration_;
-  int32_t cycle_;
-
- public:
-  struct Traits;
-  PatternEmit()
-      : index_generate_(0),
-        duration_(0),
-        cycle_(0) {
-  }
-  PatternEmit(int32_t _index_generate, int32_t _duration, int32_t _cycle)
-      : index_generate_(::flatbuffers::EndianScalar(_index_generate)),
-        duration_(::flatbuffers::EndianScalar(_duration)),
-        cycle_(::flatbuffers::EndianScalar(_cycle)) {
-  }
-  int32_t index_generate() const {
-    return ::flatbuffers::EndianScalar(index_generate_);
-  }
-  void mutate_index_generate(int32_t _index_generate) {
-    ::flatbuffers::WriteScalar(&index_generate_, _index_generate);
-  }
-  int32_t duration() const {
-    return ::flatbuffers::EndianScalar(duration_);
-  }
-  void mutate_duration(int32_t _duration) {
-    ::flatbuffers::WriteScalar(&duration_, _duration);
-  }
-  int32_t cycle() const {
-    return ::flatbuffers::EndianScalar(cycle_);
-  }
-  void mutate_cycle(int32_t _cycle) {
-    ::flatbuffers::WriteScalar(&cycle_, _cycle);
-  }
-};
-FLATBUFFERS_STRUCT_END(PatternEmit, 12);
-
-inline bool operator==(const PatternEmit &lhs, const PatternEmit &rhs) {
-  return
-      (lhs.index_generate() == rhs.index_generate()) &&
-      (lhs.duration() == rhs.duration()) &&
-      (lhs.cycle() == rhs.cycle());
-}
-
-inline bool operator!=(const PatternEmit &lhs, const PatternEmit &rhs) {
-    return !(lhs == rhs);
-}
-
-
-struct PatternEmit::Traits {
-  using type = PatternEmit;
-};
-
 struct DataExtendInformationFileT : public ::flatbuffers::NativeTable {
   typedef DataExtendInformationFile TableType;
   ss::ssfb2::DataExtendInformationFileFlagBitStatus status = ss::ssfb2::DataExtendInformationFileFlagBitStatus::CLEAR;
@@ -2224,10 +1474,487 @@ inline ::flatbuffers::Offset<DataExtendInformationFile> CreateDataExtendInformat
 
 ::flatbuffers::Offset<DataExtendInformationFile> CreateDataExtendInformationFile(::flatbuffers::FlatBufferBuilder &_fbb, const DataExtendInformationFileT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct Vector2T : public ::flatbuffers::NativeTable {
+  typedef Vector2 TableType;
+  float x = 0.0f;
+  float y = 0.0f;
+};
+
+struct Vector2 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Vector2T NativeTableType;
+  typedef Vector2Builder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_X = 4,
+    VT_Y = 6
+  };
+  float x() const {
+    return GetField<float>(VT_X, 0.0f);
+  }
+  bool mutate_x(float _x = 0.0f) {
+    return SetField<float>(VT_X, _x, 0.0f);
+  }
+  float y() const {
+    return GetField<float>(VT_Y, 0.0f);
+  }
+  bool mutate_y(float _y = 0.0f) {
+    return SetField<float>(VT_Y, _y, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_X, 4) &&
+           VerifyField<float>(verifier, VT_Y, 4) &&
+           verifier.EndTable();
+  }
+  Vector2T *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Vector2T *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Vector2> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Vector2T* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Vector2Builder {
+  typedef Vector2 Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_x(float x) {
+    fbb_.AddElement<float>(Vector2::VT_X, x, 0.0f);
+  }
+  void add_y(float y) {
+    fbb_.AddElement<float>(Vector2::VT_Y, y, 0.0f);
+  }
+  explicit Vector2Builder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Vector2> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Vector2>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Vector2> CreateVector2(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float x = 0.0f,
+    float y = 0.0f) {
+  Vector2Builder builder_(_fbb);
+  builder_.add_y(y);
+  builder_.add_x(x);
+  return builder_.Finish();
+}
+
+struct Vector2::Traits {
+  using type = Vector2;
+  static auto constexpr Create = CreateVector2;
+};
+
+::flatbuffers::Offset<Vector2> CreateVector2(::flatbuffers::FlatBufferBuilder &_fbb, const Vector2T *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Vector3T : public ::flatbuffers::NativeTable {
+  typedef Vector3 TableType;
+  float x = 0.0f;
+  float y = 0.0f;
+  float z = 0.0f;
+};
+
+struct Vector3 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Vector3T NativeTableType;
+  typedef Vector3Builder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_X = 4,
+    VT_Y = 6,
+    VT_Z = 8
+  };
+  float x() const {
+    return GetField<float>(VT_X, 0.0f);
+  }
+  bool mutate_x(float _x = 0.0f) {
+    return SetField<float>(VT_X, _x, 0.0f);
+  }
+  float y() const {
+    return GetField<float>(VT_Y, 0.0f);
+  }
+  bool mutate_y(float _y = 0.0f) {
+    return SetField<float>(VT_Y, _y, 0.0f);
+  }
+  float z() const {
+    return GetField<float>(VT_Z, 0.0f);
+  }
+  bool mutate_z(float _z = 0.0f) {
+    return SetField<float>(VT_Z, _z, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_X, 4) &&
+           VerifyField<float>(verifier, VT_Y, 4) &&
+           VerifyField<float>(verifier, VT_Z, 4) &&
+           verifier.EndTable();
+  }
+  Vector3T *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Vector3T *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Vector3> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Vector3T* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Vector3Builder {
+  typedef Vector3 Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_x(float x) {
+    fbb_.AddElement<float>(Vector3::VT_X, x, 0.0f);
+  }
+  void add_y(float y) {
+    fbb_.AddElement<float>(Vector3::VT_Y, y, 0.0f);
+  }
+  void add_z(float z) {
+    fbb_.AddElement<float>(Vector3::VT_Z, z, 0.0f);
+  }
+  explicit Vector3Builder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Vector3> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Vector3>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Vector3> CreateVector3(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float x = 0.0f,
+    float y = 0.0f,
+    float z = 0.0f) {
+  Vector3Builder builder_(_fbb);
+  builder_.add_z(z);
+  builder_.add_y(y);
+  builder_.add_x(x);
+  return builder_.Finish();
+}
+
+struct Vector3::Traits {
+  using type = Vector3;
+  static auto constexpr Create = CreateVector3;
+};
+
+::flatbuffers::Offset<Vector3> CreateVector3(::flatbuffers::FlatBufferBuilder &_fbb, const Vector3T *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct RectT : public ::flatbuffers::NativeTable {
+  typedef Rect TableType;
+  float x_min = 0.0f;
+  float y_min = 0.0f;
+  float x_max = 0.0f;
+  float y_max = 0.0f;
+};
+
+struct Rect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RectT NativeTableType;
+  typedef RectBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_X_MIN = 4,
+    VT_Y_MIN = 6,
+    VT_X_MAX = 8,
+    VT_Y_MAX = 10
+  };
+  float x_min() const {
+    return GetField<float>(VT_X_MIN, 0.0f);
+  }
+  bool mutate_x_min(float _x_min = 0.0f) {
+    return SetField<float>(VT_X_MIN, _x_min, 0.0f);
+  }
+  float y_min() const {
+    return GetField<float>(VT_Y_MIN, 0.0f);
+  }
+  bool mutate_y_min(float _y_min = 0.0f) {
+    return SetField<float>(VT_Y_MIN, _y_min, 0.0f);
+  }
+  float x_max() const {
+    return GetField<float>(VT_X_MAX, 0.0f);
+  }
+  bool mutate_x_max(float _x_max = 0.0f) {
+    return SetField<float>(VT_X_MAX, _x_max, 0.0f);
+  }
+  float y_max() const {
+    return GetField<float>(VT_Y_MAX, 0.0f);
+  }
+  bool mutate_y_max(float _y_max = 0.0f) {
+    return SetField<float>(VT_Y_MAX, _y_max, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_X_MIN, 4) &&
+           VerifyField<float>(verifier, VT_Y_MIN, 4) &&
+           VerifyField<float>(verifier, VT_X_MAX, 4) &&
+           VerifyField<float>(verifier, VT_Y_MAX, 4) &&
+           verifier.EndTable();
+  }
+  RectT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(RectT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Rect> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RectT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct RectBuilder {
+  typedef Rect Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_x_min(float x_min) {
+    fbb_.AddElement<float>(Rect::VT_X_MIN, x_min, 0.0f);
+  }
+  void add_y_min(float y_min) {
+    fbb_.AddElement<float>(Rect::VT_Y_MIN, y_min, 0.0f);
+  }
+  void add_x_max(float x_max) {
+    fbb_.AddElement<float>(Rect::VT_X_MAX, x_max, 0.0f);
+  }
+  void add_y_max(float y_max) {
+    fbb_.AddElement<float>(Rect::VT_Y_MAX, y_max, 0.0f);
+  }
+  explicit RectBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Rect> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Rect>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Rect> CreateRect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float x_min = 0.0f,
+    float y_min = 0.0f,
+    float x_max = 0.0f,
+    float y_max = 0.0f) {
+  RectBuilder builder_(_fbb);
+  builder_.add_y_max(y_max);
+  builder_.add_x_max(x_max);
+  builder_.add_y_min(y_min);
+  builder_.add_x_min(x_min);
+  return builder_.Finish();
+}
+
+struct Rect::Traits {
+  using type = Rect;
+  static auto constexpr Create = CreateRect;
+};
+
+::flatbuffers::Offset<Rect> CreateRect(::flatbuffers::FlatBufferBuilder &_fbb, const RectT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct Color32T : public ::flatbuffers::NativeTable {
+  typedef Color32 TableType;
+  uint8_t r = 0;
+  uint8_t g = 0;
+  uint8_t b = 0;
+  uint8_t a = 0;
+};
+
+struct Color32 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef Color32T NativeTableType;
+  typedef Color32Builder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_R = 4,
+    VT_G = 6,
+    VT_B = 8,
+    VT_A = 10
+  };
+  uint8_t r() const {
+    return GetField<uint8_t>(VT_R, 0);
+  }
+  bool mutate_r(uint8_t _r = 0) {
+    return SetField<uint8_t>(VT_R, _r, 0);
+  }
+  uint8_t g() const {
+    return GetField<uint8_t>(VT_G, 0);
+  }
+  bool mutate_g(uint8_t _g = 0) {
+    return SetField<uint8_t>(VT_G, _g, 0);
+  }
+  uint8_t b() const {
+    return GetField<uint8_t>(VT_B, 0);
+  }
+  bool mutate_b(uint8_t _b = 0) {
+    return SetField<uint8_t>(VT_B, _b, 0);
+  }
+  uint8_t a() const {
+    return GetField<uint8_t>(VT_A, 0);
+  }
+  bool mutate_a(uint8_t _a = 0) {
+    return SetField<uint8_t>(VT_A, _a, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_R, 1) &&
+           VerifyField<uint8_t>(verifier, VT_G, 1) &&
+           VerifyField<uint8_t>(verifier, VT_B, 1) &&
+           VerifyField<uint8_t>(verifier, VT_A, 1) &&
+           verifier.EndTable();
+  }
+  Color32T *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(Color32T *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Color32> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Color32T* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct Color32Builder {
+  typedef Color32 Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_r(uint8_t r) {
+    fbb_.AddElement<uint8_t>(Color32::VT_R, r, 0);
+  }
+  void add_g(uint8_t g) {
+    fbb_.AddElement<uint8_t>(Color32::VT_G, g, 0);
+  }
+  void add_b(uint8_t b) {
+    fbb_.AddElement<uint8_t>(Color32::VT_B, b, 0);
+  }
+  void add_a(uint8_t a) {
+    fbb_.AddElement<uint8_t>(Color32::VT_A, a, 0);
+  }
+  explicit Color32Builder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Color32> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Color32>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Color32> CreateColor32(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint8_t r = 0,
+    uint8_t g = 0,
+    uint8_t b = 0,
+    uint8_t a = 0) {
+  Color32Builder builder_(_fbb);
+  builder_.add_a(a);
+  builder_.add_b(b);
+  builder_.add_g(g);
+  builder_.add_r(r);
+  return builder_.Finish();
+}
+
+struct Color32::Traits {
+  using type = Color32;
+  static auto constexpr Create = CreateColor32;
+};
+
+::flatbuffers::Offset<Color32> CreateColor32(::flatbuffers::FlatBufferBuilder &_fbb, const Color32T *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct ColorT : public ::flatbuffers::NativeTable {
+  typedef Color TableType;
+  float r = 0.0f;
+  float g = 0.0f;
+  float b = 0.0f;
+  float a = 0.0f;
+};
+
+struct Color FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ColorT NativeTableType;
+  typedef ColorBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_R = 4,
+    VT_G = 6,
+    VT_B = 8,
+    VT_A = 10
+  };
+  float r() const {
+    return GetField<float>(VT_R, 0.0f);
+  }
+  bool mutate_r(float _r = 0.0f) {
+    return SetField<float>(VT_R, _r, 0.0f);
+  }
+  float g() const {
+    return GetField<float>(VT_G, 0.0f);
+  }
+  bool mutate_g(float _g = 0.0f) {
+    return SetField<float>(VT_G, _g, 0.0f);
+  }
+  float b() const {
+    return GetField<float>(VT_B, 0.0f);
+  }
+  bool mutate_b(float _b = 0.0f) {
+    return SetField<float>(VT_B, _b, 0.0f);
+  }
+  float a() const {
+    return GetField<float>(VT_A, 0.0f);
+  }
+  bool mutate_a(float _a = 0.0f) {
+    return SetField<float>(VT_A, _a, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_R, 4) &&
+           VerifyField<float>(verifier, VT_G, 4) &&
+           VerifyField<float>(verifier, VT_B, 4) &&
+           VerifyField<float>(verifier, VT_A, 4) &&
+           verifier.EndTable();
+  }
+  ColorT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(ColorT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<Color> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ColorT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct ColorBuilder {
+  typedef Color Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_r(float r) {
+    fbb_.AddElement<float>(Color::VT_R, r, 0.0f);
+  }
+  void add_g(float g) {
+    fbb_.AddElement<float>(Color::VT_G, g, 0.0f);
+  }
+  void add_b(float b) {
+    fbb_.AddElement<float>(Color::VT_B, b, 0.0f);
+  }
+  void add_a(float a) {
+    fbb_.AddElement<float>(Color::VT_A, a, 0.0f);
+  }
+  explicit ColorBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Color> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Color>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Color> CreateColor(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float r = 0.0f,
+    float g = 0.0f,
+    float b = 0.0f,
+    float a = 0.0f) {
+  ColorBuilder builder_(_fbb);
+  builder_.add_a(a);
+  builder_.add_b(b);
+  builder_.add_g(g);
+  builder_.add_r(r);
+  return builder_.Finish();
+}
+
+struct Color::Traits {
+  using type = Color;
+  static auto constexpr Create = CreateColor;
+};
+
+::flatbuffers::Offset<Color> CreateColor(::flatbuffers::FlatBufferBuilder &_fbb, const ColorT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 struct DataMeshCellT : public ::flatbuffers::NativeTable {
   typedef DataMeshCell TableType;
-  std::vector<ss::ssfb2::Vector2> table_coordinate{};
+  std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> table_coordinate{};
   std::vector<uint16_t> table_index_vertex{};
+  DataMeshCellT() = default;
+  DataMeshCellT(const DataMeshCellT &o);
+  DataMeshCellT(DataMeshCellT&&) FLATBUFFERS_NOEXCEPT = default;
+  DataMeshCellT &operator=(DataMeshCellT o) FLATBUFFERS_NOEXCEPT;
 };
 
 struct DataMeshCell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
@@ -2238,11 +1965,11 @@ struct DataMeshCell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_TABLE_COORDINATE = 4,
     VT_TABLE_INDEX_VERTEX = 6
   };
-  const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *table_coordinate() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABLE_COORDINATE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_coordinate() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_COORDINATE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *mutable_table_coordinate() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABLE_COORDINATE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *mutable_table_coordinate() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_COORDINATE);
   }
   const ::flatbuffers::Vector<uint16_t> *table_index_vertex() const {
     return GetPointer<const ::flatbuffers::Vector<uint16_t> *>(VT_TABLE_INDEX_VERTEX);
@@ -2254,6 +1981,7 @@ struct DataMeshCell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_TABLE_COORDINATE) &&
            verifier.VerifyVector(table_coordinate()) &&
+           verifier.VerifyVectorOfTables(table_coordinate()) &&
            VerifyOffset(verifier, VT_TABLE_INDEX_VERTEX) &&
            verifier.VerifyVector(table_index_vertex()) &&
            verifier.EndTable();
@@ -2267,7 +1995,7 @@ struct DataMeshCellBuilder {
   typedef DataMeshCell Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_table_coordinate(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> table_coordinate) {
+  void add_table_coordinate(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_coordinate) {
     fbb_.AddOffset(DataMeshCell::VT_TABLE_COORDINATE, table_coordinate);
   }
   void add_table_index_vertex(::flatbuffers::Offset<::flatbuffers::Vector<uint16_t>> table_index_vertex) {
@@ -2286,7 +2014,7 @@ struct DataMeshCellBuilder {
 
 inline ::flatbuffers::Offset<DataMeshCell> CreateDataMeshCell(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> table_coordinate = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_coordinate = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint16_t>> table_index_vertex = 0) {
   DataMeshCellBuilder builder_(_fbb);
   builder_.add_table_index_vertex(table_index_vertex);
@@ -2301,9 +2029,9 @@ struct DataMeshCell::Traits {
 
 inline ::flatbuffers::Offset<DataMeshCell> CreateDataMeshCellDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<ss::ssfb2::Vector2> *table_coordinate = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_coordinate = nullptr,
     const std::vector<uint16_t> *table_index_vertex = nullptr) {
-  auto table_coordinate__ = table_coordinate ? _fbb.CreateVectorOfStructs<ss::ssfb2::Vector2>(*table_coordinate) : 0;
+  auto table_coordinate__ = table_coordinate ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>>(*table_coordinate) : 0;
   auto table_index_vertex__ = table_index_vertex ? _fbb.CreateVector<uint16_t>(*table_index_vertex) : 0;
   return ss::ssfb2::CreateDataMeshCell(
       _fbb,
@@ -2316,10 +2044,10 @@ inline ::flatbuffers::Offset<DataMeshCell> CreateDataMeshCellDirect(
 struct CellT : public ::flatbuffers::NativeTable {
   typedef Cell TableType;
   std::string name{};
-  std::shared_ptr<ss::ssfb2::Rect> rectangle{};
-  std::shared_ptr<ss::ssfb2::Vector2> pivot{};
+  std::shared_ptr<ss::ssfb2::RectT> rectangle{};
+  std::shared_ptr<ss::ssfb2::Vector2T> pivot{};
   float rotate = 0.0f;
-  std::shared_ptr<ss::ssfb2::Vector2> size_untrimmed{};
+  std::shared_ptr<ss::ssfb2::Vector2T> size_untrimmed{};
   std::shared_ptr<ss::ssfb2::DataMeshCellT> mesh{};
   CellT() = default;
   CellT(const CellT &o);
@@ -2346,16 +2074,16 @@ struct Cell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
   const ss::ssfb2::Rect *rectangle() const {
-    return GetStruct<const ss::ssfb2::Rect *>(VT_RECTANGLE);
+    return GetPointer<const ss::ssfb2::Rect *>(VT_RECTANGLE);
   }
   ss::ssfb2::Rect *mutable_rectangle() {
-    return GetStruct<ss::ssfb2::Rect *>(VT_RECTANGLE);
+    return GetPointer<ss::ssfb2::Rect *>(VT_RECTANGLE);
   }
   const ss::ssfb2::Vector2 *pivot() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_PIVOT);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_PIVOT);
   }
   ss::ssfb2::Vector2 *mutable_pivot() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_PIVOT);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_PIVOT);
   }
   float rotate() const {
     return GetField<float>(VT_ROTATE, 0.0f);
@@ -2364,10 +2092,10 @@ struct Cell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<float>(VT_ROTATE, _rotate, 0.0f);
   }
   const ss::ssfb2::Vector2 *size_untrimmed() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SIZE_UNTRIMMED);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SIZE_UNTRIMMED);
   }
   ss::ssfb2::Vector2 *mutable_size_untrimmed() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_SIZE_UNTRIMMED);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SIZE_UNTRIMMED);
   }
   const ss::ssfb2::DataMeshCell *mesh() const {
     return GetPointer<const ss::ssfb2::DataMeshCell *>(VT_MESH);
@@ -2379,10 +2107,13 @@ struct Cell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyField<ss::ssfb2::Rect>(verifier, VT_RECTANGLE, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_PIVOT, 4) &&
+           VerifyOffset(verifier, VT_RECTANGLE) &&
+           verifier.VerifyTable(rectangle()) &&
+           VerifyOffset(verifier, VT_PIVOT) &&
+           verifier.VerifyTable(pivot()) &&
            VerifyField<float>(verifier, VT_ROTATE, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SIZE_UNTRIMMED, 4) &&
+           VerifyOffset(verifier, VT_SIZE_UNTRIMMED) &&
+           verifier.VerifyTable(size_untrimmed()) &&
            VerifyOffset(verifier, VT_MESH) &&
            verifier.VerifyTable(mesh()) &&
            verifier.EndTable();
@@ -2399,17 +2130,17 @@ struct CellBuilder {
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(Cell::VT_NAME, name);
   }
-  void add_rectangle(const ss::ssfb2::Rect *rectangle) {
-    fbb_.AddStruct(Cell::VT_RECTANGLE, rectangle);
+  void add_rectangle(::flatbuffers::Offset<ss::ssfb2::Rect> rectangle) {
+    fbb_.AddOffset(Cell::VT_RECTANGLE, rectangle);
   }
-  void add_pivot(const ss::ssfb2::Vector2 *pivot) {
-    fbb_.AddStruct(Cell::VT_PIVOT, pivot);
+  void add_pivot(::flatbuffers::Offset<ss::ssfb2::Vector2> pivot) {
+    fbb_.AddOffset(Cell::VT_PIVOT, pivot);
   }
   void add_rotate(float rotate) {
     fbb_.AddElement<float>(Cell::VT_ROTATE, rotate, 0.0f);
   }
-  void add_size_untrimmed(const ss::ssfb2::Vector2 *size_untrimmed) {
-    fbb_.AddStruct(Cell::VT_SIZE_UNTRIMMED, size_untrimmed);
+  void add_size_untrimmed(::flatbuffers::Offset<ss::ssfb2::Vector2> size_untrimmed) {
+    fbb_.AddOffset(Cell::VT_SIZE_UNTRIMMED, size_untrimmed);
   }
   void add_mesh(::flatbuffers::Offset<ss::ssfb2::DataMeshCell> mesh) {
     fbb_.AddOffset(Cell::VT_MESH, mesh);
@@ -2428,10 +2159,10 @@ struct CellBuilder {
 inline ::flatbuffers::Offset<Cell> CreateCell(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    const ss::ssfb2::Rect *rectangle = nullptr,
-    const ss::ssfb2::Vector2 *pivot = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Rect> rectangle = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> pivot = 0,
     float rotate = 0.0f,
-    const ss::ssfb2::Vector2 *size_untrimmed = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_untrimmed = 0,
     ::flatbuffers::Offset<ss::ssfb2::DataMeshCell> mesh = 0) {
   CellBuilder builder_(_fbb);
   builder_.add_mesh(mesh);
@@ -2451,10 +2182,10 @@ struct Cell::Traits {
 inline ::flatbuffers::Offset<Cell> CreateCellDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
-    const ss::ssfb2::Rect *rectangle = nullptr,
-    const ss::ssfb2::Vector2 *pivot = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Rect> rectangle = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> pivot = 0,
     float rotate = 0.0f,
-    const ss::ssfb2::Vector2 *size_untrimmed = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_untrimmed = 0,
     ::flatbuffers::Offset<ss::ssfb2::DataMeshCell> mesh = 0) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
   return ss::ssfb2::CreateCell(
@@ -2472,7 +2203,7 @@ inline ::flatbuffers::Offset<Cell> CreateCellDirect(
 struct LibraryDataCellMapT : public ::flatbuffers::NativeTable {
   typedef LibraryDataCellMap TableType;
   std::string name{};
-  std::shared_ptr<ss::ssfb2::Vector2> size_original{};
+  std::shared_ptr<ss::ssfb2::Vector2T> size_original{};
   int16_t filter = 0;
   int16_t wrap = 0;
   ss::ssfb2::LibraryDataCellMapFlagBitStatus status = ss::ssfb2::LibraryDataCellMapFlagBitStatus::CLEAR;
@@ -2502,10 +2233,10 @@ struct LibraryDataCellMap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
     return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
   const ss::ssfb2::Vector2 *size_original() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SIZE_ORIGINAL);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SIZE_ORIGINAL);
   }
   ss::ssfb2::Vector2 *mutable_size_original() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_SIZE_ORIGINAL);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SIZE_ORIGINAL);
   }
   int16_t filter() const {
     return GetField<int16_t>(VT_FILTER, 0);
@@ -2535,7 +2266,8 @@ struct LibraryDataCellMap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_NAME) &&
            verifier.VerifyString(name()) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SIZE_ORIGINAL, 4) &&
+           VerifyOffset(verifier, VT_SIZE_ORIGINAL) &&
+           verifier.VerifyTable(size_original()) &&
            VerifyField<int16_t>(verifier, VT_FILTER, 2) &&
            VerifyField<int16_t>(verifier, VT_WRAP, 2) &&
            VerifyField<uint16_t>(verifier, VT_STATUS, 2) &&
@@ -2556,8 +2288,8 @@ struct LibraryDataCellMapBuilder {
   void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(LibraryDataCellMap::VT_NAME, name);
   }
-  void add_size_original(const ss::ssfb2::Vector2 *size_original) {
-    fbb_.AddStruct(LibraryDataCellMap::VT_SIZE_ORIGINAL, size_original);
+  void add_size_original(::flatbuffers::Offset<ss::ssfb2::Vector2> size_original) {
+    fbb_.AddOffset(LibraryDataCellMap::VT_SIZE_ORIGINAL, size_original);
   }
   void add_filter(int16_t filter) {
     fbb_.AddElement<int16_t>(LibraryDataCellMap::VT_FILTER, filter, 0);
@@ -2585,7 +2317,7 @@ struct LibraryDataCellMapBuilder {
 inline ::flatbuffers::Offset<LibraryDataCellMap> CreateLibraryDataCellMap(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    const ss::ssfb2::Vector2 *size_original = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_original = 0,
     int16_t filter = 0,
     int16_t wrap = 0,
     ss::ssfb2::LibraryDataCellMapFlagBitStatus status = ss::ssfb2::LibraryDataCellMapFlagBitStatus::CLEAR,
@@ -2608,7 +2340,7 @@ struct LibraryDataCellMap::Traits {
 inline ::flatbuffers::Offset<LibraryDataCellMap> CreateLibraryDataCellMapDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
-    const ss::ssfb2::Vector2 *size_original = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_original = 0,
     int16_t filter = 0,
     int16_t wrap = 0,
     ss::ssfb2::LibraryDataCellMapFlagBitStatus status = ss::ssfb2::LibraryDataCellMapFlagBitStatus::CLEAR,
@@ -2714,9 +2446,187 @@ inline ::flatbuffers::Offset<Label> CreateLabelDirect(
 
 ::flatbuffers::Offset<Label> CreateLabel(::flatbuffers::FlatBufferBuilder &_fbb, const LabelT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct ColorLabelT : public ::flatbuffers::NativeTable {
+  typedef ColorLabel TableType;
+  ss::ssfb2::KindFormColorLabel form = ss::ssfb2::KindFormColorLabel::NON;
+  std::shared_ptr<ss::ssfb2::Color32T> color{};
+  ColorLabelT() = default;
+  ColorLabelT(const ColorLabelT &o);
+  ColorLabelT(ColorLabelT&&) FLATBUFFERS_NOEXCEPT = default;
+  ColorLabelT &operator=(ColorLabelT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct ColorLabel FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef ColorLabelT NativeTableType;
+  typedef ColorLabelBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_FORM = 4,
+    VT_COLOR = 6
+  };
+  ss::ssfb2::KindFormColorLabel form() const {
+    return static_cast<ss::ssfb2::KindFormColorLabel>(GetField<uint8_t>(VT_FORM, 0));
+  }
+  bool mutate_form(ss::ssfb2::KindFormColorLabel _form = static_cast<ss::ssfb2::KindFormColorLabel>(0)) {
+    return SetField<uint8_t>(VT_FORM, static_cast<uint8_t>(_form), 0);
+  }
+  const ss::ssfb2::Color32 *color() const {
+    return GetPointer<const ss::ssfb2::Color32 *>(VT_COLOR);
+  }
+  ss::ssfb2::Color32 *mutable_color() {
+    return GetPointer<ss::ssfb2::Color32 *>(VT_COLOR);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint8_t>(verifier, VT_FORM, 1) &&
+           VerifyOffset(verifier, VT_COLOR) &&
+           verifier.VerifyTable(color()) &&
+           verifier.EndTable();
+  }
+  ColorLabelT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(ColorLabelT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<ColorLabel> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ColorLabelT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct ColorLabelBuilder {
+  typedef ColorLabel Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_form(ss::ssfb2::KindFormColorLabel form) {
+    fbb_.AddElement<uint8_t>(ColorLabel::VT_FORM, static_cast<uint8_t>(form), 0);
+  }
+  void add_color(::flatbuffers::Offset<ss::ssfb2::Color32> color) {
+    fbb_.AddOffset(ColorLabel::VT_COLOR, color);
+  }
+  explicit ColorLabelBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<ColorLabel> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<ColorLabel>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<ColorLabel> CreateColorLabel(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ss::ssfb2::KindFormColorLabel form = ss::ssfb2::KindFormColorLabel::NON,
+    ::flatbuffers::Offset<ss::ssfb2::Color32> color = 0) {
+  ColorLabelBuilder builder_(_fbb);
+  builder_.add_color(color);
+  builder_.add_form(form);
+  return builder_.Finish();
+}
+
+struct ColorLabel::Traits {
+  using type = ColorLabel;
+  static auto constexpr Create = CreateColorLabel;
+};
+
+::flatbuffers::Offset<ColorLabel> CreateColorLabel(::flatbuffers::FlatBufferBuilder &_fbb, const ColorLabelT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct BindMeshBoneT : public ::flatbuffers::NativeTable {
+  typedef BindMeshBone TableType;
+  uint16_t index = 0;
+  float weight = 0.0f;
+  std::shared_ptr<ss::ssfb2::Vector3T> coordinate_offset{};
+  BindMeshBoneT() = default;
+  BindMeshBoneT(const BindMeshBoneT &o);
+  BindMeshBoneT(BindMeshBoneT&&) FLATBUFFERS_NOEXCEPT = default;
+  BindMeshBoneT &operator=(BindMeshBoneT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct BindMeshBone FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef BindMeshBoneT NativeTableType;
+  typedef BindMeshBoneBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INDEX = 4,
+    VT_WEIGHT = 6,
+    VT_COORDINATE_OFFSET = 8
+  };
+  uint16_t index() const {
+    return GetField<uint16_t>(VT_INDEX, 0);
+  }
+  bool mutate_index(uint16_t _index = 0) {
+    return SetField<uint16_t>(VT_INDEX, _index, 0);
+  }
+  float weight() const {
+    return GetField<float>(VT_WEIGHT, 0.0f);
+  }
+  bool mutate_weight(float _weight = 0.0f) {
+    return SetField<float>(VT_WEIGHT, _weight, 0.0f);
+  }
+  const ss::ssfb2::Vector3 *coordinate_offset() const {
+    return GetPointer<const ss::ssfb2::Vector3 *>(VT_COORDINATE_OFFSET);
+  }
+  ss::ssfb2::Vector3 *mutable_coordinate_offset() {
+    return GetPointer<ss::ssfb2::Vector3 *>(VT_COORDINATE_OFFSET);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<uint16_t>(verifier, VT_INDEX, 2) &&
+           VerifyField<float>(verifier, VT_WEIGHT, 4) &&
+           VerifyOffset(verifier, VT_COORDINATE_OFFSET) &&
+           verifier.VerifyTable(coordinate_offset()) &&
+           verifier.EndTable();
+  }
+  BindMeshBoneT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(BindMeshBoneT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<BindMeshBone> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshBoneT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct BindMeshBoneBuilder {
+  typedef BindMeshBone Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_index(uint16_t index) {
+    fbb_.AddElement<uint16_t>(BindMeshBone::VT_INDEX, index, 0);
+  }
+  void add_weight(float weight) {
+    fbb_.AddElement<float>(BindMeshBone::VT_WEIGHT, weight, 0.0f);
+  }
+  void add_coordinate_offset(::flatbuffers::Offset<ss::ssfb2::Vector3> coordinate_offset) {
+    fbb_.AddOffset(BindMeshBone::VT_COORDINATE_OFFSET, coordinate_offset);
+  }
+  explicit BindMeshBoneBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<BindMeshBone> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BindMeshBone>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<BindMeshBone> CreateBindMeshBone(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    uint16_t index = 0,
+    float weight = 0.0f,
+    ::flatbuffers::Offset<ss::ssfb2::Vector3> coordinate_offset = 0) {
+  BindMeshBoneBuilder builder_(_fbb);
+  builder_.add_coordinate_offset(coordinate_offset);
+  builder_.add_weight(weight);
+  builder_.add_index(index);
+  return builder_.Finish();
+}
+
+struct BindMeshBone::Traits {
+  using type = BindMeshBone;
+  static auto constexpr Create = CreateBindMeshBone;
+};
+
+::flatbuffers::Offset<BindMeshBone> CreateBindMeshBone(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshBoneT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 struct BindMeshVertexT : public ::flatbuffers::NativeTable {
   typedef BindMeshVertex TableType;
-  std::vector<ss::ssfb2::BindMeshBone> table_bone{};
+  std::vector<std::shared_ptr<ss::ssfb2::BindMeshBoneT>> table_bone{};
+  BindMeshVertexT() = default;
+  BindMeshVertexT(const BindMeshVertexT &o);
+  BindMeshVertexT(BindMeshVertexT&&) FLATBUFFERS_NOEXCEPT = default;
+  BindMeshVertexT &operator=(BindMeshVertexT o) FLATBUFFERS_NOEXCEPT;
 };
 
 struct BindMeshVertex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
@@ -2726,16 +2636,17 @@ struct BindMeshVertex FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TABLE_BONE = 4
   };
-  const ::flatbuffers::Vector<const ss::ssfb2::BindMeshBone *> *table_bone() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::BindMeshBone *> *>(VT_TABLE_BONE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>> *table_bone() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>> *>(VT_TABLE_BONE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::BindMeshBone *> *mutable_table_bone() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::BindMeshBone *> *>(VT_TABLE_BONE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>> *mutable_table_bone() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>> *>(VT_TABLE_BONE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_TABLE_BONE) &&
            verifier.VerifyVector(table_bone()) &&
+           verifier.VerifyVectorOfTables(table_bone()) &&
            verifier.EndTable();
   }
   BindMeshVertexT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2747,7 +2658,7 @@ struct BindMeshVertexBuilder {
   typedef BindMeshVertex Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_table_bone(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::BindMeshBone *>> table_bone) {
+  void add_table_bone(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>>> table_bone) {
     fbb_.AddOffset(BindMeshVertex::VT_TABLE_BONE, table_bone);
   }
   explicit BindMeshVertexBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
@@ -2763,7 +2674,7 @@ struct BindMeshVertexBuilder {
 
 inline ::flatbuffers::Offset<BindMeshVertex> CreateBindMeshVertex(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::BindMeshBone *>> table_bone = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>>> table_bone = 0) {
   BindMeshVertexBuilder builder_(_fbb);
   builder_.add_table_bone(table_bone);
   return builder_.Finish();
@@ -2776,8 +2687,8 @@ struct BindMeshVertex::Traits {
 
 inline ::flatbuffers::Offset<BindMeshVertex> CreateBindMeshVertexDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<ss::ssfb2::BindMeshBone> *table_bone = nullptr) {
-  auto table_bone__ = table_bone ? _fbb.CreateVectorOfStructs<ss::ssfb2::BindMeshBone>(*table_bone) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>> *table_bone = nullptr) {
+  auto table_bone__ = table_bone ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>>(*table_bone) : 0;
   return ss::ssfb2::CreateBindMeshVertex(
       _fbb,
       table_bone__);
@@ -2789,7 +2700,7 @@ struct BindMeshT : public ::flatbuffers::NativeTable {
   typedef BindMesh TableType;
   int32_t count_vertex = 0;
   std::vector<std::shared_ptr<ss::ssfb2::BindMeshVertexT>> table_vertex{};
-  std::vector<ss::ssfb2::Vector2> table_rate_uv{};
+  std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> table_rate_uv{};
   std::vector<uint16_t> table_index_vertex{};
   int32_t count_vertex_deform = 0;
   BindMeshT() = default;
@@ -2821,11 +2732,11 @@ struct BindMesh FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>> *mutable_table_vertex() {
     return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>> *>(VT_TABLE_VERTEX);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *table_rate_uv() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABLE_RATE_UV);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_rate_uv() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_RATE_UV);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *mutable_table_rate_uv() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABLE_RATE_UV);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *mutable_table_rate_uv() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_RATE_UV);
   }
   const ::flatbuffers::Vector<uint16_t> *table_index_vertex() const {
     return GetPointer<const ::flatbuffers::Vector<uint16_t> *>(VT_TABLE_INDEX_VERTEX);
@@ -2847,6 +2758,7 @@ struct BindMesh FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyVectorOfTables(table_vertex()) &&
            VerifyOffset(verifier, VT_TABLE_RATE_UV) &&
            verifier.VerifyVector(table_rate_uv()) &&
+           verifier.VerifyVectorOfTables(table_rate_uv()) &&
            VerifyOffset(verifier, VT_TABLE_INDEX_VERTEX) &&
            verifier.VerifyVector(table_index_vertex()) &&
            VerifyField<int32_t>(verifier, VT_COUNT_VERTEX_DEFORM, 4) &&
@@ -2867,7 +2779,7 @@ struct BindMeshBuilder {
   void add_table_vertex(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>>> table_vertex) {
     fbb_.AddOffset(BindMesh::VT_TABLE_VERTEX, table_vertex);
   }
-  void add_table_rate_uv(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> table_rate_uv) {
+  void add_table_rate_uv(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_rate_uv) {
     fbb_.AddOffset(BindMesh::VT_TABLE_RATE_UV, table_rate_uv);
   }
   void add_table_index_vertex(::flatbuffers::Offset<::flatbuffers::Vector<uint16_t>> table_index_vertex) {
@@ -2891,7 +2803,7 @@ inline ::flatbuffers::Offset<BindMesh> CreateBindMesh(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int32_t count_vertex = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>>> table_vertex = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> table_rate_uv = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_rate_uv = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint16_t>> table_index_vertex = 0,
     int32_t count_vertex_deform = 0) {
   BindMeshBuilder builder_(_fbb);
@@ -2912,11 +2824,11 @@ inline ::flatbuffers::Offset<BindMesh> CreateBindMeshDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int32_t count_vertex = 0,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>> *table_vertex = nullptr,
-    const std::vector<ss::ssfb2::Vector2> *table_rate_uv = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_rate_uv = nullptr,
     const std::vector<uint16_t> *table_index_vertex = nullptr,
     int32_t count_vertex_deform = 0) {
   auto table_vertex__ = table_vertex ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>>(*table_vertex) : 0;
-  auto table_rate_uv__ = table_rate_uv ? _fbb.CreateVectorOfStructs<ss::ssfb2::Vector2>(*table_rate_uv) : 0;
+  auto table_rate_uv__ = table_rate_uv ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>>(*table_rate_uv) : 0;
   auto table_index_vertex__ = table_index_vertex ? _fbb.CreateVector<uint16_t>(*table_index_vertex) : 0;
   return ss::ssfb2::CreateBindMesh(
       _fbb,
@@ -2929,12 +2841,91 @@ inline ::flatbuffers::Offset<BindMesh> CreateBindMeshDirect(
 
 ::flatbuffers::Offset<BindMesh> CreateBindMesh(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct AnimationAttributeCellT : public ::flatbuffers::NativeTable {
+  typedef AnimationAttributeCell TableType;
+  int32_t index_cell_map = 0;
+  int32_t index_cell = 0;
+};
+
+struct AnimationAttributeCell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef AnimationAttributeCellT NativeTableType;
+  typedef AnimationAttributeCellBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INDEX_CELL_MAP = 4,
+    VT_INDEX_CELL = 6
+  };
+  int32_t index_cell_map() const {
+    return GetField<int32_t>(VT_INDEX_CELL_MAP, 0);
+  }
+  bool mutate_index_cell_map(int32_t _index_cell_map = 0) {
+    return SetField<int32_t>(VT_INDEX_CELL_MAP, _index_cell_map, 0);
+  }
+  int32_t index_cell() const {
+    return GetField<int32_t>(VT_INDEX_CELL, 0);
+  }
+  bool mutate_index_cell(int32_t _index_cell = 0) {
+    return SetField<int32_t>(VT_INDEX_CELL, _index_cell, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_INDEX_CELL_MAP, 4) &&
+           VerifyField<int32_t>(verifier, VT_INDEX_CELL, 4) &&
+           verifier.EndTable();
+  }
+  AnimationAttributeCellT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(AnimationAttributeCellT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<AnimationAttributeCell> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeCellT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct AnimationAttributeCellBuilder {
+  typedef AnimationAttributeCell Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_index_cell_map(int32_t index_cell_map) {
+    fbb_.AddElement<int32_t>(AnimationAttributeCell::VT_INDEX_CELL_MAP, index_cell_map, 0);
+  }
+  void add_index_cell(int32_t index_cell) {
+    fbb_.AddElement<int32_t>(AnimationAttributeCell::VT_INDEX_CELL, index_cell, 0);
+  }
+  explicit AnimationAttributeCellBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<AnimationAttributeCell> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<AnimationAttributeCell>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<AnimationAttributeCell> CreateAnimationAttributeCell(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t index_cell_map = 0,
+    int32_t index_cell = 0) {
+  AnimationAttributeCellBuilder builder_(_fbb);
+  builder_.add_index_cell(index_cell);
+  builder_.add_index_cell_map(index_cell_map);
+  return builder_.Finish();
+}
+
+struct AnimationAttributeCell::Traits {
+  using type = AnimationAttributeCell;
+  static auto constexpr Create = CreateAnimationAttributeCell;
+};
+
+::flatbuffers::Offset<AnimationAttributeCell> CreateAnimationAttributeCell(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeCellT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 struct AnimationAttributePartsColorT : public ::flatbuffers::NativeTable {
   typedef AnimationAttributePartsColor TableType;
   int16_t bound = 0;
   int16_t operation = 0;
-  std::vector<ss::ssfb2::Color> vertex_color{};
+  std::vector<std::shared_ptr<ss::ssfb2::ColorT>> vertex_color{};
   std::vector<float> rate_alpha{};
+  AnimationAttributePartsColorT() = default;
+  AnimationAttributePartsColorT(const AnimationAttributePartsColorT &o);
+  AnimationAttributePartsColorT(AnimationAttributePartsColorT&&) FLATBUFFERS_NOEXCEPT = default;
+  AnimationAttributePartsColorT &operator=(AnimationAttributePartsColorT o) FLATBUFFERS_NOEXCEPT;
 };
 
 struct AnimationAttributePartsColor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
@@ -2959,11 +2950,11 @@ struct AnimationAttributePartsColor FLATBUFFERS_FINAL_CLASS : private ::flatbuff
   bool mutate_operation(int16_t _operation = 0) {
     return SetField<int16_t>(VT_OPERATION, _operation, 0);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::Color *> *vertex_color() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Color *> *>(VT_VERTEX_COLOR);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Color>> *vertex_color() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Color>> *>(VT_VERTEX_COLOR);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Color *> *mutable_vertex_color() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Color *> *>(VT_VERTEX_COLOR);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Color>> *mutable_vertex_color() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Color>> *>(VT_VERTEX_COLOR);
   }
   const ::flatbuffers::Vector<float> *rate_alpha() const {
     return GetPointer<const ::flatbuffers::Vector<float> *>(VT_RATE_ALPHA);
@@ -2977,6 +2968,7 @@ struct AnimationAttributePartsColor FLATBUFFERS_FINAL_CLASS : private ::flatbuff
            VerifyField<int16_t>(verifier, VT_OPERATION, 2) &&
            VerifyOffset(verifier, VT_VERTEX_COLOR) &&
            verifier.VerifyVector(vertex_color()) &&
+           verifier.VerifyVectorOfTables(vertex_color()) &&
            VerifyOffset(verifier, VT_RATE_ALPHA) &&
            verifier.VerifyVector(rate_alpha()) &&
            verifier.EndTable();
@@ -2996,7 +2988,7 @@ struct AnimationAttributePartsColorBuilder {
   void add_operation(int16_t operation) {
     fbb_.AddElement<int16_t>(AnimationAttributePartsColor::VT_OPERATION, operation, 0);
   }
-  void add_vertex_color(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Color *>> vertex_color) {
+  void add_vertex_color(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Color>>> vertex_color) {
     fbb_.AddOffset(AnimationAttributePartsColor::VT_VERTEX_COLOR, vertex_color);
   }
   void add_rate_alpha(::flatbuffers::Offset<::flatbuffers::Vector<float>> rate_alpha) {
@@ -3017,7 +3009,7 @@ inline ::flatbuffers::Offset<AnimationAttributePartsColor> CreateAnimationAttrib
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int16_t bound = 0,
     int16_t operation = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Color *>> vertex_color = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Color>>> vertex_color = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<float>> rate_alpha = 0) {
   AnimationAttributePartsColorBuilder builder_(_fbb);
   builder_.add_rate_alpha(rate_alpha);
@@ -3036,9 +3028,9 @@ inline ::flatbuffers::Offset<AnimationAttributePartsColor> CreateAnimationAttrib
     ::flatbuffers::FlatBufferBuilder &_fbb,
     int16_t bound = 0,
     int16_t operation = 0,
-    const std::vector<ss::ssfb2::Color> *vertex_color = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Color>> *vertex_color = nullptr,
     const std::vector<float> *rate_alpha = nullptr) {
-  auto vertex_color__ = vertex_color ? _fbb.CreateVectorOfStructs<ss::ssfb2::Color>(*vertex_color) : 0;
+  auto vertex_color__ = vertex_color ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Color>>(*vertex_color) : 0;
   auto rate_alpha__ = rate_alpha ? _fbb.CreateVector<float>(*rate_alpha) : 0;
   return ss::ssfb2::CreateAnimationAttributePartsColor(
       _fbb,
@@ -3052,7 +3044,11 @@ inline ::flatbuffers::Offset<AnimationAttributePartsColor> CreateAnimationAttrib
 
 struct AnimationAttributeVertexCorrectionT : public ::flatbuffers::NativeTable {
   typedef AnimationAttributeVertexCorrection TableType;
-  std::vector<ss::ssfb2::Vector2> coordinate{};
+  std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> coordinate{};
+  AnimationAttributeVertexCorrectionT() = default;
+  AnimationAttributeVertexCorrectionT(const AnimationAttributeVertexCorrectionT &o);
+  AnimationAttributeVertexCorrectionT(AnimationAttributeVertexCorrectionT&&) FLATBUFFERS_NOEXCEPT = default;
+  AnimationAttributeVertexCorrectionT &operator=(AnimationAttributeVertexCorrectionT o) FLATBUFFERS_NOEXCEPT;
 };
 
 struct AnimationAttributeVertexCorrection FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
@@ -3062,16 +3058,17 @@ struct AnimationAttributeVertexCorrection FLATBUFFERS_FINAL_CLASS : private ::fl
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_COORDINATE = 4
   };
-  const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *coordinate() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_COORDINATE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *coordinate() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_COORDINATE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *mutable_coordinate() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_COORDINATE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *mutable_coordinate() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_COORDINATE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_COORDINATE) &&
            verifier.VerifyVector(coordinate()) &&
+           verifier.VerifyVectorOfTables(coordinate()) &&
            verifier.EndTable();
   }
   AnimationAttributeVertexCorrectionT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -3083,7 +3080,7 @@ struct AnimationAttributeVertexCorrectionBuilder {
   typedef AnimationAttributeVertexCorrection Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_coordinate(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> coordinate) {
+  void add_coordinate(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> coordinate) {
     fbb_.AddOffset(AnimationAttributeVertexCorrection::VT_COORDINATE, coordinate);
   }
   explicit AnimationAttributeVertexCorrectionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
@@ -3099,7 +3096,7 @@ struct AnimationAttributeVertexCorrectionBuilder {
 
 inline ::flatbuffers::Offset<AnimationAttributeVertexCorrection> CreateAnimationAttributeVertexCorrection(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> coordinate = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> coordinate = 0) {
   AnimationAttributeVertexCorrectionBuilder builder_(_fbb);
   builder_.add_coordinate(coordinate);
   return builder_.Finish();
@@ -3112,8 +3109,8 @@ struct AnimationAttributeVertexCorrection::Traits {
 
 inline ::flatbuffers::Offset<AnimationAttributeVertexCorrection> CreateAnimationAttributeVertexCorrectionDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<ss::ssfb2::Vector2> *coordinate = nullptr) {
-  auto coordinate__ = coordinate ? _fbb.CreateVectorOfStructs<ss::ssfb2::Vector2>(*coordinate) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *coordinate = nullptr) {
+  auto coordinate__ = coordinate ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>>(*coordinate) : 0;
   return ss::ssfb2::CreateAnimationAttributeVertexCorrection(
       _fbb,
       coordinate__);
@@ -3200,8 +3197,8 @@ struct AnimationAttributeUserDataT : public ::flatbuffers::NativeTable {
   typedef AnimationAttributeUserData TableType;
   ss::ssfb2::FlagBitUserData flags = ss::ssfb2::FlagBitUserData::CLEAR;
   int32_t number_int = 0;
-  std::shared_ptr<ss::ssfb2::Rect> rectangle{};
-  std::shared_ptr<ss::ssfb2::Vector2> coordinate{};
+  std::shared_ptr<ss::ssfb2::RectT> rectangle{};
+  std::shared_ptr<ss::ssfb2::Vector2T> coordinate{};
   std::string text{};
   AnimationAttributeUserDataT() = default;
   AnimationAttributeUserDataT(const AnimationAttributeUserDataT &o);
@@ -3233,16 +3230,16 @@ struct AnimationAttributeUserData FLATBUFFERS_FINAL_CLASS : private ::flatbuffer
     return SetField<int32_t>(VT_NUMBER_INT, _number_int, 0);
   }
   const ss::ssfb2::Rect *rectangle() const {
-    return GetStruct<const ss::ssfb2::Rect *>(VT_RECTANGLE);
+    return GetPointer<const ss::ssfb2::Rect *>(VT_RECTANGLE);
   }
   ss::ssfb2::Rect *mutable_rectangle() {
-    return GetStruct<ss::ssfb2::Rect *>(VT_RECTANGLE);
+    return GetPointer<ss::ssfb2::Rect *>(VT_RECTANGLE);
   }
   const ss::ssfb2::Vector2 *coordinate() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_COORDINATE);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_COORDINATE);
   }
   ss::ssfb2::Vector2 *mutable_coordinate() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_COORDINATE);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_COORDINATE);
   }
   const ::flatbuffers::String *text() const {
     return GetPointer<const ::flatbuffers::String *>(VT_TEXT);
@@ -3254,8 +3251,10 @@ struct AnimationAttributeUserData FLATBUFFERS_FINAL_CLASS : private ::flatbuffer
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_FLAGS, 4) &&
            VerifyField<int32_t>(verifier, VT_NUMBER_INT, 4) &&
-           VerifyField<ss::ssfb2::Rect>(verifier, VT_RECTANGLE, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_COORDINATE, 4) &&
+           VerifyOffset(verifier, VT_RECTANGLE) &&
+           verifier.VerifyTable(rectangle()) &&
+           VerifyOffset(verifier, VT_COORDINATE) &&
+           verifier.VerifyTable(coordinate()) &&
            VerifyOffset(verifier, VT_TEXT) &&
            verifier.VerifyString(text()) &&
            verifier.EndTable();
@@ -3275,11 +3274,11 @@ struct AnimationAttributeUserDataBuilder {
   void add_number_int(int32_t number_int) {
     fbb_.AddElement<int32_t>(AnimationAttributeUserData::VT_NUMBER_INT, number_int, 0);
   }
-  void add_rectangle(const ss::ssfb2::Rect *rectangle) {
-    fbb_.AddStruct(AnimationAttributeUserData::VT_RECTANGLE, rectangle);
+  void add_rectangle(::flatbuffers::Offset<ss::ssfb2::Rect> rectangle) {
+    fbb_.AddOffset(AnimationAttributeUserData::VT_RECTANGLE, rectangle);
   }
-  void add_coordinate(const ss::ssfb2::Vector2 *coordinate) {
-    fbb_.AddStruct(AnimationAttributeUserData::VT_COORDINATE, coordinate);
+  void add_coordinate(::flatbuffers::Offset<ss::ssfb2::Vector2> coordinate) {
+    fbb_.AddOffset(AnimationAttributeUserData::VT_COORDINATE, coordinate);
   }
   void add_text(::flatbuffers::Offset<::flatbuffers::String> text) {
     fbb_.AddOffset(AnimationAttributeUserData::VT_TEXT, text);
@@ -3299,8 +3298,8 @@ inline ::flatbuffers::Offset<AnimationAttributeUserData> CreateAnimationAttribut
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::FlagBitUserData flags = ss::ssfb2::FlagBitUserData::CLEAR,
     int32_t number_int = 0,
-    const ss::ssfb2::Rect *rectangle = nullptr,
-    const ss::ssfb2::Vector2 *coordinate = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Rect> rectangle = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> coordinate = 0,
     ::flatbuffers::Offset<::flatbuffers::String> text = 0) {
   AnimationAttributeUserDataBuilder builder_(_fbb);
   builder_.add_text(text);
@@ -3320,8 +3319,8 @@ inline ::flatbuffers::Offset<AnimationAttributeUserData> CreateAnimationAttribut
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::FlagBitUserData flags = ss::ssfb2::FlagBitUserData::CLEAR,
     int32_t number_int = 0,
-    const ss::ssfb2::Rect *rectangle = nullptr,
-    const ss::ssfb2::Vector2 *coordinate = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Rect> rectangle = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> coordinate = 0,
     const char *text = nullptr) {
   auto text__ = text ? _fbb.CreateString(text) : 0;
   return ss::ssfb2::CreateAnimationAttributeUserData(
@@ -3809,9 +3808,102 @@ inline ::flatbuffers::Offset<AnimationAttributeInstance> CreateAnimationAttribut
 
 ::flatbuffers::Offset<AnimationAttributeInstance> CreateAnimationAttributeInstance(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeInstanceT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct AnimationAttributeEffectT : public ::flatbuffers::NativeTable {
+  typedef AnimationAttributeEffect TableType;
+  int32_t flags = 0;
+  int32_t frame_start = 0;
+  float rate_time = 0.0f;
+};
+
+struct AnimationAttributeEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef AnimationAttributeEffectT NativeTableType;
+  typedef AnimationAttributeEffectBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_FLAGS = 4,
+    VT_FRAME_START = 6,
+    VT_RATE_TIME = 8
+  };
+  int32_t flags() const {
+    return GetField<int32_t>(VT_FLAGS, 0);
+  }
+  bool mutate_flags(int32_t _flags = 0) {
+    return SetField<int32_t>(VT_FLAGS, _flags, 0);
+  }
+  int32_t frame_start() const {
+    return GetField<int32_t>(VT_FRAME_START, 0);
+  }
+  bool mutate_frame_start(int32_t _frame_start = 0) {
+    return SetField<int32_t>(VT_FRAME_START, _frame_start, 0);
+  }
+  float rate_time() const {
+    return GetField<float>(VT_RATE_TIME, 0.0f);
+  }
+  bool mutate_rate_time(float _rate_time = 0.0f) {
+    return SetField<float>(VT_RATE_TIME, _rate_time, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_FLAGS, 4) &&
+           VerifyField<int32_t>(verifier, VT_FRAME_START, 4) &&
+           VerifyField<float>(verifier, VT_RATE_TIME, 4) &&
+           verifier.EndTable();
+  }
+  AnimationAttributeEffectT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(AnimationAttributeEffectT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<AnimationAttributeEffect> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeEffectT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct AnimationAttributeEffectBuilder {
+  typedef AnimationAttributeEffect Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_flags(int32_t flags) {
+    fbb_.AddElement<int32_t>(AnimationAttributeEffect::VT_FLAGS, flags, 0);
+  }
+  void add_frame_start(int32_t frame_start) {
+    fbb_.AddElement<int32_t>(AnimationAttributeEffect::VT_FRAME_START, frame_start, 0);
+  }
+  void add_rate_time(float rate_time) {
+    fbb_.AddElement<float>(AnimationAttributeEffect::VT_RATE_TIME, rate_time, 0.0f);
+  }
+  explicit AnimationAttributeEffectBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<AnimationAttributeEffect> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<AnimationAttributeEffect>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<AnimationAttributeEffect> CreateAnimationAttributeEffect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t flags = 0,
+    int32_t frame_start = 0,
+    float rate_time = 0.0f) {
+  AnimationAttributeEffectBuilder builder_(_fbb);
+  builder_.add_rate_time(rate_time);
+  builder_.add_frame_start(frame_start);
+  builder_.add_flags(flags);
+  return builder_.Finish();
+}
+
+struct AnimationAttributeEffect::Traits {
+  using type = AnimationAttributeEffect;
+  static auto constexpr Create = CreateAnimationAttributeEffect;
+};
+
+::flatbuffers::Offset<AnimationAttributeEffect> CreateAnimationAttributeEffect(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeEffectT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 struct AnimationAttributeDeformT : public ::flatbuffers::NativeTable {
   typedef AnimationAttributeDeform TableType;
-  std::vector<ss::ssfb2::Vector2> table_coordinate{};
+  std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> table_coordinate{};
+  AnimationAttributeDeformT() = default;
+  AnimationAttributeDeformT(const AnimationAttributeDeformT &o);
+  AnimationAttributeDeformT(AnimationAttributeDeformT&&) FLATBUFFERS_NOEXCEPT = default;
+  AnimationAttributeDeformT &operator=(AnimationAttributeDeformT o) FLATBUFFERS_NOEXCEPT;
 };
 
 struct AnimationAttributeDeform FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
@@ -3821,16 +3913,17 @@ struct AnimationAttributeDeform FLATBUFFERS_FINAL_CLASS : private ::flatbuffers:
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TABLE_COORDINATE = 4
   };
-  const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *table_coordinate() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABLE_COORDINATE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_coordinate() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_COORDINATE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *mutable_table_coordinate() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABLE_COORDINATE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *mutable_table_coordinate() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_COORDINATE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_TABLE_COORDINATE) &&
            verifier.VerifyVector(table_coordinate()) &&
+           verifier.VerifyVectorOfTables(table_coordinate()) &&
            verifier.EndTable();
   }
   AnimationAttributeDeformT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -3842,7 +3935,7 @@ struct AnimationAttributeDeformBuilder {
   typedef AnimationAttributeDeform Table;
   ::flatbuffers::FlatBufferBuilder &fbb_;
   ::flatbuffers::uoffset_t start_;
-  void add_table_coordinate(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> table_coordinate) {
+  void add_table_coordinate(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_coordinate) {
     fbb_.AddOffset(AnimationAttributeDeform::VT_TABLE_COORDINATE, table_coordinate);
   }
   explicit AnimationAttributeDeformBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
@@ -3858,7 +3951,7 @@ struct AnimationAttributeDeformBuilder {
 
 inline ::flatbuffers::Offset<AnimationAttributeDeform> CreateAnimationAttributeDeform(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> table_coordinate = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_coordinate = 0) {
   AnimationAttributeDeformBuilder builder_(_fbb);
   builder_.add_table_coordinate(table_coordinate);
   return builder_.Finish();
@@ -3871,8 +3964,8 @@ struct AnimationAttributeDeform::Traits {
 
 inline ::flatbuffers::Offset<AnimationAttributeDeform> CreateAnimationAttributeDeformDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<ss::ssfb2::Vector2> *table_coordinate = nullptr) {
-  auto table_coordinate__ = table_coordinate ? _fbb.CreateVectorOfStructs<ss::ssfb2::Vector2>(*table_coordinate) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_coordinate = nullptr) {
+  auto table_coordinate__ = table_coordinate ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>>(*table_coordinate) : 0;
   return ss::ssfb2::CreateAnimationAttributeDeform(
       _fbb,
       table_coordinate__);
@@ -3969,6 +4062,156 @@ inline ::flatbuffers::Offset<AnimationAttributeShader> CreateAnimationAttributeS
 
 ::flatbuffers::Offset<AnimationAttributeShader> CreateAnimationAttributeShader(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeShaderT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct AnimationAttributeAudioT : public ::flatbuffers::NativeTable {
+  typedef AnimationAttributeAudio TableType;
+  int16_t id = 0;
+  int16_t index = 0;
+  int16_t count_play = 0;
+};
+
+struct AnimationAttributeAudio FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef AnimationAttributeAudioT NativeTableType;
+  typedef AnimationAttributeAudioBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_ID = 4,
+    VT_INDEX = 6,
+    VT_COUNT_PLAY = 8
+  };
+  int16_t id() const {
+    return GetField<int16_t>(VT_ID, 0);
+  }
+  bool mutate_id(int16_t _id = 0) {
+    return SetField<int16_t>(VT_ID, _id, 0);
+  }
+  int16_t index() const {
+    return GetField<int16_t>(VT_INDEX, 0);
+  }
+  bool mutate_index(int16_t _index = 0) {
+    return SetField<int16_t>(VT_INDEX, _index, 0);
+  }
+  int16_t count_play() const {
+    return GetField<int16_t>(VT_COUNT_PLAY, 0);
+  }
+  bool mutate_count_play(int16_t _count_play = 0) {
+    return SetField<int16_t>(VT_COUNT_PLAY, _count_play, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int16_t>(verifier, VT_ID, 2) &&
+           VerifyField<int16_t>(verifier, VT_INDEX, 2) &&
+           VerifyField<int16_t>(verifier, VT_COUNT_PLAY, 2) &&
+           verifier.EndTable();
+  }
+  AnimationAttributeAudioT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(AnimationAttributeAudioT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<AnimationAttributeAudio> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeAudioT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct AnimationAttributeAudioBuilder {
+  typedef AnimationAttributeAudio Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_id(int16_t id) {
+    fbb_.AddElement<int16_t>(AnimationAttributeAudio::VT_ID, id, 0);
+  }
+  void add_index(int16_t index) {
+    fbb_.AddElement<int16_t>(AnimationAttributeAudio::VT_INDEX, index, 0);
+  }
+  void add_count_play(int16_t count_play) {
+    fbb_.AddElement<int16_t>(AnimationAttributeAudio::VT_COUNT_PLAY, count_play, 0);
+  }
+  explicit AnimationAttributeAudioBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<AnimationAttributeAudio> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<AnimationAttributeAudio>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<AnimationAttributeAudio> CreateAnimationAttributeAudio(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int16_t id = 0,
+    int16_t index = 0,
+    int16_t count_play = 0) {
+  AnimationAttributeAudioBuilder builder_(_fbb);
+  builder_.add_count_play(count_play);
+  builder_.add_index(index);
+  builder_.add_id(id);
+  return builder_.Finish();
+}
+
+struct AnimationAttributeAudio::Traits {
+  using type = AnimationAttributeAudio;
+  static auto constexpr Create = CreateAnimationAttributeAudio;
+};
+
+::flatbuffers::Offset<AnimationAttributeAudio> CreateAnimationAttributeAudio(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeAudioT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct AnimationAttributeChangeTextureT : public ::flatbuffers::NativeTable {
+  typedef AnimationAttributeChangeTexture TableType;
+  int16_t index_texture = 0;
+};
+
+struct AnimationAttributeChangeTexture FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef AnimationAttributeChangeTextureT NativeTableType;
+  typedef AnimationAttributeChangeTextureBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INDEX_TEXTURE = 4
+  };
+  int16_t index_texture() const {
+    return GetField<int16_t>(VT_INDEX_TEXTURE, 0);
+  }
+  bool mutate_index_texture(int16_t _index_texture = 0) {
+    return SetField<int16_t>(VT_INDEX_TEXTURE, _index_texture, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int16_t>(verifier, VT_INDEX_TEXTURE, 2) &&
+           verifier.EndTable();
+  }
+  AnimationAttributeChangeTextureT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(AnimationAttributeChangeTextureT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<AnimationAttributeChangeTexture> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeChangeTextureT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct AnimationAttributeChangeTextureBuilder {
+  typedef AnimationAttributeChangeTexture Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_index_texture(int16_t index_texture) {
+    fbb_.AddElement<int16_t>(AnimationAttributeChangeTexture::VT_INDEX_TEXTURE, index_texture, 0);
+  }
+  explicit AnimationAttributeChangeTextureBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<AnimationAttributeChangeTexture> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<AnimationAttributeChangeTexture>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<AnimationAttributeChangeTexture> CreateAnimationAttributeChangeTexture(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int16_t index_texture = 0) {
+  AnimationAttributeChangeTextureBuilder builder_(_fbb);
+  builder_.add_index_texture(index_texture);
+  return builder_.Finish();
+}
+
+struct AnimationAttributeChangeTexture::Traits {
+  using type = AnimationAttributeChangeTexture;
+  static auto constexpr Create = CreateAnimationAttributeChangeTexture;
+};
+
+::flatbuffers::Offset<AnimationAttributeChangeTexture> CreateAnimationAttributeChangeTexture(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeChangeTextureT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 struct DataModelPartsT : public ::flatbuffers::NativeTable {
   typedef DataModelParts TableType;
   std::string name{};
@@ -3978,7 +4221,7 @@ struct DataModelPartsT : public ::flatbuffers::NativeTable {
   ss::ssfb2::KindFeatureParts feature = ss::ssfb2::KindFeatureParts::ROOT;
   int32_t count_mesh = 0;
   std::shared_ptr<ss::ssfb2::BindMeshT> mesh{};
-  std::shared_ptr<ss::ssfb2::ColorLabel> label_color{};
+  std::shared_ptr<ss::ssfb2::ColorLabelT> label_color{};
   ss::ssfb2::KindOperationBlend operation_blend_target = ss::ssfb2::KindOperationBlend::MIX;
   ss::ssfb2::KindCollision shape_collision = ss::ssfb2::KindCollision::NON;
   float size_collision = 0.0f;
@@ -4082,10 +4325,10 @@ struct DataModelParts FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return GetPointer<ss::ssfb2::BindMesh *>(VT_MESH);
   }
   const ss::ssfb2::ColorLabel *label_color() const {
-    return GetStruct<const ss::ssfb2::ColorLabel *>(VT_LABEL_COLOR);
+    return GetPointer<const ss::ssfb2::ColorLabel *>(VT_LABEL_COLOR);
   }
   ss::ssfb2::ColorLabel *mutable_label_color() {
-    return GetStruct<ss::ssfb2::ColorLabel *>(VT_LABEL_COLOR);
+    return GetPointer<ss::ssfb2::ColorLabel *>(VT_LABEL_COLOR);
   }
   ss::ssfb2::KindOperationBlend operation_blend_target() const {
     return static_cast<ss::ssfb2::KindOperationBlend>(GetField<int8_t>(VT_OPERATION_BLEND_TARGET, 0));
@@ -4219,7 +4462,8 @@ struct DataModelParts FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_COUNT_MESH, 4) &&
            VerifyOffset(verifier, VT_MESH) &&
            verifier.VerifyTable(mesh()) &&
-           VerifyField<ss::ssfb2::ColorLabel>(verifier, VT_LABEL_COLOR, 1) &&
+           VerifyOffset(verifier, VT_LABEL_COLOR) &&
+           verifier.VerifyTable(label_color()) &&
            VerifyField<int8_t>(verifier, VT_OPERATION_BLEND_TARGET, 1) &&
            VerifyField<uint8_t>(verifier, VT_SHAPE_COLLISION, 1) &&
            VerifyField<float>(verifier, VT_SIZE_COLLISION, 4) &&
@@ -4275,8 +4519,8 @@ struct DataModelPartsBuilder {
   void add_mesh(::flatbuffers::Offset<ss::ssfb2::BindMesh> mesh) {
     fbb_.AddOffset(DataModelParts::VT_MESH, mesh);
   }
-  void add_label_color(const ss::ssfb2::ColorLabel *label_color) {
-    fbb_.AddStruct(DataModelParts::VT_LABEL_COLOR, label_color);
+  void add_label_color(::flatbuffers::Offset<ss::ssfb2::ColorLabel> label_color) {
+    fbb_.AddOffset(DataModelParts::VT_LABEL_COLOR, label_color);
   }
   void add_operation_blend_target(ss::ssfb2::KindOperationBlend operation_blend_target) {
     fbb_.AddElement<int8_t>(DataModelParts::VT_OPERATION_BLEND_TARGET, static_cast<int8_t>(operation_blend_target), 0);
@@ -4358,7 +4602,7 @@ inline ::flatbuffers::Offset<DataModelParts> CreateDataModelParts(
     ss::ssfb2::KindFeatureParts feature = ss::ssfb2::KindFeatureParts::ROOT,
     int32_t count_mesh = 0,
     ::flatbuffers::Offset<ss::ssfb2::BindMesh> mesh = 0,
-    const ss::ssfb2::ColorLabel *label_color = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::ColorLabel> label_color = 0,
     ss::ssfb2::KindOperationBlend operation_blend_target = ss::ssfb2::KindOperationBlend::MIX,
     ss::ssfb2::KindCollision shape_collision = ss::ssfb2::KindCollision::NON,
     float size_collision = 0.0f,
@@ -4425,7 +4669,7 @@ inline ::flatbuffers::Offset<DataModelParts> CreateDataModelPartsDirect(
     ss::ssfb2::KindFeatureParts feature = ss::ssfb2::KindFeatureParts::ROOT,
     int32_t count_mesh = 0,
     ::flatbuffers::Offset<ss::ssfb2::BindMesh> mesh = 0,
-    const ss::ssfb2::ColorLabel *label_color = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::ColorLabel> label_color = 0,
     ss::ssfb2::KindOperationBlend operation_blend_target = ss::ssfb2::KindOperationBlend::MIX,
     ss::ssfb2::KindCollision shape_collision = ss::ssfb2::KindCollision::NON,
     float size_collision = 0.0f,
@@ -4490,7 +4734,7 @@ struct DataSetupT : public ::flatbuffers::NativeTable {
   ss::ssfb2::FlagUse0DataSetup flag_use0 = ss::ssfb2::FlagUse0DataSetup::CLEAR;
   ss::ssfb2::FlagUse1DataSetup flag_use1 = ss::ssfb2::FlagUse1DataSetup::CLEAR;
   int32_t status = 0;
-  std::shared_ptr<ss::ssfb2::AnimationAttributeCell> cell{};
+  std::shared_ptr<ss::ssfb2::AnimationAttributeCellT> cell{};
   float position_x = 0.0f;
   float position_y = 0.0f;
   float position_z = 0.0f;
@@ -4522,14 +4766,14 @@ struct DataSetupT : public ::flatbuffers::NativeTable {
   float radius_collision = 0.0f;
   std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT> user_data{};
   std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT> instance{};
-  std::shared_ptr<ss::ssfb2::AnimationAttributeEffect> effect{};
+  std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT> effect{};
   std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT> deform{};
   std::vector<int32_t> deform_tableindex{};
   int32_t deform_countvertex = 0;
   std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT> shader{};
   std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT> signal{};
-  std::shared_ptr<ss::ssfb2::AnimationAttributeAudio> audio{};
-  std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTexture> change_texture{};
+  std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT> audio{};
+  std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT> change_texture{};
   DataSetupT() = default;
   DataSetupT(const DataSetupT &o);
   DataSetupT(DataSetupT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -4604,10 +4848,10 @@ struct DataSetup FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<int32_t>(VT_STATUS, _status, 0);
   }
   const ss::ssfb2::AnimationAttributeCell *cell() const {
-    return GetStruct<const ss::ssfb2::AnimationAttributeCell *>(VT_CELL);
+    return GetPointer<const ss::ssfb2::AnimationAttributeCell *>(VT_CELL);
   }
   ss::ssfb2::AnimationAttributeCell *mutable_cell() {
-    return GetStruct<ss::ssfb2::AnimationAttributeCell *>(VT_CELL);
+    return GetPointer<ss::ssfb2::AnimationAttributeCell *>(VT_CELL);
   }
   float position_x() const {
     return GetField<float>(VT_POSITION_X, 0.0f);
@@ -4796,10 +5040,10 @@ struct DataSetup FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return GetPointer<ss::ssfb2::AnimationAttributeInstance *>(VT_INSTANCE);
   }
   const ss::ssfb2::AnimationAttributeEffect *effect() const {
-    return GetStruct<const ss::ssfb2::AnimationAttributeEffect *>(VT_EFFECT);
+    return GetPointer<const ss::ssfb2::AnimationAttributeEffect *>(VT_EFFECT);
   }
   ss::ssfb2::AnimationAttributeEffect *mutable_effect() {
-    return GetStruct<ss::ssfb2::AnimationAttributeEffect *>(VT_EFFECT);
+    return GetPointer<ss::ssfb2::AnimationAttributeEffect *>(VT_EFFECT);
   }
   const ss::ssfb2::AnimationAttributeDeform *deform() const {
     return GetPointer<const ss::ssfb2::AnimationAttributeDeform *>(VT_DEFORM);
@@ -4832,23 +5076,24 @@ struct DataSetup FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return GetPointer<ss::ssfb2::AnimationAttributeSignal *>(VT_SIGNAL);
   }
   const ss::ssfb2::AnimationAttributeAudio *audio() const {
-    return GetStruct<const ss::ssfb2::AnimationAttributeAudio *>(VT_AUDIO);
+    return GetPointer<const ss::ssfb2::AnimationAttributeAudio *>(VT_AUDIO);
   }
   ss::ssfb2::AnimationAttributeAudio *mutable_audio() {
-    return GetStruct<ss::ssfb2::AnimationAttributeAudio *>(VT_AUDIO);
+    return GetPointer<ss::ssfb2::AnimationAttributeAudio *>(VT_AUDIO);
   }
   const ss::ssfb2::AnimationAttributeChangeTexture *change_texture() const {
-    return GetStruct<const ss::ssfb2::AnimationAttributeChangeTexture *>(VT_CHANGE_TEXTURE);
+    return GetPointer<const ss::ssfb2::AnimationAttributeChangeTexture *>(VT_CHANGE_TEXTURE);
   }
   ss::ssfb2::AnimationAttributeChangeTexture *mutable_change_texture() {
-    return GetStruct<ss::ssfb2::AnimationAttributeChangeTexture *>(VT_CHANGE_TEXTURE);
+    return GetPointer<ss::ssfb2::AnimationAttributeChangeTexture *>(VT_CHANGE_TEXTURE);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_FLAG_USE0, 4) &&
            VerifyField<uint32_t>(verifier, VT_FLAG_USE1, 4) &&
            VerifyField<int32_t>(verifier, VT_STATUS, 4) &&
-           VerifyField<ss::ssfb2::AnimationAttributeCell>(verifier, VT_CELL, 4) &&
+           VerifyOffset(verifier, VT_CELL) &&
+           verifier.VerifyTable(cell()) &&
            VerifyField<float>(verifier, VT_POSITION_X, 4) &&
            VerifyField<float>(verifier, VT_POSITION_Y, 4) &&
            VerifyField<float>(verifier, VT_POSITION_Z, 4) &&
@@ -4885,7 +5130,8 @@ struct DataSetup FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(user_data()) &&
            VerifyOffset(verifier, VT_INSTANCE) &&
            verifier.VerifyTable(instance()) &&
-           VerifyField<ss::ssfb2::AnimationAttributeEffect>(verifier, VT_EFFECT, 4) &&
+           VerifyOffset(verifier, VT_EFFECT) &&
+           verifier.VerifyTable(effect()) &&
            VerifyOffset(verifier, VT_DEFORM) &&
            verifier.VerifyTable(deform()) &&
            VerifyOffset(verifier, VT_DEFORM_TABLEINDEX) &&
@@ -4895,8 +5141,10 @@ struct DataSetup FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyTable(shader()) &&
            VerifyOffset(verifier, VT_SIGNAL) &&
            verifier.VerifyTable(signal()) &&
-           VerifyField<ss::ssfb2::AnimationAttributeAudio>(verifier, VT_AUDIO, 2) &&
-           VerifyField<ss::ssfb2::AnimationAttributeChangeTexture>(verifier, VT_CHANGE_TEXTURE, 2) &&
+           VerifyOffset(verifier, VT_AUDIO) &&
+           verifier.VerifyTable(audio()) &&
+           VerifyOffset(verifier, VT_CHANGE_TEXTURE) &&
+           verifier.VerifyTable(change_texture()) &&
            verifier.EndTable();
   }
   DataSetupT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -4917,8 +5165,8 @@ struct DataSetupBuilder {
   void add_status(int32_t status) {
     fbb_.AddElement<int32_t>(DataSetup::VT_STATUS, status, 0);
   }
-  void add_cell(const ss::ssfb2::AnimationAttributeCell *cell) {
-    fbb_.AddStruct(DataSetup::VT_CELL, cell);
+  void add_cell(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell> cell) {
+    fbb_.AddOffset(DataSetup::VT_CELL, cell);
   }
   void add_position_x(float position_x) {
     fbb_.AddElement<float>(DataSetup::VT_POSITION_X, position_x, 0.0f);
@@ -5013,8 +5261,8 @@ struct DataSetupBuilder {
   void add_instance(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance> instance) {
     fbb_.AddOffset(DataSetup::VT_INSTANCE, instance);
   }
-  void add_effect(const ss::ssfb2::AnimationAttributeEffect *effect) {
-    fbb_.AddStruct(DataSetup::VT_EFFECT, effect);
+  void add_effect(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect> effect) {
+    fbb_.AddOffset(DataSetup::VT_EFFECT, effect);
   }
   void add_deform(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform> deform) {
     fbb_.AddOffset(DataSetup::VT_DEFORM, deform);
@@ -5031,11 +5279,11 @@ struct DataSetupBuilder {
   void add_signal(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal> signal) {
     fbb_.AddOffset(DataSetup::VT_SIGNAL, signal);
   }
-  void add_audio(const ss::ssfb2::AnimationAttributeAudio *audio) {
-    fbb_.AddStruct(DataSetup::VT_AUDIO, audio);
+  void add_audio(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio> audio) {
+    fbb_.AddOffset(DataSetup::VT_AUDIO, audio);
   }
-  void add_change_texture(const ss::ssfb2::AnimationAttributeChangeTexture *change_texture) {
-    fbb_.AddStruct(DataSetup::VT_CHANGE_TEXTURE, change_texture);
+  void add_change_texture(::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture> change_texture) {
+    fbb_.AddOffset(DataSetup::VT_CHANGE_TEXTURE, change_texture);
   }
   explicit DataSetupBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -5053,7 +5301,7 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetup(
     ss::ssfb2::FlagUse0DataSetup flag_use0 = ss::ssfb2::FlagUse0DataSetup::CLEAR,
     ss::ssfb2::FlagUse1DataSetup flag_use1 = ss::ssfb2::FlagUse1DataSetup::CLEAR,
     int32_t status = 0,
-    const ss::ssfb2::AnimationAttributeCell *cell = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell> cell = 0,
     float position_x = 0.0f,
     float position_y = 0.0f,
     float position_z = 0.0f,
@@ -5085,14 +5333,14 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetup(
     float radius_collision = 0.0f,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData> user_data = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance> instance = 0,
-    const ss::ssfb2::AnimationAttributeEffect *effect = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect> effect = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform> deform = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> deform_tableindex = 0,
     int32_t deform_countvertex = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader> shader = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal> signal = 0,
-    const ss::ssfb2::AnimationAttributeAudio *audio = nullptr,
-    const ss::ssfb2::AnimationAttributeChangeTexture *change_texture = nullptr) {
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio> audio = 0,
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture> change_texture = 0) {
   DataSetupBuilder builder_(_fbb);
   builder_.add_change_texture(change_texture);
   builder_.add_audio(audio);
@@ -5150,7 +5398,7 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetupDirect(
     ss::ssfb2::FlagUse0DataSetup flag_use0 = ss::ssfb2::FlagUse0DataSetup::CLEAR,
     ss::ssfb2::FlagUse1DataSetup flag_use1 = ss::ssfb2::FlagUse1DataSetup::CLEAR,
     int32_t status = 0,
-    const ss::ssfb2::AnimationAttributeCell *cell = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell> cell = 0,
     float position_x = 0.0f,
     float position_y = 0.0f,
     float position_z = 0.0f,
@@ -5182,14 +5430,14 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetupDirect(
     float radius_collision = 0.0f,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData> user_data = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance> instance = 0,
-    const ss::ssfb2::AnimationAttributeEffect *effect = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect> effect = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform> deform = 0,
     const std::vector<int32_t> *deform_tableindex = nullptr,
     int32_t deform_countvertex = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader> shader = 0,
     ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal> signal = 0,
-    const ss::ssfb2::AnimationAttributeAudio *audio = nullptr,
-    const ss::ssfb2::AnimationAttributeChangeTexture *change_texture = nullptr) {
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio> audio = 0,
+    ::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture> change_texture = 0) {
   auto deform_tableindex__ = deform_tableindex ? _fbb.CreateVector<int32_t>(*deform_tableindex) : 0;
   return ss::ssfb2::CreateDataSetup(
       _fbb,
@@ -5239,6 +5487,332 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetupDirect(
 }
 
 ::flatbuffers::Offset<DataSetup> CreateDataSetup(::flatbuffers::FlatBufferBuilder &_fbb, const DataSetupT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct RangeFloatT : public ::flatbuffers::NativeTable {
+  typedef RangeFloat TableType;
+  float main = 0.0f;
+  float sub = 0.0f;
+};
+
+struct RangeFloat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RangeFloatT NativeTableType;
+  typedef RangeFloatBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAIN = 4,
+    VT_SUB = 6
+  };
+  float main() const {
+    return GetField<float>(VT_MAIN, 0.0f);
+  }
+  bool mutate_main(float _main = 0.0f) {
+    return SetField<float>(VT_MAIN, _main, 0.0f);
+  }
+  float sub() const {
+    return GetField<float>(VT_SUB, 0.0f);
+  }
+  bool mutate_sub(float _sub = 0.0f) {
+    return SetField<float>(VT_SUB, _sub, 0.0f);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<float>(verifier, VT_MAIN, 4) &&
+           VerifyField<float>(verifier, VT_SUB, 4) &&
+           verifier.EndTable();
+  }
+  RangeFloatT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(RangeFloatT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<RangeFloat> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RangeFloatT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct RangeFloatBuilder {
+  typedef RangeFloat Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_main(float main) {
+    fbb_.AddElement<float>(RangeFloat::VT_MAIN, main, 0.0f);
+  }
+  void add_sub(float sub) {
+    fbb_.AddElement<float>(RangeFloat::VT_SUB, sub, 0.0f);
+  }
+  explicit RangeFloatBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RangeFloat> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RangeFloat>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RangeFloat> CreateRangeFloat(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    float main = 0.0f,
+    float sub = 0.0f) {
+  RangeFloatBuilder builder_(_fbb);
+  builder_.add_sub(sub);
+  builder_.add_main(main);
+  return builder_.Finish();
+}
+
+struct RangeFloat::Traits {
+  using type = RangeFloat;
+  static auto constexpr Create = CreateRangeFloat;
+};
+
+::flatbuffers::Offset<RangeFloat> CreateRangeFloat(::flatbuffers::FlatBufferBuilder &_fbb, const RangeFloatT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct RangeVector2T : public ::flatbuffers::NativeTable {
+  typedef RangeVector2 TableType;
+  std::shared_ptr<ss::ssfb2::Vector2T> main{};
+  std::shared_ptr<ss::ssfb2::Vector2T> sub{};
+  RangeVector2T() = default;
+  RangeVector2T(const RangeVector2T &o);
+  RangeVector2T(RangeVector2T&&) FLATBUFFERS_NOEXCEPT = default;
+  RangeVector2T &operator=(RangeVector2T o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct RangeVector2 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RangeVector2T NativeTableType;
+  typedef RangeVector2Builder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAIN = 4,
+    VT_SUB = 6
+  };
+  const ss::ssfb2::Vector2 *main() const {
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_MAIN);
+  }
+  ss::ssfb2::Vector2 *mutable_main() {
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_MAIN);
+  }
+  const ss::ssfb2::Vector2 *sub() const {
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SUB);
+  }
+  ss::ssfb2::Vector2 *mutable_sub() {
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SUB);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_MAIN) &&
+           verifier.VerifyTable(main()) &&
+           VerifyOffset(verifier, VT_SUB) &&
+           verifier.VerifyTable(sub()) &&
+           verifier.EndTable();
+  }
+  RangeVector2T *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(RangeVector2T *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<RangeVector2> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RangeVector2T* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct RangeVector2Builder {
+  typedef RangeVector2 Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_main(::flatbuffers::Offset<ss::ssfb2::Vector2> main) {
+    fbb_.AddOffset(RangeVector2::VT_MAIN, main);
+  }
+  void add_sub(::flatbuffers::Offset<ss::ssfb2::Vector2> sub) {
+    fbb_.AddOffset(RangeVector2::VT_SUB, sub);
+  }
+  explicit RangeVector2Builder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RangeVector2> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RangeVector2>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RangeVector2> CreateRangeVector2(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> main = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> sub = 0) {
+  RangeVector2Builder builder_(_fbb);
+  builder_.add_sub(sub);
+  builder_.add_main(main);
+  return builder_.Finish();
+}
+
+struct RangeVector2::Traits {
+  using type = RangeVector2;
+  static auto constexpr Create = CreateRangeVector2;
+};
+
+::flatbuffers::Offset<RangeVector2> CreateRangeVector2(::flatbuffers::FlatBufferBuilder &_fbb, const RangeVector2T *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct RangeColorT : public ::flatbuffers::NativeTable {
+  typedef RangeColor TableType;
+  std::shared_ptr<ss::ssfb2::ColorT> main{};
+  std::shared_ptr<ss::ssfb2::ColorT> sub{};
+  RangeColorT() = default;
+  RangeColorT(const RangeColorT &o);
+  RangeColorT(RangeColorT&&) FLATBUFFERS_NOEXCEPT = default;
+  RangeColorT &operator=(RangeColorT o) FLATBUFFERS_NOEXCEPT;
+};
+
+struct RangeColor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef RangeColorT NativeTableType;
+  typedef RangeColorBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_MAIN = 4,
+    VT_SUB = 6
+  };
+  const ss::ssfb2::Color *main() const {
+    return GetPointer<const ss::ssfb2::Color *>(VT_MAIN);
+  }
+  ss::ssfb2::Color *mutable_main() {
+    return GetPointer<ss::ssfb2::Color *>(VT_MAIN);
+  }
+  const ss::ssfb2::Color *sub() const {
+    return GetPointer<const ss::ssfb2::Color *>(VT_SUB);
+  }
+  ss::ssfb2::Color *mutable_sub() {
+    return GetPointer<ss::ssfb2::Color *>(VT_SUB);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_MAIN) &&
+           verifier.VerifyTable(main()) &&
+           VerifyOffset(verifier, VT_SUB) &&
+           verifier.VerifyTable(sub()) &&
+           verifier.EndTable();
+  }
+  RangeColorT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(RangeColorT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<RangeColor> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RangeColorT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct RangeColorBuilder {
+  typedef RangeColor Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_main(::flatbuffers::Offset<ss::ssfb2::Color> main) {
+    fbb_.AddOffset(RangeColor::VT_MAIN, main);
+  }
+  void add_sub(::flatbuffers::Offset<ss::ssfb2::Color> sub) {
+    fbb_.AddOffset(RangeColor::VT_SUB, sub);
+  }
+  explicit RangeColorBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<RangeColor> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<RangeColor>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<RangeColor> CreateRangeColor(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<ss::ssfb2::Color> main = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Color> sub = 0) {
+  RangeColorBuilder builder_(_fbb);
+  builder_.add_sub(sub);
+  builder_.add_main(main);
+  return builder_.Finish();
+}
+
+struct RangeColor::Traits {
+  using type = RangeColor;
+  static auto constexpr Create = CreateRangeColor;
+};
+
+::flatbuffers::Offset<RangeColor> CreateRangeColor(::flatbuffers::FlatBufferBuilder &_fbb, const RangeColorT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
+struct PatternEmitT : public ::flatbuffers::NativeTable {
+  typedef PatternEmit TableType;
+  int32_t index_generate = 0;
+  int32_t duration = 0;
+  int32_t cycle = 0;
+};
+
+struct PatternEmit FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef PatternEmitT NativeTableType;
+  typedef PatternEmitBuilder Builder;
+  struct Traits;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_INDEX_GENERATE = 4,
+    VT_DURATION = 6,
+    VT_CYCLE = 8
+  };
+  int32_t index_generate() const {
+    return GetField<int32_t>(VT_INDEX_GENERATE, 0);
+  }
+  bool mutate_index_generate(int32_t _index_generate = 0) {
+    return SetField<int32_t>(VT_INDEX_GENERATE, _index_generate, 0);
+  }
+  int32_t duration() const {
+    return GetField<int32_t>(VT_DURATION, 0);
+  }
+  bool mutate_duration(int32_t _duration = 0) {
+    return SetField<int32_t>(VT_DURATION, _duration, 0);
+  }
+  int32_t cycle() const {
+    return GetField<int32_t>(VT_CYCLE, 0);
+  }
+  bool mutate_cycle(int32_t _cycle = 0) {
+    return SetField<int32_t>(VT_CYCLE, _cycle, 0);
+  }
+  bool Verify(::flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_INDEX_GENERATE, 4) &&
+           VerifyField<int32_t>(verifier, VT_DURATION, 4) &&
+           VerifyField<int32_t>(verifier, VT_CYCLE, 4) &&
+           verifier.EndTable();
+  }
+  PatternEmitT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(PatternEmitT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<PatternEmit> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const PatternEmitT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct PatternEmitBuilder {
+  typedef PatternEmit Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_index_generate(int32_t index_generate) {
+    fbb_.AddElement<int32_t>(PatternEmit::VT_INDEX_GENERATE, index_generate, 0);
+  }
+  void add_duration(int32_t duration) {
+    fbb_.AddElement<int32_t>(PatternEmit::VT_DURATION, duration, 0);
+  }
+  void add_cycle(int32_t cycle) {
+    fbb_.AddElement<int32_t>(PatternEmit::VT_CYCLE, cycle, 0);
+  }
+  explicit PatternEmitBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<PatternEmit> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<PatternEmit>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<PatternEmit> CreatePatternEmit(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t index_generate = 0,
+    int32_t duration = 0,
+    int32_t cycle = 0) {
+  PatternEmitBuilder builder_(_fbb);
+  builder_.add_cycle(cycle);
+  builder_.add_duration(duration);
+  builder_.add_index_generate(index_generate);
+  return builder_.Finish();
+}
+
+struct PatternEmit::Traits {
+  using type = PatternEmit;
+  static auto constexpr Create = CreatePatternEmit;
+};
+
+::flatbuffers::Offset<PatternEmit> CreatePatternEmit(::flatbuffers::FlatBufferBuilder &_fbb, const PatternEmitT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
 struct DataSequenceDetailsT : public ::flatbuffers::NativeTable {
   typedef DataSequenceDetails TableType;
@@ -5579,8 +6153,8 @@ inline ::flatbuffers::Offset<LibraryDataSound> CreateLibraryDataSoundDirect(
 struct LibraryDataFontGryphBitmapT : public ::flatbuffers::NativeTable {
   typedef LibraryDataFontGryphBitmap TableType;
   uint32_t id = 0;
-  std::shared_ptr<ss::ssfb2::Rect> atlas{};
-  std::shared_ptr<ss::ssfb2::Vector2> offset{};
+  std::shared_ptr<ss::ssfb2::RectT> atlas{};
+  std::shared_ptr<ss::ssfb2::Vector2T> offset{};
   float width_advance = 0.0f;
   std::string text{};
   int8_t page = 0;
@@ -5611,16 +6185,16 @@ struct LibraryDataFontGryphBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffer
     return SetField<uint32_t>(VT_ID, _id, 0);
   }
   const ss::ssfb2::Rect *atlas() const {
-    return GetStruct<const ss::ssfb2::Rect *>(VT_ATLAS);
+    return GetPointer<const ss::ssfb2::Rect *>(VT_ATLAS);
   }
   ss::ssfb2::Rect *mutable_atlas() {
-    return GetStruct<ss::ssfb2::Rect *>(VT_ATLAS);
+    return GetPointer<ss::ssfb2::Rect *>(VT_ATLAS);
   }
   const ss::ssfb2::Vector2 *offset() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_OFFSET);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_OFFSET);
   }
   ss::ssfb2::Vector2 *mutable_offset() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_OFFSET);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_OFFSET);
   }
   float width_advance() const {
     return GetField<float>(VT_WIDTH_ADVANCE, 0.0f);
@@ -5649,8 +6223,10 @@ struct LibraryDataFontGryphBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffer
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint32_t>(verifier, VT_ID, 4) &&
-           VerifyField<ss::ssfb2::Rect>(verifier, VT_ATLAS, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_OFFSET, 4) &&
+           VerifyOffset(verifier, VT_ATLAS) &&
+           verifier.VerifyTable(atlas()) &&
+           VerifyOffset(verifier, VT_OFFSET) &&
+           verifier.VerifyTable(offset()) &&
            VerifyField<float>(verifier, VT_WIDTH_ADVANCE, 4) &&
            VerifyOffset(verifier, VT_TEXT) &&
            verifier.VerifyString(text()) &&
@@ -5670,11 +6246,11 @@ struct LibraryDataFontGryphBitmapBuilder {
   void add_id(uint32_t id) {
     fbb_.AddElement<uint32_t>(LibraryDataFontGryphBitmap::VT_ID, id, 0);
   }
-  void add_atlas(const ss::ssfb2::Rect *atlas) {
-    fbb_.AddStruct(LibraryDataFontGryphBitmap::VT_ATLAS, atlas);
+  void add_atlas(::flatbuffers::Offset<ss::ssfb2::Rect> atlas) {
+    fbb_.AddOffset(LibraryDataFontGryphBitmap::VT_ATLAS, atlas);
   }
-  void add_offset(const ss::ssfb2::Vector2 *offset) {
-    fbb_.AddStruct(LibraryDataFontGryphBitmap::VT_OFFSET, offset);
+  void add_offset(::flatbuffers::Offset<ss::ssfb2::Vector2> offset) {
+    fbb_.AddOffset(LibraryDataFontGryphBitmap::VT_OFFSET, offset);
   }
   void add_width_advance(float width_advance) {
     fbb_.AddElement<float>(LibraryDataFontGryphBitmap::VT_WIDTH_ADVANCE, width_advance, 0.0f);
@@ -5702,8 +6278,8 @@ struct LibraryDataFontGryphBitmapBuilder {
 inline ::flatbuffers::Offset<LibraryDataFontGryphBitmap> CreateLibraryDataFontGryphBitmap(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
-    const ss::ssfb2::Rect *atlas = nullptr,
-    const ss::ssfb2::Vector2 *offset = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Rect> atlas = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> offset = 0,
     float width_advance = 0.0f,
     ::flatbuffers::Offset<::flatbuffers::String> text = 0,
     int8_t page = 0,
@@ -5727,8 +6303,8 @@ struct LibraryDataFontGryphBitmap::Traits {
 inline ::flatbuffers::Offset<LibraryDataFontGryphBitmap> CreateLibraryDataFontGryphBitmapDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     uint32_t id = 0,
-    const ss::ssfb2::Rect *atlas = nullptr,
-    const ss::ssfb2::Vector2 *offset = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Rect> atlas = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> offset = 0,
     float width_advance = 0.0f,
     const char *text = nullptr,
     int8_t page = 0,
@@ -5789,9 +6365,242 @@ inline ::flatbuffers::Offset<DataExtendInformationFile> CreateDataExtendInformat
 }
 
 
+inline bool operator==(const Vector2T &lhs, const Vector2T &rhs) {
+  return
+      (lhs.x == rhs.x) &&
+      (lhs.y == rhs.y);
+}
+
+inline bool operator!=(const Vector2T &lhs, const Vector2T &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline Vector2T *Vector2::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<Vector2T>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Vector2::UnPackTo(Vector2T *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = x(); _o->x = _e; }
+  { auto _e = y(); _o->y = _e; }
+}
+
+inline ::flatbuffers::Offset<Vector2> Vector2::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Vector2T* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateVector2(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Vector2> CreateVector2(::flatbuffers::FlatBufferBuilder &_fbb, const Vector2T *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Vector2T* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _x = _o->x;
+  auto _y = _o->y;
+  return ss::ssfb2::CreateVector2(
+      _fbb,
+      _x,
+      _y);
+}
+
+
+inline bool operator==(const Vector3T &lhs, const Vector3T &rhs) {
+  return
+      (lhs.x == rhs.x) &&
+      (lhs.y == rhs.y) &&
+      (lhs.z == rhs.z);
+}
+
+inline bool operator!=(const Vector3T &lhs, const Vector3T &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline Vector3T *Vector3::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<Vector3T>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Vector3::UnPackTo(Vector3T *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = x(); _o->x = _e; }
+  { auto _e = y(); _o->y = _e; }
+  { auto _e = z(); _o->z = _e; }
+}
+
+inline ::flatbuffers::Offset<Vector3> Vector3::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Vector3T* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateVector3(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Vector3> CreateVector3(::flatbuffers::FlatBufferBuilder &_fbb, const Vector3T *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Vector3T* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _x = _o->x;
+  auto _y = _o->y;
+  auto _z = _o->z;
+  return ss::ssfb2::CreateVector3(
+      _fbb,
+      _x,
+      _y,
+      _z);
+}
+
+
+inline bool operator==(const RectT &lhs, const RectT &rhs) {
+  return
+      (lhs.x_min == rhs.x_min) &&
+      (lhs.y_min == rhs.y_min) &&
+      (lhs.x_max == rhs.x_max) &&
+      (lhs.y_max == rhs.y_max);
+}
+
+inline bool operator!=(const RectT &lhs, const RectT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline RectT *Rect::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<RectT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Rect::UnPackTo(RectT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = x_min(); _o->x_min = _e; }
+  { auto _e = y_min(); _o->y_min = _e; }
+  { auto _e = x_max(); _o->x_max = _e; }
+  { auto _e = y_max(); _o->y_max = _e; }
+}
+
+inline ::flatbuffers::Offset<Rect> Rect::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RectT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRect(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Rect> CreateRect(::flatbuffers::FlatBufferBuilder &_fbb, const RectT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const RectT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _x_min = _o->x_min;
+  auto _y_min = _o->y_min;
+  auto _x_max = _o->x_max;
+  auto _y_max = _o->y_max;
+  return ss::ssfb2::CreateRect(
+      _fbb,
+      _x_min,
+      _y_min,
+      _x_max,
+      _y_max);
+}
+
+
+inline bool operator==(const Color32T &lhs, const Color32T &rhs) {
+  return
+      (lhs.r == rhs.r) &&
+      (lhs.g == rhs.g) &&
+      (lhs.b == rhs.b) &&
+      (lhs.a == rhs.a);
+}
+
+inline bool operator!=(const Color32T &lhs, const Color32T &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline Color32T *Color32::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<Color32T>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Color32::UnPackTo(Color32T *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = r(); _o->r = _e; }
+  { auto _e = g(); _o->g = _e; }
+  { auto _e = b(); _o->b = _e; }
+  { auto _e = a(); _o->a = _e; }
+}
+
+inline ::flatbuffers::Offset<Color32> Color32::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const Color32T* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateColor32(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Color32> CreateColor32(::flatbuffers::FlatBufferBuilder &_fbb, const Color32T *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const Color32T* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _r = _o->r;
+  auto _g = _o->g;
+  auto _b = _o->b;
+  auto _a = _o->a;
+  return ss::ssfb2::CreateColor32(
+      _fbb,
+      _r,
+      _g,
+      _b,
+      _a);
+}
+
+
+inline bool operator==(const ColorT &lhs, const ColorT &rhs) {
+  return
+      (lhs.r == rhs.r) &&
+      (lhs.g == rhs.g) &&
+      (lhs.b == rhs.b) &&
+      (lhs.a == rhs.a);
+}
+
+inline bool operator!=(const ColorT &lhs, const ColorT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline ColorT *Color::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<ColorT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void Color::UnPackTo(ColorT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = r(); _o->r = _e; }
+  { auto _e = g(); _o->g = _e; }
+  { auto _e = b(); _o->b = _e; }
+  { auto _e = a(); _o->a = _e; }
+}
+
+inline ::flatbuffers::Offset<Color> Color::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ColorT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateColor(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<Color> CreateColor(::flatbuffers::FlatBufferBuilder &_fbb, const ColorT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ColorT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _r = _o->r;
+  auto _g = _o->g;
+  auto _b = _o->b;
+  auto _a = _o->a;
+  return ss::ssfb2::CreateColor(
+      _fbb,
+      _r,
+      _g,
+      _b,
+      _a);
+}
+
+
 inline bool operator==(const DataMeshCellT &lhs, const DataMeshCellT &rhs) {
   return
-      (lhs.table_coordinate == rhs.table_coordinate) &&
+      (lhs.table_coordinate.size() == rhs.table_coordinate.size() && std::equal(lhs.table_coordinate.cbegin(), lhs.table_coordinate.cend(), rhs.table_coordinate.cbegin(), [](std::shared_ptr<ss::ssfb2::Vector2T> const &a, std::shared_ptr<ss::ssfb2::Vector2T> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.table_index_vertex == rhs.table_index_vertex);
 }
 
@@ -5799,6 +6608,18 @@ inline bool operator!=(const DataMeshCellT &lhs, const DataMeshCellT &rhs) {
     return !(lhs == rhs);
 }
 
+
+inline DataMeshCellT::DataMeshCellT(const DataMeshCellT &o)
+      : table_index_vertex(o.table_index_vertex) {
+  table_coordinate.reserve(o.table_coordinate.size());
+  for (const auto &table_coordinate_ : o.table_coordinate) { table_coordinate.emplace_back((table_coordinate_) ? new ss::ssfb2::Vector2T(*table_coordinate_) : nullptr); }
+}
+
+inline DataMeshCellT &DataMeshCellT::operator=(DataMeshCellT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(table_coordinate, o.table_coordinate);
+  std::swap(table_index_vertex, o.table_index_vertex);
+  return *this;
+}
 
 inline DataMeshCellT *DataMeshCell::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::make_unique<DataMeshCellT>();
@@ -5809,7 +6630,7 @@ inline DataMeshCellT *DataMeshCell::UnPack(const ::flatbuffers::resolver_functio
 inline void DataMeshCell::UnPackTo(DataMeshCellT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_coordinate[_i] = *_e->Get(_i); } } else { _o->table_coordinate.resize(0); } }
+  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->table_coordinate[_i].get(), _resolver); } else { _o->table_coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_coordinate.resize(0); } }
   { auto _e = table_index_vertex(); if (_e) { _o->table_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_vertex[_i] = _e->Get(_i); } } else { _o->table_index_vertex.resize(0); } }
 }
 
@@ -5821,7 +6642,7 @@ inline ::flatbuffers::Offset<DataMeshCell> CreateDataMeshCell(::flatbuffers::Fla
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DataMeshCellT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _table_coordinate = _o->table_coordinate.size() ? _fbb.CreateVectorOfStructs(_o->table_coordinate) : 0;
+  auto _table_coordinate = _o->table_coordinate.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>> (_o->table_coordinate.size(), [](size_t i, _VectorArgs *__va) { return CreateVector2(*__va->__fbb, __va->__o->table_coordinate[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_index_vertex = _o->table_index_vertex.size() ? _fbb.CreateVector(_o->table_index_vertex) : 0;
   return ss::ssfb2::CreateDataMeshCell(
       _fbb,
@@ -5847,10 +6668,10 @@ inline bool operator!=(const CellT &lhs, const CellT &rhs) {
 
 inline CellT::CellT(const CellT &o)
       : name(o.name),
-        rectangle((o.rectangle) ? new ss::ssfb2::Rect(*o.rectangle) : nullptr),
-        pivot((o.pivot) ? new ss::ssfb2::Vector2(*o.pivot) : nullptr),
+        rectangle((o.rectangle) ? new ss::ssfb2::RectT(*o.rectangle) : nullptr),
+        pivot((o.pivot) ? new ss::ssfb2::Vector2T(*o.pivot) : nullptr),
         rotate(o.rotate),
-        size_untrimmed((o.size_untrimmed) ? new ss::ssfb2::Vector2(*o.size_untrimmed) : nullptr),
+        size_untrimmed((o.size_untrimmed) ? new ss::ssfb2::Vector2T(*o.size_untrimmed) : nullptr),
         mesh((o.mesh) ? new ss::ssfb2::DataMeshCellT(*o.mesh) : nullptr) {
 }
 
@@ -5874,10 +6695,10 @@ inline void Cell::UnPackTo(CellT *_o, const ::flatbuffers::resolver_function_t *
   (void)_o;
   (void)_resolver;
   { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = rectangle(); if (_e) _o->rectangle = std::shared_ptr<ss::ssfb2::Rect>(new ss::ssfb2::Rect(*_e)); }
-  { auto _e = pivot(); if (_e) _o->pivot = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = rectangle(); if (_e) { if(_o->rectangle) { _e->UnPackTo(_o->rectangle.get(), _resolver); } else { _o->rectangle = std::shared_ptr<ss::ssfb2::RectT>(_e->UnPack(_resolver)); } } else if (_o->rectangle) { _o->rectangle.reset(); } }
+  { auto _e = pivot(); if (_e) { if(_o->pivot) { _e->UnPackTo(_o->pivot.get(), _resolver); } else { _o->pivot = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->pivot) { _o->pivot.reset(); } }
   { auto _e = rotate(); _o->rotate = _e; }
-  { auto _e = size_untrimmed(); if (_e) _o->size_untrimmed = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = size_untrimmed(); if (_e) { if(_o->size_untrimmed) { _e->UnPackTo(_o->size_untrimmed.get(), _resolver); } else { _o->size_untrimmed = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->size_untrimmed) { _o->size_untrimmed.reset(); } }
   { auto _e = mesh(); if (_e) { if(_o->mesh) { _e->UnPackTo(_o->mesh.get(), _resolver); } else { _o->mesh = std::shared_ptr<ss::ssfb2::DataMeshCellT>(_e->UnPack(_resolver)); } } else if (_o->mesh) { _o->mesh.reset(); } }
 }
 
@@ -5890,10 +6711,10 @@ inline ::flatbuffers::Offset<Cell> CreateCell(::flatbuffers::FlatBufferBuilder &
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const CellT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
-  auto _rectangle = _o->rectangle ? _o->rectangle.get() : nullptr;
-  auto _pivot = _o->pivot ? _o->pivot.get() : nullptr;
+  auto _rectangle = _o->rectangle ? CreateRect(_fbb, _o->rectangle.get(), _rehasher) : 0;
+  auto _pivot = _o->pivot ? CreateVector2(_fbb, _o->pivot.get(), _rehasher) : 0;
   auto _rotate = _o->rotate;
-  auto _size_untrimmed = _o->size_untrimmed ? _o->size_untrimmed.get() : nullptr;
+  auto _size_untrimmed = _o->size_untrimmed ? CreateVector2(_fbb, _o->size_untrimmed.get(), _rehasher) : 0;
   auto _mesh = _o->mesh ? CreateDataMeshCell(_fbb, _o->mesh.get(), _rehasher) : 0;
   return ss::ssfb2::CreateCell(
       _fbb,
@@ -5923,7 +6744,7 @@ inline bool operator!=(const LibraryDataCellMapT &lhs, const LibraryDataCellMapT
 
 inline LibraryDataCellMapT::LibraryDataCellMapT(const LibraryDataCellMapT &o)
       : name(o.name),
-        size_original((o.size_original) ? new ss::ssfb2::Vector2(*o.size_original) : nullptr),
+        size_original((o.size_original) ? new ss::ssfb2::Vector2T(*o.size_original) : nullptr),
         filter(o.filter),
         wrap(o.wrap),
         status(o.status) {
@@ -5951,7 +6772,7 @@ inline void LibraryDataCellMap::UnPackTo(LibraryDataCellMapT *_o, const ::flatbu
   (void)_o;
   (void)_resolver;
   { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = size_original(); if (_e) _o->size_original = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = size_original(); if (_e) { if(_o->size_original) { _e->UnPackTo(_o->size_original.get(), _resolver); } else { _o->size_original = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->size_original) { _o->size_original.reset(); } }
   { auto _e = filter(); _o->filter = _e; }
   { auto _e = wrap(); _o->wrap = _e; }
   { auto _e = status(); _o->status = _e; }
@@ -5967,7 +6788,7 @@ inline ::flatbuffers::Offset<LibraryDataCellMap> CreateLibraryDataCellMap(::flat
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const LibraryDataCellMapT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _name = _o->name.empty() ? 0 : _fbb.CreateString(_o->name);
-  auto _size_original = _o->size_original ? _o->size_original.get() : nullptr;
+  auto _size_original = _o->size_original ? CreateVector2(_fbb, _o->size_original.get(), _rehasher) : 0;
   auto _filter = _o->filter;
   auto _wrap = _o->wrap;
   auto _status = _o->status;
@@ -6024,15 +6845,135 @@ inline ::flatbuffers::Offset<Label> CreateLabel(::flatbuffers::FlatBufferBuilder
 }
 
 
+inline bool operator==(const ColorLabelT &lhs, const ColorLabelT &rhs) {
+  return
+      (lhs.form == rhs.form) &&
+      ((lhs.color == rhs.color) || (lhs.color && rhs.color && *lhs.color == *rhs.color));
+}
+
+inline bool operator!=(const ColorLabelT &lhs, const ColorLabelT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline ColorLabelT::ColorLabelT(const ColorLabelT &o)
+      : form(o.form),
+        color((o.color) ? new ss::ssfb2::Color32T(*o.color) : nullptr) {
+}
+
+inline ColorLabelT &ColorLabelT::operator=(ColorLabelT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(form, o.form);
+  std::swap(color, o.color);
+  return *this;
+}
+
+inline ColorLabelT *ColorLabel::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<ColorLabelT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void ColorLabel::UnPackTo(ColorLabelT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = form(); _o->form = _e; }
+  { auto _e = color(); if (_e) { if(_o->color) { _e->UnPackTo(_o->color.get(), _resolver); } else { _o->color = std::shared_ptr<ss::ssfb2::Color32T>(_e->UnPack(_resolver)); } } else if (_o->color) { _o->color.reset(); } }
+}
+
+inline ::flatbuffers::Offset<ColorLabel> ColorLabel::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ColorLabelT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateColorLabel(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<ColorLabel> CreateColorLabel(::flatbuffers::FlatBufferBuilder &_fbb, const ColorLabelT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ColorLabelT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _form = _o->form;
+  auto _color = _o->color ? CreateColor32(_fbb, _o->color.get(), _rehasher) : 0;
+  return ss::ssfb2::CreateColorLabel(
+      _fbb,
+      _form,
+      _color);
+}
+
+
+inline bool operator==(const BindMeshBoneT &lhs, const BindMeshBoneT &rhs) {
+  return
+      (lhs.index == rhs.index) &&
+      (lhs.weight == rhs.weight) &&
+      ((lhs.coordinate_offset == rhs.coordinate_offset) || (lhs.coordinate_offset && rhs.coordinate_offset && *lhs.coordinate_offset == *rhs.coordinate_offset));
+}
+
+inline bool operator!=(const BindMeshBoneT &lhs, const BindMeshBoneT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline BindMeshBoneT::BindMeshBoneT(const BindMeshBoneT &o)
+      : index(o.index),
+        weight(o.weight),
+        coordinate_offset((o.coordinate_offset) ? new ss::ssfb2::Vector3T(*o.coordinate_offset) : nullptr) {
+}
+
+inline BindMeshBoneT &BindMeshBoneT::operator=(BindMeshBoneT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(index, o.index);
+  std::swap(weight, o.weight);
+  std::swap(coordinate_offset, o.coordinate_offset);
+  return *this;
+}
+
+inline BindMeshBoneT *BindMeshBone::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<BindMeshBoneT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void BindMeshBone::UnPackTo(BindMeshBoneT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = index(); _o->index = _e; }
+  { auto _e = weight(); _o->weight = _e; }
+  { auto _e = coordinate_offset(); if (_e) { if(_o->coordinate_offset) { _e->UnPackTo(_o->coordinate_offset.get(), _resolver); } else { _o->coordinate_offset = std::shared_ptr<ss::ssfb2::Vector3T>(_e->UnPack(_resolver)); } } else if (_o->coordinate_offset) { _o->coordinate_offset.reset(); } }
+}
+
+inline ::flatbuffers::Offset<BindMeshBone> BindMeshBone::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshBoneT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateBindMeshBone(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<BindMeshBone> CreateBindMeshBone(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshBoneT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const BindMeshBoneT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _index = _o->index;
+  auto _weight = _o->weight;
+  auto _coordinate_offset = _o->coordinate_offset ? CreateVector3(_fbb, _o->coordinate_offset.get(), _rehasher) : 0;
+  return ss::ssfb2::CreateBindMeshBone(
+      _fbb,
+      _index,
+      _weight,
+      _coordinate_offset);
+}
+
+
 inline bool operator==(const BindMeshVertexT &lhs, const BindMeshVertexT &rhs) {
   return
-      (lhs.table_bone == rhs.table_bone);
+      (lhs.table_bone.size() == rhs.table_bone.size() && std::equal(lhs.table_bone.cbegin(), lhs.table_bone.cend(), rhs.table_bone.cbegin(), [](std::shared_ptr<ss::ssfb2::BindMeshBoneT> const &a, std::shared_ptr<ss::ssfb2::BindMeshBoneT> const &b) { return (a == b) || (a && b && *a == *b); }));
 }
 
 inline bool operator!=(const BindMeshVertexT &lhs, const BindMeshVertexT &rhs) {
     return !(lhs == rhs);
 }
 
+
+inline BindMeshVertexT::BindMeshVertexT(const BindMeshVertexT &o) {
+  table_bone.reserve(o.table_bone.size());
+  for (const auto &table_bone_ : o.table_bone) { table_bone.emplace_back((table_bone_) ? new ss::ssfb2::BindMeshBoneT(*table_bone_) : nullptr); }
+}
+
+inline BindMeshVertexT &BindMeshVertexT::operator=(BindMeshVertexT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(table_bone, o.table_bone);
+  return *this;
+}
 
 inline BindMeshVertexT *BindMeshVertex::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::make_unique<BindMeshVertexT>();
@@ -6043,7 +6984,7 @@ inline BindMeshVertexT *BindMeshVertex::UnPack(const ::flatbuffers::resolver_fun
 inline void BindMeshVertex::UnPackTo(BindMeshVertexT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_bone(); if (_e) { _o->table_bone.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_bone[_i] = *_e->Get(_i); } } else { _o->table_bone.resize(0); } }
+  { auto _e = table_bone(); if (_e) { _o->table_bone.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_bone[_i]) { _e->Get(_i)->UnPackTo(_o->table_bone[_i].get(), _resolver); } else { _o->table_bone[_i] = std::shared_ptr<ss::ssfb2::BindMeshBoneT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_bone.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<BindMeshVertex> BindMeshVertex::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshVertexT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -6054,7 +6995,7 @@ inline ::flatbuffers::Offset<BindMeshVertex> CreateBindMeshVertex(::flatbuffers:
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const BindMeshVertexT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _table_bone = _o->table_bone.size() ? _fbb.CreateVectorOfStructs(_o->table_bone) : 0;
+  auto _table_bone = _o->table_bone.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::BindMeshBone>> (_o->table_bone.size(), [](size_t i, _VectorArgs *__va) { return CreateBindMeshBone(*__va->__fbb, __va->__o->table_bone[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateBindMeshVertex(
       _fbb,
       _table_bone);
@@ -6065,7 +7006,7 @@ inline bool operator==(const BindMeshT &lhs, const BindMeshT &rhs) {
   return
       (lhs.count_vertex == rhs.count_vertex) &&
       (lhs.table_vertex.size() == rhs.table_vertex.size() && std::equal(lhs.table_vertex.cbegin(), lhs.table_vertex.cend(), rhs.table_vertex.cbegin(), [](std::shared_ptr<ss::ssfb2::BindMeshVertexT> const &a, std::shared_ptr<ss::ssfb2::BindMeshVertexT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.table_rate_uv == rhs.table_rate_uv) &&
+      (lhs.table_rate_uv.size() == rhs.table_rate_uv.size() && std::equal(lhs.table_rate_uv.cbegin(), lhs.table_rate_uv.cend(), rhs.table_rate_uv.cbegin(), [](std::shared_ptr<ss::ssfb2::Vector2T> const &a, std::shared_ptr<ss::ssfb2::Vector2T> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.table_index_vertex == rhs.table_index_vertex) &&
       (lhs.count_vertex_deform == rhs.count_vertex_deform);
 }
@@ -6077,11 +7018,12 @@ inline bool operator!=(const BindMeshT &lhs, const BindMeshT &rhs) {
 
 inline BindMeshT::BindMeshT(const BindMeshT &o)
       : count_vertex(o.count_vertex),
-        table_rate_uv(o.table_rate_uv),
         table_index_vertex(o.table_index_vertex),
         count_vertex_deform(o.count_vertex_deform) {
   table_vertex.reserve(o.table_vertex.size());
   for (const auto &table_vertex_ : o.table_vertex) { table_vertex.emplace_back((table_vertex_) ? new ss::ssfb2::BindMeshVertexT(*table_vertex_) : nullptr); }
+  table_rate_uv.reserve(o.table_rate_uv.size());
+  for (const auto &table_rate_uv_ : o.table_rate_uv) { table_rate_uv.emplace_back((table_rate_uv_) ? new ss::ssfb2::Vector2T(*table_rate_uv_) : nullptr); }
 }
 
 inline BindMeshT &BindMeshT::operator=(BindMeshT o) FLATBUFFERS_NOEXCEPT {
@@ -6104,7 +7046,7 @@ inline void BindMesh::UnPackTo(BindMeshT *_o, const ::flatbuffers::resolver_func
   (void)_resolver;
   { auto _e = count_vertex(); _o->count_vertex = _e; }
   { auto _e = table_vertex(); if (_e) { _o->table_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_vertex[_i]) { _e->Get(_i)->UnPackTo(_o->table_vertex[_i].get(), _resolver); } else { _o->table_vertex[_i] = std::shared_ptr<ss::ssfb2::BindMeshVertexT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_vertex.resize(0); } }
-  { auto _e = table_rate_uv(); if (_e) { _o->table_rate_uv.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_rate_uv[_i] = *_e->Get(_i); } } else { _o->table_rate_uv.resize(0); } }
+  { auto _e = table_rate_uv(); if (_e) { _o->table_rate_uv.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_rate_uv[_i]) { _e->Get(_i)->UnPackTo(_o->table_rate_uv[_i].get(), _resolver); } else { _o->table_rate_uv[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_rate_uv.resize(0); } }
   { auto _e = table_index_vertex(); if (_e) { _o->table_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_vertex[_i] = _e->Get(_i); } } else { _o->table_index_vertex.resize(0); } }
   { auto _e = count_vertex_deform(); _o->count_vertex_deform = _e; }
 }
@@ -6119,7 +7061,7 @@ inline ::flatbuffers::Offset<BindMesh> CreateBindMesh(::flatbuffers::FlatBufferB
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const BindMeshT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _count_vertex = _o->count_vertex;
   auto _table_vertex = _o->table_vertex.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::BindMeshVertex>> (_o->table_vertex.size(), [](size_t i, _VectorArgs *__va) { return CreateBindMeshVertex(*__va->__fbb, __va->__o->table_vertex[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _table_rate_uv = _o->table_rate_uv.size() ? _fbb.CreateVectorOfStructs(_o->table_rate_uv) : 0;
+  auto _table_rate_uv = _o->table_rate_uv.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>> (_o->table_rate_uv.size(), [](size_t i, _VectorArgs *__va) { return CreateVector2(*__va->__fbb, __va->__o->table_rate_uv[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_index_vertex = _o->table_index_vertex.size() ? _fbb.CreateVector(_o->table_index_vertex) : 0;
   auto _count_vertex_deform = _o->count_vertex_deform;
   return ss::ssfb2::CreateBindMesh(
@@ -6132,11 +7074,52 @@ inline ::flatbuffers::Offset<BindMesh> CreateBindMesh(::flatbuffers::FlatBufferB
 }
 
 
+inline bool operator==(const AnimationAttributeCellT &lhs, const AnimationAttributeCellT &rhs) {
+  return
+      (lhs.index_cell_map == rhs.index_cell_map) &&
+      (lhs.index_cell == rhs.index_cell);
+}
+
+inline bool operator!=(const AnimationAttributeCellT &lhs, const AnimationAttributeCellT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline AnimationAttributeCellT *AnimationAttributeCell::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<AnimationAttributeCellT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void AnimationAttributeCell::UnPackTo(AnimationAttributeCellT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = index_cell_map(); _o->index_cell_map = _e; }
+  { auto _e = index_cell(); _o->index_cell = _e; }
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeCell> AnimationAttributeCell::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeCellT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateAnimationAttributeCell(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeCell> CreateAnimationAttributeCell(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeCellT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeCellT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _index_cell_map = _o->index_cell_map;
+  auto _index_cell = _o->index_cell;
+  return ss::ssfb2::CreateAnimationAttributeCell(
+      _fbb,
+      _index_cell_map,
+      _index_cell);
+}
+
+
 inline bool operator==(const AnimationAttributePartsColorT &lhs, const AnimationAttributePartsColorT &rhs) {
   return
       (lhs.bound == rhs.bound) &&
       (lhs.operation == rhs.operation) &&
-      (lhs.vertex_color == rhs.vertex_color) &&
+      (lhs.vertex_color.size() == rhs.vertex_color.size() && std::equal(lhs.vertex_color.cbegin(), lhs.vertex_color.cend(), rhs.vertex_color.cbegin(), [](std::shared_ptr<ss::ssfb2::ColorT> const &a, std::shared_ptr<ss::ssfb2::ColorT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.rate_alpha == rhs.rate_alpha);
 }
 
@@ -6144,6 +7127,22 @@ inline bool operator!=(const AnimationAttributePartsColorT &lhs, const Animation
     return !(lhs == rhs);
 }
 
+
+inline AnimationAttributePartsColorT::AnimationAttributePartsColorT(const AnimationAttributePartsColorT &o)
+      : bound(o.bound),
+        operation(o.operation),
+        rate_alpha(o.rate_alpha) {
+  vertex_color.reserve(o.vertex_color.size());
+  for (const auto &vertex_color_ : o.vertex_color) { vertex_color.emplace_back((vertex_color_) ? new ss::ssfb2::ColorT(*vertex_color_) : nullptr); }
+}
+
+inline AnimationAttributePartsColorT &AnimationAttributePartsColorT::operator=(AnimationAttributePartsColorT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(bound, o.bound);
+  std::swap(operation, o.operation);
+  std::swap(vertex_color, o.vertex_color);
+  std::swap(rate_alpha, o.rate_alpha);
+  return *this;
+}
 
 inline AnimationAttributePartsColorT *AnimationAttributePartsColor::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::make_unique<AnimationAttributePartsColorT>();
@@ -6156,7 +7155,7 @@ inline void AnimationAttributePartsColor::UnPackTo(AnimationAttributePartsColorT
   (void)_resolver;
   { auto _e = bound(); _o->bound = _e; }
   { auto _e = operation(); _o->operation = _e; }
-  { auto _e = vertex_color(); if (_e) { _o->vertex_color.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->vertex_color[_i] = *_e->Get(_i); } } else { _o->vertex_color.resize(0); } }
+  { auto _e = vertex_color(); if (_e) { _o->vertex_color.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->vertex_color[_i]) { _e->Get(_i)->UnPackTo(_o->vertex_color[_i].get(), _resolver); } else { _o->vertex_color[_i] = std::shared_ptr<ss::ssfb2::ColorT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->vertex_color.resize(0); } }
   { auto _e = rate_alpha(); if (_e) { _o->rate_alpha.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->rate_alpha[_i] = _e->Get(_i); } } else { _o->rate_alpha.resize(0); } }
 }
 
@@ -6170,7 +7169,7 @@ inline ::flatbuffers::Offset<AnimationAttributePartsColor> CreateAnimationAttrib
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributePartsColorT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _bound = _o->bound;
   auto _operation = _o->operation;
-  auto _vertex_color = _o->vertex_color.size() ? _fbb.CreateVectorOfStructs(_o->vertex_color) : 0;
+  auto _vertex_color = _o->vertex_color.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Color>> (_o->vertex_color.size(), [](size_t i, _VectorArgs *__va) { return CreateColor(*__va->__fbb, __va->__o->vertex_color[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _rate_alpha = _o->rate_alpha.size() ? _fbb.CreateVector(_o->rate_alpha) : 0;
   return ss::ssfb2::CreateAnimationAttributePartsColor(
       _fbb,
@@ -6183,13 +7182,23 @@ inline ::flatbuffers::Offset<AnimationAttributePartsColor> CreateAnimationAttrib
 
 inline bool operator==(const AnimationAttributeVertexCorrectionT &lhs, const AnimationAttributeVertexCorrectionT &rhs) {
   return
-      (lhs.coordinate == rhs.coordinate);
+      (lhs.coordinate.size() == rhs.coordinate.size() && std::equal(lhs.coordinate.cbegin(), lhs.coordinate.cend(), rhs.coordinate.cbegin(), [](std::shared_ptr<ss::ssfb2::Vector2T> const &a, std::shared_ptr<ss::ssfb2::Vector2T> const &b) { return (a == b) || (a && b && *a == *b); }));
 }
 
 inline bool operator!=(const AnimationAttributeVertexCorrectionT &lhs, const AnimationAttributeVertexCorrectionT &rhs) {
     return !(lhs == rhs);
 }
 
+
+inline AnimationAttributeVertexCorrectionT::AnimationAttributeVertexCorrectionT(const AnimationAttributeVertexCorrectionT &o) {
+  coordinate.reserve(o.coordinate.size());
+  for (const auto &coordinate_ : o.coordinate) { coordinate.emplace_back((coordinate_) ? new ss::ssfb2::Vector2T(*coordinate_) : nullptr); }
+}
+
+inline AnimationAttributeVertexCorrectionT &AnimationAttributeVertexCorrectionT::operator=(AnimationAttributeVertexCorrectionT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(coordinate, o.coordinate);
+  return *this;
+}
 
 inline AnimationAttributeVertexCorrectionT *AnimationAttributeVertexCorrection::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::make_unique<AnimationAttributeVertexCorrectionT>();
@@ -6200,7 +7209,7 @@ inline AnimationAttributeVertexCorrectionT *AnimationAttributeVertexCorrection::
 inline void AnimationAttributeVertexCorrection::UnPackTo(AnimationAttributeVertexCorrectionT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = coordinate(); if (_e) { _o->coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->coordinate[_i] = *_e->Get(_i); } } else { _o->coordinate.resize(0); } }
+  { auto _e = coordinate(); if (_e) { _o->coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->coordinate[_i].get(), _resolver); } else { _o->coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->coordinate.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<AnimationAttributeVertexCorrection> AnimationAttributeVertexCorrection::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeVertexCorrectionT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -6211,7 +7220,7 @@ inline ::flatbuffers::Offset<AnimationAttributeVertexCorrection> CreateAnimation
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeVertexCorrectionT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _coordinate = _o->coordinate.size() ? _fbb.CreateVectorOfStructs(_o->coordinate) : 0;
+  auto _coordinate = _o->coordinate.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>> (_o->coordinate.size(), [](size_t i, _VectorArgs *__va) { return CreateVector2(*__va->__fbb, __va->__o->coordinate[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateAnimationAttributeVertexCorrection(
       _fbb,
       _coordinate);
@@ -6276,8 +7285,8 @@ inline bool operator!=(const AnimationAttributeUserDataT &lhs, const AnimationAt
 inline AnimationAttributeUserDataT::AnimationAttributeUserDataT(const AnimationAttributeUserDataT &o)
       : flags(o.flags),
         number_int(o.number_int),
-        rectangle((o.rectangle) ? new ss::ssfb2::Rect(*o.rectangle) : nullptr),
-        coordinate((o.coordinate) ? new ss::ssfb2::Vector2(*o.coordinate) : nullptr),
+        rectangle((o.rectangle) ? new ss::ssfb2::RectT(*o.rectangle) : nullptr),
+        coordinate((o.coordinate) ? new ss::ssfb2::Vector2T(*o.coordinate) : nullptr),
         text(o.text) {
 }
 
@@ -6301,8 +7310,8 @@ inline void AnimationAttributeUserData::UnPackTo(AnimationAttributeUserDataT *_o
   (void)_resolver;
   { auto _e = flags(); _o->flags = _e; }
   { auto _e = number_int(); _o->number_int = _e; }
-  { auto _e = rectangle(); if (_e) _o->rectangle = std::shared_ptr<ss::ssfb2::Rect>(new ss::ssfb2::Rect(*_e)); }
-  { auto _e = coordinate(); if (_e) _o->coordinate = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = rectangle(); if (_e) { if(_o->rectangle) { _e->UnPackTo(_o->rectangle.get(), _resolver); } else { _o->rectangle = std::shared_ptr<ss::ssfb2::RectT>(_e->UnPack(_resolver)); } } else if (_o->rectangle) { _o->rectangle.reset(); } }
+  { auto _e = coordinate(); if (_e) { if(_o->coordinate) { _e->UnPackTo(_o->coordinate.get(), _resolver); } else { _o->coordinate = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->coordinate) { _o->coordinate.reset(); } }
   { auto _e = text(); if (_e) _o->text = _e->str(); }
 }
 
@@ -6316,8 +7325,8 @@ inline ::flatbuffers::Offset<AnimationAttributeUserData> CreateAnimationAttribut
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeUserDataT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _flags = _o->flags;
   auto _number_int = _o->number_int;
-  auto _rectangle = _o->rectangle ? _o->rectangle.get() : nullptr;
-  auto _coordinate = _o->coordinate ? _o->coordinate.get() : nullptr;
+  auto _rectangle = _o->rectangle ? CreateRect(_fbb, _o->rectangle.get(), _rehasher) : 0;
+  auto _coordinate = _o->coordinate ? CreateVector2(_fbb, _o->coordinate.get(), _rehasher) : 0;
   auto _text = _o->text.empty() ? 0 : _fbb.CreateString(_o->text);
   return ss::ssfb2::CreateAnimationAttributeUserData(
       _fbb,
@@ -6547,15 +7556,70 @@ inline ::flatbuffers::Offset<AnimationAttributeInstance> CreateAnimationAttribut
 }
 
 
+inline bool operator==(const AnimationAttributeEffectT &lhs, const AnimationAttributeEffectT &rhs) {
+  return
+      (lhs.flags == rhs.flags) &&
+      (lhs.frame_start == rhs.frame_start) &&
+      (lhs.rate_time == rhs.rate_time);
+}
+
+inline bool operator!=(const AnimationAttributeEffectT &lhs, const AnimationAttributeEffectT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline AnimationAttributeEffectT *AnimationAttributeEffect::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<AnimationAttributeEffectT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void AnimationAttributeEffect::UnPackTo(AnimationAttributeEffectT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = flags(); _o->flags = _e; }
+  { auto _e = frame_start(); _o->frame_start = _e; }
+  { auto _e = rate_time(); _o->rate_time = _e; }
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeEffect> AnimationAttributeEffect::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeEffectT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateAnimationAttributeEffect(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeEffect> CreateAnimationAttributeEffect(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeEffectT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeEffectT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _flags = _o->flags;
+  auto _frame_start = _o->frame_start;
+  auto _rate_time = _o->rate_time;
+  return ss::ssfb2::CreateAnimationAttributeEffect(
+      _fbb,
+      _flags,
+      _frame_start,
+      _rate_time);
+}
+
+
 inline bool operator==(const AnimationAttributeDeformT &lhs, const AnimationAttributeDeformT &rhs) {
   return
-      (lhs.table_coordinate == rhs.table_coordinate);
+      (lhs.table_coordinate.size() == rhs.table_coordinate.size() && std::equal(lhs.table_coordinate.cbegin(), lhs.table_coordinate.cend(), rhs.table_coordinate.cbegin(), [](std::shared_ptr<ss::ssfb2::Vector2T> const &a, std::shared_ptr<ss::ssfb2::Vector2T> const &b) { return (a == b) || (a && b && *a == *b); }));
 }
 
 inline bool operator!=(const AnimationAttributeDeformT &lhs, const AnimationAttributeDeformT &rhs) {
     return !(lhs == rhs);
 }
 
+
+inline AnimationAttributeDeformT::AnimationAttributeDeformT(const AnimationAttributeDeformT &o) {
+  table_coordinate.reserve(o.table_coordinate.size());
+  for (const auto &table_coordinate_ : o.table_coordinate) { table_coordinate.emplace_back((table_coordinate_) ? new ss::ssfb2::Vector2T(*table_coordinate_) : nullptr); }
+}
+
+inline AnimationAttributeDeformT &AnimationAttributeDeformT::operator=(AnimationAttributeDeformT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(table_coordinate, o.table_coordinate);
+  return *this;
+}
 
 inline AnimationAttributeDeformT *AnimationAttributeDeform::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::make_unique<AnimationAttributeDeformT>();
@@ -6566,7 +7630,7 @@ inline AnimationAttributeDeformT *AnimationAttributeDeform::UnPack(const ::flatb
 inline void AnimationAttributeDeform::UnPackTo(AnimationAttributeDeformT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_coordinate[_i] = *_e->Get(_i); } } else { _o->table_coordinate.resize(0); } }
+  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->table_coordinate[_i].get(), _resolver); } else { _o->table_coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_coordinate.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<AnimationAttributeDeform> AnimationAttributeDeform::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeDeformT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -6577,7 +7641,7 @@ inline ::flatbuffers::Offset<AnimationAttributeDeform> CreateAnimationAttributeD
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeDeformT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _table_coordinate = _o->table_coordinate.size() ? _fbb.CreateVectorOfStructs(_o->table_coordinate) : 0;
+  auto _table_coordinate = _o->table_coordinate.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>> (_o->table_coordinate.size(), [](size_t i, _VectorArgs *__va) { return CreateVector2(*__va->__fbb, __va->__o->table_coordinate[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateAnimationAttributeDeform(
       _fbb,
       _table_coordinate);
@@ -6622,6 +7686,88 @@ inline ::flatbuffers::Offset<AnimationAttributeShader> CreateAnimationAttributeS
       _fbb,
       _id,
       _parameter);
+}
+
+
+inline bool operator==(const AnimationAttributeAudioT &lhs, const AnimationAttributeAudioT &rhs) {
+  return
+      (lhs.id == rhs.id) &&
+      (lhs.index == rhs.index) &&
+      (lhs.count_play == rhs.count_play);
+}
+
+inline bool operator!=(const AnimationAttributeAudioT &lhs, const AnimationAttributeAudioT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline AnimationAttributeAudioT *AnimationAttributeAudio::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<AnimationAttributeAudioT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void AnimationAttributeAudio::UnPackTo(AnimationAttributeAudioT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = id(); _o->id = _e; }
+  { auto _e = index(); _o->index = _e; }
+  { auto _e = count_play(); _o->count_play = _e; }
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeAudio> AnimationAttributeAudio::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeAudioT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateAnimationAttributeAudio(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeAudio> CreateAnimationAttributeAudio(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeAudioT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeAudioT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _id = _o->id;
+  auto _index = _o->index;
+  auto _count_play = _o->count_play;
+  return ss::ssfb2::CreateAnimationAttributeAudio(
+      _fbb,
+      _id,
+      _index,
+      _count_play);
+}
+
+
+inline bool operator==(const AnimationAttributeChangeTextureT &lhs, const AnimationAttributeChangeTextureT &rhs) {
+  return
+      (lhs.index_texture == rhs.index_texture);
+}
+
+inline bool operator!=(const AnimationAttributeChangeTextureT &lhs, const AnimationAttributeChangeTextureT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline AnimationAttributeChangeTextureT *AnimationAttributeChangeTexture::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<AnimationAttributeChangeTextureT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void AnimationAttributeChangeTexture::UnPackTo(AnimationAttributeChangeTextureT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = index_texture(); _o->index_texture = _e; }
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeChangeTexture> AnimationAttributeChangeTexture::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeChangeTextureT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateAnimationAttributeChangeTexture(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<AnimationAttributeChangeTexture> CreateAnimationAttributeChangeTexture(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeChangeTextureT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const AnimationAttributeChangeTextureT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _index_texture = _o->index_texture;
+  return ss::ssfb2::CreateAnimationAttributeChangeTexture(
+      _fbb,
+      _index_texture);
 }
 
 
@@ -6670,7 +7816,7 @@ inline DataModelPartsT::DataModelPartsT(const DataModelPartsT &o)
         feature(o.feature),
         count_mesh(o.count_mesh),
         mesh((o.mesh) ? new ss::ssfb2::BindMeshT(*o.mesh) : nullptr),
-        label_color((o.label_color) ? new ss::ssfb2::ColorLabel(*o.label_color) : nullptr),
+        label_color((o.label_color) ? new ss::ssfb2::ColorLabelT(*o.label_color) : nullptr),
         operation_blend_target(o.operation_blend_target),
         shape_collision(o.shape_collision),
         size_collision(o.size_collision),
@@ -6741,7 +7887,7 @@ inline void DataModelParts::UnPackTo(DataModelPartsT *_o, const ::flatbuffers::r
   { auto _e = feature(); _o->feature = _e; }
   { auto _e = count_mesh(); _o->count_mesh = _e; }
   { auto _e = mesh(); if (_e) { if(_o->mesh) { _e->UnPackTo(_o->mesh.get(), _resolver); } else { _o->mesh = std::shared_ptr<ss::ssfb2::BindMeshT>(_e->UnPack(_resolver)); } } else if (_o->mesh) { _o->mesh.reset(); } }
-  { auto _e = label_color(); if (_e) _o->label_color = std::shared_ptr<ss::ssfb2::ColorLabel>(new ss::ssfb2::ColorLabel(*_e)); }
+  { auto _e = label_color(); if (_e) { if(_o->label_color) { _e->UnPackTo(_o->label_color.get(), _resolver); } else { _o->label_color = std::shared_ptr<ss::ssfb2::ColorLabelT>(_e->UnPack(_resolver)); } } else if (_o->label_color) { _o->label_color.reset(); } }
   { auto _e = operation_blend_target(); _o->operation_blend_target = _e; }
   { auto _e = shape_collision(); _o->shape_collision = _e; }
   { auto _e = size_collision(); _o->size_collision = _e; }
@@ -6779,7 +7925,7 @@ inline ::flatbuffers::Offset<DataModelParts> CreateDataModelParts(::flatbuffers:
   auto _feature = _o->feature;
   auto _count_mesh = _o->count_mesh;
   auto _mesh = _o->mesh ? CreateBindMesh(_fbb, _o->mesh.get(), _rehasher) : 0;
-  auto _label_color = _o->label_color ? _o->label_color.get() : nullptr;
+  auto _label_color = _o->label_color ? CreateColorLabel(_fbb, _o->label_color.get(), _rehasher) : 0;
   auto _operation_blend_target = _o->operation_blend_target;
   auto _shape_collision = _o->shape_collision;
   auto _size_collision = _o->size_collision;
@@ -6889,7 +8035,7 @@ inline DataSetupT::DataSetupT(const DataSetupT &o)
       : flag_use0(o.flag_use0),
         flag_use1(o.flag_use1),
         status(o.status),
-        cell((o.cell) ? new ss::ssfb2::AnimationAttributeCell(*o.cell) : nullptr),
+        cell((o.cell) ? new ss::ssfb2::AnimationAttributeCellT(*o.cell) : nullptr),
         position_x(o.position_x),
         position_y(o.position_y),
         position_z(o.position_z),
@@ -6921,14 +8067,14 @@ inline DataSetupT::DataSetupT(const DataSetupT &o)
         radius_collision(o.radius_collision),
         user_data((o.user_data) ? new ss::ssfb2::AnimationAttributeUserDataT(*o.user_data) : nullptr),
         instance((o.instance) ? new ss::ssfb2::AnimationAttributeInstanceT(*o.instance) : nullptr),
-        effect((o.effect) ? new ss::ssfb2::AnimationAttributeEffect(*o.effect) : nullptr),
+        effect((o.effect) ? new ss::ssfb2::AnimationAttributeEffectT(*o.effect) : nullptr),
         deform((o.deform) ? new ss::ssfb2::AnimationAttributeDeformT(*o.deform) : nullptr),
         deform_tableindex(o.deform_tableindex),
         deform_countvertex(o.deform_countvertex),
         shader((o.shader) ? new ss::ssfb2::AnimationAttributeShaderT(*o.shader) : nullptr),
         signal((o.signal) ? new ss::ssfb2::AnimationAttributeSignalT(*o.signal) : nullptr),
-        audio((o.audio) ? new ss::ssfb2::AnimationAttributeAudio(*o.audio) : nullptr),
-        change_texture((o.change_texture) ? new ss::ssfb2::AnimationAttributeChangeTexture(*o.change_texture) : nullptr) {
+        audio((o.audio) ? new ss::ssfb2::AnimationAttributeAudioT(*o.audio) : nullptr),
+        change_texture((o.change_texture) ? new ss::ssfb2::AnimationAttributeChangeTextureT(*o.change_texture) : nullptr) {
 }
 
 inline DataSetupT &DataSetupT::operator=(DataSetupT o) FLATBUFFERS_NOEXCEPT {
@@ -6990,7 +8136,7 @@ inline void DataSetup::UnPackTo(DataSetupT *_o, const ::flatbuffers::resolver_fu
   { auto _e = flag_use0(); _o->flag_use0 = _e; }
   { auto _e = flag_use1(); _o->flag_use1 = _e; }
   { auto _e = status(); _o->status = _e; }
-  { auto _e = cell(); if (_e) _o->cell = std::shared_ptr<ss::ssfb2::AnimationAttributeCell>(new ss::ssfb2::AnimationAttributeCell(*_e)); }
+  { auto _e = cell(); if (_e) { if(_o->cell) { _e->UnPackTo(_o->cell.get(), _resolver); } else { _o->cell = std::shared_ptr<ss::ssfb2::AnimationAttributeCellT>(_e->UnPack(_resolver)); } } else if (_o->cell) { _o->cell.reset(); } }
   { auto _e = position_x(); _o->position_x = _e; }
   { auto _e = position_y(); _o->position_y = _e; }
   { auto _e = position_z(); _o->position_z = _e; }
@@ -7022,14 +8168,14 @@ inline void DataSetup::UnPackTo(DataSetupT *_o, const ::flatbuffers::resolver_fu
   { auto _e = radius_collision(); _o->radius_collision = _e; }
   { auto _e = user_data(); if (_e) { if(_o->user_data) { _e->UnPackTo(_o->user_data.get(), _resolver); } else { _o->user_data = std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>(_e->UnPack(_resolver)); } } else if (_o->user_data) { _o->user_data.reset(); } }
   { auto _e = instance(); if (_e) { if(_o->instance) { _e->UnPackTo(_o->instance.get(), _resolver); } else { _o->instance = std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>(_e->UnPack(_resolver)); } } else if (_o->instance) { _o->instance.reset(); } }
-  { auto _e = effect(); if (_e) _o->effect = std::shared_ptr<ss::ssfb2::AnimationAttributeEffect>(new ss::ssfb2::AnimationAttributeEffect(*_e)); }
+  { auto _e = effect(); if (_e) { if(_o->effect) { _e->UnPackTo(_o->effect.get(), _resolver); } else { _o->effect = std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT>(_e->UnPack(_resolver)); } } else if (_o->effect) { _o->effect.reset(); } }
   { auto _e = deform(); if (_e) { if(_o->deform) { _e->UnPackTo(_o->deform.get(), _resolver); } else { _o->deform = std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>(_e->UnPack(_resolver)); } } else if (_o->deform) { _o->deform.reset(); } }
   { auto _e = deform_tableindex(); if (_e) { _o->deform_tableindex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->deform_tableindex[_i] = _e->Get(_i); } } else { _o->deform_tableindex.resize(0); } }
   { auto _e = deform_countvertex(); _o->deform_countvertex = _e; }
   { auto _e = shader(); if (_e) { if(_o->shader) { _e->UnPackTo(_o->shader.get(), _resolver); } else { _o->shader = std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>(_e->UnPack(_resolver)); } } else if (_o->shader) { _o->shader.reset(); } }
   { auto _e = signal(); if (_e) { if(_o->signal) { _e->UnPackTo(_o->signal.get(), _resolver); } else { _o->signal = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>(_e->UnPack(_resolver)); } } else if (_o->signal) { _o->signal.reset(); } }
-  { auto _e = audio(); if (_e) _o->audio = std::shared_ptr<ss::ssfb2::AnimationAttributeAudio>(new ss::ssfb2::AnimationAttributeAudio(*_e)); }
-  { auto _e = change_texture(); if (_e) _o->change_texture = std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTexture>(new ss::ssfb2::AnimationAttributeChangeTexture(*_e)); }
+  { auto _e = audio(); if (_e) { if(_o->audio) { _e->UnPackTo(_o->audio.get(), _resolver); } else { _o->audio = std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT>(_e->UnPack(_resolver)); } } else if (_o->audio) { _o->audio.reset(); } }
+  { auto _e = change_texture(); if (_e) { if(_o->change_texture) { _e->UnPackTo(_o->change_texture.get(), _resolver); } else { _o->change_texture = std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT>(_e->UnPack(_resolver)); } } else if (_o->change_texture) { _o->change_texture.reset(); } }
 }
 
 inline ::flatbuffers::Offset<DataSetup> DataSetup::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const DataSetupT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -7043,7 +8189,7 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetup(::flatbuffers::FlatBuffe
   auto _flag_use0 = _o->flag_use0;
   auto _flag_use1 = _o->flag_use1;
   auto _status = _o->status;
-  auto _cell = _o->cell ? _o->cell.get() : nullptr;
+  auto _cell = _o->cell ? CreateAnimationAttributeCell(_fbb, _o->cell.get(), _rehasher) : 0;
   auto _position_x = _o->position_x;
   auto _position_y = _o->position_y;
   auto _position_z = _o->position_z;
@@ -7075,14 +8221,14 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetup(::flatbuffers::FlatBuffe
   auto _radius_collision = _o->radius_collision;
   auto _user_data = _o->user_data ? CreateAnimationAttributeUserData(_fbb, _o->user_data.get(), _rehasher) : 0;
   auto _instance = _o->instance ? CreateAnimationAttributeInstance(_fbb, _o->instance.get(), _rehasher) : 0;
-  auto _effect = _o->effect ? _o->effect.get() : nullptr;
+  auto _effect = _o->effect ? CreateAnimationAttributeEffect(_fbb, _o->effect.get(), _rehasher) : 0;
   auto _deform = _o->deform ? CreateAnimationAttributeDeform(_fbb, _o->deform.get(), _rehasher) : 0;
   auto _deform_tableindex = _o->deform_tableindex.size() ? _fbb.CreateVector(_o->deform_tableindex) : 0;
   auto _deform_countvertex = _o->deform_countvertex;
   auto _shader = _o->shader ? CreateAnimationAttributeShader(_fbb, _o->shader.get(), _rehasher) : 0;
   auto _signal = _o->signal ? CreateAnimationAttributeSignal(_fbb, _o->signal.get(), _rehasher) : 0;
-  auto _audio = _o->audio ? _o->audio.get() : nullptr;
-  auto _change_texture = _o->change_texture ? _o->change_texture.get() : nullptr;
+  auto _audio = _o->audio ? CreateAnimationAttributeAudio(_fbb, _o->audio.get(), _rehasher) : 0;
+  auto _change_texture = _o->change_texture ? CreateAnimationAttributeChangeTexture(_fbb, _o->change_texture.get(), _rehasher) : 0;
   return ss::ssfb2::CreateDataSetup(
       _fbb,
       _flag_use0,
@@ -7128,6 +8274,196 @@ inline ::flatbuffers::Offset<DataSetup> CreateDataSetup(::flatbuffers::FlatBuffe
       _signal,
       _audio,
       _change_texture);
+}
+
+
+inline bool operator==(const RangeFloatT &lhs, const RangeFloatT &rhs) {
+  return
+      (lhs.main == rhs.main) &&
+      (lhs.sub == rhs.sub);
+}
+
+inline bool operator!=(const RangeFloatT &lhs, const RangeFloatT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline RangeFloatT *RangeFloat::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<RangeFloatT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void RangeFloat::UnPackTo(RangeFloatT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = main(); _o->main = _e; }
+  { auto _e = sub(); _o->sub = _e; }
+}
+
+inline ::flatbuffers::Offset<RangeFloat> RangeFloat::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RangeFloatT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRangeFloat(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<RangeFloat> CreateRangeFloat(::flatbuffers::FlatBufferBuilder &_fbb, const RangeFloatT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const RangeFloatT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _main = _o->main;
+  auto _sub = _o->sub;
+  return ss::ssfb2::CreateRangeFloat(
+      _fbb,
+      _main,
+      _sub);
+}
+
+
+inline bool operator==(const RangeVector2T &lhs, const RangeVector2T &rhs) {
+  return
+      ((lhs.main == rhs.main) || (lhs.main && rhs.main && *lhs.main == *rhs.main)) &&
+      ((lhs.sub == rhs.sub) || (lhs.sub && rhs.sub && *lhs.sub == *rhs.sub));
+}
+
+inline bool operator!=(const RangeVector2T &lhs, const RangeVector2T &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline RangeVector2T::RangeVector2T(const RangeVector2T &o)
+      : main((o.main) ? new ss::ssfb2::Vector2T(*o.main) : nullptr),
+        sub((o.sub) ? new ss::ssfb2::Vector2T(*o.sub) : nullptr) {
+}
+
+inline RangeVector2T &RangeVector2T::operator=(RangeVector2T o) FLATBUFFERS_NOEXCEPT {
+  std::swap(main, o.main);
+  std::swap(sub, o.sub);
+  return *this;
+}
+
+inline RangeVector2T *RangeVector2::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<RangeVector2T>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void RangeVector2::UnPackTo(RangeVector2T *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = main(); if (_e) { if(_o->main) { _e->UnPackTo(_o->main.get(), _resolver); } else { _o->main = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->main) { _o->main.reset(); } }
+  { auto _e = sub(); if (_e) { if(_o->sub) { _e->UnPackTo(_o->sub.get(), _resolver); } else { _o->sub = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->sub) { _o->sub.reset(); } }
+}
+
+inline ::flatbuffers::Offset<RangeVector2> RangeVector2::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RangeVector2T* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRangeVector2(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<RangeVector2> CreateRangeVector2(::flatbuffers::FlatBufferBuilder &_fbb, const RangeVector2T *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const RangeVector2T* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _main = _o->main ? CreateVector2(_fbb, _o->main.get(), _rehasher) : 0;
+  auto _sub = _o->sub ? CreateVector2(_fbb, _o->sub.get(), _rehasher) : 0;
+  return ss::ssfb2::CreateRangeVector2(
+      _fbb,
+      _main,
+      _sub);
+}
+
+
+inline bool operator==(const RangeColorT &lhs, const RangeColorT &rhs) {
+  return
+      ((lhs.main == rhs.main) || (lhs.main && rhs.main && *lhs.main == *rhs.main)) &&
+      ((lhs.sub == rhs.sub) || (lhs.sub && rhs.sub && *lhs.sub == *rhs.sub));
+}
+
+inline bool operator!=(const RangeColorT &lhs, const RangeColorT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline RangeColorT::RangeColorT(const RangeColorT &o)
+      : main((o.main) ? new ss::ssfb2::ColorT(*o.main) : nullptr),
+        sub((o.sub) ? new ss::ssfb2::ColorT(*o.sub) : nullptr) {
+}
+
+inline RangeColorT &RangeColorT::operator=(RangeColorT o) FLATBUFFERS_NOEXCEPT {
+  std::swap(main, o.main);
+  std::swap(sub, o.sub);
+  return *this;
+}
+
+inline RangeColorT *RangeColor::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<RangeColorT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void RangeColor::UnPackTo(RangeColorT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = main(); if (_e) { if(_o->main) { _e->UnPackTo(_o->main.get(), _resolver); } else { _o->main = std::shared_ptr<ss::ssfb2::ColorT>(_e->UnPack(_resolver)); } } else if (_o->main) { _o->main.reset(); } }
+  { auto _e = sub(); if (_e) { if(_o->sub) { _e->UnPackTo(_o->sub.get(), _resolver); } else { _o->sub = std::shared_ptr<ss::ssfb2::ColorT>(_e->UnPack(_resolver)); } } else if (_o->sub) { _o->sub.reset(); } }
+}
+
+inline ::flatbuffers::Offset<RangeColor> RangeColor::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const RangeColorT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateRangeColor(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<RangeColor> CreateRangeColor(::flatbuffers::FlatBufferBuilder &_fbb, const RangeColorT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const RangeColorT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _main = _o->main ? CreateColor(_fbb, _o->main.get(), _rehasher) : 0;
+  auto _sub = _o->sub ? CreateColor(_fbb, _o->sub.get(), _rehasher) : 0;
+  return ss::ssfb2::CreateRangeColor(
+      _fbb,
+      _main,
+      _sub);
+}
+
+
+inline bool operator==(const PatternEmitT &lhs, const PatternEmitT &rhs) {
+  return
+      (lhs.index_generate == rhs.index_generate) &&
+      (lhs.duration == rhs.duration) &&
+      (lhs.cycle == rhs.cycle);
+}
+
+inline bool operator!=(const PatternEmitT &lhs, const PatternEmitT &rhs) {
+    return !(lhs == rhs);
+}
+
+
+inline PatternEmitT *PatternEmit::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::make_unique<PatternEmitT>();
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void PatternEmit::UnPackTo(PatternEmitT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = index_generate(); _o->index_generate = _e; }
+  { auto _e = duration(); _o->duration = _e; }
+  { auto _e = cycle(); _o->cycle = _e; }
+}
+
+inline ::flatbuffers::Offset<PatternEmit> PatternEmit::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const PatternEmitT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  return CreatePatternEmit(_fbb, _o, _rehasher);
+}
+
+inline ::flatbuffers::Offset<PatternEmit> CreatePatternEmit(::flatbuffers::FlatBufferBuilder &_fbb, const PatternEmitT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const PatternEmitT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _index_generate = _o->index_generate;
+  auto _duration = _o->duration;
+  auto _cycle = _o->cycle;
+  return ss::ssfb2::CreatePatternEmit(
+      _fbb,
+      _index_generate,
+      _duration,
+      _cycle);
 }
 
 
@@ -7304,8 +8640,8 @@ inline bool operator!=(const LibraryDataFontGryphBitmapT &lhs, const LibraryData
 
 inline LibraryDataFontGryphBitmapT::LibraryDataFontGryphBitmapT(const LibraryDataFontGryphBitmapT &o)
       : id(o.id),
-        atlas((o.atlas) ? new ss::ssfb2::Rect(*o.atlas) : nullptr),
-        offset((o.offset) ? new ss::ssfb2::Vector2(*o.offset) : nullptr),
+        atlas((o.atlas) ? new ss::ssfb2::RectT(*o.atlas) : nullptr),
+        offset((o.offset) ? new ss::ssfb2::Vector2T(*o.offset) : nullptr),
         width_advance(o.width_advance),
         text(o.text),
         page(o.page),
@@ -7333,8 +8669,8 @@ inline void LibraryDataFontGryphBitmap::UnPackTo(LibraryDataFontGryphBitmapT *_o
   (void)_o;
   (void)_resolver;
   { auto _e = id(); _o->id = _e; }
-  { auto _e = atlas(); if (_e) _o->atlas = std::shared_ptr<ss::ssfb2::Rect>(new ss::ssfb2::Rect(*_e)); }
-  { auto _e = offset(); if (_e) _o->offset = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = atlas(); if (_e) { if(_o->atlas) { _e->UnPackTo(_o->atlas.get(), _resolver); } else { _o->atlas = std::shared_ptr<ss::ssfb2::RectT>(_e->UnPack(_resolver)); } } else if (_o->atlas) { _o->atlas.reset(); } }
+  { auto _e = offset(); if (_e) { if(_o->offset) { _e->UnPackTo(_o->offset.get(), _resolver); } else { _o->offset = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->offset) { _o->offset.reset(); } }
   { auto _e = width_advance(); _o->width_advance = _e; }
   { auto _e = text(); if (_e) _o->text = _e->str(); }
   { auto _e = page(); _o->page = _e; }
@@ -7350,8 +8686,8 @@ inline ::flatbuffers::Offset<LibraryDataFontGryphBitmap> CreateLibraryDataFontGr
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const LibraryDataFontGryphBitmapT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _id = _o->id;
-  auto _atlas = _o->atlas ? _o->atlas.get() : nullptr;
-  auto _offset = _o->offset ? _o->offset.get() : nullptr;
+  auto _atlas = _o->atlas ? CreateRect(_fbb, _o->atlas.get(), _rehasher) : 0;
+  auto _offset = _o->offset ? CreateVector2(_fbb, _o->offset.get(), _rehasher) : 0;
   auto _width_advance = _o->width_advance;
   auto _text = _o->text.empty() ? 0 : _fbb.CreateString(_o->text);
   auto _page = _o->page;

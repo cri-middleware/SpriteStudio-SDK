@@ -590,9 +590,9 @@ inline ::flatbuffers::Offset<CodeValueContainer> CreateCodeValueContainerDirect(
 struct ContainerStatusT : public ::flatbuffers::NativeTable {
   typedef ContainerStatus TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<int32_t> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<int32_t> table_value{};
+  std::vector<float> table_accessory{};
   ContainerStatusT() = default;
   ContainerStatusT(const ContainerStatusT &o);
   ContainerStatusT(ContainerStatusT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -605,9 +605,9 @@ struct ContainerStatus FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -615,34 +615,34 @@ struct ContainerStatus FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<int32_t> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<int32_t> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<int32_t> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<int32_t> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<int32_t> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<int32_t> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerStatusT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -657,14 +657,14 @@ struct ContainerStatusBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerStatus::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerStatus::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerStatus::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> tabel_value) {
-    fbb_.AddOffset(ContainerStatus::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_value) {
+    fbb_.AddOffset(ContainerStatus::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerStatus::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerStatus::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerStatusBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -680,13 +680,13 @@ struct ContainerStatusBuilder {
 inline ::flatbuffers::Offset<ContainerStatus> CreateContainerStatus(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerStatusBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -699,18 +699,18 @@ struct ContainerStatus::Traits {
 inline ::flatbuffers::Offset<ContainerStatus> CreateContainerStatusDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<int32_t> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<int32_t>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<int32_t> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<int32_t>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerStatus(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerStatus> CreateContainerStatus(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerStatusT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -718,9 +718,9 @@ inline ::flatbuffers::Offset<ContainerStatus> CreateContainerStatusDirect(
 struct ContainerCellT : public ::flatbuffers::NativeTable {
   typedef ContainerCell TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<ss::ssfb2::AnimationAttributeCell> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeCellT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerCellT() = default;
   ContainerCellT(const ContainerCellT &o);
   ContainerCellT(ContainerCellT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -733,9 +733,9 @@ struct ContainerCell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -743,34 +743,35 @@ struct ContainerCell FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeCell *> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeCell *> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeCell *> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeCell *> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerCellT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -785,14 +786,14 @@ struct ContainerCellBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerCell::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerCell::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerCell::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeCell *>> tabel_value) {
-    fbb_.AddOffset(ContainerCell::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>>> table_value) {
+    fbb_.AddOffset(ContainerCell::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerCell::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerCell::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerCellBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -808,13 +809,13 @@ struct ContainerCellBuilder {
 inline ::flatbuffers::Offset<ContainerCell> CreateContainerCell(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeCell *>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerCellBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -827,18 +828,18 @@ struct ContainerCell::Traits {
 inline ::flatbuffers::Offset<ContainerCell> CreateContainerCellDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<ss::ssfb2::AnimationAttributeCell> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVectorOfStructs<ss::ssfb2::AnimationAttributeCell>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerCell(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerCell> CreateContainerCell(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerCellT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -846,9 +847,9 @@ inline ::flatbuffers::Offset<ContainerCell> CreateContainerCellDirect(
 struct ContainerIntT : public ::flatbuffers::NativeTable {
   typedef ContainerInt TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<int32_t> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<int32_t> table_value{};
+  std::vector<float> table_accessory{};
   ContainerIntT() = default;
   ContainerIntT(const ContainerIntT &o);
   ContainerIntT(ContainerIntT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -861,9 +862,9 @@ struct ContainerInt FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -871,34 +872,34 @@ struct ContainerInt FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<int32_t> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<int32_t> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<int32_t> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<int32_t> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<int32_t> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<int32_t> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerIntT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -913,14 +914,14 @@ struct ContainerIntBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerInt::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerInt::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerInt::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> tabel_value) {
-    fbb_.AddOffset(ContainerInt::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_value) {
+    fbb_.AddOffset(ContainerInt::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerInt::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerInt::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerIntBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -936,13 +937,13 @@ struct ContainerIntBuilder {
 inline ::flatbuffers::Offset<ContainerInt> CreateContainerInt(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerIntBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -955,18 +956,18 @@ struct ContainerInt::Traits {
 inline ::flatbuffers::Offset<ContainerInt> CreateContainerIntDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<int32_t> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<int32_t>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<int32_t> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<int32_t>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerInt(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerInt> CreateContainerInt(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerIntT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -974,9 +975,9 @@ inline ::flatbuffers::Offset<ContainerInt> CreateContainerIntDirect(
 struct ContainerFloatT : public ::flatbuffers::NativeTable {
   typedef ContainerFloat TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<float> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<float> table_value{};
+  std::vector<float> table_accessory{};
   ContainerFloatT() = default;
   ContainerFloatT(const ContainerFloatT &o);
   ContainerFloatT(ContainerFloatT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -989,9 +990,9 @@ struct ContainerFloat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -999,34 +1000,34 @@ struct ContainerFloat FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<float> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<float> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerFloatT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1041,14 +1042,14 @@ struct ContainerFloatBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerFloat::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerFloat::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerFloat::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_value) {
-    fbb_.AddOffset(ContainerFloat::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_value) {
+    fbb_.AddOffset(ContainerFloat::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerFloat::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerFloat::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerFloatBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1064,13 +1065,13 @@ struct ContainerFloatBuilder {
 inline ::flatbuffers::Offset<ContainerFloat> CreateContainerFloat(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerFloatBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1083,18 +1084,18 @@ struct ContainerFloat::Traits {
 inline ::flatbuffers::Offset<ContainerFloat> CreateContainerFloatDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<float> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<float>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<float> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<float>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerFloat(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerFloat> CreateContainerFloat(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerFloatT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1102,9 +1103,9 @@ inline ::flatbuffers::Offset<ContainerFloat> CreateContainerFloatDirect(
 struct ContainerVector2T : public ::flatbuffers::NativeTable {
   typedef ContainerVector2 TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<ss::ssfb2::Vector2> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::Vector2T>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerVector2T() = default;
   ContainerVector2T(const ContainerVector2T &o);
   ContainerVector2T(ContainerVector2T&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1117,9 +1118,9 @@ struct ContainerVector2 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1127,34 +1128,35 @@ struct ContainerVector2 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Vector2 *> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerVector2T *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1169,14 +1171,14 @@ struct ContainerVector2Builder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerVector2::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerVector2::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerVector2::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> tabel_value) {
-    fbb_.AddOffset(ContainerVector2::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_value) {
+    fbb_.AddOffset(ContainerVector2::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerVector2::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerVector2::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerVector2Builder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1192,13 +1194,13 @@ struct ContainerVector2Builder {
 inline ::flatbuffers::Offset<ContainerVector2> CreateContainerVector2(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector2 *>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector2>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerVector2Builder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1211,18 +1213,18 @@ struct ContainerVector2::Traits {
 inline ::flatbuffers::Offset<ContainerVector2> CreateContainerVector2Direct(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<ss::ssfb2::Vector2> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVectorOfStructs<ss::ssfb2::Vector2>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Vector2>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerVector2(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerVector2> CreateContainerVector2(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerVector2T *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1230,9 +1232,9 @@ inline ::flatbuffers::Offset<ContainerVector2> CreateContainerVector2Direct(
 struct ContainerVector3T : public ::flatbuffers::NativeTable {
   typedef ContainerVector3 TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<ss::ssfb2::Vector3> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::Vector3T>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerVector3T() = default;
   ContainerVector3T(const ContainerVector3T &o);
   ContainerVector3T(ContainerVector3T&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1245,9 +1247,9 @@ struct ContainerVector3 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1255,34 +1257,35 @@ struct ContainerVector3 FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::Vector3 *> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::Vector3 *> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector3>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector3>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::Vector3 *> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::Vector3 *> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector3>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector3>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerVector3T *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1297,14 +1300,14 @@ struct ContainerVector3Builder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerVector3::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerVector3::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerVector3::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector3 *>> tabel_value) {
-    fbb_.AddOffset(ContainerVector3::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector3>>> table_value) {
+    fbb_.AddOffset(ContainerVector3::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerVector3::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerVector3::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerVector3Builder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1320,13 +1323,13 @@ struct ContainerVector3Builder {
 inline ::flatbuffers::Offset<ContainerVector3> CreateContainerVector3(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::Vector3 *>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::Vector3>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerVector3Builder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1339,18 +1342,18 @@ struct ContainerVector3::Traits {
 inline ::flatbuffers::Offset<ContainerVector3> CreateContainerVector3Direct(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<ss::ssfb2::Vector3> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVectorOfStructs<ss::ssfb2::Vector3>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::Vector3>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector3>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerVector3(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerVector3> CreateContainerVector3(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerVector3T *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1358,9 +1361,9 @@ inline ::flatbuffers::Offset<ContainerVector3> CreateContainerVector3Direct(
 struct ContainerPartsColorT : public ::flatbuffers::NativeTable {
   typedef ContainerPartsColor TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerPartsColorT() = default;
   ContainerPartsColorT(const ContainerPartsColorT &o);
   ContainerPartsColorT(ContainerPartsColorT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1373,9 +1376,9 @@ struct ContainerPartsColor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1383,35 +1386,35 @@ struct ContainerPartsColor FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Tabl
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerPartsColorT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1426,14 +1429,14 @@ struct ContainerPartsColorBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerPartsColor::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerPartsColor::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerPartsColor::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>>> tabel_value) {
-    fbb_.AddOffset(ContainerPartsColor::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>>> table_value) {
+    fbb_.AddOffset(ContainerPartsColor::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerPartsColor::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerPartsColor::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerPartsColorBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1449,13 +1452,13 @@ struct ContainerPartsColorBuilder {
 inline ::flatbuffers::Offset<ContainerPartsColor> CreateContainerPartsColor(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerPartsColorBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1468,18 +1471,18 @@ struct ContainerPartsColor::Traits {
 inline ::flatbuffers::Offset<ContainerPartsColor> CreateContainerPartsColorDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerPartsColor(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerPartsColor> CreateContainerPartsColor(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerPartsColorT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1487,9 +1490,9 @@ inline ::flatbuffers::Offset<ContainerPartsColor> CreateContainerPartsColorDirec
 struct ContainerVertexCorrectionT : public ::flatbuffers::NativeTable {
   typedef ContainerVertexCorrection TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerVertexCorrectionT() = default;
   ContainerVertexCorrectionT(const ContainerVertexCorrectionT &o);
   ContainerVertexCorrectionT(ContainerVertexCorrectionT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1502,9 +1505,9 @@ struct ContainerVertexCorrection FLATBUFFERS_FINAL_CLASS : private ::flatbuffers
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1512,35 +1515,35 @@ struct ContainerVertexCorrection FLATBUFFERS_FINAL_CLASS : private ::flatbuffers
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerVertexCorrectionT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1555,14 +1558,14 @@ struct ContainerVertexCorrectionBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerVertexCorrection::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerVertexCorrection::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerVertexCorrection::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>>> tabel_value) {
-    fbb_.AddOffset(ContainerVertexCorrection::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>>> table_value) {
+    fbb_.AddOffset(ContainerVertexCorrection::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerVertexCorrection::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerVertexCorrection::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerVertexCorrectionBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1578,13 +1581,13 @@ struct ContainerVertexCorrectionBuilder {
 inline ::flatbuffers::Offset<ContainerVertexCorrection> CreateContainerVertexCorrection(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerVertexCorrectionBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1597,18 +1600,18 @@ struct ContainerVertexCorrection::Traits {
 inline ::flatbuffers::Offset<ContainerVertexCorrection> CreateContainerVertexCorrectionDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerVertexCorrection(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerVertexCorrection> CreateContainerVertexCorrection(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerVertexCorrectionT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1616,9 +1619,9 @@ inline ::flatbuffers::Offset<ContainerVertexCorrection> CreateContainerVertexCor
 struct ContainerSkewT : public ::flatbuffers::NativeTable {
   typedef ContainerSkew TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerSkewT() = default;
   ContainerSkewT(const ContainerSkewT &o);
   ContainerSkewT(ContainerSkewT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1631,9 +1634,9 @@ struct ContainerSkew FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1641,35 +1644,35 @@ struct ContainerSkew FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerSkewT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1684,14 +1687,14 @@ struct ContainerSkewBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerSkew::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerSkew::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerSkew::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>>> tabel_value) {
-    fbb_.AddOffset(ContainerSkew::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>>> table_value) {
+    fbb_.AddOffset(ContainerSkew::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerSkew::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerSkew::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerSkewBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1707,13 +1710,13 @@ struct ContainerSkewBuilder {
 inline ::flatbuffers::Offset<ContainerSkew> CreateContainerSkew(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerSkewBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1726,18 +1729,18 @@ struct ContainerSkew::Traits {
 inline ::flatbuffers::Offset<ContainerSkew> CreateContainerSkewDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerSkew(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerSkew> CreateContainerSkew(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerSkewT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1745,9 +1748,9 @@ inline ::flatbuffers::Offset<ContainerSkew> CreateContainerSkewDirect(
 struct ContainerUserDataT : public ::flatbuffers::NativeTable {
   typedef ContainerUserData TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerUserDataT() = default;
   ContainerUserDataT(const ContainerUserDataT &o);
   ContainerUserDataT(ContainerUserDataT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1760,9 +1763,9 @@ struct ContainerUserData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1770,35 +1773,35 @@ struct ContainerUserData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerUserDataT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1813,14 +1816,14 @@ struct ContainerUserDataBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerUserData::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerUserData::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerUserData::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>>> tabel_value) {
-    fbb_.AddOffset(ContainerUserData::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>>> table_value) {
+    fbb_.AddOffset(ContainerUserData::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerUserData::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerUserData::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerUserDataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1836,13 +1839,13 @@ struct ContainerUserDataBuilder {
 inline ::flatbuffers::Offset<ContainerUserData> CreateContainerUserData(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerUserDataBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1855,18 +1858,18 @@ struct ContainerUserData::Traits {
 inline ::flatbuffers::Offset<ContainerUserData> CreateContainerUserDataDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerUserData(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerUserData> CreateContainerUserData(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerUserDataT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -1874,9 +1877,9 @@ inline ::flatbuffers::Offset<ContainerUserData> CreateContainerUserDataDirect(
 struct ContainerInstanceT : public ::flatbuffers::NativeTable {
   typedef ContainerInstance TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerInstanceT() = default;
   ContainerInstanceT(const ContainerInstanceT &o);
   ContainerInstanceT(ContainerInstanceT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -1889,9 +1892,9 @@ struct ContainerInstance FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -1899,35 +1902,35 @@ struct ContainerInstance FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerInstanceT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -1942,14 +1945,14 @@ struct ContainerInstanceBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerInstance::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerInstance::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerInstance::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>>> tabel_value) {
-    fbb_.AddOffset(ContainerInstance::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>>> table_value) {
+    fbb_.AddOffset(ContainerInstance::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerInstance::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerInstance::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerInstanceBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -1965,13 +1968,13 @@ struct ContainerInstanceBuilder {
 inline ::flatbuffers::Offset<ContainerInstance> CreateContainerInstance(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerInstanceBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -1984,18 +1987,18 @@ struct ContainerInstance::Traits {
 inline ::flatbuffers::Offset<ContainerInstance> CreateContainerInstanceDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerInstance(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerInstance> CreateContainerInstance(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerInstanceT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2003,9 +2006,9 @@ inline ::flatbuffers::Offset<ContainerInstance> CreateContainerInstanceDirect(
 struct ContainerEffectT : public ::flatbuffers::NativeTable {
   typedef ContainerEffect TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<ss::ssfb2::AnimationAttributeEffect> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerEffectT() = default;
   ContainerEffectT(const ContainerEffectT &o);
   ContainerEffectT(ContainerEffectT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -2018,9 +2021,9 @@ struct ContainerEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -2028,34 +2031,35 @@ struct ContainerEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeEffect *> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeEffect *> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeEffect *> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeEffect *> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerEffectT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2070,14 +2074,14 @@ struct ContainerEffectBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerEffect::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerEffect::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerEffect::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeEffect *>> tabel_value) {
-    fbb_.AddOffset(ContainerEffect::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>>> table_value) {
+    fbb_.AddOffset(ContainerEffect::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerEffect::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerEffect::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerEffectBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2093,13 +2097,13 @@ struct ContainerEffectBuilder {
 inline ::flatbuffers::Offset<ContainerEffect> CreateContainerEffect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeEffect *>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerEffectBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -2112,18 +2116,18 @@ struct ContainerEffect::Traits {
 inline ::flatbuffers::Offset<ContainerEffect> CreateContainerEffectDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<ss::ssfb2::AnimationAttributeEffect> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVectorOfStructs<ss::ssfb2::AnimationAttributeEffect>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerEffect(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerEffect> CreateContainerEffect(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerEffectT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2131,11 +2135,11 @@ inline ::flatbuffers::Offset<ContainerEffect> CreateContainerEffectDirect(
 struct ContainerDeformT : public ::flatbuffers::NativeTable {
   typedef ContainerDeform TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>> table_value{};
+  std::vector<float> table_accessory{};
   int32_t count_vertex_mesh = 0;
-  std::vector<int32_t> tabel_index_vertex{};
+  std::vector<int32_t> table_index_vertex{};
   ContainerDeformT() = default;
   ContainerDeformT(const ContainerDeformT &o);
   ContainerDeformT(ContainerDeformT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -2148,11 +2152,11 @@ struct ContainerDeform FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10,
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10,
     VT_COUNT_VERTEX_MESH = 12,
-    VT_TABEL_INDEX_VERTEX = 14
+    VT_TABLE_INDEX_VERTEX = 14
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -2160,23 +2164,23 @@ struct ContainerDeform FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   int32_t count_vertex_mesh() const {
     return GetField<int32_t>(VT_COUNT_VERTEX_MESH, 0);
@@ -2184,26 +2188,26 @@ struct ContainerDeform FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_count_vertex_mesh(int32_t _count_vertex_mesh = 0) {
     return SetField<int32_t>(VT_COUNT_VERTEX_MESH, _count_vertex_mesh, 0);
   }
-  const ::flatbuffers::Vector<int32_t> *tabel_index_vertex() const {
-    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABEL_INDEX_VERTEX);
+  const ::flatbuffers::Vector<int32_t> *table_index_vertex() const {
+    return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABLE_INDEX_VERTEX);
   }
-  ::flatbuffers::Vector<int32_t> *mutable_tabel_index_vertex() {
-    return GetPointer<::flatbuffers::Vector<int32_t> *>(VT_TABEL_INDEX_VERTEX);
+  ::flatbuffers::Vector<int32_t> *mutable_table_index_vertex() {
+    return GetPointer<::flatbuffers::Vector<int32_t> *>(VT_TABLE_INDEX_VERTEX);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            VerifyField<int32_t>(verifier, VT_COUNT_VERTEX_MESH, 4) &&
-           VerifyOffset(verifier, VT_TABEL_INDEX_VERTEX) &&
-           verifier.VerifyVector(tabel_index_vertex()) &&
+           VerifyOffset(verifier, VT_TABLE_INDEX_VERTEX) &&
+           verifier.VerifyVector(table_index_vertex()) &&
            verifier.EndTable();
   }
   ContainerDeformT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2218,20 +2222,20 @@ struct ContainerDeformBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerDeform::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerDeform::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerDeform::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>>> tabel_value) {
-    fbb_.AddOffset(ContainerDeform::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>>> table_value) {
+    fbb_.AddOffset(ContainerDeform::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerDeform::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerDeform::VT_TABLE_ACCESSORY, table_accessory);
   }
   void add_count_vertex_mesh(int32_t count_vertex_mesh) {
     fbb_.AddElement<int32_t>(ContainerDeform::VT_COUNT_VERTEX_MESH, count_vertex_mesh, 0);
   }
-  void add_tabel_index_vertex(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> tabel_index_vertex) {
-    fbb_.AddOffset(ContainerDeform::VT_TABEL_INDEX_VERTEX, tabel_index_vertex);
+  void add_table_index_vertex(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_index_vertex) {
+    fbb_.AddOffset(ContainerDeform::VT_TABLE_INDEX_VERTEX, table_index_vertex);
   }
   explicit ContainerDeformBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2247,17 +2251,17 @@ struct ContainerDeformBuilder {
 inline ::flatbuffers::Offset<ContainerDeform> CreateContainerDeform(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0,
     int32_t count_vertex_mesh = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> tabel_index_vertex = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_index_vertex = 0) {
   ContainerDeformBuilder builder_(_fbb);
-  builder_.add_tabel_index_vertex(tabel_index_vertex);
+  builder_.add_table_index_vertex(table_index_vertex);
   builder_.add_count_vertex_mesh(count_vertex_mesh);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -2270,23 +2274,23 @@ struct ContainerDeform::Traits {
 inline ::flatbuffers::Offset<ContainerDeform> CreateContainerDeformDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr,
     int32_t count_vertex_mesh = 0,
-    const std::vector<int32_t> *tabel_index_vertex = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
-  auto tabel_index_vertex__ = tabel_index_vertex ? _fbb.CreateVector<int32_t>(*tabel_index_vertex) : 0;
+    const std::vector<int32_t> *table_index_vertex = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
+  auto table_index_vertex__ = table_index_vertex ? _fbb.CreateVector<int32_t>(*table_index_vertex) : 0;
   return ss::ssfb2::CreateContainerDeform(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__,
+      table_code_value__,
+      table_value__,
+      table_accessory__,
       count_vertex_mesh,
-      tabel_index_vertex__);
+      table_index_vertex__);
 }
 
 ::flatbuffers::Offset<ContainerDeform> CreateContainerDeform(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerDeformT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2294,9 +2298,9 @@ inline ::flatbuffers::Offset<ContainerDeform> CreateContainerDeformDirect(
 struct ContainerShaderT : public ::flatbuffers::NativeTable {
   typedef ContainerShader TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerShaderT() = default;
   ContainerShaderT(const ContainerShaderT &o);
   ContainerShaderT(ContainerShaderT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -2309,9 +2313,9 @@ struct ContainerShader FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -2319,35 +2323,35 @@ struct ContainerShader FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerShaderT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2362,14 +2366,14 @@ struct ContainerShaderBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerShader::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerShader::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerShader::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>>> tabel_value) {
-    fbb_.AddOffset(ContainerShader::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>>> table_value) {
+    fbb_.AddOffset(ContainerShader::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerShader::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerShader::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerShaderBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2385,13 +2389,13 @@ struct ContainerShaderBuilder {
 inline ::flatbuffers::Offset<ContainerShader> CreateContainerShader(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerShaderBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -2404,18 +2408,18 @@ struct ContainerShader::Traits {
 inline ::flatbuffers::Offset<ContainerShader> CreateContainerShaderDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerShader(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerShader> CreateContainerShader(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerShaderT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2423,9 +2427,9 @@ inline ::flatbuffers::Offset<ContainerShader> CreateContainerShaderDirect(
 struct ContainerSignalT : public ::flatbuffers::NativeTable {
   typedef ContainerSignal TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerSignalT() = default;
   ContainerSignalT(const ContainerSignalT &o);
   ContainerSignalT(ContainerSignalT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -2438,9 +2442,9 @@ struct ContainerSignal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -2448,35 +2452,35 @@ struct ContainerSignal FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           verifier.VerifyVectorOfTables(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerSignalT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2491,14 +2495,14 @@ struct ContainerSignalBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerSignal::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerSignal::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerSignal::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>>> tabel_value) {
-    fbb_.AddOffset(ContainerSignal::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>>> table_value) {
+    fbb_.AddOffset(ContainerSignal::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerSignal::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerSignal::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerSignalBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2514,13 +2518,13 @@ struct ContainerSignalBuilder {
 inline ::flatbuffers::Offset<ContainerSignal> CreateContainerSignal(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerSignalBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -2533,18 +2537,18 @@ struct ContainerSignal::Traits {
 inline ::flatbuffers::Offset<ContainerSignal> CreateContainerSignalDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerSignal(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerSignal> CreateContainerSignal(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerSignalT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2552,9 +2556,9 @@ inline ::flatbuffers::Offset<ContainerSignal> CreateContainerSignalDirect(
 struct ContainerAudioT : public ::flatbuffers::NativeTable {
   typedef ContainerAudio TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<ss::ssfb2::AnimationAttributeAudio> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerAudioT() = default;
   ContainerAudioT(const ContainerAudioT &o);
   ContainerAudioT(ContainerAudioT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -2567,9 +2571,9 @@ struct ContainerAudio FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -2577,34 +2581,35 @@ struct ContainerAudio FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeAudio *> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeAudio *> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeAudio *> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeAudio *> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerAudioT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2619,14 +2624,14 @@ struct ContainerAudioBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerAudio::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerAudio::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerAudio::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeAudio *>> tabel_value) {
-    fbb_.AddOffset(ContainerAudio::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>>> table_value) {
+    fbb_.AddOffset(ContainerAudio::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerAudio::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerAudio::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerAudioBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2642,13 +2647,13 @@ struct ContainerAudioBuilder {
 inline ::flatbuffers::Offset<ContainerAudio> CreateContainerAudio(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeAudio *>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerAudioBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -2661,18 +2666,18 @@ struct ContainerAudio::Traits {
 inline ::flatbuffers::Offset<ContainerAudio> CreateContainerAudioDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<ss::ssfb2::AnimationAttributeAudio> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVectorOfStructs<ss::ssfb2::AnimationAttributeAudio>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerAudio(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerAudio> CreateContainerAudio(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerAudioT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -2680,9 +2685,9 @@ inline ::flatbuffers::Offset<ContainerAudio> CreateContainerAudioDirect(
 struct ContainerChangeTextureT : public ::flatbuffers::NativeTable {
   typedef ContainerChangeTexture TableType;
   ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED;
-  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> tabel_code_value{};
-  std::vector<ss::ssfb2::AnimationAttributeChangeTexture> tabel_value{};
-  std::vector<float> tabel_accessory{};
+  std::vector<std::shared_ptr<ss::ssfb2::CodeValueContainerT>> table_code_value{};
+  std::vector<std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT>> table_value{};
+  std::vector<float> table_accessory{};
   ContainerChangeTextureT() = default;
   ContainerChangeTextureT(const ContainerChangeTextureT &o);
   ContainerChangeTextureT(ContainerChangeTextureT&&) FLATBUFFERS_NOEXCEPT = default;
@@ -2695,9 +2700,9 @@ struct ContainerChangeTexture FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   struct Traits;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_TYPE_PACK = 4,
-    VT_TABEL_CODE_VALUE = 6,
-    VT_TABEL_VALUE = 8,
-    VT_TABEL_ACCESSORY = 10
+    VT_TABLE_CODE_VALUE = 6,
+    VT_TABLE_VALUE = 8,
+    VT_TABLE_ACCESSORY = 10
   };
   ss::ssfb2::KindTypePack type_pack() const {
     return static_cast<ss::ssfb2::KindTypePack>(GetField<int8_t>(VT_TYPE_PACK, 0));
@@ -2705,34 +2710,35 @@ struct ContainerChangeTexture FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::T
   bool mutate_type_pack(ss::ssfb2::KindTypePack _type_pack = static_cast<ss::ssfb2::KindTypePack>(0)) {
     return SetField<int8_t>(VT_TYPE_PACK, static_cast<int8_t>(_type_pack), 0);
   }
-  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value() const {
-    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_tabel_code_value() {
-    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABEL_CODE_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *mutable_table_code_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *>(VT_TABLE_CODE_VALUE);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeChangeTexture *> *tabel_value() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeChangeTexture *> *>(VT_TABEL_VALUE);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>> *table_value() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>> *>(VT_TABLE_VALUE);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeChangeTexture *> *mutable_tabel_value() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeChangeTexture *> *>(VT_TABEL_VALUE);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>> *mutable_table_value() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>> *>(VT_TABLE_VALUE);
   }
-  const ::flatbuffers::Vector<float> *tabel_accessory() const {
-    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  const ::flatbuffers::Vector<float> *table_accessory() const {
+    return GetPointer<const ::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
-  ::flatbuffers::Vector<float> *mutable_tabel_accessory() {
-    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABEL_ACCESSORY);
+  ::flatbuffers::Vector<float> *mutable_table_accessory() {
+    return GetPointer<::flatbuffers::Vector<float> *>(VT_TABLE_ACCESSORY);
   }
   bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int8_t>(verifier, VT_TYPE_PACK, 1) &&
-           VerifyOffset(verifier, VT_TABEL_CODE_VALUE) &&
-           verifier.VerifyVector(tabel_code_value()) &&
-           verifier.VerifyVectorOfTables(tabel_code_value()) &&
-           VerifyOffset(verifier, VT_TABEL_VALUE) &&
-           verifier.VerifyVector(tabel_value()) &&
-           VerifyOffset(verifier, VT_TABEL_ACCESSORY) &&
-           verifier.VerifyVector(tabel_accessory()) &&
+           VerifyOffset(verifier, VT_TABLE_CODE_VALUE) &&
+           verifier.VerifyVector(table_code_value()) &&
+           verifier.VerifyVectorOfTables(table_code_value()) &&
+           VerifyOffset(verifier, VT_TABLE_VALUE) &&
+           verifier.VerifyVector(table_value()) &&
+           verifier.VerifyVectorOfTables(table_value()) &&
+           VerifyOffset(verifier, VT_TABLE_ACCESSORY) &&
+           verifier.VerifyVector(table_accessory()) &&
            verifier.EndTable();
   }
   ContainerChangeTextureT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -2747,14 +2753,14 @@ struct ContainerChangeTextureBuilder {
   void add_type_pack(ss::ssfb2::KindTypePack type_pack) {
     fbb_.AddElement<int8_t>(ContainerChangeTexture::VT_TYPE_PACK, static_cast<int8_t>(type_pack), 0);
   }
-  void add_tabel_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value) {
-    fbb_.AddOffset(ContainerChangeTexture::VT_TABEL_CODE_VALUE, tabel_code_value);
+  void add_table_code_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value) {
+    fbb_.AddOffset(ContainerChangeTexture::VT_TABLE_CODE_VALUE, table_code_value);
   }
-  void add_tabel_value(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeChangeTexture *>> tabel_value) {
-    fbb_.AddOffset(ContainerChangeTexture::VT_TABEL_VALUE, tabel_value);
+  void add_table_value(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>>> table_value) {
+    fbb_.AddOffset(ContainerChangeTexture::VT_TABLE_VALUE, table_value);
   }
-  void add_tabel_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory) {
-    fbb_.AddOffset(ContainerChangeTexture::VT_TABEL_ACCESSORY, tabel_accessory);
+  void add_table_accessory(::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory) {
+    fbb_.AddOffset(ContainerChangeTexture::VT_TABLE_ACCESSORY, table_accessory);
   }
   explicit ContainerChangeTextureBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -2770,13 +2776,13 @@ struct ContainerChangeTextureBuilder {
 inline ::flatbuffers::Offset<ContainerChangeTexture> CreateContainerChangeTexture(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> tabel_code_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::AnimationAttributeChangeTexture *>> tabel_value = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<float>> tabel_accessory = 0) {
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>> table_code_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>>> table_value = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<float>> table_accessory = 0) {
   ContainerChangeTextureBuilder builder_(_fbb);
-  builder_.add_tabel_accessory(tabel_accessory);
-  builder_.add_tabel_value(tabel_value);
-  builder_.add_tabel_code_value(tabel_code_value);
+  builder_.add_table_accessory(table_accessory);
+  builder_.add_table_value(table_value);
+  builder_.add_table_code_value(table_code_value);
   builder_.add_type_pack(type_pack);
   return builder_.Finish();
 }
@@ -2789,18 +2795,18 @@ struct ContainerChangeTexture::Traits {
 inline ::flatbuffers::Offset<ContainerChangeTexture> CreateContainerChangeTextureDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
     ss::ssfb2::KindTypePack type_pack = ss::ssfb2::KindTypePack::STANDARD_UNCOMPRESSED,
-    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *tabel_code_value = nullptr,
-    const std::vector<ss::ssfb2::AnimationAttributeChangeTexture> *tabel_value = nullptr,
-    const std::vector<float> *tabel_accessory = nullptr) {
-  auto tabel_code_value__ = tabel_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*tabel_code_value) : 0;
-  auto tabel_value__ = tabel_value ? _fbb.CreateVectorOfStructs<ss::ssfb2::AnimationAttributeChangeTexture>(*tabel_value) : 0;
-  auto tabel_accessory__ = tabel_accessory ? _fbb.CreateVector<float>(*tabel_accessory) : 0;
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> *table_code_value = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>> *table_value = nullptr,
+    const std::vector<float> *table_accessory = nullptr) {
+  auto table_code_value__ = table_code_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>>(*table_code_value) : 0;
+  auto table_value__ = table_value ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>>(*table_value) : 0;
+  auto table_accessory__ = table_accessory ? _fbb.CreateVector<float>(*table_accessory) : 0;
   return ss::ssfb2::CreateContainerChangeTexture(
       _fbb,
       type_pack,
-      tabel_code_value__,
-      tabel_value__,
-      tabel_accessory__);
+      table_code_value__,
+      table_value__,
+      table_accessory__);
 }
 
 ::flatbuffers::Offset<ContainerChangeTexture> CreateContainerChangeTexture(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerChangeTextureT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
@@ -3676,36 +3682,36 @@ struct DataEffectEmitterT : public ::flatbuffers::NativeTable {
   uint32_t operation_blend_target = 0;
   uint16_t index_cell_map = 0;
   uint16_t index_cell = 0;
-  std::shared_ptr<ss::ssfb2::RangeFloat> angle{};
-  std::shared_ptr<ss::ssfb2::Vector2> gravity_directional{};
-  std::shared_ptr<ss::ssfb2::Vector2> gravity_point_position{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> angle{};
+  std::shared_ptr<ss::ssfb2::Vector2T> gravity_directional{};
+  std::shared_ptr<ss::ssfb2::Vector2T> gravity_point_position{};
   float gravity_point_power = 0.0f;
-  std::shared_ptr<ss::ssfb2::RangeVector2> position{};
-  std::shared_ptr<ss::ssfb2::RangeFloat> rotation{};
-  std::shared_ptr<ss::ssfb2::RangeFloat> rotation_fluctuation{};
+  std::shared_ptr<ss::ssfb2::RangeVector2T> position{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> rotation{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> rotation_fluctuation{};
   float rotation_fluctuation_rate = 0.0f;
   float rotation_fluctuation_rate_time = 0.0f;
-  std::shared_ptr<ss::ssfb2::RangeFloat> rate_tangential_acceleration{};
-  std::shared_ptr<ss::ssfb2::RangeVector2> scale_start{};
-  std::shared_ptr<ss::ssfb2::RangeFloat> scale_rate_start{};
-  std::shared_ptr<ss::ssfb2::RangeVector2> scale_end{};
-  std::shared_ptr<ss::ssfb2::RangeFloat> scale_rate_end{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> rate_tangential_acceleration{};
+  std::shared_ptr<ss::ssfb2::RangeVector2T> scale_start{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> scale_rate_start{};
+  std::shared_ptr<ss::ssfb2::RangeVector2T> scale_end{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> scale_rate_end{};
   int32_t delay = 0;
-  std::shared_ptr<ss::ssfb2::RangeColor> color_vertex{};
-  std::shared_ptr<ss::ssfb2::RangeColor> color_vertex_fluctuation{};
+  std::shared_ptr<ss::ssfb2::RangeColorT> color_vertex{};
+  std::shared_ptr<ss::ssfb2::RangeColorT> color_vertex_fluctuation{};
   float alpha_fade_start = 0.0f;
   float alpha_fade_end = 0.0f;
-  std::shared_ptr<ss::ssfb2::RangeFloat> speed{};
-  std::shared_ptr<ss::ssfb2::RangeFloat> speed_fluctuation{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> speed{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> speed_fluctuation{};
   float turn_direction_fluctuation = 0.0f;
   int64_t seed_random = 0;
   int32_t duration_emitter = 0;
   int32_t interval = 0;
-  std::shared_ptr<ss::ssfb2::RangeFloat> duration_particle{};
+  std::shared_ptr<ss::ssfb2::RangeFloatT> duration_particle{};
   int32_t count_particle_max = 0;
   int32_t count_particle_emit = 0;
   int32_t count_parts_maximum = 0;
-  std::vector<ss::ssfb2::PatternEmit> table_pattern_emit{};
+  std::vector<std::shared_ptr<ss::ssfb2::PatternEmitT>> table_pattern_emit{};
   std::vector<int32_t> table_pattern_offset{};
   std::vector<int64_t> table_seed_particle{};
   DataEffectEmitterT() = default;
@@ -3781,22 +3787,22 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
     return SetField<uint16_t>(VT_INDEX_CELL, _index_cell, 0);
   }
   const ss::ssfb2::RangeFloat *angle() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_ANGLE);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_ANGLE);
   }
   ss::ssfb2::RangeFloat *mutable_angle() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_ANGLE);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_ANGLE);
   }
   const ss::ssfb2::Vector2 *gravity_directional() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_GRAVITY_DIRECTIONAL);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_GRAVITY_DIRECTIONAL);
   }
   ss::ssfb2::Vector2 *mutable_gravity_directional() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_GRAVITY_DIRECTIONAL);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_GRAVITY_DIRECTIONAL);
   }
   const ss::ssfb2::Vector2 *gravity_point_position() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_GRAVITY_POINT_POSITION);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_GRAVITY_POINT_POSITION);
   }
   ss::ssfb2::Vector2 *mutable_gravity_point_position() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_GRAVITY_POINT_POSITION);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_GRAVITY_POINT_POSITION);
   }
   float gravity_point_power() const {
     return GetField<float>(VT_GRAVITY_POINT_POWER, 0.0f);
@@ -3805,22 +3811,22 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
     return SetField<float>(VT_GRAVITY_POINT_POWER, _gravity_point_power, 0.0f);
   }
   const ss::ssfb2::RangeVector2 *position() const {
-    return GetStruct<const ss::ssfb2::RangeVector2 *>(VT_POSITION);
+    return GetPointer<const ss::ssfb2::RangeVector2 *>(VT_POSITION);
   }
   ss::ssfb2::RangeVector2 *mutable_position() {
-    return GetStruct<ss::ssfb2::RangeVector2 *>(VT_POSITION);
+    return GetPointer<ss::ssfb2::RangeVector2 *>(VT_POSITION);
   }
   const ss::ssfb2::RangeFloat *rotation() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_ROTATION);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_ROTATION);
   }
   ss::ssfb2::RangeFloat *mutable_rotation() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_ROTATION);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_ROTATION);
   }
   const ss::ssfb2::RangeFloat *rotation_fluctuation() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_ROTATION_FLUCTUATION);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_ROTATION_FLUCTUATION);
   }
   ss::ssfb2::RangeFloat *mutable_rotation_fluctuation() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_ROTATION_FLUCTUATION);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_ROTATION_FLUCTUATION);
   }
   float rotation_fluctuation_rate() const {
     return GetField<float>(VT_ROTATION_FLUCTUATION_RATE, 0.0f);
@@ -3835,34 +3841,34 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
     return SetField<float>(VT_ROTATION_FLUCTUATION_RATE_TIME, _rotation_fluctuation_rate_time, 0.0f);
   }
   const ss::ssfb2::RangeFloat *rate_tangential_acceleration() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_RATE_TANGENTIAL_ACCELERATION);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_RATE_TANGENTIAL_ACCELERATION);
   }
   ss::ssfb2::RangeFloat *mutable_rate_tangential_acceleration() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_RATE_TANGENTIAL_ACCELERATION);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_RATE_TANGENTIAL_ACCELERATION);
   }
   const ss::ssfb2::RangeVector2 *scale_start() const {
-    return GetStruct<const ss::ssfb2::RangeVector2 *>(VT_SCALE_START);
+    return GetPointer<const ss::ssfb2::RangeVector2 *>(VT_SCALE_START);
   }
   ss::ssfb2::RangeVector2 *mutable_scale_start() {
-    return GetStruct<ss::ssfb2::RangeVector2 *>(VT_SCALE_START);
+    return GetPointer<ss::ssfb2::RangeVector2 *>(VT_SCALE_START);
   }
   const ss::ssfb2::RangeFloat *scale_rate_start() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_START);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_START);
   }
   ss::ssfb2::RangeFloat *mutable_scale_rate_start() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_START);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_START);
   }
   const ss::ssfb2::RangeVector2 *scale_end() const {
-    return GetStruct<const ss::ssfb2::RangeVector2 *>(VT_SCALE_END);
+    return GetPointer<const ss::ssfb2::RangeVector2 *>(VT_SCALE_END);
   }
   ss::ssfb2::RangeVector2 *mutable_scale_end() {
-    return GetStruct<ss::ssfb2::RangeVector2 *>(VT_SCALE_END);
+    return GetPointer<ss::ssfb2::RangeVector2 *>(VT_SCALE_END);
   }
   const ss::ssfb2::RangeFloat *scale_rate_end() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_END);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_END);
   }
   ss::ssfb2::RangeFloat *mutable_scale_rate_end() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_END);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_SCALE_RATE_END);
   }
   int32_t delay() const {
     return GetField<int32_t>(VT_DELAY, 0);
@@ -3871,16 +3877,16 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
     return SetField<int32_t>(VT_DELAY, _delay, 0);
   }
   const ss::ssfb2::RangeColor *color_vertex() const {
-    return GetStruct<const ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX);
+    return GetPointer<const ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX);
   }
   ss::ssfb2::RangeColor *mutable_color_vertex() {
-    return GetStruct<ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX);
+    return GetPointer<ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX);
   }
   const ss::ssfb2::RangeColor *color_vertex_fluctuation() const {
-    return GetStruct<const ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX_FLUCTUATION);
+    return GetPointer<const ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX_FLUCTUATION);
   }
   ss::ssfb2::RangeColor *mutable_color_vertex_fluctuation() {
-    return GetStruct<ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX_FLUCTUATION);
+    return GetPointer<ss::ssfb2::RangeColor *>(VT_COLOR_VERTEX_FLUCTUATION);
   }
   float alpha_fade_start() const {
     return GetField<float>(VT_ALPHA_FADE_START, 0.0f);
@@ -3895,16 +3901,16 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
     return SetField<float>(VT_ALPHA_FADE_END, _alpha_fade_end, 0.0f);
   }
   const ss::ssfb2::RangeFloat *speed() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_SPEED);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_SPEED);
   }
   ss::ssfb2::RangeFloat *mutable_speed() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_SPEED);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_SPEED);
   }
   const ss::ssfb2::RangeFloat *speed_fluctuation() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_SPEED_FLUCTUATION);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_SPEED_FLUCTUATION);
   }
   ss::ssfb2::RangeFloat *mutable_speed_fluctuation() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_SPEED_FLUCTUATION);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_SPEED_FLUCTUATION);
   }
   float turn_direction_fluctuation() const {
     return GetField<float>(VT_TURN_DIRECTION_FLUCTUATION, 0.0f);
@@ -3931,10 +3937,10 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
     return SetField<int32_t>(VT_INTERVAL, _interval, 0);
   }
   const ss::ssfb2::RangeFloat *duration_particle() const {
-    return GetStruct<const ss::ssfb2::RangeFloat *>(VT_DURATION_PARTICLE);
+    return GetPointer<const ss::ssfb2::RangeFloat *>(VT_DURATION_PARTICLE);
   }
   ss::ssfb2::RangeFloat *mutable_duration_particle() {
-    return GetStruct<ss::ssfb2::RangeFloat *>(VT_DURATION_PARTICLE);
+    return GetPointer<ss::ssfb2::RangeFloat *>(VT_DURATION_PARTICLE);
   }
   int32_t count_particle_max() const {
     return GetField<int32_t>(VT_COUNT_PARTICLE_MAX, 0);
@@ -3954,11 +3960,11 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
   bool mutate_count_parts_maximum(int32_t _count_parts_maximum = 0) {
     return SetField<int32_t>(VT_COUNT_PARTS_MAXIMUM, _count_parts_maximum, 0);
   }
-  const ::flatbuffers::Vector<const ss::ssfb2::PatternEmit *> *table_pattern_emit() const {
-    return GetPointer<const ::flatbuffers::Vector<const ss::ssfb2::PatternEmit *> *>(VT_TABLE_PATTERN_EMIT);
+  const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>> *table_pattern_emit() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>> *>(VT_TABLE_PATTERN_EMIT);
   }
-  ::flatbuffers::Vector<const ss::ssfb2::PatternEmit *> *mutable_table_pattern_emit() {
-    return GetPointer<::flatbuffers::Vector<const ss::ssfb2::PatternEmit *> *>(VT_TABLE_PATTERN_EMIT);
+  ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>> *mutable_table_pattern_emit() {
+    return GetPointer<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>> *>(VT_TABLE_PATTERN_EMIT);
   }
   const ::flatbuffers::Vector<int32_t> *table_pattern_offset() const {
     return GetPointer<const ::flatbuffers::Vector<int32_t> *>(VT_TABLE_PATTERN_OFFSET);
@@ -3978,37 +3984,54 @@ struct DataEffectEmitter FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table 
            VerifyField<uint32_t>(verifier, VT_OPERATION_BLEND_TARGET, 4) &&
            VerifyField<uint16_t>(verifier, VT_INDEX_CELL_MAP, 2) &&
            VerifyField<uint16_t>(verifier, VT_INDEX_CELL, 2) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_ANGLE, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_GRAVITY_DIRECTIONAL, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_GRAVITY_POINT_POSITION, 4) &&
+           VerifyOffset(verifier, VT_ANGLE) &&
+           verifier.VerifyTable(angle()) &&
+           VerifyOffset(verifier, VT_GRAVITY_DIRECTIONAL) &&
+           verifier.VerifyTable(gravity_directional()) &&
+           VerifyOffset(verifier, VT_GRAVITY_POINT_POSITION) &&
+           verifier.VerifyTable(gravity_point_position()) &&
            VerifyField<float>(verifier, VT_GRAVITY_POINT_POWER, 4) &&
-           VerifyField<ss::ssfb2::RangeVector2>(verifier, VT_POSITION, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_ROTATION, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_ROTATION_FLUCTUATION, 4) &&
+           VerifyOffset(verifier, VT_POSITION) &&
+           verifier.VerifyTable(position()) &&
+           VerifyOffset(verifier, VT_ROTATION) &&
+           verifier.VerifyTable(rotation()) &&
+           VerifyOffset(verifier, VT_ROTATION_FLUCTUATION) &&
+           verifier.VerifyTable(rotation_fluctuation()) &&
            VerifyField<float>(verifier, VT_ROTATION_FLUCTUATION_RATE, 4) &&
            VerifyField<float>(verifier, VT_ROTATION_FLUCTUATION_RATE_TIME, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_RATE_TANGENTIAL_ACCELERATION, 4) &&
-           VerifyField<ss::ssfb2::RangeVector2>(verifier, VT_SCALE_START, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_SCALE_RATE_START, 4) &&
-           VerifyField<ss::ssfb2::RangeVector2>(verifier, VT_SCALE_END, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_SCALE_RATE_END, 4) &&
+           VerifyOffset(verifier, VT_RATE_TANGENTIAL_ACCELERATION) &&
+           verifier.VerifyTable(rate_tangential_acceleration()) &&
+           VerifyOffset(verifier, VT_SCALE_START) &&
+           verifier.VerifyTable(scale_start()) &&
+           VerifyOffset(verifier, VT_SCALE_RATE_START) &&
+           verifier.VerifyTable(scale_rate_start()) &&
+           VerifyOffset(verifier, VT_SCALE_END) &&
+           verifier.VerifyTable(scale_end()) &&
+           VerifyOffset(verifier, VT_SCALE_RATE_END) &&
+           verifier.VerifyTable(scale_rate_end()) &&
            VerifyField<int32_t>(verifier, VT_DELAY, 4) &&
-           VerifyField<ss::ssfb2::RangeColor>(verifier, VT_COLOR_VERTEX, 4) &&
-           VerifyField<ss::ssfb2::RangeColor>(verifier, VT_COLOR_VERTEX_FLUCTUATION, 4) &&
+           VerifyOffset(verifier, VT_COLOR_VERTEX) &&
+           verifier.VerifyTable(color_vertex()) &&
+           VerifyOffset(verifier, VT_COLOR_VERTEX_FLUCTUATION) &&
+           verifier.VerifyTable(color_vertex_fluctuation()) &&
            VerifyField<float>(verifier, VT_ALPHA_FADE_START, 4) &&
            VerifyField<float>(verifier, VT_ALPHA_FADE_END, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_SPEED, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_SPEED_FLUCTUATION, 4) &&
+           VerifyOffset(verifier, VT_SPEED) &&
+           verifier.VerifyTable(speed()) &&
+           VerifyOffset(verifier, VT_SPEED_FLUCTUATION) &&
+           verifier.VerifyTable(speed_fluctuation()) &&
            VerifyField<float>(verifier, VT_TURN_DIRECTION_FLUCTUATION, 4) &&
            VerifyField<int64_t>(verifier, VT_SEED_RANDOM, 8) &&
            VerifyField<int32_t>(verifier, VT_DURATION_EMITTER, 4) &&
            VerifyField<int32_t>(verifier, VT_INTERVAL, 4) &&
-           VerifyField<ss::ssfb2::RangeFloat>(verifier, VT_DURATION_PARTICLE, 4) &&
+           VerifyOffset(verifier, VT_DURATION_PARTICLE) &&
+           verifier.VerifyTable(duration_particle()) &&
            VerifyField<int32_t>(verifier, VT_COUNT_PARTICLE_MAX, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_PARTICLE_EMIT, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_PARTS_MAXIMUM, 4) &&
            VerifyOffset(verifier, VT_TABLE_PATTERN_EMIT) &&
            verifier.VerifyVector(table_pattern_emit()) &&
+           verifier.VerifyVectorOfTables(table_pattern_emit()) &&
            VerifyOffset(verifier, VT_TABLE_PATTERN_OFFSET) &&
            verifier.VerifyVector(table_pattern_offset()) &&
            VerifyOffset(verifier, VT_TABLE_SEED_PARTICLE) &&
@@ -4036,26 +4059,26 @@ struct DataEffectEmitterBuilder {
   void add_index_cell(uint16_t index_cell) {
     fbb_.AddElement<uint16_t>(DataEffectEmitter::VT_INDEX_CELL, index_cell, 0);
   }
-  void add_angle(const ss::ssfb2::RangeFloat *angle) {
-    fbb_.AddStruct(DataEffectEmitter::VT_ANGLE, angle);
+  void add_angle(::flatbuffers::Offset<ss::ssfb2::RangeFloat> angle) {
+    fbb_.AddOffset(DataEffectEmitter::VT_ANGLE, angle);
   }
-  void add_gravity_directional(const ss::ssfb2::Vector2 *gravity_directional) {
-    fbb_.AddStruct(DataEffectEmitter::VT_GRAVITY_DIRECTIONAL, gravity_directional);
+  void add_gravity_directional(::flatbuffers::Offset<ss::ssfb2::Vector2> gravity_directional) {
+    fbb_.AddOffset(DataEffectEmitter::VT_GRAVITY_DIRECTIONAL, gravity_directional);
   }
-  void add_gravity_point_position(const ss::ssfb2::Vector2 *gravity_point_position) {
-    fbb_.AddStruct(DataEffectEmitter::VT_GRAVITY_POINT_POSITION, gravity_point_position);
+  void add_gravity_point_position(::flatbuffers::Offset<ss::ssfb2::Vector2> gravity_point_position) {
+    fbb_.AddOffset(DataEffectEmitter::VT_GRAVITY_POINT_POSITION, gravity_point_position);
   }
   void add_gravity_point_power(float gravity_point_power) {
     fbb_.AddElement<float>(DataEffectEmitter::VT_GRAVITY_POINT_POWER, gravity_point_power, 0.0f);
   }
-  void add_position(const ss::ssfb2::RangeVector2 *position) {
-    fbb_.AddStruct(DataEffectEmitter::VT_POSITION, position);
+  void add_position(::flatbuffers::Offset<ss::ssfb2::RangeVector2> position) {
+    fbb_.AddOffset(DataEffectEmitter::VT_POSITION, position);
   }
-  void add_rotation(const ss::ssfb2::RangeFloat *rotation) {
-    fbb_.AddStruct(DataEffectEmitter::VT_ROTATION, rotation);
+  void add_rotation(::flatbuffers::Offset<ss::ssfb2::RangeFloat> rotation) {
+    fbb_.AddOffset(DataEffectEmitter::VT_ROTATION, rotation);
   }
-  void add_rotation_fluctuation(const ss::ssfb2::RangeFloat *rotation_fluctuation) {
-    fbb_.AddStruct(DataEffectEmitter::VT_ROTATION_FLUCTUATION, rotation_fluctuation);
+  void add_rotation_fluctuation(::flatbuffers::Offset<ss::ssfb2::RangeFloat> rotation_fluctuation) {
+    fbb_.AddOffset(DataEffectEmitter::VT_ROTATION_FLUCTUATION, rotation_fluctuation);
   }
   void add_rotation_fluctuation_rate(float rotation_fluctuation_rate) {
     fbb_.AddElement<float>(DataEffectEmitter::VT_ROTATION_FLUCTUATION_RATE, rotation_fluctuation_rate, 0.0f);
@@ -4063,29 +4086,29 @@ struct DataEffectEmitterBuilder {
   void add_rotation_fluctuation_rate_time(float rotation_fluctuation_rate_time) {
     fbb_.AddElement<float>(DataEffectEmitter::VT_ROTATION_FLUCTUATION_RATE_TIME, rotation_fluctuation_rate_time, 0.0f);
   }
-  void add_rate_tangential_acceleration(const ss::ssfb2::RangeFloat *rate_tangential_acceleration) {
-    fbb_.AddStruct(DataEffectEmitter::VT_RATE_TANGENTIAL_ACCELERATION, rate_tangential_acceleration);
+  void add_rate_tangential_acceleration(::flatbuffers::Offset<ss::ssfb2::RangeFloat> rate_tangential_acceleration) {
+    fbb_.AddOffset(DataEffectEmitter::VT_RATE_TANGENTIAL_ACCELERATION, rate_tangential_acceleration);
   }
-  void add_scale_start(const ss::ssfb2::RangeVector2 *scale_start) {
-    fbb_.AddStruct(DataEffectEmitter::VT_SCALE_START, scale_start);
+  void add_scale_start(::flatbuffers::Offset<ss::ssfb2::RangeVector2> scale_start) {
+    fbb_.AddOffset(DataEffectEmitter::VT_SCALE_START, scale_start);
   }
-  void add_scale_rate_start(const ss::ssfb2::RangeFloat *scale_rate_start) {
-    fbb_.AddStruct(DataEffectEmitter::VT_SCALE_RATE_START, scale_rate_start);
+  void add_scale_rate_start(::flatbuffers::Offset<ss::ssfb2::RangeFloat> scale_rate_start) {
+    fbb_.AddOffset(DataEffectEmitter::VT_SCALE_RATE_START, scale_rate_start);
   }
-  void add_scale_end(const ss::ssfb2::RangeVector2 *scale_end) {
-    fbb_.AddStruct(DataEffectEmitter::VT_SCALE_END, scale_end);
+  void add_scale_end(::flatbuffers::Offset<ss::ssfb2::RangeVector2> scale_end) {
+    fbb_.AddOffset(DataEffectEmitter::VT_SCALE_END, scale_end);
   }
-  void add_scale_rate_end(const ss::ssfb2::RangeFloat *scale_rate_end) {
-    fbb_.AddStruct(DataEffectEmitter::VT_SCALE_RATE_END, scale_rate_end);
+  void add_scale_rate_end(::flatbuffers::Offset<ss::ssfb2::RangeFloat> scale_rate_end) {
+    fbb_.AddOffset(DataEffectEmitter::VT_SCALE_RATE_END, scale_rate_end);
   }
   void add_delay(int32_t delay) {
     fbb_.AddElement<int32_t>(DataEffectEmitter::VT_DELAY, delay, 0);
   }
-  void add_color_vertex(const ss::ssfb2::RangeColor *color_vertex) {
-    fbb_.AddStruct(DataEffectEmitter::VT_COLOR_VERTEX, color_vertex);
+  void add_color_vertex(::flatbuffers::Offset<ss::ssfb2::RangeColor> color_vertex) {
+    fbb_.AddOffset(DataEffectEmitter::VT_COLOR_VERTEX, color_vertex);
   }
-  void add_color_vertex_fluctuation(const ss::ssfb2::RangeColor *color_vertex_fluctuation) {
-    fbb_.AddStruct(DataEffectEmitter::VT_COLOR_VERTEX_FLUCTUATION, color_vertex_fluctuation);
+  void add_color_vertex_fluctuation(::flatbuffers::Offset<ss::ssfb2::RangeColor> color_vertex_fluctuation) {
+    fbb_.AddOffset(DataEffectEmitter::VT_COLOR_VERTEX_FLUCTUATION, color_vertex_fluctuation);
   }
   void add_alpha_fade_start(float alpha_fade_start) {
     fbb_.AddElement<float>(DataEffectEmitter::VT_ALPHA_FADE_START, alpha_fade_start, 0.0f);
@@ -4093,11 +4116,11 @@ struct DataEffectEmitterBuilder {
   void add_alpha_fade_end(float alpha_fade_end) {
     fbb_.AddElement<float>(DataEffectEmitter::VT_ALPHA_FADE_END, alpha_fade_end, 0.0f);
   }
-  void add_speed(const ss::ssfb2::RangeFloat *speed) {
-    fbb_.AddStruct(DataEffectEmitter::VT_SPEED, speed);
+  void add_speed(::flatbuffers::Offset<ss::ssfb2::RangeFloat> speed) {
+    fbb_.AddOffset(DataEffectEmitter::VT_SPEED, speed);
   }
-  void add_speed_fluctuation(const ss::ssfb2::RangeFloat *speed_fluctuation) {
-    fbb_.AddStruct(DataEffectEmitter::VT_SPEED_FLUCTUATION, speed_fluctuation);
+  void add_speed_fluctuation(::flatbuffers::Offset<ss::ssfb2::RangeFloat> speed_fluctuation) {
+    fbb_.AddOffset(DataEffectEmitter::VT_SPEED_FLUCTUATION, speed_fluctuation);
   }
   void add_turn_direction_fluctuation(float turn_direction_fluctuation) {
     fbb_.AddElement<float>(DataEffectEmitter::VT_TURN_DIRECTION_FLUCTUATION, turn_direction_fluctuation, 0.0f);
@@ -4111,8 +4134,8 @@ struct DataEffectEmitterBuilder {
   void add_interval(int32_t interval) {
     fbb_.AddElement<int32_t>(DataEffectEmitter::VT_INTERVAL, interval, 0);
   }
-  void add_duration_particle(const ss::ssfb2::RangeFloat *duration_particle) {
-    fbb_.AddStruct(DataEffectEmitter::VT_DURATION_PARTICLE, duration_particle);
+  void add_duration_particle(::flatbuffers::Offset<ss::ssfb2::RangeFloat> duration_particle) {
+    fbb_.AddOffset(DataEffectEmitter::VT_DURATION_PARTICLE, duration_particle);
   }
   void add_count_particle_max(int32_t count_particle_max) {
     fbb_.AddElement<int32_t>(DataEffectEmitter::VT_COUNT_PARTICLE_MAX, count_particle_max, 0);
@@ -4123,7 +4146,7 @@ struct DataEffectEmitterBuilder {
   void add_count_parts_maximum(int32_t count_parts_maximum) {
     fbb_.AddElement<int32_t>(DataEffectEmitter::VT_COUNT_PARTS_MAXIMUM, count_parts_maximum, 0);
   }
-  void add_table_pattern_emit(::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::PatternEmit *>> table_pattern_emit) {
+  void add_table_pattern_emit(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>>> table_pattern_emit) {
     fbb_.AddOffset(DataEffectEmitter::VT_TABLE_PATTERN_EMIT, table_pattern_emit);
   }
   void add_table_pattern_offset(::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_pattern_offset) {
@@ -4149,36 +4172,36 @@ inline ::flatbuffers::Offset<DataEffectEmitter> CreateDataEffectEmitter(
     uint32_t operation_blend_target = 0,
     uint16_t index_cell_map = 0,
     uint16_t index_cell = 0,
-    const ss::ssfb2::RangeFloat *angle = nullptr,
-    const ss::ssfb2::Vector2 *gravity_directional = nullptr,
-    const ss::ssfb2::Vector2 *gravity_point_position = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> angle = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> gravity_directional = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> gravity_point_position = 0,
     float gravity_point_power = 0.0f,
-    const ss::ssfb2::RangeVector2 *position = nullptr,
-    const ss::ssfb2::RangeFloat *rotation = nullptr,
-    const ss::ssfb2::RangeFloat *rotation_fluctuation = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeVector2> position = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> rotation = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> rotation_fluctuation = 0,
     float rotation_fluctuation_rate = 0.0f,
     float rotation_fluctuation_rate_time = 0.0f,
-    const ss::ssfb2::RangeFloat *rate_tangential_acceleration = nullptr,
-    const ss::ssfb2::RangeVector2 *scale_start = nullptr,
-    const ss::ssfb2::RangeFloat *scale_rate_start = nullptr,
-    const ss::ssfb2::RangeVector2 *scale_end = nullptr,
-    const ss::ssfb2::RangeFloat *scale_rate_end = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> rate_tangential_acceleration = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeVector2> scale_start = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> scale_rate_start = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeVector2> scale_end = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> scale_rate_end = 0,
     int32_t delay = 0,
-    const ss::ssfb2::RangeColor *color_vertex = nullptr,
-    const ss::ssfb2::RangeColor *color_vertex_fluctuation = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeColor> color_vertex = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeColor> color_vertex_fluctuation = 0,
     float alpha_fade_start = 0.0f,
     float alpha_fade_end = 0.0f,
-    const ss::ssfb2::RangeFloat *speed = nullptr,
-    const ss::ssfb2::RangeFloat *speed_fluctuation = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> speed = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> speed_fluctuation = 0,
     float turn_direction_fluctuation = 0.0f,
     int64_t seed_random = 0,
     int32_t duration_emitter = 0,
     int32_t interval = 0,
-    const ss::ssfb2::RangeFloat *duration_particle = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> duration_particle = 0,
     int32_t count_particle_max = 0,
     int32_t count_particle_emit = 0,
     int32_t count_parts_maximum = 0,
-    ::flatbuffers::Offset<::flatbuffers::Vector<const ss::ssfb2::PatternEmit *>> table_pattern_emit = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>>> table_pattern_emit = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_pattern_offset = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<int64_t>> table_seed_particle = 0) {
   DataEffectEmitterBuilder builder_(_fbb);
@@ -4232,39 +4255,39 @@ inline ::flatbuffers::Offset<DataEffectEmitter> CreateDataEffectEmitterDirect(
     uint32_t operation_blend_target = 0,
     uint16_t index_cell_map = 0,
     uint16_t index_cell = 0,
-    const ss::ssfb2::RangeFloat *angle = nullptr,
-    const ss::ssfb2::Vector2 *gravity_directional = nullptr,
-    const ss::ssfb2::Vector2 *gravity_point_position = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> angle = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> gravity_directional = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> gravity_point_position = 0,
     float gravity_point_power = 0.0f,
-    const ss::ssfb2::RangeVector2 *position = nullptr,
-    const ss::ssfb2::RangeFloat *rotation = nullptr,
-    const ss::ssfb2::RangeFloat *rotation_fluctuation = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeVector2> position = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> rotation = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> rotation_fluctuation = 0,
     float rotation_fluctuation_rate = 0.0f,
     float rotation_fluctuation_rate_time = 0.0f,
-    const ss::ssfb2::RangeFloat *rate_tangential_acceleration = nullptr,
-    const ss::ssfb2::RangeVector2 *scale_start = nullptr,
-    const ss::ssfb2::RangeFloat *scale_rate_start = nullptr,
-    const ss::ssfb2::RangeVector2 *scale_end = nullptr,
-    const ss::ssfb2::RangeFloat *scale_rate_end = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> rate_tangential_acceleration = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeVector2> scale_start = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> scale_rate_start = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeVector2> scale_end = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> scale_rate_end = 0,
     int32_t delay = 0,
-    const ss::ssfb2::RangeColor *color_vertex = nullptr,
-    const ss::ssfb2::RangeColor *color_vertex_fluctuation = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeColor> color_vertex = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeColor> color_vertex_fluctuation = 0,
     float alpha_fade_start = 0.0f,
     float alpha_fade_end = 0.0f,
-    const ss::ssfb2::RangeFloat *speed = nullptr,
-    const ss::ssfb2::RangeFloat *speed_fluctuation = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> speed = 0,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> speed_fluctuation = 0,
     float turn_direction_fluctuation = 0.0f,
     int64_t seed_random = 0,
     int32_t duration_emitter = 0,
     int32_t interval = 0,
-    const ss::ssfb2::RangeFloat *duration_particle = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::RangeFloat> duration_particle = 0,
     int32_t count_particle_max = 0,
     int32_t count_particle_emit = 0,
     int32_t count_parts_maximum = 0,
-    const std::vector<ss::ssfb2::PatternEmit> *table_pattern_emit = nullptr,
+    const std::vector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>> *table_pattern_emit = nullptr,
     const std::vector<int32_t> *table_pattern_offset = nullptr,
     const std::vector<int64_t> *table_seed_particle = nullptr) {
-  auto table_pattern_emit__ = table_pattern_emit ? _fbb.CreateVectorOfStructs<ss::ssfb2::PatternEmit>(*table_pattern_emit) : 0;
+  auto table_pattern_emit__ = table_pattern_emit ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>>(*table_pattern_emit) : 0;
   auto table_pattern_offset__ = table_pattern_offset ? _fbb.CreateVector<int32_t>(*table_pattern_offset) : 0;
   auto table_seed_particle__ = table_seed_particle ? _fbb.CreateVector<int64_t>(*table_seed_particle) : 0;
   return ss::ssfb2::CreateDataEffectEmitter(
@@ -4451,9 +4474,9 @@ inline ::flatbuffers::Offset<CodeValueContainer> CreateCodeValueContainer(::flat
 inline bool operator==(const ContainerStatusT &lhs, const ContainerStatusT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value == rhs.table_value) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerStatusT &lhs, const ContainerStatusT &rhs) {
@@ -4463,17 +4486,17 @@ inline bool operator!=(const ContainerStatusT &lhs, const ContainerStatusT &rhs)
 
 inline ContainerStatusT::ContainerStatusT(const ContainerStatusT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_value(o.table_value),
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
 }
 
 inline ContainerStatusT &ContainerStatusT::operator=(ContainerStatusT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4487,9 +4510,9 @@ inline void ContainerStatus::UnPackTo(ContainerStatusT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = _e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_value[_i] = _e->Get(_i); } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerStatus> ContainerStatus::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerStatusT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4501,24 +4524,24 @@ inline ::flatbuffers::Offset<ContainerStatus> CreateContainerStatus(::flatbuffer
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerStatusT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector(_o->table_value) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerStatus(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerCellT &lhs, const ContainerCellT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeCellT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeCellT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerCellT &lhs, const ContainerCellT &rhs) {
@@ -4528,17 +4551,18 @@ inline bool operator!=(const ContainerCellT &lhs, const ContainerCellT &rhs) {
 
 inline ContainerCellT::ContainerCellT(const ContainerCellT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeCellT(*table_value_) : nullptr); }
 }
 
 inline ContainerCellT &ContainerCellT::operator=(ContainerCellT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4552,9 +4576,9 @@ inline void ContainerCell::UnPackTo(ContainerCellT *_o, const ::flatbuffers::res
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = *_e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeCellT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerCell> ContainerCell::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerCellT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4566,24 +4590,24 @@ inline ::flatbuffers::Offset<ContainerCell> CreateContainerCell(::flatbuffers::F
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerCellT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVectorOfStructs(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeCell>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeCell(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerCell(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerIntT &lhs, const ContainerIntT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value == rhs.table_value) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerIntT &lhs, const ContainerIntT &rhs) {
@@ -4593,17 +4617,17 @@ inline bool operator!=(const ContainerIntT &lhs, const ContainerIntT &rhs) {
 
 inline ContainerIntT::ContainerIntT(const ContainerIntT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_value(o.table_value),
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
 }
 
 inline ContainerIntT &ContainerIntT::operator=(ContainerIntT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4617,9 +4641,9 @@ inline void ContainerInt::UnPackTo(ContainerIntT *_o, const ::flatbuffers::resol
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = _e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_value[_i] = _e->Get(_i); } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerInt> ContainerInt::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerIntT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4631,24 +4655,24 @@ inline ::flatbuffers::Offset<ContainerInt> CreateContainerInt(::flatbuffers::Fla
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerIntT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector(_o->table_value) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerInt(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerFloatT &lhs, const ContainerFloatT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value == rhs.table_value) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerFloatT &lhs, const ContainerFloatT &rhs) {
@@ -4658,17 +4682,17 @@ inline bool operator!=(const ContainerFloatT &lhs, const ContainerFloatT &rhs) {
 
 inline ContainerFloatT::ContainerFloatT(const ContainerFloatT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_value(o.table_value),
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
 }
 
 inline ContainerFloatT &ContainerFloatT::operator=(ContainerFloatT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4682,9 +4706,9 @@ inline void ContainerFloat::UnPackTo(ContainerFloatT *_o, const ::flatbuffers::r
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = _e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_value[_i] = _e->Get(_i); } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerFloat> ContainerFloat::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerFloatT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4696,24 +4720,24 @@ inline ::flatbuffers::Offset<ContainerFloat> CreateContainerFloat(::flatbuffers:
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerFloatT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector(_o->table_value) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerFloat(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerVector2T &lhs, const ContainerVector2T &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::Vector2T> const &a, std::shared_ptr<ss::ssfb2::Vector2T> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerVector2T &lhs, const ContainerVector2T &rhs) {
@@ -4723,17 +4747,18 @@ inline bool operator!=(const ContainerVector2T &lhs, const ContainerVector2T &rh
 
 inline ContainerVector2T::ContainerVector2T(const ContainerVector2T &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::Vector2T(*table_value_) : nullptr); }
 }
 
 inline ContainerVector2T &ContainerVector2T::operator=(ContainerVector2T o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4747,9 +4772,9 @@ inline void ContainerVector2::UnPackTo(ContainerVector2T *_o, const ::flatbuffer
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = *_e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerVector2> ContainerVector2::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerVector2T* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4761,24 +4786,24 @@ inline ::flatbuffers::Offset<ContainerVector2> CreateContainerVector2(::flatbuff
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerVector2T* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVectorOfStructs(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector2>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateVector2(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerVector2(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerVector3T &lhs, const ContainerVector3T &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::Vector3T> const &a, std::shared_ptr<ss::ssfb2::Vector3T> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerVector3T &lhs, const ContainerVector3T &rhs) {
@@ -4788,17 +4813,18 @@ inline bool operator!=(const ContainerVector3T &lhs, const ContainerVector3T &rh
 
 inline ContainerVector3T::ContainerVector3T(const ContainerVector3T &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::Vector3T(*table_value_) : nullptr); }
 }
 
 inline ContainerVector3T &ContainerVector3T::operator=(ContainerVector3T o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4812,9 +4838,9 @@ inline void ContainerVector3::UnPackTo(ContainerVector3T *_o, const ::flatbuffer
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = *_e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::Vector3T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerVector3> ContainerVector3::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerVector3T* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4826,24 +4852,24 @@ inline ::flatbuffers::Offset<ContainerVector3> CreateContainerVector3(::flatbuff
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerVector3T* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVectorOfStructs(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::Vector3>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateVector3(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerVector3(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerPartsColorT &lhs, const ContainerPartsColorT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerPartsColorT &lhs, const ContainerPartsColorT &rhs) {
@@ -4853,18 +4879,18 @@ inline bool operator!=(const ContainerPartsColorT &lhs, const ContainerPartsColo
 
 inline ContainerPartsColorT::ContainerPartsColorT(const ContainerPartsColorT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributePartsColorT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributePartsColorT(*table_value_) : nullptr); }
 }
 
 inline ContainerPartsColorT &ContainerPartsColorT::operator=(ContainerPartsColorT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4878,9 +4904,9 @@ inline void ContainerPartsColor::UnPackTo(ContainerPartsColorT *_o, const ::flat
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerPartsColor> ContainerPartsColor::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerPartsColorT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4892,24 +4918,24 @@ inline ::flatbuffers::Offset<ContainerPartsColor> CreateContainerPartsColor(::fl
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerPartsColorT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributePartsColor(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributePartsColor>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributePartsColor(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerPartsColor(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerVertexCorrectionT &lhs, const ContainerVertexCorrectionT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerVertexCorrectionT &lhs, const ContainerVertexCorrectionT &rhs) {
@@ -4919,18 +4945,18 @@ inline bool operator!=(const ContainerVertexCorrectionT &lhs, const ContainerVer
 
 inline ContainerVertexCorrectionT::ContainerVertexCorrectionT(const ContainerVertexCorrectionT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeVertexCorrectionT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeVertexCorrectionT(*table_value_) : nullptr); }
 }
 
 inline ContainerVertexCorrectionT &ContainerVertexCorrectionT::operator=(ContainerVertexCorrectionT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -4944,9 +4970,9 @@ inline void ContainerVertexCorrection::UnPackTo(ContainerVertexCorrectionT *_o, 
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerVertexCorrection> ContainerVertexCorrection::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerVertexCorrectionT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -4958,24 +4984,24 @@ inline ::flatbuffers::Offset<ContainerVertexCorrection> CreateContainerVertexCor
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerVertexCorrectionT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeVertexCorrection(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeVertexCorrection>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeVertexCorrection(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerVertexCorrection(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerSkewT &lhs, const ContainerSkewT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerSkewT &lhs, const ContainerSkewT &rhs) {
@@ -4985,18 +5011,18 @@ inline bool operator!=(const ContainerSkewT &lhs, const ContainerSkewT &rhs) {
 
 inline ContainerSkewT::ContainerSkewT(const ContainerSkewT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeSkewT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeSkewT(*table_value_) : nullptr); }
 }
 
 inline ContainerSkewT &ContainerSkewT::operator=(ContainerSkewT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5010,9 +5036,9 @@ inline void ContainerSkew::UnPackTo(ContainerSkewT *_o, const ::flatbuffers::res
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerSkew> ContainerSkew::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerSkewT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5024,24 +5050,24 @@ inline ::flatbuffers::Offset<ContainerSkew> CreateContainerSkew(::flatbuffers::F
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerSkewT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeSkew(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSkew>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeSkew(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerSkew(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerUserDataT &lhs, const ContainerUserDataT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerUserDataT &lhs, const ContainerUserDataT &rhs) {
@@ -5051,18 +5077,18 @@ inline bool operator!=(const ContainerUserDataT &lhs, const ContainerUserDataT &
 
 inline ContainerUserDataT::ContainerUserDataT(const ContainerUserDataT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeUserDataT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeUserDataT(*table_value_) : nullptr); }
 }
 
 inline ContainerUserDataT &ContainerUserDataT::operator=(ContainerUserDataT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5076,9 +5102,9 @@ inline void ContainerUserData::UnPackTo(ContainerUserDataT *_o, const ::flatbuff
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerUserData> ContainerUserData::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerUserDataT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5090,24 +5116,24 @@ inline ::flatbuffers::Offset<ContainerUserData> CreateContainerUserData(::flatbu
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerUserDataT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeUserData(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeUserData>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeUserData(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerUserData(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerInstanceT &lhs, const ContainerInstanceT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerInstanceT &lhs, const ContainerInstanceT &rhs) {
@@ -5117,18 +5143,18 @@ inline bool operator!=(const ContainerInstanceT &lhs, const ContainerInstanceT &
 
 inline ContainerInstanceT::ContainerInstanceT(const ContainerInstanceT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeInstanceT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeInstanceT(*table_value_) : nullptr); }
 }
 
 inline ContainerInstanceT &ContainerInstanceT::operator=(ContainerInstanceT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5142,9 +5168,9 @@ inline void ContainerInstance::UnPackTo(ContainerInstanceT *_o, const ::flatbuff
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerInstance> ContainerInstance::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerInstanceT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5156,24 +5182,24 @@ inline ::flatbuffers::Offset<ContainerInstance> CreateContainerInstance(::flatbu
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerInstanceT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeInstance(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeInstance>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeInstance(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerInstance(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerEffectT &lhs, const ContainerEffectT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerEffectT &lhs, const ContainerEffectT &rhs) {
@@ -5183,17 +5209,18 @@ inline bool operator!=(const ContainerEffectT &lhs, const ContainerEffectT &rhs)
 
 inline ContainerEffectT::ContainerEffectT(const ContainerEffectT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeEffectT(*table_value_) : nullptr); }
 }
 
 inline ContainerEffectT &ContainerEffectT::operator=(ContainerEffectT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5207,9 +5234,9 @@ inline void ContainerEffect::UnPackTo(ContainerEffectT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = *_e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerEffect> ContainerEffect::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerEffectT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5221,26 +5248,26 @@ inline ::flatbuffers::Offset<ContainerEffect> CreateContainerEffect(::flatbuffer
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerEffectT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVectorOfStructs(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeEffect>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeEffect(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerEffect(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerDeformT &lhs, const ContainerDeformT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory) &&
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory) &&
       (lhs.count_vertex_mesh == rhs.count_vertex_mesh) &&
-      (lhs.tabel_index_vertex == rhs.tabel_index_vertex);
+      (lhs.table_index_vertex == rhs.table_index_vertex);
 }
 
 inline bool operator!=(const ContainerDeformT &lhs, const ContainerDeformT &rhs) {
@@ -5250,22 +5277,22 @@ inline bool operator!=(const ContainerDeformT &lhs, const ContainerDeformT &rhs)
 
 inline ContainerDeformT::ContainerDeformT(const ContainerDeformT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory),
+        table_accessory(o.table_accessory),
         count_vertex_mesh(o.count_vertex_mesh),
-        tabel_index_vertex(o.tabel_index_vertex) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeDeformT(*tabel_value_) : nullptr); }
+        table_index_vertex(o.table_index_vertex) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeDeformT(*table_value_) : nullptr); }
 }
 
 inline ContainerDeformT &ContainerDeformT::operator=(ContainerDeformT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   std::swap(count_vertex_mesh, o.count_vertex_mesh);
-  std::swap(tabel_index_vertex, o.tabel_index_vertex);
+  std::swap(table_index_vertex, o.table_index_vertex);
   return *this;
 }
 
@@ -5279,11 +5306,11 @@ inline void ContainerDeform::UnPackTo(ContainerDeformT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
   { auto _e = count_vertex_mesh(); _o->count_vertex_mesh = _e; }
-  { auto _e = tabel_index_vertex(); if (_e) { _o->tabel_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_index_vertex[_i] = _e->Get(_i); } } else { _o->tabel_index_vertex.resize(0); } }
+  { auto _e = table_index_vertex(); if (_e) { _o->table_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_vertex[_i] = _e->Get(_i); } } else { _o->table_index_vertex.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerDeform> ContainerDeform::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerDeformT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5295,28 +5322,28 @@ inline ::flatbuffers::Offset<ContainerDeform> CreateContainerDeform(::flatbuffer
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerDeformT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeDeform(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeDeform>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeDeform(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   auto _count_vertex_mesh = _o->count_vertex_mesh;
-  auto _tabel_index_vertex = _o->tabel_index_vertex.size() ? _fbb.CreateVector(_o->tabel_index_vertex) : 0;
+  auto _table_index_vertex = _o->table_index_vertex.size() ? _fbb.CreateVector(_o->table_index_vertex) : 0;
   return ss::ssfb2::CreateContainerDeform(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory,
+      _table_code_value,
+      _table_value,
+      _table_accessory,
       _count_vertex_mesh,
-      _tabel_index_vertex);
+      _table_index_vertex);
 }
 
 
 inline bool operator==(const ContainerShaderT &lhs, const ContainerShaderT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerShaderT &lhs, const ContainerShaderT &rhs) {
@@ -5326,18 +5353,18 @@ inline bool operator!=(const ContainerShaderT &lhs, const ContainerShaderT &rhs)
 
 inline ContainerShaderT::ContainerShaderT(const ContainerShaderT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeShaderT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeShaderT(*table_value_) : nullptr); }
 }
 
 inline ContainerShaderT &ContainerShaderT::operator=(ContainerShaderT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5351,9 +5378,9 @@ inline void ContainerShader::UnPackTo(ContainerShaderT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerShader> ContainerShader::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerShaderT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5365,24 +5392,24 @@ inline ::flatbuffers::Offset<ContainerShader> CreateContainerShader(::flatbuffer
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerShaderT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeShader(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeShader>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeShader(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerShader(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerSignalT &lhs, const ContainerSignalT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value.size() == rhs.tabel_value.size() && std::equal(lhs.tabel_value.cbegin(), lhs.tabel_value.cend(), rhs.tabel_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerSignalT &lhs, const ContainerSignalT &rhs) {
@@ -5392,18 +5419,18 @@ inline bool operator!=(const ContainerSignalT &lhs, const ContainerSignalT &rhs)
 
 inline ContainerSignalT::ContainerSignalT(const ContainerSignalT &o)
       : type_pack(o.type_pack),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
-  tabel_value.reserve(o.tabel_value.size());
-  for (const auto &tabel_value_ : o.tabel_value) { tabel_value.emplace_back((tabel_value_) ? new ss::ssfb2::AnimationAttributeSignalT(*tabel_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeSignalT(*table_value_) : nullptr); }
 }
 
 inline ContainerSignalT &ContainerSignalT::operator=(ContainerSignalT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5417,9 +5444,9 @@ inline void ContainerSignal::UnPackTo(ContainerSignalT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_value[_i].get(), _resolver); } else { _o->tabel_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerSignal> ContainerSignal::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerSignalT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5431,24 +5458,24 @@ inline ::flatbuffers::Offset<ContainerSignal> CreateContainerSignal(::flatbuffer
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerSignalT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> (_o->tabel_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeSignal(*__va->__fbb, __va->__o->tabel_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeSignal>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeSignal(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerSignal(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerAudioT &lhs, const ContainerAudioT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerAudioT &lhs, const ContainerAudioT &rhs) {
@@ -5458,17 +5485,18 @@ inline bool operator!=(const ContainerAudioT &lhs, const ContainerAudioT &rhs) {
 
 inline ContainerAudioT::ContainerAudioT(const ContainerAudioT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeAudioT(*table_value_) : nullptr); }
 }
 
 inline ContainerAudioT &ContainerAudioT::operator=(ContainerAudioT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5482,9 +5510,9 @@ inline void ContainerAudio::UnPackTo(ContainerAudioT *_o, const ::flatbuffers::r
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = *_e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerAudio> ContainerAudio::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerAudioT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5496,24 +5524,24 @@ inline ::flatbuffers::Offset<ContainerAudio> CreateContainerAudio(::flatbuffers:
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerAudioT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVectorOfStructs(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeAudio>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeAudio(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerAudio(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
 inline bool operator==(const ContainerChangeTextureT &lhs, const ContainerChangeTextureT &rhs) {
   return
       (lhs.type_pack == rhs.type_pack) &&
-      (lhs.tabel_code_value.size() == rhs.tabel_code_value.size() && std::equal(lhs.tabel_code_value.cbegin(), lhs.tabel_code_value.cend(), rhs.tabel_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
-      (lhs.tabel_value == rhs.tabel_value) &&
-      (lhs.tabel_accessory == rhs.tabel_accessory);
+      (lhs.table_code_value.size() == rhs.table_code_value.size() && std::equal(lhs.table_code_value.cbegin(), lhs.table_code_value.cend(), rhs.table_code_value.cbegin(), [](std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &a, std::shared_ptr<ss::ssfb2::CodeValueContainerT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_value.size() == rhs.table_value.size() && std::equal(lhs.table_value.cbegin(), lhs.table_value.cend(), rhs.table_value.cbegin(), [](std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT> const &a, std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
+      (lhs.table_accessory == rhs.table_accessory);
 }
 
 inline bool operator!=(const ContainerChangeTextureT &lhs, const ContainerChangeTextureT &rhs) {
@@ -5523,17 +5551,18 @@ inline bool operator!=(const ContainerChangeTextureT &lhs, const ContainerChange
 
 inline ContainerChangeTextureT::ContainerChangeTextureT(const ContainerChangeTextureT &o)
       : type_pack(o.type_pack),
-        tabel_value(o.tabel_value),
-        tabel_accessory(o.tabel_accessory) {
-  tabel_code_value.reserve(o.tabel_code_value.size());
-  for (const auto &tabel_code_value_ : o.tabel_code_value) { tabel_code_value.emplace_back((tabel_code_value_) ? new ss::ssfb2::CodeValueContainerT(*tabel_code_value_) : nullptr); }
+        table_accessory(o.table_accessory) {
+  table_code_value.reserve(o.table_code_value.size());
+  for (const auto &table_code_value_ : o.table_code_value) { table_code_value.emplace_back((table_code_value_) ? new ss::ssfb2::CodeValueContainerT(*table_code_value_) : nullptr); }
+  table_value.reserve(o.table_value.size());
+  for (const auto &table_value_ : o.table_value) { table_value.emplace_back((table_value_) ? new ss::ssfb2::AnimationAttributeChangeTextureT(*table_value_) : nullptr); }
 }
 
 inline ContainerChangeTextureT &ContainerChangeTextureT::operator=(ContainerChangeTextureT o) FLATBUFFERS_NOEXCEPT {
   std::swap(type_pack, o.type_pack);
-  std::swap(tabel_code_value, o.tabel_code_value);
-  std::swap(tabel_value, o.tabel_value);
-  std::swap(tabel_accessory, o.tabel_accessory);
+  std::swap(table_code_value, o.table_code_value);
+  std::swap(table_value, o.table_value);
+  std::swap(table_accessory, o.table_accessory);
   return *this;
 }
 
@@ -5547,9 +5576,9 @@ inline void ContainerChangeTexture::UnPackTo(ContainerChangeTextureT *_o, const 
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = tabel_code_value(); if (_e) { _o->tabel_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->tabel_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->tabel_code_value[_i].get(), _resolver); } else { _o->tabel_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->tabel_code_value.resize(0); } }
-  { auto _e = tabel_value(); if (_e) { _o->tabel_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_value[_i] = *_e->Get(_i); } } else { _o->tabel_value.resize(0); } }
-  { auto _e = tabel_accessory(); if (_e) { _o->tabel_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->tabel_accessory[_i] = _e->Get(_i); } } else { _o->tabel_accessory.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<ContainerChangeTexture> ContainerChangeTexture::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const ContainerChangeTextureT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -5561,15 +5590,15 @@ inline ::flatbuffers::Offset<ContainerChangeTexture> CreateContainerChangeTextur
   (void)_o;
   struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const ContainerChangeTextureT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _type_pack = _o->type_pack;
-  auto _tabel_code_value = _o->tabel_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->tabel_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->tabel_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
-  auto _tabel_value = _o->tabel_value.size() ? _fbb.CreateVectorOfStructs(_o->tabel_value) : 0;
-  auto _tabel_accessory = _o->tabel_accessory.size() ? _fbb.CreateVector(_o->tabel_accessory) : 0;
+  auto _table_code_value = _o->table_code_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::CodeValueContainer>> (_o->table_code_value.size(), [](size_t i, _VectorArgs *__va) { return CreateCodeValueContainer(*__va->__fbb, __va->__o->table_code_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_value = _o->table_value.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::AnimationAttributeChangeTexture>> (_o->table_value.size(), [](size_t i, _VectorArgs *__va) { return CreateAnimationAttributeChangeTexture(*__va->__fbb, __va->__o->table_value[i].get(), __va->__rehasher); }, &_va ) : 0;
+  auto _table_accessory = _o->table_accessory.size() ? _fbb.CreateVector(_o->table_accessory) : 0;
   return ss::ssfb2::CreateContainerChangeTexture(
       _fbb,
       _type_pack,
-      _tabel_code_value,
-      _tabel_value,
-      _tabel_accessory);
+      _table_code_value,
+      _table_value,
+      _table_accessory);
 }
 
 
@@ -5981,7 +6010,7 @@ inline bool operator==(const DataEffectEmitterT &lhs, const DataEffectEmitterT &
       (lhs.count_particle_max == rhs.count_particle_max) &&
       (lhs.count_particle_emit == rhs.count_particle_emit) &&
       (lhs.count_parts_maximum == rhs.count_parts_maximum) &&
-      (lhs.table_pattern_emit == rhs.table_pattern_emit) &&
+      (lhs.table_pattern_emit.size() == rhs.table_pattern_emit.size() && std::equal(lhs.table_pattern_emit.cbegin(), lhs.table_pattern_emit.cend(), rhs.table_pattern_emit.cbegin(), [](std::shared_ptr<ss::ssfb2::PatternEmitT> const &a, std::shared_ptr<ss::ssfb2::PatternEmitT> const &b) { return (a == b) || (a && b && *a == *b); })) &&
       (lhs.table_pattern_offset == rhs.table_pattern_offset) &&
       (lhs.table_seed_particle == rhs.table_seed_particle);
 }
@@ -5996,38 +6025,39 @@ inline DataEffectEmitterT::DataEffectEmitterT(const DataEffectEmitterT &o)
         operation_blend_target(o.operation_blend_target),
         index_cell_map(o.index_cell_map),
         index_cell(o.index_cell),
-        angle((o.angle) ? new ss::ssfb2::RangeFloat(*o.angle) : nullptr),
-        gravity_directional((o.gravity_directional) ? new ss::ssfb2::Vector2(*o.gravity_directional) : nullptr),
-        gravity_point_position((o.gravity_point_position) ? new ss::ssfb2::Vector2(*o.gravity_point_position) : nullptr),
+        angle((o.angle) ? new ss::ssfb2::RangeFloatT(*o.angle) : nullptr),
+        gravity_directional((o.gravity_directional) ? new ss::ssfb2::Vector2T(*o.gravity_directional) : nullptr),
+        gravity_point_position((o.gravity_point_position) ? new ss::ssfb2::Vector2T(*o.gravity_point_position) : nullptr),
         gravity_point_power(o.gravity_point_power),
-        position((o.position) ? new ss::ssfb2::RangeVector2(*o.position) : nullptr),
-        rotation((o.rotation) ? new ss::ssfb2::RangeFloat(*o.rotation) : nullptr),
-        rotation_fluctuation((o.rotation_fluctuation) ? new ss::ssfb2::RangeFloat(*o.rotation_fluctuation) : nullptr),
+        position((o.position) ? new ss::ssfb2::RangeVector2T(*o.position) : nullptr),
+        rotation((o.rotation) ? new ss::ssfb2::RangeFloatT(*o.rotation) : nullptr),
+        rotation_fluctuation((o.rotation_fluctuation) ? new ss::ssfb2::RangeFloatT(*o.rotation_fluctuation) : nullptr),
         rotation_fluctuation_rate(o.rotation_fluctuation_rate),
         rotation_fluctuation_rate_time(o.rotation_fluctuation_rate_time),
-        rate_tangential_acceleration((o.rate_tangential_acceleration) ? new ss::ssfb2::RangeFloat(*o.rate_tangential_acceleration) : nullptr),
-        scale_start((o.scale_start) ? new ss::ssfb2::RangeVector2(*o.scale_start) : nullptr),
-        scale_rate_start((o.scale_rate_start) ? new ss::ssfb2::RangeFloat(*o.scale_rate_start) : nullptr),
-        scale_end((o.scale_end) ? new ss::ssfb2::RangeVector2(*o.scale_end) : nullptr),
-        scale_rate_end((o.scale_rate_end) ? new ss::ssfb2::RangeFloat(*o.scale_rate_end) : nullptr),
+        rate_tangential_acceleration((o.rate_tangential_acceleration) ? new ss::ssfb2::RangeFloatT(*o.rate_tangential_acceleration) : nullptr),
+        scale_start((o.scale_start) ? new ss::ssfb2::RangeVector2T(*o.scale_start) : nullptr),
+        scale_rate_start((o.scale_rate_start) ? new ss::ssfb2::RangeFloatT(*o.scale_rate_start) : nullptr),
+        scale_end((o.scale_end) ? new ss::ssfb2::RangeVector2T(*o.scale_end) : nullptr),
+        scale_rate_end((o.scale_rate_end) ? new ss::ssfb2::RangeFloatT(*o.scale_rate_end) : nullptr),
         delay(o.delay),
-        color_vertex((o.color_vertex) ? new ss::ssfb2::RangeColor(*o.color_vertex) : nullptr),
-        color_vertex_fluctuation((o.color_vertex_fluctuation) ? new ss::ssfb2::RangeColor(*o.color_vertex_fluctuation) : nullptr),
+        color_vertex((o.color_vertex) ? new ss::ssfb2::RangeColorT(*o.color_vertex) : nullptr),
+        color_vertex_fluctuation((o.color_vertex_fluctuation) ? new ss::ssfb2::RangeColorT(*o.color_vertex_fluctuation) : nullptr),
         alpha_fade_start(o.alpha_fade_start),
         alpha_fade_end(o.alpha_fade_end),
-        speed((o.speed) ? new ss::ssfb2::RangeFloat(*o.speed) : nullptr),
-        speed_fluctuation((o.speed_fluctuation) ? new ss::ssfb2::RangeFloat(*o.speed_fluctuation) : nullptr),
+        speed((o.speed) ? new ss::ssfb2::RangeFloatT(*o.speed) : nullptr),
+        speed_fluctuation((o.speed_fluctuation) ? new ss::ssfb2::RangeFloatT(*o.speed_fluctuation) : nullptr),
         turn_direction_fluctuation(o.turn_direction_fluctuation),
         seed_random(o.seed_random),
         duration_emitter(o.duration_emitter),
         interval(o.interval),
-        duration_particle((o.duration_particle) ? new ss::ssfb2::RangeFloat(*o.duration_particle) : nullptr),
+        duration_particle((o.duration_particle) ? new ss::ssfb2::RangeFloatT(*o.duration_particle) : nullptr),
         count_particle_max(o.count_particle_max),
         count_particle_emit(o.count_particle_emit),
         count_parts_maximum(o.count_parts_maximum),
-        table_pattern_emit(o.table_pattern_emit),
         table_pattern_offset(o.table_pattern_offset),
         table_seed_particle(o.table_seed_particle) {
+  table_pattern_emit.reserve(o.table_pattern_emit.size());
+  for (const auto &table_pattern_emit_ : o.table_pattern_emit) { table_pattern_emit.emplace_back((table_pattern_emit_) ? new ss::ssfb2::PatternEmitT(*table_pattern_emit_) : nullptr); }
 }
 
 inline DataEffectEmitterT &DataEffectEmitterT::operator=(DataEffectEmitterT o) FLATBUFFERS_NOEXCEPT {
@@ -6083,36 +6113,36 @@ inline void DataEffectEmitter::UnPackTo(DataEffectEmitterT *_o, const ::flatbuff
   { auto _e = operation_blend_target(); _o->operation_blend_target = _e; }
   { auto _e = index_cell_map(); _o->index_cell_map = _e; }
   { auto _e = index_cell(); _o->index_cell = _e; }
-  { auto _e = angle(); if (_e) _o->angle = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
-  { auto _e = gravity_directional(); if (_e) _o->gravity_directional = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
-  { auto _e = gravity_point_position(); if (_e) _o->gravity_point_position = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = angle(); if (_e) { if(_o->angle) { _e->UnPackTo(_o->angle.get(), _resolver); } else { _o->angle = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->angle) { _o->angle.reset(); } }
+  { auto _e = gravity_directional(); if (_e) { if(_o->gravity_directional) { _e->UnPackTo(_o->gravity_directional.get(), _resolver); } else { _o->gravity_directional = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->gravity_directional) { _o->gravity_directional.reset(); } }
+  { auto _e = gravity_point_position(); if (_e) { if(_o->gravity_point_position) { _e->UnPackTo(_o->gravity_point_position.get(), _resolver); } else { _o->gravity_point_position = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->gravity_point_position) { _o->gravity_point_position.reset(); } }
   { auto _e = gravity_point_power(); _o->gravity_point_power = _e; }
-  { auto _e = position(); if (_e) _o->position = std::shared_ptr<ss::ssfb2::RangeVector2>(new ss::ssfb2::RangeVector2(*_e)); }
-  { auto _e = rotation(); if (_e) _o->rotation = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
-  { auto _e = rotation_fluctuation(); if (_e) _o->rotation_fluctuation = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
+  { auto _e = position(); if (_e) { if(_o->position) { _e->UnPackTo(_o->position.get(), _resolver); } else { _o->position = std::shared_ptr<ss::ssfb2::RangeVector2T>(_e->UnPack(_resolver)); } } else if (_o->position) { _o->position.reset(); } }
+  { auto _e = rotation(); if (_e) { if(_o->rotation) { _e->UnPackTo(_o->rotation.get(), _resolver); } else { _o->rotation = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->rotation) { _o->rotation.reset(); } }
+  { auto _e = rotation_fluctuation(); if (_e) { if(_o->rotation_fluctuation) { _e->UnPackTo(_o->rotation_fluctuation.get(), _resolver); } else { _o->rotation_fluctuation = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->rotation_fluctuation) { _o->rotation_fluctuation.reset(); } }
   { auto _e = rotation_fluctuation_rate(); _o->rotation_fluctuation_rate = _e; }
   { auto _e = rotation_fluctuation_rate_time(); _o->rotation_fluctuation_rate_time = _e; }
-  { auto _e = rate_tangential_acceleration(); if (_e) _o->rate_tangential_acceleration = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
-  { auto _e = scale_start(); if (_e) _o->scale_start = std::shared_ptr<ss::ssfb2::RangeVector2>(new ss::ssfb2::RangeVector2(*_e)); }
-  { auto _e = scale_rate_start(); if (_e) _o->scale_rate_start = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
-  { auto _e = scale_end(); if (_e) _o->scale_end = std::shared_ptr<ss::ssfb2::RangeVector2>(new ss::ssfb2::RangeVector2(*_e)); }
-  { auto _e = scale_rate_end(); if (_e) _o->scale_rate_end = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
+  { auto _e = rate_tangential_acceleration(); if (_e) { if(_o->rate_tangential_acceleration) { _e->UnPackTo(_o->rate_tangential_acceleration.get(), _resolver); } else { _o->rate_tangential_acceleration = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->rate_tangential_acceleration) { _o->rate_tangential_acceleration.reset(); } }
+  { auto _e = scale_start(); if (_e) { if(_o->scale_start) { _e->UnPackTo(_o->scale_start.get(), _resolver); } else { _o->scale_start = std::shared_ptr<ss::ssfb2::RangeVector2T>(_e->UnPack(_resolver)); } } else if (_o->scale_start) { _o->scale_start.reset(); } }
+  { auto _e = scale_rate_start(); if (_e) { if(_o->scale_rate_start) { _e->UnPackTo(_o->scale_rate_start.get(), _resolver); } else { _o->scale_rate_start = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->scale_rate_start) { _o->scale_rate_start.reset(); } }
+  { auto _e = scale_end(); if (_e) { if(_o->scale_end) { _e->UnPackTo(_o->scale_end.get(), _resolver); } else { _o->scale_end = std::shared_ptr<ss::ssfb2::RangeVector2T>(_e->UnPack(_resolver)); } } else if (_o->scale_end) { _o->scale_end.reset(); } }
+  { auto _e = scale_rate_end(); if (_e) { if(_o->scale_rate_end) { _e->UnPackTo(_o->scale_rate_end.get(), _resolver); } else { _o->scale_rate_end = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->scale_rate_end) { _o->scale_rate_end.reset(); } }
   { auto _e = delay(); _o->delay = _e; }
-  { auto _e = color_vertex(); if (_e) _o->color_vertex = std::shared_ptr<ss::ssfb2::RangeColor>(new ss::ssfb2::RangeColor(*_e)); }
-  { auto _e = color_vertex_fluctuation(); if (_e) _o->color_vertex_fluctuation = std::shared_ptr<ss::ssfb2::RangeColor>(new ss::ssfb2::RangeColor(*_e)); }
+  { auto _e = color_vertex(); if (_e) { if(_o->color_vertex) { _e->UnPackTo(_o->color_vertex.get(), _resolver); } else { _o->color_vertex = std::shared_ptr<ss::ssfb2::RangeColorT>(_e->UnPack(_resolver)); } } else if (_o->color_vertex) { _o->color_vertex.reset(); } }
+  { auto _e = color_vertex_fluctuation(); if (_e) { if(_o->color_vertex_fluctuation) { _e->UnPackTo(_o->color_vertex_fluctuation.get(), _resolver); } else { _o->color_vertex_fluctuation = std::shared_ptr<ss::ssfb2::RangeColorT>(_e->UnPack(_resolver)); } } else if (_o->color_vertex_fluctuation) { _o->color_vertex_fluctuation.reset(); } }
   { auto _e = alpha_fade_start(); _o->alpha_fade_start = _e; }
   { auto _e = alpha_fade_end(); _o->alpha_fade_end = _e; }
-  { auto _e = speed(); if (_e) _o->speed = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
-  { auto _e = speed_fluctuation(); if (_e) _o->speed_fluctuation = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
+  { auto _e = speed(); if (_e) { if(_o->speed) { _e->UnPackTo(_o->speed.get(), _resolver); } else { _o->speed = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->speed) { _o->speed.reset(); } }
+  { auto _e = speed_fluctuation(); if (_e) { if(_o->speed_fluctuation) { _e->UnPackTo(_o->speed_fluctuation.get(), _resolver); } else { _o->speed_fluctuation = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->speed_fluctuation) { _o->speed_fluctuation.reset(); } }
   { auto _e = turn_direction_fluctuation(); _o->turn_direction_fluctuation = _e; }
   { auto _e = seed_random(); _o->seed_random = _e; }
   { auto _e = duration_emitter(); _o->duration_emitter = _e; }
   { auto _e = interval(); _o->interval = _e; }
-  { auto _e = duration_particle(); if (_e) _o->duration_particle = std::shared_ptr<ss::ssfb2::RangeFloat>(new ss::ssfb2::RangeFloat(*_e)); }
+  { auto _e = duration_particle(); if (_e) { if(_o->duration_particle) { _e->UnPackTo(_o->duration_particle.get(), _resolver); } else { _o->duration_particle = std::shared_ptr<ss::ssfb2::RangeFloatT>(_e->UnPack(_resolver)); } } else if (_o->duration_particle) { _o->duration_particle.reset(); } }
   { auto _e = count_particle_max(); _o->count_particle_max = _e; }
   { auto _e = count_particle_emit(); _o->count_particle_emit = _e; }
   { auto _e = count_parts_maximum(); _o->count_parts_maximum = _e; }
-  { auto _e = table_pattern_emit(); if (_e) { _o->table_pattern_emit.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_pattern_emit[_i] = *_e->Get(_i); } } else { _o->table_pattern_emit.resize(0); } }
+  { auto _e = table_pattern_emit(); if (_e) { _o->table_pattern_emit.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_pattern_emit[_i]) { _e->Get(_i)->UnPackTo(_o->table_pattern_emit[_i].get(), _resolver); } else { _o->table_pattern_emit[_i] = std::shared_ptr<ss::ssfb2::PatternEmitT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_pattern_emit.resize(0); } }
   { auto _e = table_pattern_offset(); if (_e) { _o->table_pattern_offset.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_pattern_offset[_i] = _e->Get(_i); } } else { _o->table_pattern_offset.resize(0); } }
   { auto _e = table_seed_particle(); if (_e) { _o->table_seed_particle.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_seed_particle[_i] = _e->Get(_i); } } else { _o->table_seed_particle.resize(0); } }
 }
@@ -6129,36 +6159,36 @@ inline ::flatbuffers::Offset<DataEffectEmitter> CreateDataEffectEmitter(::flatbu
   auto _operation_blend_target = _o->operation_blend_target;
   auto _index_cell_map = _o->index_cell_map;
   auto _index_cell = _o->index_cell;
-  auto _angle = _o->angle ? _o->angle.get() : nullptr;
-  auto _gravity_directional = _o->gravity_directional ? _o->gravity_directional.get() : nullptr;
-  auto _gravity_point_position = _o->gravity_point_position ? _o->gravity_point_position.get() : nullptr;
+  auto _angle = _o->angle ? CreateRangeFloat(_fbb, _o->angle.get(), _rehasher) : 0;
+  auto _gravity_directional = _o->gravity_directional ? CreateVector2(_fbb, _o->gravity_directional.get(), _rehasher) : 0;
+  auto _gravity_point_position = _o->gravity_point_position ? CreateVector2(_fbb, _o->gravity_point_position.get(), _rehasher) : 0;
   auto _gravity_point_power = _o->gravity_point_power;
-  auto _position = _o->position ? _o->position.get() : nullptr;
-  auto _rotation = _o->rotation ? _o->rotation.get() : nullptr;
-  auto _rotation_fluctuation = _o->rotation_fluctuation ? _o->rotation_fluctuation.get() : nullptr;
+  auto _position = _o->position ? CreateRangeVector2(_fbb, _o->position.get(), _rehasher) : 0;
+  auto _rotation = _o->rotation ? CreateRangeFloat(_fbb, _o->rotation.get(), _rehasher) : 0;
+  auto _rotation_fluctuation = _o->rotation_fluctuation ? CreateRangeFloat(_fbb, _o->rotation_fluctuation.get(), _rehasher) : 0;
   auto _rotation_fluctuation_rate = _o->rotation_fluctuation_rate;
   auto _rotation_fluctuation_rate_time = _o->rotation_fluctuation_rate_time;
-  auto _rate_tangential_acceleration = _o->rate_tangential_acceleration ? _o->rate_tangential_acceleration.get() : nullptr;
-  auto _scale_start = _o->scale_start ? _o->scale_start.get() : nullptr;
-  auto _scale_rate_start = _o->scale_rate_start ? _o->scale_rate_start.get() : nullptr;
-  auto _scale_end = _o->scale_end ? _o->scale_end.get() : nullptr;
-  auto _scale_rate_end = _o->scale_rate_end ? _o->scale_rate_end.get() : nullptr;
+  auto _rate_tangential_acceleration = _o->rate_tangential_acceleration ? CreateRangeFloat(_fbb, _o->rate_tangential_acceleration.get(), _rehasher) : 0;
+  auto _scale_start = _o->scale_start ? CreateRangeVector2(_fbb, _o->scale_start.get(), _rehasher) : 0;
+  auto _scale_rate_start = _o->scale_rate_start ? CreateRangeFloat(_fbb, _o->scale_rate_start.get(), _rehasher) : 0;
+  auto _scale_end = _o->scale_end ? CreateRangeVector2(_fbb, _o->scale_end.get(), _rehasher) : 0;
+  auto _scale_rate_end = _o->scale_rate_end ? CreateRangeFloat(_fbb, _o->scale_rate_end.get(), _rehasher) : 0;
   auto _delay = _o->delay;
-  auto _color_vertex = _o->color_vertex ? _o->color_vertex.get() : nullptr;
-  auto _color_vertex_fluctuation = _o->color_vertex_fluctuation ? _o->color_vertex_fluctuation.get() : nullptr;
+  auto _color_vertex = _o->color_vertex ? CreateRangeColor(_fbb, _o->color_vertex.get(), _rehasher) : 0;
+  auto _color_vertex_fluctuation = _o->color_vertex_fluctuation ? CreateRangeColor(_fbb, _o->color_vertex_fluctuation.get(), _rehasher) : 0;
   auto _alpha_fade_start = _o->alpha_fade_start;
   auto _alpha_fade_end = _o->alpha_fade_end;
-  auto _speed = _o->speed ? _o->speed.get() : nullptr;
-  auto _speed_fluctuation = _o->speed_fluctuation ? _o->speed_fluctuation.get() : nullptr;
+  auto _speed = _o->speed ? CreateRangeFloat(_fbb, _o->speed.get(), _rehasher) : 0;
+  auto _speed_fluctuation = _o->speed_fluctuation ? CreateRangeFloat(_fbb, _o->speed_fluctuation.get(), _rehasher) : 0;
   auto _turn_direction_fluctuation = _o->turn_direction_fluctuation;
   auto _seed_random = _o->seed_random;
   auto _duration_emitter = _o->duration_emitter;
   auto _interval = _o->interval;
-  auto _duration_particle = _o->duration_particle ? _o->duration_particle.get() : nullptr;
+  auto _duration_particle = _o->duration_particle ? CreateRangeFloat(_fbb, _o->duration_particle.get(), _rehasher) : 0;
   auto _count_particle_max = _o->count_particle_max;
   auto _count_particle_emit = _o->count_particle_emit;
   auto _count_parts_maximum = _o->count_parts_maximum;
-  auto _table_pattern_emit = _o->table_pattern_emit.size() ? _fbb.CreateVectorOfStructs(_o->table_pattern_emit) : 0;
+  auto _table_pattern_emit = _o->table_pattern_emit.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::PatternEmit>> (_o->table_pattern_emit.size(), [](size_t i, _VectorArgs *__va) { return CreatePatternEmit(*__va->__fbb, __va->__o->table_pattern_emit[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_pattern_offset = _o->table_pattern_offset.size() ? _fbb.CreateVector(_o->table_pattern_offset) : 0;
   auto _table_seed_particle = _o->table_seed_particle.size() ? _fbb.CreateVector(_o->table_seed_particle) : 0;
   return ss::ssfb2::CreateDataEffectEmitter(

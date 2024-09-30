@@ -17,13 +17,13 @@ namespace SpriteStudio {
         std::string NameFace;
         int Size;
         // FlagBitStatus Status;
-        ss::ssfb2::Vector2 Scale;							/* Strech */
+        ss::ssfb2::Vector2T Scale;							/* Strech */
         // Vector4 Padding;							/* .x=L / .y=U / .z=R / .W=D */
-        ss::ssfb2::Vector2 Spacing;
+        ss::ssfb2::Vector2T Spacing;
 
         int HeightLine;
         int Base;
-        ss::ssfb2::Vector2 PixelSizeTexture;
+        ss::ssfb2::Vector2T PixelSizeTexture;
         int CountPage;
 
         int CountGryph;

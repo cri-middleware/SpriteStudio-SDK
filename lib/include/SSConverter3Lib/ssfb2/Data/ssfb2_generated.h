@@ -345,7 +345,7 @@ struct DataEffectT : public ::flatbuffers::NativeTable {
   int32_t version_renderer = 0;
   int32_t count_max_particle = 0;
   int32_t count_frame_per_second = 0;
-  std::shared_ptr<ss::ssfb2::Vector2> scale_layout{};
+  std::shared_ptr<ss::ssfb2::Vector2T> scale_layout{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectPartsT>> table_parts{};
   std::vector<std::shared_ptr<ss::ssfb2::DataEffectEmitterT>> table_emitter{};
   std::vector<int32_t> table_index_emitter_order_draw{};
@@ -415,10 +415,10 @@ struct DataEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<int32_t>(VT_COUNT_FRAME_PER_SECOND, _count_frame_per_second, 0);
   }
   const ss::ssfb2::Vector2 *scale_layout() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
   }
   ss::ssfb2::Vector2 *mutable_scale_layout() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SCALE_LAYOUT);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *table_parts() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *>(VT_TABLE_PARTS);
@@ -448,7 +448,8 @@ struct DataEffect FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_VERSION_RENDERER, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_MAX_PARTICLE, 4) &&
            VerifyField<int32_t>(verifier, VT_COUNT_FRAME_PER_SECOND, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SCALE_LAYOUT, 4) &&
+           VerifyOffset(verifier, VT_SCALE_LAYOUT) &&
+           verifier.VerifyTable(scale_layout()) &&
            VerifyOffset(verifier, VT_TABLE_PARTS) &&
            verifier.VerifyVector(table_parts()) &&
            verifier.VerifyVectorOfTables(table_parts()) &&
@@ -489,8 +490,8 @@ struct DataEffectBuilder {
   void add_count_frame_per_second(int32_t count_frame_per_second) {
     fbb_.AddElement<int32_t>(DataEffect::VT_COUNT_FRAME_PER_SECOND, count_frame_per_second, 0);
   }
-  void add_scale_layout(const ss::ssfb2::Vector2 *scale_layout) {
-    fbb_.AddStruct(DataEffect::VT_SCALE_LAYOUT, scale_layout);
+  void add_scale_layout(::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout) {
+    fbb_.AddOffset(DataEffect::VT_SCALE_LAYOUT, scale_layout);
   }
   void add_table_parts(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>>> table_parts) {
     fbb_.AddOffset(DataEffect::VT_TABLE_PARTS, table_parts);
@@ -521,7 +522,7 @@ inline ::flatbuffers::Offset<DataEffect> CreateDataEffect(
     int32_t version_renderer = 0,
     int32_t count_max_particle = 0,
     int32_t count_frame_per_second = 0,
-    const ss::ssfb2::Vector2 *scale_layout = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>>> table_parts = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>>> table_emitter = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<int32_t>> table_index_emitter_order_draw = 0) {
@@ -554,7 +555,7 @@ inline ::flatbuffers::Offset<DataEffect> CreateDataEffectDirect(
     int32_t version_renderer = 0,
     int32_t count_max_particle = 0,
     int32_t count_frame_per_second = 0,
-    const ss::ssfb2::Vector2 *scale_layout = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale_layout = 0,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> *table_parts = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>> *table_emitter = nullptr,
     const std::vector<int32_t> *table_index_emitter_order_draw = nullptr) {
@@ -701,9 +702,9 @@ struct FontBitmapT : public ::flatbuffers::NativeTable {
   uint16_t padding_d = 0;
   int16_t base = 0;
   int16_t height_line = 0;
-  std::shared_ptr<ss::ssfb2::Vector2> scale{};
-  std::shared_ptr<ss::ssfb2::Vector2> spacing{};
-  std::shared_ptr<ss::ssfb2::Vector2> size_texture_original{};
+  std::shared_ptr<ss::ssfb2::Vector2T> scale{};
+  std::shared_ptr<ss::ssfb2::Vector2T> spacing{};
+  std::shared_ptr<ss::ssfb2::Vector2T> size_texture_original{};
   std::vector<std::string> name_texture{};
   std::vector<std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>> table_data{};
   FontBitmapT() = default;
@@ -794,22 +795,22 @@ struct FontBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return SetField<int16_t>(VT_HEIGHT_LINE, _height_line, 0);
   }
   const ss::ssfb2::Vector2 *scale() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SCALE);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SCALE);
   }
   ss::ssfb2::Vector2 *mutable_scale() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_SCALE);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SCALE);
   }
   const ss::ssfb2::Vector2 *spacing() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SPACING);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SPACING);
   }
   ss::ssfb2::Vector2 *mutable_spacing() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_SPACING);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SPACING);
   }
   const ss::ssfb2::Vector2 *size_texture_original() const {
-    return GetStruct<const ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
+    return GetPointer<const ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
   }
   ss::ssfb2::Vector2 *mutable_size_texture_original() {
-    return GetStruct<ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
+    return GetPointer<ss::ssfb2::Vector2 *>(VT_SIZE_TEXTURE_ORIGINAL);
   }
   const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture() const {
     return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_NAME_TEXTURE);
@@ -837,9 +838,12 @@ struct FontBitmap FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<uint16_t>(verifier, VT_PADDING_D, 2) &&
            VerifyField<int16_t>(verifier, VT_BASE, 2) &&
            VerifyField<int16_t>(verifier, VT_HEIGHT_LINE, 2) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SCALE, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SPACING, 4) &&
-           VerifyField<ss::ssfb2::Vector2>(verifier, VT_SIZE_TEXTURE_ORIGINAL, 4) &&
+           VerifyOffset(verifier, VT_SCALE) &&
+           verifier.VerifyTable(scale()) &&
+           VerifyOffset(verifier, VT_SPACING) &&
+           verifier.VerifyTable(spacing()) &&
+           VerifyOffset(verifier, VT_SIZE_TEXTURE_ORIGINAL) &&
+           verifier.VerifyTable(size_texture_original()) &&
            VerifyOffset(verifier, VT_NAME_TEXTURE) &&
            verifier.VerifyVector(name_texture()) &&
            verifier.VerifyVectorOfStrings(name_texture()) &&
@@ -887,14 +891,14 @@ struct FontBitmapBuilder {
   void add_height_line(int16_t height_line) {
     fbb_.AddElement<int16_t>(FontBitmap::VT_HEIGHT_LINE, height_line, 0);
   }
-  void add_scale(const ss::ssfb2::Vector2 *scale) {
-    fbb_.AddStruct(FontBitmap::VT_SCALE, scale);
+  void add_scale(::flatbuffers::Offset<ss::ssfb2::Vector2> scale) {
+    fbb_.AddOffset(FontBitmap::VT_SCALE, scale);
   }
-  void add_spacing(const ss::ssfb2::Vector2 *spacing) {
-    fbb_.AddStruct(FontBitmap::VT_SPACING, spacing);
+  void add_spacing(::flatbuffers::Offset<ss::ssfb2::Vector2> spacing) {
+    fbb_.AddOffset(FontBitmap::VT_SPACING, spacing);
   }
-  void add_size_texture_original(const ss::ssfb2::Vector2 *size_texture_original) {
-    fbb_.AddStruct(FontBitmap::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
+  void add_size_texture_original(::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original) {
+    fbb_.AddOffset(FontBitmap::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
   }
   void add_name_texture(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture) {
     fbb_.AddOffset(FontBitmap::VT_NAME_TEXTURE, name_texture);
@@ -925,9 +929,9 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmap(
     uint16_t padding_d = 0,
     int16_t base = 0,
     int16_t height_line = 0,
-    const ss::ssfb2::Vector2 *scale = nullptr,
-    const ss::ssfb2::Vector2 *spacing = nullptr,
-    const ss::ssfb2::Vector2 *size_texture_original = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> spacing = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> name_texture = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>>> table_data = 0) {
   FontBitmapBuilder builder_(_fbb);
@@ -966,9 +970,9 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmapDirect(
     uint16_t padding_d = 0,
     int16_t base = 0,
     int16_t height_line = 0,
-    const ss::ssfb2::Vector2 *scale = nullptr,
-    const ss::ssfb2::Vector2 *spacing = nullptr,
-    const ss::ssfb2::Vector2 *size_texture_original = nullptr,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> scale = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> spacing = 0,
+    ::flatbuffers::Offset<ss::ssfb2::Vector2> size_texture_original = 0,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *name_texture = nullptr,
     const std::vector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>> *table_data = nullptr) {
   auto name__ = name ? _fbb.CreateString(name) : 0;
@@ -1533,7 +1537,7 @@ inline DataEffectT::DataEffectT(const DataEffectT &o)
         version_renderer(o.version_renderer),
         count_max_particle(o.count_max_particle),
         count_frame_per_second(o.count_frame_per_second),
-        scale_layout((o.scale_layout) ? new ss::ssfb2::Vector2(*o.scale_layout) : nullptr),
+        scale_layout((o.scale_layout) ? new ss::ssfb2::Vector2T(*o.scale_layout) : nullptr),
         table_index_emitter_order_draw(o.table_index_emitter_order_draw) {
   table_parts.reserve(o.table_parts.size());
   for (const auto &table_parts_ : o.table_parts) { table_parts.emplace_back((table_parts_) ? new ss::ssfb2::DataEffectPartsT(*table_parts_) : nullptr); }
@@ -1572,7 +1576,7 @@ inline void DataEffect::UnPackTo(DataEffectT *_o, const ::flatbuffers::resolver_
   { auto _e = version_renderer(); _o->version_renderer = _e; }
   { auto _e = count_max_particle(); _o->count_max_particle = _e; }
   { auto _e = count_frame_per_second(); _o->count_frame_per_second = _e; }
-  { auto _e = scale_layout(); if (_e) _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = scale_layout(); if (_e) { if(_o->scale_layout) { _e->UnPackTo(_o->scale_layout.get(), _resolver); } else { _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale_layout) { _o->scale_layout.reset(); } }
   { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataEffectPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
   { auto _e = table_emitter(); if (_e) { _o->table_emitter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_emitter[_i]) { _e->Get(_i)->UnPackTo(_o->table_emitter[_i].get(), _resolver); } else { _o->table_emitter[_i] = std::shared_ptr<ss::ssfb2::DataEffectEmitterT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_emitter.resize(0); } }
   { auto _e = table_index_emitter_order_draw(); if (_e) { _o->table_index_emitter_order_draw.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_emitter_order_draw[_i] = _e->Get(_i); } } else { _o->table_index_emitter_order_draw.resize(0); } }
@@ -1593,7 +1597,7 @@ inline ::flatbuffers::Offset<DataEffect> CreateDataEffect(::flatbuffers::FlatBuf
   auto _version_renderer = _o->version_renderer;
   auto _count_max_particle = _o->count_max_particle;
   auto _count_frame_per_second = _o->count_frame_per_second;
-  auto _scale_layout = _o->scale_layout ? _o->scale_layout.get() : nullptr;
+  auto _scale_layout = _o->scale_layout ? CreateVector2(_fbb, _o->scale_layout.get(), _rehasher) : 0;
   auto _table_parts = _o->table_parts.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffectParts>> (_o->table_parts.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffectParts(*__va->__fbb, __va->__o->table_parts[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_emitter = _o->table_emitter.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::DataEffectEmitter>> (_o->table_emitter.size(), [](size_t i, _VectorArgs *__va) { return CreateDataEffectEmitter(*__va->__fbb, __va->__o->table_emitter[i].get(), __va->__rehasher); }, &_va ) : 0;
   auto _table_index_emitter_order_draw = _o->table_index_emitter_order_draw.size() ? _fbb.CreateVector(_o->table_index_emitter_order_draw) : 0;
@@ -1707,9 +1711,9 @@ inline FontBitmapT::FontBitmapT(const FontBitmapT &o)
         padding_d(o.padding_d),
         base(o.base),
         height_line(o.height_line),
-        scale((o.scale) ? new ss::ssfb2::Vector2(*o.scale) : nullptr),
-        spacing((o.spacing) ? new ss::ssfb2::Vector2(*o.spacing) : nullptr),
-        size_texture_original((o.size_texture_original) ? new ss::ssfb2::Vector2(*o.size_texture_original) : nullptr),
+        scale((o.scale) ? new ss::ssfb2::Vector2T(*o.scale) : nullptr),
+        spacing((o.spacing) ? new ss::ssfb2::Vector2T(*o.spacing) : nullptr),
+        size_texture_original((o.size_texture_original) ? new ss::ssfb2::Vector2T(*o.size_texture_original) : nullptr),
         name_texture(o.name_texture) {
   table_data.reserve(o.table_data.size());
   for (const auto &table_data_ : o.table_data) { table_data.emplace_back((table_data_) ? new ss::ssfb2::LibraryDataFontGryphBitmapT(*table_data_) : nullptr); }
@@ -1753,9 +1757,9 @@ inline void FontBitmap::UnPackTo(FontBitmapT *_o, const ::flatbuffers::resolver_
   { auto _e = padding_d(); _o->padding_d = _e; }
   { auto _e = base(); _o->base = _e; }
   { auto _e = height_line(); _o->height_line = _e; }
-  { auto _e = scale(); if (_e) _o->scale = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
-  { auto _e = spacing(); if (_e) _o->spacing = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
-  { auto _e = size_texture_original(); if (_e) _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2>(new ss::ssfb2::Vector2(*_e)); }
+  { auto _e = scale(); if (_e) { if(_o->scale) { _e->UnPackTo(_o->scale.get(), _resolver); } else { _o->scale = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale) { _o->scale.reset(); } }
+  { auto _e = spacing(); if (_e) { if(_o->spacing) { _e->UnPackTo(_o->spacing.get(), _resolver); } else { _o->spacing = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->spacing) { _o->spacing.reset(); } }
+  { auto _e = size_texture_original(); if (_e) { if(_o->size_texture_original) { _e->UnPackTo(_o->size_texture_original.get(), _resolver); } else { _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->size_texture_original) { _o->size_texture_original.reset(); } }
   { auto _e = name_texture(); if (_e) { _o->name_texture.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_texture[_i] = _e->Get(_i)->str(); } } else { _o->name_texture.resize(0); } }
   { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
 }
@@ -1778,9 +1782,9 @@ inline ::flatbuffers::Offset<FontBitmap> CreateFontBitmap(::flatbuffers::FlatBuf
   auto _padding_d = _o->padding_d;
   auto _base = _o->base;
   auto _height_line = _o->height_line;
-  auto _scale = _o->scale ? _o->scale.get() : nullptr;
-  auto _spacing = _o->spacing ? _o->spacing.get() : nullptr;
-  auto _size_texture_original = _o->size_texture_original ? _o->size_texture_original.get() : nullptr;
+  auto _scale = _o->scale ? CreateVector2(_fbb, _o->scale.get(), _rehasher) : 0;
+  auto _spacing = _o->spacing ? CreateVector2(_fbb, _o->spacing.get(), _rehasher) : 0;
+  auto _size_texture_original = _o->size_texture_original ? CreateVector2(_fbb, _o->size_texture_original.get(), _rehasher) : 0;
   auto _name_texture = _o->name_texture.size() ? _fbb.CreateVectorOfStrings(_o->name_texture) : 0;
   auto _table_data = _o->table_data.size() ? _fbb.CreateVector<::flatbuffers::Offset<ss::ssfb2::LibraryDataFontGryphBitmap>> (_o->table_data.size(), [](size_t i, _VectorArgs *__va) { return CreateLibraryDataFontGryphBitmap(*__va->__fbb, __va->__o->table_data[i].get(), __va->__rehasher); }, &_va ) : 0;
   return ss::ssfb2::CreateFontBitmap(

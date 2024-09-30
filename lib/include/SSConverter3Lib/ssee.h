@@ -33,7 +33,7 @@ namespace SpriteStudio {
         SSEEVersion version;
 
         int VersionRenderer;
-        ss::ssfb2::Vector2 ScaleLayout;
+        ss::ssfb2::Vector2T ScaleLayout;
         int SeedRandom;
         bool FlagLockSeed;
         int FramePerSecond;
