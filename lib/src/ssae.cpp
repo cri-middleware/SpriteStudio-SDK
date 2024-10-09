@@ -563,10 +563,12 @@ std::shared_ptr<ss::ssfb2::ColorLabelT> SSAE::Impl::getColorLabel(const std::str
             colorLabel->form = ss::ssfb2::KindFormColorLabel::GRAY;
         } else {
             auto argb = std::stoul(valueText, 0, 16);
-            colorLabel->color->a = (argb >> 24) & 0xff;
-            colorLabel->color->r = (argb >> 16) & 0xff;
-            colorLabel->color->g = (argb >> 8) & 0xff;
-            colorLabel->color->b = (argb & 0xff);
+            auto color = std::make_shared<ss::ssfb2::Color32T>();
+            color->a = (argb >> 24) & 0xff;
+            color->r = (argb >> 16) & 0xff;
+            color->g = (argb >> 8) & 0xff;
+            color->b = (argb & 0xff);
+            colorLabel->color = color;
         }
     }
 

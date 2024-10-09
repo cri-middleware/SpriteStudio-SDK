@@ -254,6 +254,10 @@ std::tuple<int, int> SSConverter3Lib::Impl::convertSSPJ(const std::shared_ptr<SS
     for (const auto& item : sspjInfo->TableInformationSSCE) {
         SSCE ssce;
         ssce.DataConverter(options, sspjInfo, item);
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
+        }
     }
 }
 

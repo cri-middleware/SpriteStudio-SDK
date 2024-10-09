@@ -185,8 +185,10 @@ void SSCE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SS
         int countCell = item->TableCell.size();
 
         item->Data.name = item->NameFileBody();
-        item->Data.size_original->x = (float)informationTexture->SizeX;
-        item->Data.size_original->y = (float)informationTexture->SizeY;
+        auto size_original = std::make_shared<ss::ssfb2::Vector2T>();
+        size_original->x = (float)informationTexture->SizeX;
+        size_original->y = (float)informationTexture->SizeY;
+        item->Data.size_original = size_original;
         item->Data.table_cell = std::vector<std::shared_ptr<ss::ssfb2::CellT>>(countCell);
         item->Data.filter = static_cast<int16_t>(item->FilterTexture);
         item->Data.wrap = static_cast<int16_t>(item->WrapTexture);
