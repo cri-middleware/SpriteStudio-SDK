@@ -6,6 +6,7 @@
 #include "util.h"
 #include "error.h"
 #include "SSConverter3Lib/ssae.h"
+#include "SSConverter3Lib/ssce.h"
 
 using namespace SpriteStudio;
 const PhaseType PHASE = PhaseType::PARSE;
@@ -26,6 +27,37 @@ std::string SSPJInformation::NameFileBody() const {
 
 std::string SSPJInformation::NameFileExtension() const {
     return util::getNameFileExtension(sspj);
+}
+
+void SSPJInformation::InformationCreateTexture(const ConvertOptions &options) {
+    // create Texture-Information Table
+    int countTexture = ListNameTexture.size();
+    int countSSCE = TableInformationSSCE.size();
+    TableInformationTexture = std::vector<std::shared_ptr<SSCEInformationTexture>>(countTexture);
+    for (int i=0; i<countTexture; i++) {
+        TableInformationTexture[i] = nullptr;
+    }
+
+    // create Texture-Informations
+    if (!ListNameTexture.empty()) {
+        int indexTexture;
+        std::string namePathTexture;
+        for(int i=0; i<countSSCE; i++) {
+            auto ssce = TableInformationSSCE[i];
+            indexTexture = ssce->IndexTexture;
+            namePathTexture = ListNameTexture[indexTexture];
+            if(TableInformationTexture[indexTexture] == nullptr) {	/* Not Created */
+                auto informationTexture = std::make_shared<SSCEInformationTexture>();
+                TableInformationTexture[indexTexture] = informationTexture;
+
+                informationTexture->file = (std::filesystem::path(NameDirectoryBaseTexture) / std::filesystem::path(namePathTexture)).string();
+                informationTexture->Wrap = ssce->WrapTexture;
+                informationTexture->Filter = ssce->FilterTexture;
+                informationTexture->SizeX = ssce->SizePixelX;
+                informationTexture->SizeY = ssce->SizePixelY;
+            }
+        }
+    }
 }
 
 int SSPJInformation::addTexture(const std::string &nameTexture) {

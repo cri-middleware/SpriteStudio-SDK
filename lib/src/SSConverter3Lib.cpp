@@ -22,6 +22,7 @@ using namespace SpriteStudio;
 
 struct SSConverter3Lib::Impl {
     std::tuple<std::shared_ptr<SSPJInformation>, int, int> parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options);
+    std::tuple<int, int> convertSSPJ(const std::shared_ptr<SSPJInformation>& sspjInfo, int progress, int progressMax, const ConvertOptions& options);
 };
 
 std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::parseSSPJ(const std::filesystem::path &inputPath, const ConvertOptions& options) {
@@ -220,7 +221,40 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     }
     ssqeFeatures.clear();
 
+    // create Texture-Information
+    sspjInfo->InformationCreateTexture(options);
+
+
     return std::make_tuple(sspjInfo, progress, progressMax);
+}
+
+std::tuple<int, int> SSConverter3Lib::Impl::convertSSPJ(const std::shared_ptr<SSPJInformation> &sspjInfo, int progress, int progressMax, const ConvertOptions& options) {
+    PhaseType phase = PhaseType::CONVERT;
+    std::string phaseName = phase::getPhaseName(phase);
+
+    // create Asset: SoundList
+    for (const auto& item : sspjInfo->TableInformationSSSE) {
+        // do nothing at the moment
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
+        }
+    }
+
+    // create Asset: Font-Bitmap
+    for (const auto& item : sspjInfo->TableInformationFnt) {
+        // do nothing at the moment
+        progress++;
+        if (options.progressCallback) {
+            options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
+        }
+    }
+
+    // create Asset: CellMap */
+    for (const auto& item : sspjInfo->TableInformationSSCE) {
+        SSCE ssce;
+        ssce.DataConverter(options, sspjInfo, item);
+    }
 }
 
 std::unique_ptr<SSConverter3Lib::Impl> SSConverter3Lib::pImpl = std::make_unique<Impl>();
@@ -234,5 +268,5 @@ void SSConverter3Lib::convert(const std::string &input, const ConvertOptions& op
     }
 
     auto [sspjInfo, progress, progressMax] = SSConverter3Lib::pImpl->parseSSPJ(inputPath, options);
-
+    std::tie(progress, progressMax) = SSConverter3Lib::pImpl->convertSSPJ(sspjInfo, progress, progressMax, options);
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 
+#include "SSConverter3Lib.h"
 #include "version.h"
 #include "ssfb2/type_base_generated.h"
 #include "ssfb2/Data/common_ssfb2_generated.h"
@@ -16,6 +17,7 @@ namespace SpriteStudio {
     class FntInformation;
     class SSCE;
     class SSCEInformation;
+    class SSCEInformationTexture;
     class SSAE;
     class SSAEInformation;
     class SSEE;
@@ -23,19 +25,19 @@ namespace SpriteStudio {
     class SSQE;
     class SSQEInformation;
 
-    enum class KindWrap : uint8_t {
+    enum class KindWrap {
         Clamp = 0,
         Repeart,
         Mirror, // Unsupported
     };
 
-    enum class KindFilter : uint8_t {
+    enum class KindFilter {
         Nearest = 0,
         Linear,
         Bilinear,
     };
 
-    enum class KindCoordUnit : int8_t {
+    enum class KindCoordUnit {
         Invalid = -1,
         Rate,
         Pix,
@@ -69,6 +71,8 @@ namespace SpriteStudio {
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
 
+        void InformationCreateTexture(const ConvertOptions& options);
+
         SSPJVersion version;
 
         KindWrap WrapTexture;
@@ -79,7 +83,7 @@ namespace SpriteStudio {
         bool FlagVertexAnimeFloat;
 
         std::string NameDirectoryBaseTexture;
-        //SSCE::Information.Texture[] TableInformationTexture;
+        std::vector<std::shared_ptr<SSCEInformationTexture>> TableInformationTexture;
         std::vector<std::string> ListNameTexture;	/* Temporary ... Accumulating list for determine TableNameTexture. Valid during analyzing SSxx-s. */
 
         // SSCE::Information::Texture[] TableInformationTextureExternal;

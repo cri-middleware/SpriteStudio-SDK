@@ -2,6 +2,8 @@
 
 #include <string>
 #include <vector>
+
+#include "SSConverter3Lib.h"
 #include "version.h"
 #include "ssfb2/type_base_generated.h"
 #include "ssfb2/Data/common_ssfb2_generated.h"
@@ -10,6 +12,8 @@
 
 namespace SpriteStudio {
     class SSPJInformation;
+    enum class KindWrap;
+    enum class KindFilter;
 
     enum class SSCEVersion : uint32_t {
         ERROR = static_cast<uint32_t>(Version::ERROR),
@@ -39,8 +43,8 @@ namespace SpriteStudio {
         int IndexTexture;
         int SizePixelX;	/* Temporary */
         int SizePixelY;	/* Temporary */
-        // Library_SpriteStudio6.Data.Texture.KindWrap WrapTexture;
-        // Library_SpriteStudio6.Data.Texture.KindFilter FilterTexture;
+        KindWrap WrapTexture;
+        KindFilter FilterTexture;
         bool FlagConvertImagePremultipliedAlpha;
         bool FlagBlendImagePremultipliedAlpha;
         bool FlagCorrectShaderPremultipliedAlpha;
@@ -55,12 +59,30 @@ namespace SpriteStudio {
 
     };
 
+    class SSCEInformationTexture {
+    public:
+        std::string file;
+        std::string NameDirectory() const;
+        std::string NameFileBody() const;
+        std::string NameFileExtension() const;
+        std::string NameFile() const;
+
+        KindWrap Wrap;
+        KindFilter Filter;
+
+        int SizeX;
+        int SizeY;
+    };
+
     class SSCE {
     public:
         SSCE();
         ~SSCE();
 
         std::shared_ptr<SSCEInformation> parse(const std::string& ssce, const std::shared_ptr<SSPJInformation> &sspjInfo);
+
+        void DataConverter(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo, const std::shared_ptr<SSCEInformation>& item);
+
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

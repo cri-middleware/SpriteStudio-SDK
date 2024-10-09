@@ -129,34 +129,33 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
     ssceInfo->FlagCorrectShaderPremultipliedAlpha = sspjInfo->FlagCorrectShaderPremultipliedAlpha;
 
     // get Texture Addressing
-    // TODO: impl
-    // ssceInfo->WrapTexture = sspjInfo->WrapTexture;
-    // ssceInfo->FilterTexture = sspjInfo->FilterTexture;
+    ssceInfo->WrapTexture = sspjInfo->WrapTexture;
+    ssceInfo->FilterTexture = sspjInfo->FilterTexture;
 
-    // std::tie(valueText, node) = getValueText("overrideTexSettings");
-    // if (!valueText.empty()) {
-    //     auto valueBool = node.text().as_bool()
-    //     if (valueBool) {
-    //         std::tie(valueText, node) = getValueText("wrapMode");
-    //         if (valueText == "repeat") {
-    //             ssceInfo->WrapTexture = KindWrap::Repeart;
-    //         } else if (valueText == "mirror") {
-    //             ssceInfo->WrapTexture = KindWrap::Mirror;
-    //         } else {
-    //             ssceInfo->WrapTexture = KindWrap::Clamp;
-    //         }
-    //
-    //         std::tie(valueText, node) = getValueText("filterMode");
-    //         if (valueText == "nearlest") {
-    //             ssceInfo->FilterTexture = KindFilter::Nearest;
-    //         } else if (valueText == "bilinear") {
-    //             ssceInfo->FilterTexture = KindFilter::Bilinear;
-    //         } else {
-    //             ssceInfo->FilterTexture = KindFilter::Linear;
-    //         }
-    //
-    //     }
-    // }
+    std::tie(valueText, node) = getValueText("overrideTexSettings");
+    if (!valueText.empty()) {
+        auto valueBool = node.text().as_bool();
+        if (valueBool) {
+            std::tie(valueText, node) = getValueText("wrapMode");
+            if (valueText == "repeat") {
+                ssceInfo->WrapTexture = KindWrap::Repeart;
+            } else if (valueText == "mirror") {
+                ssceInfo->WrapTexture = KindWrap::Mirror;
+            } else {
+                ssceInfo->WrapTexture = KindWrap::Clamp;
+            }
+
+            std::tie(valueText, node) = getValueText("filterMode");
+            if (valueText == "nearlest") {
+                ssceInfo->FilterTexture = KindFilter::Nearest;
+            } else if (valueText == "bilinear") {
+                ssceInfo->FilterTexture = KindFilter::Bilinear;
+            } else {
+                ssceInfo->FilterTexture = KindFilter::Linear;
+            }
+
+        }
+    }
 
     auto getList = [&nodeRoot](const std::string &query)  {
         return nodeRoot.select_nodes(query.c_str());
@@ -176,6 +175,37 @@ std::shared_ptr<SSCEInformation> SSCE::parse(const std::string &ssce, const std:
     ssceInfo->TableCell = listCell;
 
     return ssceInfo;
+}
+
+void SSCE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo, const std::shared_ptr<SSCEInformation> &item) {
+    auto flagDataIsSplit = options.split;
+
+    if(0 <= item->IndexTexture) {
+        auto informationTexture = sspjInfo->TableInformationTexture[item->IndexTexture];
+        int countCell = item->TableCell.size();
+
+        item->Data.name = item->NameFileBody();
+        item->Data.size_original->x = (float)informationTexture->SizeX;
+        item->Data.size_original->y = (float)informationTexture->SizeY;
+        item->Data.table_cell = std::vector<std::shared_ptr<ss::ssfb2::CellT>>(countCell);
+        item->Data.filter = static_cast<int16_t>(item->FilterTexture);
+        item->Data.wrap = static_cast<int16_t>(item->WrapTexture);
+        item->Data.status = ss::ssfb2::LibraryDataCellMapFlagBitStatus::CLEAR;
+        if(true == item->FlagConvertImagePremultipliedAlpha) {
+            item->Data.status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(item->Data.status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::TEXTURE_CONVERT_PMA));
+        }
+        if(true == item->FlagBlendImagePremultipliedAlpha) {
+            item->Data.status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(item->Data.status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::BLEND_IMAGE_PMA));
+        }
+        if(true == item->FlagCorrectShaderPremultipliedAlpha) {
+            item->Data.status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(item->Data.status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::CORRECT_SHADER_PMA));
+        }
+
+        for(int i=0; i<countCell; i++) {
+            item->Data.table_cell[i] = item->TableCell[i];
+        }
+        item->TableCell.clear();
+    }
 }
 
 std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &node) {
