@@ -60,6 +60,61 @@ void SSPJInformation::InformationCreateTexture(const ConvertOptions &options) {
     }
 }
 
+std::vector<int> SSPJInformation::QueueGetConvertSSAE(const ConvertOptions &options) {
+    auto countSSAE = TableInformationSSAE.size();
+    auto index = 0;
+
+    auto tableIndexSSAE = std::vector<int>();
+    tableIndexSSAE.resize(countSSAE);
+    for(int i=0; i<countSSAE; i++) {
+        tableIndexSSAE[i] = -1;
+    }
+
+    // Set having no "Instance"parts
+    for(int i=0; i<countSSAE; i++) {
+        if(0 >= CountGetInstancePartsSSAE(options, TableInformationSSAE[i])) {
+            tableIndexSSAE[index] = i;
+            index++;
+        }
+    }
+
+    // Set having "Instance"parts
+    auto flagAlreadyQueued = false;
+    auto flagAllInstanceExist = false;
+    while (countSSAE > index) {
+        for (int i=0; i<countSSAE; i++) {
+            // Check already queued
+            flagAlreadyQueued = false;
+            for (int j=0; j<index; j++) {
+                if (i == tableIndexSSAE[j]) {
+                    /* Already Set */
+                    flagAlreadyQueued = true;
+                    break;
+                }
+            }
+            if (true == flagAlreadyQueued) {
+                continue;
+            }
+
+            // Check all calling "Instance"s are queued
+            bool result;
+            bool flagAllInstanceExist;
+            std::tie(result, flagAllInstanceExist) = QueueCheckAllInstance(options, TableInformationSSAE[i], tableIndexSSAE, index);
+            if (result) {
+                throw error::getException(PHASE, DOC_PART, "not implemented", -1);
+            }
+
+            if (flagAllInstanceExist) {	/* All Queued */
+                tableIndexSSAE[index] = i;
+                index++;
+                break;	/* i-Loop */
+            }
+        }
+    }
+
+    return(tableIndexSSAE);
+}
+
 int SSPJInformation::addTexture(const std::string &nameTexture) {
     std::lock_guard<std::mutex> lock(m);
     int index;
@@ -127,6 +182,47 @@ int SSPJInformation::indexGetFontBitmap(const std::string &name) {
     }
 
     return index;
+}
+
+int SSPJInformation::CountGetInstancePartsSSAE(const ConvertOptions &options, const std::shared_ptr<SSAEInformation> &item) {
+    int count = 0;
+    for (const auto& parts : item->TableParts) {
+        if (ss::ssfb2::KindFeatureParts::INSTANCE == parts->data->feature) {
+            count ++;
+        }
+    }
+
+    return count;
+}
+
+std::tuple<bool, bool> SSPJInformation::QueueCheckAllInstance(const ConvertOptions & options, const std::shared_ptr<SSAEInformation>& item, const std::vector<int>& tableIndexSSAE, int countQueued) {
+    bool flagAllInstanceExist = false;
+    int indexInstanceSSAE;
+    bool flagExist;
+
+    for (const auto& parts : item->TableParts) {
+        if (ss::ssfb2::KindFeatureParts::INSTANCE == parts->data->feature) {
+            indexInstanceSSAE = indexGetAnimation(parts->NameUnderControl);
+            if(-1 == indexInstanceSSAE) {
+                flagAllInstanceExist = false;
+                return std::make_tuple(false, flagAllInstanceExist);
+            }
+            flagExist = false;
+            for (int j=0; j<countQueued; j++) {
+                if(tableIndexSSAE[j] == indexInstanceSSAE) {
+                    flagExist = true;
+                    break;
+                }
+            }
+            if(false == flagExist) {
+                flagAllInstanceExist = false;
+                return std::make_tuple(true, flagAllInstanceExist);
+            }
+        }
+    }
+
+    flagAllInstanceExist = true;
+    return std::make_tuple(true, flagAllInstanceExist);
 }
 
 SSPJ::SSPJ() : pImpl(std::make_unique<Impl>()) {

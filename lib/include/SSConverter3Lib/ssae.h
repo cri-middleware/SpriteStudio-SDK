@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SSConverter3Lib.h"
 #include "version.h"
 #include "ssfb2/type_base_generated.h"
 #include "ssfb2/Data/common_ssfb2_generated.h"
@@ -65,6 +66,9 @@ namespace SpriteStudio {
         bool FlagVerbose;
 
         bool FlagDeform;
+
+        std::string NameUnderControl;
+        std::string NameAnimationUnderControl;
     };
 
     class SSAEInformation {
@@ -87,6 +91,11 @@ namespace SpriteStudio {
         ~SSAE();
 
         std::shared_ptr<SSAEInformation> parse(const std::string& ssae, const std::shared_ptr<SSPJInformation> &sspjInfo);
+
+        void DataConverter(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo, const std::shared_ptr<SSAEInformation>& item);
+
+        void DataOutput(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo, const std::shared_ptr<SSAEInformation>& item);
+
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;

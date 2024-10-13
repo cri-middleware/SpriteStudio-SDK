@@ -184,30 +184,75 @@ void SSCE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SS
         auto informationTexture = sspjInfo->TableInformationTexture[item->IndexTexture];
         int countCell = item->TableCell.size();
 
-        item->Data.name = item->NameFileBody();
+        auto data = std::make_shared<ss::ssfb2::LibraryDataCellMapT>();
+        data->name = item->NameFileBody();
         auto size_original = std::make_shared<ss::ssfb2::Vector2T>();
         size_original->x = (float)informationTexture->SizeX;
         size_original->y = (float)informationTexture->SizeY;
-        item->Data.size_original = size_original;
-        item->Data.table_cell = std::vector<std::shared_ptr<ss::ssfb2::CellT>>(countCell);
-        item->Data.filter = static_cast<int16_t>(item->FilterTexture);
-        item->Data.wrap = static_cast<int16_t>(item->WrapTexture);
-        item->Data.status = ss::ssfb2::LibraryDataCellMapFlagBitStatus::CLEAR;
+        data->size_original = size_original;
+        data->table_cell = std::vector<std::shared_ptr<ss::ssfb2::CellT>>(countCell);
+        data->filter = static_cast<int16_t>(item->FilterTexture);
+        data->wrap = static_cast<int16_t>(item->WrapTexture);
+        data->status = ss::ssfb2::LibraryDataCellMapFlagBitStatus::CLEAR;
         if(true == item->FlagConvertImagePremultipliedAlpha) {
-            item->Data.status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(item->Data.status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::TEXTURE_CONVERT_PMA));
+            data->status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(data->status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::TEXTURE_CONVERT_PMA));
         }
         if(true == item->FlagBlendImagePremultipliedAlpha) {
-            item->Data.status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(item->Data.status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::BLEND_IMAGE_PMA));
+            data->status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(data->status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::BLEND_IMAGE_PMA));
         }
         if(true == item->FlagCorrectShaderPremultipliedAlpha) {
-            item->Data.status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(item->Data.status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::CORRECT_SHADER_PMA));
+            data->status = static_cast<ss::ssfb2::LibraryDataCellMapFlagBitStatus>(static_cast<uint16_t>(data->status) | static_cast<uint16_t>(ss::ssfb2::LibraryDataCellMapFlagBitStatus::CORRECT_SHADER_PMA));
         }
+        item->Data = data;
 
         for(int i=0; i<countCell; i++) {
-            item->Data.table_cell[i] = item->TableCell[i];
+            data->table_cell[i] = item->TableCell[i];
         }
         item->TableCell.clear();
     }
+}
+
+void SSCE::DataOutputCellMap(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo) {
+    /* MEMO: Even when outputting Split-Data,  "Cell-Map" data in Script_SpriteStudio6_DataCellMap is referenced    */
+    /*         starting from "Script_SpriteStudio6_DataCellMap.CellMap".                                            */
+    /*       For this reason, "Cell-Map" data is generated for each part after the state of Merged-Data is created. */
+
+    /* Generate Merged-Data */
+    auto dataCellMap = std::make_shared<ss::ssfb2::DataCellMapT>();
+
+    // sspjInfo->dataCellMapT->table_cell_map[0] =  DataCellMapSS6PU.TableData[0] = dataCellMap;
+
+    // TODO: impl version
+    int countSSCE = sspjInfo->TableInformationSSCE.size();
+    dataCellMap->version = std::make_shared<ss::ssfb2::DataVersion>();
+    // dataCellMap.Version.Code = LibraryEditor_SpriteStudio6.KindVersionData.TARGET_LATEST;
+    // dataCellMap.Version.Property = ss.ssfb2.DataVersionPropertyFlagBitStatus.Clear;
+
+    dataCellMap->index_texture = {};
+    for(int i=0; i<countSSCE; i++) {
+        dataCellMap->index_texture.push_back(sspjInfo->TableInformationSSCE[i]->IndexTexture);
+    }
+    dataCellMap->table_cell_map = {};
+    for(int i=0; i<countSSCE; i++) {
+        dataCellMap->table_cell_map.push_back(sspjInfo->TableInformationSSCE[i]->Data);
+    }
+
+    // TODO: impl split
+    // dataCellMap.ExtendSplit = null;
+    // generated Split-Data
+    /*
+    if(true == options.split) {
+        dataCellMap.Version.Property |= (ss.ssfb2.DataVersionPropertyFlagBitStatus)(Script_SpriteStudio6_DataCellMap.PropertyVersion.SPLIT_PROJECT);
+        for(int i=0; i<countSSCE; i++)
+        {
+            if(false == LibraryEditor_SpriteStudio6.Import.SSCE.ModeSS6PU.DataOutputSplit(ref setting, informationSSPJ, informationSSPJ.TableInformationSSCE[i]))
+            {
+                return(false);
+            }
+        }
+        dataCellMap.ExtendSplit = null!;
+    }
+    */
 }
 
 std::shared_ptr<ss::ssfb2::CellT> SSCE::Impl::parseCell(const pugi::xml_node &node) {

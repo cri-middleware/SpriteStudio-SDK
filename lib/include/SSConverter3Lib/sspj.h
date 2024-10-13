@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <tuple>
 
 #include "SSConverter3Lib.h"
 #include "version.h"
@@ -73,6 +74,8 @@ namespace SpriteStudio {
 
         void InformationCreateTexture(const ConvertOptions& options);
 
+        std::vector<int> QueueGetConvertSSAE(const ConvertOptions & options);
+
         SSPJVersion version;
 
         KindWrap WrapTexture;
@@ -124,8 +127,8 @@ namespace SpriteStudio {
         std::vector<std::string> TableNameTextureProject;
         std::vector<std::string> TableNameTextureExternalProject;
 
-        ss::ssfb2::DataCellMapT dataCellMapT;
-        ss::ssfb2::ProjectDataT projectDataT;
+        std::shared_ptr<ss::ssfb2::DataCellMapT> dataCellMapT;
+        std::shared_ptr<ss::ssfb2::ProjectDataT> projectDataT;
 
         std::string Signal;
         KindCoordUnit CoordUnit;
@@ -141,6 +144,9 @@ namespace SpriteStudio {
         int indexGetFontBitmap(const std::string& name);
 
     private:
+        int CountGetInstancePartsSSAE(const ConvertOptions& options, const std::shared_ptr<SSAEInformation>& item);
+        std::tuple<bool, bool> QueueCheckAllInstance(const ConvertOptions & options, const std::shared_ptr<SSAEInformation>& value, const std::vector<int>& vector, int index);
+
         std::mutex m;
     };
 

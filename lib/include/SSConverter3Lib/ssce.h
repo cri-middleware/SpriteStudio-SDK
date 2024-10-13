@@ -29,7 +29,7 @@ namespace SpriteStudio {
 
     class SSCEInformation {
     public:
-        ss::ssfb2::LibraryDataCellMapT Data;
+        std::shared_ptr<ss::ssfb2::LibraryDataCellMapT> Data;
         ss::ssfb2::DataCellmapExtendSplitT DataCellmapExtendSplitT;
 
         std::string file;
@@ -82,6 +82,8 @@ namespace SpriteStudio {
         std::shared_ptr<SSCEInformation> parse(const std::string& ssce, const std::shared_ptr<SSPJInformation> &sspjInfo);
 
         void DataConverter(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo, const std::shared_ptr<SSCEInformation>& item);
+
+        void DataOutputCellMap(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo);
 
     private:
         struct Impl;

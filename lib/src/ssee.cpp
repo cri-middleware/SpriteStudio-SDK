@@ -107,6 +107,49 @@ std::shared_ptr<SSEEInformation> SSEE::parse(const std::string &ssee, const std:
     return sseeInfo;
 }
 
+void SSEE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo, const std::shared_ptr<SSEEInformation> &item) {
+
+    int countPartsRebuild = 0;
+    int countEmitter = 0;
+    auto tableIndexPartsRebuild = std::vector<int>();
+    auto workAreaRebuildParts = std::vector<std::shared_ptr<WorkAreaRebuildPartsDataConvert>>();
+    for (int i=0; i< item->TableParts.size(); i++) {
+        auto parts = item->TableParts[i];
+        switch (parts->feature) {
+            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::ROOT):
+                workAreaRebuildParts[countPartsRebuild]->IndexParts = i;
+                workAreaRebuildParts[countPartsRebuild]->IndexPartsChildParicle = -1;
+                workAreaRebuildParts[countPartsRebuild]->IndexEmitter = -1;	/* Has no "Emitter" */
+
+                tableIndexPartsRebuild[i] = countPartsRebuild;
+                countPartsRebuild++;
+                break;
+
+            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::EMITTER):
+                // TODO: impl
+                /* MEMO: "Emitter" always has only 1 child(definitely "Particle"). */
+                workAreaRebuildParts[countPartsRebuild]->IndexParts = i;
+                // workAreaRebuildParts[countPartsRebuild]->IndexPartsChildParicle = item->Tab informationSSEE.TableParts[i].Data.TableIDChild[0];
+                workAreaRebuildParts[countPartsRebuild]->IndexEmitter = countEmitter;
+                countEmitter++;
+
+                tableIndexPartsRebuild[i] = countPartsRebuild;
+                countPartsRebuild++;
+                break;
+
+            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::PARTICLE):
+                // TODO: impl
+                break;
+        }
+    }
+
+    // TODO: impl
+}
+
+void SSEE::DataOutput(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo, const std::shared_ptr<SSEEInformation> &item) {
+    // TODO: impl
+}
+
 std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseParts(const std::shared_ptr<SSEEInformation>& sseeInfo, const std::vector<std::shared_ptr<ss::ssfb2::DataEffectPartsT>>& tableParts, const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node& node) {
     std::string valueText;
 
@@ -183,15 +226,18 @@ std::tuple<int, std::shared_ptr<ss::ssfb2::DataEffectPartsT>> SSEE::Impl::parseP
 
 /*
 void SSEE::Impl::parsePartsEmitter(pugi::xml_node node, const std::shared_ptr<SSEEInformation> &sseeInfo, const std::shared_ptr<ss::ssfb2::DataEffectPartsT> &dataEffectParts,
-    ss::ssfb2::KindOperationBlendEffect operationBlendTarget, int indexCellMap,
-    const std::string &cell, int index_parts) {
+                                   ss::ssfb2::KindOperationBlendEffect operationBlendTarget, int indexCellMap,
+                                   const std::string &cell, int index_parts) {
 
     auto dataEffectEmitter = std::make_shared<ss::ssfb2::DataEffectEmitterT>();
     if (dataEffectEmitter == nullptr) throw error::getException(PHASE, DOC_PART, "not enough memory", -1);
 
-    dataEffectEmitter->flag_data = static_cast<uint32_t>(ss::ssfb2::DataEffectEmitterFlagBit::Clear);
+    dataEffectEmitter->flag_data = static_cast<uint32_t>(ss::ssfb2::FlagBitEmitterDataEffect::CLEAR);
     dataEffectEmitter->operation_blend_target = static_cast<uint32_t>(operationBlendTarget);
     dataEffectEmitter->index_cell_map = indexCellMap;
     dataEffectEmitter->index_cell = -1;
+
+    // TODO: impl
+
 }
 */

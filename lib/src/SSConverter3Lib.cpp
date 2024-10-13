@@ -224,6 +224,8 @@ std::tuple<std::shared_ptr<SSPJInformation>, int, int> SSConverter3Lib::Impl::pa
     // create Texture-Information
     sspjInfo->InformationCreateTexture(options);
 
+    // get Convert-Order SSAE
+    sspjInfo->QueueConvertSSAE = sspjInfo->QueueGetConvertSSAE(options);
 
     return std::make_tuple(sspjInfo, progress, progressMax);
 }
@@ -254,11 +256,33 @@ std::tuple<int, int> SSConverter3Lib::Impl::convertSSPJ(const std::shared_ptr<SS
     for (const auto& item : sspjInfo->TableInformationSSCE) {
         SSCE ssce;
         ssce.DataConverter(options, sspjInfo, item);
+        ssce.DataOutputCellMap(options, sspjInfo);
         progress++;
         if (options.progressCallback) {
             options.progressCallback(phaseName + " " + item->NameFile(), progress, progressMax);
         }
     }
+
+    // Create-Asset: Effect
+    for (const auto& item : sspjInfo->TableInformationSSEE) {
+        // TODO: impl
+        SSEE ssee;
+        ssee.DataConverter(options, sspjInfo, item);
+        ssee.DataOutput(options, sspjInfo, item);
+    }
+
+
+    // Create-Asset: Animation
+    for (const auto& item : sspjInfo->TableInformationSSAE) {
+        // TODO: impl
+        SSAE ssae;
+        ssae.DataConverter(options, sspjInfo, item);
+        ssae.DataOutput(options, sspjInfo, item);
+    }
+
+    // TODO: impl
+
+    return std::make_tuple(progress, progressMax);
 }
 
 std::unique_ptr<SSConverter3Lib::Impl> SSConverter3Lib::pImpl = std::make_unique<Impl>();

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 
+#include "SSConverter3Lib.h"
 #include "version.h"
 #include "ssfb2/type_base_generated.h"
 #include "ssfb2/Data/common_ssfb2_generated.h"
@@ -49,8 +50,25 @@ namespace SpriteStudio {
         ~SSEE();
 
         std::shared_ptr<SSEEInformation> parse(const std::string& ssee, const std::shared_ptr<SSPJInformation>& sspjInfo);
+
+        void DataConverter(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo, const std::shared_ptr<SSEEInformation>& item);
+
+        void DataOutput(const ConvertOptions& options, const std::shared_ptr<SSPJInformation>& sspjInfo, const std::shared_ptr<SSEEInformation>& item);
+
     private:
         struct Impl;
         std::unique_ptr<Impl> pImpl;
+
+        struct WorkAreaRebuildPartsDataConvert {
+            int IndexParts{-1};
+            int IndexPartsChildParicle{-1};
+            int IndexEmitter{-1};
+        };
+
+        struct WorkAreaBuildDrawOrderDataConvert {
+            int IndexEmitter{-1};
+            float PriorityParticle{0.0f / 0.0f};
+        };
+
     };
 }

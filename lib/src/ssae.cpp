@@ -110,6 +110,14 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
     return ssaeInfo;
 }
 
+void SSAE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo, const std::shared_ptr<SSAEInformation> &item) {
+    // TODO: impl
+}
+
+void SSAE::DataOutput(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo, const std::shared_ptr<SSAEInformation> &item) {
+    // TODO: impl
+}
+
 void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo, const pugi::xml_node &node) {
     int valueInt;
     std::string valueText;
@@ -264,16 +272,16 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
     if (partData->data->feature == ss::ssfb2::KindFeatureParts::INSTANCE) {
         valueText = std::string(node.child("refAnimePack").text().as_string());
         if (!valueText.empty()) {
-            // partData->name_under_control = valueText;
+            partData->NameUnderControl = valueText;
 
             valueText = std::string(node.child("refAnime").text().as_string());
-            partData->data->name_animation_under_control = valueText.empty() ? "" : valueText;
+            partData->NameAnimationUnderControl = valueText.empty() ? "" : valueText;
         }
     } else if (partData->data->feature == ss::ssfb2::KindFeatureParts::EFFECT) {
         valueText = std::string(node.child("refEffectName").text().as_string());
         if (!valueText.empty()) {
-            // partData->name_under_control = valueText; // TODO: impl
-            partData->data->name_animation_under_control = "";
+            partData->NameUnderControl = valueText;
+            partData->NameAnimationUnderControl = "";
         }
     }
 
