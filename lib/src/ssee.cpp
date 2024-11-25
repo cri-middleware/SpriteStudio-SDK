@@ -113,28 +113,36 @@ void SSEE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SS
     int countEmitter = 0;
     auto tableIndexPartsRebuild = std::vector<int>();
     auto workAreaRebuildParts = std::vector<std::shared_ptr<WorkAreaRebuildPartsDataConvert>>();
+    tableIndexPartsRebuild.resize(item->TableParts.size());
+    workAreaRebuildParts.resize(item->TableParts.size());
     for (int i=0; i< item->TableParts.size(); i++) {
         auto parts = item->TableParts[i];
         switch (parts->feature) {
-            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::ROOT):
-                workAreaRebuildParts[countPartsRebuild]->IndexParts = i;
-                workAreaRebuildParts[countPartsRebuild]->IndexPartsChildParicle = -1;
-                workAreaRebuildParts[countPartsRebuild]->IndexEmitter = -1;	/* Has no "Emitter" */
+            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::ROOT): {
+                auto a = std::make_shared<WorkAreaRebuildPartsDataConvert>();
+                a->IndexParts = i;
+                a->IndexPartsChildParicle = -1;
+                a->IndexEmitter = -1;	/* Has no "Emitter" */
+                workAreaRebuildParts[countPartsRebuild] = a;
 
                 tableIndexPartsRebuild[i] = countPartsRebuild;
                 countPartsRebuild++;
+            }
                 break;
 
-            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::EMITTER):
+            case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::EMITTER): {
                 // TODO: impl
                 /* MEMO: "Emitter" always has only 1 child(definitely "Particle"). */
-                workAreaRebuildParts[countPartsRebuild]->IndexParts = i;
-                // workAreaRebuildParts[countPartsRebuild]->IndexPartsChildParicle = item->Tab informationSSEE.TableParts[i].Data.TableIDChild[0];
-                workAreaRebuildParts[countPartsRebuild]->IndexEmitter = countEmitter;
+                auto a = std::make_shared<WorkAreaRebuildPartsDataConvert>();
+                a->IndexParts = i;
+                // a->IndexPartsChildParicle = item->Tab informationSSEE.TableParts[i].Data.TableIDChild[0];
+                a->IndexEmitter = countEmitter;
+                workAreaRebuildParts[countPartsRebuild] = a;
                 countEmitter++;
 
                 tableIndexPartsRebuild[i] = countPartsRebuild;
                 countPartsRebuild++;
+            }
                 break;
 
             case static_cast<uint8_t>(ss::ssfb2::KindFeaturePartsDataEffect::PARTICLE):
