@@ -4,6 +4,7 @@
 #include "version.h"
 #include "ssfb2/type_base_generated.h"
 #include "ssfb2/Data/common_ssfb2_generated.h"
+#include "ssfb2/Data/ssfb2_generated.h"
 
 namespace SpriteStudio {
     class SSPJInformation;
@@ -74,15 +75,27 @@ namespace SpriteStudio {
     class SSAEInformation {
     public:
         std::string ssae;
+
         std::string NameDirectory() const;
         std::string NameFileBody() const;
         std::string NameFileExtension() const;
         std::string NameFile() const;
 
+        int indexGetParts(const std::string& value_text);
+
         SSAEVersion version;
 
         ss::ssfb2::LibraryDataAnimationT data;
         std::vector<std::shared_ptr<SSAEPartsInformation>> TableParts;
+
+        std::vector<int> TableIndexCellMap;
+        std::vector<std::shared_ptr<ss::ssfb2::LibraryDataAnimationT>> TableAnimation;
+        std::shared_ptr<ss::ssfb2::LibraryDataAnimationT> AnimationSetup;
+
+        int OffsetIndexBone;
+        std::vector<std::string> ListBone;
+        std::vector<std::shared_ptr<ss::ssfb2::BindMeshT>> ListBindMesh;
+
     };
 
     class SSAE {

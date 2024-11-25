@@ -100,7 +100,7 @@ std::vector<int> SSPJInformation::QueueGetConvertSSAE(const ConvertOptions &opti
             bool result;
             bool flagAllInstanceExist;
             std::tie(result, flagAllInstanceExist) = QueueCheckAllInstance(options, TableInformationSSAE[i], tableIndexSSAE, index);
-            if (result) {
+            if (!result) {
                 throw error::getException(PHASE, DOC_PART, "not implemented", -1);
             }
 
