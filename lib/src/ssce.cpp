@@ -217,7 +217,7 @@ void SSCE::DataOutputCellMap(const ConvertOptions &options, const std::shared_pt
     /*         starting from "Script_SpriteStudio6_DataCellMap.CellMap".                                            */
     /*       For this reason, "Cell-Map" data is generated for each part after the state of Merged-Data is created. */
 
-    /* Generate Merged-Data */
+    // generate Merged-Data
     auto dataCellMap = std::make_shared<ss::ssfb2::DataCellMapT>();
 
     // sspjInfo->dataCellMapT->table_cell_map[0] =  DataCellMapSS6PU.TableData[0] = dataCellMap;
