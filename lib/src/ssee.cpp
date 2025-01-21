@@ -281,6 +281,7 @@ void SSEE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SS
             auto partsNew = std::make_shared<SSEEPartsInformation>();
             auto partsOriginal = sseeInfo->TableParts[workAreaRebuildParts[i]->IndexParts];
 
+            partsNew->Data = std::make_shared<ss::ssfb2::DataEffectPartsT>();
             partsNew->Data->name = partsOriginal->Data->name;
             partsNew->Data->id = i;
 
@@ -413,6 +414,7 @@ std::shared_ptr<SSEEEmitterInformation> SSEE::Impl::parsePartsEmitter(const pugi
     auto emitter = std::make_shared<SSEEEmitterInformation>();
     if (emitter == nullptr) throw error::getException(PHASE, DOC_PART, "not enough memory", -1);
 
+    emitter->Data = std::make_shared<ss::ssfb2::DataEffectEmitterT>();
     emitter->Data->flag_data = static_cast<uint32_t>(ss::ssfb2::FlagBitEmitterDataEffect::CLEAR);
     emitter->Data->operation_blend_target = static_cast<uint32_t>(operationBlendTarget);
     emitter->NameCellMap = cellMap;
