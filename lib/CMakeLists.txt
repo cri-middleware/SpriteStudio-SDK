@@ -87,6 +87,10 @@ set(SsConverter3Lib_SRCS
         src/simpleSemaphore.h
         src/phase.cpp
         src/phase.h
+
+        src/util/Generator.h
+        src/util/XorShift32.cpp
+        src/util/XorShift32.h
 )
 
 set(SsConverter3Lib_HEADERS
