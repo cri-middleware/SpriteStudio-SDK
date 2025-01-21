@@ -16,8 +16,14 @@ const PhaseType PHASE = PhaseType::PARSE;
 const DocPartType DOC_PART = DocPartType::SSAE;
 
 struct SSAE::Impl {
-    void parseSettings(const std::shared_ptr<SSAEInformation>& ssaeInfo, const pugi::xml_node& node);
+    void parseSettings(const std::shared_ptr<ss::ssfb2::LibraryDataAnimationT> &data, const pugi::xml_node &node);
     std::tuple<int, std::shared_ptr<SSAEPartsInformation>> parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node& node, const std::shared_ptr<SSPJInformation> &sspjInfo);
+
+    void parseAnimationAttribute(const pugi::xml_node& xml_node, const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::shared_ptr<ss::ssfb2::LibraryDataAnimationT>& dat, int index_parts, bool flagIsSetup, const std::string& ssae);
+
+    std::tuple<bool, std::shared_ptr<ss::ssfb2::LibraryDataAnimationT>> parseAnimation(const std::shared_ptr<SSPJInformation>& sspjInfo, const pugi::xml_node& nodeRoot, const std::shared_ptr<SSAEInformation>& ssaeInfo, int index_animation, const std::string& ssae);
+
+    int NameCheckReserved(const std::string& string);
 
     static ss::ssfb2::KindFeatureParts getPartType(const std::string& valueText);
 
@@ -42,6 +48,17 @@ std::string SSAEInformation::NameFileExtension() const {
 
 std::string SSAEInformation::NameFile() const {
     return util::getFileName(ssae);
+}
+
+int SSAEInformation::indexGetParts(const std::string &value_text) {
+    int index = -1;
+    auto result = std::find_if(TableParts.begin(), TableParts.end(),  [value_text](const std::shared_ptr<SSAEPartsInformation>& item) {
+        return value_text == item->data->name;
+    });
+    if (result != TableParts.end()) {
+        index = std::distance(TableParts.begin(), result);
+    }
+    return index;
 }
 
 SSAE::SSAE() : pImpl(std::make_unique<Impl>()) {
@@ -90,9 +107,10 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
     auto getList = [&nodeRoot](const std::string &query)  {
         return nodeRoot.select_nodes(query.c_str());
     };
+    // Decode Parts-Data
     auto xpath_node_set = getList("Model/partList/value");
     if (xpath_node_set.empty()) {
-        throw SSException("PartList-Node Not Found", -1);
+        throw error::getException(PHASE, DOC_PART, "PartList-Node Not Found", -1);
     }
 
     auto tableParts = std::vector<std::shared_ptr<SSAEPartsInformation>>(xpath_node_set.size());
@@ -105,12 +123,239 @@ std::shared_ptr<SSAEInformation> SSAE::parse(const std::string &ssae, const std:
         tableParts[index] = partData;
     }
     ssaeInfo->TableParts = tableParts;
+    for(const auto& partData : ssaeInfo->TableParts) {
+        partData->data->table_id_children = partData->ListIndexPartsChild;
+        partData->ListIndexPartsChild.clear();
 
-    pImpl->parseSettings(ssaeInfo, nodeRoot.child("settings"));
+        // fix inheritance kind
+        // MEMO: Parent-part is always fixed earlier.
+        if (partData->Inheritance == SSAEPartsInformation::KindInheritance_SELF) {
+            // do nothing
+        } else {
+            auto indexPartsParent = partData->data->id_parent;
+            if (0 <= indexPartsParent) {
+                partData->Inheritance = SSAEPartsInformation::KindInheritance_SELF;
+                partData->FlagInheritance = ssaeInfo->TableParts[indexPartsParent]->FlagInheritance;
+            }
+        }
+    }
+
+    // decode Bone-List
+    {
+        xpath_node_set = getList("Model/boneList/item");
+        auto indexBoneMin = std::numeric_limits<int32_t>::max();
+        int countBoneList = xpath_node_set.size();
+        int indexBone;
+        for(const auto& xpath_node : xpath_node_set) {
+            node = xpath_node.node();
+
+            /* Scan Bone-List */
+            indexBone = node.text().as_int();
+            if(0 <= indexBone) {
+                /* Valid index */
+                if(countBoneList <= indexBone)
+                {
+                    countBoneList = indexBone + 1;
+                }
+                if(indexBoneMin > indexBone)
+                {
+                    indexBoneMin = indexBone;
+                }
+            }
+        }
+        ssaeInfo->ListBone.resize(countBoneList);
+
+        // MEMO: Some Beta versions of SS6.3 be outputting an "1 origined" index.
+        if (std::numeric_limits<int32_t>::max() <= indexBoneMin) {
+            // All Invalid or no bone
+            indexBoneMin = 0;
+        }
+        ssaeInfo->OffsetIndexBone = indexBoneMin;
+
+        for(const auto& xpath_node : xpath_node_set) {
+            node = xpath_node.node();
+
+            // get Bone-List
+            auto nameBoneParts = std::string(node.attribute("key").as_string());
+            indexBone = node.text().as_int();
+
+            if(0 <= indexBone)
+            {
+                ssaeInfo->ListBone[indexBone - indexBoneMin] = nameBoneParts;
+            }
+        }
+    }
+
+    // decode MeshBind List
+    {
+        xpath_node_set = getList("Model/meshList/value");
+
+        for(const auto& xpath_node : xpath_node_set) {
+            node = xpath_node.node();
+            auto bindMesh = std::make_shared<ss::ssfb2::BindMeshT>();
+            valueText = node.text().as_string();
+            if (!valueText.empty()) {
+                auto bindVertex = std::make_shared<ss::ssfb2::BindMeshVertexT>();
+
+                // split string
+                auto valueTextSplitVertex = std::vector<std::string>();
+                auto temp = std::string();
+                auto iss = std::istringstream(valueText);
+                while (std::getline(iss, temp, ',')) {
+                    valueTextSplitVertex.push_back(temp);
+                }
+
+                for (const auto& item : valueTextSplitVertex) {
+                    if (item.empty()) continue;
+
+                    auto valueTextSplitParameter = std::vector<std::string>();
+                    temp = std::string();
+                    iss = std::istringstream(item);
+                    while (std::getline(iss, temp, ' ')) {
+                        valueTextSplitParameter.push_back(temp);
+                    }
+
+                    // get Bone-count
+                    // MEMO: No-effective bones(weight=0) are counted to VertexBlock's "n(number of Bone)" sometimes, so check real data size.
+                    auto countBone = std::stoi(valueTextSplitParameter[0]);
+                    auto countParameterBone = static_cast<int>(valueTextSplitParameter.size() - 1) / 4; // "- 1": Bone-Count / "/ 4": number of Parameter
+                    if (countBone != countParameterBone) {
+                        countBone = countParameterBone;
+                    }
+                    bindVertex->table_bone.resize(countBone);
+                    for (int i = 0; i< countBone; i++) {
+                        auto indexParameter = (i * 4) + 1;
+
+                        auto bindmeshBoneT = std::make_shared<ss::ssfb2::BindMeshBoneT>();
+                        bindmeshBoneT->index = std::stoi(valueTextSplitParameter[indexParameter + 0]) - ssaeInfo->OffsetIndexBone;
+                        bindmeshBoneT->weight = std::stof(valueTextSplitParameter[indexParameter + 1]) * 0.01f;
+
+                        auto coordinate_offset = std::make_shared<ss::ssfb2::Vector3T>();
+                        coordinate_offset->x = std::stof(valueTextSplitParameter[indexParameter + 2]);
+                        coordinate_offset->y = std::stof(valueTextSplitParameter[indexParameter + 3]);
+                        coordinate_offset->z = 0.0f;
+                        bindmeshBoneT->coordinate_offset = coordinate_offset;
+
+                        bindVertex->table_bone[i] = bindmeshBoneT;
+                    }
+                }
+            }
+            ssaeInfo->ListBindMesh.push_back(bindMesh);
+        }
+    }
+
+    // solve Referenced-CellMaps' index
+    {
+        xpath_node_set = getList("cellmapNames/value");
+
+        for(const auto& xpath_node : xpath_node_set) {
+            node = xpath_node.node();
+            auto nameCellMap = std::string(node.text().as_string());
+            nameCellMap = (std::filesystem::path(sspjInfo->NameDirectoryBaseSSCE) /  std::filesystem::path(nameCellMap)).string();
+
+            auto value = sspjInfo->indexGetFileName(sspjInfo->TableNameSSCE, nameCellMap);
+            ssaeInfo->TableIndexCellMap.push_back(value);
+            if(-1 == value) {
+                throw error::getException(PHASE, DOC_PART, "CellMap Not Found: " + file, -1);
+            }
+        }
+    }
+
+    int countAnimation;
+
+    // animations (& Parts' Key-Frames) Get
+    {
+        xpath_node_set = getList("animeList/anime");
+        if (xpath_node_set.empty()) {
+            throw error::getException(PHASE, DOC_PART, "AnimationList-Node Not Found" + file, -1);
+        }
+        auto flagHasSetup = false;
+        for (const auto& xpath_node : xpath_node_set) {
+
+            // check "SetUp" animation
+            /* MEMO: When judging "Setup"-animation, do not judge by name. (Be sure, use "isSetup" tag's value.)                      */
+            /*       Especially, if SS5's SSAE including same name animation is migrated to SS6, "Setup"-animation's name is changed. */
+            if (node.child("isSetup").text().as_int(-1) > 0) {
+                flagHasSetup = true;
+            }
+        }
+        countAnimation = xpath_node_set.size();
+        if(true == flagHasSetup) {
+            /* MEMO: If has "Setup", should not be countAnimation negative. */
+            countAnimation--;
+        }
+
+        ssaeInfo->TableAnimation.resize(countAnimation);
+
+        int indexAnimation = 0;
+        auto informationAnimation = std::make_shared<ss::ssfb2::LibraryDataAnimationT>();
+        for (const auto& xpath_node : xpath_node_set) {
+            // Animation (& Parts' Key-Frames) Get
+            flagHasSetup = false;	// recycling Is animation "Setup"-animation ?
+            std::tie(flagHasSetup, informationAnimation) = pImpl->parseAnimation(sspjInfo, xpath_node.node(), ssaeInfo, indexAnimation, ssae);
+
+            if(true == flagHasSetup) {
+                // "Setup" animation
+                ssaeInfo->AnimationSetup = informationAnimation;
+            }else
+            {	// Normal animation
+                ssaeInfo->TableAnimation[indexAnimation] = informationAnimation;
+                indexAnimation++;
+            }
+        }
+    }
+
+    // TODO: impl
+    /*
+    // set secondary parameters
+    // MEMO: This process is unnecessary, since "Setup" animation has only attributes' initial values.
+    for(int i=0; i<countAnimation; i++) {
+
+        // solving Attributes
+        informationSSAE.TableAnimation[i].AttributeSolve(std::ref setting, informationSSPJ, informationSSAE);
+
+
+        // set Part-Status
+        informationSSAE.TableAnimation[i].StatusSetParts(informationSSPJ, informationSSAE);
+
+        // set Draw-Order
+        informationSSAE.TableAnimation[i].DrawOrderCreate(informationSSPJ, informationSSAE);
+    }
+    */
+
+    // TODO: impl
+
+    // get Labels
+    auto table_label = std::vector<std::shared_ptr<ss::ssfb2::LabelT>>();
+    xpath_node_set = getList("labels/value");
+    for(const auto& xpath_node : xpath_node_set) {
+        node = xpath_node.node();
+        valueText = std::string(node.child("name").text().as_string());
+        if (valueText.find("_start") == std::string::npos &&
+            valueText.find("_end") == std::string::npos) {
+            auto label = std::make_shared<ss::ssfb2::LabelT>();
+            label->name = valueText;
+            label->frame = node.child("time").text().as_int();
+
+            table_label.push_back(label);
+            }
+        else
+        {
+            // TODO: impl
+            // LogWarning(messageLogPrefix, "Used reserved Label-Name \"" + valueText + "\" Animation[" + indexAnimation.ToString() + "]", nameFileSSAE, informationSSPJ);
+        }
+    }
+    ssaeInfo->data.table_label = table_label;
+
+    // get Key-Frames
+    int countParts = ssaeInfo->TableParts.size();
+    // TODO: impl
+
     return ssaeInfo;
 }
 
 void SSAE::DataConverter(const ConvertOptions &options, const std::shared_ptr<SSPJInformation> &sspjInfo, const std::shared_ptr<SSAEInformation> &item) {
+    int countParts = item->TableParts.size();
     // TODO: impl
 }
 
@@ -118,15 +363,15 @@ void SSAE::DataOutput(const ConvertOptions &options, const std::shared_ptr<SSPJI
     // TODO: impl
 }
 
-void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo, const pugi::xml_node &node) {
+void SSAE::Impl::parseSettings(const std::shared_ptr<ss::ssfb2::LibraryDataAnimationT> &data, const pugi::xml_node &node) {
     int valueInt;
     std::string valueText;
 
     valueInt = node.child("fps").text().as_int();
-    ssaeInfo->data.frame_per_second = valueInt;
+    data->frame_per_second = valueInt;
 
     valueInt = node.child("frameCount").text().as_int();
-    ssaeInfo->data.count_frame = valueInt;
+    data->count_frame = valueInt;
 
     ss::ssfb2::KindModeSort sort;
     valueText = std::string(node.child("sortMode").text().as_string());
@@ -137,7 +382,7 @@ void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo,
     } else {
         sort = ss::ssfb2::KindModeSort::PRIORITY;
     }
-    ssaeInfo->data.mode_sort = sort;
+    data->mode_sort = sort;
 
     valueText = std::string(node.child("canvasSize").text().as_string());
     if (!valueText.empty()) {
@@ -145,21 +390,21 @@ void SSAE::Impl::parseSettings(const std::shared_ptr<SSAEInformation> &ssaeInfo,
         std::string x,y;
 
         if (std::getline(iss, x, ' ') && std::getline(iss, y)) {
-            ssaeInfo->data.size_canvas_x = std::stoi(x);
-            ssaeInfo->data.size_canvas_y = std::stoi(y);
+            data->size_canvas_x = std::stoi(x);
+            data->size_canvas_y = std::stoi(y);
         }
     }
 
     valueInt = node.child("startFrame").text().as_int(0);
-    ssaeInfo->data.frame_valid_start = valueInt;
+    data->frame_valid_start = valueInt;
 
     valueInt = node.child("endFrame").text().as_int(-1);
-    ssaeInfo->data.frame_valid_end = valueInt;
+    data->frame_valid_end = valueInt;
 
-    ssaeInfo->data.count_frame_valid = (ssaeInfo->data.frame_valid_end - ssaeInfo->data.frame_valid_start) + 1;
+    data->count_frame_valid = (data->frame_valid_end - data->frame_valid_start) + 1;
 
     valueInt = node.child("ik_depth").text().as_int(3);
-    ssaeInfo->data.depth_ik = valueInt;
+    data->depth_ik = valueInt;
 }
 
 std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData(const std::shared_ptr<SSAEInformation>& ssaeInfo, const std::vector<std::shared_ptr<SSAEPartsInformation>>& tableParts, const pugi::xml_node &node, const std::shared_ptr<SSPJInformation> &sspjInfo) {
@@ -452,6 +697,123 @@ std::tuple<int, std::shared_ptr<SSAEPartsInformation>> SSAE::Impl::parsePartData
 
     return std::make_tuple(indexPart, partData);
 }
+
+void SSAE::Impl::parseAnimationAttribute(const pugi::xml_node &nodeRoot, const std::shared_ptr<SSAEInformation> &ssaeInfo, const std::shared_ptr<ss::ssfb2::LibraryDataAnimationT> &dat, int index_parts, bool flagIsSetup, const std::string &ssae) {
+    auto informationAnimationParts = dat->table_parts[index_parts];
+    // Set Part's Status
+    /* MEMO: Set here at least "Not Used" flag. When this function is called, key-data exists in this part. */
+    /*       Other flags are set in "Information.Animation.StatusSetParts".                                 */
+    informationAnimationParts->status_parts = ss::ssfb2::FlagBitStatusDataAnimationParts::NOT_USED;
+    informationAnimationParts->status_parts = static_cast<ss::ssfb2::FlagBitStatusDataAnimationParts>( static_cast<uint32_t>(informationAnimationParts->status_parts) & ~static_cast<uint32_t>(ss::ssfb2::FlagBitStatusDataAnimationParts::NOT_USED));
+
+    std::string valueText;
+    pugi::xml_node node;
+    auto getList = [&nodeRoot](const std::string &query)  {
+        return nodeRoot.select_nodes(query.c_str());
+    };
+
+    // get KeyFrame List
+    auto xpath_node_set = getList("attribute");
+    for (const auto& node_set : xpath_node_set) {
+        auto node = node_set.node();
+
+        // get Attribute-Tag
+        auto tagText = node.attribute("tag").as_string();
+
+        // get Key-Data List
+        auto listNodeKey = node.select_nodes("key");
+
+        // get Key-Data
+        // nodeInterpolation
+
+        // TODO: impl
+    }
+
+
+    // TODO: impl
+}
+
+std::tuple<bool, std::shared_ptr<ss::ssfb2::LibraryDataAnimationT>> SSAE::Impl::parseAnimation(const std::shared_ptr<SSPJInformation> &sspjInfo, const pugi::xml_node &nodeRoot, const std::shared_ptr<SSAEInformation> &ssaeInfo, int index_animation, const std::string &ssae) {
+    auto flagIsSetup = false;
+    auto informationAnimation = std::make_shared<ss::ssfb2::LibraryDataAnimationT>();
+
+    std::string valueText;
+    pugi::xml_node node;
+    auto getList = [&nodeRoot](const std::string &query)  {
+        return nodeRoot.select_nodes(query.c_str());
+    };
+
+    // get Base Datas
+    valueText = std::string(nodeRoot.child("name").text().as_string());
+    informationAnimation->name = valueText;
+
+    if (nodeRoot.child("isSetup").text().as_int(-1) > 0) {
+        flagIsSetup = true;
+    }
+
+    // settings
+    this->parseSettings(informationAnimation, nodeRoot.child("settings"));
+
+    // get Labels
+    auto table_label = std::vector<std::shared_ptr<ss::ssfb2::LabelT>>();
+    auto xpath_node_set = getList("labels/value");
+    for(const auto& xpath_node : xpath_node_set) {
+        node = xpath_node.node();
+        valueText = std::string(node.child("name").text().as_string());
+        if (valueText.find("_start") == std::string::npos &&
+            valueText.find("_end") == std::string::npos) {
+            auto label = std::make_shared<ss::ssfb2::LabelT>();
+            label->name = valueText;
+            label->frame = node.child("time").text().as_int();
+
+            table_label.push_back(label);
+            }
+        else
+        {
+            // TODO: impl
+            // LogWarning(messageLogPrefix, "Used reserved Label-Name \"" + valueText + "\" Animation[" + indexAnimation.ToString() + "]", nameFileSSAE, informationSSPJ);
+        }
+    }
+    informationAnimation->table_label = table_label;
+
+    // get Key-Frames
+    int countParts = ssaeInfo->TableParts.size();
+    informationAnimation->table_parts.resize(countParts);
+    // MEMO: All animation part information is created here. Because parts-animation that has no key-data are not recorded in SSAE.
+    for (int i=0; i<countParts; i++) {
+        informationAnimation->table_parts[i] = std::make_shared<ss::ssfb2::DataAnimationPartsT>();
+    }
+    xpath_node_set = getList("partAnimes/partAnime");
+    for(const auto& xpath_node : xpath_node_set) {
+        node = xpath_node.node();
+        valueText = std::string(node.child("partName").text().as_string());
+        auto indexParts = ssaeInfo->indexGetParts(valueText);
+        if (indexParts == -1) {
+            throw error::getException(PHASE, DOC_PART, "Part's Name Not Found " + valueText + " Animation[" + std::to_string(index_animation) + "]", -1);
+        }
+
+        auto attributesNode = node.child("attributes");
+        this->parseAnimationAttribute(attributesNode, ssaeInfo, informationAnimation, indexParts, flagIsSetup, ssae);
+    }
+
+    return std::make_tuple(flagIsSetup, informationAnimation);
+}
+
+int SSAE::Impl::NameCheckReserved(const std::string &name) {
+    // TODO: impl
+    return -1;
+    /*
+    if(!name.empty()) {
+        for (int i=0; i<(int)KindLabelReserved.TERMINATOR; i++) {
+            if(name == TableNameLabelReserved[i]) {
+                return(i);
+            }
+        }
+    }
+    return -1;
+    */
+}
+
 
 ss::ssfb2::KindFeatureParts SSAE::Impl::getPartType(const std::string &valueText) {
     ss::ssfb2::KindFeatureParts feature;
