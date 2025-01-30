@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 24,
              "Non-compatible flatbuffers version included");
 
 #include "common_ssfb2_generated.h"
@@ -555,7 +555,7 @@ inline void DataFontBitmapSplit::UnPackTo(DataFontBitmapSplitT *_o, const ::flat
   { auto _e = spacing(); if (_e) { if(_o->spacing) { _e->UnPackTo(_o->spacing.get(), _resolver); } else { _o->spacing = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->spacing) { _o->spacing.reset(); } }
   { auto _e = size_texture_original(); if (_e) { if(_o->size_texture_original) { _e->UnPackTo(_o->size_texture_original.get(), _resolver); } else { _o->size_texture_original = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->size_texture_original) { _o->size_texture_original.reset(); } }
   { auto _e = name_texture(); if (_e) { _o->name_texture.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->name_texture[_i] = _e->Get(_i)->str(); } } else { _o->name_texture.resize(0); } }
-  { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
+  { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataFontGryphBitmapT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_data.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataFontBitmapExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
 }
 

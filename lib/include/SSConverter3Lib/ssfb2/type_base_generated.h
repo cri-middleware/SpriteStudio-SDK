@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 24,
              "Non-compatible flatbuffers version included");
 
 namespace ss {
@@ -6630,7 +6630,7 @@ inline DataMeshCellT *DataMeshCell::UnPack(const ::flatbuffers::resolver_functio
 inline void DataMeshCell::UnPackTo(DataMeshCellT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->table_coordinate[_i].get(), _resolver); } else { _o->table_coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_coordinate.resize(0); } }
+  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->table_coordinate[_i].get(), _resolver); } else { _o->table_coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_coordinate.resize(0); } }
   { auto _e = table_index_vertex(); if (_e) { _o->table_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_vertex[_i] = _e->Get(_i); } } else { _o->table_index_vertex.resize(0); } }
 }
 
@@ -6776,7 +6776,7 @@ inline void LibraryDataCellMap::UnPackTo(LibraryDataCellMapT *_o, const ::flatbu
   { auto _e = filter(); _o->filter = _e; }
   { auto _e = wrap(); _o->wrap = _e; }
   { auto _e = status(); _o->status = _e; }
-  { auto _e = table_cell(); if (_e) { _o->table_cell.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_cell[_i]) { _e->Get(_i)->UnPackTo(_o->table_cell[_i].get(), _resolver); } else { _o->table_cell[_i] = std::shared_ptr<ss::ssfb2::CellT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_cell.resize(0); } }
+  { auto _e = table_cell(); if (_e) { _o->table_cell.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_cell[_i]) { _e->Get(_i)->UnPackTo(_o->table_cell[_i].get(), _resolver); } else { _o->table_cell[_i] = std::shared_ptr<ss::ssfb2::CellT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_cell.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<LibraryDataCellMap> LibraryDataCellMap::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const LibraryDataCellMapT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -6984,7 +6984,7 @@ inline BindMeshVertexT *BindMeshVertex::UnPack(const ::flatbuffers::resolver_fun
 inline void BindMeshVertex::UnPackTo(BindMeshVertexT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_bone(); if (_e) { _o->table_bone.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_bone[_i]) { _e->Get(_i)->UnPackTo(_o->table_bone[_i].get(), _resolver); } else { _o->table_bone[_i] = std::shared_ptr<ss::ssfb2::BindMeshBoneT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_bone.resize(0); } }
+  { auto _e = table_bone(); if (_e) { _o->table_bone.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_bone[_i]) { _e->Get(_i)->UnPackTo(_o->table_bone[_i].get(), _resolver); } else { _o->table_bone[_i] = std::shared_ptr<ss::ssfb2::BindMeshBoneT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_bone.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<BindMeshVertex> BindMeshVertex::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const BindMeshVertexT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -7045,8 +7045,8 @@ inline void BindMesh::UnPackTo(BindMeshT *_o, const ::flatbuffers::resolver_func
   (void)_o;
   (void)_resolver;
   { auto _e = count_vertex(); _o->count_vertex = _e; }
-  { auto _e = table_vertex(); if (_e) { _o->table_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_vertex[_i]) { _e->Get(_i)->UnPackTo(_o->table_vertex[_i].get(), _resolver); } else { _o->table_vertex[_i] = std::shared_ptr<ss::ssfb2::BindMeshVertexT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_vertex.resize(0); } }
-  { auto _e = table_rate_uv(); if (_e) { _o->table_rate_uv.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_rate_uv[_i]) { _e->Get(_i)->UnPackTo(_o->table_rate_uv[_i].get(), _resolver); } else { _o->table_rate_uv[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_rate_uv.resize(0); } }
+  { auto _e = table_vertex(); if (_e) { _o->table_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_vertex[_i]) { _e->Get(_i)->UnPackTo(_o->table_vertex[_i].get(), _resolver); } else { _o->table_vertex[_i] = std::shared_ptr<ss::ssfb2::BindMeshVertexT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_vertex.resize(0); } }
+  { auto _e = table_rate_uv(); if (_e) { _o->table_rate_uv.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_rate_uv[_i]) { _e->Get(_i)->UnPackTo(_o->table_rate_uv[_i].get(), _resolver); } else { _o->table_rate_uv[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_rate_uv.resize(0); } }
   { auto _e = table_index_vertex(); if (_e) { _o->table_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_vertex[_i] = _e->Get(_i); } } else { _o->table_index_vertex.resize(0); } }
   { auto _e = count_vertex_deform(); _o->count_vertex_deform = _e; }
 }
@@ -7155,7 +7155,7 @@ inline void AnimationAttributePartsColor::UnPackTo(AnimationAttributePartsColorT
   (void)_resolver;
   { auto _e = bound(); _o->bound = _e; }
   { auto _e = operation(); _o->operation = _e; }
-  { auto _e = vertex_color(); if (_e) { _o->vertex_color.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->vertex_color[_i]) { _e->Get(_i)->UnPackTo(_o->vertex_color[_i].get(), _resolver); } else { _o->vertex_color[_i] = std::shared_ptr<ss::ssfb2::ColorT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->vertex_color.resize(0); } }
+  { auto _e = vertex_color(); if (_e) { _o->vertex_color.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->vertex_color[_i]) { _e->Get(_i)->UnPackTo(_o->vertex_color[_i].get(), _resolver); } else { _o->vertex_color[_i] = std::shared_ptr<ss::ssfb2::ColorT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->vertex_color.resize(0); } }
   { auto _e = rate_alpha(); if (_e) { _o->rate_alpha.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->rate_alpha[_i] = _e->Get(_i); } } else { _o->rate_alpha.resize(0); } }
 }
 
@@ -7209,7 +7209,7 @@ inline AnimationAttributeVertexCorrectionT *AnimationAttributeVertexCorrection::
 inline void AnimationAttributeVertexCorrection::UnPackTo(AnimationAttributeVertexCorrectionT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = coordinate(); if (_e) { _o->coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->coordinate[_i].get(), _resolver); } else { _o->coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->coordinate.resize(0); } }
+  { auto _e = coordinate(); if (_e) { _o->coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->coordinate[_i].get(), _resolver); } else { _o->coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->coordinate.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<AnimationAttributeVertexCorrection> AnimationAttributeVertexCorrection::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeVertexCorrectionT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -7424,7 +7424,7 @@ inline void AnimationAttributeSignalCommand::UnPackTo(AnimationAttributeSignalCo
   { auto _e = flags(); _o->flags = _e; }
   { auto _e = id(); _o->id = _e; }
   { auto _e = note(); if (_e) _o->note = _e->str(); }
-  { auto _e = table_parameter(); if (_e) { _o->table_parameter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parameter[_i]) { _e->Get(_i)->UnPackTo(_o->table_parameter[_i].get(), _resolver); } else { _o->table_parameter[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalCommandParameterT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parameter.resize(0); } }
+  { auto _e = table_parameter(); if (_e) { _o->table_parameter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parameter[_i]) { _e->Get(_i)->UnPackTo(_o->table_parameter[_i].get(), _resolver); } else { _o->table_parameter[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalCommandParameterT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_parameter.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<AnimationAttributeSignalCommand> AnimationAttributeSignalCommand::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeSignalCommandT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -7477,7 +7477,7 @@ inline AnimationAttributeSignalT *AnimationAttributeSignal::UnPack(const ::flatb
 inline void AnimationAttributeSignal::UnPackTo(AnimationAttributeSignalT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_command(); if (_e) { _o->table_command.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_command[_i]) { _e->Get(_i)->UnPackTo(_o->table_command[_i].get(), _resolver); } else { _o->table_command[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalCommandT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_command.resize(0); } }
+  { auto _e = table_command(); if (_e) { _o->table_command.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_command[_i]) { _e->Get(_i)->UnPackTo(_o->table_command[_i].get(), _resolver); } else { _o->table_command[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalCommandT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_command.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<AnimationAttributeSignal> AnimationAttributeSignal::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeSignalT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -7630,7 +7630,7 @@ inline AnimationAttributeDeformT *AnimationAttributeDeform::UnPack(const ::flatb
 inline void AnimationAttributeDeform::UnPackTo(AnimationAttributeDeformT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->table_coordinate[_i].get(), _resolver); } else { _o->table_coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_coordinate.resize(0); } }
+  { auto _e = table_coordinate(); if (_e) { _o->table_coordinate.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_coordinate[_i]) { _e->Get(_i)->UnPackTo(_o->table_coordinate[_i].get(), _resolver); } else { _o->table_coordinate[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_coordinate.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<AnimationAttributeDeform> AnimationAttributeDeform::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const AnimationAttributeDeformT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -8553,7 +8553,7 @@ inline void DataSequence::UnPackTo(DataSequenceT *_o, const ::flatbuffers::resol
   { auto _e = name(); if (_e) _o->name = _e->str(); }
   { auto _e = index(); _o->index = _e; }
   { auto _e = type(); _o->type = _e; }
-  { auto _e = value_list(); if (_e) { _o->value_list.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->value_list[_i]) { _e->Get(_i)->UnPackTo(_o->value_list[_i].get(), _resolver); } else { _o->value_list[_i] = std::shared_ptr<ss::ssfb2::DataSequenceDetailsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->value_list.resize(0); } }
+  { auto _e = value_list(); if (_e) { _o->value_list.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->value_list[_i]) { _e->Get(_i)->UnPackTo(_o->value_list[_i].get(), _resolver); } else { _o->value_list[_i] = std::shared_ptr<ss::ssfb2::DataSequenceDetailsT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->value_list.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<DataSequence> DataSequence::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const DataSequenceT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {

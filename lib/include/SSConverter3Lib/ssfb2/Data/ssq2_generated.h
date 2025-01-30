@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 24,
              "Non-compatible flatbuffers version included");
 
 #include "common_ssfb2_generated.h"
@@ -286,7 +286,7 @@ inline void DataSequencPackeExtendSplit::UnPackTo(DataSequencPackeExtendSplitT *
   (void)_o;
   (void)_resolver;
   { auto _e = name_project(); if (_e) _o->name_project = _e->str(); }
-  { auto _e = animation_project(); if (_e) { _o->animation_project.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->animation_project[_i]) { _e->Get(_i)->UnPackTo(_o->animation_project[_i].get(), _resolver); } else { _o->animation_project[_i] = std::shared_ptr<ss::ssfb2::DataExtendInformationFileT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->animation_project.resize(0); } }
+  { auto _e = animation_project(); if (_e) { _o->animation_project.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->animation_project[_i]) { _e->Get(_i)->UnPackTo(_o->animation_project[_i].get(), _resolver); } else { _o->animation_project[_i] = std::shared_ptr<ss::ssfb2::DataExtendInformationFileT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->animation_project.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<DataSequencPackeExtendSplit> DataSequencPackeExtendSplit::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const DataSequencPackeExtendSplitT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -346,7 +346,7 @@ inline void DataSequencePackSplit::UnPackTo(DataSequencePackSplitT *_o, const ::
   (void)_resolver;
   { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = sequence_list(); if (_e) { _o->sequence_list.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequence_list[_i]) { _e->Get(_i)->UnPackTo(_o->sequence_list[_i].get(), _resolver); } else { _o->sequence_list[_i] = std::shared_ptr<ss::ssfb2::DataSequenceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->sequence_list.resize(0); } }
+  { auto _e = sequence_list(); if (_e) { _o->sequence_list.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->sequence_list[_i]) { _e->Get(_i)->UnPackTo(_o->sequence_list[_i].get(), _resolver); } else { _o->sequence_list[_i] = std::shared_ptr<ss::ssfb2::DataSequenceT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->sequence_list.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataSequencPackeExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
 }
 

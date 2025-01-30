@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 24,
              "Non-compatible flatbuffers version included");
 
 #include "common_ssfb2_generated.h"
@@ -420,7 +420,7 @@ inline void DataEffectExtendSplit::UnPackTo(DataEffectExtendSplitT *_o, const ::
   (void)_o;
   (void)_resolver;
   { auto _e = name_project(); if (_e) _o->name_project = _e->str(); }
-  { auto _e = cellmap_project(); if (_e) { _o->cellmap_project.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->cellmap_project[_i]) { _e->Get(_i)->UnPackTo(_o->cellmap_project[_i].get(), _resolver); } else { _o->cellmap_project[_i] = std::shared_ptr<ss::ssfb2::DataExtendInformationFileT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->cellmap_project.resize(0); } }
+  { auto _e = cellmap_project(); if (_e) { _o->cellmap_project.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->cellmap_project[_i]) { _e->Get(_i)->UnPackTo(_o->cellmap_project[_i].get(), _resolver); } else { _o->cellmap_project[_i] = std::shared_ptr<ss::ssfb2::DataExtendInformationFileT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->cellmap_project.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<DataEffectExtendSplit> DataEffectExtendSplit::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const DataEffectExtendSplitT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -511,8 +511,8 @@ inline void DataEffectSplit::UnPackTo(DataEffectSplitT *_o, const ::flatbuffers:
   { auto _e = count_max_particle(); _o->count_max_particle = _e; }
   { auto _e = count_frame_per_second(); _o->count_frame_per_second = _e; }
   { auto _e = scale_layout(); if (_e) { if(_o->scale_layout) { _e->UnPackTo(_o->scale_layout.get(), _resolver); } else { _o->scale_layout = std::shared_ptr<ss::ssfb2::Vector2T>(_e->UnPack(_resolver)); } } else if (_o->scale_layout) { _o->scale_layout.reset(); } }
-  { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataEffectPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
-  { auto _e = table_emitter(); if (_e) { _o->table_emitter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_emitter[_i]) { _e->Get(_i)->UnPackTo(_o->table_emitter[_i].get(), _resolver); } else { _o->table_emitter[_i] = std::shared_ptr<ss::ssfb2::DataEffectEmitterT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_emitter.resize(0); } }
+  { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataEffectPartsT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_parts.resize(0); } }
+  { auto _e = table_emitter(); if (_e) { _o->table_emitter.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_emitter[_i]) { _e->Get(_i)->UnPackTo(_o->table_emitter[_i].get(), _resolver); } else { _o->table_emitter[_i] = std::shared_ptr<ss::ssfb2::DataEffectEmitterT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_emitter.resize(0); } }
   { auto _e = table_index_emitter_order_draw(); if (_e) { _o->table_index_emitter_order_draw.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_emitter_order_draw[_i] = _e->Get(_i); } } else { _o->table_index_emitter_order_draw.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataEffectExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
 }
