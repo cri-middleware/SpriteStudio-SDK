@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 24,
              "Non-compatible flatbuffers version included");
 
 #include "common_ssfb2_generated.h"
@@ -307,7 +307,7 @@ inline void DataSoundListSplit::UnPackTo(DataSoundListSplitT *_o, const ::flatbu
   (void)_resolver;
   { auto _e = version(); if (_e) _o->version = std::shared_ptr<ss::ssfb2::DataVersion>(new ss::ssfb2::DataVersion(*_e)); }
   { auto _e = name(); if (_e) _o->name = _e->str(); }
-  { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataSoundT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_data.resize(0); } }
+  { auto _e = table_data(); if (_e) { _o->table_data.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_data[_i]) { _e->Get(_i)->UnPackTo(_o->table_data[_i].get(), _resolver); } else { _o->table_data[_i] = std::shared_ptr<ss::ssfb2::LibraryDataSoundT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_data.resize(0); } }
   { auto _e = extend_split(); if (_e) { if(_o->extend_split) { _e->UnPackTo(_o->extend_split.get(), _resolver); } else { _o->extend_split = std::shared_ptr<ss::ssfb2::DataSoundListExtendSplitT>(_e->UnPack(_resolver)); } } else if (_o->extend_split) { _o->extend_split.reset(); } }
 }
 

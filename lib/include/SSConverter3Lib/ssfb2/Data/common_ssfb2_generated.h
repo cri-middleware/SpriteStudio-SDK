@@ -8,9 +8,9 @@
 
 // Ensure the included flatbuffers.h is the same version as when this file was
 // generated, otherwise it may not be compatible.
-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
-              FLATBUFFERS_VERSION_MINOR == 3 &&
-              FLATBUFFERS_VERSION_REVISION == 25,
+static_assert(FLATBUFFERS_VERSION_MAJOR == 25 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 24,
              "Non-compatible flatbuffers version included");
 
 #include "../type_base_generated.h"
@@ -4510,7 +4510,7 @@ inline void ContainerStatus::UnPackTo(ContainerStatusT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
   { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_value[_i] = _e->Get(_i); } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
@@ -4576,8 +4576,8 @@ inline void ContainerCell::UnPackTo(ContainerCellT *_o, const ::flatbuffers::res
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeCellT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeCellT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -4641,7 +4641,7 @@ inline void ContainerInt::UnPackTo(ContainerIntT *_o, const ::flatbuffers::resol
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
   { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_value[_i] = _e->Get(_i); } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
@@ -4706,7 +4706,7 @@ inline void ContainerFloat::UnPackTo(ContainerFloatT *_o, const ::flatbuffers::r
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
   { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_value[_i] = _e->Get(_i); } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
@@ -4772,8 +4772,8 @@ inline void ContainerVector2::UnPackTo(ContainerVector2T *_o, const ::flatbuffer
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::Vector2T>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -4838,8 +4838,8 @@ inline void ContainerVector3::UnPackTo(ContainerVector3T *_o, const ::flatbuffer
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::Vector3T>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::Vector3T>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -4904,8 +4904,8 @@ inline void ContainerPartsColor::UnPackTo(ContainerPartsColorT *_o, const ::flat
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributePartsColorT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -4970,8 +4970,8 @@ inline void ContainerVertexCorrection::UnPackTo(ContainerVertexCorrectionT *_o, 
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeVertexCorrectionT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5036,8 +5036,8 @@ inline void ContainerSkew::UnPackTo(ContainerSkewT *_o, const ::flatbuffers::res
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSkewT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5102,8 +5102,8 @@ inline void ContainerUserData::UnPackTo(ContainerUserDataT *_o, const ::flatbuff
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeUserDataT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5168,8 +5168,8 @@ inline void ContainerInstance::UnPackTo(ContainerInstanceT *_o, const ::flatbuff
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeInstanceT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5234,8 +5234,8 @@ inline void ContainerEffect::UnPackTo(ContainerEffectT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeEffectT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5306,8 +5306,8 @@ inline void ContainerDeform::UnPackTo(ContainerDeformT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeDeformT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
   { auto _e = count_vertex_mesh(); _o->count_vertex_mesh = _e; }
   { auto _e = table_index_vertex(); if (_e) { _o->table_index_vertex.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_index_vertex[_i] = _e->Get(_i); } } else { _o->table_index_vertex.resize(0); } }
@@ -5378,8 +5378,8 @@ inline void ContainerShader::UnPackTo(ContainerShaderT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeShaderT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5444,8 +5444,8 @@ inline void ContainerSignal::UnPackTo(ContainerSignalT *_o, const ::flatbuffers:
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeSignalT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5510,8 +5510,8 @@ inline void ContainerAudio::UnPackTo(ContainerAudioT *_o, const ::flatbuffers::r
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeAudioT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5576,8 +5576,8 @@ inline void ContainerChangeTexture::UnPackTo(ContainerChangeTextureT *_o, const 
   (void)_o;
   (void)_resolver;
   { auto _e = type_pack(); _o->type_pack = _e; }
-  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_code_value.resize(0); } }
-  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_value.resize(0); } }
+  { auto _e = table_code_value(); if (_e) { _o->table_code_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_code_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_code_value[_i].get(), _resolver); } else { _o->table_code_value[_i] = std::shared_ptr<ss::ssfb2::CodeValueContainerT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_code_value.resize(0); } }
+  { auto _e = table_value(); if (_e) { _o->table_value.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_value[_i]) { _e->Get(_i)->UnPackTo(_o->table_value[_i].get(), _resolver); } else { _o->table_value[_i] = std::shared_ptr<ss::ssfb2::AnimationAttributeChangeTextureT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_value.resize(0); } }
   { auto _e = table_accessory(); if (_e) { _o->table_accessory.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_accessory[_i] = _e->Get(_i); } } else { _o->table_accessory.resize(0); } }
 }
 
@@ -5877,8 +5877,8 @@ inline void LibraryDataAnimation::UnPackTo(LibraryDataAnimationT *_o, const ::fl
   { auto _e = count_frame_valid(); _o->count_frame_valid = _e; }
   { auto _e = depth_ik(); _o->depth_ik = _e; }
   { auto _e = mode_sort(); _o->mode_sort = _e; }
-  { auto _e = table_label(); if (_e) { _o->table_label.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_label[_i]) { _e->Get(_i)->UnPackTo(_o->table_label[_i].get(), _resolver); } else { _o->table_label[_i] = std::shared_ptr<ss::ssfb2::LabelT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_label.resize(0); } }
-  { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataAnimationPartsT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_parts.resize(0); } }
+  { auto _e = table_label(); if (_e) { _o->table_label.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_label[_i]) { _e->Get(_i)->UnPackTo(_o->table_label[_i].get(), _resolver); } else { _o->table_label[_i] = std::shared_ptr<ss::ssfb2::LabelT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_label.resize(0); } }
+  { auto _e = table_parts(); if (_e) { _o->table_parts.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_parts[_i]) { _e->Get(_i)->UnPackTo(_o->table_parts[_i].get(), _resolver); } else { _o->table_parts[_i] = std::shared_ptr<ss::ssfb2::DataAnimationPartsT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_parts.resize(0); } }
 }
 
 inline ::flatbuffers::Offset<LibraryDataAnimation> LibraryDataAnimation::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const LibraryDataAnimationT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
@@ -6142,7 +6142,7 @@ inline void DataEffectEmitter::UnPackTo(DataEffectEmitterT *_o, const ::flatbuff
   { auto _e = count_particle_max(); _o->count_particle_max = _e; }
   { auto _e = count_particle_emit(); _o->count_particle_emit = _e; }
   { auto _e = count_parts_maximum(); _o->count_parts_maximum = _e; }
-  { auto _e = table_pattern_emit(); if (_e) { _o->table_pattern_emit.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_pattern_emit[_i]) { _e->Get(_i)->UnPackTo(_o->table_pattern_emit[_i].get(), _resolver); } else { _o->table_pattern_emit[_i] = std::shared_ptr<ss::ssfb2::PatternEmitT>(_e->Get(_i)->UnPack(_resolver)); }; } } else { _o->table_pattern_emit.resize(0); } }
+  { auto _e = table_pattern_emit(); if (_e) { _o->table_pattern_emit.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { if(_o->table_pattern_emit[_i]) { _e->Get(_i)->UnPackTo(_o->table_pattern_emit[_i].get(), _resolver); } else { _o->table_pattern_emit[_i] = std::shared_ptr<ss::ssfb2::PatternEmitT>(_e->Get(_i)->UnPack(_resolver)); } } } else { _o->table_pattern_emit.resize(0); } }
   { auto _e = table_pattern_offset(); if (_e) { _o->table_pattern_offset.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_pattern_offset[_i] = _e->Get(_i); } } else { _o->table_pattern_offset.resize(0); } }
   { auto _e = table_seed_particle(); if (_e) { _o->table_seed_particle.resize(_e->size()); for (::flatbuffers::uoffset_t _i = 0; _i < _e->size(); _i++) { _o->table_seed_particle[_i] = _e->Get(_i); } } else { _o->table_seed_particle.resize(0); } }
 }
