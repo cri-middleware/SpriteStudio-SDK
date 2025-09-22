@@ -1,5 +1,6 @@
 use quick_xml::DeError;
 use serde::Deserialize;
+use rayon::prelude::*;
 use crate::sspj::ssae::SsAnimePack;
 use crate::sspj::ssce::SsCellMap;
 use crate::sspj::ssee::SsEffectFile;
@@ -113,21 +114,54 @@ impl SsLoader for SsProject {
         let parent = path.parent().expect("Failed to get parent directory");
         let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data)?;
 
-        sspj.anime_list = sspj.animepack_names.iter().filter_map(|animepack| {
-            SsAnimePack::load_from_file(&parent.join(animepack)).ok()
-        }).collect::<Vec<SsAnimePack>>();
-        sspj.cellmap_list = sspj.cellmap_names.iter().filter_map(|cellmap| {
-            SsCellMap::load_from_file(&parent.join(cellmap)).ok()
-        }).collect::<Vec<SsCellMap>>();
-        sspj.effect_file_list = sspj.effect_file_names.iter().filter_map(|effect_file| {
-            SsEffectFile::load_from_file(&parent.join(effect_file)).ok()
-        }).collect::<Vec<SsEffectFile>>();
-        sspj.sequence_list = sspj.sequencepack_names.iter().filter_map(|sequencepack| {
-            SsSequencePack::load_from_file(&parent.join(sequencepack)).ok()
-        }).collect::<Vec<SsSequencePack>>();
-        sspj.sound_list = sspj.audiopack_names.iter().filter_map(|audiopack| {
-            SsAudioPack::load_from_file(&parent.join(audiopack)).ok()
-        }).collect::<Vec<SsAudioPack>>();
+
+        let mut parent_path: std::path::PathBuf;
+
+        parent_path = parent.to_path_buf();
+        let audiopack_names = sspj.audiopack_names.clone();
+        let sound_handle = std::thread::spawn(move || {
+            audiopack_names.par_iter().filter_map(|audiopack| {
+                SsAudioPack::load_from_file(&parent_path.join(audiopack)).ok()
+            }).collect::<Vec<SsAudioPack>>()
+        });
+
+        parent_path = parent.to_path_buf();
+        let sequencepack_names = sspj.sequencepack_names.clone();
+        let sequence_handle = std::thread::spawn(move || {
+            sequencepack_names.par_iter().filter_map(|sequencepack| {
+                SsSequencePack::load_from_file(&parent_path.join(sequencepack)).ok()
+            }).collect::<Vec<SsSequencePack>>()
+        });
+
+        parent_path = parent.to_path_buf();
+        let cellmap_names = sspj.cellmap_names.clone();
+        let cellmap_handle = std::thread::spawn(move || {
+            cellmap_names.par_iter().filter_map(|cellmap| {
+                SsCellMap::load_from_file(&parent_path.join(cellmap)).ok()
+            }).collect::<Vec<SsCellMap>>()
+        });
+
+        parent_path = parent.to_path_buf();
+        let effect_file_names = sspj.effect_file_names.clone();
+        let effect_handle = std::thread::spawn(move || {
+            effect_file_names.par_iter().filter_map(|effect_file| {
+                SsEffectFile::load_from_file(&parent_path.join(effect_file)).ok()
+            }).collect::<Vec<SsEffectFile>>()
+        });
+
+        parent_path = parent.to_path_buf();
+        let animepack_names = sspj.animepack_names.clone();
+        let animepack_handle = std::thread::spawn(move || {
+            animepack_names.par_iter().filter_map(|animepack| {
+                SsAnimePack::load_from_file(&parent_path.join(animepack)).ok()
+            }).collect::<Vec<SsAnimePack>>()
+        });
+
+        sspj.sound_list = sound_handle.join().unwrap();
+        sspj.sequence_list = sequence_handle.join().unwrap();
+        sspj.cellmap_list = cellmap_handle.join().unwrap();
+        sspj.effect_file_list = effect_handle.join().unwrap();
+        sspj.anime_list = animepack_handle.join().unwrap();
 
         Ok(sspj)
     }
@@ -165,10 +199,10 @@ mod tests {
     fn parse_sspj() {
         [
             "tests/ParticleEffect/ParticleEffect.sspj",
-            //"tests/allAttributeV7/allAttributeV7.sspj",
-            //"tests/allPartsV7/allPartsV7.sspj",
-            //"tests/overall/overall.sspj",
-        ].iter().for_each(|&f| {
+            "tests/allAttributeV7/allAttributeV7.sspj",
+            "tests/allPartsV7/allPartsV7.sspj",
+            "tests/overall/overall.sspj",
+        ].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_sspj(&p.as_path());
         });
