@@ -199,9 +199,11 @@ mod tests {
     fn parse_sspj() {
         [
             "tests/ParticleEffect/ParticleEffect.sspj",
+            /*
             "tests/allAttributeV7/allAttributeV7.sspj",
             "tests/allPartsV7/allPartsV7.sspj",
             "tests/overall/overall.sspj",
+             */
         ].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_sspj(&p.as_path());

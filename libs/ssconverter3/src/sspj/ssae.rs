@@ -321,6 +321,7 @@ where
 #[cfg(test)]
 mod tests {
     use std::path::{Path, PathBuf};
+    use rayon::prelude::*;
     use super::*;
 
     fn load_ssae(path : &Path) {
@@ -368,7 +369,7 @@ mod tests {
             "tests/overall/Text.ssae",
             "tests/overall/TextureChange.ssae",
             "tests/overall/UserData.ssae",
-        ].iter().for_each( |&f| {
+        ].par_iter().for_each( |&f| {
             let p = get_test_base_path().join(f);
             load_ssae(&p.as_path());
         });
@@ -417,7 +418,7 @@ mod tests {
             "tests/ParticleEffect/e038.ssae",
             "tests/ParticleEffect/e039.ssae",
             "tests/ParticleEffect/e040a.ssae",
-        ].iter().for_each( |&f| {
+        ].par_iter().for_each( |&f| {
             let p = get_test_base_path().join(f);
             load_ssae(&p.as_path());
         });
@@ -466,7 +467,7 @@ mod tests {
             "tests/allPartsV7/shape.ssae",
             "tests/allPartsV7/sound.ssae",
             "tests/allPartsV7/text.ssae",
-        ].iter().for_each( |&f| {
+        ].par_iter().for_each( |&f| {
             let p = get_test_base_path().join(f);
             load_ssae(&p.as_path());
         });

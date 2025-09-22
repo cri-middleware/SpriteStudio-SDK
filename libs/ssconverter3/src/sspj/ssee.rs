@@ -389,8 +389,10 @@ impl SsLoader for SsEffectFile {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::{Path, PathBuf};
+    use rayon::prelude::*;
+    use super::*;
+
 
     fn load_ssee(path : &Path) {
         let r = SsEffectFile::load_from_file(path);
@@ -489,7 +491,7 @@ mod tests {
             "tests/allPartsV7/NewEffect.ssee",
             "tests/overall/effect.ssee",
             "tests/overall/effect_checker.ssee",
-        ].iter().for_each( |&f| {
+        ].par_iter().for_each( |&f| {
             let p = get_test_base_path().join(f);
             load_ssee(&p.as_path());
         });
