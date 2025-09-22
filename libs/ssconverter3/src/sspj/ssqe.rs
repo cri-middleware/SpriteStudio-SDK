@@ -68,6 +68,7 @@ where
 #[cfg(test)]
 mod tests {
     use std::path::{Path, PathBuf};
+    use rayon::prelude::*;
     use super::*;
 
     fn load_ssqe(path: &Path) {
@@ -97,7 +98,7 @@ mod tests {
     fn parse_ssce() {
         [
             "tests/overall/sequence.ssqe",
-        ].iter().for_each(|&f| {
+        ].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssqe(&p.as_path());
         });

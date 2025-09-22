@@ -110,8 +110,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::{Path, PathBuf};
+    use rayon::prelude::*;
+    use super::*;
 
     fn load_ssce(path: &Path) {
         let r = SsCellMap::load_from_file(path);
@@ -141,7 +142,7 @@ mod tests {
             "tests/overall/9slice_64tile.ssce",
             "tests/overall/box_00_00.ssce",
             "tests/overall/common.ssce",
-        ].iter().for_each(|&f| {
+        ].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssce(&p.as_path());
         });
