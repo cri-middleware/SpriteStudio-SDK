@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<SpriteStudioSoundList version="1.00.00" editorVersion="7.3.0">
+	<name>soundlist</name>
+	<exportPath></exportPath>
+	<table>
+		<id>0</id>
+		<Alias></Alias>
+		<sounds>
+			<value>
+				<Alias>MP3_44khz_mono_160kbps</Alias>
+				<filename>sound/MP3_44khz_mono_160kbps.mp3</filename>
+				<msec>966</msec>
+			</value>
+			<value>
+				<Alias>WAV_16khz_mono_256kbps_s16</Alias>
+				<filename>sound/WAV_16khz_mono_256kbps_s16.wav</filename>
+				<msec>5670</msec>
+			</value>
+			<value>
+				<Alias>test</Alias>
+				<filename>sound/test.mp3</filename>
+				<msec>79516</msec>
+			</value>
+		</sounds>
+	</table>
+</SpriteStudioSoundList>

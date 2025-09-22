@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "cli",
+    "libs/ssconverter3",
+    "libs/sscpe",
+]
+
+[workspace.dependencies]
+sscpe = { path = "lib/sscpe" }
+ssconverter3 = { path = "libs/ssconverter3" }
