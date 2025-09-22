@@ -4,14 +4,14 @@ use ssconverter3;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    for arg in args {
-        println!("{:?}", arg)
+    if args.len() <= 1 {
+        println!("usage: ssconverter3 <sspj path>");
+        return;
     }
-    println!("{}", ssconverter3::add(1, 2));
-    let path = Path::new("tests/overall/common.ssce");
-    let Ok(ssce) = ssconverter3::ssce(&path) else {
+    let path = Path::new(args[1].as_str());
+    let Ok(sspj) = ssconverter3::sspj(&path) else {
         println!("not found: {}", path.as_os_str().to_string_lossy());
         return;
     };
-    println!("{:?}", ssce);
+    println!("{:?}", sspj);
 }
