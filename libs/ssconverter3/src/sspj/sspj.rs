@@ -1,5 +1,6 @@
 use quick_xml::DeError;
 use serde::Deserialize;
+use rayon::prelude::*;
 use crate::sspj::ssae::SsAnimePack;
 use crate::sspj::ssce::SsCellMap;
 use crate::sspj::ssee::SsEffectFile;
@@ -119,7 +120,7 @@ impl SsLoader for SsProject {
         parent_path = parent.to_path_buf();
         let audiopack_names = sspj.audiopack_names.clone();
         let sound_handle = std::thread::spawn(move || {
-            audiopack_names.iter().filter_map(|audiopack| {
+            audiopack_names.par_iter().filter_map(|audiopack| {
                 SsAudioPack::load_from_file(&parent_path.join(audiopack)).ok()
             }).collect::<Vec<SsAudioPack>>()
         });
@@ -127,7 +128,7 @@ impl SsLoader for SsProject {
         parent_path = parent.to_path_buf();
         let sequencepack_names = sspj.sequencepack_names.clone();
         let sequence_handle = std::thread::spawn(move || {
-            sequencepack_names.iter().filter_map(|sequencepack| {
+            sequencepack_names.par_iter().filter_map(|sequencepack| {
                 SsSequencePack::load_from_file(&parent_path.join(sequencepack)).ok()
             }).collect::<Vec<SsSequencePack>>()
         });
@@ -135,7 +136,7 @@ impl SsLoader for SsProject {
         parent_path = parent.to_path_buf();
         let cellmap_names = sspj.cellmap_names.clone();
         let cellmap_handle = std::thread::spawn(move || {
-            cellmap_names.iter().filter_map(|cellmap| {
+            cellmap_names.par_iter().filter_map(|cellmap| {
                 SsCellMap::load_from_file(&parent_path.join(cellmap)).ok()
             }).collect::<Vec<SsCellMap>>()
         });
@@ -143,7 +144,7 @@ impl SsLoader for SsProject {
         parent_path = parent.to_path_buf();
         let effect_file_names = sspj.effect_file_names.clone();
         let effect_handle = std::thread::spawn(move || {
-            effect_file_names.iter().filter_map(|effect_file| {
+            effect_file_names.par_iter().filter_map(|effect_file| {
                 SsEffectFile::load_from_file(&parent_path.join(effect_file)).ok()
             }).collect::<Vec<SsEffectFile>>()
         });
@@ -151,7 +152,7 @@ impl SsLoader for SsProject {
         parent_path = parent.to_path_buf();
         let animepack_names = sspj.animepack_names.clone();
         let animepack_handle = std::thread::spawn(move || {
-            animepack_names.iter().filter_map(|animepack| {
+            animepack_names.par_iter().filter_map(|animepack| {
                 SsAnimePack::load_from_file(&parent_path.join(animepack)).ok()
             }).collect::<Vec<SsAnimePack>>()
         });
@@ -201,7 +202,7 @@ mod tests {
             "tests/allAttributeV7/allAttributeV7.sspj",
             "tests/allPartsV7/allPartsV7.sspj",
             "tests/overall/overall.sspj",
-        ].iter().for_each(|&f| {
+        ].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_sspj(&p.as_path());
         });
