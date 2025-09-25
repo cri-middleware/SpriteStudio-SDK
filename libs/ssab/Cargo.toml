@@ -1,0 +1,7 @@
+[package]
+name = "ssab"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+flatbuffers = { version = "25.9.23", features = ["default"] }

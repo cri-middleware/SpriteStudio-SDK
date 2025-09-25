@@ -7,7 +7,7 @@ pub struct SsSoundFile {
     #[serde(rename = "Alias")]
     pub alias: String,
     pub filename: String,
-    pub msec: i32,
+    pub msec: u32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

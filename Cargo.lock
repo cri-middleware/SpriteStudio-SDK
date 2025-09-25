@@ -149,10 +149,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ssab"
+version = "0.1.0"
+dependencies = [
+ "flatbuffers",
+]
+
+[[package]]
 name = "ssconverter3"
 version = "0.1.0"
 dependencies = [
  "flatbuffers",
+ "ssab",
  "sscpe",
  "sspj",
 ]

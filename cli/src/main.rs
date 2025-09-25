@@ -10,7 +10,7 @@ fn main() {
         return;
     }
     let path = Path::new(args[1].as_os_str());
-    ssconverter3::convert_ss_project_to_ssab(path, ssconverter3::ConverterConfig::default()).unwrap();
+    ssconverter3::convert_sspj_to_ssab_files(&path, ssconverter3::ConverterConfig::default()).unwrap();
 }
 
 #[cfg(test)]

@@ -1,0 +1,151 @@
+table Vec2 {
+  x: float;
+  y: float;
+}
+table Vec3 {
+  x: float;
+  y: float;
+  z: float;
+}
+table Rect {
+  x1: float;
+  y1: float;
+  x2: float;
+  y2: float;
+}
+
+enum TexFilterMode: byte {
+  Nearest,
+  Linear,
+}
+
+enum TexWrapMode: byte {
+  Clamp,
+  Repeat,
+  Mirror,
+}
+
+enum MeshDivType: byte {
+  Unknown,
+  PolylineBase,
+  Boxdiv,
+}
+
+enum PartType: byte {
+    Null,
+    Normal,
+    Shape,
+    Text,
+    Nines,
+    Instance,
+    Armature,
+    Effect,
+    Mesh,
+    Movenode,
+    Constraint,
+    Mask,
+    Joint,
+    Bonepoint,
+    TransformConstraint,
+    Camera,
+    Audio,
+}
+
+table Cell {
+  name: string (key);
+
+  rectangle: Rect;
+  pivot: Vec2;
+  rotated: bool;
+
+  table_coordinate:[Vec2];
+  table_index_vertex:[ushort];
+}
+
+table CellMap {
+  name: string (key);
+
+  image_path: string;
+  size_original: Vec2;
+
+  wrap_mode: TexWrapMode;
+  filter_mode: TexFilterMode;
+
+  cells: [Cell];
+}
+
+table Model {
+
+}
+
+table Animation {
+
+}
+
+table AnimePack {
+  name: string (key);
+  // settings: SsAnimationSettings;
+  model: Model;
+  cellmap_names: [string];
+  anime_list: [Animation];
+}
+
+table Effect {
+
+}
+
+table SoundFile {
+  name: string (key);
+  path: string;
+  time_total: uint;
+}
+
+table SoundList {
+  name: string (key);
+  table_data:[SoundFile];
+}
+
+table FontGlyphBitmap {
+  id: uint (key);
+  atlas: Rect;
+  offset: Vec2;
+  width_advance: float;
+  text: string;
+  page: byte;
+  channel: byte;
+}
+
+table FontBitmap {
+  name:string (key);
+
+  name_face: string;
+  size: ushort;
+  padding_l: ushort;
+  padding_r: ushort;
+  padding_u: ushort;
+  padding_d: ushort;
+  base: short;
+  height_line: short;
+  scale: Vec2;
+  spacing: Vec2;
+  size_texture_original: Vec2;
+
+  name_texture:[string];
+  table_data:[FontGlyphBitmap];
+}
+
+table SsAnimeBinary {
+  version: uint = 0x00000001;
+
+  animation_pack: AnimePack;
+
+  cell_map: [CellMap];
+  effect: [Effect];
+  sound_list: [SoundList];
+  font_bitmap: [FontBitmap];
+
+  dependencies: [Animation];
+}
+
+file_identifier "SSAB";
+root_type SsAnimeBinary;
