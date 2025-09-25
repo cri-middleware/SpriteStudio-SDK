@@ -7,7 +7,7 @@ table DataSoundListExtendSplit {
 }
 
 table DataSoundListSplit {
-    version:ss.basetype.DataVersion;
+    version:uint = 0x00000001;
     name:string;
     table_data:[ss.basetype.LibraryDataSound];
 

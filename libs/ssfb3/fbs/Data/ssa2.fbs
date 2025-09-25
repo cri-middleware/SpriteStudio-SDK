@@ -14,7 +14,7 @@ table DataAnimationExtendSplit { // Ver.3.0 -
 }
 
 table DataAnimationSplit { // Ver.3.0 -
-    version:ss.basetype.DataVersion;
+    version:uint = 0x00000001;
     name:string;
     table_parts:[ss.basetype.DataModelParts];
     catalog_parts:Catalog;

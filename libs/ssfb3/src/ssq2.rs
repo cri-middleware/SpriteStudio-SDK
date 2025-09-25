@@ -223,14 +223,12 @@ impl<'a> DataSequencePackSplit<'a> {
     if let Some(x) = args.extend_split { builder.add_extend_split(x); }
     if let Some(x) = args.sequence_list { builder.add_sequence_list(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
+    builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataSequencePackSplitT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
+    let version = self.version();
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -249,11 +247,11 @@ impl<'a> DataSequencePackSplit<'a> {
   }
 
   #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
+  pub fn version(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataSequencePackSplit::VT_VERSION, None)}
+    unsafe { self._tab.get::<u32>(DataSequencePackSplit::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -285,7 +283,7 @@ impl flatbuffers::Verifiable for DataSequencePackSplit<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<super::basetype::DataSequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DataSequencPackeExtendSplit>>("extend_split", Self::VT_EXTEND_SPLIT, false)?
@@ -294,7 +292,7 @@ impl flatbuffers::Verifiable for DataSequencePackSplit<'_> {
   }
 }
 pub struct DataSequencePackSplitArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
+    pub version: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub sequence_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<super::basetype::DataSequence<'a>>>>>,
     pub extend_split: Option<flatbuffers::WIPOffset<DataSequencPackeExtendSplit<'a>>>,
@@ -303,7 +301,7 @@ impl<'a> Default for DataSequencePackSplitArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataSequencePackSplitArgs {
-      version: None,
+      version: 1,
       name: None,
       sequence_list: None,
       extend_split: None,
@@ -317,8 +315,8 @@ pub struct DataSequencePackSplitBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataSequencePackSplitBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataSequencePackSplit::VT_VERSION, version);
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(DataSequencePackSplit::VT_VERSION, version, 1);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -360,7 +358,7 @@ impl core::fmt::Debug for DataSequencePackSplit<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataSequencePackSplitT {
-  pub version: Option<super::basetype::DataVersionT>,
+  pub version: u32,
   pub name: Option<String>,
   pub sequence_list: Option<Vec<super::basetype::DataSequenceT>>,
   pub extend_split: Option<Box<DataSequencPackeExtendSplitT>>,
@@ -368,7 +366,7 @@ pub struct DataSequencePackSplitT {
 impl Default for DataSequencePackSplitT {
   fn default() -> Self {
     Self {
-      version: None,
+      version: 1,
       name: None,
       sequence_list: None,
       extend_split: None,
@@ -380,8 +378,7 @@ impl DataSequencePackSplitT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataSequencePackSplit<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
+    let version = self.version;
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });

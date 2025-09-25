@@ -7,7 +7,7 @@ table DataFontBitmapExtendSplit {
 }
 
 table DataFontBitmapSplit {
-    version:ss.basetype.DataVersion;
+    version:uint = 0x00000001;
     name:string;
 
     name_face:string;
