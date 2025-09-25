@@ -3,7 +3,7 @@
 
 // @generated
 
-use crate::type_base_generated::*;
+use crate::type_base::*;
 use core::mem;
 use core::cmp::Ordering;
 
@@ -13,7 +13,7 @@ use self::flatbuffers::{EndianScalar, Follow};
 #[allow(unused_imports, dead_code)]
 pub mod ss {
 
-  use crate::type_base_generated::ss::*;
+  use crate::type_base::ss::*;
   use core::mem;
   use core::cmp::Ordering;
 
@@ -22,7 +22,7 @@ pub mod ss {
 #[allow(unused_imports, dead_code)]
 pub mod ssfb_2 {
 
-  use crate::type_base_generated::ss::basetype::*;
+  use crate::type_base::ss::basetype::*;
   use core::mem;
   use core::cmp::Ordering;
 
