@@ -3,8 +3,10 @@ members = [
     "cli",
     "libs/ssconverter3",
     "libs/sscpe",
+    "libs/ssfb3",
 ]
 
 [workspace.dependencies]
 sscpe = { path = "lib/sscpe" }
 ssconverter3 = { path = "libs/ssconverter3" }
+ssfb3 = { path = "lib/ssfb3" }

@@ -152,11 +152,11 @@ dependencies = [
 name = "ssconverter3"
 version = "0.1.0"
 dependencies = [
- "flatbuffers",
  "quick-xml",
  "rayon",
  "serde",
  "sscpe",
+ "ssfb3",
 ]
 
 [[package]]
@@ -169,6 +169,13 @@ dependencies = [
 [[package]]
 name = "sscpe"
 version = "0.1.0"
+
+[[package]]
+name = "ssfb3"
+version = "0.1.0"
+dependencies = [
+ "flatbuffers",
+]
 
 [[package]]
 name = "syn"

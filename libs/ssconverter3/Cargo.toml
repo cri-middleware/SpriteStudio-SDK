@@ -11,4 +11,4 @@ serde = {  version = "1.0.219", features = ["derive"] }
 quick-xml = {  version = "0.38.3", features = ["serialize"] }
 rayon = "1.11.0"
 sscpe = { path = "../sscpe" }
-flatbuffers = "25.9.23"
+ssfb3 = { path = "../ssfb3" }

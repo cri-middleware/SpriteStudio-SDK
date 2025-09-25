@@ -1,0 +1,22 @@
+include "common_ssfb2.fbs";
+
+namespace ss.ssfb2;
+
+table DataCellmapExtendSplit {
+	name_project:string;
+}
+
+table DataCellMapSplit {
+    version:ss.basetype.DataVersion;
+    name:string;
+    filename_texture:string;
+    cell_map:ss.basetype.LibraryDataCellMap;
+
+    extend_split:DataCellmapExtendSplit;
+}
+
+
+// Split-Format:CellMap
+file_identifier "SSC2";
+root_type DataCellMapSplit;
+
