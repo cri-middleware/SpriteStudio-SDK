@@ -3,14 +3,11 @@ include "common_ssfb2.fbs";
 namespace ss.ssfb2;
 
 table DataCellMap {
-    version:ss.basetype.DataVersion;
-
     index_texture:[short];
     table_cell_map:[ss.basetype.LibraryDataCellMap];
 }
 
 table DataAnimation {
-    version:ss.basetype.DataVersion;
     name:string;
     table_parts:[ss.basetype.DataModelParts];
     catalog_parts:Catalog;
@@ -19,7 +16,6 @@ table DataAnimation {
 }
 
 table DataEffect {
-    version:ss.basetype.DataVersion;
     name:string;
 //    flag_data:ss.basetype.DataEffectFlagBit;
     flag_data:int;
@@ -38,13 +34,11 @@ table DataEffect {
 }
 
 table SequencePack {
-    version:ss.basetype.DataVersion;
     name:string;
     sequence_list:[ss.basetype.DataSequence];
 }
 
 table FontBitmap {
-    version:ss.basetype.DataVersion;
     name:string;
 
     name_face:string;
@@ -64,13 +58,12 @@ table FontBitmap {
 }
 
 table DataSoundList {
-    version:ss.basetype.DataVersion;
     name:string;
     table_data:[ss.basetype.LibraryDataSound];
 }
 
 table ProjectData {
-    version:ss.basetype.DataVersion;
+    version: uint = 0x00000001;
     name:string;
     cell_map:DataCellMap;
     animation:[DataAnimation];

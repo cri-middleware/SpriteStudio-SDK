@@ -239,14 +239,12 @@ impl<'a> DataEffectSplit<'a> {
     builder.add_seed_random(args.seed_random);
     builder.add_flag_data(args.flag_data);
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
+    builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataEffectSplitT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
+    let version = self.version();
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -287,11 +285,11 @@ impl<'a> DataEffectSplit<'a> {
   }
 
   #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
+  pub fn version(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataEffectSplit::VT_VERSION, None)}
+    unsafe { self._tab.get::<u32>(DataEffectSplit::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -379,7 +377,7 @@ impl flatbuffers::Verifiable for DataEffectSplit<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<i32>("flag_data", Self::VT_FLAG_DATA, false)?
      .visit_field::<i32>("seed_random", Self::VT_SEED_RANDOM, false)?
@@ -396,7 +394,7 @@ impl flatbuffers::Verifiable for DataEffectSplit<'_> {
   }
 }
 pub struct DataEffectSplitArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
+    pub version: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub flag_data: i32,
     pub seed_random: i32,
@@ -413,7 +411,7 @@ impl<'a> Default for DataEffectSplitArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataEffectSplitArgs {
-      version: None,
+      version: 1,
       name: None,
       flag_data: 0,
       seed_random: 0,
@@ -435,8 +433,8 @@ pub struct DataEffectSplitBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataEffectSplitBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataEffectSplit::VT_VERSION, version);
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(DataEffectSplit::VT_VERSION, version, 1);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -518,7 +516,7 @@ impl core::fmt::Debug for DataEffectSplit<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataEffectSplitT {
-  pub version: Option<super::basetype::DataVersionT>,
+  pub version: u32,
   pub name: Option<String>,
   pub flag_data: i32,
   pub seed_random: i32,
@@ -534,7 +532,7 @@ pub struct DataEffectSplitT {
 impl Default for DataEffectSplitT {
   fn default() -> Self {
     Self {
-      version: None,
+      version: 1,
       name: None,
       flag_data: 0,
       seed_random: 0,
@@ -554,8 +552,7 @@ impl DataEffectSplitT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataEffectSplit<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
+    let version = self.version;
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });

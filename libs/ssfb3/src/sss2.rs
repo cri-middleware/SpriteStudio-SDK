@@ -196,14 +196,12 @@ impl<'a> DataSoundListSplit<'a> {
     if let Some(x) = args.extend_split { builder.add_extend_split(x); }
     if let Some(x) = args.table_data { builder.add_table_data(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
+    builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataSoundListSplitT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
+    let version = self.version();
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -222,11 +220,11 @@ impl<'a> DataSoundListSplit<'a> {
   }
 
   #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
+  pub fn version(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataSoundListSplit::VT_VERSION, None)}
+    unsafe { self._tab.get::<u32>(DataSoundListSplit::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -258,7 +256,7 @@ impl flatbuffers::Verifiable for DataSoundListSplit<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<super::basetype::LibraryDataSound>>>>("table_data", Self::VT_TABLE_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DataSoundListExtendSplit>>("extend_split", Self::VT_EXTEND_SPLIT, false)?
@@ -267,7 +265,7 @@ impl flatbuffers::Verifiable for DataSoundListSplit<'_> {
   }
 }
 pub struct DataSoundListSplitArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
+    pub version: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub table_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<super::basetype::LibraryDataSound<'a>>>>>,
     pub extend_split: Option<flatbuffers::WIPOffset<DataSoundListExtendSplit<'a>>>,
@@ -276,7 +274,7 @@ impl<'a> Default for DataSoundListSplitArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataSoundListSplitArgs {
-      version: None,
+      version: 1,
       name: None,
       table_data: None,
       extend_split: None,
@@ -290,8 +288,8 @@ pub struct DataSoundListSplitBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataSoundListSplitBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataSoundListSplit::VT_VERSION, version);
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(DataSoundListSplit::VT_VERSION, version, 1);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -333,7 +331,7 @@ impl core::fmt::Debug for DataSoundListSplit<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataSoundListSplitT {
-  pub version: Option<super::basetype::DataVersionT>,
+  pub version: u32,
   pub name: Option<String>,
   pub table_data: Option<Vec<super::basetype::LibraryDataSoundT>>,
   pub extend_split: Option<Box<DataSoundListExtendSplitT>>,
@@ -341,7 +339,7 @@ pub struct DataSoundListSplitT {
 impl Default for DataSoundListSplitT {
   fn default() -> Self {
     Self {
-      version: None,
+      version: 1,
       name: None,
       table_data: None,
       extend_split: None,
@@ -353,8 +351,7 @@ impl DataSoundListSplitT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataSoundListSplit<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
+    let version = self.version;
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });

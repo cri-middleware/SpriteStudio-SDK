@@ -198,14 +198,12 @@ impl<'a> DataCellMapSplit<'a> {
     if let Some(x) = args.cell_map { builder.add_cell_map(x); }
     if let Some(x) = args.filename_texture { builder.add_filename_texture(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
+    builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataCellMapSplitT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
+    let version = self.version();
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -228,11 +226,11 @@ impl<'a> DataCellMapSplit<'a> {
   }
 
   #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
+  pub fn version(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataCellMapSplit::VT_VERSION, None)}
+    unsafe { self._tab.get::<u32>(DataCellMapSplit::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -271,7 +269,7 @@ impl flatbuffers::Verifiable for DataCellMapSplit<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filename_texture", Self::VT_FILENAME_TEXTURE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<super::basetype::LibraryDataCellMap>>("cell_map", Self::VT_CELL_MAP, false)?
@@ -281,7 +279,7 @@ impl flatbuffers::Verifiable for DataCellMapSplit<'_> {
   }
 }
 pub struct DataCellMapSplitArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
+    pub version: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub filename_texture: Option<flatbuffers::WIPOffset<&'a str>>,
     pub cell_map: Option<flatbuffers::WIPOffset<super::basetype::LibraryDataCellMap<'a>>>,
@@ -291,7 +289,7 @@ impl<'a> Default for DataCellMapSplitArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataCellMapSplitArgs {
-      version: None,
+      version: 1,
       name: None,
       filename_texture: None,
       cell_map: None,
@@ -306,8 +304,8 @@ pub struct DataCellMapSplitBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataCellMapSplitBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataCellMapSplit::VT_VERSION, version);
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(DataCellMapSplit::VT_VERSION, version, 1);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -354,7 +352,7 @@ impl core::fmt::Debug for DataCellMapSplit<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataCellMapSplitT {
-  pub version: Option<super::basetype::DataVersionT>,
+  pub version: u32,
   pub name: Option<String>,
   pub filename_texture: Option<String>,
   pub cell_map: Option<Box<super::basetype::LibraryDataCellMapT>>,
@@ -363,7 +361,7 @@ pub struct DataCellMapSplitT {
 impl Default for DataCellMapSplitT {
   fn default() -> Self {
     Self {
-      version: None,
+      version: 1,
       name: None,
       filename_texture: None,
       cell_map: None,
@@ -376,8 +374,7 @@ impl DataCellMapSplitT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataCellMapSplit<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
+    let version = self.version;
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });

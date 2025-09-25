@@ -8,7 +8,7 @@ table DataEffectExtendSplit {	// Ver.3.0 -
 }
 
 table DataEffectSplit {		// Ver.3.0 -
-    version:ss.basetype.DataVersion;
+	version:uint = 0x00000001;
     name:string;
 //    flag_data:DataEffectFlagBit;
     flag_data:int;

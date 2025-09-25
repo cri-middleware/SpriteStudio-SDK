@@ -48,9 +48,8 @@ impl<'a> flatbuffers::Follow<'a> for DataCellMap<'a> {
 }
 
 impl<'a> DataCellMap<'a> {
-  pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_INDEX_TEXTURE: flatbuffers::VOffsetT = 6;
-  pub const VT_TABLE_CELL_MAP: flatbuffers::VOffsetT = 8;
+  pub const VT_INDEX_TEXTURE: flatbuffers::VOffsetT = 4;
+  pub const VT_TABLE_CELL_MAP: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -64,14 +63,10 @@ impl<'a> DataCellMap<'a> {
     let mut builder = DataCellMapBuilder::new(_fbb);
     if let Some(x) = args.table_cell_map { builder.add_table_cell_map(x); }
     if let Some(x) = args.index_texture { builder.add_index_texture(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataCellMapT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
     let index_texture = self.index_texture().map(|x| {
       x.into_iter().collect()
     });
@@ -79,19 +74,11 @@ impl<'a> DataCellMap<'a> {
       x.iter().map(|t| t.unpack()).collect()
     });
     DataCellMapT {
-      version,
       index_texture,
       table_cell_map,
     }
   }
 
-  #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataCellMap::VT_VERSION, None)}
-  }
   #[inline]
   pub fn index_texture(&self) -> Option<flatbuffers::Vector<'a, i16>> {
     // Safety:
@@ -115,7 +102,6 @@ impl flatbuffers::Verifiable for DataCellMap<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i16>>>("index_texture", Self::VT_INDEX_TEXTURE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<super::basetype::LibraryDataCellMap>>>>("table_cell_map", Self::VT_TABLE_CELL_MAP, false)?
      .finish();
@@ -123,7 +109,6 @@ impl flatbuffers::Verifiable for DataCellMap<'_> {
   }
 }
 pub struct DataCellMapArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
     pub index_texture: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i16>>>,
     pub table_cell_map: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<super::basetype::LibraryDataCellMap<'a>>>>>,
 }
@@ -131,7 +116,6 @@ impl<'a> Default for DataCellMapArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataCellMapArgs {
-      version: None,
       index_texture: None,
       table_cell_map: None,
     }
@@ -143,10 +127,6 @@ pub struct DataCellMapBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataCellMapBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataCellMap::VT_VERSION, version);
-  }
   #[inline]
   pub fn add_index_texture(&mut self, index_texture: flatbuffers::WIPOffset<flatbuffers::Vector<'b , i16>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DataCellMap::VT_INDEX_TEXTURE, index_texture);
@@ -173,7 +153,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataCellMapBuilder<'a, 'b, A> {
 impl core::fmt::Debug for DataCellMap<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DataCellMap");
-      ds.field("version", &self.version());
       ds.field("index_texture", &self.index_texture());
       ds.field("table_cell_map", &self.table_cell_map());
       ds.finish()
@@ -182,14 +161,12 @@ impl core::fmt::Debug for DataCellMap<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataCellMapT {
-  pub version: Option<super::basetype::DataVersionT>,
   pub index_texture: Option<Vec<i16>>,
   pub table_cell_map: Option<Vec<super::basetype::LibraryDataCellMapT>>,
 }
 impl Default for DataCellMapT {
   fn default() -> Self {
     Self {
-      version: None,
       index_texture: None,
       table_cell_map: None,
     }
@@ -200,8 +177,6 @@ impl DataCellMapT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataCellMap<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
     let index_texture = self.index_texture.as_ref().map(|x|{
       _fbb.create_vector(x)
     });
@@ -209,7 +184,6 @@ impl DataCellMapT {
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     DataCellMap::create(_fbb, &DataCellMapArgs{
-      version,
       index_texture,
       table_cell_map,
     })
@@ -231,12 +205,11 @@ impl<'a> flatbuffers::Follow<'a> for DataAnimation<'a> {
 }
 
 impl<'a> DataAnimation<'a> {
-  pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: flatbuffers::VOffsetT = 6;
-  pub const VT_TABLE_PARTS: flatbuffers::VOffsetT = 8;
-  pub const VT_CATALOG_PARTS: flatbuffers::VOffsetT = 10;
-  pub const VT_TABLE_ANIMATION: flatbuffers::VOffsetT = 12;
-  pub const VT_TABLE_ANIMATION_PARTS_SETUP: flatbuffers::VOffsetT = 14;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TABLE_PARTS: flatbuffers::VOffsetT = 6;
+  pub const VT_CATALOG_PARTS: flatbuffers::VOffsetT = 8;
+  pub const VT_TABLE_ANIMATION: flatbuffers::VOffsetT = 10;
+  pub const VT_TABLE_ANIMATION_PARTS_SETUP: flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -253,14 +226,10 @@ impl<'a> DataAnimation<'a> {
     if let Some(x) = args.catalog_parts { builder.add_catalog_parts(x); }
     if let Some(x) = args.table_parts { builder.add_table_parts(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataAnimationT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -277,7 +246,6 @@ impl<'a> DataAnimation<'a> {
       x.iter().map(|t| t.unpack()).collect()
     });
     DataAnimationT {
-      version,
       name,
       table_parts,
       catalog_parts,
@@ -286,13 +254,6 @@ impl<'a> DataAnimation<'a> {
     }
   }
 
-  #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataAnimation::VT_VERSION, None)}
-  }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
     // Safety:
@@ -337,7 +298,6 @@ impl flatbuffers::Verifiable for DataAnimation<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<super::basetype::DataModelParts>>>>("table_parts", Self::VT_TABLE_PARTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<Catalog>>("catalog_parts", Self::VT_CATALOG_PARTS, false)?
@@ -348,7 +308,6 @@ impl flatbuffers::Verifiable for DataAnimation<'_> {
   }
 }
 pub struct DataAnimationArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub table_parts: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<super::basetype::DataModelParts<'a>>>>>,
     pub catalog_parts: Option<flatbuffers::WIPOffset<Catalog<'a>>>,
@@ -359,7 +318,6 @@ impl<'a> Default for DataAnimationArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataAnimationArgs {
-      version: None,
       name: None,
       table_parts: None,
       catalog_parts: None,
@@ -374,10 +332,6 @@ pub struct DataAnimationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataAnimationBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataAnimation::VT_VERSION, version);
-  }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DataAnimation::VT_NAME, name);
@@ -416,7 +370,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataAnimationBuilder<'a, 'b, A>
 impl core::fmt::Debug for DataAnimation<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DataAnimation");
-      ds.field("version", &self.version());
       ds.field("name", &self.name());
       ds.field("table_parts", &self.table_parts());
       ds.field("catalog_parts", &self.catalog_parts());
@@ -428,7 +381,6 @@ impl core::fmt::Debug for DataAnimation<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataAnimationT {
-  pub version: Option<super::basetype::DataVersionT>,
   pub name: Option<String>,
   pub table_parts: Option<Vec<super::basetype::DataModelPartsT>>,
   pub catalog_parts: Option<Box<CatalogT>>,
@@ -438,7 +390,6 @@ pub struct DataAnimationT {
 impl Default for DataAnimationT {
   fn default() -> Self {
     Self {
-      version: None,
       name: None,
       table_parts: None,
       catalog_parts: None,
@@ -452,8 +403,6 @@ impl DataAnimationT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataAnimation<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });
@@ -470,7 +419,6 @@ impl DataAnimationT {
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     DataAnimation::create(_fbb, &DataAnimationArgs{
-      version,
       name,
       table_parts,
       catalog_parts,
@@ -495,17 +443,16 @@ impl<'a> flatbuffers::Follow<'a> for DataEffect<'a> {
 }
 
 impl<'a> DataEffect<'a> {
-  pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: flatbuffers::VOffsetT = 6;
-  pub const VT_FLAG_DATA: flatbuffers::VOffsetT = 8;
-  pub const VT_SEED_RANDOM: flatbuffers::VOffsetT = 10;
-  pub const VT_VERSION_RENDERER: flatbuffers::VOffsetT = 12;
-  pub const VT_COUNT_MAX_PARTICLE: flatbuffers::VOffsetT = 14;
-  pub const VT_COUNT_FRAME_PER_SECOND: flatbuffers::VOffsetT = 16;
-  pub const VT_SCALE_LAYOUT: flatbuffers::VOffsetT = 18;
-  pub const VT_TABLE_PARTS: flatbuffers::VOffsetT = 20;
-  pub const VT_TABLE_EMITTER: flatbuffers::VOffsetT = 22;
-  pub const VT_TABLE_INDEX_EMITTER_ORDER_DRAW: flatbuffers::VOffsetT = 24;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_FLAG_DATA: flatbuffers::VOffsetT = 6;
+  pub const VT_SEED_RANDOM: flatbuffers::VOffsetT = 8;
+  pub const VT_VERSION_RENDERER: flatbuffers::VOffsetT = 10;
+  pub const VT_COUNT_MAX_PARTICLE: flatbuffers::VOffsetT = 12;
+  pub const VT_COUNT_FRAME_PER_SECOND: flatbuffers::VOffsetT = 14;
+  pub const VT_SCALE_LAYOUT: flatbuffers::VOffsetT = 16;
+  pub const VT_TABLE_PARTS: flatbuffers::VOffsetT = 18;
+  pub const VT_TABLE_EMITTER: flatbuffers::VOffsetT = 20;
+  pub const VT_TABLE_INDEX_EMITTER_ORDER_DRAW: flatbuffers::VOffsetT = 22;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -527,14 +474,10 @@ impl<'a> DataEffect<'a> {
     builder.add_seed_random(args.seed_random);
     builder.add_flag_data(args.flag_data);
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataEffectT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -556,7 +499,6 @@ impl<'a> DataEffect<'a> {
       x.into_iter().collect()
     });
     DataEffectT {
-      version,
       name,
       flag_data,
       seed_random,
@@ -570,13 +512,6 @@ impl<'a> DataEffect<'a> {
     }
   }
 
-  #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataEffect::VT_VERSION, None)}
-  }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
     // Safety:
@@ -656,7 +591,6 @@ impl flatbuffers::Verifiable for DataEffect<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<i32>("flag_data", Self::VT_FLAG_DATA, false)?
      .visit_field::<i32>("seed_random", Self::VT_SEED_RANDOM, false)?
@@ -672,7 +606,6 @@ impl flatbuffers::Verifiable for DataEffect<'_> {
   }
 }
 pub struct DataEffectArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub flag_data: i32,
     pub seed_random: i32,
@@ -688,7 +621,6 @@ impl<'a> Default for DataEffectArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataEffectArgs {
-      version: None,
       name: None,
       flag_data: 0,
       seed_random: 0,
@@ -708,10 +640,6 @@ pub struct DataEffectBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataEffectBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataEffect::VT_VERSION, version);
-  }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DataEffect::VT_NAME, name);
@@ -770,7 +698,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataEffectBuilder<'a, 'b, A> {
 impl core::fmt::Debug for DataEffect<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DataEffect");
-      ds.field("version", &self.version());
       ds.field("name", &self.name());
       ds.field("flag_data", &self.flag_data());
       ds.field("seed_random", &self.seed_random());
@@ -787,7 +714,6 @@ impl core::fmt::Debug for DataEffect<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataEffectT {
-  pub version: Option<super::basetype::DataVersionT>,
   pub name: Option<String>,
   pub flag_data: i32,
   pub seed_random: i32,
@@ -802,7 +728,6 @@ pub struct DataEffectT {
 impl Default for DataEffectT {
   fn default() -> Self {
     Self {
-      version: None,
       name: None,
       flag_data: 0,
       seed_random: 0,
@@ -821,8 +746,6 @@ impl DataEffectT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataEffect<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });
@@ -844,7 +767,6 @@ impl DataEffectT {
       _fbb.create_vector(x)
     });
     DataEffect::create(_fbb, &DataEffectArgs{
-      version,
       name,
       flag_data,
       seed_random,
@@ -874,9 +796,8 @@ impl<'a> flatbuffers::Follow<'a> for SequencePack<'a> {
 }
 
 impl<'a> SequencePack<'a> {
-  pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: flatbuffers::VOffsetT = 6;
-  pub const VT_SEQUENCE_LIST: flatbuffers::VOffsetT = 8;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_SEQUENCE_LIST: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -890,14 +811,10 @@ impl<'a> SequencePack<'a> {
     let mut builder = SequencePackBuilder::new(_fbb);
     if let Some(x) = args.sequence_list { builder.add_sequence_list(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> SequencePackT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -905,19 +822,11 @@ impl<'a> SequencePack<'a> {
       x.iter().map(|t| t.unpack()).collect()
     });
     SequencePackT {
-      version,
       name,
       sequence_list,
     }
   }
 
-  #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(SequencePack::VT_VERSION, None)}
-  }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
     // Safety:
@@ -941,7 +850,6 @@ impl flatbuffers::Verifiable for SequencePack<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<super::basetype::DataSequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
      .finish();
@@ -949,7 +857,6 @@ impl flatbuffers::Verifiable for SequencePack<'_> {
   }
 }
 pub struct SequencePackArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub sequence_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<super::basetype::DataSequence<'a>>>>>,
 }
@@ -957,7 +864,6 @@ impl<'a> Default for SequencePackArgs<'a> {
   #[inline]
   fn default() -> Self {
     SequencePackArgs {
-      version: None,
       name: None,
       sequence_list: None,
     }
@@ -969,10 +875,6 @@ pub struct SequencePackBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SequencePackBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(SequencePack::VT_VERSION, version);
-  }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SequencePack::VT_NAME, name);
@@ -999,7 +901,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SequencePackBuilder<'a, 'b, A> 
 impl core::fmt::Debug for SequencePack<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("SequencePack");
-      ds.field("version", &self.version());
       ds.field("name", &self.name());
       ds.field("sequence_list", &self.sequence_list());
       ds.finish()
@@ -1008,14 +909,12 @@ impl core::fmt::Debug for SequencePack<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SequencePackT {
-  pub version: Option<super::basetype::DataVersionT>,
   pub name: Option<String>,
   pub sequence_list: Option<Vec<super::basetype::DataSequenceT>>,
 }
 impl Default for SequencePackT {
   fn default() -> Self {
     Self {
-      version: None,
       name: None,
       sequence_list: None,
     }
@@ -1026,8 +925,6 @@ impl SequencePackT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<SequencePack<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });
@@ -1035,7 +932,6 @@ impl SequencePackT {
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     SequencePack::create(_fbb, &SequencePackArgs{
-      version,
       name,
       sequence_list,
     })
@@ -1057,21 +953,20 @@ impl<'a> flatbuffers::Follow<'a> for FontBitmap<'a> {
 }
 
 impl<'a> FontBitmap<'a> {
-  pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: flatbuffers::VOffsetT = 6;
-  pub const VT_NAME_FACE: flatbuffers::VOffsetT = 8;
-  pub const VT_SIZE: flatbuffers::VOffsetT = 10;
-  pub const VT_PADDING_L: flatbuffers::VOffsetT = 12;
-  pub const VT_PADDING_R: flatbuffers::VOffsetT = 14;
-  pub const VT_PADDING_U: flatbuffers::VOffsetT = 16;
-  pub const VT_PADDING_D: flatbuffers::VOffsetT = 18;
-  pub const VT_BASE: flatbuffers::VOffsetT = 20;
-  pub const VT_HEIGHT_LINE: flatbuffers::VOffsetT = 22;
-  pub const VT_SCALE: flatbuffers::VOffsetT = 24;
-  pub const VT_SPACING: flatbuffers::VOffsetT = 26;
-  pub const VT_SIZE_TEXTURE_ORIGINAL: flatbuffers::VOffsetT = 28;
-  pub const VT_NAME_TEXTURE: flatbuffers::VOffsetT = 30;
-  pub const VT_TABLE_DATA: flatbuffers::VOffsetT = 32;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_NAME_FACE: flatbuffers::VOffsetT = 6;
+  pub const VT_SIZE: flatbuffers::VOffsetT = 8;
+  pub const VT_PADDING_L: flatbuffers::VOffsetT = 10;
+  pub const VT_PADDING_R: flatbuffers::VOffsetT = 12;
+  pub const VT_PADDING_U: flatbuffers::VOffsetT = 14;
+  pub const VT_PADDING_D: flatbuffers::VOffsetT = 16;
+  pub const VT_BASE: flatbuffers::VOffsetT = 18;
+  pub const VT_HEIGHT_LINE: flatbuffers::VOffsetT = 20;
+  pub const VT_SCALE: flatbuffers::VOffsetT = 22;
+  pub const VT_SPACING: flatbuffers::VOffsetT = 24;
+  pub const VT_SIZE_TEXTURE_ORIGINAL: flatbuffers::VOffsetT = 26;
+  pub const VT_NAME_TEXTURE: flatbuffers::VOffsetT = 28;
+  pub const VT_TABLE_DATA: flatbuffers::VOffsetT = 30;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1090,7 +985,6 @@ impl<'a> FontBitmap<'a> {
     if let Some(x) = args.scale { builder.add_scale(x); }
     if let Some(x) = args.name_face { builder.add_name_face(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
     builder.add_height_line(args.height_line);
     builder.add_base(args.base);
     builder.add_padding_d(args.padding_d);
@@ -1102,9 +996,6 @@ impl<'a> FontBitmap<'a> {
   }
 
   pub fn unpack(&self) -> FontBitmapT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -1134,7 +1025,6 @@ impl<'a> FontBitmap<'a> {
       x.iter().map(|t| t.unpack()).collect()
     });
     FontBitmapT {
-      version,
       name,
       name_face,
       size,
@@ -1152,13 +1042,6 @@ impl<'a> FontBitmap<'a> {
     }
   }
 
-  #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(FontBitmap::VT_VERSION, None)}
-  }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
     // Safety:
@@ -1266,7 +1149,6 @@ impl flatbuffers::Verifiable for FontBitmap<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name_face", Self::VT_NAME_FACE, false)?
      .visit_field::<u16>("size", Self::VT_SIZE, false)?
@@ -1286,7 +1168,6 @@ impl flatbuffers::Verifiable for FontBitmap<'_> {
   }
 }
 pub struct FontBitmapArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub name_face: Option<flatbuffers::WIPOffset<&'a str>>,
     pub size: u16,
@@ -1306,7 +1187,6 @@ impl<'a> Default for FontBitmapArgs<'a> {
   #[inline]
   fn default() -> Self {
     FontBitmapArgs {
-      version: None,
       name: None,
       name_face: None,
       size: 0,
@@ -1330,10 +1210,6 @@ pub struct FontBitmapBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FontBitmapBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(FontBitmap::VT_VERSION, version);
-  }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FontBitmap::VT_NAME, name);
@@ -1408,7 +1284,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FontBitmapBuilder<'a, 'b, A> {
 impl core::fmt::Debug for FontBitmap<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("FontBitmap");
-      ds.field("version", &self.version());
       ds.field("name", &self.name());
       ds.field("name_face", &self.name_face());
       ds.field("size", &self.size());
@@ -1429,7 +1304,6 @@ impl core::fmt::Debug for FontBitmap<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FontBitmapT {
-  pub version: Option<super::basetype::DataVersionT>,
   pub name: Option<String>,
   pub name_face: Option<String>,
   pub size: u16,
@@ -1448,7 +1322,6 @@ pub struct FontBitmapT {
 impl Default for FontBitmapT {
   fn default() -> Self {
     Self {
-      version: None,
       name: None,
       name_face: None,
       size: 0,
@@ -1471,8 +1344,6 @@ impl FontBitmapT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<FontBitmap<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });
@@ -1502,7 +1373,6 @@ impl FontBitmapT {
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     FontBitmap::create(_fbb, &FontBitmapArgs{
-      version,
       name,
       name_face,
       size,
@@ -1536,9 +1406,8 @@ impl<'a> flatbuffers::Follow<'a> for DataSoundList<'a> {
 }
 
 impl<'a> DataSoundList<'a> {
-  pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: flatbuffers::VOffsetT = 6;
-  pub const VT_TABLE_DATA: flatbuffers::VOffsetT = 8;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TABLE_DATA: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1552,14 +1421,10 @@ impl<'a> DataSoundList<'a> {
     let mut builder = DataSoundListBuilder::new(_fbb);
     if let Some(x) = args.table_data { builder.add_table_data(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> DataSoundListT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -1567,19 +1432,11 @@ impl<'a> DataSoundList<'a> {
       x.iter().map(|t| t.unpack()).collect()
     });
     DataSoundListT {
-      version,
       name,
       table_data,
     }
   }
 
-  #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataSoundList::VT_VERSION, None)}
-  }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
     // Safety:
@@ -1603,7 +1460,6 @@ impl flatbuffers::Verifiable for DataSoundList<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<super::basetype::LibraryDataSound>>>>("table_data", Self::VT_TABLE_DATA, false)?
      .finish();
@@ -1611,7 +1467,6 @@ impl flatbuffers::Verifiable for DataSoundList<'_> {
   }
 }
 pub struct DataSoundListArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub table_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<super::basetype::LibraryDataSound<'a>>>>>,
 }
@@ -1619,7 +1474,6 @@ impl<'a> Default for DataSoundListArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataSoundListArgs {
-      version: None,
       name: None,
       table_data: None,
     }
@@ -1631,10 +1485,6 @@ pub struct DataSoundListBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataSoundListBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataSoundList::VT_VERSION, version);
-  }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(DataSoundList::VT_NAME, name);
@@ -1661,7 +1511,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataSoundListBuilder<'a, 'b, A>
 impl core::fmt::Debug for DataSoundList<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("DataSoundList");
-      ds.field("version", &self.version());
       ds.field("name", &self.name());
       ds.field("table_data", &self.table_data());
       ds.finish()
@@ -1670,14 +1519,12 @@ impl core::fmt::Debug for DataSoundList<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataSoundListT {
-  pub version: Option<super::basetype::DataVersionT>,
   pub name: Option<String>,
   pub table_data: Option<Vec<super::basetype::LibraryDataSoundT>>,
 }
 impl Default for DataSoundListT {
   fn default() -> Self {
     Self {
-      version: None,
       name: None,
       table_data: None,
     }
@@ -1688,8 +1535,6 @@ impl DataSoundListT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataSoundList<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });
@@ -1697,7 +1542,6 @@ impl DataSoundListT {
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     DataSoundList::create(_fbb, &DataSoundListArgs{
-      version,
       name,
       table_data,
     })
@@ -1751,14 +1595,12 @@ impl<'a> ProjectData<'a> {
     if let Some(x) = args.animation { builder.add_animation(x); }
     if let Some(x) = args.cell_map { builder.add_cell_map(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
+    builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> ProjectDataT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
+    let version = self.version();
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -1805,11 +1647,11 @@ impl<'a> ProjectData<'a> {
   }
 
   #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
+  pub fn version(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(ProjectData::VT_VERSION, None)}
+    unsafe { self._tab.get::<u32>(ProjectData::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -1890,7 +1732,7 @@ impl flatbuffers::Verifiable for ProjectData<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<DataCellMap>>("cell_map", Self::VT_CELL_MAP, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<DataAnimation>>>>("animation", Self::VT_ANIMATION, false)?
@@ -1906,7 +1748,7 @@ impl flatbuffers::Verifiable for ProjectData<'_> {
   }
 }
 pub struct ProjectDataArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
+    pub version: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub cell_map: Option<flatbuffers::WIPOffset<DataCellMap<'a>>>,
     pub animation: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<DataAnimation<'a>>>>>,
@@ -1922,7 +1764,7 @@ impl<'a> Default for ProjectDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     ProjectDataArgs {
-      version: None,
+      version: 1,
       name: None,
       cell_map: None,
       animation: None,
@@ -1943,8 +1785,8 @@ pub struct ProjectDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ProjectDataBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(ProjectData::VT_VERSION, version);
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(ProjectData::VT_VERSION, version, 1);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -2021,7 +1863,7 @@ impl core::fmt::Debug for ProjectData<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProjectDataT {
-  pub version: Option<super::basetype::DataVersionT>,
+  pub version: u32,
   pub name: Option<String>,
   pub cell_map: Option<Box<DataCellMapT>>,
   pub animation: Option<Vec<DataAnimationT>>,
@@ -2036,7 +1878,7 @@ pub struct ProjectDataT {
 impl Default for ProjectDataT {
   fn default() -> Self {
     Self {
-      version: None,
+      version: 1,
       name: None,
       cell_map: None,
       animation: None,
@@ -2055,8 +1897,7 @@ impl ProjectDataT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<ProjectData<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
+    let version = self.version;
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });

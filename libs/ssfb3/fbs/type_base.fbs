@@ -1,16 +1,6 @@
 namespace ss.basetype;
 
 // --------------------------------------------------------------------- [DataーVersion]
-enum DataVersionPropertyFlagBitStatus:ubyte {
-    Clear = 0x00,
-
-    MaskKindData = 0x0f, // Bit-Mask & Value-Invalid for KindDataFile
-
-    DependentKind01 = 0x10,
-    DependentKind02 = 0x20,
-    DependentKind03 = 0x40,
-    SplitProject = 0x80,
-}
 
 enum DataExtendInformationFileFlagBitStatus:ushort {
     CLEAR = 0x0000,
@@ -19,13 +9,6 @@ enum DataExtendInformationFileFlagBitStatus:ushort {
 
     IS_DATA = 0x4000,
 //  (Don't use) = 0x8000,
-}
-
-struct DataVersion {
-    property:DataVersionPropertyFlagBitStatus;
-    major:ubyte;
-    minor:ubyte;
-    revision:ubyte;
 }
 
 table DataExtendInformationFile {

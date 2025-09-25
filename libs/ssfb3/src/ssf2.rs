@@ -213,7 +213,7 @@ impl<'a> DataFontBitmapSplit<'a> {
     if let Some(x) = args.scale { builder.add_scale(x); }
     if let Some(x) = args.name_face { builder.add_name_face(x); }
     if let Some(x) = args.name { builder.add_name(x); }
-    if let Some(x) = args.version { builder.add_version(x); }
+    builder.add_version(args.version);
     builder.add_height_line(args.height_line);
     builder.add_base(args.base);
     builder.add_padding_d(args.padding_d);
@@ -225,9 +225,7 @@ impl<'a> DataFontBitmapSplit<'a> {
   }
 
   pub fn unpack(&self) -> DataFontBitmapSplitT {
-    let version = self.version().map(|x| {
-      x.unpack()
-    });
+    let version = self.version();
     let name = self.name().map(|x| {
       x.to_string()
     });
@@ -280,11 +278,11 @@ impl<'a> DataFontBitmapSplit<'a> {
   }
 
   #[inline]
-  pub fn version(&self) -> Option<&'a super::basetype::DataVersion> {
+  pub fn version(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<super::basetype::DataVersion>(DataFontBitmapSplit::VT_VERSION, None)}
+    unsafe { self._tab.get::<u32>(DataFontBitmapSplit::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -400,7 +398,7 @@ impl flatbuffers::Verifiable for DataFontBitmapSplit<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<super::basetype::DataVersion>("version", Self::VT_VERSION, false)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name_face", Self::VT_NAME_FACE, false)?
      .visit_field::<u16>("size", Self::VT_SIZE, false)?
@@ -421,7 +419,7 @@ impl flatbuffers::Verifiable for DataFontBitmapSplit<'_> {
   }
 }
 pub struct DataFontBitmapSplitArgs<'a> {
-    pub version: Option<&'a super::basetype::DataVersion>,
+    pub version: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub name_face: Option<flatbuffers::WIPOffset<&'a str>>,
     pub size: u16,
@@ -442,7 +440,7 @@ impl<'a> Default for DataFontBitmapSplitArgs<'a> {
   #[inline]
   fn default() -> Self {
     DataFontBitmapSplitArgs {
-      version: None,
+      version: 1,
       name: None,
       name_face: None,
       size: 0,
@@ -468,8 +466,8 @@ pub struct DataFontBitmapSplitBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> DataFontBitmapSplitBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_version(&mut self, version: &super::basetype::DataVersion) {
-    self.fbb_.push_slot_always::<&super::basetype::DataVersion>(DataFontBitmapSplit::VT_VERSION, version);
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(DataFontBitmapSplit::VT_VERSION, version, 1);
   }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
@@ -571,7 +569,7 @@ impl core::fmt::Debug for DataFontBitmapSplit<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct DataFontBitmapSplitT {
-  pub version: Option<super::basetype::DataVersionT>,
+  pub version: u32,
   pub name: Option<String>,
   pub name_face: Option<String>,
   pub size: u16,
@@ -591,7 +589,7 @@ pub struct DataFontBitmapSplitT {
 impl Default for DataFontBitmapSplitT {
   fn default() -> Self {
     Self {
-      version: None,
+      version: 1,
       name: None,
       name_face: None,
       size: 0,
@@ -615,8 +613,7 @@ impl DataFontBitmapSplitT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<DataFontBitmapSplit<'b>> {
-    let version_tmp = self.version.as_ref().map(|x| x.pack());
-    let version = version_tmp.as_ref();
+    let version = self.version;
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });

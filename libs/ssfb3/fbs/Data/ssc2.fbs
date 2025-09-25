@@ -7,7 +7,7 @@ table DataCellmapExtendSplit {
 }
 
 table DataCellMapSplit {
-    version:ss.basetype.DataVersion;
+	version:uint = 0x00000001;
     name:string;
     filename_texture:string;
     cell_map:ss.basetype.LibraryDataCellMap;
