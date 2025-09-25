@@ -9,4 +9,5 @@ crate-type = ["rlib", "staticlib"]
 [dependencies]
 sscpe = { path = "../sscpe" }
 sspj = { path = "../sspj" }
+ssfb3 = { path = "../ssfb3" }
 flatbuffers = "25.9.23"
