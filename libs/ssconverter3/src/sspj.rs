@@ -6,4 +6,6 @@ pub mod ssse;
 pub mod ssee;
 pub mod ssattribute;
 pub mod ssqe;
+pub mod sscharmap;
 pub mod sspj;
+
