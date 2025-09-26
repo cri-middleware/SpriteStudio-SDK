@@ -118,7 +118,7 @@ impl SsLoader for SsProject {
         let parent = path.parent().expect("Failed to get parent directory");
         let mut sspj = match quick_xml::de::from_str::<SsProject>(&xml_data) {
             Ok(sspj) => sspj,
-            Err(e) => return Err(SspjError::ParseError(e)),
+            Err(e) => return Err(SspjError::XmlParseError(e)),
         };
 
         let mut parent_path: std::path::PathBuf;

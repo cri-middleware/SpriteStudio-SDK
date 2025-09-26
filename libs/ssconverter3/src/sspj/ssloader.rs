@@ -3,7 +3,8 @@ use std::path::Path;
 #[derive(Debug)]
 pub enum SspjError {
     FileError(std::io::Error),
-    ParseError(quick_xml::DeError),
+    XmlParseError(quick_xml::DeError),
+    FntParseError(String),
 }
 
 

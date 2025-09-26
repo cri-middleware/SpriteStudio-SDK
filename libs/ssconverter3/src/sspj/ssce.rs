@@ -96,7 +96,7 @@ impl SsLoader for SsCellMap {
         let r = quick_xml::de::from_str(s);
         match r {
             Ok(ss_cell_map) => Ok(ss_cell_map),
-            Err(e) => Err(SspjError::ParseError(e)),
+            Err(e) => Err(SspjError::XmlParseError(e)),
         }
     }
 

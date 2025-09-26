@@ -53,7 +53,7 @@ impl SsLoader for SsSequencePack {
         let r = quick_xml::de::from_str(s);
         match r {
             Ok(ss_sequence_pack) => Ok(ss_sequence_pack),
-            Err(e) => Err(SspjError::ParseError(e)),
+            Err(e) => Err(SspjError::XmlParseError(e)),
         }
     }
 }

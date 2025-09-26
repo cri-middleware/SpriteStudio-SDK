@@ -18,9 +18,9 @@ impl CharMapLoader for SsCharMapInfo {
     type Output = SsCharMapInfo;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        let face = parts.get("face").unwrap().trim_matches('"');
-        let unicode = parts.get("unicode").unwrap().as_str() == "1";
-        let smooth = parts.get("smooth").unwrap().as_str() == "1";
+        let face = parts["face"].trim_matches('"');
+        let unicode = parts["unicode"].as_str() == "1";
+        let smooth = parts["smooth"].as_str() == "1";
 
         Ok(SsCharMapInfo {
             face: face.to_string(),
@@ -42,11 +42,11 @@ impl CharMapLoader for SsCharMapCommon {
     type Output = SsCharMapCommon;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        let line_height = parts.get("lineHeight").unwrap().parse::<i32>().unwrap();
-        let base = parts.get("base").unwrap().parse::<i32>().unwrap();
-        let scale_w = parts.get("scaleW").unwrap().parse::<f32>().unwrap();
-        let scale_h = parts.get("scaleH").unwrap().parse::<f32>().unwrap();
-        let pages = parts.get("pages").unwrap().parse::<i32>().unwrap();
+        let line_height = parts["lineHeight"].parse::<i32>().unwrap();
+        let base = parts["base"].parse::<i32>().unwrap();
+        let scale_w = parts["scaleW"].parse::<f32>().unwrap();
+        let scale_h = parts["scaleH"].parse::<f32>().unwrap();
+        let pages = parts["pages"].parse::<i32>().unwrap();
         Ok(SsCharMapCommon {
             line_height,
             base,
@@ -66,8 +66,8 @@ impl CharMapLoader for SsCharMapPage {
     type Output = SsCharMapPage;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        let id = parts.get("id").unwrap().parse::<i32>().unwrap();
-        let file = parts.get("file").unwrap().trim_matches('"');
+        let id = parts["id"].parse::<i32>().unwrap();
+        let file = parts["file"].trim_matches('"');
         Ok(
             SsCharMapPage {
                 id: id,
@@ -110,16 +110,16 @@ impl CharMapLoader for SsCharMapChar {
 }
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
-pub struct SsCharMapKernig {
+pub struct SsCharMapKerning {
     pub id: i32,
 }
-impl CharMapLoader for SsCharMapKernig {
-    type Output = SsCharMapKernig;
+impl CharMapLoader for SsCharMapKerning {
+    type Output = SsCharMapKerning;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
         let id = parts["id"].parse::<i32>().unwrap();
         Ok(
-            SsCharMapKernig {
+            SsCharMapKerning {
                 id: id,
             }
         )
@@ -132,7 +132,7 @@ pub struct SsCharMap {
     pub common: SsCharMapCommon,
     pub pages: HashMap<i32, SsCharMapPage>,
     pub chars: HashMap<i32, SsCharMapChar>,
-    pub kernings: HashMap<i32, SsCharMapKernig>,
+    pub kernings: HashMap<i32, SsCharMapKerning>,
 }
 
 impl SsLoader for SsCharMap {
@@ -140,6 +140,8 @@ impl SsLoader for SsCharMap {
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
         let mut ss_char_map = SsCharMap::default();
+        let mut chars_count: usize = 0;
+        let mut kernings_count: usize = 0;
         for line in s.lines() {
             let splits = line.splitn(2, ' ').collect::<Vec<&str>>();
             if splits.len() != 2 {
@@ -165,24 +167,30 @@ impl SsLoader for SsCharMap {
                     ss_char_map.pages.insert(page.id, page);
                 }
                 "chars" => {
-                    //
+                    chars_count = parts["count"].parse::<usize>().unwrap();
                 }
                 "char" => {
                     let char = SsCharMapChar::load(&parts)?;
                     ss_char_map.chars.insert(char.id, char);
                 }
                 "kernings" => {
-                    //
+                    kernings_count = parts["count"].parse::<usize>().unwrap();
                 }
                 "kerning" => {
-                    let kerning = SsCharMapKernig::load(&parts)?;
+                    let kerning = SsCharMapKerning::load(&parts)?;
                     ss_char_map.kernings.insert(kerning.id, kerning);
                 }
                 _ => {
                     continue;
                 }
             }
-
+        }
+        // validation
+        if chars_count != ss_char_map.chars.len() {
+            return Err(SspjError::FntParseError(format!("Invalid number of chars count={} chars.len()={}", chars_count, ss_char_map.chars.len())));
+        }
+        if kernings_count != ss_char_map.kernings.len() {
+            return Err(SspjError::FntParseError(format!("Invalid number of kernings count={} kernings.len()={}", kernings_count, ss_char_map.kernings.len())));
         }
 
         Ok(ss_char_map)
@@ -252,6 +260,7 @@ mod tests {
     fn parse_ssfnt() {
         [
             "tests/overall/font/RoundedMPlus.fnt",
+            "tests/allPartsV7/font/Sample_PixelMplus12.fnt",
         ].par_iter().for_each( |&f| {
             let p = get_test_base_path().join(f);
             load_ssfnt(&p.as_path());

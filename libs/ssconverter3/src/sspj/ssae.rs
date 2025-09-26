@@ -292,7 +292,7 @@ impl SsLoader for SsAnimePack {
         let r = quick_xml::de::from_str::<Self::Output>(s);
         match r {
             Ok(ss_anime_pack) => Ok(ss_anime_pack),
-            Err(e) => Err(SspjError::ParseError(e)),
+            Err(e) => Err(SspjError::XmlParseError(e)),
         }
     }
 }

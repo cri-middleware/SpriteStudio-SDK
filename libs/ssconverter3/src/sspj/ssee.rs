@@ -386,7 +386,7 @@ impl SsLoader for SsEffectFile {
         let r = quick_xml::de::from_str::<Self::Output>(s);
         match r {
             Ok(r) => Ok(r),
-            Err(e) => Err(SspjError::ParseError(e)),
+            Err(e) => Err(SspjError::XmlParseError(e)),
         }
     }
 }

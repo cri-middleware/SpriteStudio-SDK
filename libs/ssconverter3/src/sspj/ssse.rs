@@ -46,7 +46,7 @@ impl SsLoader for SsAudioPack {
         let r = quick_xml::de::from_str(s);
         match r {
             Ok(ss_audio_pack) => Ok(ss_audio_pack),
-            Err(e) => Err(SspjError::ParseError(e)),
+            Err(e) => Err(SspjError::XmlParseError(e)),
         }
     }
 }
