@@ -163,6 +163,7 @@ dependencies = [
 name = "ssconverter3-cli"
 version = "0.1.0"
 dependencies = [
+ "rayon",
  "ssconverter3",
 ]
 
