@@ -2,7 +2,7 @@ use std::fmt::Formatter;
 use serde::{Deserialize};
 use serde::de::{MapAccess, Visitor};
 use serde::de::value::MapAccessDeserializer;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::*;
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -382,8 +382,12 @@ pub struct SsEffectFile {
 impl SsLoader for SsEffectFile {
     type Output = SsEffectFile;
 
-    fn load(s: &str) -> Result<Self::Output, quick_xml::DeError> {
-        quick_xml::de::from_str(s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        let r = quick_xml::de::from_str::<Self::Output>(s);
+        match r {
+            Ok(r) => Ok(r),
+            Err(e) => Err(SspjError::ParseError(e)),
+        }
     }
 }
 

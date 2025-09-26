@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::SsSequenceType;
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -49,8 +49,12 @@ impl SsSequencePack {
 impl SsLoader for SsSequencePack {
     type Output = SsSequencePack;
 
-    fn load(s: &str) -> Result<Self::Output, quick_xml::DeError> {
-        quick_xml::de::from_str::<SsSequencePack>(&s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        let r = quick_xml::de::from_str(s);
+        match r {
+            Ok(ss_sequence_pack) => Ok(ss_sequence_pack),
+            Err(e) => Err(SspjError::ParseError(e)),
+        }
     }
 }
 

@@ -1,6 +1,5 @@
-use quick_xml::DeError;
 use serde::Deserialize;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -43,8 +42,12 @@ pub struct SsAudioPack {
 impl SsLoader for SsAudioPack {
     type Output = SsAudioPack;
 
-    fn load(s: &str) -> Result<Self::Output, DeError> {
-        quick_xml::de::from_str(s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        let r = quick_xml::de::from_str(s);
+        match r {
+            Ok(ss_audio_pack) => Ok(ss_audio_pack),
+            Err(e) => Err(SspjError::ParseError(e)),
+        }
     }
 }
 

@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 use serde::{Deserialize, Deserializer};
-use quick_xml::DeError;
 use serde::de::Error;
 use crate::sspj::ssattribute::SsAttributeKind;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::*;
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
@@ -289,8 +288,12 @@ pub struct SsAnimePack {
 impl SsLoader for SsAnimePack {
     type Output = SsAnimePack;
 
-    fn load(s: &str) -> Result<Self::Output, DeError> {
-        quick_xml::de::from_str::<Self::Output>(s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        let r = quick_xml::de::from_str::<Self::Output>(s);
+        match r {
+            Ok(ss_anime_pack) => Ok(ss_anime_pack),
+            Err(e) => Err(SspjError::ParseError(e)),
+        }
     }
 }
 
@@ -332,7 +335,7 @@ mod tests {
                 assert!(true);
             }
             Err(e) => {
-                assert!(false, "{}", e)
+                assert!(false, "{:?}", e)
             }
         }
     }

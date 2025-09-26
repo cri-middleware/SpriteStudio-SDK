@@ -1,6 +1,5 @@
-use quick_xml::DeError;
 use serde::Deserialize;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::*;
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -93,9 +92,14 @@ pub struct SsCellMap {
 impl SsLoader for SsCellMap {
     type Output = SsCellMap;
 
-    fn load(s: &str) -> Result<Self::Output, DeError> {
-        quick_xml::de::from_str::<SsCellMap>(&s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        let r = quick_xml::de::from_str(s);
+        match r {
+            Ok(ss_cell_map) => Ok(ss_cell_map),
+            Err(e) => Err(SspjError::ParseError(e)),
+        }
     }
+
 }
 fn parse_ss_cells<'de, D>(deserializer: D) -> Result<Vec<SsCell>, D::Error>
 where

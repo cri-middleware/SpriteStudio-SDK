@@ -1,10 +1,9 @@
-use quick_xml::DeError;
 use serde::Deserialize;
 use rayon::prelude::*;
 use crate::sspj::ssae::SsAnimePack;
 use crate::sspj::ssce::SsCellMap;
 use crate::sspj::ssee::SsEffectFile;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::ssqe::SsSequencePack;
 use crate::sspj::ssse::SsAudioPack;
 use crate::sspj::sstypes::{SsTexFilterMode, SsTexWrapMode};
@@ -106,14 +105,17 @@ where
 
 impl SsLoader for SsProject {
     type Output = SsProject;
-    fn load_from_file(path: &std::path::Path) -> Result<Self::Output, DeError> {
-        let Ok(xml_data) = std::fs::read_to_string(path) else {
-            return Err(quick_xml::DeError::Custom(format!("Failed to read file: {}", path.display())))
+    fn load_from_file(path: &std::path::Path) -> Result<Self::Output, SspjError> {
+        let xml_data = match std::fs::read_to_string(path) {
+            Ok(xml_data) => xml_data,
+            Err(e) => return Err(SspjError::FileError(e)),
         };
 
         let parent = path.parent().expect("Failed to get parent directory");
-        let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data)?;
-
+        let mut sspj = match quick_xml::de::from_str::<SsProject>(&xml_data) {
+            Ok(sspj) => sspj,
+            Err(e) => return Err(SspjError::ParseError(e)),
+        };
 
         let mut parent_path: std::path::PathBuf;
 
@@ -165,7 +167,10 @@ impl SsLoader for SsProject {
 
         Ok(sspj)
     }
-    fn load(_: &str) -> Result<<Self as SsLoader>::Output, DeError> { todo!() }
+
+    fn load(_: &str) -> Result<<Self as SsLoader>::Output, SspjError> {
+        panic!("Not support Sspj::load()");
+    }
 }
 
 #[cfg(test)]
