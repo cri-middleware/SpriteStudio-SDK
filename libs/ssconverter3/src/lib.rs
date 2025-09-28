@@ -18,7 +18,3 @@ impl SspjLoader {
         SsProject::load_from_file(self.path_buf.as_path())
     }
 }
-
-pub fn sspj(path: &Path) -> Result<SsProject, SspjError> {
-    SspjLoader::new(path).load_ss_project()
-}
