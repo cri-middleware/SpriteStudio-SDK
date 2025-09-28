@@ -93,11 +93,7 @@ impl SsLoader for SsCellMap {
     type Output = SsCellMap;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        let r = quick_xml::de::from_str(s);
-        match r {
-            Ok(ss_cell_map) => Ok(ss_cell_map),
-            Err(e) => Err(SspjError::XmlParseError(e)),
-        }
+        quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
     }
 
 }

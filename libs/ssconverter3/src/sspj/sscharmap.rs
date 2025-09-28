@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use crate::sspj::ssloader::{SsLoader, SspjError};
 
@@ -232,6 +231,7 @@ fn split_ignoring_quotes(delimiter: char, s: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use rayon::prelude::*;
+    use std::path::{Path, PathBuf};
     use super::*;
 
     fn load_ssfnt(path : &Path) {

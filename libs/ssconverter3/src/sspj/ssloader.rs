@@ -11,12 +11,7 @@ pub enum SspjError {
 pub trait SsLoader {
     type Output;
     fn load_from_file(path: &Path) -> Result<Self::Output, SspjError> {
-        let r = std::fs::read_to_string(path);
-        let xml_data = match r {
-            Ok(data) => data,
-            Err(e) => return Err(SspjError::FileError(e)),
-        };
-
+        let xml_data = std::fs::read_to_string(path).map_err(SspjError::FileError)?;
         Self::load(&xml_data)
     }
     fn load(s: &str) -> Result<Self::Output, SspjError>;

@@ -110,16 +110,9 @@ where
 impl SsLoader for SsProject {
     type Output = SsProject;
     fn load_from_file(path: &std::path::Path) -> Result<Self::Output, SspjError> {
-        let xml_data = match std::fs::read_to_string(path) {
-            Ok(xml_data) => xml_data,
-            Err(e) => return Err(SspjError::FileError(e)),
-        };
-
-        let parent = path.parent().expect("Failed to get parent directory");
-        let mut sspj = match quick_xml::de::from_str::<SsProject>(&xml_data) {
-            Ok(sspj) => sspj,
-            Err(e) => return Err(SspjError::XmlParseError(e)),
-        };
+        let xml_data = std::fs::read_to_string(path).map_err(SspjError::FileError)?;
+        let parent = path.parent().expect("Failed to get a parent directory");
+        let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(SspjError::XmlParseError)?;
 
         let mut parent_path: std::path::PathBuf;
 

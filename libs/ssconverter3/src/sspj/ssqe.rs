@@ -50,11 +50,7 @@ impl SsLoader for SsSequencePack {
     type Output = SsSequencePack;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        let r = quick_xml::de::from_str(s);
-        match r {
-            Ok(ss_sequence_pack) => Ok(ss_sequence_pack),
-            Err(e) => Err(SspjError::XmlParseError(e)),
-        }
+        quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
     }
 }
 

@@ -383,11 +383,7 @@ impl SsLoader for SsEffectFile {
     type Output = SsEffectFile;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        let r = quick_xml::de::from_str::<Self::Output>(s);
-        match r {
-            Ok(r) => Ok(r),
-            Err(e) => Err(SspjError::XmlParseError(e)),
-        }
+        quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
     }
 }
 

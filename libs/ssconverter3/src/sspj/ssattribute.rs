@@ -627,7 +627,8 @@ impl<'de> Deserialize<'de> for SsAttributeKind {
                                 Ok(SsAttributeKind::PartsColor(parts_color))
                             },
                             "VCOL" => {
-                                Err(serde::de::Error::custom("VCOL is deprecated"))
+                                // warn!("VCOL is deprecated");
+                                Ok(SsAttributeKind::Color)
                             },
                             "SHDR" => {
                                 let shader = SsAttributeShader::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
@@ -726,7 +727,7 @@ impl<'de> Deserialize<'de> for SsAttributeKind {
                                 Ok(SsAttributeKind::Texchange(texchange))
                             },
                             _ => {
-                                return Err(serde::de::Error::custom(format!("unknown type: {}", value)))
+                                return Err(serde::de::Error::custom(format!("unknown attribute type: {}", value)))
                             }
                         }
                         _ => {
