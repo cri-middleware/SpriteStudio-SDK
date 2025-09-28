@@ -19,8 +19,6 @@ pub struct SsCell {
     pub size: SsPoint2,
     pub pivot: SsPoint2,
     pub rotated: bool,
-    #[serde(default)]
-    pub parent_size: SsPoint2,
     #[serde(rename = "ismesh")]
     pub is_mesh: bool,
 
@@ -84,8 +82,6 @@ pub struct SsCellMap {
     #[serde(deserialize_with = "parse_ss_cells")]
     pub cells: Vec<SsCell>,
 
-    #[serde(default)]
-    pub f_name: String,
     #[serde(default)]
     pub load_file_path: String,
 }

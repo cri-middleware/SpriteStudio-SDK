@@ -147,7 +147,12 @@ impl SsLoader for SsProject {
         let cellmap_names = sspj.cellmap_names.clone();
         let cellmap_handle = std::thread::spawn(move || {
             cellmap_names.par_iter().filter_map(|cellmap| {
-                SsCellMap::load_from_file(&parent_path.join(cellmap)).ok()
+                let ssce_path = &parent_path.join(cellmap);
+                let Ok(mut ssce) = SsCellMap::load_from_file(&ssce_path) else {
+                    return None;
+                };
+                ssce.load_file_path = ssce_path.to_string_lossy().to_string();
+                Some(ssce)
             }).collect::<Vec<SsCellMap>>()
         });
 
