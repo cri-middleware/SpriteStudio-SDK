@@ -5,7 +5,7 @@ use serde::de::value::MapAccessDeserializer;
 use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::*;
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 pub struct VarianceValue<T> {
     #[serde(rename = "@value")]
     pub value: T,
@@ -16,8 +16,7 @@ pub struct VarianceValue<T> {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ParticleElementBasic {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub priority: i32,
     pub maximum_particle: i32,
     pub attime_create: i32,
@@ -29,45 +28,63 @@ pub struct ParticleElementBasic {
 
     pub lifetime: i32,
 }
+impl Default for ParticleElementBasic {
+    fn default() -> Self {
+        ParticleElementBasic {
+            // name: String::new(),
+            priority: 64,
+            maximum_particle: 50,
+            attime_create: 1,
+            interval: 1,
+            speed: VarianceValue { value: 5.0, subvalue: 5.0 },
+            lifespan: VarianceValue { value: 30, subvalue: 30 },
+            angle: 0.0,
+            angle_variance: 45.0,
+            lifetime: 30,
+        }
+    }
+}
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementRndSeedChange {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub seed: i32,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementDelay {
-    #[serde(rename = "name")]
-    pub name: String,
+    //pub name: String,
     pub delay_time: i32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementGravity {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub gravity: SsPoint2,
 }
+impl Default for ParticleElementGravity {
+    fn default() -> Self {
+        Self {
+            gravity: SsPoint2 { x: 0.0, y: -3.0 },
+        }
+    }
+}
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementPosition {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub offset_x: VarianceValue<f32>,
     pub offset_y: VarianceValue<f32>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementRotation {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub rotation: VarianceValue<f32>,
     pub rotation_add: VarianceValue<f32>,
 }
@@ -75,101 +92,157 @@ pub struct ParticleElementRotation {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementRotationTrans {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub rotation_factor: f32,
     pub end_life_time_per: f32,
 }
 impl Default for ParticleElementRotationTrans {
     fn default() -> Self {
         Self {
-            name: String::from(""),
+            // name: String::from(""),
             rotation_factor: 0.0,
             end_life_time_per: 75.0,
         }
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTransSpeed {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub speed: VarianceValue<f32>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTangentialAcceleration {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub acceleration: VarianceValue<f32>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementInitColor {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub color: VarianceValue<SsU8Color>,
+}
+impl Default for ParticleElementInitColor {
+    fn default() -> Self {
+        ParticleElementInitColor {
+            color: VarianceValue::<SsU8Color> {
+                value: SsU8Color {a: 255, r: 255, g: 255, b: 255},
+                subvalue: SsU8Color {a: 255, r: 255, g: 255, b: 255},
+            }
+        }
+    }
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTransColor {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub color: VarianceValue<SsU8Color>,
+}
+impl Default for ParticleElementTransColor {
+    fn default() -> Self {
+        ParticleElementTransColor {
+            color: VarianceValue::<SsU8Color> {
+                value: SsU8Color {a: 255, r: 255, g: 255, b: 255},
+                subvalue: SsU8Color {a: 255, r: 255, g: 255, b: 255},
+            }
+        }
+    }
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct ParticleElementAlphaFade {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub disprange: VarianceValue<f32>,
+}
+impl Default for ParticleElementAlphaFade {
+    fn default() -> Self {
+        ParticleElementAlphaFade {
+            disprange: VarianceValue::<f32> {
+                value: 25.0,
+                subvalue: 75.0,
+            }
+        }
+    }
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementSize {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub size_x: VarianceValue<f32>,
     pub size_y: VarianceValue<f32>,
     pub scale_factor: VarianceValue<f32>,
+}
+impl Default for ParticleElementSize {
+    fn default() -> Self {
+        ParticleElementSize {
+            size_x: VarianceValue::<f32> {
+                value: 1.0,
+                subvalue: 1.0,
+            },
+            size_y: VarianceValue::<f32> {
+                value: 1.0,
+                subvalue: 1.0,
+            },
+            scale_factor: VarianceValue::<f32> {
+                value: 1.0,
+                subvalue: 1.0,
+            },
+        }
+    }
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleElementTransSize {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub size_x: VarianceValue<f32>,
     pub size_y: VarianceValue<f32>,
     pub scale_factor: VarianceValue<f32>,
 }
+impl Default for ParticleElementTransSize {
+    fn default() -> Self {
+        ParticleElementTransSize {
+            size_x: VarianceValue::<f32> {
+                value: 1.0,
+                subvalue: 1.0,
+            },
+            size_y: VarianceValue::<f32> {
+                value: 1.0,
+                subvalue: 1.0,
+            },
+            scale_factor: VarianceValue::<f32> {
+                value: 1.0,
+                subvalue: 1.0,
+            },
+        }
+    }
+}
 
-#[derive(Deserialize, PartialEq, Debug)]
+
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticlePointGravity {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub position: SsPoint2,
     pub power: f32,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct ParticleTurnToDirectionEnabled {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
     pub rotation: f32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct ParticleInfiniteEmitEnabled {
-    #[serde(rename = "name")]
-    pub name: String,
+    // pub name: String,
 }
 
 #[derive(PartialEq, Debug)]
@@ -358,7 +431,11 @@ pub struct SsEffectModel {
     pub layout_scale_y: i32,
 
     #[serde(default)]
-    pub effect_name: String, // TODO: impl
+    pub effect_name: String,
+
+    // TODO: impl
+    // #[serde(default)]
+    // pub root: LinkedList<SsEffectNode>,
 }
 fn parse_node_list<'de, D>(deserializer: D) -> Result<Vec<SsEffectNode>, D::Error>
 where
@@ -383,7 +460,19 @@ impl SsLoader for SsEffectFile {
     type Output = SsEffectFile;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
+        let mut ssee = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
+        ssee.effect_data.effect_name = ssee.name.clone();
+        if ssee.effect_data.layout_scale_x == 0 {
+            ssee.effect_data.layout_scale_x = 100;
+        }
+        if ssee.effect_data.layout_scale_y == 0 {
+            ssee.effect_data.layout_scale_y = 100;
+        }
+
+        // TODO: create a tree
+
+
+        Ok(ssee)
     }
 }
 
@@ -487,8 +576,26 @@ mod tests {
             "tests/ParticleEffect/038a.ssee",
             "tests/ParticleEffect/039a.ssee",
             "tests/ParticleEffect/040a.ssee",
-            "tests/allAttributeV7/NewEffect.ssee",
-            "tests/allPartsV7/NewEffect.ssee",
+        ].par_iter().for_each( |&f| {
+            let p = get_test_base_path().join(f);
+            load_ssee(&p.as_path());
+        });
+    }
+
+    #[test]
+    fn parse_ssee2() {
+        [
+        "tests/allAttributeV7/NewEffect.ssee",
+        "tests/allPartsV7/NewEffect.ssee",
+        ].par_iter().for_each( |&f| {
+            let p = get_test_base_path().join(f);
+            load_ssee(&p.as_path());
+        });
+    }
+
+    #[test]
+    fn parse_ssee3() {
+        [
             "tests/overall/effect.ssee",
             "tests/overall/effect_checker.ssee",
         ].par_iter().for_each( |&f| {
@@ -496,4 +603,5 @@ mod tests {
             load_ssee(&p.as_path());
         });
     }
+
 }
