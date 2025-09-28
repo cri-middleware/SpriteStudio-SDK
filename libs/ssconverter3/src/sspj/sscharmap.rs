@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 use crate::sspj::ssloader::{SsLoader, SspjError};
+use crate::sspj::sstypes::{SsIRect, SsPoint2};
 
 pub trait CharMapLoader {
     type Output;
@@ -68,12 +69,8 @@ impl CharMapLoader for SsCharMapPage {
 #[derive(Deserialize, PartialEq, Default, Debug)]
 pub struct SsCharMapChar {
     pub id: i32,
-    pub x: i32,
-    pub y: i32,
-    pub width: i32,
-    pub height: i32,
-    pub xoffset: i32,
-    pub yoffset: i32,
+    pub src_rect: SsIRect,
+    pub offset: SsPoint2,
     pub xadvance: i32,
     pub page: i32,
 }
@@ -83,12 +80,16 @@ impl CharMapLoader for SsCharMapChar {
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
         Ok(SsCharMapChar {
             id: parts["id"].parse::<i32>().unwrap(),
-            x: parts["x"].parse::<i32>().unwrap(),
-            y: parts["y"].parse::<i32>().unwrap(),
-            width: parts["width"].parse::<i32>().unwrap(),
-            height: parts["height"].parse::<i32>().unwrap(),
-            xoffset: parts["xoffset"].parse::<i32>().unwrap(),
-            yoffset: parts["yoffset"].parse::<i32>().unwrap(),
+            src_rect: SsIRect {
+                x1: parts["x"].parse::<i32>().unwrap(),
+                y1: parts["y"].parse::<i32>().unwrap(),
+                x2: parts["width"].parse::<i32>().unwrap(),
+                y2: parts["height"].parse::<i32>().unwrap(),
+            },
+            offset: SsPoint2 {
+                x: parts["xoffset"].parse::<f32>().unwrap(),
+                y: parts["yoffset"].parse::<f32>().unwrap()
+            },
             xadvance: parts["xadvance"].parse::<i32>().unwrap(),
             page: parts["page"].parse::<i32>().unwrap(),
         })
@@ -132,7 +133,7 @@ impl SsLoader for SsCharMap {
                 continue;
             }
             let order = splits[0];
-            let parts = split_ignoring_quotes(' ', splits[1]).into_iter().filter_map(|x| {
+            let parts = split_ignoring_quotes(' ', splits[1]).iter().filter_map(|x| {
                 let kv = split_ignoring_quotes('=', x.trim());
                 if kv.len() != 2 { return None;}
                 Some((kv[0].to_string(), kv[1].to_string()))

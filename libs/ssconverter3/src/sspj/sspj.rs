@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use serde::Deserialize;
 use rayon::prelude::*;
 use crate::sspj::ssae::SsAnimePack;
@@ -115,11 +114,9 @@ impl SsLoader for SsProject {
         let parent = path.parent().expect("Failed to get a parent directory");
         let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(SspjError::XmlParseError)?;
 
-        let parent_arc = Arc::new(parent.to_path_buf());
-
         let sound_handle = {
-            let parent_path = Arc::clone(&parent_arc);
-            let audiopack_names = Arc::new(std::mem::take(&mut sspj.audiopack_names));
+            let parent_path = parent.to_path_buf();
+            let audiopack_names = sspj.audiopack_names.clone();
             std::thread::spawn(move || {
                 audiopack_names.par_iter().filter_map(|audiopack| {
                     SsAudioPack::load_from_file(&parent_path.join(audiopack)).ok()
@@ -128,8 +125,8 @@ impl SsLoader for SsProject {
         };
 
         let sequence_handle = {
-            let parent_path = Arc::clone(&parent_arc);
-            let sequencepack_names = Arc::new(std::mem::take(&mut sspj.sequencepack_names));
+            let parent_path = parent.to_path_buf();
+            let sequencepack_names = sspj.sequencepack_names.clone();
             std::thread::spawn(move || {
                 sequencepack_names.par_iter().filter_map(|sequencepack| {
                     SsSequencePack::load_from_file(&parent_path.join(sequencepack)).ok()
@@ -138,8 +135,8 @@ impl SsLoader for SsProject {
         };
 
         let charmap_handle = {
-            let parent_path = Arc::clone(&parent_arc);
-            let charmap_names = Arc::new(std::mem::take(&mut sspj.charmap_names));
+            let parent_path = parent.to_path_buf();
+            let charmap_names = sspj.charmap_names.clone();
             std::thread::spawn(move || {
                 charmap_names.par_iter().filter_map(|charmap_name| {
                     let Ok(charmap_data) = SsCharMap::load_from_file(&parent_path.join(charmap_name)) else {
@@ -151,8 +148,8 @@ impl SsLoader for SsProject {
         };
 
         let cellmap_handle = {
-            let parent_path = Arc::clone(&parent_arc);
-            let cellmap_names = Arc::new(std::mem::take(&mut sspj.cellmap_names));
+            let parent_path = parent.to_path_buf();
+            let cellmap_names = sspj.cellmap_names.clone();
             std::thread::spawn(move || {
                 cellmap_names.par_iter().filter_map(|cellmap| {
                     let ssce_path = &parent_path.join(cellmap);
@@ -166,8 +163,8 @@ impl SsLoader for SsProject {
         };
 
         let effect_handle = {
-            let parent_path = Arc::clone(&parent_arc);
-            let effect_file_names = Arc::new(std::mem::take(&mut sspj.effect_file_names));
+            let parent_path = parent.to_path_buf();
+            let effect_file_names = sspj.effect_file_names.clone();
             std::thread::spawn(move || {
                 effect_file_names.par_iter().filter_map(|effect_file| {
                     SsEffectFile::load_from_file(&parent_path.join(effect_file)).ok()
@@ -176,8 +173,8 @@ impl SsLoader for SsProject {
         };
 
         let animepack_handle = {
-            let parent_path = Arc::clone(&parent_arc);
-            let animepack_names = Arc::new(std::mem::take(&mut sspj.animepack_names));
+            let parent_path = parent.to_path_buf();
+            let animepack_names = sspj.animepack_names.clone();
             std::thread::spawn(move || {
                 animepack_names.par_iter().filter_map(|animepack| {
                     SsAnimePack::load_from_file(&parent_path.join(animepack)).ok()
