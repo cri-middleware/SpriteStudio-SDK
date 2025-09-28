@@ -10,7 +10,8 @@ fn main() {
         return;
     }
     let path = Path::new(args[1].as_os_str());
-    let Ok(sspj) = ssconverter3::sspj(&path) else {
+    let sspj_loader = ssconverter3::SspjLoader::new(path);
+    let Ok(sspj) = sspj_loader.load_ss_project() else {
         println!("not found: {}", path.as_os_str().to_string_lossy());
         return;
     };
@@ -25,9 +26,9 @@ mod tests {
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir()
-            .expect("Failed to get current directory")
+            .expect("Failed to get the current directory")
             .parent()
-            .expect("Failed to get base directory")
+            .expect("Failed to get the base directory")
             .to_path_buf()
     }
 
@@ -40,7 +41,8 @@ mod tests {
             "tests/overall/overall.sspj",
         ].par_iter().for_each(|&p| {
             let path = Path::new(p);
-            let Ok(sspj) = ssconverter3::sspj(&get_test_base_path().join(p).as_path()) else {
+            let sspj_loader = ssconverter3::SspjLoader::new(&get_test_base_path().join(p).as_path());
+            let Ok(sspj) = sspj_loader.load_ss_project() else {
                 panic!("not found: {}", path.as_os_str().to_string_lossy());
             };
             // println!("{:?}", sspj);

@@ -129,10 +129,10 @@ mod tests {
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir()
-            .expect("Failed to get current directory")
+            .expect("Failed to get the current directory")
             .ancestors()
             .nth(2)
-            .expect("Failed to get base directory")
+            .expect("Failed to get the base directory")
             .to_path_buf()
     }
 
