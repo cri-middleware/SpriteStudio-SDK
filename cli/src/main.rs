@@ -11,9 +11,12 @@ fn main() {
     }
     let path = Path::new(args[1].as_os_str());
     let sspj_loader = ssconverter3::SspjLoader::new(path);
-    let Ok(sspj) = sspj_loader.load_ss_project() else {
-        println!("not found: {}", path.as_os_str().to_string_lossy());
-        return;
+    let sspj = match sspj_loader.load_ss_project() {
+        Ok(sspj) => sspj,
+        Err(error) => {
+            println!("{:?} error: {:?}", path.as_os_str().to_string_lossy(), error);
+            return;
+        }
     };
     println!("{:?}", sspj);
 }
@@ -39,11 +42,11 @@ mod tests {
             "tests/allAttributeV7/allAttributeV7.sspj",
             "tests/allPartsV7/allPartsV7.sspj",
             "tests/overall/overall.sspj",
-        ].par_iter().for_each(|&p| {
-            let path = Path::new(p);
+        ].par_iter().for_each(|&f| {
+            let p = Path::new(f);
             let sspj_loader = ssconverter3::SspjLoader::new(&get_test_base_path().join(p).as_path());
             let Ok(sspj) = sspj_loader.load_ss_project() else {
-                panic!("not found: {}", path.as_os_str().to_string_lossy());
+                panic!("not found: {}", p.as_os_str().to_string_lossy());
             };
             // println!("{:?}", sspj);
         });

@@ -17,14 +17,10 @@ impl CharMapLoader for SsCharMapInfo {
     type Output = SsCharMapInfo;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        let face = parts["face"].trim_matches('"');
-        let unicode = parts["unicode"].as_str() == "1";
-        let smooth = parts["smooth"].as_str() == "1";
-
         Ok(SsCharMapInfo {
-            face: face.to_string(),
-            unicode,
-            smooth,
+            face: parts["face"].trim_matches('"').to_string(),
+            unicode: parts["unicode"].as_str() == "1",
+            smooth: parts["smooth"].as_str() == "1",
         })
     }
 }
@@ -41,17 +37,12 @@ impl CharMapLoader for SsCharMapCommon {
     type Output = SsCharMapCommon;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        let line_height = parts["lineHeight"].parse::<i32>().unwrap();
-        let base = parts["base"].parse::<i32>().unwrap();
-        let scale_w = parts["scaleW"].parse::<f32>().unwrap();
-        let scale_h = parts["scaleH"].parse::<f32>().unwrap();
-        let pages = parts["pages"].parse::<i32>().unwrap();
         Ok(SsCharMapCommon {
-            line_height,
-            base,
-            scale_w,
-            scale_h,
-            pages,
+            line_height: parts["lineHeight"].parse::<i32>().unwrap(),
+            base: parts["base"].parse::<i32>().unwrap(),
+            scale_w: parts["scaleW"].parse::<f32>().unwrap(),
+            scale_h: parts["scaleH"].parse::<f32>().unwrap(),
+            pages: parts["pages"].parse::<i32>().unwrap(),
         })
     }
 }
@@ -67,12 +58,10 @@ impl CharMapLoader for SsCharMapPage {
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
         let id = parts["id"].parse::<i32>().unwrap();
         let file = parts["file"].trim_matches('"');
-        Ok(
-            SsCharMapPage {
-                id: id,
-                file: file.to_string(),
-            }
-        )
+        Ok(SsCharMapPage {
+            id: id,
+            file: file.to_string(),
+        })
     }
 }
 
@@ -92,19 +81,17 @@ impl CharMapLoader for SsCharMapChar {
     type Output = SsCharMapChar;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(
-            SsCharMapChar {
-                id: parts["id"].parse::<i32>().unwrap(),
-                x: parts["x"].parse::<i32>().unwrap(),
-                y: parts["y"].parse::<i32>().unwrap(),
-                width: parts["width"].parse::<i32>().unwrap(),
-                height: parts["height"].parse::<i32>().unwrap(),
-                xoffset: parts["xoffset"].parse::<i32>().unwrap(),
-                yoffset: parts["yoffset"].parse::<i32>().unwrap(),
-                xadvance: parts["xadvance"].parse::<i32>().unwrap(),
-                page: parts["page"].parse::<i32>().unwrap(),
-            }
-        )
+        Ok(SsCharMapChar {
+            id: parts["id"].parse::<i32>().unwrap(),
+            x: parts["x"].parse::<i32>().unwrap(),
+            y: parts["y"].parse::<i32>().unwrap(),
+            width: parts["width"].parse::<i32>().unwrap(),
+            height: parts["height"].parse::<i32>().unwrap(),
+            xoffset: parts["xoffset"].parse::<i32>().unwrap(),
+            yoffset: parts["yoffset"].parse::<i32>().unwrap(),
+            xadvance: parts["xadvance"].parse::<i32>().unwrap(),
+            page: parts["page"].parse::<i32>().unwrap(),
+        })
     }
 }
 
@@ -116,12 +103,9 @@ impl CharMapLoader for SsCharMapKerning {
     type Output = SsCharMapKerning;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        let id = parts["id"].parse::<i32>().unwrap();
-        Ok(
-            SsCharMapKerning {
-                id: id,
-            }
-        )
+        Ok(SsCharMapKerning {
+            id: parts["id"].parse::<i32>().unwrap(),
+        })
     }
 }
 
@@ -180,6 +164,7 @@ impl SsLoader for SsCharMap {
                     ss_char_map.kernings.insert(kerning.id, kerning);
                 }
                 _ => {
+                    // invalid line
                     continue;
                 }
             }
