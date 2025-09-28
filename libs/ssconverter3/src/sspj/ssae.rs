@@ -240,7 +240,7 @@ pub struct SsModel {
     #[serde(deserialize_with = "parse_part_list")]
     pub part_list: Vec<SsPart>,
     #[serde(default)]
-    pub setup_animation: SsAnimation,
+    pub setup_animation: String,
 
     #[serde(deserialize_with = "parse_mesh_list")]
     pub mesh_list: Vec<SsMeshBind>,
@@ -289,7 +289,13 @@ impl SsLoader for SsAnimePack {
     type Output = SsAnimePack;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
+        let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
+        ssae.anime_list.iter().for_each(|anime| {
+            if anime.is_setup {
+                ssae.model.setup_animation = anime.name.clone();
+            }
+        });
+        Ok(ssae)
     }
 }
 
