@@ -1,6 +1,5 @@
-use quick_xml::DeError;
 use serde::Deserialize;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::*;
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -20,8 +19,6 @@ pub struct SsCell {
     pub size: SsPoint2,
     pub pivot: SsPoint2,
     pub rotated: bool,
-    #[serde(default)]
-    pub parent_size: SsPoint2,
     #[serde(rename = "ismesh")]
     pub is_mesh: bool,
 
@@ -86,16 +83,15 @@ pub struct SsCellMap {
     pub cells: Vec<SsCell>,
 
     #[serde(default)]
-    pub f_name: String,
-    #[serde(default)]
     pub load_file_path: String,
 }
 impl SsLoader for SsCellMap {
     type Output = SsCellMap;
 
-    fn load(s: &str) -> Result<Self::Output, DeError> {
-        quick_xml::de::from_str::<SsCellMap>(&s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
     }
+
 }
 fn parse_ss_cells<'de, D>(deserializer: D) -> Result<Vec<SsCell>, D::Error>
 where
@@ -129,10 +125,10 @@ mod tests {
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir()
-            .expect("Failed to get current directory")
+            .expect("Failed to get the current directory")
             .ancestors()
             .nth(2)
-            .expect("Failed to get base directory")
+            .expect("Failed to get the base directory")
             .to_path_buf()
     }
 

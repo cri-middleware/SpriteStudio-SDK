@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 use serde::{Deserialize, Deserializer};
-use quick_xml::DeError;
 use serde::de::Error;
 use crate::sspj::ssattribute::SsAttributeKind;
-use crate::sspj::ssloader::SsLoader;
+use crate::sspj::ssloader::{SsLoader, SspjError};
 use crate::sspj::sstypes::*;
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
@@ -241,7 +240,7 @@ pub struct SsModel {
     #[serde(deserialize_with = "parse_part_list")]
     pub part_list: Vec<SsPart>,
     #[serde(default)]
-    pub setup_animation: SsAnimation,
+    pub setup_animation: String,
 
     #[serde(deserialize_with = "parse_mesh_list")]
     pub mesh_list: Vec<SsMeshBind>,
@@ -289,8 +288,14 @@ pub struct SsAnimePack {
 impl SsLoader for SsAnimePack {
     type Output = SsAnimePack;
 
-    fn load(s: &str) -> Result<Self::Output, DeError> {
-        quick_xml::de::from_str::<Self::Output>(s)
+    fn load(s: &str) -> Result<Self::Output, SspjError> {
+        let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
+        ssae.anime_list.iter().for_each(|anime| {
+            if anime.is_setup {
+                ssae.model.setup_animation = anime.name.clone();
+            }
+        });
+        Ok(ssae)
     }
 }
 
@@ -332,16 +337,16 @@ mod tests {
                 assert!(true);
             }
             Err(e) => {
-                assert!(false, "{}", e)
+                assert!(false, "{:?}", e)
             }
         }
     }
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir()
-            .expect("Failed to get current directory")
+            .expect("Failed to get the current directory")
             .ancestors()
             .nth(2)
-            .expect("Failed to get base directory")
+            .expect("Failed to get the base directory")
             .to_path_buf()
     }
 
