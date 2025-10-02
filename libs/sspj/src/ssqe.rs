@@ -1,6 +1,6 @@
 use serde::Deserialize;
-use crate::sspj::ssloader::{SsLoader, SspjError};
-use crate::sspj::sstypes::SsSequenceType;
+use crate::ssloader::{SsLoader, SspjError};
+use crate::sstypes::SsSequenceType;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -92,7 +92,6 @@ mod tests {
             .expect("Failed to get the base directory")
             .to_path_buf()
     }
-
 
     #[test]
     fn parse_ssce() {

@@ -1,7 +1,7 @@
 use std::fmt::Formatter;
 use serde::de::{MapAccess, Visitor};
 use serde::Deserialize;
-use crate::sspj::sstypes::{SsBlendType, SsColorBlendTarget, SsCurve, SsIRect, SsInterpolationType, SsPoint2, SsU8Color};
+use crate::sstypes::{SsBlendType, SsColorBlendTarget, SsCurve, SsIRect, SsInterpolationType, SsPoint2, SsU8Color};
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]

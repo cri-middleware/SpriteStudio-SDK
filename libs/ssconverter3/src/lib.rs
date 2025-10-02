@@ -1,9 +1,7 @@
 use std::path::{Path, PathBuf};
-use crate::sspj::ssloader::SsLoader;
-use crate::sspj::sspj::SsProject;
-use crate::sspj::ssloader::SspjError;
-
-pub mod sspj;
+use sspj::ssloader::SsLoader;
+use sspj::sspj::SsProject;
+use sspj::ssloader::SspjError;
 
 pub struct SspjLoader {
     path_buf: PathBuf,

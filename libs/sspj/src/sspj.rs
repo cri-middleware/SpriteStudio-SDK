@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 use rayon::prelude::*;
-use crate::sspj::ssae::SsAnimePack;
-use crate::sspj::ssce::SsCellMap;
-use crate::sspj::sscharmap::SsCharMap;
-use crate::sspj::ssee::SsEffectFile;
-use crate::sspj::ssloader::{SsLoader, SspjError};
-use crate::sspj::ssqe::SsSequencePack;
-use crate::sspj::ssse::SsAudioPack;
-use crate::sspj::sstypes::{SsTexFilterMode, SsTexWrapMode};
+use crate::ssae::SsAnimePack;
+use crate::ssce::SsCellMap;
+use crate::sscharmap::SsCharMap;
+use crate::ssee::SsEffectFile;
+use crate::ssloader::{SsLoader, SspjError};
+use crate::ssqe::SsSequencePack;
+use crate::ssse::SsAudioPack;
+use crate::sstypes::{SsTexFilterMode, SsTexWrapMode};
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
