@@ -18,14 +18,6 @@ pub mod ss {
   extern crate flatbuffers;
   use self::flatbuffers::{EndianScalar, Follow};
 #[allow(unused_imports, dead_code)]
-pub mod ssab {
-
-  use core::mem;
-  use core::cmp::Ordering;
-
-  extern crate flatbuffers;
-  use self::flatbuffers::{EndianScalar, Follow};
-#[allow(unused_imports, dead_code)]
 pub mod data {
 
   use core::mem;
@@ -2486,6 +2478,5 @@ pub fn finish_size_prefixed_ss_anime_binary_buffer<'a, 'b, A: flatbuffers::Alloc
   fbb.finish_size_prefixed(root, Some(SS_ANIME_BINARY_IDENTIFIER));
 }
 }  // pub mod data
-}  // pub mod ssab
 }  // pub mod ss
 

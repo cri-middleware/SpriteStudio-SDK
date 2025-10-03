@@ -1,0 +1,29 @@
+namespace ss.data;
+
+enum SsSequenceType: byte {
+  Last,
+  Keep,
+  Top,
+}
+
+table SsSequenceItem {
+  ref_anime_pack: string;
+  ref_anime: string;
+  repeat_count: int;
+}
+
+table SsSequence {
+  name: string (key);
+  index: int;
+  type: SsSequence;
+  list: [SsSequenceItem];
+}
+
+table SsSequenceBinary {
+  version: uint = 0x00000001;
+
+  sequence_list: [SsSequence];
+}
+
+file_identifier "SSQB";
+root_type SsSequenceBinary;

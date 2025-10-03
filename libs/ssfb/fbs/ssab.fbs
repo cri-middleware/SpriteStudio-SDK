@@ -1,4 +1,4 @@
-namespace ss.ssab.data;
+namespace ss.data;
 
 table Vec2 {
   x: float;
@@ -17,20 +17,20 @@ table Rect {
 }
 
 enum SsTexFilterMode: byte {
-    Nearest,
-    Linear,
+  Nearest,
+  Linear,
 }
 
 enum SsTexWrapMode: byte {
-    Clamp,
-    Repeat,
-    Mirror,
+  Clamp,
+  Repeat,
+  Mirror,
 }
 
 enum SsMeshDivType: byte {
-    Unknown,
-    PolylineBase,
-    Boxdiv,
+  Unknown,
+  PolylineBase,
+  Boxdiv,
 }
 
 table Cell {

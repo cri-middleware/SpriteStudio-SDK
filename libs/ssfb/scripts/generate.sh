@@ -4,7 +4,7 @@ BASE_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 pushd $BASE_DIR > /dev/null
 
-for f in ./fbs/ssab.fbs;
+for f in ./fbs/*.fbs;
 do
     name=$(basename "$f" .fbs)
     flatc --rust --gen-compare --gen-object-api --gen-mutable $f
