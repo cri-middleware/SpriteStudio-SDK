@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use sspj::ssloader::SsLoader;
 use sspj::sspj::SsProject;
 use sspj::ssloader::SspjError;
-use ssfb3::*;
+use ssfb::*;
 
 pub struct SspjLoader {
     path_buf: PathBuf,
@@ -80,7 +80,7 @@ fn aa(path: &Path) -> Result<Vec<u8>, std::io::Error> {
         return Err(std::io::Error::new(std::io::ErrorKind::Other, "sspj load error"));
     };
 
-    let mut project_data = ssfb3::ssfb2::ss::ssfb_2::ProjectDataT::default();
+    let mut project_data = ssfb::ssfb2::ss::ssfb_2::ProjectDataT::default();
     project_data.name;
 
     Ok(Vec::new())

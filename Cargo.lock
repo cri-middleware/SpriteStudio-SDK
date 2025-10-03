@@ -154,7 +154,7 @@ version = "0.1.0"
 dependencies = [
  "flatbuffers",
  "sscpe",
- "ssfb3",
+ "ssfb",
  "sspj",
 ]
 
@@ -171,7 +171,7 @@ name = "sscpe"
 version = "0.1.0"
 
 [[package]]
-name = "ssfb3"
+name = "ssfb"
 version = "0.1.0"
 dependencies = [
  "flatbuffers",
