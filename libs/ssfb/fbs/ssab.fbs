@@ -1,0 +1,101 @@
+namespace ss.ssab.data;
+
+table Vec2 {
+  x: float;
+  y: float;
+}
+table Vec3 {
+  x: float;
+  y: float;
+  z: float;
+}
+table Rect {
+  x1: float;
+  y1: float;
+  x2: float;
+  y2: float;
+}
+
+enum SsTexFilterMode: byte {
+    Nearest,
+    Linear,
+}
+
+enum SsTexWrapMode: byte {
+    Clamp,
+    Repeat,
+    Mirror,
+}
+
+enum SsMeshDivType: byte {
+    Unknown,
+    PolylineBase,
+    Boxdiv,
+}
+
+table Cell {
+  name: string (key);
+
+  rectangle: Rect;
+  pivot: Vec2;
+  rotated: bool;
+
+  table_coordinate:[Vec2];
+  table_index_vertex:[ushort];
+}
+
+table CellMap {
+  name: string (key);
+
+  image_path: string;
+  size_original: Vec2;
+
+  wrap_mode: SsTexWrapMode;
+  filter_mode: SsTexFilterMode;
+
+  cells: [Cell];
+}
+
+table AnimePack {
+  name: string (key);
+  // settings: SsAnimationSettings;
+  // model: SsModel;
+  cellmap_names: [string];
+  // anime_list: [SsAnimation];
+}
+
+table Effect {
+  
+}
+
+table SoundFile {
+  alias: string (key);
+  filename: string;
+  msec: uint;
+}
+
+table SoundList {
+  id: uint (key);
+  alias: string;
+  sounds: [SoundFile];
+}
+
+table FontBitmap {
+
+}
+
+table SsAnimeBinary {
+  version: uint = 0x00000001;
+
+  animation: AnimePack;
+
+  cell_map: [CellMap];
+  effect: [Effect];
+  sound_list: [SoundList];
+  font_bitmap: [FontBitmap];
+
+  instance: [AnimePack];
+}
+
+file_identifier "SSAB";
+root_type SsAnimeBinary;
