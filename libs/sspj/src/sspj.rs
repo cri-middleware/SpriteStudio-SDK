@@ -1,40 +1,40 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 use rayon::prelude::*;
-use crate::sspj::ssae::SsAnimePack;
-use crate::sspj::ssce::SsCellMap;
-use crate::sspj::sscharmap::SsCharMap;
-use crate::sspj::ssee::SsEffectFile;
-use crate::sspj::ssloader::{SsLoader, SspjError};
-use crate::sspj::ssqe::SsSequencePack;
-use crate::sspj::ssse::SsAudioPack;
-use crate::sspj::sstypes::{SsTexFilterMode, SsTexWrapMode};
+use crate::ssae::SsAnimePack;
+use crate::ssce::SsCellMap;
+use crate::sscharmap::SsCharMap;
+use crate::ssee::SsEffectFile;
+use crate::ssloader::{SsLoader, SspjError};
+use crate::ssqe::SsSequencePack;
+use crate::ssse::SsAudioPack;
+use crate::sstypes::{SsTexFilterMode, SsTexWrapMode};
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SsProjectSetting {
     #[serde(default)]
-    anime_base_directory: String,
+    pub anime_base_directory: String,
     #[serde(default)]
-    cell_map_base_directory: String,
+    pub cell_map_base_directory: String,
     #[serde(default)]
-    image_base_directory: String,
+    pub image_base_directory: String,
     #[serde(default)]
-    effect_base_directory: String,
+    pub effect_base_directory: String,
 
-    export_base_directory: String,
-    query_export_base_directory: bool,
-    wrap_mode: SsTexWrapMode,
-    filter_mode: SsTexFilterMode,
-    vertex_anime_float: i32,
+    pub export_base_directory: String,
+    pub query_export_base_directory: bool,
+    pub wrap_mode: SsTexWrapMode,
+    pub filter_mode: SsTexFilterMode,
+    pub vertex_anime_float: i32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct TextureInfo {
     #[serde(rename = "PathName")]
-    path_name: String,
-    index: i32,
-    flags: i32,
+    pub path_name: String,
+    pub index: i32,
+    pub flags: i32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -42,41 +42,41 @@ pub struct TextureInfo {
 #[serde(rename_all = "camelCase")]
 pub struct SsProject {
     #[serde(rename = "@version")]
-    version: String,
-    name: String,
-    settings: SsProjectSetting,
+    pub version: String,
+    pub name: String,
+    pub settings: SsProjectSetting,
 
     #[serde(deserialize_with = "parse_name_list", default)]
-    cellmap_names: Vec<String>,
+    pub cellmap_names: Vec<String>,
     #[serde(deserialize_with = "parse_name_list", default)]
-    animepack_names: Vec<String>,
+    pub animepack_names: Vec<String>,
     #[serde(deserialize_with = "parse_name_list", default)]
-    effect_file_names: Vec<String>,
+    pub effect_file_names: Vec<String>,
     //#[serde(deserialize_with = "parse_name_list", default)]
     //texture_list: Vec<String>,
     #[serde(deserialize_with = "parse_name_list", default)]
-    sequencepack_names: Vec<String>,
+    pub sequencepack_names: Vec<String>,
 
     #[serde(deserialize_with = "parse_name_list", default)]
-    audiopack_names: Vec<String>,
+    pub audiopack_names: Vec<String>,
     #[serde(deserialize_with = "parse_name_list", default)]
-    charmap_names: Vec<String>,
+    pub charmap_names: Vec<String>,
     #[serde(rename = "ExternalTextures", deserialize_with = "parse_external_textures", default)]
-    external_textures: Vec<TextureInfo>,
+    pub external_textures: Vec<TextureInfo>,
 
     #[serde(default)]
-    anime_list: Vec<SsAnimePack>,
+    pub anime_list: Vec<SsAnimePack>,
     #[serde(default)]
-    cellmap_list: Vec<SsCellMap>,
+    pub cellmap_list: Vec<SsCellMap>,
     #[serde(default)]
-    effect_file_list: Vec<SsEffectFile>,
+    pub effect_file_list: Vec<SsEffectFile>,
     #[serde(default)]
-    sequence_list: Vec<SsSequencePack>,
+    pub sequence_list: Vec<SsSequencePack>,
     #[serde(default)]
-    sound_list: Vec<SsAudioPack>,
+    pub sound_list: Vec<SsAudioPack>,
 
     #[serde(default)]
-    charmap_dic: HashMap<String, SsCharMap>,
+    pub charmap_dic: HashMap<String, SsCharMap>,
 
 }
 fn parse_name_list<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>

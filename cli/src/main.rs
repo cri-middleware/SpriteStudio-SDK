@@ -10,15 +10,7 @@ fn main() {
         return;
     }
     let path = Path::new(args[1].as_os_str());
-    let sspj_loader = ssconverter3::SspjLoader::new(path);
-    let sspj = match sspj_loader.load_ss_project() {
-        Ok(sspj) => sspj,
-        Err(error) => {
-            println!("{:?} error: {:?}", path.as_os_str().to_string_lossy(), error);
-            return;
-        }
-    };
-    println!("{:?}", sspj);
+    ssconverter3::convert_ss_project_to_ssab(path, ssconverter3::ConverterConfig::default()).unwrap();
 }
 
 #[cfg(test)]

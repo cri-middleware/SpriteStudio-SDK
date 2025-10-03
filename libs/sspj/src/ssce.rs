@@ -1,6 +1,6 @@
 use serde::Deserialize;
-use crate::sspj::ssloader::{SsLoader, SspjError};
-use crate::sspj::sstypes::*;
+use crate::ssloader::{SsLoader, SspjError};
+use crate::sstypes::*;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "snake_case")]
