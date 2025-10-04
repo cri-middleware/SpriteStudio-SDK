@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use sspj::ssloader::SsLoader;
 use sspj::sspj::SsProject;
 use sspj::ssloader::SspjError;
-use ssfb::ssab::ss::data::{AnimePackT, CellMapT, CellT, EffectT, FontBitmapT, RectT, SoundListT, SsAnimeBinaryT, SsTexFilterMode, SsTexWrapMode, Vec2, Vec2T};
+use ssfb::ssab::ss::data::{CellMapT, CellT, RectT, SsAnimeBinaryT, SsTexFilterMode, SsTexWrapMode};
 use sspj::sstypes;
 use sspj::sstypes::{SsPoint2, SsPoint3};
 use sspj::ssce::{SsCell, SsCellMap};
