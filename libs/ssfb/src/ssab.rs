@@ -2004,6 +2004,292 @@ impl SoundListT {
     })
   }
 }
+pub enum FontGlyphBitmapOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct FontGlyphBitmap<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for FontGlyphBitmap<'a> {
+  type Inner = FontGlyphBitmap<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> FontGlyphBitmap<'a> {
+  pub const VT_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_ATLAS: flatbuffers::VOffsetT = 6;
+  pub const VT_OFFSET: flatbuffers::VOffsetT = 8;
+  pub const VT_WIDTH_ADVANCE: flatbuffers::VOffsetT = 10;
+  pub const VT_TEXT: flatbuffers::VOffsetT = 12;
+  pub const VT_PAGE: flatbuffers::VOffsetT = 14;
+  pub const VT_CHANNEL: flatbuffers::VOffsetT = 16;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    FontGlyphBitmap { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args FontGlyphBitmapArgs<'args>
+  ) -> flatbuffers::WIPOffset<FontGlyphBitmap<'bldr>> {
+    let mut builder = FontGlyphBitmapBuilder::new(_fbb);
+    if let Some(x) = args.text { builder.add_text(x); }
+    builder.add_width_advance(args.width_advance);
+    if let Some(x) = args.offset { builder.add_offset(x); }
+    if let Some(x) = args.atlas { builder.add_atlas(x); }
+    builder.add_id(args.id);
+    builder.add_channel(args.channel);
+    builder.add_page(args.page);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> FontGlyphBitmapT {
+    let id = self.id();
+    let atlas = self.atlas().map(|x| {
+      Box::new(x.unpack())
+    });
+    let offset = self.offset().map(|x| {
+      Box::new(x.unpack())
+    });
+    let width_advance = self.width_advance();
+    let text = self.text().map(|x| {
+      x.to_string()
+    });
+    let page = self.page();
+    let channel = self.channel();
+    FontGlyphBitmapT {
+      id,
+      atlas,
+      offset,
+      width_advance,
+      text,
+      page,
+      channel,
+    }
+  }
+
+  #[inline]
+  pub fn id(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(FontGlyphBitmap::VT_ID, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &FontGlyphBitmap) -> bool {
+    self.id() < o.id()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
+    let key = self.id();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn atlas(&self) -> Option<Rect<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Rect>>(FontGlyphBitmap::VT_ATLAS, None)}
+  }
+  #[inline]
+  pub fn offset(&self) -> Option<Vec2<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(FontGlyphBitmap::VT_OFFSET, None)}
+  }
+  #[inline]
+  pub fn width_advance(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(FontGlyphBitmap::VT_WIDTH_ADVANCE, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn text(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FontGlyphBitmap::VT_TEXT, None)}
+  }
+  #[inline]
+  pub fn page(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(FontGlyphBitmap::VT_PAGE, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn channel(&self) -> i8 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i8>(FontGlyphBitmap::VT_CHANNEL, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for FontGlyphBitmap<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<u32>("id", Self::VT_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("atlas", Self::VT_ATLAS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("offset", Self::VT_OFFSET, false)?
+     .visit_field::<f32>("width_advance", Self::VT_WIDTH_ADVANCE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
+     .visit_field::<i8>("page", Self::VT_PAGE, false)?
+     .visit_field::<i8>("channel", Self::VT_CHANNEL, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct FontGlyphBitmapArgs<'a> {
+    pub id: u32,
+    pub atlas: Option<flatbuffers::WIPOffset<Rect<'a>>>,
+    pub offset: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub width_advance: f32,
+    pub text: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub page: i8,
+    pub channel: i8,
+}
+impl<'a> Default for FontGlyphBitmapArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    FontGlyphBitmapArgs {
+      id: 0,
+      atlas: None,
+      offset: None,
+      width_advance: 0.0,
+      text: None,
+      page: 0,
+      channel: 0,
+    }
+  }
+}
+
+pub struct FontGlyphBitmapBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FontGlyphBitmapBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_id(&mut self, id: u32) {
+    self.fbb_.push_slot::<u32>(FontGlyphBitmap::VT_ID, id, 0);
+  }
+  #[inline]
+  pub fn add_atlas(&mut self, atlas: flatbuffers::WIPOffset<Rect<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Rect>>(FontGlyphBitmap::VT_ATLAS, atlas);
+  }
+  #[inline]
+  pub fn add_offset(&mut self, offset: flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(FontGlyphBitmap::VT_OFFSET, offset);
+  }
+  #[inline]
+  pub fn add_width_advance(&mut self, width_advance: f32) {
+    self.fbb_.push_slot::<f32>(FontGlyphBitmap::VT_WIDTH_ADVANCE, width_advance, 0.0);
+  }
+  #[inline]
+  pub fn add_text(&mut self, text: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FontGlyphBitmap::VT_TEXT, text);
+  }
+  #[inline]
+  pub fn add_page(&mut self, page: i8) {
+    self.fbb_.push_slot::<i8>(FontGlyphBitmap::VT_PAGE, page, 0);
+  }
+  #[inline]
+  pub fn add_channel(&mut self, channel: i8) {
+    self.fbb_.push_slot::<i8>(FontGlyphBitmap::VT_CHANNEL, channel, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FontGlyphBitmapBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    FontGlyphBitmapBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<FontGlyphBitmap<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for FontGlyphBitmap<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("FontGlyphBitmap");
+      ds.field("id", &self.id());
+      ds.field("atlas", &self.atlas());
+      ds.field("offset", &self.offset());
+      ds.field("width_advance", &self.width_advance());
+      ds.field("text", &self.text());
+      ds.field("page", &self.page());
+      ds.field("channel", &self.channel());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct FontGlyphBitmapT {
+  pub id: u32,
+  pub atlas: Option<Box<RectT>>,
+  pub offset: Option<Box<Vec2T>>,
+  pub width_advance: f32,
+  pub text: Option<String>,
+  pub page: i8,
+  pub channel: i8,
+}
+impl Default for FontGlyphBitmapT {
+  fn default() -> Self {
+    Self {
+      id: 0,
+      atlas: None,
+      offset: None,
+      width_advance: 0.0,
+      text: None,
+      page: 0,
+      channel: 0,
+    }
+  }
+}
+impl FontGlyphBitmapT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<FontGlyphBitmap<'b>> {
+    let id = self.id;
+    let atlas = self.atlas.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    let offset = self.offset.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    let width_advance = self.width_advance;
+    let text = self.text.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let page = self.page;
+    let channel = self.channel;
+    FontGlyphBitmap::create(_fbb, &FontGlyphBitmapArgs{
+      id,
+      atlas,
+      offset,
+      width_advance,
+      text,
+      page,
+      channel,
+    })
+  }
+}
 pub enum FontBitmapOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -2020,6 +2306,20 @@ impl<'a> flatbuffers::Follow<'a> for FontBitmap<'a> {
 }
 
 impl<'a> FontBitmap<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_NAME_FACE: flatbuffers::VOffsetT = 6;
+  pub const VT_SIZE: flatbuffers::VOffsetT = 8;
+  pub const VT_PADDING_L: flatbuffers::VOffsetT = 10;
+  pub const VT_PADDING_R: flatbuffers::VOffsetT = 12;
+  pub const VT_PADDING_U: flatbuffers::VOffsetT = 14;
+  pub const VT_PADDING_D: flatbuffers::VOffsetT = 16;
+  pub const VT_BASE: flatbuffers::VOffsetT = 18;
+  pub const VT_HEIGHT_LINE: flatbuffers::VOffsetT = 20;
+  pub const VT_SCALE: flatbuffers::VOffsetT = 22;
+  pub const VT_SPACING: flatbuffers::VOffsetT = 24;
+  pub const VT_SIZE_TEXTURE_ORIGINAL: flatbuffers::VOffsetT = 26;
+  pub const VT_NAME_TEXTURE: flatbuffers::VOffsetT = 28;
+  pub const VT_TABLE_DATA: flatbuffers::VOffsetT = 30;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -2028,15 +2328,181 @@ impl<'a> FontBitmap<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args FontBitmapArgs
+    args: &'args FontBitmapArgs<'args>
   ) -> flatbuffers::WIPOffset<FontBitmap<'bldr>> {
     let mut builder = FontBitmapBuilder::new(_fbb);
+    if let Some(x) = args.table_data { builder.add_table_data(x); }
+    if let Some(x) = args.name_texture { builder.add_name_texture(x); }
+    if let Some(x) = args.size_texture_original { builder.add_size_texture_original(x); }
+    if let Some(x) = args.spacing { builder.add_spacing(x); }
+    if let Some(x) = args.scale { builder.add_scale(x); }
+    if let Some(x) = args.name_face { builder.add_name_face(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_height_line(args.height_line);
+    builder.add_base(args.base);
+    builder.add_padding_d(args.padding_d);
+    builder.add_padding_u(args.padding_u);
+    builder.add_padding_r(args.padding_r);
+    builder.add_padding_l(args.padding_l);
+    builder.add_size(args.size);
     builder.finish()
   }
 
   pub fn unpack(&self) -> FontBitmapT {
+    let name = {
+      let x = self.name();
+      x.to_string()
+    };
+    let name_face = self.name_face().map(|x| {
+      x.to_string()
+    });
+    let size = self.size();
+    let padding_l = self.padding_l();
+    let padding_r = self.padding_r();
+    let padding_u = self.padding_u();
+    let padding_d = self.padding_d();
+    let base = self.base();
+    let height_line = self.height_line();
+    let scale = self.scale().map(|x| {
+      Box::new(x.unpack())
+    });
+    let spacing = self.spacing().map(|x| {
+      Box::new(x.unpack())
+    });
+    let size_texture_original = self.size_texture_original().map(|x| {
+      Box::new(x.unpack())
+    });
+    let name_texture = self.name_texture().map(|x| {
+      x.iter().map(|s| s.to_string()).collect()
+    });
+    let table_data = self.table_data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
     FontBitmapT {
+      name,
+      name_face,
+      size,
+      padding_l,
+      padding_r,
+      padding_u,
+      padding_d,
+      base,
+      height_line,
+      scale,
+      spacing,
+      size_texture_original,
+      name_texture,
+      table_data,
     }
+  }
+
+  #[inline]
+  pub fn name(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FontBitmap::VT_NAME, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &FontBitmap) -> bool {
+    self.name() < o.name()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.name();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn name_face(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(FontBitmap::VT_NAME_FACE, None)}
+  }
+  #[inline]
+  pub fn size(&self) -> u16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u16>(FontBitmap::VT_SIZE, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn padding_l(&self) -> u16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u16>(FontBitmap::VT_PADDING_L, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn padding_r(&self) -> u16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u16>(FontBitmap::VT_PADDING_R, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn padding_u(&self) -> u16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u16>(FontBitmap::VT_PADDING_U, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn padding_d(&self) -> u16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u16>(FontBitmap::VT_PADDING_D, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn base(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(FontBitmap::VT_BASE, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn height_line(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(FontBitmap::VT_HEIGHT_LINE, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn scale(&self) -> Option<Vec2<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(FontBitmap::VT_SCALE, None)}
+  }
+  #[inline]
+  pub fn spacing(&self) -> Option<Vec2<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(FontBitmap::VT_SPACING, None)}
+  }
+  #[inline]
+  pub fn size_texture_original(&self) -> Option<Vec2<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(FontBitmap::VT_SIZE_TEXTURE_ORIGINAL, None)}
+  }
+  #[inline]
+  pub fn name_texture(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(FontBitmap::VT_NAME_TEXTURE, None)}
+  }
+  #[inline]
+  pub fn table_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontGlyphBitmap<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontGlyphBitmap>>>>(FontBitmap::VT_TABLE_DATA, None)}
   }
 }
 
@@ -2047,16 +2513,58 @@ impl flatbuffers::Verifiable for FontBitmap<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name_face", Self::VT_NAME_FACE, false)?
+     .visit_field::<u16>("size", Self::VT_SIZE, false)?
+     .visit_field::<u16>("padding_l", Self::VT_PADDING_L, false)?
+     .visit_field::<u16>("padding_r", Self::VT_PADDING_R, false)?
+     .visit_field::<u16>("padding_u", Self::VT_PADDING_U, false)?
+     .visit_field::<u16>("padding_d", Self::VT_PADDING_D, false)?
+     .visit_field::<i16>("base", Self::VT_BASE, false)?
+     .visit_field::<i16>("height_line", Self::VT_HEIGHT_LINE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("scale", Self::VT_SCALE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("spacing", Self::VT_SPACING, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("size_texture_original", Self::VT_SIZE_TEXTURE_ORIGINAL, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("name_texture", Self::VT_NAME_TEXTURE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FontGlyphBitmap>>>>("table_data", Self::VT_TABLE_DATA, false)?
      .finish();
     Ok(())
   }
 }
-pub struct FontBitmapArgs {
+pub struct FontBitmapArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub name_face: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub size: u16,
+    pub padding_l: u16,
+    pub padding_r: u16,
+    pub padding_u: u16,
+    pub padding_d: u16,
+    pub base: i16,
+    pub height_line: i16,
+    pub scale: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub spacing: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub size_texture_original: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub name_texture: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub table_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontGlyphBitmap<'a>>>>>,
 }
-impl<'a> Default for FontBitmapArgs {
+impl<'a> Default for FontBitmapArgs<'a> {
   #[inline]
   fn default() -> Self {
     FontBitmapArgs {
+      name: None, // required field
+      name_face: None,
+      size: 0,
+      padding_l: 0,
+      padding_r: 0,
+      padding_u: 0,
+      padding_d: 0,
+      base: 0,
+      height_line: 0,
+      scale: None,
+      spacing: None,
+      size_texture_original: None,
+      name_texture: None,
+      table_data: None,
     }
   }
 }
@@ -2066,6 +2574,62 @@ pub struct FontBitmapBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FontBitmapBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FontBitmap::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_name_face(&mut self, name_face: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FontBitmap::VT_NAME_FACE, name_face);
+  }
+  #[inline]
+  pub fn add_size(&mut self, size: u16) {
+    self.fbb_.push_slot::<u16>(FontBitmap::VT_SIZE, size, 0);
+  }
+  #[inline]
+  pub fn add_padding_l(&mut self, padding_l: u16) {
+    self.fbb_.push_slot::<u16>(FontBitmap::VT_PADDING_L, padding_l, 0);
+  }
+  #[inline]
+  pub fn add_padding_r(&mut self, padding_r: u16) {
+    self.fbb_.push_slot::<u16>(FontBitmap::VT_PADDING_R, padding_r, 0);
+  }
+  #[inline]
+  pub fn add_padding_u(&mut self, padding_u: u16) {
+    self.fbb_.push_slot::<u16>(FontBitmap::VT_PADDING_U, padding_u, 0);
+  }
+  #[inline]
+  pub fn add_padding_d(&mut self, padding_d: u16) {
+    self.fbb_.push_slot::<u16>(FontBitmap::VT_PADDING_D, padding_d, 0);
+  }
+  #[inline]
+  pub fn add_base(&mut self, base: i16) {
+    self.fbb_.push_slot::<i16>(FontBitmap::VT_BASE, base, 0);
+  }
+  #[inline]
+  pub fn add_height_line(&mut self, height_line: i16) {
+    self.fbb_.push_slot::<i16>(FontBitmap::VT_HEIGHT_LINE, height_line, 0);
+  }
+  #[inline]
+  pub fn add_scale(&mut self, scale: flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(FontBitmap::VT_SCALE, scale);
+  }
+  #[inline]
+  pub fn add_spacing(&mut self, spacing: flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(FontBitmap::VT_SPACING, spacing);
+  }
+  #[inline]
+  pub fn add_size_texture_original(&mut self, size_texture_original: flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(FontBitmap::VT_SIZE_TEXTURE_ORIGINAL, size_texture_original);
+  }
+  #[inline]
+  pub fn add_name_texture(&mut self, name_texture: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FontBitmap::VT_NAME_TEXTURE, name_texture);
+  }
+  #[inline]
+  pub fn add_table_data(&mut self, table_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<FontGlyphBitmap<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(FontBitmap::VT_TABLE_DATA, table_data);
+  }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FontBitmapBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
@@ -2077,6 +2641,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FontBitmapBuilder<'a, 'b, A> {
   #[inline]
   pub fn finish(self) -> flatbuffers::WIPOffset<FontBitmap<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, FontBitmap::VT_NAME,"name");
     flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -2084,16 +2649,58 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FontBitmapBuilder<'a, 'b, A> {
 impl core::fmt::Debug for FontBitmap<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("FontBitmap");
+      ds.field("name", &self.name());
+      ds.field("name_face", &self.name_face());
+      ds.field("size", &self.size());
+      ds.field("padding_l", &self.padding_l());
+      ds.field("padding_r", &self.padding_r());
+      ds.field("padding_u", &self.padding_u());
+      ds.field("padding_d", &self.padding_d());
+      ds.field("base", &self.base());
+      ds.field("height_line", &self.height_line());
+      ds.field("scale", &self.scale());
+      ds.field("spacing", &self.spacing());
+      ds.field("size_texture_original", &self.size_texture_original());
+      ds.field("name_texture", &self.name_texture());
+      ds.field("table_data", &self.table_data());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct FontBitmapT {
+  pub name: String,
+  pub name_face: Option<String>,
+  pub size: u16,
+  pub padding_l: u16,
+  pub padding_r: u16,
+  pub padding_u: u16,
+  pub padding_d: u16,
+  pub base: i16,
+  pub height_line: i16,
+  pub scale: Option<Box<Vec2T>>,
+  pub spacing: Option<Box<Vec2T>>,
+  pub size_texture_original: Option<Box<Vec2T>>,
+  pub name_texture: Option<Vec<String>>,
+  pub table_data: Option<Vec<FontGlyphBitmapT>>,
 }
 impl Default for FontBitmapT {
   fn default() -> Self {
     Self {
+      name: "".to_string(),
+      name_face: None,
+      size: 0,
+      padding_l: 0,
+      padding_r: 0,
+      padding_u: 0,
+      padding_d: 0,
+      base: 0,
+      height_line: 0,
+      scale: None,
+      spacing: None,
+      size_texture_original: None,
+      name_texture: None,
+      table_data: None,
     }
   }
 }
@@ -2102,7 +2709,50 @@ impl FontBitmapT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<FontBitmap<'b>> {
+    let name = Some({
+      let x = &self.name;
+      _fbb.create_string(x)
+    });
+    let name_face = self.name_face.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let size = self.size;
+    let padding_l = self.padding_l;
+    let padding_r = self.padding_r;
+    let padding_u = self.padding_u;
+    let padding_d = self.padding_d;
+    let base = self.base;
+    let height_line = self.height_line;
+    let scale = self.scale.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    let spacing = self.spacing.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    let size_texture_original = self.size_texture_original.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    let name_texture = self.name_texture.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
+    });
+    let table_data = self.table_data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
     FontBitmap::create(_fbb, &FontBitmapArgs{
+      name,
+      name_face,
+      size,
+      padding_l,
+      padding_r,
+      padding_u,
+      padding_d,
+      base,
+      height_line,
+      scale,
+      spacing,
+      size_texture_original,
+      name_texture,
+      table_data,
     })
   }
 }

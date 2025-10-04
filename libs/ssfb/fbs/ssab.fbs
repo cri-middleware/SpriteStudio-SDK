@@ -65,7 +65,7 @@ table AnimePack {
 }
 
 table Effect {
-  
+
 }
 
 table SoundFile {
@@ -80,8 +80,33 @@ table SoundList {
   sounds: [SoundFile];
 }
 
-table FontBitmap {
+table FontGlyphBitmap {
+  id: uint (key);
+  atlas: Rect;
+  offset: Vec2;
+  width_advance: float;
+  text: string;
+  page:byte;
+  channel:byte;
+}
 
+table FontBitmap {
+  name:string (key);
+
+  name_face: string;
+  size: ushort;
+  padding_l: ushort;
+  padding_r: ushort;
+  padding_u: ushort;
+  padding_d: ushort;
+  base: short;
+  height_line: short;
+  scale: Vec2;
+  spacing: Vec2;
+  size_texture_original: Vec2;
+
+  name_texture:[string];
+  table_data:[FontGlyphBitmap];
 }
 
 table SsAnimeBinary {
