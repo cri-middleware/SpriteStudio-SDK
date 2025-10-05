@@ -183,7 +183,13 @@ fn convert_sequence_item_t_list(sequence_item_list: &Vec<SsSequenceItem>) -> Vec
     }).collect::<Vec<ssfb::ssqb::SequenceItemT>>()
 }
 
-pub fn convert_ssab_from_sspj(path: &Path, config: ConverterConfig) -> Result<HashMap<String, Vec<u8>>, SspjError> {
+pub struct ResultConvert {
+    pub name: String,
+    pub data: Vec<u8>,
+    pub len: usize,
+}
+
+pub fn convert_ssab_from_sspj(path: &Path, config: ConverterConfig) -> Result<Vec<ResultConvert>, SspjError> {
     let sspj_loader = crate::SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
@@ -194,7 +200,7 @@ pub fn convert_ssab_from_sspj(path: &Path, config: ConverterConfig) -> Result<Ha
     };
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let mut ssab_model_map = sspj.animepack_names.iter().zip(sspj.anime_list.iter()).map(|(f, anime_pack)| {
+    let mut ssab_model_list = sspj.anime_list.iter().map(| anime_pack| {
         let mut anime_binary = ssfb::ssab::SsAnimeBinaryT::default();
         anime_binary.animation_pack = None;
         anime_binary.cell_map = Some(convert_cellmapt_list(&sspj, &anime_pack.cellmap_names));
@@ -203,48 +209,65 @@ pub fn convert_ssab_from_sspj(path: &Path, config: ConverterConfig) -> Result<Ha
         anime_binary.font_bitmap = Some(convert_font_bitmap(&sspj, &sspj.charmap_dic));
         anime_binary.dependencies = Some(Vec::new());
 
-        (f.to_string(), anime_binary)
-    }).collect::<HashMap<String, SsAnimeBinaryT>>();
+        anime_binary
+    }).collect::<Vec<SsAnimeBinaryT>>();
 
-    let ssqb_model_map = sspj.sequencepack_names.iter().zip(sspj.sequence_list.iter()).map(|(f, sequence)| {
+    let ssqb_model_list = sspj.sequence_list.iter().map(|sequence| {
         let mut sequence_binary_t = ssfb::ssqb::SsSequenceBinaryT::default();
         sequence_binary_t.sequence_list = Some(convert_sequence_t_list(&sequence.sequence_list));
 
-        (f.to_string(), sequence_binary_t)
-    }).collect::<HashMap<String, ssfb::ssqb::SsSequenceBinaryT>>();
+        sequence_binary_t
+    }).collect::<Vec<ssfb::ssqb::SsSequenceBinaryT>>();
 
     // optimize ssab ssab structures (e.g. set dependencies)
     // TODO: implement
 
     // convert ssab structures to binary data
-    let mut ssab_bin_map = ssab_model_map.iter().map(|(f, anime_binary)| {
+    let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(anime_binary, f)| {
         // TODO: implement
-        (f.to_string(), Vec::new())
+
+        let output_file = format!("{}.ssab", f.split(".").collect::<Vec<&str>>().first().unwrap());
+        (output_file, Vec::new())
     }).collect::<HashMap<String, Vec<u8>>>();
 
     // convert ssqb structures to binary data
-    let ssqb_bin_map = ssqb_model_map.iter().map(|(f, sequence_binary_t)| {
-        let mut fb = flatbuffers::FlatBufferBuilder::with_capacity(1);
+    let ssqb_bin_map = ssqb_model_list.iter().zip(sspj.sequencepack_names.iter()).map(|(sequence_binary_t, f)| {
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
         let offset = sequence_binary_t.pack(&mut fb);
-        fb.finish(offset, Some("ssqb"));
+        fb.finish(offset, None);
         let buf = fb.finished_data();
 
-        (f.to_string(), buf.to_vec())
+        let output_file = format!("{}.ssqb", f.split(".").collect::<Vec<&str>>().first().unwrap());
+        (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
     ssab_bin_map.extend(ssqb_bin_map);
-    Ok(ssab_bin_map)
+    ssab_bin_map.iter().map(|(name, data)| {
+        Ok(ResultConvert {
+            name: name.clone(),
+            data: data.clone(),
+            len: data.len(),
+        })
+    }).collect::<Result<Vec<ResultConvert>, SspjError>>()
 }
 
 pub fn convert_ss_project_to_ssab(path: &Path, config: ConverterConfig) -> Result<(), SspjError> {
-    let ssab = convert_ssab_from_sspj(path, config)?;
+    let convert_result = convert_ssab_from_sspj(path, config)?;
 
     let Some(parent) = path.parent() else {
-        return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "")));
+        return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "not found: path parent: {}")));
     };
-    ssab.iter().for_each(|(key, value)| {
-        let output_path = parent.join(key).with_extension("ssab");
-        std::fs::write(output_path.as_path(), value).expect("TODO: panic message"); // TODO: FIXME
+    let Some(stem) = path.file_stem() else {
+        return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "{}")));
+    };
+    let outdir = parent.join(format!("{}_ssab", stem.to_string_lossy()));
+
+    if !outdir.as_path().exists() {
+        std::fs::create_dir(outdir.as_path()).expect("TODO: panic message"); // TODO: FIXME Error handling
+    }
+    convert_result.iter().for_each(|result| {
+        let output_path = outdir.join(&result.name);
+        std::fs::write(output_path.as_path(), &result.data).expect("TODO: panic message"); // TODO: FIXME Error handling
     });
 
     Ok(())
