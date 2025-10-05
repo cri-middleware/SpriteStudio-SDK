@@ -183,7 +183,7 @@ fn convert_sequence_item_t_list(sequence_item_list: &Vec<SsSequenceItem>) -> Vec
     }).collect::<Vec<ssfb::ssqb::SequenceItemT>>()
 }
 
-pub fn convert_ss_project(path: &Path, config: ConverterConfig) -> Result<HashMap<String, Vec<u8>>, SspjError> {
+pub fn convert_ssab_from_sspj(path: &Path, config: ConverterConfig) -> Result<HashMap<String, Vec<u8>>, SspjError> {
     let sspj_loader = crate::SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
@@ -194,7 +194,7 @@ pub fn convert_ss_project(path: &Path, config: ConverterConfig) -> Result<HashMa
     };
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let _a_list = sspj.anime_list.iter().map(|anime_pack| {
+    let mut ssab_model_map = sspj.animepack_names.iter().zip(sspj.anime_list.iter()).map(|(f, anime_pack)| {
         let mut anime_binary = ssfb::ssab::SsAnimeBinaryT::default();
         anime_binary.animation_pack = None;
         anime_binary.cell_map = Some(convert_cellmapt_list(&sspj, &anime_pack.cellmap_names));
@@ -203,26 +203,41 @@ pub fn convert_ss_project(path: &Path, config: ConverterConfig) -> Result<HashMa
         anime_binary.font_bitmap = Some(convert_font_bitmap(&sspj, &sspj.charmap_dic));
         anime_binary.dependencies = Some(Vec::new());
 
-        anime_binary
-    }).collect::<Vec<SsAnimeBinaryT>>();
+        (f.to_string(), anime_binary)
+    }).collect::<HashMap<String, SsAnimeBinaryT>>();
 
-    let _q_list = sspj.sequence_list.iter().map(|sequence| {
+    let ssqb_model_map = sspj.sequencepack_names.iter().zip(sspj.sequence_list.iter()).map(|(f, sequence)| {
         let mut sequence_binary_t = ssfb::ssqb::SsSequenceBinaryT::default();
-        sequence_binary_t.sequence_list = Some(convert_sequence_t_list(&sequence.sequence_list))
-    });
+        sequence_binary_t.sequence_list = Some(convert_sequence_t_list(&sequence.sequence_list));
+
+        (f.to_string(), sequence_binary_t)
+    }).collect::<HashMap<String, ssfb::ssqb::SsSequenceBinaryT>>();
 
     // optimize ssab ssab structures (e.g. set dependencies)
-
+    // TODO: implement
 
     // convert ssab structures to binary data
+    let mut ssab_bin_map = ssab_model_map.iter().map(|(f, anime_binary)| {
+        // TODO: implement
+        (f.to_string(), Vec::new())
+    }).collect::<HashMap<String, Vec<u8>>>();
 
     // convert ssqb structures to binary data
+    let ssqb_bin_map = ssqb_model_map.iter().map(|(f, sequence_binary_t)| {
+        let mut fb = flatbuffers::FlatBufferBuilder::with_capacity(1);
+        let offset = sequence_binary_t.pack(&mut fb);
+        fb.finish(offset, Some("ssqb"));
+        let buf = fb.finished_data();
 
-    Ok(HashMap::new())
+        (f.to_string(), buf.to_vec())
+    }).collect::<HashMap<String, Vec<u8>>>();
+
+    ssab_bin_map.extend(ssqb_bin_map);
+    Ok(ssab_bin_map)
 }
 
 pub fn convert_ss_project_to_ssab(path: &Path, config: ConverterConfig) -> Result<(), SspjError> {
-    let ssab = convert_ss_project(path, config)?;
+    let ssab = convert_ssab_from_sspj(path, config)?;
 
     let Some(parent) = path.parent() else {
         return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "")));
