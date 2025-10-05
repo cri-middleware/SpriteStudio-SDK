@@ -1,5 +1,3 @@
-namespace ss.data;
-
 table Vec2 {
   x: float;
   y: float;
@@ -16,21 +14,41 @@ table Rect {
   y2: float;
 }
 
-enum SsTexFilterMode: byte {
+enum TexFilterMode: byte {
   Nearest,
   Linear,
 }
 
-enum SsTexWrapMode: byte {
+enum TexWrapMode: byte {
   Clamp,
   Repeat,
   Mirror,
 }
 
-enum SsMeshDivType: byte {
+enum MeshDivType: byte {
   Unknown,
   PolylineBase,
   Boxdiv,
+}
+
+enum PartType: byte {
+    Null,
+    Normal,
+    Shape,
+    Text,
+    Nines,
+    Instance,
+    Armature,
+    Effect,
+    Mesh,
+    Movenode,
+    Constraint,
+    Mask,
+    Joint,
+    Bonepoint,
+    TransformConstraint,
+    Camera,
+    Audio,
 }
 
 table Cell {
@@ -50,18 +68,26 @@ table CellMap {
   image_path: string;
   size_original: Vec2;
 
-  wrap_mode: SsTexWrapMode;
-  filter_mode: SsTexFilterMode;
+  wrap_mode: TexWrapMode;
+  filter_mode: TexFilterMode;
 
   cells: [Cell];
+}
+
+table Model {
+
+}
+
+table Animation {
+
 }
 
 table AnimePack {
   name: string (key);
   // settings: SsAnimationSettings;
-  // model: SsModel;
+  model: Model;
   cellmap_names: [string];
-  // anime_list: [SsAnimation];
+  anime_list: [Animation];
 }
 
 table Effect {
@@ -69,15 +95,14 @@ table Effect {
 }
 
 table SoundFile {
-  alias: string (key);
-  filename: string;
-  msec: uint;
+  name: string (key);
+  path: string;
+  time_total: uint;
 }
 
 table SoundList {
-  id: uint (key);
-  alias: string;
-  sounds: [SoundFile];
+  name: string (key);
+  table_data:[SoundFile];
 }
 
 table FontGlyphBitmap {
@@ -86,8 +111,8 @@ table FontGlyphBitmap {
   offset: Vec2;
   width_advance: float;
   text: string;
-  page:byte;
-  channel:byte;
+  page: byte;
+  channel: byte;
 }
 
 table FontBitmap {
@@ -112,14 +137,14 @@ table FontBitmap {
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
-  animation: AnimePack;
+  animation_pack: AnimePack;
 
   cell_map: [CellMap];
   effect: [Effect];
   sound_list: [SoundList];
   font_bitmap: [FontBitmap];
 
-  instance: [AnimePack];
+  dependencies: [Animation];
 }
 
 file_identifier "SSAB";

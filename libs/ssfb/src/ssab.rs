@@ -9,39 +9,22 @@ use core::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::{EndianScalar, Follow};
 
-#[allow(unused_imports, dead_code)]
-pub mod ss {
-
-  use core::mem;
-  use core::cmp::Ordering;
-
-  extern crate flatbuffers;
-  use self::flatbuffers::{EndianScalar, Follow};
-#[allow(unused_imports, dead_code)]
-pub mod data {
-
-  use core::mem;
-  use core::cmp::Ordering;
-
-  extern crate flatbuffers;
-  use self::flatbuffers::{EndianScalar, Follow};
-
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_SS_TEX_FILTER_MODE: i8 = 0;
+pub const ENUM_MIN_TEX_FILTER_MODE: i8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_SS_TEX_FILTER_MODE: i8 = 1;
+pub const ENUM_MAX_TEX_FILTER_MODE: i8 = 1;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_SS_TEX_FILTER_MODE: [SsTexFilterMode; 2] = [
-  SsTexFilterMode::Nearest,
-  SsTexFilterMode::Linear,
+pub const ENUM_VALUES_TEX_FILTER_MODE: [TexFilterMode; 2] = [
+  TexFilterMode::Nearest,
+  TexFilterMode::Linear,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
-pub struct SsTexFilterMode(pub i8);
+pub struct TexFilterMode(pub i8);
 #[allow(non_upper_case_globals)]
-impl SsTexFilterMode {
+impl TexFilterMode {
   pub const Nearest: Self = Self(0);
   pub const Linear: Self = Self(1);
 
@@ -60,7 +43,7 @@ impl SsTexFilterMode {
     }
   }
 }
-impl core::fmt::Debug for SsTexFilterMode {
+impl core::fmt::Debug for TexFilterMode {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     if let Some(name) = self.variant_name() {
       f.write_str(name)
@@ -69,7 +52,7 @@ impl core::fmt::Debug for SsTexFilterMode {
     }
   }
 }
-impl<'a> flatbuffers::Follow<'a> for SsTexFilterMode {
+impl<'a> flatbuffers::Follow<'a> for TexFilterMode {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
@@ -78,15 +61,15 @@ impl<'a> flatbuffers::Follow<'a> for SsTexFilterMode {
   }
 }
 
-impl flatbuffers::Push for SsTexFilterMode {
-    type Output = SsTexFilterMode;
+impl flatbuffers::Push for TexFilterMode {
+    type Output = TexFilterMode;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
         unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
     }
 }
 
-impl flatbuffers::EndianScalar for SsTexFilterMode {
+impl flatbuffers::EndianScalar for TexFilterMode {
   type Scalar = i8;
   #[inline]
   fn to_little_endian(self) -> i8 {
@@ -100,7 +83,7 @@ impl flatbuffers::EndianScalar for SsTexFilterMode {
   }
 }
 
-impl<'a> flatbuffers::Verifiable for SsTexFilterMode {
+impl<'a> flatbuffers::Verifiable for TexFilterMode {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -110,24 +93,24 @@ impl<'a> flatbuffers::Verifiable for SsTexFilterMode {
   }
 }
 
-impl flatbuffers::SimpleToVerifyInSlice for SsTexFilterMode {}
+impl flatbuffers::SimpleToVerifyInSlice for TexFilterMode {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_SS_TEX_WRAP_MODE: i8 = 0;
+pub const ENUM_MIN_TEX_WRAP_MODE: i8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_SS_TEX_WRAP_MODE: i8 = 2;
+pub const ENUM_MAX_TEX_WRAP_MODE: i8 = 2;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_SS_TEX_WRAP_MODE: [SsTexWrapMode; 3] = [
-  SsTexWrapMode::Clamp,
-  SsTexWrapMode::Repeat,
-  SsTexWrapMode::Mirror,
+pub const ENUM_VALUES_TEX_WRAP_MODE: [TexWrapMode; 3] = [
+  TexWrapMode::Clamp,
+  TexWrapMode::Repeat,
+  TexWrapMode::Mirror,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
-pub struct SsTexWrapMode(pub i8);
+pub struct TexWrapMode(pub i8);
 #[allow(non_upper_case_globals)]
-impl SsTexWrapMode {
+impl TexWrapMode {
   pub const Clamp: Self = Self(0);
   pub const Repeat: Self = Self(1);
   pub const Mirror: Self = Self(2);
@@ -149,7 +132,7 @@ impl SsTexWrapMode {
     }
   }
 }
-impl core::fmt::Debug for SsTexWrapMode {
+impl core::fmt::Debug for TexWrapMode {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     if let Some(name) = self.variant_name() {
       f.write_str(name)
@@ -158,7 +141,7 @@ impl core::fmt::Debug for SsTexWrapMode {
     }
   }
 }
-impl<'a> flatbuffers::Follow<'a> for SsTexWrapMode {
+impl<'a> flatbuffers::Follow<'a> for TexWrapMode {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
@@ -167,15 +150,15 @@ impl<'a> flatbuffers::Follow<'a> for SsTexWrapMode {
   }
 }
 
-impl flatbuffers::Push for SsTexWrapMode {
-    type Output = SsTexWrapMode;
+impl flatbuffers::Push for TexWrapMode {
+    type Output = TexWrapMode;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
         unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
     }
 }
 
-impl flatbuffers::EndianScalar for SsTexWrapMode {
+impl flatbuffers::EndianScalar for TexWrapMode {
   type Scalar = i8;
   #[inline]
   fn to_little_endian(self) -> i8 {
@@ -189,7 +172,7 @@ impl flatbuffers::EndianScalar for SsTexWrapMode {
   }
 }
 
-impl<'a> flatbuffers::Verifiable for SsTexWrapMode {
+impl<'a> flatbuffers::Verifiable for TexWrapMode {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -199,24 +182,24 @@ impl<'a> flatbuffers::Verifiable for SsTexWrapMode {
   }
 }
 
-impl flatbuffers::SimpleToVerifyInSlice for SsTexWrapMode {}
+impl flatbuffers::SimpleToVerifyInSlice for TexWrapMode {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_SS_MESH_DIV_TYPE: i8 = 0;
+pub const ENUM_MIN_MESH_DIV_TYPE: i8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_SS_MESH_DIV_TYPE: i8 = 2;
+pub const ENUM_MAX_MESH_DIV_TYPE: i8 = 2;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_SS_MESH_DIV_TYPE: [SsMeshDivType; 3] = [
-  SsMeshDivType::Unknown,
-  SsMeshDivType::PolylineBase,
-  SsMeshDivType::Boxdiv,
+pub const ENUM_VALUES_MESH_DIV_TYPE: [MeshDivType; 3] = [
+  MeshDivType::Unknown,
+  MeshDivType::PolylineBase,
+  MeshDivType::Boxdiv,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
-pub struct SsMeshDivType(pub i8);
+pub struct MeshDivType(pub i8);
 #[allow(non_upper_case_globals)]
-impl SsMeshDivType {
+impl MeshDivType {
   pub const Unknown: Self = Self(0);
   pub const PolylineBase: Self = Self(1);
   pub const Boxdiv: Self = Self(2);
@@ -238,7 +221,7 @@ impl SsMeshDivType {
     }
   }
 }
-impl core::fmt::Debug for SsMeshDivType {
+impl core::fmt::Debug for MeshDivType {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     if let Some(name) = self.variant_name() {
       f.write_str(name)
@@ -247,7 +230,7 @@ impl core::fmt::Debug for SsMeshDivType {
     }
   }
 }
-impl<'a> flatbuffers::Follow<'a> for SsMeshDivType {
+impl<'a> flatbuffers::Follow<'a> for MeshDivType {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
@@ -256,15 +239,15 @@ impl<'a> flatbuffers::Follow<'a> for SsMeshDivType {
   }
 }
 
-impl flatbuffers::Push for SsMeshDivType {
-    type Output = SsMeshDivType;
+impl flatbuffers::Push for MeshDivType {
+    type Output = MeshDivType;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
         unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
     }
 }
 
-impl flatbuffers::EndianScalar for SsMeshDivType {
+impl flatbuffers::EndianScalar for MeshDivType {
   type Scalar = i8;
   #[inline]
   fn to_little_endian(self) -> i8 {
@@ -278,7 +261,7 @@ impl flatbuffers::EndianScalar for SsMeshDivType {
   }
 }
 
-impl<'a> flatbuffers::Verifiable for SsMeshDivType {
+impl<'a> flatbuffers::Verifiable for MeshDivType {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -288,7 +271,152 @@ impl<'a> flatbuffers::Verifiable for SsMeshDivType {
   }
 }
 
-impl flatbuffers::SimpleToVerifyInSlice for SsMeshDivType {}
+impl flatbuffers::SimpleToVerifyInSlice for MeshDivType {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_PART_TYPE: i8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_PART_TYPE: i8 = 16;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_PART_TYPE: [PartType; 17] = [
+  PartType::Null,
+  PartType::Normal,
+  PartType::Shape,
+  PartType::Text,
+  PartType::Nines,
+  PartType::Instance,
+  PartType::Armature,
+  PartType::Effect,
+  PartType::Mesh,
+  PartType::Movenode,
+  PartType::Constraint,
+  PartType::Mask,
+  PartType::Joint,
+  PartType::Bonepoint,
+  PartType::TransformConstraint,
+  PartType::Camera,
+  PartType::Audio,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct PartType(pub i8);
+#[allow(non_upper_case_globals)]
+impl PartType {
+  pub const Null: Self = Self(0);
+  pub const Normal: Self = Self(1);
+  pub const Shape: Self = Self(2);
+  pub const Text: Self = Self(3);
+  pub const Nines: Self = Self(4);
+  pub const Instance: Self = Self(5);
+  pub const Armature: Self = Self(6);
+  pub const Effect: Self = Self(7);
+  pub const Mesh: Self = Self(8);
+  pub const Movenode: Self = Self(9);
+  pub const Constraint: Self = Self(10);
+  pub const Mask: Self = Self(11);
+  pub const Joint: Self = Self(12);
+  pub const Bonepoint: Self = Self(13);
+  pub const TransformConstraint: Self = Self(14);
+  pub const Camera: Self = Self(15);
+  pub const Audio: Self = Self(16);
+
+  pub const ENUM_MIN: i8 = 0;
+  pub const ENUM_MAX: i8 = 16;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Null,
+    Self::Normal,
+    Self::Shape,
+    Self::Text,
+    Self::Nines,
+    Self::Instance,
+    Self::Armature,
+    Self::Effect,
+    Self::Mesh,
+    Self::Movenode,
+    Self::Constraint,
+    Self::Mask,
+    Self::Joint,
+    Self::Bonepoint,
+    Self::TransformConstraint,
+    Self::Camera,
+    Self::Audio,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::Null => Some("Null"),
+      Self::Normal => Some("Normal"),
+      Self::Shape => Some("Shape"),
+      Self::Text => Some("Text"),
+      Self::Nines => Some("Nines"),
+      Self::Instance => Some("Instance"),
+      Self::Armature => Some("Armature"),
+      Self::Effect => Some("Effect"),
+      Self::Mesh => Some("Mesh"),
+      Self::Movenode => Some("Movenode"),
+      Self::Constraint => Some("Constraint"),
+      Self::Mask => Some("Mask"),
+      Self::Joint => Some("Joint"),
+      Self::Bonepoint => Some("Bonepoint"),
+      Self::TransformConstraint => Some("TransformConstraint"),
+      Self::Camera => Some("Camera"),
+      Self::Audio => Some("Audio"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for PartType {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for PartType {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { flatbuffers::read_scalar_at::<i8>(buf, loc) };
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for PartType {
+    type Output = PartType;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
+    }
+}
+
+impl flatbuffers::EndianScalar for PartType {
+  type Scalar = i8;
+  #[inline]
+  fn to_little_endian(self) -> i8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: i8) -> Self {
+    let b = i8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for PartType {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    i8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for PartType {}
 pub enum Vec2Offset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1179,18 +1307,18 @@ impl<'a> CellMap<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(CellMap::VT_SIZE_ORIGINAL, None)}
   }
   #[inline]
-  pub fn wrap_mode(&self) -> SsTexWrapMode {
+  pub fn wrap_mode(&self) -> TexWrapMode {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<SsTexWrapMode>(CellMap::VT_WRAP_MODE, Some(SsTexWrapMode::Clamp)).unwrap()}
+    unsafe { self._tab.get::<TexWrapMode>(CellMap::VT_WRAP_MODE, Some(TexWrapMode::Clamp)).unwrap()}
   }
   #[inline]
-  pub fn filter_mode(&self) -> SsTexFilterMode {
+  pub fn filter_mode(&self) -> TexFilterMode {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<SsTexFilterMode>(CellMap::VT_FILTER_MODE, Some(SsTexFilterMode::Nearest)).unwrap()}
+    unsafe { self._tab.get::<TexFilterMode>(CellMap::VT_FILTER_MODE, Some(TexFilterMode::Nearest)).unwrap()}
   }
   #[inline]
   pub fn cells(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Cell<'a>>>> {
@@ -1211,8 +1339,8 @@ impl flatbuffers::Verifiable for CellMap<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("image_path", Self::VT_IMAGE_PATH, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("size_original", Self::VT_SIZE_ORIGINAL, false)?
-     .visit_field::<SsTexWrapMode>("wrap_mode", Self::VT_WRAP_MODE, false)?
-     .visit_field::<SsTexFilterMode>("filter_mode", Self::VT_FILTER_MODE, false)?
+     .visit_field::<TexWrapMode>("wrap_mode", Self::VT_WRAP_MODE, false)?
+     .visit_field::<TexFilterMode>("filter_mode", Self::VT_FILTER_MODE, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Cell>>>>("cells", Self::VT_CELLS, false)?
      .finish();
     Ok(())
@@ -1222,8 +1350,8 @@ pub struct CellMapArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub image_path: Option<flatbuffers::WIPOffset<&'a str>>,
     pub size_original: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub wrap_mode: SsTexWrapMode,
-    pub filter_mode: SsTexFilterMode,
+    pub wrap_mode: TexWrapMode,
+    pub filter_mode: TexFilterMode,
     pub cells: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Cell<'a>>>>>,
 }
 impl<'a> Default for CellMapArgs<'a> {
@@ -1233,8 +1361,8 @@ impl<'a> Default for CellMapArgs<'a> {
       name: None, // required field
       image_path: None,
       size_original: None,
-      wrap_mode: SsTexWrapMode::Clamp,
-      filter_mode: SsTexFilterMode::Nearest,
+      wrap_mode: TexWrapMode::Clamp,
+      filter_mode: TexFilterMode::Nearest,
       cells: None,
     }
   }
@@ -1258,12 +1386,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> CellMapBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(CellMap::VT_SIZE_ORIGINAL, size_original);
   }
   #[inline]
-  pub fn add_wrap_mode(&mut self, wrap_mode: SsTexWrapMode) {
-    self.fbb_.push_slot::<SsTexWrapMode>(CellMap::VT_WRAP_MODE, wrap_mode, SsTexWrapMode::Clamp);
+  pub fn add_wrap_mode(&mut self, wrap_mode: TexWrapMode) {
+    self.fbb_.push_slot::<TexWrapMode>(CellMap::VT_WRAP_MODE, wrap_mode, TexWrapMode::Clamp);
   }
   #[inline]
-  pub fn add_filter_mode(&mut self, filter_mode: SsTexFilterMode) {
-    self.fbb_.push_slot::<SsTexFilterMode>(CellMap::VT_FILTER_MODE, filter_mode, SsTexFilterMode::Nearest);
+  pub fn add_filter_mode(&mut self, filter_mode: TexFilterMode) {
+    self.fbb_.push_slot::<TexFilterMode>(CellMap::VT_FILTER_MODE, filter_mode, TexFilterMode::Nearest);
   }
   #[inline]
   pub fn add_cells(&mut self, cells: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Cell<'b >>>>) {
@@ -1303,8 +1431,8 @@ pub struct CellMapT {
   pub name: String,
   pub image_path: Option<String>,
   pub size_original: Option<Box<Vec2T>>,
-  pub wrap_mode: SsTexWrapMode,
-  pub filter_mode: SsTexFilterMode,
+  pub wrap_mode: TexWrapMode,
+  pub filter_mode: TexFilterMode,
   pub cells: Option<Vec<CellT>>,
 }
 impl Default for CellMapT {
@@ -1313,8 +1441,8 @@ impl Default for CellMapT {
       name: "".to_string(),
       image_path: None,
       size_original: None,
-      wrap_mode: SsTexWrapMode::Clamp,
-      filter_mode: SsTexFilterMode::Nearest,
+      wrap_mode: TexWrapMode::Clamp,
+      filter_mode: TexFilterMode::Nearest,
       cells: None,
     }
   }
@@ -1349,6 +1477,210 @@ impl CellMapT {
     })
   }
 }
+pub enum ModelOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct Model<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for Model<'a> {
+  type Inner = Model<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> Model<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    Model { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args ModelArgs
+  ) -> flatbuffers::WIPOffset<Model<'bldr>> {
+    let mut builder = ModelBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> ModelT {
+    ModelT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for Model<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct ModelArgs {
+}
+impl<'a> Default for ModelArgs {
+  #[inline]
+  fn default() -> Self {
+    ModelArgs {
+    }
+  }
+}
+
+pub struct ModelBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ModelBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ModelBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    ModelBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<Model<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for Model<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("Model");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelT {
+}
+impl Default for ModelT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl ModelT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<Model<'b>> {
+    Model::create(_fbb, &ModelArgs{
+    })
+  }
+}
+pub enum AnimationOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct Animation<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for Animation<'a> {
+  type Inner = Animation<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> Animation<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    Animation { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AnimationArgs
+  ) -> flatbuffers::WIPOffset<Animation<'bldr>> {
+    let mut builder = AnimationBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AnimationT {
+    AnimationT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for Animation<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AnimationArgs {
+}
+impl<'a> Default for AnimationArgs {
+  #[inline]
+  fn default() -> Self {
+    AnimationArgs {
+    }
+  }
+}
+
+pub struct AnimationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimationBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AnimationBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<Animation<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for Animation<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("Animation");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnimationT {
+}
+impl Default for AnimationT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AnimationT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<Animation<'b>> {
+    Animation::create(_fbb, &AnimationArgs{
+    })
+  }
+}
 pub enum AnimePackOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1366,7 +1698,9 @@ impl<'a> flatbuffers::Follow<'a> for AnimePack<'a> {
 
 impl<'a> AnimePack<'a> {
   pub const VT_NAME: flatbuffers::VOffsetT = 4;
-  pub const VT_CELLMAP_NAMES: flatbuffers::VOffsetT = 6;
+  pub const VT_MODEL: flatbuffers::VOffsetT = 6;
+  pub const VT_CELLMAP_NAMES: flatbuffers::VOffsetT = 8;
+  pub const VT_ANIME_LIST: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1378,7 +1712,9 @@ impl<'a> AnimePack<'a> {
     args: &'args AnimePackArgs<'args>
   ) -> flatbuffers::WIPOffset<AnimePack<'bldr>> {
     let mut builder = AnimePackBuilder::new(_fbb);
+    if let Some(x) = args.anime_list { builder.add_anime_list(x); }
     if let Some(x) = args.cellmap_names { builder.add_cellmap_names(x); }
+    if let Some(x) = args.model { builder.add_model(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.finish()
   }
@@ -1388,12 +1724,20 @@ impl<'a> AnimePack<'a> {
       let x = self.name();
       x.to_string()
     };
+    let model = self.model().map(|x| {
+      Box::new(x.unpack())
+    });
     let cellmap_names = self.cellmap_names().map(|x| {
       x.iter().map(|s| s.to_string()).collect()
     });
+    let anime_list = self.anime_list().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
     AnimePackT {
       name,
+      model,
       cellmap_names,
+      anime_list,
     }
   }
 
@@ -1415,11 +1759,25 @@ impl<'a> AnimePack<'a> {
     key.cmp(val)
   }
   #[inline]
+  pub fn model(&self) -> Option<Model<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Model>>(AnimePack::VT_MODEL, None)}
+  }
+  #[inline]
   pub fn cellmap_names(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(AnimePack::VT_CELLMAP_NAMES, None)}
+  }
+  #[inline]
+  pub fn anime_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation>>>>(AnimePack::VT_ANIME_LIST, None)}
   }
 }
 
@@ -1431,21 +1789,27 @@ impl flatbuffers::Verifiable for AnimePack<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Model>>("model", Self::VT_MODEL, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("cellmap_names", Self::VT_CELLMAP_NAMES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Animation>>>>("anime_list", Self::VT_ANIME_LIST, false)?
      .finish();
     Ok(())
   }
 }
 pub struct AnimePackArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub model: Option<flatbuffers::WIPOffset<Model<'a>>>,
     pub cellmap_names: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub anime_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>>>,
 }
 impl<'a> Default for AnimePackArgs<'a> {
   #[inline]
   fn default() -> Self {
     AnimePackArgs {
       name: None, // required field
+      model: None,
       cellmap_names: None,
+      anime_list: None,
     }
   }
 }
@@ -1460,8 +1824,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimePackBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimePack::VT_NAME, name);
   }
   #[inline]
+  pub fn add_model(&mut self, model: flatbuffers::WIPOffset<Model<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Model>>(AnimePack::VT_MODEL, model);
+  }
+  #[inline]
   pub fn add_cellmap_names(&mut self, cellmap_names: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimePack::VT_CELLMAP_NAMES, cellmap_names);
+  }
+  #[inline]
+  pub fn add_anime_list(&mut self, anime_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Animation<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimePack::VT_ANIME_LIST, anime_list);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimePackBuilder<'a, 'b, A> {
@@ -1483,7 +1855,9 @@ impl core::fmt::Debug for AnimePack<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("AnimePack");
       ds.field("name", &self.name());
+      ds.field("model", &self.model());
       ds.field("cellmap_names", &self.cellmap_names());
+      ds.field("anime_list", &self.anime_list());
       ds.finish()
   }
 }
@@ -1491,13 +1865,17 @@ impl core::fmt::Debug for AnimePack<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnimePackT {
   pub name: String,
+  pub model: Option<Box<ModelT>>,
   pub cellmap_names: Option<Vec<String>>,
+  pub anime_list: Option<Vec<AnimationT>>,
 }
 impl Default for AnimePackT {
   fn default() -> Self {
     Self {
       name: "".to_string(),
+      model: None,
       cellmap_names: None,
+      anime_list: None,
     }
   }
 }
@@ -1510,12 +1888,20 @@ impl AnimePackT {
       let x = &self.name;
       _fbb.create_string(x)
     });
+    let model = self.model.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
     let cellmap_names = self.cellmap_names.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
     });
+    let anime_list = self.anime_list.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
     AnimePack::create(_fbb, &AnimePackArgs{
       name,
+      model,
       cellmap_names,
+      anime_list,
     })
   }
 }
@@ -1637,9 +2023,9 @@ impl<'a> flatbuffers::Follow<'a> for SoundFile<'a> {
 }
 
 impl<'a> SoundFile<'a> {
-  pub const VT_ALIAS: flatbuffers::VOffsetT = 4;
-  pub const VT_FILENAME: flatbuffers::VOffsetT = 6;
-  pub const VT_MSEC: flatbuffers::VOffsetT = 8;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_PATH: flatbuffers::VOffsetT = 6;
+  pub const VT_TIME_TOTAL: flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1651,58 +2037,58 @@ impl<'a> SoundFile<'a> {
     args: &'args SoundFileArgs<'args>
   ) -> flatbuffers::WIPOffset<SoundFile<'bldr>> {
     let mut builder = SoundFileBuilder::new(_fbb);
-    builder.add_msec(args.msec);
-    if let Some(x) = args.filename { builder.add_filename(x); }
-    if let Some(x) = args.alias { builder.add_alias(x); }
+    builder.add_time_total(args.time_total);
+    if let Some(x) = args.path { builder.add_path(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> SoundFileT {
-    let alias = {
-      let x = self.alias();
+    let name = {
+      let x = self.name();
       x.to_string()
     };
-    let filename = self.filename().map(|x| {
+    let path = self.path().map(|x| {
       x.to_string()
     });
-    let msec = self.msec();
+    let time_total = self.time_total();
     SoundFileT {
-      alias,
-      filename,
-      msec,
+      name,
+      path,
+      time_total,
     }
   }
 
   #[inline]
-  pub fn alias(&self) -> &'a str {
+  pub fn name(&self) -> &'a str {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_ALIAS, None).unwrap()}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_NAME, None).unwrap()}
   }
   #[inline]
   pub fn key_compare_less_than(&self, o: &SoundFile) -> bool {
-    self.alias() < o.alias()
+    self.name() < o.name()
   }
 
   #[inline]
   pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
-    let key = self.alias();
+    let key = self.name();
     key.cmp(val)
   }
   #[inline]
-  pub fn filename(&self) -> Option<&'a str> {
+  pub fn path(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_FILENAME, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_PATH, None)}
   }
   #[inline]
-  pub fn msec(&self) -> u32 {
+  pub fn time_total(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(SoundFile::VT_MSEC, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(SoundFile::VT_TIME_TOTAL, Some(0)).unwrap()}
   }
 }
 
@@ -1713,25 +2099,25 @@ impl flatbuffers::Verifiable for SoundFile<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("alias", Self::VT_ALIAS, true)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("filename", Self::VT_FILENAME, false)?
-     .visit_field::<u32>("msec", Self::VT_MSEC, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("path", Self::VT_PATH, false)?
+     .visit_field::<u32>("time_total", Self::VT_TIME_TOTAL, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SoundFileArgs<'a> {
-    pub alias: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub filename: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub msec: u32,
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub path: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub time_total: u32,
 }
 impl<'a> Default for SoundFileArgs<'a> {
   #[inline]
   fn default() -> Self {
     SoundFileArgs {
-      alias: None, // required field
-      filename: None,
-      msec: 0,
+      name: None, // required field
+      path: None,
+      time_total: 0,
     }
   }
 }
@@ -1742,16 +2128,16 @@ pub struct SoundFileBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SoundFileBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_alias(&mut self, alias: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundFile::VT_ALIAS, alias);
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundFile::VT_NAME, name);
   }
   #[inline]
-  pub fn add_filename(&mut self, filename: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundFile::VT_FILENAME, filename);
+  pub fn add_path(&mut self, path: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundFile::VT_PATH, path);
   }
   #[inline]
-  pub fn add_msec(&mut self, msec: u32) {
-    self.fbb_.push_slot::<u32>(SoundFile::VT_MSEC, msec, 0);
+  pub fn add_time_total(&mut self, time_total: u32) {
+    self.fbb_.push_slot::<u32>(SoundFile::VT_TIME_TOTAL, time_total, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SoundFileBuilder<'a, 'b, A> {
@@ -1764,7 +2150,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SoundFileBuilder<'a, 'b, A> {
   #[inline]
   pub fn finish(self) -> flatbuffers::WIPOffset<SoundFile<'a>> {
     let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, SoundFile::VT_ALIAS,"alias");
+    self.fbb_.required(o, SoundFile::VT_NAME,"name");
     flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -1772,25 +2158,25 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SoundFileBuilder<'a, 'b, A> {
 impl core::fmt::Debug for SoundFile<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("SoundFile");
-      ds.field("alias", &self.alias());
-      ds.field("filename", &self.filename());
-      ds.field("msec", &self.msec());
+      ds.field("name", &self.name());
+      ds.field("path", &self.path());
+      ds.field("time_total", &self.time_total());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SoundFileT {
-  pub alias: String,
-  pub filename: Option<String>,
-  pub msec: u32,
+  pub name: String,
+  pub path: Option<String>,
+  pub time_total: u32,
 }
 impl Default for SoundFileT {
   fn default() -> Self {
     Self {
-      alias: "".to_string(),
-      filename: None,
-      msec: 0,
+      name: "".to_string(),
+      path: None,
+      time_total: 0,
     }
   }
 }
@@ -1799,18 +2185,18 @@ impl SoundFileT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<SoundFile<'b>> {
-    let alias = Some({
-      let x = &self.alias;
+    let name = Some({
+      let x = &self.name;
       _fbb.create_string(x)
     });
-    let filename = self.filename.as_ref().map(|x|{
+    let path = self.path.as_ref().map(|x|{
       _fbb.create_string(x)
     });
-    let msec = self.msec;
+    let time_total = self.time_total;
     SoundFile::create(_fbb, &SoundFileArgs{
-      alias,
-      filename,
-      msec,
+      name,
+      path,
+      time_total,
     })
   }
 }
@@ -1830,9 +2216,8 @@ impl<'a> flatbuffers::Follow<'a> for SoundList<'a> {
 }
 
 impl<'a> SoundList<'a> {
-  pub const VT_ID: flatbuffers::VOffsetT = 4;
-  pub const VT_ALIAS: flatbuffers::VOffsetT = 6;
-  pub const VT_SOUNDS: flatbuffers::VOffsetT = 8;
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TABLE_DATA: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -1844,57 +2229,48 @@ impl<'a> SoundList<'a> {
     args: &'args SoundListArgs<'args>
   ) -> flatbuffers::WIPOffset<SoundList<'bldr>> {
     let mut builder = SoundListBuilder::new(_fbb);
-    if let Some(x) = args.sounds { builder.add_sounds(x); }
-    if let Some(x) = args.alias { builder.add_alias(x); }
-    builder.add_id(args.id);
+    if let Some(x) = args.table_data { builder.add_table_data(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> SoundListT {
-    let id = self.id();
-    let alias = self.alias().map(|x| {
+    let name = {
+      let x = self.name();
       x.to_string()
-    });
-    let sounds = self.sounds().map(|x| {
+    };
+    let table_data = self.table_data().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     SoundListT {
-      id,
-      alias,
-      sounds,
+      name,
+      table_data,
     }
   }
 
   #[inline]
-  pub fn id(&self) -> u32 {
+  pub fn name(&self) -> &'a str {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(SoundList::VT_ID, Some(0)).unwrap()}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SoundList::VT_NAME, None).unwrap()}
   }
   #[inline]
   pub fn key_compare_less_than(&self, o: &SoundList) -> bool {
-    self.id() < o.id()
+    self.name() < o.name()
   }
 
   #[inline]
-  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
-    let key = self.id();
-    key.cmp(&val)
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.name();
+    key.cmp(val)
   }
   #[inline]
-  pub fn alias(&self) -> Option<&'a str> {
+  pub fn table_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundFile<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SoundList::VT_ALIAS, None)}
-  }
-  #[inline]
-  pub fn sounds(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundFile<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundFile>>>>(SoundList::VT_SOUNDS, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundFile>>>>(SoundList::VT_TABLE_DATA, None)}
   }
 }
 
@@ -1905,25 +2281,22 @@ impl flatbuffers::Verifiable for SoundList<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<u32>("id", Self::VT_ID, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("alias", Self::VT_ALIAS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SoundFile>>>>("sounds", Self::VT_SOUNDS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SoundFile>>>>("table_data", Self::VT_TABLE_DATA, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SoundListArgs<'a> {
-    pub id: u32,
-    pub alias: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub sounds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundFile<'a>>>>>,
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub table_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundFile<'a>>>>>,
 }
 impl<'a> Default for SoundListArgs<'a> {
   #[inline]
   fn default() -> Self {
     SoundListArgs {
-      id: 0,
-      alias: None,
-      sounds: None,
+      name: None, // required field
+      table_data: None,
     }
   }
 }
@@ -1934,16 +2307,12 @@ pub struct SoundListBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SoundListBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_id(&mut self, id: u32) {
-    self.fbb_.push_slot::<u32>(SoundList::VT_ID, id, 0);
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundList::VT_NAME, name);
   }
   #[inline]
-  pub fn add_alias(&mut self, alias: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundList::VT_ALIAS, alias);
-  }
-  #[inline]
-  pub fn add_sounds(&mut self, sounds: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SoundFile<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundList::VT_SOUNDS, sounds);
+  pub fn add_table_data(&mut self, table_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SoundFile<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SoundList::VT_TABLE_DATA, table_data);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SoundListBuilder<'a, 'b, A> {
@@ -1956,6 +2325,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SoundListBuilder<'a, 'b, A> {
   #[inline]
   pub fn finish(self) -> flatbuffers::WIPOffset<SoundList<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, SoundList::VT_NAME,"name");
     flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -1963,25 +2333,22 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SoundListBuilder<'a, 'b, A> {
 impl core::fmt::Debug for SoundList<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("SoundList");
-      ds.field("id", &self.id());
-      ds.field("alias", &self.alias());
-      ds.field("sounds", &self.sounds());
+      ds.field("name", &self.name());
+      ds.field("table_data", &self.table_data());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SoundListT {
-  pub id: u32,
-  pub alias: Option<String>,
-  pub sounds: Option<Vec<SoundFileT>>,
+  pub name: String,
+  pub table_data: Option<Vec<SoundFileT>>,
 }
 impl Default for SoundListT {
   fn default() -> Self {
     Self {
-      id: 0,
-      alias: None,
-      sounds: None,
+      name: "".to_string(),
+      table_data: None,
     }
   }
 }
@@ -1990,17 +2357,16 @@ impl SoundListT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<SoundList<'b>> {
-    let id = self.id;
-    let alias = self.alias.as_ref().map(|x|{
+    let name = Some({
+      let x = &self.name;
       _fbb.create_string(x)
     });
-    let sounds = self.sounds.as_ref().map(|x|{
+    let table_data = self.table_data.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     SoundList::create(_fbb, &SoundListArgs{
-      id,
-      alias,
-      sounds,
+      name,
+      table_data,
     })
   }
 }
@@ -2773,12 +3139,12 @@ impl<'a> flatbuffers::Follow<'a> for SsAnimeBinary<'a> {
 
 impl<'a> SsAnimeBinary<'a> {
   pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_ANIMATION: flatbuffers::VOffsetT = 6;
+  pub const VT_ANIMATION_PACK: flatbuffers::VOffsetT = 6;
   pub const VT_CELL_MAP: flatbuffers::VOffsetT = 8;
   pub const VT_EFFECT: flatbuffers::VOffsetT = 10;
   pub const VT_SOUND_LIST: flatbuffers::VOffsetT = 12;
   pub const VT_FONT_BITMAP: flatbuffers::VOffsetT = 14;
-  pub const VT_INSTANCE: flatbuffers::VOffsetT = 16;
+  pub const VT_DEPENDENCIES: flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -2790,19 +3156,19 @@ impl<'a> SsAnimeBinary<'a> {
     args: &'args SsAnimeBinaryArgs<'args>
   ) -> flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
-    if let Some(x) = args.instance { builder.add_instance(x); }
+    if let Some(x) = args.dependencies { builder.add_dependencies(x); }
     if let Some(x) = args.font_bitmap { builder.add_font_bitmap(x); }
     if let Some(x) = args.sound_list { builder.add_sound_list(x); }
     if let Some(x) = args.effect { builder.add_effect(x); }
     if let Some(x) = args.cell_map { builder.add_cell_map(x); }
-    if let Some(x) = args.animation { builder.add_animation(x); }
+    if let Some(x) = args.animation_pack { builder.add_animation_pack(x); }
     builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> SsAnimeBinaryT {
     let version = self.version();
-    let animation = self.animation().map(|x| {
+    let animation_pack = self.animation_pack().map(|x| {
       Box::new(x.unpack())
     });
     let cell_map = self.cell_map().map(|x| {
@@ -2817,17 +3183,17 @@ impl<'a> SsAnimeBinary<'a> {
     let font_bitmap = self.font_bitmap().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let instance = self.instance().map(|x| {
+    let dependencies = self.dependencies().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     SsAnimeBinaryT {
       version,
-      animation,
+      animation_pack,
       cell_map,
       effect,
       sound_list,
       font_bitmap,
-      instance,
+      dependencies,
     }
   }
 
@@ -2839,11 +3205,11 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<u32>(SsAnimeBinary::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
-  pub fn animation(&self) -> Option<AnimePack<'a>> {
+  pub fn animation_pack(&self) -> Option<AnimePack<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<AnimePack>>(SsAnimeBinary::VT_ANIMATION, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<AnimePack>>(SsAnimeBinary::VT_ANIMATION_PACK, None)}
   }
   #[inline]
   pub fn cell_map(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
@@ -2874,11 +3240,11 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAP, None)}
   }
   #[inline]
-  pub fn instance(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimePack<'a>>>> {
+  pub fn dependencies(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimePack>>>>(SsAnimeBinary::VT_INSTANCE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation>>>>(SsAnimeBinary::VT_DEPENDENCIES, None)}
   }
 }
 
@@ -2890,36 +3256,36 @@ impl flatbuffers::Verifiable for SsAnimeBinary<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("version", Self::VT_VERSION, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<AnimePack>>("animation", Self::VT_ANIMATION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<AnimePack>>("animation_pack", Self::VT_ANIMATION_PACK, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<CellMap>>>>("cell_map", Self::VT_CELL_MAP, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Effect>>>>("effect", Self::VT_EFFECT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SoundList>>>>("sound_list", Self::VT_SOUND_LIST, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmap", Self::VT_FONT_BITMAP, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AnimePack>>>>("instance", Self::VT_INSTANCE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Animation>>>>("dependencies", Self::VT_DEPENDENCIES, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SsAnimeBinaryArgs<'a> {
     pub version: u32,
-    pub animation: Option<flatbuffers::WIPOffset<AnimePack<'a>>>,
+    pub animation_pack: Option<flatbuffers::WIPOffset<AnimePack<'a>>>,
     pub cell_map: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
     pub effect: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmap: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
-    pub instance: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimePack<'a>>>>>,
+    pub dependencies: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
   #[inline]
   fn default() -> Self {
     SsAnimeBinaryArgs {
       version: 1,
-      animation: None,
+      animation_pack: None,
       cell_map: None,
       effect: None,
       sound_list: None,
       font_bitmap: None,
-      instance: None,
+      dependencies: None,
     }
   }
 }
@@ -2934,8 +3300,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, A>
     self.fbb_.push_slot::<u32>(SsAnimeBinary::VT_VERSION, version, 1);
   }
   #[inline]
-  pub fn add_animation(&mut self, animation: flatbuffers::WIPOffset<AnimePack<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<AnimePack>>(SsAnimeBinary::VT_ANIMATION, animation);
+  pub fn add_animation_pack(&mut self, animation_pack: flatbuffers::WIPOffset<AnimePack<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<AnimePack>>(SsAnimeBinary::VT_ANIMATION_PACK, animation_pack);
   }
   #[inline]
   pub fn add_cell_map(&mut self, cell_map: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
@@ -2954,8 +3320,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, A>
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAP, font_bitmap);
   }
   #[inline]
-  pub fn add_instance(&mut self, instance: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AnimePack<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_INSTANCE, instance);
+  pub fn add_dependencies(&mut self, dependencies: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Animation<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_DEPENDENCIES, dependencies);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SsAnimeBinaryBuilder<'a, 'b, A> {
@@ -2976,12 +3342,12 @@ impl core::fmt::Debug for SsAnimeBinary<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("SsAnimeBinary");
       ds.field("version", &self.version());
-      ds.field("animation", &self.animation());
+      ds.field("animation_pack", &self.animation_pack());
       ds.field("cell_map", &self.cell_map());
       ds.field("effect", &self.effect());
       ds.field("sound_list", &self.sound_list());
       ds.field("font_bitmap", &self.font_bitmap());
-      ds.field("instance", &self.instance());
+      ds.field("dependencies", &self.dependencies());
       ds.finish()
   }
 }
@@ -2989,23 +3355,23 @@ impl core::fmt::Debug for SsAnimeBinary<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SsAnimeBinaryT {
   pub version: u32,
-  pub animation: Option<Box<AnimePackT>>,
+  pub animation_pack: Option<Box<AnimePackT>>,
   pub cell_map: Option<Vec<CellMapT>>,
   pub effect: Option<Vec<EffectT>>,
   pub sound_list: Option<Vec<SoundListT>>,
   pub font_bitmap: Option<Vec<FontBitmapT>>,
-  pub instance: Option<Vec<AnimePackT>>,
+  pub dependencies: Option<Vec<AnimationT>>,
 }
 impl Default for SsAnimeBinaryT {
   fn default() -> Self {
     Self {
       version: 1,
-      animation: None,
+      animation_pack: None,
       cell_map: None,
       effect: None,
       sound_list: None,
       font_bitmap: None,
-      instance: None,
+      dependencies: None,
     }
   }
 }
@@ -3015,7 +3381,7 @@ impl SsAnimeBinaryT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<SsAnimeBinary<'b>> {
     let version = self.version;
-    let animation = self.animation.as_ref().map(|x|{
+    let animation_pack = self.animation_pack.as_ref().map(|x|{
       x.pack(_fbb)
     });
     let cell_map = self.cell_map.as_ref().map(|x|{
@@ -3030,17 +3396,17 @@ impl SsAnimeBinaryT {
     let font_bitmap = self.font_bitmap.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let instance = self.instance.as_ref().map(|x|{
+    let dependencies = self.dependencies.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     SsAnimeBinary::create(_fbb, &SsAnimeBinaryArgs{
       version,
-      animation,
+      animation_pack,
       cell_map,
       effect,
       sound_list,
       font_bitmap,
-      instance,
+      dependencies,
     })
   }
 }
@@ -3127,6 +3493,3 @@ pub fn finish_ss_anime_binary_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(
 pub fn finish_size_prefixed_ss_anime_binary_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<SsAnimeBinary<'a>>) {
   fbb.finish_size_prefixed(root, Some(SS_ANIME_BINARY_IDENTIFIER));
 }
-}  // pub mod data
-}  // pub mod ss
-

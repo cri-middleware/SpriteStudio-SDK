@@ -9,40 +9,23 @@ use core::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::{EndianScalar, Follow};
 
-#[allow(unused_imports, dead_code)]
-pub mod ss {
-
-  use core::mem;
-  use core::cmp::Ordering;
-
-  extern crate flatbuffers;
-  use self::flatbuffers::{EndianScalar, Follow};
-#[allow(unused_imports, dead_code)]
-pub mod data {
-
-  use core::mem;
-  use core::cmp::Ordering;
-
-  extern crate flatbuffers;
-  use self::flatbuffers::{EndianScalar, Follow};
-
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_SS_SEQUENCE_TYPE: i8 = 0;
+pub const ENUM_MIN_SEQUENCE_TYPE: i8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_SS_SEQUENCE_TYPE: i8 = 2;
+pub const ENUM_MAX_SEQUENCE_TYPE: i8 = 2;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_SS_SEQUENCE_TYPE: [SsSequenceType; 3] = [
-  SsSequenceType::Last,
-  SsSequenceType::Keep,
-  SsSequenceType::Top,
+pub const ENUM_VALUES_SEQUENCE_TYPE: [SequenceType; 3] = [
+  SequenceType::Last,
+  SequenceType::Keep,
+  SequenceType::Top,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
-pub struct SsSequenceType(pub i8);
+pub struct SequenceType(pub i8);
 #[allow(non_upper_case_globals)]
-impl SsSequenceType {
+impl SequenceType {
   pub const Last: Self = Self(0);
   pub const Keep: Self = Self(1);
   pub const Top: Self = Self(2);
@@ -64,7 +47,7 @@ impl SsSequenceType {
     }
   }
 }
-impl core::fmt::Debug for SsSequenceType {
+impl core::fmt::Debug for SequenceType {
   fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
     if let Some(name) = self.variant_name() {
       f.write_str(name)
@@ -73,7 +56,7 @@ impl core::fmt::Debug for SsSequenceType {
     }
   }
 }
-impl<'a> flatbuffers::Follow<'a> for SsSequenceType {
+impl<'a> flatbuffers::Follow<'a> for SequenceType {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
@@ -82,15 +65,15 @@ impl<'a> flatbuffers::Follow<'a> for SsSequenceType {
   }
 }
 
-impl flatbuffers::Push for SsSequenceType {
-    type Output = SsSequenceType;
+impl flatbuffers::Push for SequenceType {
+    type Output = SequenceType;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
         unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
     }
 }
 
-impl flatbuffers::EndianScalar for SsSequenceType {
+impl flatbuffers::EndianScalar for SequenceType {
   type Scalar = i8;
   #[inline]
   fn to_little_endian(self) -> i8 {
@@ -104,7 +87,7 @@ impl flatbuffers::EndianScalar for SsSequenceType {
   }
 }
 
-impl<'a> flatbuffers::Verifiable for SsSequenceType {
+impl<'a> flatbuffers::Verifiable for SequenceType {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -114,44 +97,44 @@ impl<'a> flatbuffers::Verifiable for SsSequenceType {
   }
 }
 
-impl flatbuffers::SimpleToVerifyInSlice for SsSequenceType {}
-pub enum SsSequenceItemOffset {}
+impl flatbuffers::SimpleToVerifyInSlice for SequenceType {}
+pub enum SequenceItemOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct SsSequenceItem<'a> {
+pub struct SequenceItem<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for SsSequenceItem<'a> {
-  type Inner = SsSequenceItem<'a>;
+impl<'a> flatbuffers::Follow<'a> for SequenceItem<'a> {
+  type Inner = SequenceItem<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> SsSequenceItem<'a> {
+impl<'a> SequenceItem<'a> {
   pub const VT_REF_ANIME_PACK: flatbuffers::VOffsetT = 4;
   pub const VT_REF_ANIME: flatbuffers::VOffsetT = 6;
   pub const VT_REPEAT_COUNT: flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    SsSequenceItem { _tab: table }
+    SequenceItem { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args SsSequenceItemArgs<'args>
-  ) -> flatbuffers::WIPOffset<SsSequenceItem<'bldr>> {
-    let mut builder = SsSequenceItemBuilder::new(_fbb);
+    args: &'args SequenceItemArgs<'args>
+  ) -> flatbuffers::WIPOffset<SequenceItem<'bldr>> {
+    let mut builder = SequenceItemBuilder::new(_fbb);
     builder.add_repeat_count(args.repeat_count);
     if let Some(x) = args.ref_anime { builder.add_ref_anime(x); }
     if let Some(x) = args.ref_anime_pack { builder.add_ref_anime_pack(x); }
     builder.finish()
   }
 
-  pub fn unpack(&self) -> SsSequenceItemT {
+  pub fn unpack(&self) -> SequenceItemT {
     let ref_anime_pack = self.ref_anime_pack().map(|x| {
       x.to_string()
     });
@@ -159,7 +142,7 @@ impl<'a> SsSequenceItem<'a> {
       x.to_string()
     });
     let repeat_count = self.repeat_count();
-    SsSequenceItemT {
+    SequenceItemT {
       ref_anime_pack,
       ref_anime,
       repeat_count,
@@ -171,25 +154,25 @@ impl<'a> SsSequenceItem<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SsSequenceItem::VT_REF_ANIME_PACK, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None)}
   }
   #[inline]
   pub fn ref_anime(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SsSequenceItem::VT_REF_ANIME, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME, None)}
   }
   #[inline]
   pub fn repeat_count(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(SsSequenceItem::VT_REPEAT_COUNT, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(SequenceItem::VT_REPEAT_COUNT, Some(0)).unwrap()}
   }
 }
 
-impl flatbuffers::Verifiable for SsSequenceItem<'_> {
+impl flatbuffers::Verifiable for SequenceItem<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -203,15 +186,15 @@ impl flatbuffers::Verifiable for SsSequenceItem<'_> {
     Ok(())
   }
 }
-pub struct SsSequenceItemArgs<'a> {
+pub struct SequenceItemArgs<'a> {
     pub ref_anime_pack: Option<flatbuffers::WIPOffset<&'a str>>,
     pub ref_anime: Option<flatbuffers::WIPOffset<&'a str>>,
     pub repeat_count: i32,
 }
-impl<'a> Default for SsSequenceItemArgs<'a> {
+impl<'a> Default for SequenceItemArgs<'a> {
   #[inline]
   fn default() -> Self {
-    SsSequenceItemArgs {
+    SequenceItemArgs {
       ref_anime_pack: None,
       ref_anime: None,
       repeat_count: 0,
@@ -219,41 +202,41 @@ impl<'a> Default for SsSequenceItemArgs<'a> {
   }
 }
 
-pub struct SsSequenceItemBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct SequenceItemBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsSequenceItemBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SequenceItemBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_ref_anime_pack(&mut self, ref_anime_pack: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsSequenceItem::VT_REF_ANIME_PACK, ref_anime_pack);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME_PACK, ref_anime_pack);
   }
   #[inline]
   pub fn add_ref_anime(&mut self, ref_anime: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsSequenceItem::VT_REF_ANIME, ref_anime);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME, ref_anime);
   }
   #[inline]
   pub fn add_repeat_count(&mut self, repeat_count: i32) {
-    self.fbb_.push_slot::<i32>(SsSequenceItem::VT_REPEAT_COUNT, repeat_count, 0);
+    self.fbb_.push_slot::<i32>(SequenceItem::VT_REPEAT_COUNT, repeat_count, 0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SsSequenceItemBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SequenceItemBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    SsSequenceItemBuilder {
+    SequenceItemBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<SsSequenceItem<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<SequenceItem<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for SsSequenceItem<'_> {
+impl core::fmt::Debug for SequenceItem<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("SsSequenceItem");
+    let mut ds = f.debug_struct("SequenceItem");
       ds.field("ref_anime_pack", &self.ref_anime_pack());
       ds.field("ref_anime", &self.ref_anime());
       ds.field("repeat_count", &self.repeat_count());
@@ -262,12 +245,12 @@ impl core::fmt::Debug for SsSequenceItem<'_> {
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct SsSequenceItemT {
+pub struct SequenceItemT {
   pub ref_anime_pack: Option<String>,
   pub ref_anime: Option<String>,
   pub repeat_count: i32,
 }
-impl Default for SsSequenceItemT {
+impl Default for SequenceItemT {
   fn default() -> Self {
     Self {
       ref_anime_pack: None,
@@ -276,11 +259,11 @@ impl Default for SsSequenceItemT {
     }
   }
 }
-impl SsSequenceItemT {
+impl SequenceItemT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<SsSequenceItem<'b>> {
+  ) -> flatbuffers::WIPOffset<SequenceItem<'b>> {
     let ref_anime_pack = self.ref_anime_pack.as_ref().map(|x|{
       _fbb.create_string(x)
     });
@@ -288,29 +271,29 @@ impl SsSequenceItemT {
       _fbb.create_string(x)
     });
     let repeat_count = self.repeat_count;
-    SsSequenceItem::create(_fbb, &SsSequenceItemArgs{
+    SequenceItem::create(_fbb, &SequenceItemArgs{
       ref_anime_pack,
       ref_anime,
       repeat_count,
     })
   }
 }
-pub enum SsSequenceOffset {}
+pub enum SequenceOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct SsSequence<'a> {
+pub struct Sequence<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for SsSequence<'a> {
-  type Inner = SsSequence<'a>;
+impl<'a> flatbuffers::Follow<'a> for Sequence<'a> {
+  type Inner = Sequence<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> SsSequence<'a> {
+impl<'a> Sequence<'a> {
   pub const VT_NAME: flatbuffers::VOffsetT = 4;
   pub const VT_INDEX: flatbuffers::VOffsetT = 6;
   pub const VT_TYPE_: flatbuffers::VOffsetT = 8;
@@ -318,34 +301,32 @@ impl<'a> SsSequence<'a> {
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    SsSequence { _tab: table }
+    Sequence { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args SsSequenceArgs<'args>
-  ) -> flatbuffers::WIPOffset<SsSequence<'bldr>> {
-    let mut builder = SsSequenceBuilder::new(_fbb);
+    args: &'args SequenceArgs<'args>
+  ) -> flatbuffers::WIPOffset<Sequence<'bldr>> {
+    let mut builder = SequenceBuilder::new(_fbb);
     if let Some(x) = args.list { builder.add_list(x); }
-    if let Some(x) = args.type_ { builder.add_type_(x); }
     builder.add_index(args.index);
     if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_type_(args.type_);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> SsSequenceT {
+  pub fn unpack(&self) -> SequenceT {
     let name = {
       let x = self.name();
       x.to_string()
     };
     let index = self.index();
-    let type_ = self.type_().map(|x| {
-      Box::new(x.unpack())
-    });
+    let type_ = self.type_();
     let list = self.list().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    SsSequenceT {
+    SequenceT {
       name,
       index,
       type_,
@@ -358,10 +339,10 @@ impl<'a> SsSequence<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SsSequence::VT_NAME, None).unwrap()}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Sequence::VT_NAME, None).unwrap()}
   }
   #[inline]
-  pub fn key_compare_less_than(&self, o: &SsSequence) -> bool {
+  pub fn key_compare_less_than(&self, o: &Sequence) -> bool {
     self.name() < o.name()
   }
 
@@ -375,25 +356,25 @@ impl<'a> SsSequence<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(SsSequence::VT_INDEX, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(Sequence::VT_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn type_(&self) -> Option<SsSequence<'a>> {
+  pub fn type_(&self) -> SequenceType {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<SsSequence>>(SsSequence::VT_TYPE_, None)}
+    unsafe { self._tab.get::<SequenceType>(Sequence::VT_TYPE_, Some(SequenceType::Last)).unwrap()}
   }
   #[inline]
-  pub fn list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SsSequenceItem<'a>>>> {
+  pub fn list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SequenceItem<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SsSequenceItem>>>>(SsSequence::VT_LIST, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SequenceItem>>>>(Sequence::VT_LIST, None)}
   }
 }
 
-impl flatbuffers::Verifiable for SsSequence<'_> {
+impl flatbuffers::Verifiable for Sequence<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -402,70 +383,70 @@ impl flatbuffers::Verifiable for SsSequence<'_> {
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<i32>("index", Self::VT_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<SsSequence>>("type_", Self::VT_TYPE_, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SsSequenceItem>>>>("list", Self::VT_LIST, false)?
+     .visit_field::<SequenceType>("type_", Self::VT_TYPE_, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SequenceItem>>>>("list", Self::VT_LIST, false)?
      .finish();
     Ok(())
   }
 }
-pub struct SsSequenceArgs<'a> {
+pub struct SequenceArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub index: i32,
-    pub type_: Option<flatbuffers::WIPOffset<SsSequence<'a>>>,
-    pub list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SsSequenceItem<'a>>>>>,
+    pub type_: SequenceType,
+    pub list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SequenceItem<'a>>>>>,
 }
-impl<'a> Default for SsSequenceArgs<'a> {
+impl<'a> Default for SequenceArgs<'a> {
   #[inline]
   fn default() -> Self {
-    SsSequenceArgs {
+    SequenceArgs {
       name: None, // required field
       index: 0,
-      type_: None,
+      type_: SequenceType::Last,
       list: None,
     }
   }
 }
 
-pub struct SsSequenceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct SequenceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsSequenceBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SequenceBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsSequence::VT_NAME, name);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Sequence::VT_NAME, name);
   }
   #[inline]
   pub fn add_index(&mut self, index: i32) {
-    self.fbb_.push_slot::<i32>(SsSequence::VT_INDEX, index, 0);
+    self.fbb_.push_slot::<i32>(Sequence::VT_INDEX, index, 0);
   }
   #[inline]
-  pub fn add_type_(&mut self, type_: flatbuffers::WIPOffset<SsSequence<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<SsSequence>>(SsSequence::VT_TYPE_, type_);
+  pub fn add_type_(&mut self, type_: SequenceType) {
+    self.fbb_.push_slot::<SequenceType>(Sequence::VT_TYPE_, type_, SequenceType::Last);
   }
   #[inline]
-  pub fn add_list(&mut self, list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SsSequenceItem<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsSequence::VT_LIST, list);
+  pub fn add_list(&mut self, list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SequenceItem<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Sequence::VT_LIST, list);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SsSequenceBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SequenceBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    SsSequenceBuilder {
+    SequenceBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<SsSequence<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<Sequence<'a>> {
     let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, SsSequence::VT_NAME,"name");
+    self.fbb_.required(o, Sequence::VT_NAME,"name");
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for SsSequence<'_> {
+impl core::fmt::Debug for Sequence<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("SsSequence");
+    let mut ds = f.debug_struct("Sequence");
       ds.field("name", &self.name());
       ds.field("index", &self.index());
       ds.field("type_", &self.type_());
@@ -475,39 +456,37 @@ impl core::fmt::Debug for SsSequence<'_> {
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct SsSequenceT {
+pub struct SequenceT {
   pub name: String,
   pub index: i32,
-  pub type_: Option<Box<SsSequenceT>>,
-  pub list: Option<Vec<SsSequenceItemT>>,
+  pub type_: SequenceType,
+  pub list: Option<Vec<SequenceItemT>>,
 }
-impl Default for SsSequenceT {
+impl Default for SequenceT {
   fn default() -> Self {
     Self {
       name: "".to_string(),
       index: 0,
-      type_: None,
+      type_: SequenceType::Last,
       list: None,
     }
   }
 }
-impl SsSequenceT {
+impl SequenceT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<SsSequence<'b>> {
+  ) -> flatbuffers::WIPOffset<Sequence<'b>> {
     let name = Some({
       let x = &self.name;
       _fbb.create_string(x)
     });
     let index = self.index;
-    let type_ = self.type_.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
+    let type_ = self.type_;
     let list = self.list.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    SsSequence::create(_fbb, &SsSequenceArgs{
+    Sequence::create(_fbb, &SequenceArgs{
       name,
       index,
       type_,
@@ -568,11 +547,11 @@ impl<'a> SsSequenceBinary<'a> {
     unsafe { self._tab.get::<u32>(SsSequenceBinary::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
-  pub fn sequence_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SsSequence<'a>>>> {
+  pub fn sequence_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Sequence<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SsSequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Sequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None)}
   }
 }
 
@@ -584,14 +563,14 @@ impl flatbuffers::Verifiable for SsSequenceBinary<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("version", Self::VT_VERSION, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SsSequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SsSequenceBinaryArgs<'a> {
     pub version: u32,
-    pub sequence_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SsSequence<'a>>>>>,
+    pub sequence_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Sequence<'a>>>>>,
 }
 impl<'a> Default for SsSequenceBinaryArgs<'a> {
   #[inline]
@@ -613,7 +592,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsSequenceBinaryBuilder<'a, 'b,
     self.fbb_.push_slot::<u32>(SsSequenceBinary::VT_VERSION, version, 1);
   }
   #[inline]
-  pub fn add_sequence_list(&mut self, sequence_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SsSequence<'b >>>>) {
+  pub fn add_sequence_list(&mut self, sequence_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Sequence<'b >>>>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsSequenceBinary::VT_SEQUENCE_LIST, sequence_list);
   }
   #[inline]
@@ -643,7 +622,7 @@ impl core::fmt::Debug for SsSequenceBinary<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SsSequenceBinaryT {
   pub version: u32,
-  pub sequence_list: Option<Vec<SsSequenceT>>,
+  pub sequence_list: Option<Vec<SequenceT>>,
 }
 impl Default for SsSequenceBinaryT {
   fn default() -> Self {
@@ -751,6 +730,3 @@ pub fn finish_ss_sequence_binary_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(
 pub fn finish_size_prefixed_ss_sequence_binary_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<SsSequenceBinary<'a>>) {
   fbb.finish_size_prefixed(root, Some(SS_SEQUENCE_BINARY_IDENTIFIER));
 }
-}  // pub mod data
-}  // pub mod ss
-
