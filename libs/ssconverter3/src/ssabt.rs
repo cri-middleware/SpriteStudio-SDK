@@ -20,6 +20,7 @@ pub fn convert_vec2t_list(point2_list: &Vec<SsPoint2>) -> Vec<ssab::ssab::Vec2T>
         convert_vec2t(point2)
     }).collect::<Vec<ssab::ssab::Vec2T>>()
 }
+#[allow(dead_code)] // TODO: delete when using the function
 pub fn convert_vec3t(point3: &SsPoint3) -> ssab::ssab::Vec3T {
     let mut vec = ssab::ssab::Vec3T::default();
     vec.x = point3.x;
@@ -27,6 +28,7 @@ pub fn convert_vec3t(point3: &SsPoint3) -> ssab::ssab::Vec3T {
     vec.z = point3.z;
     vec
 }
+#[allow(dead_code)] // TODO: delete when using the function
 pub fn convert_vec3t_list(point3_list: &Vec<SsPoint3>) -> Vec<ssab::ssab::Vec3T> {
     point3_list.iter().map(|point3| {
         convert_vec3t(point3)
@@ -94,7 +96,7 @@ pub fn convert_cellmapt_list(sspj: &SsProject, cellmap_names: &Vec<String>) -> V
     }).collect::<Vec<CellMapT>>()
 }
 
-pub fn convert_sound_file_list(sspj: &SsProject, sssound_list: &SsSoundFileList) -> Vec<ssab::ssab::SoundFileT> {
+pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList) -> Vec<ssab::ssab::SoundFileT> {
     sssound_list.sounds.iter().map(|sssound| {
         let mut sound_file_t = ssab::ssab::SoundFileT::default();
 
@@ -117,12 +119,12 @@ pub fn convert_sound_list(sspj: &SsProject, sound_list: &Vec<SsAudioPack>) -> Ve
     }).collect::<Vec<ssab::ssab::SoundListT>>()
 }
 
-pub fn convert_font_bitmap(sspj: &SsProject, charmap_dic: &HashMap<String, SsCharMap>) -> Vec<FontBitmapT> {
-    charmap_dic.into_iter().map(|(_key, value)| {
-        let mut font_bitmap_t = FontBitmapT::default();
+pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCharMap>) -> Vec<FontBitmapT> {
+    charmap_dic.into_iter().map(|(_key, _value)| {
+        // let mut font_bitmap_t = FontBitmapT::default();
         // font_bitmap_t.name = value.info.face;
 
-        font_bitmap_t
+        FontBitmapT::default()
     }).collect::<Vec<FontBitmapT>>()
 }
 

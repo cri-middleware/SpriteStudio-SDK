@@ -50,16 +50,18 @@ impl Default for ConverterConfig {
     }
 }
 
-
-
-pub struct ResultConvert {
-    pub name: String,
-    pub data: Vec<u8>,
-    pub len: usize,
+/*
+use std::ffi::c_char;
+#[repr(C)]
+pub struct CResultConvert {
+    pub name: *mut c_char,
+    pub data: *mut u8,
+    pub data_len: usize,
 }
+ */
 
-pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig) -> Result<Vec<ResultConvert>, SspjError> {
-    let sspj_name = path.file_stem().unwrap().to_str().unwrap();
+pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result<HashMap<String, Vec<u8>>, SspjError> {
+    let sspj_name = path.file_stem().unwrap().to_string_lossy();
     let sspj_loader = crate::SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
@@ -80,12 +82,12 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig) -> Result<
     }).collect::<Vec<ssab::ssqb::SsSequenceBinaryT>>();
 
     // optimize ssab ssab structures (e.g. set dependencies)
-    ssab_model_list.iter_mut().for_each(|ss_anime_binary_t| {
+    ssab_model_list.iter_mut().for_each(|_ss_anime_binary_t| {
         // TODO: implement
     });
 
     // convert ssab structures to binary data
-    let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(anime_binary, f)| {
+    let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(_anime_binary, f)| {
         // TODO: implement
 
         let output_file = format!("{}_{}.ssab", sspj_name, PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
@@ -104,13 +106,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig) -> Result<
     }).collect::<HashMap<String, Vec<u8>>>();
 
     ssab_bin_map.extend(ssqb_bin_map);
-    ssab_bin_map.iter().map(|(name, data)| {
-        Ok(ResultConvert {
-            name: name.clone(),
-            data: data.clone(),
-            len: data.len(),
-        })
-    }).collect::<Result<Vec<ResultConvert>, SspjError>>()
+    Ok(ssab_bin_map)
 }
 
 pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Result<(), SspjError> {
@@ -136,9 +132,9 @@ pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Resu
         }
     };
 
-    convert_result.iter().for_each(|result| {
-        let output_path = outdir_path.join(&result.name);
-        std::fs::write(output_path.as_path(), &result.data).expect("TODO: panic message"); // TODO: FIXME Error handling
+    convert_result.iter().for_each(|(name, data)| {
+        let output_path = outdir_path.join(name);
+        std::fs::write(output_path.as_path(), data).expect("TODO: panic message"); // TODO: FIXME Error handling
     });
 
     Ok(())
@@ -171,10 +167,10 @@ mod tests {
         TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
             let sspj_loader = SspjLoader::new(&get_test_base_path().join(p).as_path());
-            let Ok(sspj) = sspj_loader.load_ss_project() else {
+            let Ok(_sspj) = sspj_loader.load_ss_project() else {
                 panic!("not found: {}", p.as_os_str().to_string_lossy());
             };
-            // println!("{:?}", sspj);
+            // println!("{:?}", _sspj);
         });
     }
 
