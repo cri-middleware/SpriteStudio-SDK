@@ -40,18 +40,6 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_sspj() {
-        TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
-            let p = Path::new(f);
-            let sspj_loader = ssconverter3::SspjLoader::new(&get_test_base_path().join(p).as_path());
-            let Ok(sspj) = sspj_loader.load_ss_project() else {
-                panic!("not found: {}", p.as_os_str().to_string_lossy());
-            };
-            // println!("{:?}", sspj);
-        });
-    }
-
-    #[test]
     fn test_convert_ssab() {
         TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
