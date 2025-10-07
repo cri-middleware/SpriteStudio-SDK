@@ -10,7 +10,12 @@ fn main() {
         return;
     }
     let path = Path::new(args[1].as_os_str());
-    ssconverter3::convert_sspj_to_ssab_files(&path, ssconverter3::ConverterConfig::default()).unwrap();
+    let config = ssconverter3::ConverterConfig::default();
+    let r = ssconverter3::convert_sspj_to_ssab_files(&path, &config);
+    match r {
+        Ok(_) => (),
+        Err(e) => println!("{:?}", e),
+    }
 }
 
 #[cfg(test)]
@@ -18,6 +23,13 @@ mod tests {
     use std::path::PathBuf;
     use super::*;
     use rayon::prelude::*;
+
+    static TARGET_SSPJ_FILES: [&str; 4] = [
+        "tests/ParticleEffect/ParticleEffect.sspj",
+        "tests/allAttributeV7/allAttributeV7.sspj",
+        "tests/allPartsV7/allPartsV7.sspj",
+        "tests/overall/overall.sspj",
+    ];
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir()
@@ -29,12 +41,7 @@ mod tests {
 
     #[test]
     fn test_parse_sspj() {
-        [
-            "tests/ParticleEffect/ParticleEffect.sspj",
-            "tests/allAttributeV7/allAttributeV7.sspj",
-            "tests/allPartsV7/allPartsV7.sspj",
-            "tests/overall/overall.sspj",
-        ].par_iter().for_each(|&f| {
+        TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
             let sspj_loader = ssconverter3::SspjLoader::new(&get_test_base_path().join(p).as_path());
             let Ok(sspj) = sspj_loader.load_ss_project() else {
@@ -42,6 +49,19 @@ mod tests {
             };
             // println!("{:?}", sspj);
         });
-
     }
+
+    #[test]
+    fn test_convert_ssab() {
+        TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
+            let p = Path::new(f);
+            let config = ssconverter3::ConverterConfig::default();
+            let r = ssconverter3::convert_sspj_to_ssab_files(&get_test_base_path().join(p).as_path(), &config);
+            match r {
+                Ok(_) => { assert!(true) },
+                Err(e) => assert!(false, "{:?}", e),
+            }
+        });
+    }
+
 }

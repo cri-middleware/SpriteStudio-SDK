@@ -113,10 +113,10 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig) -> Result<
     }).collect::<Result<Vec<ResultConvert>, SspjError>>()
 }
 
-pub fn convert_sspj_to_ssab_files(path: &Path, config: ConverterConfig) -> Result<(), SspjError> {
+pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Result<(), SspjError> {
     let convert_result = convert_sspj_to_ssab_data(path, &config.convert_config)?;
 
-    let outdir_path = match config.out_dir {
+    let outdir_path = match &config.out_dir {
         Some(out_dir) => {
             PathBuf::from(&out_dir)
         }
@@ -127,13 +127,15 @@ pub fn convert_sspj_to_ssab_files(path: &Path, config: ConverterConfig) -> Resul
             let Some(stem) = path.file_stem() else {
                 return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "{}")));
             };
-            parent.join(format!("{}_ssab", stem.to_string_lossy()))
+            let dir = parent.join(format!("{}_ssab", stem.to_string_lossy()));
+            if !dir.as_path().exists() {
+                std::fs::create_dir(dir.as_path()).expect("TODO: panic message"); // TODO: FIXME Error handling
+            }
+
+            dir
         }
     };
 
-    if !outdir_path.as_path().exists() {
-        std::fs::create_dir(outdir_path.as_path()).expect("TODO: panic message"); // TODO: FIXME Error handling
-    }
     convert_result.iter().for_each(|result| {
         let output_path = outdir_path.join(&result.name);
         std::fs::write(output_path.as_path(), &result.data).expect("TODO: panic message"); // TODO: FIXME Error handling
