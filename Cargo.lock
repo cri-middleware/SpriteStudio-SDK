@@ -196,7 +196,6 @@ dependencies = [
  "flatbuffers",
  "rayon",
  "ssab",
- "sscpe",
  "sspj",
  "walkdir",
 ]
@@ -208,10 +207,6 @@ dependencies = [
  "rayon",
  "ssconverter3",
 ]
-
-[[package]]
-name = "sscpe"
-version = "0.1.0"
 
 [[package]]
 name = "sspj"

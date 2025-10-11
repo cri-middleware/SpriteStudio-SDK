@@ -7,7 +7,6 @@ edition = "2024"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-sscpe = { path = "../sscpe" }
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab" }
 flatbuffers = "25.9.23"
