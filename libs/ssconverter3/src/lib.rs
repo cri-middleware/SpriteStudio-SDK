@@ -10,6 +10,7 @@ use sspj::ssloader::SsLoader;
 use sspj::sspj::SsProject;
 use sspj::ssloader::SspjError;
 use ssab::ssab::{SsAnimeBinaryT};
+use ssab::ssab_cache;
 
 pub struct SspjLoader {
     path_buf: PathBuf,
@@ -87,11 +88,15 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
     });
 
     // convert ssab structures to binary data
-    let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(_anime_binary, f)| {
+    let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(anime_binary_t, f)| {
         // TODO: implement
-
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
+        let mut ssab_cache = ssab::ssab_cache::SsabCache::new();
+        let offset = ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t);
+        ssab::ssab::finish_ss_anime_binary_buffer(&mut fb, offset);
+        let buf = fb.finished_data();
         let output_file = format!("{}.ssab", PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
-        (output_file, Vec::new())
+        (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
     // convert ssqb structures to binary data

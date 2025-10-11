@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 flatbuffers = { version = "25.9.23", features = ["default"] }
+ordered-float = "5.1.0"
