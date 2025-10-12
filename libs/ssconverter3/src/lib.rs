@@ -10,7 +10,6 @@ use sspj::ssloader::SsLoader;
 use sspj::sspj::SsProject;
 use sspj::ssloader::SspjError;
 use ssab::ssab::{SsAnimeBinaryT};
-use ssab::ssab_cache;
 
 pub struct SspjLoader {
     path_buf: PathBuf,

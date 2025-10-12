@@ -1,5 +1,5 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
-use crate::ssqb::{Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SequenceT, SsSequenceBinary, SsSequenceBinaryArgs, SsSequenceBinaryT};
+use crate::ssqb::{Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SsSequenceBinary, SsSequenceBinaryArgs, SsSequenceBinaryT};
 
 pub fn create_shared_sequence_item_list<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
