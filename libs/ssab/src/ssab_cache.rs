@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use crate::ssab::{CellMap, CellMapArgs, CellMapT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T};
+use crate::ssab::{CellMap, CellMapArgs, CellMapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T};
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -84,9 +84,9 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_cell_map<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        cell_map: &Vec<CellMapT>
+        cell_map_t_vec: &Vec<CellMapT>
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<CellMap<'bldr>>>> {
-        let a = cell_map.iter().map(|cell_map_t| {
+        let cell_map = cell_map_t_vec.iter().map(|cell_map_t| {
             let mut cell_map_args = CellMapArgs::default();
             cell_map_args.name = Some(fb.create_shared_string(&cell_map_t.name));
             cell_map_args.image_path = cell_map_t.image_path.as_ref().map(|s| fb.create_shared_string(s));
@@ -98,7 +98,41 @@ impl<'bldr> SsabCache<'bldr> {
             CellMap::create(fb, &cell_map_args)
         }).collect::<Vec<WIPOffset<CellMap<'bldr>>>>();
 
-        fb.create_vector(&a)
+        fb.create_vector(&cell_map)
+    }
+
+    fn create_shared_table_data<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        table_data_t_vec: &Vec<SoundFileT>,
+    ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SoundFile<'bldr>>>> {
+        let table_data = table_data_t_vec.iter().map(|table_data_t| {
+            let mut sound_file_args = SoundFileArgs::default();
+            sound_file_args.name = Some(fb.create_shared_string(&table_data_t.name));
+            sound_file_args.path = table_data_t.path.as_ref().map(|s| fb.create_shared_string(s));
+            sound_file_args.time_total = table_data_t.time_total;
+
+            SoundFile::create(fb, &sound_file_args)
+        }).collect::<Vec<WIPOffset<SoundFile<'bldr>>>>();
+
+        fb.create_vector(&table_data)
+    }
+
+    fn create_shared_sound_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        sound_list_t_vec: &Vec<SoundListT>
+    ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SoundList<'bldr>>>> {
+        let sound_list = sound_list_t_vec.iter().map(|sound_list_t| {
+            let mut sound_list_args = SoundListArgs::default();
+            sound_list_args.name = Some(fb.create_shared_string(&sound_list_t.name));
+            //sound_list_args.table_data = self.create_shared_table_data(fb, &sound_list_t.table_data);
+            sound_list_args.table_data = sound_list_t.table_data.as_ref().map(|table_data| { self.create_shared_table_data(fb, table_data) });
+
+            SoundList::create(fb, &sound_list_args)
+        }).collect::<Vec<WIPOffset<SoundList<'bldr>>>>();
+
+        fb.create_vector(&sound_list)
     }
 
     pub fn create_shared_anime_binary<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
@@ -111,7 +145,7 @@ impl<'bldr> SsabCache<'bldr> {
         anime_binary_args.animation_pack = None; // TODO: implement
         anime_binary_args.cell_map = ss_anime_binary_t.cell_map.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
         anime_binary_args.effect = None;
-        anime_binary_args.sound_list = None;
+        anime_binary_args.sound_list = ss_anime_binary_t.sound_list.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
         anime_binary_args.font_bitmap = None;
         anime_binary_args.dependencies = None;
 

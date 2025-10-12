@@ -1,8 +1,8 @@
 use sspj::ssqe::{SsSequence, SsSequenceItem};
 use crate::ssqbt;
 
-fn convert_sequence_t_list(sequence_list: &Vec<SsSequence>) -> Vec<ssab::ssqb::SequenceT> {
-    sequence_list.iter().map(|sequence| {
+fn convert_sequence_t_list(sequence_list: &Vec<SsSequence>) -> Option<Vec<ssab::ssqb::SequenceT>> {
+    Some(sequence_list.iter().map(|sequence| {
         let mut sequence_t = ssab::ssqb::SequenceT::default();
         sequence_t.name = sequence.name.clone();
         sequence_t.index = sequence.index;
@@ -14,7 +14,7 @@ fn convert_sequence_t_list(sequence_list: &Vec<SsSequence>) -> Vec<ssab::ssqb::S
         sequence_t.list = Some(convert_sequence_item_t_list(&sequence.list));
 
         sequence_t
-    }).collect::<Vec<ssab::ssqb::SequenceT>>()
+    }).collect::<Vec<ssab::ssqb::SequenceT>>())
 }
 
 fn convert_sequence_item_t_list(sequence_item_list: &Vec<SsSequenceItem>) -> Vec<ssab::ssqb::SequenceItemT> {
@@ -30,7 +30,7 @@ fn convert_sequence_item_t_list(sequence_item_list: &Vec<SsSequenceItem>) -> Vec
 
 pub fn convert_ss_sequence_binary_t(sequence_pack: &sspj::ssqe::SsSequencePack) -> ssab::ssqb::SsSequenceBinaryT {
     let mut ss_sequence_binary_t = ssab::ssqb::SsSequenceBinaryT::default();
-    ss_sequence_binary_t.sequence_list = Some(ssqbt::convert_sequence_t_list(&sequence_pack.sequence_list));
+    ss_sequence_binary_t.sequence_list = ssqbt::convert_sequence_t_list(&sequence_pack.sequence_list);
 
     ss_sequence_binary_t
 }
