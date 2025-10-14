@@ -61,8 +61,7 @@ pub struct CResultConvert {
  */
 
 pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result<HashMap<String, Vec<u8>>, SspjError> {
-    let sspj_name = path.file_stem().unwrap().to_string_lossy();
-    let sspj_loader = crate::SspjLoader::new(path);
+    let sspj_loader = SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
         Err(error) => {
@@ -90,7 +89,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
     let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(_anime_binary, f)| {
         // TODO: implement
 
-        let output_file = format!("{}_{}.ssab", sspj_name, PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
+        let output_file = format!("{}.ssab", PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
         (output_file, Vec::new())
     }).collect::<HashMap<String, Vec<u8>>>();
 
@@ -101,7 +100,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
         ssab::ssqb::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
-        let output_file = format!("{}_{}.ssqb", sspj_name, PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
+        let output_file = format!("{}.ssqb", PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
