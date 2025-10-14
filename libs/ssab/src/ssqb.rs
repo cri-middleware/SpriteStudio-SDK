@@ -10,9 +10,9 @@ extern crate flatbuffers;
 use self::flatbuffers::{EndianScalar, Follow};
 
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_SEQUENCE_TYPE: i8 = 0;
+pub const ENUM_MIN_SEQUENCE_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_SEQUENCE_TYPE: i8 = 2;
+pub const ENUM_MAX_SEQUENCE_TYPE: u8 = 2;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
 pub const ENUM_VALUES_SEQUENCE_TYPE: [SequenceType; 3] = [
@@ -23,15 +23,15 @@ pub const ENUM_VALUES_SEQUENCE_TYPE: [SequenceType; 3] = [
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
-pub struct SequenceType(pub i8);
+pub struct SequenceType(pub u8);
 #[allow(non_upper_case_globals)]
 impl SequenceType {
   pub const Last: Self = Self(0);
   pub const Keep: Self = Self(1);
   pub const Top: Self = Self(2);
 
-  pub const ENUM_MIN: i8 = 0;
-  pub const ENUM_MAX: i8 = 2;
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 2;
   pub const ENUM_VALUES: &'static [Self] = &[
     Self::Last,
     Self::Keep,
@@ -60,7 +60,7 @@ impl<'a> flatbuffers::Follow<'a> for SequenceType {
   type Inner = Self;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = unsafe { flatbuffers::read_scalar_at::<i8>(buf, loc) };
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
     Self(b)
   }
 }
@@ -69,20 +69,20 @@ impl flatbuffers::Push for SequenceType {
     type Output = SequenceType;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        unsafe { flatbuffers::emplace_scalar::<i8>(dst, self.0); }
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
     }
 }
 
 impl flatbuffers::EndianScalar for SequenceType {
-  type Scalar = i8;
+  type Scalar = u8;
   #[inline]
-  fn to_little_endian(self) -> i8 {
+  fn to_little_endian(self) -> u8 {
     self.0.to_le()
   }
   #[inline]
   #[allow(clippy::wrong_self_convention)]
-  fn from_little_endian(v: i8) -> Self {
-    let b = i8::from_le(v);
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
     Self(b)
   }
 }
@@ -93,7 +93,7 @@ impl<'a> flatbuffers::Verifiable for SequenceType {
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
-    i8::run_verifier(v, pos)
+    u8::run_verifier(v, pos)
   }
 }
 
