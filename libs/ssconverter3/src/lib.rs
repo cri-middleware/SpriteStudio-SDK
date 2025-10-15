@@ -1,5 +1,6 @@
 mod ssqbt;
 mod ssabt;
+pub mod parse_args;
 
 use std::collections::HashMap;
 use std::ffi::OsString;
