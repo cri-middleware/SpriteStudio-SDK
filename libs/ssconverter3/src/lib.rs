@@ -1,6 +1,6 @@
 mod ssqbt;
 mod ssabt;
-pub mod parse_args;
+pub mod utility;
 
 use std::collections::HashMap;
 use std::ffi::OsString;
@@ -54,6 +54,16 @@ impl Default for ConverterConfig {
 /*
 use std::ffi::c_char;
 #[repr(C)]
+pub struct CConvertConfig {
+    pub debug: bool,
+    pub split: bool,
+}
+#[repr(C)]
+pub struct CConverterConfig {
+    convert_config: CConvertConfig,
+    out_dir: Option<OsString>,
+}
+#[repr(C)]
 pub struct CResultConvert {
     pub name: *mut c_char,
     pub data: *mut u8,
@@ -73,7 +83,6 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
     let mut ssab_model_list = sspj.anime_list.iter().map(| anime_pack| {
-        // TODO: implement
         ssabt::convert_ss_anime_binary_t(anime_pack, &sspj)
     }).collect::<Vec<SsAnimeBinaryT>>();
 
@@ -81,9 +90,9 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
         ssqbt::convert_ss_sequence_binary_t(sequence)
     }).collect::<Vec<ssab::ssqb::SsSequenceBinaryT>>();
 
-    // optimize ssab ssab structures (e.g. set dependencies)
+
     ssab_model_list.iter_mut().for_each(|_ss_anime_binary_t| {
-        // TODO: implement
+        // optimize ssab ssab structures (e.g. add dependency animations, remove unused ss*e data)
     });
 
     // convert ssab structures to binary data
