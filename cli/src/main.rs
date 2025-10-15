@@ -9,13 +9,17 @@ fn main() {
         println!("usage: ssconverter3 <sspj path>");
         return;
     }
-    let path = Path::new(args[1].as_os_str());
+    // let path = Path::new(args[1].as_os_str());
+    let sspj_paths = ssconverter3::parse_args::parse_args(&args);
     let config = ssconverter3::ConverterConfig::default();
-    let r = ssconverter3::convert_sspj_to_ssab_files(&path, &config);
-    match r {
-        Ok(_) => (),
-        Err(e) => println!("{:?}", e),
-    }
+    sspj_paths.iter().for_each(|p| {
+        println!("convert {:?}", p.display());
+        let r = ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &config);
+        match r {
+            Ok(_) => (),
+            Err(e) => println!("{:?}", e),
+        }
+    })
 }
 
 #[cfg(test)]
