@@ -25,7 +25,7 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
         return WalkDir::new(path)
             .into_iter()
             .filter_entry(|entry| { let name = entry.file_name();
-                name != "." && !name.to_string_lossy().starts_with(".")
+                !name.to_string_lossy().starts_with(".git")
             })
             .filter_map(Result::ok)
             .filter(|entry| is_sspj_file(entry.path()))

@@ -4,7 +4,16 @@ use std::thread::JoinHandle;
 use ssconverter3;
 
 fn print_usage(prog: &OsStr) {
-    println!("usage: {} <sspj_file OR directory> [sspj_file OR directory...]", prog.to_string_lossy());
+    let p = prog.to_string_lossy();
+    let formatted_output = format!(r#"
+single sspj file usage:
+$ {} <sspj_file>
+
+multiple sspj files usage:
+$ {} <sspj_file OR directory> [sspj_file OR directory...]
+"#,p, p,
+    );
+    println!("{}", formatted_output);
 }
 fn main() {
     let args: Vec<OsString> = env::args_os().collect();
