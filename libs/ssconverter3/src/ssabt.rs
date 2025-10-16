@@ -30,13 +30,13 @@ pub fn convert_vec3t(point3: &SsPoint3) -> ssab::ssab::Vec3T {
     vec
 }
 #[allow(dead_code)] // TODO: delete when using the function
-pub fn convert_vec3t_list(point3_list: &Vec<SsPoint3>) -> Vec<ssab::ssab::Vec3T> {
+pub fn convert_vec3t_list(point3_list: &[SsPoint3]) -> Vec<ssab::ssab::Vec3T> {
     point3_list.iter().map(|point3| {
         convert_vec3t(point3)
     }).collect::<Vec<ssab::ssab::Vec3T>>()
 }
 
-pub fn convert_flat_list_from_vec3t_list(point3_list: &Vec<SsPoint3>) -> Option<Vec<u16>> {
+pub fn convert_flat_list_from_vec3t_list(point3_list: &[SsPoint3]) -> Option<Vec<u16>> {
     Some(point3_list.iter().flat_map(|point3| {
         [point3.x as u16, point3.y as u16, point3.z as u16]
     }).collect::<Vec<u16>>())
@@ -63,7 +63,7 @@ pub fn convert_cellt(sscell: &SsCell) -> CellT {
 
     cell_t
 }
-pub fn convert_cellt_list(cells: &Vec<SsCell>) -> Option<Vec<CellT>> {
+pub fn convert_cellt_list(cells: &[SsCell]) -> Option<Vec<CellT>> {
     Some(cells.iter().map(|cell| {
         convert_cellt(cell)
     }).collect::<Vec<CellT>>())
@@ -87,14 +87,24 @@ pub fn convert_cellmapt(cellmap: &SsCellMap) -> CellMapT {
 
     cell_map_t
 }
-pub fn convert_cellmapt_list(sspj: &SsProject, cellmap_names: &Vec<SsCellMap>) -> Option<Vec<CellMapT>> {
+pub fn convert_cellmapt_list(sspj: &SsProject, cellmap_names: &[SsCellMap]) -> Option<Vec<CellMapT>> {
     Some(cellmap_names.iter().map(|cellmap| {
         convert_cellmapt(cellmap)
     }).collect::<Vec<CellMapT>>())
 }
 
-fn convert_effect_list(_sspj: &SsProject, effect_file_vec: &Vec<SsEffectFile>) -> Option<Vec<EffectT>> {
-    todo!()
+fn convert_effect_list(_sspj: &SsProject, effect_file_vec: &[SsEffectFile]) -> Option<Vec<EffectT>> {
+    Some(effect_file_vec.iter().map(|effect_file| {
+        let mut effect_t = EffectT::default();
+        effect_t.name = effect_file.name.clone();
+        // effect_t.fps = effect_file.effect_data.fps as i16;
+        // effect_t.is_lock_rand_seed;
+        // effect_t.lock_rand_seed;
+        // effect_t.layout_scale;
+        // effect_t.effect_node;
+
+        effect_t
+    }).collect::<Vec<EffectT>>())
 }
 
 pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList) -> Option<Vec<ssab::ssab::SoundFileT>> {
@@ -109,7 +119,7 @@ pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList
     }).collect::<Vec<ssab::ssab::SoundFileT>>())
 }
 
-pub fn convert_sound_list(sspj: &SsProject, sound_list: &Vec<SsAudioPack>) -> Option<Vec<ssab::ssab::SoundListT>> {
+pub fn convert_sound_list(sspj: &SsProject, sound_list: &[SsAudioPack]) -> Option<Vec<ssab::ssab::SoundListT>> {
     if sound_list.is_empty() {
         return None;
     }
@@ -139,8 +149,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> 
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
     anime_binary.animation_pack = None;
     anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &sspj.cellmap_list);
-    // anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
-    anime_binary.effect = None;
+    anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
     anime_binary.sound_list = ssabt::convert_sound_list(&sspj, &sspj.sound_list);
     anime_binary.font_bitmap = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
     anime_binary.dependencies = None;

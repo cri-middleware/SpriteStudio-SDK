@@ -183,7 +183,7 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_cell_map<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        cell_map_t_vec: &Vec<CellMapT>
+        cell_map_t_vec: &[CellMapT]
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<CellMap<'bldr>>>> {
         let cell_map = cell_map_t_vec.iter().map(|cell_map_t| {
             let mut cell_map_args = CellMapArgs::default();
@@ -206,7 +206,7 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_table_data<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        table_data_t_vec: &Vec<SoundFileT>,
+        table_data_t_vec: &[SoundFileT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SoundFile<'bldr>>>> {
         let table_data = table_data_t_vec.iter().map(|table_data_t| {
             let mut sound_file_args = SoundFileArgs::default();
@@ -223,7 +223,7 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_sound_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        sound_list_t_vec: &Vec<SoundListT>
+        sound_list_t_vec: &[SoundListT]
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SoundList<'bldr>>>> {
         let sound_list = sound_list_t_vec.iter().map(|sound_list_t| {
             let mut sound_list_args = SoundListArgs::default();
@@ -240,7 +240,7 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_font_bitmap<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        font_bitmap_t_vec: &Vec<FontBitmapT>,
+        font_bitmap_t_vec: &[FontBitmapT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<FontBitmap<'bldr>>>> {
         let font_bitmap = font_bitmap_t_vec.iter().map(|font_bitmap_t| {
             let mut font_bitmap_args = FontBitmapArgs::default();

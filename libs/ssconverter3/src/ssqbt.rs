@@ -17,7 +17,7 @@ fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssq
     }).collect::<Vec<ssab::ssqb::SequenceT>>())
 }
 
-fn convert_sequence_item_t_list(sequence_item_list: &Vec<SsSequenceItem>) -> Vec<ssab::ssqb::SequenceItemT> {
+fn convert_sequence_item_t_list(sequence_item_list: &[SsSequenceItem]) -> Vec<ssab::ssqb::SequenceItemT> {
     sequence_item_list.iter().map(|sequence_item| {
         let mut sequence_item_t = ssab::ssqb::SequenceItemT::default();
         sequence_item_t.ref_anime = Some(sequence_item.ref_anime.clone());
