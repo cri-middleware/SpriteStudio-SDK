@@ -9,41 +9,41 @@ use core::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::{EndianScalar, Follow};
 
-pub enum AnimationOffset {}
+pub enum PreparationOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct Animation<'a> {
+pub struct Preparation<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for Animation<'a> {
-  type Inner = Animation<'a>;
+impl<'a> flatbuffers::Follow<'a> for Preparation<'a> {
+  type Inner = Preparation<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> Animation<'a> {
+impl<'a> Preparation<'a> {
   pub const VT_STUB: flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    Animation { _tab: table }
+    Preparation { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args AnimationArgs
-  ) -> flatbuffers::WIPOffset<Animation<'bldr>> {
-    let mut builder = AnimationBuilder::new(_fbb);
+    args: &'args PreparationArgs
+  ) -> flatbuffers::WIPOffset<Preparation<'bldr>> {
+    let mut builder = PreparationBuilder::new(_fbb);
     builder.add_stub(args.stub);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> AnimationT {
+  pub fn unpack(&self) -> PreparationT {
     let stub = self.stub();
-    AnimationT {
+    PreparationT {
       stub,
     }
   }
@@ -53,11 +53,11 @@ impl<'a> Animation<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(Animation::VT_STUB, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(Preparation::VT_STUB, Some(0)).unwrap()}
   }
 }
 
-impl flatbuffers::Verifiable for Animation<'_> {
+impl flatbuffers::Verifiable for Preparation<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -69,140 +69,140 @@ impl flatbuffers::Verifiable for Animation<'_> {
     Ok(())
   }
 }
-pub struct AnimationArgs {
+pub struct PreparationArgs {
     pub stub: i32,
 }
-impl<'a> Default for AnimationArgs {
+impl<'a> Default for PreparationArgs {
   #[inline]
   fn default() -> Self {
-    AnimationArgs {
+    PreparationArgs {
       stub: 0,
     }
   }
 }
 
-pub struct AnimationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct PreparationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PreparationBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_stub(&mut self, stub: i32) {
-    self.fbb_.push_slot::<i32>(Animation::VT_STUB, stub, 0);
+    self.fbb_.push_slot::<i32>(Preparation::VT_STUB, stub, 0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimationBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PreparationBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    AnimationBuilder {
+    PreparationBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<Animation<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<Preparation<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for Animation<'_> {
+impl core::fmt::Debug for Preparation<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("Animation");
+    let mut ds = f.debug_struct("Preparation");
       ds.field("stub", &self.stub());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct AnimationT {
+pub struct PreparationT {
   pub stub: i32,
 }
-impl Default for AnimationT {
+impl Default for PreparationT {
   fn default() -> Self {
     Self {
       stub: 0,
     }
   }
 }
-impl AnimationT {
+impl PreparationT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<Animation<'b>> {
+  ) -> flatbuffers::WIPOffset<Preparation<'b>> {
     let stub = self.stub;
-    Animation::create(_fbb, &AnimationArgs{
+    Preparation::create(_fbb, &PreparationArgs{
       stub,
     })
   }
 }
 #[inline]
-/// Verifies that a buffer of bytes contains a `Animation`
+/// Verifies that a buffer of bytes contains a `Preparation`
 /// and returns it.
 /// Note that verification is still experimental and may not
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
-/// `root_as_animation_unchecked`.
-pub fn root_as_animation(buf: &[u8]) -> Result<Animation, flatbuffers::InvalidFlatbuffer> {
-  flatbuffers::root::<Animation>(buf)
+/// `root_as_preparation_unchecked`.
+pub fn root_as_preparation(buf: &[u8]) -> Result<Preparation, flatbuffers::InvalidFlatbuffer> {
+  flatbuffers::root::<Preparation>(buf)
 }
 #[inline]
 /// Verifies that a buffer of bytes contains a size prefixed
-/// `Animation` and returns it.
+/// `Preparation` and returns it.
 /// Note that verification is still experimental and may not
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
-/// `size_prefixed_root_as_animation_unchecked`.
-pub fn size_prefixed_root_as_animation(buf: &[u8]) -> Result<Animation, flatbuffers::InvalidFlatbuffer> {
-  flatbuffers::size_prefixed_root::<Animation>(buf)
+/// `size_prefixed_root_as_preparation_unchecked`.
+pub fn size_prefixed_root_as_preparation(buf: &[u8]) -> Result<Preparation, flatbuffers::InvalidFlatbuffer> {
+  flatbuffers::size_prefixed_root::<Preparation>(buf)
 }
 #[inline]
 /// Verifies, with the given options, that a buffer of bytes
-/// contains a `Animation` and returns it.
+/// contains a `Preparation` and returns it.
 /// Note that verification is still experimental and may not
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
-/// `root_as_animation_unchecked`.
-pub fn root_as_animation_with_opts<'b, 'o>(
+/// `root_as_preparation_unchecked`.
+pub fn root_as_preparation_with_opts<'b, 'o>(
   opts: &'o flatbuffers::VerifierOptions,
   buf: &'b [u8],
-) -> Result<Animation<'b>, flatbuffers::InvalidFlatbuffer> {
-  flatbuffers::root_with_opts::<Animation<'b>>(opts, buf)
+) -> Result<Preparation<'b>, flatbuffers::InvalidFlatbuffer> {
+  flatbuffers::root_with_opts::<Preparation<'b>>(opts, buf)
 }
 #[inline]
 /// Verifies, with the given verifier options, that a buffer of
-/// bytes contains a size prefixed `Animation` and returns
+/// bytes contains a size prefixed `Preparation` and returns
 /// it. Note that verification is still experimental and may not
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
-/// `root_as_animation_unchecked`.
-pub fn size_prefixed_root_as_animation_with_opts<'b, 'o>(
+/// `root_as_preparation_unchecked`.
+pub fn size_prefixed_root_as_preparation_with_opts<'b, 'o>(
   opts: &'o flatbuffers::VerifierOptions,
   buf: &'b [u8],
-) -> Result<Animation<'b>, flatbuffers::InvalidFlatbuffer> {
-  flatbuffers::size_prefixed_root_with_opts::<Animation<'b>>(opts, buf)
+) -> Result<Preparation<'b>, flatbuffers::InvalidFlatbuffer> {
+  flatbuffers::size_prefixed_root_with_opts::<Preparation<'b>>(opts, buf)
 }
 #[inline]
-/// Assumes, without verification, that a buffer of bytes contains a Animation and returns it.
+/// Assumes, without verification, that a buffer of bytes contains a Preparation and returns it.
 /// # Safety
-/// Callers must trust the given bytes do indeed contain a valid `Animation`.
-pub unsafe fn root_as_animation_unchecked(buf: &[u8]) -> Animation {
-  unsafe { flatbuffers::root_unchecked::<Animation>(buf) }
+/// Callers must trust the given bytes do indeed contain a valid `Preparation`.
+pub unsafe fn root_as_preparation_unchecked(buf: &[u8]) -> Preparation {
+  unsafe { flatbuffers::root_unchecked::<Preparation>(buf) }
 }
 #[inline]
-/// Assumes, without verification, that a buffer of bytes contains a size prefixed Animation and returns it.
+/// Assumes, without verification, that a buffer of bytes contains a size prefixed Preparation and returns it.
 /// # Safety
-/// Callers must trust the given bytes do indeed contain a valid size prefixed `Animation`.
-pub unsafe fn size_prefixed_root_as_animation_unchecked(buf: &[u8]) -> Animation {
-  unsafe { flatbuffers::size_prefixed_root_unchecked::<Animation>(buf) }
+/// Callers must trust the given bytes do indeed contain a valid size prefixed `Preparation`.
+pub unsafe fn size_prefixed_root_as_preparation_unchecked(buf: &[u8]) -> Preparation {
+  unsafe { flatbuffers::size_prefixed_root_unchecked::<Preparation>(buf) }
 }
 #[inline]
-pub fn finish_animation_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(
+pub fn finish_preparation_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    root: flatbuffers::WIPOffset<Animation<'a>>) {
+    root: flatbuffers::WIPOffset<Preparation<'a>>) {
   fbb.finish(root, None);
 }
 
 #[inline]
-pub fn finish_size_prefixed_animation_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Animation<'a>>) {
+pub fn finish_size_prefixed_preparation_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>, root: flatbuffers::WIPOffset<Preparation<'a>>) {
   fbb.finish_size_prefixed(root, None);
 }

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ssab::ssab::{CellMapT, CellT, EffectT, FontBitmapT, RectT, TexFilterMode, TexWrapMode};
+use ssab::common::{CellMapT, CellT, EffectT, FontBitmapT};
 use sspj::ssae::SsAnimePack;
 use sspj::ssce::{SsCell, SsCellMap};
 use sspj::sscharmap::SsCharMap;
@@ -10,30 +10,30 @@ use sspj::sstypes;
 use sspj::sstypes::{SsPoint2, SsPoint3};
 use crate::model_t::ssabt;
 
-pub fn convert_vec2t(point2: &SsPoint2) -> ssab::ssab::Vec2T {
-    let mut vec = ssab::ssab::Vec2T::default();
+pub fn convert_vec2t(point2: &SsPoint2) -> ssab::common::Vec2T {
+    let mut vec = ssab::common::Vec2T::default();
     vec.x = point2.x;
     vec.y = point2.y;
     vec
 }
-pub fn convert_vec2t_list(point2_list: &[SsPoint2]) -> Option<Vec<ssab::ssab::Vec2T>> {
+pub fn convert_vec2t_list(point2_list: &[SsPoint2]) -> Option<Vec<ssab::common::Vec2T>> {
     Some(point2_list.iter().map(|point2| {
         convert_vec2t(point2)
-    }).collect::<Vec<ssab::ssab::Vec2T>>())
+    }).collect::<Vec<ssab::common::Vec2T>>())
 }
 #[allow(dead_code)] // TODO: delete when using the function
-pub fn convert_vec3t(point3: &SsPoint3) -> ssab::ssab::Vec3T {
-    let mut vec = ssab::ssab::Vec3T::default();
+pub fn convert_vec3t(point3: &SsPoint3) -> ssab::common::Vec3T {
+    let mut vec = ssab::common::Vec3T::default();
     vec.x = point3.x;
     vec.y = point3.y;
     vec.z = point3.z;
     vec
 }
 #[allow(dead_code)] // TODO: delete when using the function
-pub fn convert_vec3t_list(point3_list: &[SsPoint3]) -> Vec<ssab::ssab::Vec3T> {
+pub fn convert_vec3t_list(point3_list: &[SsPoint3]) -> Vec<ssab::common::Vec3T> {
     point3_list.iter().map(|point3| {
         convert_vec3t(point3)
-    }).collect::<Vec<ssab::ssab::Vec3T>>()
+    }).collect::<Vec<ssab::common::Vec3T>>()
 }
 
 pub fn convert_flat_list_from_vec3t_list(point3_list: &[SsPoint3]) -> Option<Vec<u16>> {
@@ -42,8 +42,8 @@ pub fn convert_flat_list_from_vec3t_list(point3_list: &[SsPoint3]) -> Option<Vec
     }).collect::<Vec<u16>>())
 }
 
-pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::RectT {
-    let mut rect = RectT::default();
+pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::common::RectT {
+    let mut rect = ssab::common::RectT::default();
     rect.x1 = x1;
     rect.y1 = y1;
     rect.x2 = x2;
@@ -75,13 +75,13 @@ pub fn convert_cellmapt(cellmap: &SsCellMap) -> CellMapT {
     cell_map_t.image_path = Some(cellmap.image_path.clone());
     cell_map_t.size_original = Some(Box::new(convert_vec2t(&cellmap.pixel_size)));
     cell_map_t.wrap_mode = match cellmap.wrap_mode {
-        sstypes::SsTexWrapMode::Clamp => TexWrapMode::Clamp,
-        sstypes::SsTexWrapMode::Repeat => TexWrapMode::Repeat,
-        sstypes::SsTexWrapMode::Mirror => TexWrapMode::Mirror,
+        sstypes::SsTexWrapMode::Clamp => ssab::common::TexWrapMode::Clamp,
+        sstypes::SsTexWrapMode::Repeat => ssab::common::TexWrapMode::Repeat,
+        sstypes::SsTexWrapMode::Mirror => ssab::common::TexWrapMode::Mirror,
     };
     cell_map_t.filter_mode = match cellmap.filter_mode {
-        sstypes::SsTexFilterMode::Nearest => TexFilterMode::Nearest,
-        sstypes::SsTexFilterMode::Linear => TexFilterMode::Linear,
+        sstypes::SsTexFilterMode::Nearest => ssab::common::TexFilterMode::Nearest,
+        sstypes::SsTexFilterMode::Linear => ssab::common::TexFilterMode::Linear,
     };
     cell_map_t.cells = convert_cellt_list(&cellmap.cells);
 
@@ -107,30 +107,30 @@ fn convert_effect_list(_sspj: &SsProject, effect_file_vec: &[SsEffectFile]) -> O
     }).collect::<Vec<EffectT>>())
 }
 
-pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList) -> Option<Vec<ssab::ssab::SoundFileT>> {
+pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList) -> Option<Vec<ssab::common::SoundFileT>> {
     Some(sssound_list.sounds.iter().map(|sssound| {
-        let mut sound_file_t = ssab::ssab::SoundFileT::default();
+        let mut sound_file_t = ssab::common::SoundFileT::default();
 
         sound_file_t.name = sssound.alias.clone();
         sound_file_t.path = Some(sssound.filename.clone());
         sound_file_t.time_total = sssound.msec;
 
         sound_file_t
-    }).collect::<Vec<ssab::ssab::SoundFileT>>())
+    }).collect::<Vec<ssab::common::SoundFileT>>())
 }
 
-pub fn convert_sound_list(sspj: &SsProject, sound_list: &[SsAudioPack]) -> Option<Vec<ssab::ssab::SoundListT>> {
+pub fn convert_sound_list(sspj: &SsProject, sound_list: &[SsAudioPack]) -> Option<Vec<ssab::common::SoundListT>> {
     if sound_list.is_empty() {
         return None;
     }
     Some(sound_list.iter().map(|sssound_pack| {
-        let mut sound_list_t = ssab::ssab::SoundListT::default();
+        let mut sound_list_t = ssab::common::SoundListT::default();
 
         sound_list_t.name = sssound_pack.name.clone();
         sound_list_t.table_data = convert_sound_file_list(sspj, &sssound_pack.table);
 
         sound_list_t
-    }).collect::<Vec<ssab::ssab::SoundListT>>())
+    }).collect::<Vec<ssab::common::SoundListT>>())
 }
 
 pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCharMap>) -> Option<Vec<FontBitmapT>> {
@@ -152,7 +152,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> 
     anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
     anime_binary.sound_list = ssabt::convert_sound_list(&sspj, &sspj.sound_list);
     anime_binary.font_bitmap = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
-    anime_binary.dependencies = None;
+    anime_binary.instances = None;
 
     anime_binary
 }

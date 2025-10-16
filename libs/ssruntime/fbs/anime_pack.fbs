@@ -1,5 +1,0 @@
-table AnimePack {
-  stub: int;
-}
-
-root_type AnimePack;

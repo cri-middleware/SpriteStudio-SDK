@@ -1,5 +1,0 @@
-table Animation {
-  stub: int;
-}
-
-root_type Animation;

@@ -3,8 +3,11 @@
 
 // @generated
 
+use core::mem;
+use core::cmp::Ordering;
 
 extern crate flatbuffers;
+use self::flatbuffers::{EndianScalar, Follow};
 
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_SEQUENCE_TYPE: u8 = 0;
@@ -174,7 +177,7 @@ impl flatbuffers::Verifiable for SequenceItem<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("ref_anime", Self::VT_REF_ANIME, false)?
@@ -376,7 +379,7 @@ impl flatbuffers::Verifiable for Sequence<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<i32>("index", Self::VT_INDEX, false)?
@@ -557,7 +560,7 @@ impl flatbuffers::Verifiable for SsSequenceBinary<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("version", Self::VT_VERSION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
