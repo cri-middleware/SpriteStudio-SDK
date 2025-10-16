@@ -111,7 +111,8 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
     // convert ssqb structures to binary data
     let ssqb_bin_map = ssqb_model_list.iter().zip(sspj.sequencepack_names.iter()).map(|(sequence_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = ssab::ssqb_cache::create_shared_sequence_binary(&mut fb, sequence_binary_t);
+        let mut ssqb_cache = ssab::ssqb_cache::SsqbCache::new();
+        let offset = ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t);
         ssab::ssqb::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
