@@ -139,7 +139,7 @@ pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Resu
                 return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "{}")));
             };
             let dir = parent.join(format!("{}_ssab", stem.to_string_lossy()));
-            if !dir.as_path().exists() {
+            if !dir.exists() {
                 std::fs::create_dir(dir.as_path()).expect("TODO: panic message"); // TODO: FIXME Error handling
             }
 
