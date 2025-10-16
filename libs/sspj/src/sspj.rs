@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 use rayon::prelude::*;
-use crate::ssae::SsAnimePack;
+use crate::ssae::{SsAnimation, SsAnimePack};
 use crate::ssce::SsCellMap;
 use crate::sscharmap::SsCharMap;
 use crate::ssee::SsEffectFile;
@@ -105,6 +105,15 @@ where
         value: Vec<TextureInfo>,
     }
     Files::deserialize(deserializer).map(|l| l.files.value)
+}
+impl SsProject {
+    fn find_animation(& mut self, ref_anime_pack: &str, ref_anime: &str) -> Option<&SsAnimation> {
+        self.anime_list.iter().find(|ss_animepack| {
+            ss_animepack.name == ref_anime_pack
+        }).unwrap().anime_list.iter().find(|ss_anime| {
+            ss_anime.name == ref_anime
+        })
+    }
 }
 
 impl SsLoader for SsProject {

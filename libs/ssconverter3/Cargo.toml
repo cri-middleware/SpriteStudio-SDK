@@ -7,9 +7,16 @@ edition = "2024"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-sscpe = { path = "../sscpe" }
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab" }
 flatbuffers = "25.9.23"
 rayon = "1.11.0"
 walkdir = "2.5.0"
+ordered-float = "5.1.0"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = "symbols"

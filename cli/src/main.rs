@@ -1,18 +1,24 @@
 use std::env;
-use std::ffi::OsString;
-use std::path::Path;
+use std::ffi::{OsStr, OsString};
+use rayon::prelude::*;
 use ssconverter3;
 
+fn print_usage(prog: &OsStr) {
+    println!("usage: {} <sspj_file OR directory> [sspj_file OR directory...]", prog.to_string_lossy());
+}
 fn main() {
     let args: Vec<OsString> = env::args_os().collect();
     if args.len() <= 1 {
-        println!("usage: ssconverter3 <sspj path>");
+        print_usage(args[0].as_os_str());
         return;
     }
-    // let path = Path::new(args[1].as_os_str());
-    let sspj_paths = ssconverter3::parse_args::parse_args(&args);
+    let sspj_paths = ssconverter3::utility::parse_args(&args);
+    if sspj_paths.is_empty() {
+        print_usage(args[0].as_os_str());
+        return;
+    }
     let config = ssconverter3::ConverterConfig::default();
-    sspj_paths.iter().for_each(|p| {
+    sspj_paths.par_iter().for_each(|p| {
         println!("convert {:?}", p.display());
         let r = ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &config);
         match r {

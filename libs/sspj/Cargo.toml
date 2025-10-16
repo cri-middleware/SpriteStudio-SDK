@@ -10,3 +10,10 @@ crate-type = ["rlib"]
 serde = {  version = "1.0.219", features = ["derive"] }
 quick-xml = {  version = "0.38.3", features = ["serialize"] }
 rayon = "1.11.0"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = "symbols"

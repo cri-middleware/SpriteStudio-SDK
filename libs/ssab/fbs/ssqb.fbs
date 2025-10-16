@@ -1,4 +1,4 @@
-enum SequenceType: byte {
+enum SequenceType: ubyte {
   Last,
   Keep,
   Top,
