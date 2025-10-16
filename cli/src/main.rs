@@ -1,6 +1,5 @@
 use std::env;
 use std::ffi::{OsStr, OsString};
-use std::path::Path;
 use rayon::prelude::*;
 use ssconverter3;
 

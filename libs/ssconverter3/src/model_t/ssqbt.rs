@@ -1,5 +1,5 @@
 use sspj::ssqe::{SsSequence, SsSequenceItem};
-use crate::ssqbt;
+use crate::model_t::ssqbt;
 
 fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssqb::SequenceT>> {
     Some(sequence_list.iter().map(|sequence| {

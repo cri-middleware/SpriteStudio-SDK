@@ -107,11 +107,11 @@ where
     Files::deserialize(deserializer).map(|l| l.files.value)
 }
 impl SsProject {
-    fn find_animation(& mut self, animepack_name: &str, anime_name: &str) -> Option<&SsAnimation> {
+    fn find_animation(& mut self, ref_anime_pack: &str, ref_anime: &str) -> Option<&SsAnimation> {
         self.anime_list.iter().find(|ss_animepack| {
-            ss_animepack.name == animepack_name
+            ss_animepack.name == ref_anime_pack
         }).unwrap().anime_list.iter().find(|ss_anime| {
-            ss_anime.name == anime_name
+            ss_anime.name == ref_anime
         })
     }
 }

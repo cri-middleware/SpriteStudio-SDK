@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use crate::ssab::{Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, Rect, RectArgs, RectT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T};
+use ssab::ssab::{Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, Rect, RectArgs, RectT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T};
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {

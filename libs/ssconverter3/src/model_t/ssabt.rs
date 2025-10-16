@@ -8,7 +8,7 @@ use sspj::sspj::SsProject;
 use sspj::ssse::{SsAudioPack, SsSoundFileList};
 use sspj::sstypes;
 use sspj::sstypes::{SsPoint2, SsPoint3};
-use crate::ssabt;
+use crate::model_t::ssabt;
 
 pub fn convert_vec2t(point2: &SsPoint2) -> ssab::ssab::Vec2T {
     let mut vec = ssab::ssab::Vec2T::default();

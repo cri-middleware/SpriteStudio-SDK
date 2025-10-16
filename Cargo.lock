@@ -186,7 +186,6 @@ name = "ssab"
 version = "0.1.0"
 dependencies = [
  "flatbuffers",
- "ordered-float",
 ]
 
 [[package]]
@@ -194,6 +193,7 @@ name = "ssconverter3"
 version = "0.1.0"
 dependencies = [
  "flatbuffers",
+ "ordered-float",
  "rayon",
  "ssab",
  "sspj",

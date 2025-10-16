@@ -1,6 +1,5 @@
-use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
-use crate::ssqb::{Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SsSequenceBinary, SsSequenceBinaryArgs, SsSequenceBinaryT};
+use ssab::ssqb::{Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SsSequenceBinary, SsSequenceBinaryArgs, SsSequenceBinaryT};
 
 pub struct SsqbCache {
     
