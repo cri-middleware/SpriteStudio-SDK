@@ -1,0 +1,5 @@
+table FrameData {
+  stub: int;
+}
+
+root_type FrameData;

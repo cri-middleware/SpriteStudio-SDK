@@ -1,0 +1,15 @@
+[package]
+name = "ssruntime"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+flatbuffers = "25.9.23"
+ssab = { path = "../ssab" }
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
