@@ -30,7 +30,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use super::*;
     use rayon::prelude::*;
 
