@@ -6,3 +6,10 @@ edition = "2024"
 [dependencies]
 rayon = "1.11.0"
 ssconverter3 = { workspace = true }
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = "symbols"

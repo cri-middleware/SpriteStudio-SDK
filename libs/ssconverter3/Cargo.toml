@@ -12,3 +12,10 @@ ssab = { path = "../ssab" }
 flatbuffers = "25.9.23"
 rayon = "1.11.0"
 walkdir = "2.5.0"
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
