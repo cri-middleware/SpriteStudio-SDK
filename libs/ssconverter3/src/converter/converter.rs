@@ -8,6 +8,7 @@ use sspj::sspj::SsProject;
 use crate::cache::{ssab_cache, ssqb_cache};
 use crate::model_t::{ssabt, ssqbt};
 
+#[derive(Debug, Clone)]
 pub struct ConvertConfig {
     pub debug: bool,
     pub split: bool,
@@ -87,6 +88,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
     Ok(ssab_bin_map)
 }
 
+#[derive(Debug, Clone)]
 pub struct ConverterConfig {
     convert_config: ConvertConfig,
     out_dir: Option<OsString>,

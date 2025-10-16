@@ -1,6 +1,6 @@
 use std::env;
 use std::ffi::{OsStr, OsString};
-use rayon::prelude::*;
+use std::thread::JoinHandle;
 use ssconverter3;
 
 fn print_usage(prog: &OsStr) {
@@ -14,18 +14,26 @@ fn main() {
     }
     let sspj_paths = ssconverter3::utility::parse_args(&args);
     if sspj_paths.is_empty() {
-        print_usage(args[0].as_os_str());
+        print_usage(&args[0]);
         return;
     }
     let config = ssconverter3::ConverterConfig::default();
-    sspj_paths.par_iter().for_each(|p| {
+
+    let mut handlers: Vec<JoinHandle<()>> = Vec::new();
+    sspj_paths.into_iter().for_each(|p| {
         println!("convert {:?}", p.display());
-        let r = ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &config);
-        match r {
-            Ok(_) => (),
-            Err(e) => println!("{:?}", e),
-        }
-    })
+        handlers.push({
+            let c = config.clone();
+            std::thread::spawn(move || {
+                let r = ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &c);
+                match r {
+                    Ok(_) => (),
+                    Err(e) => println!("{:?}: {:?}", p.display(), e),
+                }
+            })
+        })
+    });
+    handlers.into_iter().for_each(|h| {h.join().unwrap()});
 }
 
 #[cfg(test)]
