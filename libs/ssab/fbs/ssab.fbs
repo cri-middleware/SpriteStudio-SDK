@@ -14,41 +14,146 @@ table Rect {
   y2: float;
 }
 
-enum TexFilterMode: byte {
+enum TexFilterMode: ubyte {
   Nearest,
   Linear,
 }
 
-enum TexWrapMode: byte {
+enum RenderBlendType: ubyte {
+    Mix,
+    Add,
+}
+
+
+enum TexWrapMode: ubyte {
   Clamp,
   Repeat,
   Mirror,
 }
 
-enum MeshDivType: byte {
+enum MeshDivType: ubyte {
   Unknown,
   PolylineBase,
   Boxdiv,
 }
 
-enum PartType: byte {
-    Null,
-    Normal,
-    Shape,
-    Text,
-    Nines,
-    Instance,
-    Armature,
-    Effect,
-    Mesh,
-    Movenode,
-    Constraint,
-    Mask,
-    Joint,
-    Bonepoint,
-    TransformConstraint,
-    Camera,
-    Audio,
+enum PartType: ubyte {
+  Null,
+  Normal,
+  Shape,
+  Text,
+  Nines,
+  Instance,
+  Armature,
+  Effect,
+  Mesh,
+  Movenode,
+  Constraint,
+  Mask,
+  Joint,
+  Bonepoint,
+  TransformConstraint,
+  Camera,
+  Audio,
+}
+
+enum BoundsType : ubyte {
+  None,
+  Quad,
+  Aabb,
+  Circle,
+  CircleSmin,
+  CircleSmax,
+}
+
+enum InheritType : ubyte {
+  Parent,
+  Self,
+}
+
+enum BlendType : ubyte {
+  Mix,
+  Mul,
+  Add,
+  Sub,
+  Mulalpha,
+  Screen,
+  Exclusion,
+  Invert,
+}
+
+table Part {
+  name: string;
+  index: int;
+  parent_index: int;
+  type: PartType;
+  bounds_type: BoundsType;
+  inherit_type: InheritType;
+  alpha_blend_type: BlendType;
+  effect_filename: string;
+  color_label: string;
+  mask_influence: bool;
+}
+
+table PartAnime {
+  part_name: string;
+  // TODO: impl
+}
+
+table MeshBindInfo {
+  weight: [int];
+  bone_index: [int];
+  offset: [Vec2];
+  bind_bone_num: int;
+}
+
+table MeshBind {
+  mesh_vertices_bind_array: [MeshBindInfo];
+}
+
+table Model {
+  part_list: [Part];
+  setup_animation: string;
+
+  mesh_list: [MeshBind];
+  // bone_list: HashMap<String, i32>,
+}
+
+table Label {
+  name: string;
+  time: int;
+}
+
+table AnimationSettings {
+  fps: int;
+  frame_count: int;
+  canvas_size: Vec2;
+  pivot: Vec2;
+  start_frame: int;
+  end_frame: int;
+}
+
+table Animation {
+  name: string (key);
+  part_animes: [PartAnime];
+
+  labels: [Label];
+
+  user_data: [string]; // TODO: improve
+  signal_data: [string]; // TODO: improve
+  audio_data: [string]; // TODO: improve
+
+  start_frames: short;
+  end_frames: short;
+  total_frames: short;
+  fps : short;
+}
+
+table AnimePack {
+  name: string (key);
+  settings: AnimationSettings;
+  model: Model;
+  anime_list: [Animation];
 }
 
 table Cell {
@@ -74,24 +179,145 @@ table CellMap {
   cells: [Cell];
 }
 
-table Model {
-
+enum EffectNodeType: ubyte {
+    Root,
+    Emitter,
+    Particle,
 }
 
-table Animation {
-
+table EffectParticleInfiniteEmitEnabled {
+  flag : int;
 }
 
-table AnimePack {
-  name: string (key);
-  // settings: SsAnimationSettings;
-  model: Model;
-  cellmap_names: [string];
-  anime_list: [Animation];
+table EffectParticleTurnToDirectionEnabled {
+  rotation : float;
+}
+
+table EffectParticlePointGravity {
+  position: Vec2;
+  power : float;
+}
+
+table EffectParticleElementTransSize {
+  size: Rect;
+
+  scale_factor_min_value : float;
+  scale_factor_max_value : float;
+}
+
+table EffectParticleElementSize {
+  size: Rect;
+  scale_factor_min_value : float;
+  scale_factor_max_value : float;
+}
+
+table EffectParticleElementAlphaFade {
+  disprange_min_value : float;
+  disprange_max_value : float;
+}
+
+table EffectParticleElementTransColor {
+  color_min_value : uint;
+  color_max_value : uint;
+}
+
+table EffectParticleElementInitColor {
+  color_min_value : uint;
+  color_max_value : uint;
+}
+
+table EffectParticleElementTangentialAcceleration {
+  acceleration_min_value : float;
+  acceleration_max_value : float;
+}
+
+table EffectParticleElementTransSpeed {
+  speed_min_value : float;
+  speed_max_value : float;
+}
+
+table EffectParticleElementRotationTrans {
+  rotation_factor : float;
+  end_life_time_per : float;
+}
+
+table EffectParticleElementRotation {
+  rotation_min_value : float;
+  rotation_max_value : float;
+  rotation_add_min_value : float;
+  rotation_add_max_value : float;
+}
+
+table EffectParticleElementPosition {
+  offset: Rect;
+}
+
+table EffectParticleElementGravity {
+  gravity: Vec2;
+}
+
+table EffectParticleElementDelay {
+  delay_time : int;
+}
+
+table EffectParticleElementRndSeedChange {
+  seed : int;
+}
+
+table EffectParticleElementBasic {
+  priority: int;
+  maximum_particle: int;
+  attime_create: int;
+  interval: int;
+  lifetime: int;
+  speed_min_value : float;
+  speed_max_value : float;
+  lifespan_min_value : int;
+  lifespan_max_value : int;
+  angle : float;
+  angle_variance : float;
+}
+
+union EffectNodeBehavior {
+  EffectParticleElementBasic,
+  EffectParticleElementRndSeedChange,
+  EffectParticleElementDelay,
+  EffectParticleElementGravity,
+  EffectParticleElementPosition,
+  EffectParticleElementRotation,
+  EffectParticleElementRotationTrans,
+  EffectParticleElementTransSpeed,
+  EffectParticleElementTangentialAcceleration,
+  EffectParticleElementInitColor,
+  EffectParticleElementTransColor,
+  EffectParticleElementAlphaFade,
+  EffectParticleElementSize,
+  EffectParticleElementTransSize,
+  EffectParticlePointGravity,
+  EffectParticleTurnToDirectionEnabled,
+  EffectParticleInfiniteEmitEnabled,
+}
+
+table EffectNodeBehaviorWrapper {
+  content: EffectNodeBehavior;
+}
+
+table EffectNode {
+  index : short;
+  parent_index : short;
+  type : EffectNodeType;
+  cell_index : short;
+  blend_type : RenderBlendType;
+  behavior : [EffectNodeBehaviorWrapper];
 }
 
 table Effect {
-
+  name: string (key);
+  fps: short;
+  is_lock_rand_seed: short;
+  lock_rand_seed: short;
+  layout_scale: Vec2;
+  effect_node : [EffectNode];
 }
 
 table SoundFile {

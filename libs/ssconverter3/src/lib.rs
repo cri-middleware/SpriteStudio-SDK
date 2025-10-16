@@ -93,6 +93,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
 
     ssab_model_list.iter_mut().for_each(|_ss_anime_binary_t| {
         // optimize ssab ssab structures (e.g. add dependency animations, remove unused ss*e data)
+
     });
 
     // convert ssab structures to binary data

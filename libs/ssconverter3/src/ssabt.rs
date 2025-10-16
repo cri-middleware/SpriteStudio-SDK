@@ -16,7 +16,7 @@ pub fn convert_vec2t(point2: &SsPoint2) -> ssab::ssab::Vec2T {
     vec.y = point2.y;
     vec
 }
-pub fn convert_vec2t_list(point2_list: &Vec<SsPoint2>) -> Option<Vec<ssab::ssab::Vec2T>> {
+pub fn convert_vec2t_list(point2_list: &[SsPoint2]) -> Option<Vec<ssab::ssab::Vec2T>> {
     Some(point2_list.iter().map(|point2| {
         convert_vec2t(point2)
     }).collect::<Vec<ssab::ssab::Vec2T>>())

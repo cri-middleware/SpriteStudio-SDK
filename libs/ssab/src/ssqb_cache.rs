@@ -3,7 +3,7 @@ use crate::ssqb::{Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, Sequen
 
 pub fn create_shared_sequence_item_list<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    sequence_item_t_list: &Vec<SequenceItemT>
+    sequence_item_t_list: &[SequenceItemT],
 ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SequenceItem<'bldr>>>> {
     let mut sequence_item_offset_vec = Vec::with_capacity(sequence_item_t_list.len());
     for sequence_item_t in sequence_item_t_list {

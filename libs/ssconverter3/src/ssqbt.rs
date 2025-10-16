@@ -1,7 +1,7 @@
 use sspj::ssqe::{SsSequence, SsSequenceItem};
 use crate::ssqbt;
 
-fn convert_sequence_t_list(sequence_list: &Vec<SsSequence>) -> Option<Vec<ssab::ssqb::SequenceT>> {
+fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssqb::SequenceT>> {
     Some(sequence_list.iter().map(|sequence| {
         let mut sequence_t = ssab::ssqb::SequenceT::default();
         sequence_t.name = sequence.name.clone();
