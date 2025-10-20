@@ -3,7 +3,6 @@
 
 // @generated
 
-use crate::common::*;
 use core::mem;
 use core::cmp::Ordering;
 
@@ -26,10 +25,7 @@ impl<'a> flatbuffers::Follow<'a> for Initialization<'a> {
 }
 
 impl<'a> Initialization<'a> {
-  pub const VT_CELL_MAP: flatbuffers::VOffsetT = 4;
-  pub const VT_EFFECT: flatbuffers::VOffsetT = 6;
-  pub const VT_SOUND_LIST: flatbuffers::VOffsetT = 8;
-  pub const VT_FONT_BITMAP: flatbuffers::VOffsetT = 10;
+  pub const VT_DATA: flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -38,64 +34,26 @@ impl<'a> Initialization<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args InitializationArgs<'args>
+    args: &'args InitializationArgs
   ) -> flatbuffers::WIPOffset<Initialization<'bldr>> {
     let mut builder = InitializationBuilder::new(_fbb);
-    if let Some(x) = args.font_bitmap { builder.add_font_bitmap(x); }
-    if let Some(x) = args.sound_list { builder.add_sound_list(x); }
-    if let Some(x) = args.effect { builder.add_effect(x); }
-    if let Some(x) = args.cell_map { builder.add_cell_map(x); }
+    builder.add_data(args.data);
     builder.finish()
   }
 
   pub fn unpack(&self) -> InitializationT {
-    let cell_map = self.cell_map().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let effect = self.effect().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let sound_list = self.sound_list().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let font_bitmap = self.font_bitmap().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
+    let data = self.data();
     InitializationT {
-      cell_map,
-      effect,
-      sound_list,
-      font_bitmap,
+      data,
     }
   }
 
   #[inline]
-  pub fn cell_map(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
+  pub fn data(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap>>>>(Initialization::VT_CELL_MAP, None)}
-  }
-  #[inline]
-  pub fn effect(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Effect<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Effect>>>>(Initialization::VT_EFFECT, None)}
-  }
-  #[inline]
-  pub fn sound_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundList<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundList>>>>(Initialization::VT_SOUND_LIST, None)}
-  }
-  #[inline]
-  pub fn font_bitmap(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap>>>>(Initialization::VT_FONT_BITMAP, None)}
+    unsafe { self._tab.get::<i32>(Initialization::VT_DATA, Some(0)).unwrap()}
   }
 }
 
@@ -106,28 +64,19 @@ impl flatbuffers::Verifiable for Initialization<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<CellMap>>>>("cell_map", Self::VT_CELL_MAP, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Effect>>>>("effect", Self::VT_EFFECT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SoundList>>>>("sound_list", Self::VT_SOUND_LIST, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmap", Self::VT_FONT_BITMAP, false)?
+     .visit_field::<i32>("data", Self::VT_DATA, false)?
      .finish();
     Ok(())
   }
 }
-pub struct InitializationArgs<'a> {
-    pub cell_map: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
-    pub effect: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
-    pub sound_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
-    pub font_bitmap: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
+pub struct InitializationArgs {
+    pub data: i32,
 }
-impl<'a> Default for InitializationArgs<'a> {
+impl<'a> Default for InitializationArgs {
   #[inline]
   fn default() -> Self {
     InitializationArgs {
-      cell_map: None,
-      effect: None,
-      sound_list: None,
-      font_bitmap: None,
+      data: 0,
     }
   }
 }
@@ -138,20 +87,8 @@ pub struct InitializationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> InitializationBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_cell_map(&mut self, cell_map: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Initialization::VT_CELL_MAP, cell_map);
-  }
-  #[inline]
-  pub fn add_effect(&mut self, effect: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Initialization::VT_EFFECT, effect);
-  }
-  #[inline]
-  pub fn add_sound_list(&mut self, sound_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SoundList<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Initialization::VT_SOUND_LIST, sound_list);
-  }
-  #[inline]
-  pub fn add_font_bitmap(&mut self, font_bitmap: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<FontBitmap<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Initialization::VT_FONT_BITMAP, font_bitmap);
+  pub fn add_data(&mut self, data: i32) {
+    self.fbb_.push_slot::<i32>(Initialization::VT_DATA, data, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> InitializationBuilder<'a, 'b, A> {
@@ -171,28 +108,19 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> InitializationBuilder<'a, 'b, A
 impl core::fmt::Debug for Initialization<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("Initialization");
-      ds.field("cell_map", &self.cell_map());
-      ds.field("effect", &self.effect());
-      ds.field("sound_list", &self.sound_list());
-      ds.field("font_bitmap", &self.font_bitmap());
+      ds.field("data", &self.data());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct InitializationT {
-  pub cell_map: Option<Vec<CellMapT>>,
-  pub effect: Option<Vec<EffectT>>,
-  pub sound_list: Option<Vec<SoundListT>>,
-  pub font_bitmap: Option<Vec<FontBitmapT>>,
+  pub data: i32,
 }
 impl Default for InitializationT {
   fn default() -> Self {
     Self {
-      cell_map: None,
-      effect: None,
-      sound_list: None,
-      font_bitmap: None,
+      data: 0,
     }
   }
 }
@@ -201,23 +129,9 @@ impl InitializationT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<Initialization<'b>> {
-    let cell_map = self.cell_map.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let effect = self.effect.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let sound_list = self.sound_list.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let font_bitmap = self.font_bitmap.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
+    let data = self.data;
     Initialization::create(_fbb, &InitializationArgs{
-      cell_map,
-      effect,
-      sound_list,
-      font_bitmap,
+      data,
     })
   }
 }

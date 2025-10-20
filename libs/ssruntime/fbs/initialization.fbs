@@ -1,11 +1,6 @@
-include "../../ssab/fbs/common.fbs";
 
 table Initialization {
-  cell_map: [CellMap];
-  effect: [Effect];
-  sound_list: [SoundList];
-  font_bitmap: [FontBitmap];
-  // instances: [Animation];
+  data: int;
 }
 
 root_type Initialization;
