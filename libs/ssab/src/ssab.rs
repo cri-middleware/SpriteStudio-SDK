@@ -3,8 +3,11 @@
 
 // @generated
 
+use core::mem;
+use core::cmp::Ordering;
 
 extern crate flatbuffers;
+use self::flatbuffers::{EndianScalar, Follow};
 
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_TEX_FILTER_MODE: u8 = 0;
@@ -795,6 +798,1655 @@ impl<'a> flatbuffers::Verifiable for BlendType {
 
 impl flatbuffers::SimpleToVerifyInSlice for BlendType {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_ATTRIBUTE_KIND: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_ATTRIBUTE_KIND: u8 = 38;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_ATTRIBUTE_KIND: [AttributeKind; 39] = [
+  AttributeKind::Cell,
+  AttributeKind::PosX,
+  AttributeKind::PosY,
+  AttributeKind::PosZ,
+  AttributeKind::RotX,
+  AttributeKind::RotY,
+  AttributeKind::RotZ,
+  AttributeKind::SclX,
+  AttributeKind::SclY,
+  AttributeKind::LosclX,
+  AttributeKind::LosclY,
+  AttributeKind::Alpha,
+  AttributeKind::LoAlpha,
+  AttributeKind::Prio,
+  AttributeKind::FlipH,
+  AttributeKind::FlipV,
+  AttributeKind::Hide,
+  AttributeKind::PartsColor,
+  AttributeKind::Shader,
+  AttributeKind::Vertex,
+  AttributeKind::PivotX,
+  AttributeKind::PivotY,
+  AttributeKind::AnchorX,
+  AttributeKind::AnchorY,
+  AttributeKind::SizeX,
+  AttributeKind::SizeY,
+  AttributeKind::ImgFlipH,
+  AttributeKind::ImgFlipV,
+  AttributeKind::UvtX,
+  AttributeKind::UvtY,
+  AttributeKind::UvrZ,
+  AttributeKind::UvsX,
+  AttributeKind::UvsY,
+  AttributeKind::Boundr,
+  AttributeKind::Mask,
+  AttributeKind::User,
+  AttributeKind::Signal,
+  AttributeKind::Instance,
+  AttributeKind::Effect,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct AttributeKind(pub u8);
+#[allow(non_upper_case_globals)]
+impl AttributeKind {
+  pub const Cell: Self = Self(0);
+  pub const PosX: Self = Self(1);
+  pub const PosY: Self = Self(2);
+  pub const PosZ: Self = Self(3);
+  pub const RotX: Self = Self(4);
+  pub const RotY: Self = Self(5);
+  pub const RotZ: Self = Self(6);
+  pub const SclX: Self = Self(7);
+  pub const SclY: Self = Self(8);
+  pub const LosclX: Self = Self(9);
+  pub const LosclY: Self = Self(10);
+  pub const Alpha: Self = Self(11);
+  pub const LoAlpha: Self = Self(12);
+  pub const Prio: Self = Self(13);
+  pub const FlipH: Self = Self(14);
+  pub const FlipV: Self = Self(15);
+  pub const Hide: Self = Self(16);
+  pub const PartsColor: Self = Self(17);
+  pub const Shader: Self = Self(18);
+  pub const Vertex: Self = Self(19);
+  pub const PivotX: Self = Self(20);
+  pub const PivotY: Self = Self(21);
+  pub const AnchorX: Self = Self(22);
+  pub const AnchorY: Self = Self(23);
+  pub const SizeX: Self = Self(24);
+  pub const SizeY: Self = Self(25);
+  pub const ImgFlipH: Self = Self(26);
+  pub const ImgFlipV: Self = Self(27);
+  pub const UvtX: Self = Self(28);
+  pub const UvtY: Self = Self(29);
+  pub const UvrZ: Self = Self(30);
+  pub const UvsX: Self = Self(31);
+  pub const UvsY: Self = Self(32);
+  pub const Boundr: Self = Self(33);
+  pub const Mask: Self = Self(34);
+  pub const User: Self = Self(35);
+  pub const Signal: Self = Self(36);
+  pub const Instance: Self = Self(37);
+  pub const Effect: Self = Self(38);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 38;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Cell,
+    Self::PosX,
+    Self::PosY,
+    Self::PosZ,
+    Self::RotX,
+    Self::RotY,
+    Self::RotZ,
+    Self::SclX,
+    Self::SclY,
+    Self::LosclX,
+    Self::LosclY,
+    Self::Alpha,
+    Self::LoAlpha,
+    Self::Prio,
+    Self::FlipH,
+    Self::FlipV,
+    Self::Hide,
+    Self::PartsColor,
+    Self::Shader,
+    Self::Vertex,
+    Self::PivotX,
+    Self::PivotY,
+    Self::AnchorX,
+    Self::AnchorY,
+    Self::SizeX,
+    Self::SizeY,
+    Self::ImgFlipH,
+    Self::ImgFlipV,
+    Self::UvtX,
+    Self::UvtY,
+    Self::UvrZ,
+    Self::UvsX,
+    Self::UvsY,
+    Self::Boundr,
+    Self::Mask,
+    Self::User,
+    Self::Signal,
+    Self::Instance,
+    Self::Effect,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::Cell => Some("Cell"),
+      Self::PosX => Some("PosX"),
+      Self::PosY => Some("PosY"),
+      Self::PosZ => Some("PosZ"),
+      Self::RotX => Some("RotX"),
+      Self::RotY => Some("RotY"),
+      Self::RotZ => Some("RotZ"),
+      Self::SclX => Some("SclX"),
+      Self::SclY => Some("SclY"),
+      Self::LosclX => Some("LosclX"),
+      Self::LosclY => Some("LosclY"),
+      Self::Alpha => Some("Alpha"),
+      Self::LoAlpha => Some("LoAlpha"),
+      Self::Prio => Some("Prio"),
+      Self::FlipH => Some("FlipH"),
+      Self::FlipV => Some("FlipV"),
+      Self::Hide => Some("Hide"),
+      Self::PartsColor => Some("PartsColor"),
+      Self::Shader => Some("Shader"),
+      Self::Vertex => Some("Vertex"),
+      Self::PivotX => Some("PivotX"),
+      Self::PivotY => Some("PivotY"),
+      Self::AnchorX => Some("AnchorX"),
+      Self::AnchorY => Some("AnchorY"),
+      Self::SizeX => Some("SizeX"),
+      Self::SizeY => Some("SizeY"),
+      Self::ImgFlipH => Some("ImgFlipH"),
+      Self::ImgFlipV => Some("ImgFlipV"),
+      Self::UvtX => Some("UvtX"),
+      Self::UvtY => Some("UvtY"),
+      Self::UvrZ => Some("UvrZ"),
+      Self::UvsX => Some("UvsX"),
+      Self::UvsY => Some("UvsY"),
+      Self::Boundr => Some("Boundr"),
+      Self::Mask => Some("Mask"),
+      Self::User => Some("User"),
+      Self::Signal => Some("Signal"),
+      Self::Instance => Some("Instance"),
+      Self::Effect => Some("Effect"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for AttributeKind {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for AttributeKind {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for AttributeKind {
+    type Output = AttributeKind;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
+    }
+}
+
+impl flatbuffers::EndianScalar for AttributeKind {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for AttributeKind {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for AttributeKind {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_ATTRIBUTE: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_ATTRIBUTE: u8 = 39;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_ATTRIBUTE: [Attribute; 40] = [
+  Attribute::NONE,
+  Attribute::AttributeCell,
+  Attribute::AttributePosX,
+  Attribute::AttributePosY,
+  Attribute::AttributePosZ,
+  Attribute::AttributeRotX,
+  Attribute::AttributeRotY,
+  Attribute::AttributeRotZ,
+  Attribute::AttributeSclX,
+  Attribute::AttributeSclY,
+  Attribute::AttributeLosclX,
+  Attribute::AttributeLosclY,
+  Attribute::AttributeAlpha,
+  Attribute::AttributeLoAlpha,
+  Attribute::AttributePrio,
+  Attribute::AttributeFlipH,
+  Attribute::AttributeFlipV,
+  Attribute::AttributeHide,
+  Attribute::AttributePartsColor,
+  Attribute::AttributeShader,
+  Attribute::AttributeVertex,
+  Attribute::AttributePivotX,
+  Attribute::AttributePivotY,
+  Attribute::AttributeAnchorX,
+  Attribute::AttributeAnchorY,
+  Attribute::AttributeSizeX,
+  Attribute::AttributeSizeY,
+  Attribute::AttributeImgFlipH,
+  Attribute::AttributeImgFlipV,
+  Attribute::AttributeUvtX,
+  Attribute::AttributeUvtY,
+  Attribute::AttributeUvrZ,
+  Attribute::AttributeUvsX,
+  Attribute::AttributeUvsY,
+  Attribute::AttributeBoundr,
+  Attribute::AttributeMask,
+  Attribute::AttributeUser,
+  Attribute::AttributeSignal,
+  Attribute::AttributeInstance,
+  Attribute::AttributeEffect,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct Attribute(pub u8);
+#[allow(non_upper_case_globals)]
+impl Attribute {
+  pub const NONE: Self = Self(0);
+  pub const AttributeCell: Self = Self(1);
+  pub const AttributePosX: Self = Self(2);
+  pub const AttributePosY: Self = Self(3);
+  pub const AttributePosZ: Self = Self(4);
+  pub const AttributeRotX: Self = Self(5);
+  pub const AttributeRotY: Self = Self(6);
+  pub const AttributeRotZ: Self = Self(7);
+  pub const AttributeSclX: Self = Self(8);
+  pub const AttributeSclY: Self = Self(9);
+  pub const AttributeLosclX: Self = Self(10);
+  pub const AttributeLosclY: Self = Self(11);
+  pub const AttributeAlpha: Self = Self(12);
+  pub const AttributeLoAlpha: Self = Self(13);
+  pub const AttributePrio: Self = Self(14);
+  pub const AttributeFlipH: Self = Self(15);
+  pub const AttributeFlipV: Self = Self(16);
+  pub const AttributeHide: Self = Self(17);
+  pub const AttributePartsColor: Self = Self(18);
+  pub const AttributeShader: Self = Self(19);
+  pub const AttributeVertex: Self = Self(20);
+  pub const AttributePivotX: Self = Self(21);
+  pub const AttributePivotY: Self = Self(22);
+  pub const AttributeAnchorX: Self = Self(23);
+  pub const AttributeAnchorY: Self = Self(24);
+  pub const AttributeSizeX: Self = Self(25);
+  pub const AttributeSizeY: Self = Self(26);
+  pub const AttributeImgFlipH: Self = Self(27);
+  pub const AttributeImgFlipV: Self = Self(28);
+  pub const AttributeUvtX: Self = Self(29);
+  pub const AttributeUvtY: Self = Self(30);
+  pub const AttributeUvrZ: Self = Self(31);
+  pub const AttributeUvsX: Self = Self(32);
+  pub const AttributeUvsY: Self = Self(33);
+  pub const AttributeBoundr: Self = Self(34);
+  pub const AttributeMask: Self = Self(35);
+  pub const AttributeUser: Self = Self(36);
+  pub const AttributeSignal: Self = Self(37);
+  pub const AttributeInstance: Self = Self(38);
+  pub const AttributeEffect: Self = Self(39);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 39;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
+    Self::AttributeCell,
+    Self::AttributePosX,
+    Self::AttributePosY,
+    Self::AttributePosZ,
+    Self::AttributeRotX,
+    Self::AttributeRotY,
+    Self::AttributeRotZ,
+    Self::AttributeSclX,
+    Self::AttributeSclY,
+    Self::AttributeLosclX,
+    Self::AttributeLosclY,
+    Self::AttributeAlpha,
+    Self::AttributeLoAlpha,
+    Self::AttributePrio,
+    Self::AttributeFlipH,
+    Self::AttributeFlipV,
+    Self::AttributeHide,
+    Self::AttributePartsColor,
+    Self::AttributeShader,
+    Self::AttributeVertex,
+    Self::AttributePivotX,
+    Self::AttributePivotY,
+    Self::AttributeAnchorX,
+    Self::AttributeAnchorY,
+    Self::AttributeSizeX,
+    Self::AttributeSizeY,
+    Self::AttributeImgFlipH,
+    Self::AttributeImgFlipV,
+    Self::AttributeUvtX,
+    Self::AttributeUvtY,
+    Self::AttributeUvrZ,
+    Self::AttributeUvsX,
+    Self::AttributeUvsY,
+    Self::AttributeBoundr,
+    Self::AttributeMask,
+    Self::AttributeUser,
+    Self::AttributeSignal,
+    Self::AttributeInstance,
+    Self::AttributeEffect,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NONE => Some("NONE"),
+      Self::AttributeCell => Some("AttributeCell"),
+      Self::AttributePosX => Some("AttributePosX"),
+      Self::AttributePosY => Some("AttributePosY"),
+      Self::AttributePosZ => Some("AttributePosZ"),
+      Self::AttributeRotX => Some("AttributeRotX"),
+      Self::AttributeRotY => Some("AttributeRotY"),
+      Self::AttributeRotZ => Some("AttributeRotZ"),
+      Self::AttributeSclX => Some("AttributeSclX"),
+      Self::AttributeSclY => Some("AttributeSclY"),
+      Self::AttributeLosclX => Some("AttributeLosclX"),
+      Self::AttributeLosclY => Some("AttributeLosclY"),
+      Self::AttributeAlpha => Some("AttributeAlpha"),
+      Self::AttributeLoAlpha => Some("AttributeLoAlpha"),
+      Self::AttributePrio => Some("AttributePrio"),
+      Self::AttributeFlipH => Some("AttributeFlipH"),
+      Self::AttributeFlipV => Some("AttributeFlipV"),
+      Self::AttributeHide => Some("AttributeHide"),
+      Self::AttributePartsColor => Some("AttributePartsColor"),
+      Self::AttributeShader => Some("AttributeShader"),
+      Self::AttributeVertex => Some("AttributeVertex"),
+      Self::AttributePivotX => Some("AttributePivotX"),
+      Self::AttributePivotY => Some("AttributePivotY"),
+      Self::AttributeAnchorX => Some("AttributeAnchorX"),
+      Self::AttributeAnchorY => Some("AttributeAnchorY"),
+      Self::AttributeSizeX => Some("AttributeSizeX"),
+      Self::AttributeSizeY => Some("AttributeSizeY"),
+      Self::AttributeImgFlipH => Some("AttributeImgFlipH"),
+      Self::AttributeImgFlipV => Some("AttributeImgFlipV"),
+      Self::AttributeUvtX => Some("AttributeUvtX"),
+      Self::AttributeUvtY => Some("AttributeUvtY"),
+      Self::AttributeUvrZ => Some("AttributeUvrZ"),
+      Self::AttributeUvsX => Some("AttributeUvsX"),
+      Self::AttributeUvsY => Some("AttributeUvsY"),
+      Self::AttributeBoundr => Some("AttributeBoundr"),
+      Self::AttributeMask => Some("AttributeMask"),
+      Self::AttributeUser => Some("AttributeUser"),
+      Self::AttributeSignal => Some("AttributeSignal"),
+      Self::AttributeInstance => Some("AttributeInstance"),
+      Self::AttributeEffect => Some("AttributeEffect"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for Attribute {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for Attribute {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for Attribute {
+    type Output = Attribute;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
+    }
+}
+
+impl flatbuffers::EndianScalar for Attribute {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for Attribute {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for Attribute {}
+pub struct AttributeUnionTableOffset {}
+
+#[allow(clippy::upper_case_acronyms)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub enum AttributeT {
+  NONE,
+  AttributeCell(Box<AttributeCellT>),
+  AttributePosX(Box<AttributePosXT>),
+  AttributePosY(Box<AttributePosYT>),
+  AttributePosZ(Box<AttributePosZT>),
+  AttributeRotX(Box<AttributeRotXT>),
+  AttributeRotY(Box<AttributeRotYT>),
+  AttributeRotZ(Box<AttributeRotZT>),
+  AttributeSclX(Box<AttributeSclXT>),
+  AttributeSclY(Box<AttributeSclYT>),
+  AttributeLosclX(Box<AttributeLosclXT>),
+  AttributeLosclY(Box<AttributeLosclYT>),
+  AttributeAlpha(Box<AttributeAlphaT>),
+  AttributeLoAlpha(Box<AttributeLoAlphaT>),
+  AttributePrio(Box<AttributePrioT>),
+  AttributeFlipH(Box<AttributeFlipHT>),
+  AttributeFlipV(Box<AttributeFlipVT>),
+  AttributeHide(Box<AttributeHideT>),
+  AttributePartsColor(Box<AttributePartsColorT>),
+  AttributeShader(Box<AttributeShaderT>),
+  AttributeVertex(Box<AttributeVertexT>),
+  AttributePivotX(Box<AttributePivotXT>),
+  AttributePivotY(Box<AttributePivotYT>),
+  AttributeAnchorX(Box<AttributeAnchorXT>),
+  AttributeAnchorY(Box<AttributeAnchorYT>),
+  AttributeSizeX(Box<AttributeSizeXT>),
+  AttributeSizeY(Box<AttributeSizeYT>),
+  AttributeImgFlipH(Box<AttributeImgFlipHT>),
+  AttributeImgFlipV(Box<AttributeImgFlipVT>),
+  AttributeUvtX(Box<AttributeUvtXT>),
+  AttributeUvtY(Box<AttributeUvtYT>),
+  AttributeUvrZ(Box<AttributeUvrZT>),
+  AttributeUvsX(Box<AttributeUvsXT>),
+  AttributeUvsY(Box<AttributeUvsYT>),
+  AttributeBoundr(Box<AttributeBoundrT>),
+  AttributeMask(Box<AttributeMaskT>),
+  AttributeUser(Box<AttributeUserT>),
+  AttributeSignal(Box<AttributeSignalT>),
+  AttributeInstance(Box<AttributeInstanceT>),
+  AttributeEffect(Box<AttributeEffectT>),
+}
+impl Default for AttributeT {
+  fn default() -> Self {
+    Self::NONE
+  }
+}
+impl AttributeT {
+  pub fn attribute_type(&self) -> Attribute {
+    match self {
+      Self::NONE => Attribute::NONE,
+      Self::AttributeCell(_) => Attribute::AttributeCell,
+      Self::AttributePosX(_) => Attribute::AttributePosX,
+      Self::AttributePosY(_) => Attribute::AttributePosY,
+      Self::AttributePosZ(_) => Attribute::AttributePosZ,
+      Self::AttributeRotX(_) => Attribute::AttributeRotX,
+      Self::AttributeRotY(_) => Attribute::AttributeRotY,
+      Self::AttributeRotZ(_) => Attribute::AttributeRotZ,
+      Self::AttributeSclX(_) => Attribute::AttributeSclX,
+      Self::AttributeSclY(_) => Attribute::AttributeSclY,
+      Self::AttributeLosclX(_) => Attribute::AttributeLosclX,
+      Self::AttributeLosclY(_) => Attribute::AttributeLosclY,
+      Self::AttributeAlpha(_) => Attribute::AttributeAlpha,
+      Self::AttributeLoAlpha(_) => Attribute::AttributeLoAlpha,
+      Self::AttributePrio(_) => Attribute::AttributePrio,
+      Self::AttributeFlipH(_) => Attribute::AttributeFlipH,
+      Self::AttributeFlipV(_) => Attribute::AttributeFlipV,
+      Self::AttributeHide(_) => Attribute::AttributeHide,
+      Self::AttributePartsColor(_) => Attribute::AttributePartsColor,
+      Self::AttributeShader(_) => Attribute::AttributeShader,
+      Self::AttributeVertex(_) => Attribute::AttributeVertex,
+      Self::AttributePivotX(_) => Attribute::AttributePivotX,
+      Self::AttributePivotY(_) => Attribute::AttributePivotY,
+      Self::AttributeAnchorX(_) => Attribute::AttributeAnchorX,
+      Self::AttributeAnchorY(_) => Attribute::AttributeAnchorY,
+      Self::AttributeSizeX(_) => Attribute::AttributeSizeX,
+      Self::AttributeSizeY(_) => Attribute::AttributeSizeY,
+      Self::AttributeImgFlipH(_) => Attribute::AttributeImgFlipH,
+      Self::AttributeImgFlipV(_) => Attribute::AttributeImgFlipV,
+      Self::AttributeUvtX(_) => Attribute::AttributeUvtX,
+      Self::AttributeUvtY(_) => Attribute::AttributeUvtY,
+      Self::AttributeUvrZ(_) => Attribute::AttributeUvrZ,
+      Self::AttributeUvsX(_) => Attribute::AttributeUvsX,
+      Self::AttributeUvsY(_) => Attribute::AttributeUvsY,
+      Self::AttributeBoundr(_) => Attribute::AttributeBoundr,
+      Self::AttributeMask(_) => Attribute::AttributeMask,
+      Self::AttributeUser(_) => Attribute::AttributeUser,
+      Self::AttributeSignal(_) => Attribute::AttributeSignal,
+      Self::AttributeInstance(_) => Attribute::AttributeInstance,
+      Self::AttributeEffect(_) => Attribute::AttributeEffect,
+    }
+  }
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(&self, fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>) -> Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>> {
+    match self {
+      Self::NONE => None,
+      Self::AttributeCell(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePosX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePosY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePosZ(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeRotX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeRotY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeRotZ(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeSclX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeSclY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeLosclX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeLosclY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeAlpha(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeLoAlpha(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePrio(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeFlipH(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeFlipV(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeHide(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePartsColor(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeShader(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeVertex(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePivotX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributePivotY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeAnchorX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeAnchorY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeSizeX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeSizeY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeImgFlipH(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeImgFlipV(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeUvtX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeUvtY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeUvrZ(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeUvsX(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeUvsY(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeBoundr(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeMask(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeUser(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeSignal(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeInstance(v) => Some(v.pack(fbb).as_union_value()),
+      Self::AttributeEffect(v) => Some(v.pack(fbb).as_union_value()),
+    }
+  }
+  /// If the union variant matches, return the owned AttributeCellT, setting the union to NONE.
+  pub fn take_attribute_cell(&mut self) -> Option<Box<AttributeCellT>> {
+    if let Self::AttributeCell(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeCell(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeCellT.
+  pub fn as_attribute_cell(&self) -> Option<&AttributeCellT> {
+    if let Self::AttributeCell(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeCellT.
+  pub fn as_attribute_cell_mut(&mut self) -> Option<&mut AttributeCellT> {
+    if let Self::AttributeCell(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePosXT, setting the union to NONE.
+  pub fn take_attribute_pos_x(&mut self) -> Option<Box<AttributePosXT>> {
+    if let Self::AttributePosX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePosX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePosXT.
+  pub fn as_attribute_pos_x(&self) -> Option<&AttributePosXT> {
+    if let Self::AttributePosX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePosXT.
+  pub fn as_attribute_pos_x_mut(&mut self) -> Option<&mut AttributePosXT> {
+    if let Self::AttributePosX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePosYT, setting the union to NONE.
+  pub fn take_attribute_pos_y(&mut self) -> Option<Box<AttributePosYT>> {
+    if let Self::AttributePosY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePosY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePosYT.
+  pub fn as_attribute_pos_y(&self) -> Option<&AttributePosYT> {
+    if let Self::AttributePosY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePosYT.
+  pub fn as_attribute_pos_y_mut(&mut self) -> Option<&mut AttributePosYT> {
+    if let Self::AttributePosY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePosZT, setting the union to NONE.
+  pub fn take_attribute_pos_z(&mut self) -> Option<Box<AttributePosZT>> {
+    if let Self::AttributePosZ(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePosZ(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePosZT.
+  pub fn as_attribute_pos_z(&self) -> Option<&AttributePosZT> {
+    if let Self::AttributePosZ(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePosZT.
+  pub fn as_attribute_pos_z_mut(&mut self) -> Option<&mut AttributePosZT> {
+    if let Self::AttributePosZ(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeRotXT, setting the union to NONE.
+  pub fn take_attribute_rot_x(&mut self) -> Option<Box<AttributeRotXT>> {
+    if let Self::AttributeRotX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeRotX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeRotXT.
+  pub fn as_attribute_rot_x(&self) -> Option<&AttributeRotXT> {
+    if let Self::AttributeRotX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeRotXT.
+  pub fn as_attribute_rot_x_mut(&mut self) -> Option<&mut AttributeRotXT> {
+    if let Self::AttributeRotX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeRotYT, setting the union to NONE.
+  pub fn take_attribute_rot_y(&mut self) -> Option<Box<AttributeRotYT>> {
+    if let Self::AttributeRotY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeRotY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeRotYT.
+  pub fn as_attribute_rot_y(&self) -> Option<&AttributeRotYT> {
+    if let Self::AttributeRotY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeRotYT.
+  pub fn as_attribute_rot_y_mut(&mut self) -> Option<&mut AttributeRotYT> {
+    if let Self::AttributeRotY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeRotZT, setting the union to NONE.
+  pub fn take_attribute_rot_z(&mut self) -> Option<Box<AttributeRotZT>> {
+    if let Self::AttributeRotZ(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeRotZ(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeRotZT.
+  pub fn as_attribute_rot_z(&self) -> Option<&AttributeRotZT> {
+    if let Self::AttributeRotZ(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeRotZT.
+  pub fn as_attribute_rot_z_mut(&mut self) -> Option<&mut AttributeRotZT> {
+    if let Self::AttributeRotZ(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeSclXT, setting the union to NONE.
+  pub fn take_attribute_scl_x(&mut self) -> Option<Box<AttributeSclXT>> {
+    if let Self::AttributeSclX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeSclX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeSclXT.
+  pub fn as_attribute_scl_x(&self) -> Option<&AttributeSclXT> {
+    if let Self::AttributeSclX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeSclXT.
+  pub fn as_attribute_scl_x_mut(&mut self) -> Option<&mut AttributeSclXT> {
+    if let Self::AttributeSclX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeSclYT, setting the union to NONE.
+  pub fn take_attribute_scl_y(&mut self) -> Option<Box<AttributeSclYT>> {
+    if let Self::AttributeSclY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeSclY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeSclYT.
+  pub fn as_attribute_scl_y(&self) -> Option<&AttributeSclYT> {
+    if let Self::AttributeSclY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeSclYT.
+  pub fn as_attribute_scl_y_mut(&mut self) -> Option<&mut AttributeSclYT> {
+    if let Self::AttributeSclY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeLosclXT, setting the union to NONE.
+  pub fn take_attribute_loscl_x(&mut self) -> Option<Box<AttributeLosclXT>> {
+    if let Self::AttributeLosclX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeLosclX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeLosclXT.
+  pub fn as_attribute_loscl_x(&self) -> Option<&AttributeLosclXT> {
+    if let Self::AttributeLosclX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeLosclXT.
+  pub fn as_attribute_loscl_x_mut(&mut self) -> Option<&mut AttributeLosclXT> {
+    if let Self::AttributeLosclX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeLosclYT, setting the union to NONE.
+  pub fn take_attribute_loscl_y(&mut self) -> Option<Box<AttributeLosclYT>> {
+    if let Self::AttributeLosclY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeLosclY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeLosclYT.
+  pub fn as_attribute_loscl_y(&self) -> Option<&AttributeLosclYT> {
+    if let Self::AttributeLosclY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeLosclYT.
+  pub fn as_attribute_loscl_y_mut(&mut self) -> Option<&mut AttributeLosclYT> {
+    if let Self::AttributeLosclY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeAlphaT, setting the union to NONE.
+  pub fn take_attribute_alpha(&mut self) -> Option<Box<AttributeAlphaT>> {
+    if let Self::AttributeAlpha(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeAlpha(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeAlphaT.
+  pub fn as_attribute_alpha(&self) -> Option<&AttributeAlphaT> {
+    if let Self::AttributeAlpha(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeAlphaT.
+  pub fn as_attribute_alpha_mut(&mut self) -> Option<&mut AttributeAlphaT> {
+    if let Self::AttributeAlpha(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeLoAlphaT, setting the union to NONE.
+  pub fn take_attribute_lo_alpha(&mut self) -> Option<Box<AttributeLoAlphaT>> {
+    if let Self::AttributeLoAlpha(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeLoAlpha(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeLoAlphaT.
+  pub fn as_attribute_lo_alpha(&self) -> Option<&AttributeLoAlphaT> {
+    if let Self::AttributeLoAlpha(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeLoAlphaT.
+  pub fn as_attribute_lo_alpha_mut(&mut self) -> Option<&mut AttributeLoAlphaT> {
+    if let Self::AttributeLoAlpha(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePrioT, setting the union to NONE.
+  pub fn take_attribute_prio(&mut self) -> Option<Box<AttributePrioT>> {
+    if let Self::AttributePrio(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePrio(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePrioT.
+  pub fn as_attribute_prio(&self) -> Option<&AttributePrioT> {
+    if let Self::AttributePrio(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePrioT.
+  pub fn as_attribute_prio_mut(&mut self) -> Option<&mut AttributePrioT> {
+    if let Self::AttributePrio(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeFlipHT, setting the union to NONE.
+  pub fn take_attribute_flip_h(&mut self) -> Option<Box<AttributeFlipHT>> {
+    if let Self::AttributeFlipH(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeFlipH(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeFlipHT.
+  pub fn as_attribute_flip_h(&self) -> Option<&AttributeFlipHT> {
+    if let Self::AttributeFlipH(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeFlipHT.
+  pub fn as_attribute_flip_h_mut(&mut self) -> Option<&mut AttributeFlipHT> {
+    if let Self::AttributeFlipH(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeFlipVT, setting the union to NONE.
+  pub fn take_attribute_flip_v(&mut self) -> Option<Box<AttributeFlipVT>> {
+    if let Self::AttributeFlipV(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeFlipV(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeFlipVT.
+  pub fn as_attribute_flip_v(&self) -> Option<&AttributeFlipVT> {
+    if let Self::AttributeFlipV(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeFlipVT.
+  pub fn as_attribute_flip_v_mut(&mut self) -> Option<&mut AttributeFlipVT> {
+    if let Self::AttributeFlipV(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeHideT, setting the union to NONE.
+  pub fn take_attribute_hide(&mut self) -> Option<Box<AttributeHideT>> {
+    if let Self::AttributeHide(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeHide(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeHideT.
+  pub fn as_attribute_hide(&self) -> Option<&AttributeHideT> {
+    if let Self::AttributeHide(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeHideT.
+  pub fn as_attribute_hide_mut(&mut self) -> Option<&mut AttributeHideT> {
+    if let Self::AttributeHide(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePartsColorT, setting the union to NONE.
+  pub fn take_attribute_parts_color(&mut self) -> Option<Box<AttributePartsColorT>> {
+    if let Self::AttributePartsColor(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePartsColor(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePartsColorT.
+  pub fn as_attribute_parts_color(&self) -> Option<&AttributePartsColorT> {
+    if let Self::AttributePartsColor(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePartsColorT.
+  pub fn as_attribute_parts_color_mut(&mut self) -> Option<&mut AttributePartsColorT> {
+    if let Self::AttributePartsColor(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeShaderT, setting the union to NONE.
+  pub fn take_attribute_shader(&mut self) -> Option<Box<AttributeShaderT>> {
+    if let Self::AttributeShader(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeShader(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeShaderT.
+  pub fn as_attribute_shader(&self) -> Option<&AttributeShaderT> {
+    if let Self::AttributeShader(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeShaderT.
+  pub fn as_attribute_shader_mut(&mut self) -> Option<&mut AttributeShaderT> {
+    if let Self::AttributeShader(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeVertexT, setting the union to NONE.
+  pub fn take_attribute_vertex(&mut self) -> Option<Box<AttributeVertexT>> {
+    if let Self::AttributeVertex(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeVertex(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeVertexT.
+  pub fn as_attribute_vertex(&self) -> Option<&AttributeVertexT> {
+    if let Self::AttributeVertex(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeVertexT.
+  pub fn as_attribute_vertex_mut(&mut self) -> Option<&mut AttributeVertexT> {
+    if let Self::AttributeVertex(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePivotXT, setting the union to NONE.
+  pub fn take_attribute_pivot_x(&mut self) -> Option<Box<AttributePivotXT>> {
+    if let Self::AttributePivotX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePivotX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePivotXT.
+  pub fn as_attribute_pivot_x(&self) -> Option<&AttributePivotXT> {
+    if let Self::AttributePivotX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePivotXT.
+  pub fn as_attribute_pivot_x_mut(&mut self) -> Option<&mut AttributePivotXT> {
+    if let Self::AttributePivotX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributePivotYT, setting the union to NONE.
+  pub fn take_attribute_pivot_y(&mut self) -> Option<Box<AttributePivotYT>> {
+    if let Self::AttributePivotY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributePivotY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributePivotYT.
+  pub fn as_attribute_pivot_y(&self) -> Option<&AttributePivotYT> {
+    if let Self::AttributePivotY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributePivotYT.
+  pub fn as_attribute_pivot_y_mut(&mut self) -> Option<&mut AttributePivotYT> {
+    if let Self::AttributePivotY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeAnchorXT, setting the union to NONE.
+  pub fn take_attribute_anchor_x(&mut self) -> Option<Box<AttributeAnchorXT>> {
+    if let Self::AttributeAnchorX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeAnchorX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeAnchorXT.
+  pub fn as_attribute_anchor_x(&self) -> Option<&AttributeAnchorXT> {
+    if let Self::AttributeAnchorX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeAnchorXT.
+  pub fn as_attribute_anchor_x_mut(&mut self) -> Option<&mut AttributeAnchorXT> {
+    if let Self::AttributeAnchorX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeAnchorYT, setting the union to NONE.
+  pub fn take_attribute_anchor_y(&mut self) -> Option<Box<AttributeAnchorYT>> {
+    if let Self::AttributeAnchorY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeAnchorY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeAnchorYT.
+  pub fn as_attribute_anchor_y(&self) -> Option<&AttributeAnchorYT> {
+    if let Self::AttributeAnchorY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeAnchorYT.
+  pub fn as_attribute_anchor_y_mut(&mut self) -> Option<&mut AttributeAnchorYT> {
+    if let Self::AttributeAnchorY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeSizeXT, setting the union to NONE.
+  pub fn take_attribute_size_x(&mut self) -> Option<Box<AttributeSizeXT>> {
+    if let Self::AttributeSizeX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeSizeX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeSizeXT.
+  pub fn as_attribute_size_x(&self) -> Option<&AttributeSizeXT> {
+    if let Self::AttributeSizeX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeSizeXT.
+  pub fn as_attribute_size_x_mut(&mut self) -> Option<&mut AttributeSizeXT> {
+    if let Self::AttributeSizeX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeSizeYT, setting the union to NONE.
+  pub fn take_attribute_size_y(&mut self) -> Option<Box<AttributeSizeYT>> {
+    if let Self::AttributeSizeY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeSizeY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeSizeYT.
+  pub fn as_attribute_size_y(&self) -> Option<&AttributeSizeYT> {
+    if let Self::AttributeSizeY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeSizeYT.
+  pub fn as_attribute_size_y_mut(&mut self) -> Option<&mut AttributeSizeYT> {
+    if let Self::AttributeSizeY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeImgFlipHT, setting the union to NONE.
+  pub fn take_attribute_img_flip_h(&mut self) -> Option<Box<AttributeImgFlipHT>> {
+    if let Self::AttributeImgFlipH(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeImgFlipH(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeImgFlipHT.
+  pub fn as_attribute_img_flip_h(&self) -> Option<&AttributeImgFlipHT> {
+    if let Self::AttributeImgFlipH(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeImgFlipHT.
+  pub fn as_attribute_img_flip_h_mut(&mut self) -> Option<&mut AttributeImgFlipHT> {
+    if let Self::AttributeImgFlipH(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeImgFlipVT, setting the union to NONE.
+  pub fn take_attribute_img_flip_v(&mut self) -> Option<Box<AttributeImgFlipVT>> {
+    if let Self::AttributeImgFlipV(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeImgFlipV(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeImgFlipVT.
+  pub fn as_attribute_img_flip_v(&self) -> Option<&AttributeImgFlipVT> {
+    if let Self::AttributeImgFlipV(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeImgFlipVT.
+  pub fn as_attribute_img_flip_v_mut(&mut self) -> Option<&mut AttributeImgFlipVT> {
+    if let Self::AttributeImgFlipV(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeUvtXT, setting the union to NONE.
+  pub fn take_attribute_uvt_x(&mut self) -> Option<Box<AttributeUvtXT>> {
+    if let Self::AttributeUvtX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeUvtX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeUvtXT.
+  pub fn as_attribute_uvt_x(&self) -> Option<&AttributeUvtXT> {
+    if let Self::AttributeUvtX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeUvtXT.
+  pub fn as_attribute_uvt_x_mut(&mut self) -> Option<&mut AttributeUvtXT> {
+    if let Self::AttributeUvtX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeUvtYT, setting the union to NONE.
+  pub fn take_attribute_uvt_y(&mut self) -> Option<Box<AttributeUvtYT>> {
+    if let Self::AttributeUvtY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeUvtY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeUvtYT.
+  pub fn as_attribute_uvt_y(&self) -> Option<&AttributeUvtYT> {
+    if let Self::AttributeUvtY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeUvtYT.
+  pub fn as_attribute_uvt_y_mut(&mut self) -> Option<&mut AttributeUvtYT> {
+    if let Self::AttributeUvtY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeUvrZT, setting the union to NONE.
+  pub fn take_attribute_uvr_z(&mut self) -> Option<Box<AttributeUvrZT>> {
+    if let Self::AttributeUvrZ(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeUvrZ(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeUvrZT.
+  pub fn as_attribute_uvr_z(&self) -> Option<&AttributeUvrZT> {
+    if let Self::AttributeUvrZ(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeUvrZT.
+  pub fn as_attribute_uvr_z_mut(&mut self) -> Option<&mut AttributeUvrZT> {
+    if let Self::AttributeUvrZ(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeUvsXT, setting the union to NONE.
+  pub fn take_attribute_uvs_x(&mut self) -> Option<Box<AttributeUvsXT>> {
+    if let Self::AttributeUvsX(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeUvsX(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeUvsXT.
+  pub fn as_attribute_uvs_x(&self) -> Option<&AttributeUvsXT> {
+    if let Self::AttributeUvsX(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeUvsXT.
+  pub fn as_attribute_uvs_x_mut(&mut self) -> Option<&mut AttributeUvsXT> {
+    if let Self::AttributeUvsX(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeUvsYT, setting the union to NONE.
+  pub fn take_attribute_uvs_y(&mut self) -> Option<Box<AttributeUvsYT>> {
+    if let Self::AttributeUvsY(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeUvsY(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeUvsYT.
+  pub fn as_attribute_uvs_y(&self) -> Option<&AttributeUvsYT> {
+    if let Self::AttributeUvsY(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeUvsYT.
+  pub fn as_attribute_uvs_y_mut(&mut self) -> Option<&mut AttributeUvsYT> {
+    if let Self::AttributeUvsY(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeBoundrT, setting the union to NONE.
+  pub fn take_attribute_boundr(&mut self) -> Option<Box<AttributeBoundrT>> {
+    if let Self::AttributeBoundr(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeBoundr(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeBoundrT.
+  pub fn as_attribute_boundr(&self) -> Option<&AttributeBoundrT> {
+    if let Self::AttributeBoundr(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeBoundrT.
+  pub fn as_attribute_boundr_mut(&mut self) -> Option<&mut AttributeBoundrT> {
+    if let Self::AttributeBoundr(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeMaskT, setting the union to NONE.
+  pub fn take_attribute_mask(&mut self) -> Option<Box<AttributeMaskT>> {
+    if let Self::AttributeMask(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeMask(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeMaskT.
+  pub fn as_attribute_mask(&self) -> Option<&AttributeMaskT> {
+    if let Self::AttributeMask(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeMaskT.
+  pub fn as_attribute_mask_mut(&mut self) -> Option<&mut AttributeMaskT> {
+    if let Self::AttributeMask(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeUserT, setting the union to NONE.
+  pub fn take_attribute_user(&mut self) -> Option<Box<AttributeUserT>> {
+    if let Self::AttributeUser(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeUser(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeUserT.
+  pub fn as_attribute_user(&self) -> Option<&AttributeUserT> {
+    if let Self::AttributeUser(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeUserT.
+  pub fn as_attribute_user_mut(&mut self) -> Option<&mut AttributeUserT> {
+    if let Self::AttributeUser(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeSignalT, setting the union to NONE.
+  pub fn take_attribute_signal(&mut self) -> Option<Box<AttributeSignalT>> {
+    if let Self::AttributeSignal(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeSignal(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeSignalT.
+  pub fn as_attribute_signal(&self) -> Option<&AttributeSignalT> {
+    if let Self::AttributeSignal(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeSignalT.
+  pub fn as_attribute_signal_mut(&mut self) -> Option<&mut AttributeSignalT> {
+    if let Self::AttributeSignal(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeInstanceT, setting the union to NONE.
+  pub fn take_attribute_instance(&mut self) -> Option<Box<AttributeInstanceT>> {
+    if let Self::AttributeInstance(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeInstance(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeInstanceT.
+  pub fn as_attribute_instance(&self) -> Option<&AttributeInstanceT> {
+    if let Self::AttributeInstance(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeInstanceT.
+  pub fn as_attribute_instance_mut(&mut self) -> Option<&mut AttributeInstanceT> {
+    if let Self::AttributeInstance(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned AttributeEffectT, setting the union to NONE.
+  pub fn take_attribute_effect(&mut self) -> Option<Box<AttributeEffectT>> {
+    if let Self::AttributeEffect(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::AttributeEffect(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the AttributeEffectT.
+  pub fn as_attribute_effect(&self) -> Option<&AttributeEffectT> {
+    if let Self::AttributeEffect(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the AttributeEffectT.
+  pub fn as_attribute_effect_mut(&mut self) -> Option<&mut AttributeEffectT> {
+    if let Self::AttributeEffect(v) = self { Some(v.as_mut()) } else { None }
+  }
+}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_USER_DATA_VALUE: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_USER_DATA_VALUE: u8 = 4;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_USER_DATA_VALUE: [UserDataValue; 5] = [
+  UserDataValue::NONE,
+  UserDataValue::UserDataInteger,
+  UserDataValue::UserDataRect,
+  UserDataValue::UserDataPoint,
+  UserDataValue::UserDataString,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct UserDataValue(pub u8);
+#[allow(non_upper_case_globals)]
+impl UserDataValue {
+  pub const NONE: Self = Self(0);
+  pub const UserDataInteger: Self = Self(1);
+  pub const UserDataRect: Self = Self(2);
+  pub const UserDataPoint: Self = Self(3);
+  pub const UserDataString: Self = Self(4);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 4;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
+    Self::UserDataInteger,
+    Self::UserDataRect,
+    Self::UserDataPoint,
+    Self::UserDataString,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NONE => Some("NONE"),
+      Self::UserDataInteger => Some("UserDataInteger"),
+      Self::UserDataRect => Some("UserDataRect"),
+      Self::UserDataPoint => Some("UserDataPoint"),
+      Self::UserDataString => Some("UserDataString"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for UserDataValue {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for UserDataValue {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for UserDataValue {
+    type Output = UserDataValue;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
+    }
+}
+
+impl flatbuffers::EndianScalar for UserDataValue {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for UserDataValue {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for UserDataValue {}
+pub struct UserDataValueUnionTableOffset {}
+
+#[allow(clippy::upper_case_acronyms)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub enum UserDataValueT {
+  NONE,
+  UserDataInteger(Box<UserDataIntegerT>),
+  UserDataRect(Box<UserDataRectT>),
+  UserDataPoint(Box<UserDataPointT>),
+  UserDataString(Box<UserDataStringT>),
+}
+impl Default for UserDataValueT {
+  fn default() -> Self {
+    Self::NONE
+  }
+}
+impl UserDataValueT {
+  pub fn user_data_value_type(&self) -> UserDataValue {
+    match self {
+      Self::NONE => UserDataValue::NONE,
+      Self::UserDataInteger(_) => UserDataValue::UserDataInteger,
+      Self::UserDataRect(_) => UserDataValue::UserDataRect,
+      Self::UserDataPoint(_) => UserDataValue::UserDataPoint,
+      Self::UserDataString(_) => UserDataValue::UserDataString,
+    }
+  }
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(&self, fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>) -> Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>> {
+    match self {
+      Self::NONE => None,
+      Self::UserDataInteger(v) => Some(v.pack(fbb).as_union_value()),
+      Self::UserDataRect(v) => Some(v.pack(fbb).as_union_value()),
+      Self::UserDataPoint(v) => Some(v.pack(fbb).as_union_value()),
+      Self::UserDataString(v) => Some(v.pack(fbb).as_union_value()),
+    }
+  }
+  /// If the union variant matches, return the owned UserDataIntegerT, setting the union to NONE.
+  pub fn take_user_data_integer(&mut self) -> Option<Box<UserDataIntegerT>> {
+    if let Self::UserDataInteger(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::UserDataInteger(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the UserDataIntegerT.
+  pub fn as_user_data_integer(&self) -> Option<&UserDataIntegerT> {
+    if let Self::UserDataInteger(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the UserDataIntegerT.
+  pub fn as_user_data_integer_mut(&mut self) -> Option<&mut UserDataIntegerT> {
+    if let Self::UserDataInteger(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned UserDataRectT, setting the union to NONE.
+  pub fn take_user_data_rect(&mut self) -> Option<Box<UserDataRectT>> {
+    if let Self::UserDataRect(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::UserDataRect(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the UserDataRectT.
+  pub fn as_user_data_rect(&self) -> Option<&UserDataRectT> {
+    if let Self::UserDataRect(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the UserDataRectT.
+  pub fn as_user_data_rect_mut(&mut self) -> Option<&mut UserDataRectT> {
+    if let Self::UserDataRect(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned UserDataPointT, setting the union to NONE.
+  pub fn take_user_data_point(&mut self) -> Option<Box<UserDataPointT>> {
+    if let Self::UserDataPoint(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::UserDataPoint(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the UserDataPointT.
+  pub fn as_user_data_point(&self) -> Option<&UserDataPointT> {
+    if let Self::UserDataPoint(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the UserDataPointT.
+  pub fn as_user_data_point_mut(&mut self) -> Option<&mut UserDataPointT> {
+    if let Self::UserDataPoint(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned UserDataStringT, setting the union to NONE.
+  pub fn take_user_data_string(&mut self) -> Option<Box<UserDataStringT>> {
+    if let Self::UserDataString(_) = self {
+      let v = core::mem::replace(self, Self::NONE);
+      if let Self::UserDataString(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the UserDataStringT.
+  pub fn as_user_data_string(&self) -> Option<&UserDataStringT> {
+    if let Self::UserDataString(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the UserDataStringT.
+  pub fn as_user_data_string_mut(&mut self) -> Option<&mut UserDataStringT> {
+    if let Self::UserDataString(v) = self { Some(v.as_mut()) } else { None }
+  }
+}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_EFFECT_NODE_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_EFFECT_NODE_TYPE: u8 = 2;
@@ -1529,7 +3181,7 @@ impl flatbuffers::Verifiable for Vec2<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("x", Self::VT_X, false)?
      .visit_field::<f32>("y", Self::VT_Y, false)?
@@ -1689,7 +3341,7 @@ impl flatbuffers::Verifiable for Vec3<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("x", Self::VT_X, false)?
      .visit_field::<f32>("y", Self::VT_Y, false)?
@@ -1872,7 +3524,7 @@ impl flatbuffers::Verifiable for Rect<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("x1", Self::VT_X1, false)?
      .visit_field::<f32>("y1", Self::VT_Y1, false)?
@@ -1981,1995 +3633,6594 @@ impl RectT {
     })
   }
 }
-pub enum PartOffset {}
+pub enum AttributeCellOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct Part<'a> {
+pub struct AttributeCell<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for Part<'a> {
-  type Inner = Part<'a>;
+impl<'a> flatbuffers::Follow<'a> for AttributeCell<'a> {
+  type Inner = AttributeCell<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> Part<'a> {
-  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+impl<'a> AttributeCell<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeCell { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeCellArgs
+  ) -> flatbuffers::WIPOffset<AttributeCell<'bldr>> {
+    let mut builder = AttributeCellBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeCellT {
+    AttributeCellT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeCell<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeCellArgs {
+}
+impl<'a> Default for AttributeCellArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeCellArgs {
+    }
+  }
+}
+
+pub struct AttributeCellBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeCellBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeCellBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeCellBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeCell<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeCell<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeCell");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeCellT {
+}
+impl Default for AttributeCellT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeCellT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeCell<'b>> {
+    AttributeCell::create(_fbb, &AttributeCellArgs{
+    })
+  }
+}
+pub enum AttributePosXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePosX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePosX<'a> {
+  type Inner = AttributePosX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePosX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePosX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePosXArgs
+  ) -> flatbuffers::WIPOffset<AttributePosX<'bldr>> {
+    let mut builder = AttributePosXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePosXT {
+    AttributePosXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePosX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePosXArgs {
+}
+impl<'a> Default for AttributePosXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePosXArgs {
+    }
+  }
+}
+
+pub struct AttributePosXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePosXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePosXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePosXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePosX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePosX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePosX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePosXT {
+}
+impl Default for AttributePosXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePosXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePosX<'b>> {
+    AttributePosX::create(_fbb, &AttributePosXArgs{
+    })
+  }
+}
+pub enum AttributePosYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePosY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePosY<'a> {
+  type Inner = AttributePosY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePosY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePosY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePosYArgs
+  ) -> flatbuffers::WIPOffset<AttributePosY<'bldr>> {
+    let mut builder = AttributePosYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePosYT {
+    AttributePosYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePosY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePosYArgs {
+}
+impl<'a> Default for AttributePosYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePosYArgs {
+    }
+  }
+}
+
+pub struct AttributePosYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePosYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePosYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePosYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePosY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePosY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePosY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePosYT {
+}
+impl Default for AttributePosYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePosYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePosY<'b>> {
+    AttributePosY::create(_fbb, &AttributePosYArgs{
+    })
+  }
+}
+pub enum AttributePosZOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePosZ<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePosZ<'a> {
+  type Inner = AttributePosZ<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePosZ<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePosZ { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePosZArgs
+  ) -> flatbuffers::WIPOffset<AttributePosZ<'bldr>> {
+    let mut builder = AttributePosZBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePosZT {
+    AttributePosZT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePosZ<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePosZArgs {
+}
+impl<'a> Default for AttributePosZArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePosZArgs {
+    }
+  }
+}
+
+pub struct AttributePosZBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePosZBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePosZBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePosZBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePosZ<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePosZ<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePosZ");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePosZT {
+}
+impl Default for AttributePosZT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePosZT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePosZ<'b>> {
+    AttributePosZ::create(_fbb, &AttributePosZArgs{
+    })
+  }
+}
+pub enum AttributeRotXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeRotX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeRotX<'a> {
+  type Inner = AttributeRotX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeRotX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeRotX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeRotXArgs
+  ) -> flatbuffers::WIPOffset<AttributeRotX<'bldr>> {
+    let mut builder = AttributeRotXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeRotXT {
+    AttributeRotXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeRotX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeRotXArgs {
+}
+impl<'a> Default for AttributeRotXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeRotXArgs {
+    }
+  }
+}
+
+pub struct AttributeRotXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeRotXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeRotXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeRotXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeRotX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeRotX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeRotX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeRotXT {
+}
+impl Default for AttributeRotXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeRotXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeRotX<'b>> {
+    AttributeRotX::create(_fbb, &AttributeRotXArgs{
+    })
+  }
+}
+pub enum AttributeRotYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeRotY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeRotY<'a> {
+  type Inner = AttributeRotY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeRotY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeRotY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeRotYArgs
+  ) -> flatbuffers::WIPOffset<AttributeRotY<'bldr>> {
+    let mut builder = AttributeRotYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeRotYT {
+    AttributeRotYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeRotY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeRotYArgs {
+}
+impl<'a> Default for AttributeRotYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeRotYArgs {
+    }
+  }
+}
+
+pub struct AttributeRotYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeRotYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeRotYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeRotYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeRotY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeRotY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeRotY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeRotYT {
+}
+impl Default for AttributeRotYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeRotYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeRotY<'b>> {
+    AttributeRotY::create(_fbb, &AttributeRotYArgs{
+    })
+  }
+}
+pub enum AttributeRotZOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeRotZ<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeRotZ<'a> {
+  type Inner = AttributeRotZ<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeRotZ<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeRotZ { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeRotZArgs
+  ) -> flatbuffers::WIPOffset<AttributeRotZ<'bldr>> {
+    let mut builder = AttributeRotZBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeRotZT {
+    AttributeRotZT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeRotZ<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeRotZArgs {
+}
+impl<'a> Default for AttributeRotZArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeRotZArgs {
+    }
+  }
+}
+
+pub struct AttributeRotZBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeRotZBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeRotZBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeRotZBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeRotZ<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeRotZ<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeRotZ");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeRotZT {
+}
+impl Default for AttributeRotZT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeRotZT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeRotZ<'b>> {
+    AttributeRotZ::create(_fbb, &AttributeRotZArgs{
+    })
+  }
+}
+pub enum AttributeSclXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeSclX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeSclX<'a> {
+  type Inner = AttributeSclX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeSclX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeSclX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeSclXArgs
+  ) -> flatbuffers::WIPOffset<AttributeSclX<'bldr>> {
+    let mut builder = AttributeSclXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeSclXT {
+    AttributeSclXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeSclX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeSclXArgs {
+}
+impl<'a> Default for AttributeSclXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeSclXArgs {
+    }
+  }
+}
+
+pub struct AttributeSclXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSclXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSclXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeSclXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSclX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeSclX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeSclX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeSclXT {
+}
+impl Default for AttributeSclXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeSclXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeSclX<'b>> {
+    AttributeSclX::create(_fbb, &AttributeSclXArgs{
+    })
+  }
+}
+pub enum AttributeSclYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeSclY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeSclY<'a> {
+  type Inner = AttributeSclY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeSclY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeSclY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeSclYArgs
+  ) -> flatbuffers::WIPOffset<AttributeSclY<'bldr>> {
+    let mut builder = AttributeSclYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeSclYT {
+    AttributeSclYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeSclY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeSclYArgs {
+}
+impl<'a> Default for AttributeSclYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeSclYArgs {
+    }
+  }
+}
+
+pub struct AttributeSclYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSclYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSclYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeSclYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSclY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeSclY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeSclY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeSclYT {
+}
+impl Default for AttributeSclYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeSclYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeSclY<'b>> {
+    AttributeSclY::create(_fbb, &AttributeSclYArgs{
+    })
+  }
+}
+pub enum AttributeLosclXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeLosclX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeLosclX<'a> {
+  type Inner = AttributeLosclX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeLosclX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeLosclX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeLosclXArgs
+  ) -> flatbuffers::WIPOffset<AttributeLosclX<'bldr>> {
+    let mut builder = AttributeLosclXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeLosclXT {
+    AttributeLosclXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeLosclX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeLosclXArgs {
+}
+impl<'a> Default for AttributeLosclXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeLosclXArgs {
+    }
+  }
+}
+
+pub struct AttributeLosclXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeLosclXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeLosclXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeLosclXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeLosclX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeLosclX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeLosclX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeLosclXT {
+}
+impl Default for AttributeLosclXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeLosclXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeLosclX<'b>> {
+    AttributeLosclX::create(_fbb, &AttributeLosclXArgs{
+    })
+  }
+}
+pub enum AttributeLosclYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeLosclY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeLosclY<'a> {
+  type Inner = AttributeLosclY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeLosclY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeLosclY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeLosclYArgs
+  ) -> flatbuffers::WIPOffset<AttributeLosclY<'bldr>> {
+    let mut builder = AttributeLosclYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeLosclYT {
+    AttributeLosclYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeLosclY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeLosclYArgs {
+}
+impl<'a> Default for AttributeLosclYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeLosclYArgs {
+    }
+  }
+}
+
+pub struct AttributeLosclYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeLosclYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeLosclYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeLosclYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeLosclY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeLosclY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeLosclY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeLosclYT {
+}
+impl Default for AttributeLosclYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeLosclYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeLosclY<'b>> {
+    AttributeLosclY::create(_fbb, &AttributeLosclYArgs{
+    })
+  }
+}
+pub enum AttributeAlphaOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeAlpha<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeAlpha<'a> {
+  type Inner = AttributeAlpha<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeAlpha<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeAlpha { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeAlphaArgs
+  ) -> flatbuffers::WIPOffset<AttributeAlpha<'bldr>> {
+    let mut builder = AttributeAlphaBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeAlphaT {
+    AttributeAlphaT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeAlpha<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeAlphaArgs {
+}
+impl<'a> Default for AttributeAlphaArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeAlphaArgs {
+    }
+  }
+}
+
+pub struct AttributeAlphaBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeAlphaBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeAlphaBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeAlphaBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeAlpha<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeAlpha<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeAlpha");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeAlphaT {
+}
+impl Default for AttributeAlphaT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeAlphaT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeAlpha<'b>> {
+    AttributeAlpha::create(_fbb, &AttributeAlphaArgs{
+    })
+  }
+}
+pub enum AttributeLoAlphaOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeLoAlpha<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeLoAlpha<'a> {
+  type Inner = AttributeLoAlpha<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeLoAlpha<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeLoAlpha { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeLoAlphaArgs
+  ) -> flatbuffers::WIPOffset<AttributeLoAlpha<'bldr>> {
+    let mut builder = AttributeLoAlphaBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeLoAlphaT {
+    AttributeLoAlphaT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeLoAlpha<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeLoAlphaArgs {
+}
+impl<'a> Default for AttributeLoAlphaArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeLoAlphaArgs {
+    }
+  }
+}
+
+pub struct AttributeLoAlphaBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeLoAlphaBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeLoAlphaBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeLoAlphaBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeLoAlpha<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeLoAlpha<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeLoAlpha");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeLoAlphaT {
+}
+impl Default for AttributeLoAlphaT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeLoAlphaT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeLoAlpha<'b>> {
+    AttributeLoAlpha::create(_fbb, &AttributeLoAlphaArgs{
+    })
+  }
+}
+pub enum AttributePrioOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePrio<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePrio<'a> {
+  type Inner = AttributePrio<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePrio<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePrio { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePrioArgs
+  ) -> flatbuffers::WIPOffset<AttributePrio<'bldr>> {
+    let mut builder = AttributePrioBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePrioT {
+    AttributePrioT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePrio<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePrioArgs {
+}
+impl<'a> Default for AttributePrioArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePrioArgs {
+    }
+  }
+}
+
+pub struct AttributePrioBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePrioBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePrioBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePrioBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePrio<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePrio<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePrio");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePrioT {
+}
+impl Default for AttributePrioT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePrioT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePrio<'b>> {
+    AttributePrio::create(_fbb, &AttributePrioArgs{
+    })
+  }
+}
+pub enum AttributeFlipHOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeFlipH<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeFlipH<'a> {
+  type Inner = AttributeFlipH<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeFlipH<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeFlipH { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeFlipHArgs
+  ) -> flatbuffers::WIPOffset<AttributeFlipH<'bldr>> {
+    let mut builder = AttributeFlipHBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeFlipHT {
+    AttributeFlipHT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeFlipH<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeFlipHArgs {
+}
+impl<'a> Default for AttributeFlipHArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeFlipHArgs {
+    }
+  }
+}
+
+pub struct AttributeFlipHBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeFlipHBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeFlipHBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeFlipHBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeFlipH<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeFlipH<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeFlipH");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeFlipHT {
+}
+impl Default for AttributeFlipHT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeFlipHT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeFlipH<'b>> {
+    AttributeFlipH::create(_fbb, &AttributeFlipHArgs{
+    })
+  }
+}
+pub enum AttributeFlipVOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeFlipV<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeFlipV<'a> {
+  type Inner = AttributeFlipV<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeFlipV<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeFlipV { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeFlipVArgs
+  ) -> flatbuffers::WIPOffset<AttributeFlipV<'bldr>> {
+    let mut builder = AttributeFlipVBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeFlipVT {
+    AttributeFlipVT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeFlipV<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeFlipVArgs {
+}
+impl<'a> Default for AttributeFlipVArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeFlipVArgs {
+    }
+  }
+}
+
+pub struct AttributeFlipVBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeFlipVBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeFlipVBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeFlipVBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeFlipV<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeFlipV<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeFlipV");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeFlipVT {
+}
+impl Default for AttributeFlipVT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeFlipVT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeFlipV<'b>> {
+    AttributeFlipV::create(_fbb, &AttributeFlipVArgs{
+    })
+  }
+}
+pub enum AttributeHideOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeHide<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeHide<'a> {
+  type Inner = AttributeHide<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeHide<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeHide { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeHideArgs
+  ) -> flatbuffers::WIPOffset<AttributeHide<'bldr>> {
+    let mut builder = AttributeHideBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeHideT {
+    AttributeHideT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeHide<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeHideArgs {
+}
+impl<'a> Default for AttributeHideArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeHideArgs {
+    }
+  }
+}
+
+pub struct AttributeHideBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeHideBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeHideBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeHideBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeHide<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeHide<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeHide");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeHideT {
+}
+impl Default for AttributeHideT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeHideT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeHide<'b>> {
+    AttributeHide::create(_fbb, &AttributeHideArgs{
+    })
+  }
+}
+pub enum AttributePartsColorOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePartsColor<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePartsColor<'a> {
+  type Inner = AttributePartsColor<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePartsColor<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePartsColor { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePartsColorArgs
+  ) -> flatbuffers::WIPOffset<AttributePartsColor<'bldr>> {
+    let mut builder = AttributePartsColorBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePartsColorT {
+    AttributePartsColorT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePartsColor<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePartsColorArgs {
+}
+impl<'a> Default for AttributePartsColorArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePartsColorArgs {
+    }
+  }
+}
+
+pub struct AttributePartsColorBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePartsColorBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePartsColorBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePartsColorBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePartsColor<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePartsColor<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePartsColor");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePartsColorT {
+}
+impl Default for AttributePartsColorT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePartsColorT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePartsColor<'b>> {
+    AttributePartsColor::create(_fbb, &AttributePartsColorArgs{
+    })
+  }
+}
+pub enum AttributeShaderOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeShader<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeShader<'a> {
+  type Inner = AttributeShader<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeShader<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeShader { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeShaderArgs
+  ) -> flatbuffers::WIPOffset<AttributeShader<'bldr>> {
+    let mut builder = AttributeShaderBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeShaderT {
+    AttributeShaderT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeShader<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeShaderArgs {
+}
+impl<'a> Default for AttributeShaderArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeShaderArgs {
+    }
+  }
+}
+
+pub struct AttributeShaderBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeShaderBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeShaderBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeShaderBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeShader<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeShader<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeShader");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeShaderT {
+}
+impl Default for AttributeShaderT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeShaderT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeShader<'b>> {
+    AttributeShader::create(_fbb, &AttributeShaderArgs{
+    })
+  }
+}
+pub enum AttributeVertexOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeVertex<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeVertex<'a> {
+  type Inner = AttributeVertex<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeVertex<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeVertex { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeVertexArgs
+  ) -> flatbuffers::WIPOffset<AttributeVertex<'bldr>> {
+    let mut builder = AttributeVertexBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeVertexT {
+    AttributeVertexT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeVertex<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeVertexArgs {
+}
+impl<'a> Default for AttributeVertexArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeVertexArgs {
+    }
+  }
+}
+
+pub struct AttributeVertexBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeVertexBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeVertexBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeVertexBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeVertex<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeVertex<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeVertex");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeVertexT {
+}
+impl Default for AttributeVertexT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeVertexT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeVertex<'b>> {
+    AttributeVertex::create(_fbb, &AttributeVertexArgs{
+    })
+  }
+}
+pub enum AttributePivotXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePivotX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePivotX<'a> {
+  type Inner = AttributePivotX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePivotX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePivotX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePivotXArgs
+  ) -> flatbuffers::WIPOffset<AttributePivotX<'bldr>> {
+    let mut builder = AttributePivotXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePivotXT {
+    AttributePivotXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePivotX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePivotXArgs {
+}
+impl<'a> Default for AttributePivotXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePivotXArgs {
+    }
+  }
+}
+
+pub struct AttributePivotXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePivotXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePivotXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePivotXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePivotX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePivotX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePivotX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePivotXT {
+}
+impl Default for AttributePivotXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePivotXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePivotX<'b>> {
+    AttributePivotX::create(_fbb, &AttributePivotXArgs{
+    })
+  }
+}
+pub enum AttributePivotYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributePivotY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributePivotY<'a> {
+  type Inner = AttributePivotY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributePivotY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributePivotY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributePivotYArgs
+  ) -> flatbuffers::WIPOffset<AttributePivotY<'bldr>> {
+    let mut builder = AttributePivotYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributePivotYT {
+    AttributePivotYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributePivotY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributePivotYArgs {
+}
+impl<'a> Default for AttributePivotYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributePivotYArgs {
+    }
+  }
+}
+
+pub struct AttributePivotYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePivotYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePivotYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributePivotYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePivotY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributePivotY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributePivotY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributePivotYT {
+}
+impl Default for AttributePivotYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributePivotYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributePivotY<'b>> {
+    AttributePivotY::create(_fbb, &AttributePivotYArgs{
+    })
+  }
+}
+pub enum AttributeAnchorXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeAnchorX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeAnchorX<'a> {
+  type Inner = AttributeAnchorX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeAnchorX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeAnchorX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeAnchorXArgs
+  ) -> flatbuffers::WIPOffset<AttributeAnchorX<'bldr>> {
+    let mut builder = AttributeAnchorXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeAnchorXT {
+    AttributeAnchorXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeAnchorX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeAnchorXArgs {
+}
+impl<'a> Default for AttributeAnchorXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeAnchorXArgs {
+    }
+  }
+}
+
+pub struct AttributeAnchorXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeAnchorXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeAnchorXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeAnchorXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeAnchorX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeAnchorX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeAnchorX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeAnchorXT {
+}
+impl Default for AttributeAnchorXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeAnchorXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeAnchorX<'b>> {
+    AttributeAnchorX::create(_fbb, &AttributeAnchorXArgs{
+    })
+  }
+}
+pub enum AttributeAnchorYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeAnchorY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeAnchorY<'a> {
+  type Inner = AttributeAnchorY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeAnchorY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeAnchorY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeAnchorYArgs
+  ) -> flatbuffers::WIPOffset<AttributeAnchorY<'bldr>> {
+    let mut builder = AttributeAnchorYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeAnchorYT {
+    AttributeAnchorYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeAnchorY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeAnchorYArgs {
+}
+impl<'a> Default for AttributeAnchorYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeAnchorYArgs {
+    }
+  }
+}
+
+pub struct AttributeAnchorYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeAnchorYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeAnchorYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeAnchorYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeAnchorY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeAnchorY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeAnchorY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeAnchorYT {
+}
+impl Default for AttributeAnchorYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeAnchorYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeAnchorY<'b>> {
+    AttributeAnchorY::create(_fbb, &AttributeAnchorYArgs{
+    })
+  }
+}
+pub enum AttributeSizeXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeSizeX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeSizeX<'a> {
+  type Inner = AttributeSizeX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeSizeX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeSizeX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeSizeXArgs
+  ) -> flatbuffers::WIPOffset<AttributeSizeX<'bldr>> {
+    let mut builder = AttributeSizeXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeSizeXT {
+    AttributeSizeXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeSizeX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeSizeXArgs {
+}
+impl<'a> Default for AttributeSizeXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeSizeXArgs {
+    }
+  }
+}
+
+pub struct AttributeSizeXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSizeXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSizeXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeSizeXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSizeX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeSizeX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeSizeX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeSizeXT {
+}
+impl Default for AttributeSizeXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeSizeXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeSizeX<'b>> {
+    AttributeSizeX::create(_fbb, &AttributeSizeXArgs{
+    })
+  }
+}
+pub enum AttributeSizeYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeSizeY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeSizeY<'a> {
+  type Inner = AttributeSizeY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeSizeY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeSizeY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeSizeYArgs
+  ) -> flatbuffers::WIPOffset<AttributeSizeY<'bldr>> {
+    let mut builder = AttributeSizeYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeSizeYT {
+    AttributeSizeYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeSizeY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeSizeYArgs {
+}
+impl<'a> Default for AttributeSizeYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeSizeYArgs {
+    }
+  }
+}
+
+pub struct AttributeSizeYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSizeYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSizeYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeSizeYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSizeY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeSizeY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeSizeY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeSizeYT {
+}
+impl Default for AttributeSizeYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeSizeYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeSizeY<'b>> {
+    AttributeSizeY::create(_fbb, &AttributeSizeYArgs{
+    })
+  }
+}
+pub enum AttributeImgFlipHOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeImgFlipH<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeImgFlipH<'a> {
+  type Inner = AttributeImgFlipH<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeImgFlipH<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeImgFlipH { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeImgFlipHArgs
+  ) -> flatbuffers::WIPOffset<AttributeImgFlipH<'bldr>> {
+    let mut builder = AttributeImgFlipHBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeImgFlipHT {
+    AttributeImgFlipHT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeImgFlipH<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeImgFlipHArgs {
+}
+impl<'a> Default for AttributeImgFlipHArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeImgFlipHArgs {
+    }
+  }
+}
+
+pub struct AttributeImgFlipHBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeImgFlipHBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeImgFlipHBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeImgFlipHBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeImgFlipH<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeImgFlipH<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeImgFlipH");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeImgFlipHT {
+}
+impl Default for AttributeImgFlipHT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeImgFlipHT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeImgFlipH<'b>> {
+    AttributeImgFlipH::create(_fbb, &AttributeImgFlipHArgs{
+    })
+  }
+}
+pub enum AttributeImgFlipVOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeImgFlipV<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeImgFlipV<'a> {
+  type Inner = AttributeImgFlipV<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeImgFlipV<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeImgFlipV { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeImgFlipVArgs
+  ) -> flatbuffers::WIPOffset<AttributeImgFlipV<'bldr>> {
+    let mut builder = AttributeImgFlipVBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeImgFlipVT {
+    AttributeImgFlipVT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeImgFlipV<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeImgFlipVArgs {
+}
+impl<'a> Default for AttributeImgFlipVArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeImgFlipVArgs {
+    }
+  }
+}
+
+pub struct AttributeImgFlipVBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeImgFlipVBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeImgFlipVBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeImgFlipVBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeImgFlipV<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeImgFlipV<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeImgFlipV");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeImgFlipVT {
+}
+impl Default for AttributeImgFlipVT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeImgFlipVT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeImgFlipV<'b>> {
+    AttributeImgFlipV::create(_fbb, &AttributeImgFlipVArgs{
+    })
+  }
+}
+pub enum AttributeUvtXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeUvtX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeUvtX<'a> {
+  type Inner = AttributeUvtX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeUvtX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeUvtX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeUvtXArgs
+  ) -> flatbuffers::WIPOffset<AttributeUvtX<'bldr>> {
+    let mut builder = AttributeUvtXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeUvtXT {
+    AttributeUvtXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeUvtX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeUvtXArgs {
+}
+impl<'a> Default for AttributeUvtXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeUvtXArgs {
+    }
+  }
+}
+
+pub struct AttributeUvtXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvtXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvtXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeUvtXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvtX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeUvtX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeUvtX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeUvtXT {
+}
+impl Default for AttributeUvtXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeUvtXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeUvtX<'b>> {
+    AttributeUvtX::create(_fbb, &AttributeUvtXArgs{
+    })
+  }
+}
+pub enum AttributeUvtYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeUvtY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeUvtY<'a> {
+  type Inner = AttributeUvtY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeUvtY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeUvtY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeUvtYArgs
+  ) -> flatbuffers::WIPOffset<AttributeUvtY<'bldr>> {
+    let mut builder = AttributeUvtYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeUvtYT {
+    AttributeUvtYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeUvtY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeUvtYArgs {
+}
+impl<'a> Default for AttributeUvtYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeUvtYArgs {
+    }
+  }
+}
+
+pub struct AttributeUvtYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvtYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvtYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeUvtYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvtY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeUvtY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeUvtY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeUvtYT {
+}
+impl Default for AttributeUvtYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeUvtYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeUvtY<'b>> {
+    AttributeUvtY::create(_fbb, &AttributeUvtYArgs{
+    })
+  }
+}
+pub enum AttributeUvrZOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeUvrZ<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeUvrZ<'a> {
+  type Inner = AttributeUvrZ<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeUvrZ<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeUvrZ { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeUvrZArgs
+  ) -> flatbuffers::WIPOffset<AttributeUvrZ<'bldr>> {
+    let mut builder = AttributeUvrZBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeUvrZT {
+    AttributeUvrZT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeUvrZ<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeUvrZArgs {
+}
+impl<'a> Default for AttributeUvrZArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeUvrZArgs {
+    }
+  }
+}
+
+pub struct AttributeUvrZBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvrZBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvrZBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeUvrZBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvrZ<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeUvrZ<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeUvrZ");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeUvrZT {
+}
+impl Default for AttributeUvrZT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeUvrZT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeUvrZ<'b>> {
+    AttributeUvrZ::create(_fbb, &AttributeUvrZArgs{
+    })
+  }
+}
+pub enum AttributeUvsXOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeUvsX<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeUvsX<'a> {
+  type Inner = AttributeUvsX<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeUvsX<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeUvsX { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeUvsXArgs
+  ) -> flatbuffers::WIPOffset<AttributeUvsX<'bldr>> {
+    let mut builder = AttributeUvsXBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeUvsXT {
+    AttributeUvsXT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeUvsX<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeUvsXArgs {
+}
+impl<'a> Default for AttributeUvsXArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeUvsXArgs {
+    }
+  }
+}
+
+pub struct AttributeUvsXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvsXBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvsXBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeUvsXBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvsX<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeUvsX<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeUvsX");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeUvsXT {
+}
+impl Default for AttributeUvsXT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeUvsXT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeUvsX<'b>> {
+    AttributeUvsX::create(_fbb, &AttributeUvsXArgs{
+    })
+  }
+}
+pub enum AttributeUvsYOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeUvsY<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeUvsY<'a> {
+  type Inner = AttributeUvsY<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeUvsY<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeUvsY { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeUvsYArgs
+  ) -> flatbuffers::WIPOffset<AttributeUvsY<'bldr>> {
+    let mut builder = AttributeUvsYBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeUvsYT {
+    AttributeUvsYT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeUvsY<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeUvsYArgs {
+}
+impl<'a> Default for AttributeUvsYArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeUvsYArgs {
+    }
+  }
+}
+
+pub struct AttributeUvsYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvsYBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvsYBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeUvsYBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvsY<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeUvsY<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeUvsY");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeUvsYT {
+}
+impl Default for AttributeUvsYT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeUvsYT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeUvsY<'b>> {
+    AttributeUvsY::create(_fbb, &AttributeUvsYArgs{
+    })
+  }
+}
+pub enum AttributeBoundrOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeBoundr<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeBoundr<'a> {
+  type Inner = AttributeBoundr<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeBoundr<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeBoundr { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeBoundrArgs
+  ) -> flatbuffers::WIPOffset<AttributeBoundr<'bldr>> {
+    let mut builder = AttributeBoundrBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeBoundrT {
+    AttributeBoundrT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeBoundr<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeBoundrArgs {
+}
+impl<'a> Default for AttributeBoundrArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeBoundrArgs {
+    }
+  }
+}
+
+pub struct AttributeBoundrBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeBoundrBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeBoundrBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeBoundrBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeBoundr<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeBoundr<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeBoundr");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeBoundrT {
+}
+impl Default for AttributeBoundrT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeBoundrT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeBoundr<'b>> {
+    AttributeBoundr::create(_fbb, &AttributeBoundrArgs{
+    })
+  }
+}
+pub enum AttributeMaskOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeMask<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeMask<'a> {
+  type Inner = AttributeMask<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeMask<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeMask { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeMaskArgs
+  ) -> flatbuffers::WIPOffset<AttributeMask<'bldr>> {
+    let mut builder = AttributeMaskBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeMaskT {
+    AttributeMaskT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeMask<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeMaskArgs {
+}
+impl<'a> Default for AttributeMaskArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeMaskArgs {
+    }
+  }
+}
+
+pub struct AttributeMaskBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeMaskBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeMaskBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeMaskBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeMask<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeMask<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeMask");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeMaskT {
+}
+impl Default for AttributeMaskT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeMaskT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeMask<'b>> {
+    AttributeMask::create(_fbb, &AttributeMaskArgs{
+    })
+  }
+}
+pub enum AttributeUserOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeUser<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeUser<'a> {
+  type Inner = AttributeUser<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeUser<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeUser { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeUserArgs
+  ) -> flatbuffers::WIPOffset<AttributeUser<'bldr>> {
+    let mut builder = AttributeUserBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeUserT {
+    AttributeUserT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeUser<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeUserArgs {
+}
+impl<'a> Default for AttributeUserArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeUserArgs {
+    }
+  }
+}
+
+pub struct AttributeUserBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUserBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUserBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeUserBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUser<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeUser<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeUser");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeUserT {
+}
+impl Default for AttributeUserT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeUserT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeUser<'b>> {
+    AttributeUser::create(_fbb, &AttributeUserArgs{
+    })
+  }
+}
+pub enum AttributeSignalOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeSignal<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeSignal<'a> {
+  type Inner = AttributeSignal<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeSignal<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeSignal { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeSignalArgs
+  ) -> flatbuffers::WIPOffset<AttributeSignal<'bldr>> {
+    let mut builder = AttributeSignalBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeSignalT {
+    AttributeSignalT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeSignal<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeSignalArgs {
+}
+impl<'a> Default for AttributeSignalArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeSignalArgs {
+    }
+  }
+}
+
+pub struct AttributeSignalBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSignalBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSignalBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeSignalBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSignal<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeSignal<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeSignal");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeSignalT {
+}
+impl Default for AttributeSignalT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeSignalT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeSignal<'b>> {
+    AttributeSignal::create(_fbb, &AttributeSignalArgs{
+    })
+  }
+}
+pub enum AttributeInstanceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeInstance<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeInstance<'a> {
+  type Inner = AttributeInstance<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeInstance<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeInstance { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeInstanceArgs
+  ) -> flatbuffers::WIPOffset<AttributeInstance<'bldr>> {
+    let mut builder = AttributeInstanceBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeInstanceT {
+    AttributeInstanceT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeInstance<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeInstanceArgs {
+}
+impl<'a> Default for AttributeInstanceArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeInstanceArgs {
+    }
+  }
+}
+
+pub struct AttributeInstanceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeInstanceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeInstanceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeInstanceBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeInstance<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeInstance<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeInstance");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeInstanceT {
+}
+impl Default for AttributeInstanceT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeInstanceT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeInstance<'b>> {
+    AttributeInstance::create(_fbb, &AttributeInstanceArgs{
+    })
+  }
+}
+pub enum AttributeEffectOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeEffect<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeEffect<'a> {
+  type Inner = AttributeEffect<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeEffect<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeEffect { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args AttributeEffectArgs
+  ) -> flatbuffers::WIPOffset<AttributeEffect<'bldr>> {
+    let mut builder = AttributeEffectBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeEffectT {
+    AttributeEffectT {
+    }
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeEffect<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeEffectArgs {
+}
+impl<'a> Default for AttributeEffectArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeEffectArgs {
+    }
+  }
+}
+
+pub struct AttributeEffectBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeEffectBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeEffectBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeEffectBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeEffect<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeEffect<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeEffect");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeEffectT {
+}
+impl Default for AttributeEffectT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl AttributeEffectT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeEffect<'b>> {
+    AttributeEffect::create(_fbb, &AttributeEffectArgs{
+    })
+  }
+}
+pub enum AttributeWrapperOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeWrapper<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeWrapper<'a> {
+  type Inner = AttributeWrapper<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeWrapper<'a> {
+  pub const VT_DATA_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_DATA: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeWrapper { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args AttributeWrapperArgs
+  ) -> flatbuffers::WIPOffset<AttributeWrapper<'bldr>> {
+    let mut builder = AttributeWrapperBuilder::new(_fbb);
+    if let Some(x) = args.data { builder.add_data(x); }
+    builder.add_data_type(args.data_type);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeWrapperT {
+    let data = match self.data_type() {
+      Attribute::NONE => AttributeT::NONE,
+      Attribute::AttributeCell => AttributeT::AttributeCell(Box::new(
+        self.data_as_attribute_cell()
+            .expect("Invalid union table, expected `Attribute::AttributeCell`.")
+            .unpack()
+      )),
+      Attribute::AttributePosX => AttributeT::AttributePosX(Box::new(
+        self.data_as_attribute_pos_x()
+            .expect("Invalid union table, expected `Attribute::AttributePosX`.")
+            .unpack()
+      )),
+      Attribute::AttributePosY => AttributeT::AttributePosY(Box::new(
+        self.data_as_attribute_pos_y()
+            .expect("Invalid union table, expected `Attribute::AttributePosY`.")
+            .unpack()
+      )),
+      Attribute::AttributePosZ => AttributeT::AttributePosZ(Box::new(
+        self.data_as_attribute_pos_z()
+            .expect("Invalid union table, expected `Attribute::AttributePosZ`.")
+            .unpack()
+      )),
+      Attribute::AttributeRotX => AttributeT::AttributeRotX(Box::new(
+        self.data_as_attribute_rot_x()
+            .expect("Invalid union table, expected `Attribute::AttributeRotX`.")
+            .unpack()
+      )),
+      Attribute::AttributeRotY => AttributeT::AttributeRotY(Box::new(
+        self.data_as_attribute_rot_y()
+            .expect("Invalid union table, expected `Attribute::AttributeRotY`.")
+            .unpack()
+      )),
+      Attribute::AttributeRotZ => AttributeT::AttributeRotZ(Box::new(
+        self.data_as_attribute_rot_z()
+            .expect("Invalid union table, expected `Attribute::AttributeRotZ`.")
+            .unpack()
+      )),
+      Attribute::AttributeSclX => AttributeT::AttributeSclX(Box::new(
+        self.data_as_attribute_scl_x()
+            .expect("Invalid union table, expected `Attribute::AttributeSclX`.")
+            .unpack()
+      )),
+      Attribute::AttributeSclY => AttributeT::AttributeSclY(Box::new(
+        self.data_as_attribute_scl_y()
+            .expect("Invalid union table, expected `Attribute::AttributeSclY`.")
+            .unpack()
+      )),
+      Attribute::AttributeLosclX => AttributeT::AttributeLosclX(Box::new(
+        self.data_as_attribute_loscl_x()
+            .expect("Invalid union table, expected `Attribute::AttributeLosclX`.")
+            .unpack()
+      )),
+      Attribute::AttributeLosclY => AttributeT::AttributeLosclY(Box::new(
+        self.data_as_attribute_loscl_y()
+            .expect("Invalid union table, expected `Attribute::AttributeLosclY`.")
+            .unpack()
+      )),
+      Attribute::AttributeAlpha => AttributeT::AttributeAlpha(Box::new(
+        self.data_as_attribute_alpha()
+            .expect("Invalid union table, expected `Attribute::AttributeAlpha`.")
+            .unpack()
+      )),
+      Attribute::AttributeLoAlpha => AttributeT::AttributeLoAlpha(Box::new(
+        self.data_as_attribute_lo_alpha()
+            .expect("Invalid union table, expected `Attribute::AttributeLoAlpha`.")
+            .unpack()
+      )),
+      Attribute::AttributePrio => AttributeT::AttributePrio(Box::new(
+        self.data_as_attribute_prio()
+            .expect("Invalid union table, expected `Attribute::AttributePrio`.")
+            .unpack()
+      )),
+      Attribute::AttributeFlipH => AttributeT::AttributeFlipH(Box::new(
+        self.data_as_attribute_flip_h()
+            .expect("Invalid union table, expected `Attribute::AttributeFlipH`.")
+            .unpack()
+      )),
+      Attribute::AttributeFlipV => AttributeT::AttributeFlipV(Box::new(
+        self.data_as_attribute_flip_v()
+            .expect("Invalid union table, expected `Attribute::AttributeFlipV`.")
+            .unpack()
+      )),
+      Attribute::AttributeHide => AttributeT::AttributeHide(Box::new(
+        self.data_as_attribute_hide()
+            .expect("Invalid union table, expected `Attribute::AttributeHide`.")
+            .unpack()
+      )),
+      Attribute::AttributePartsColor => AttributeT::AttributePartsColor(Box::new(
+        self.data_as_attribute_parts_color()
+            .expect("Invalid union table, expected `Attribute::AttributePartsColor`.")
+            .unpack()
+      )),
+      Attribute::AttributeShader => AttributeT::AttributeShader(Box::new(
+        self.data_as_attribute_shader()
+            .expect("Invalid union table, expected `Attribute::AttributeShader`.")
+            .unpack()
+      )),
+      Attribute::AttributeVertex => AttributeT::AttributeVertex(Box::new(
+        self.data_as_attribute_vertex()
+            .expect("Invalid union table, expected `Attribute::AttributeVertex`.")
+            .unpack()
+      )),
+      Attribute::AttributePivotX => AttributeT::AttributePivotX(Box::new(
+        self.data_as_attribute_pivot_x()
+            .expect("Invalid union table, expected `Attribute::AttributePivotX`.")
+            .unpack()
+      )),
+      Attribute::AttributePivotY => AttributeT::AttributePivotY(Box::new(
+        self.data_as_attribute_pivot_y()
+            .expect("Invalid union table, expected `Attribute::AttributePivotY`.")
+            .unpack()
+      )),
+      Attribute::AttributeAnchorX => AttributeT::AttributeAnchorX(Box::new(
+        self.data_as_attribute_anchor_x()
+            .expect("Invalid union table, expected `Attribute::AttributeAnchorX`.")
+            .unpack()
+      )),
+      Attribute::AttributeAnchorY => AttributeT::AttributeAnchorY(Box::new(
+        self.data_as_attribute_anchor_y()
+            .expect("Invalid union table, expected `Attribute::AttributeAnchorY`.")
+            .unpack()
+      )),
+      Attribute::AttributeSizeX => AttributeT::AttributeSizeX(Box::new(
+        self.data_as_attribute_size_x()
+            .expect("Invalid union table, expected `Attribute::AttributeSizeX`.")
+            .unpack()
+      )),
+      Attribute::AttributeSizeY => AttributeT::AttributeSizeY(Box::new(
+        self.data_as_attribute_size_y()
+            .expect("Invalid union table, expected `Attribute::AttributeSizeY`.")
+            .unpack()
+      )),
+      Attribute::AttributeImgFlipH => AttributeT::AttributeImgFlipH(Box::new(
+        self.data_as_attribute_img_flip_h()
+            .expect("Invalid union table, expected `Attribute::AttributeImgFlipH`.")
+            .unpack()
+      )),
+      Attribute::AttributeImgFlipV => AttributeT::AttributeImgFlipV(Box::new(
+        self.data_as_attribute_img_flip_v()
+            .expect("Invalid union table, expected `Attribute::AttributeImgFlipV`.")
+            .unpack()
+      )),
+      Attribute::AttributeUvtX => AttributeT::AttributeUvtX(Box::new(
+        self.data_as_attribute_uvt_x()
+            .expect("Invalid union table, expected `Attribute::AttributeUvtX`.")
+            .unpack()
+      )),
+      Attribute::AttributeUvtY => AttributeT::AttributeUvtY(Box::new(
+        self.data_as_attribute_uvt_y()
+            .expect("Invalid union table, expected `Attribute::AttributeUvtY`.")
+            .unpack()
+      )),
+      Attribute::AttributeUvrZ => AttributeT::AttributeUvrZ(Box::new(
+        self.data_as_attribute_uvr_z()
+            .expect("Invalid union table, expected `Attribute::AttributeUvrZ`.")
+            .unpack()
+      )),
+      Attribute::AttributeUvsX => AttributeT::AttributeUvsX(Box::new(
+        self.data_as_attribute_uvs_x()
+            .expect("Invalid union table, expected `Attribute::AttributeUvsX`.")
+            .unpack()
+      )),
+      Attribute::AttributeUvsY => AttributeT::AttributeUvsY(Box::new(
+        self.data_as_attribute_uvs_y()
+            .expect("Invalid union table, expected `Attribute::AttributeUvsY`.")
+            .unpack()
+      )),
+      Attribute::AttributeBoundr => AttributeT::AttributeBoundr(Box::new(
+        self.data_as_attribute_boundr()
+            .expect("Invalid union table, expected `Attribute::AttributeBoundr`.")
+            .unpack()
+      )),
+      Attribute::AttributeMask => AttributeT::AttributeMask(Box::new(
+        self.data_as_attribute_mask()
+            .expect("Invalid union table, expected `Attribute::AttributeMask`.")
+            .unpack()
+      )),
+      Attribute::AttributeUser => AttributeT::AttributeUser(Box::new(
+        self.data_as_attribute_user()
+            .expect("Invalid union table, expected `Attribute::AttributeUser`.")
+            .unpack()
+      )),
+      Attribute::AttributeSignal => AttributeT::AttributeSignal(Box::new(
+        self.data_as_attribute_signal()
+            .expect("Invalid union table, expected `Attribute::AttributeSignal`.")
+            .unpack()
+      )),
+      Attribute::AttributeInstance => AttributeT::AttributeInstance(Box::new(
+        self.data_as_attribute_instance()
+            .expect("Invalid union table, expected `Attribute::AttributeInstance`.")
+            .unpack()
+      )),
+      Attribute::AttributeEffect => AttributeT::AttributeEffect(Box::new(
+        self.data_as_attribute_effect()
+            .expect("Invalid union table, expected `Attribute::AttributeEffect`.")
+            .unpack()
+      )),
+      _ => AttributeT::NONE,
+    };
+    AttributeWrapperT {
+      data,
+    }
+  }
+
+  #[inline]
+  pub fn data_type(&self) -> Attribute {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<Attribute>(AttributeWrapper::VT_DATA_TYPE, Some(Attribute::NONE)).unwrap()}
+  }
+  #[inline]
+  pub fn data(&self) -> Option<flatbuffers::Table<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(AttributeWrapper::VT_DATA, None)}
+  }
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_cell(&self) -> Option<AttributeCell<'a>> {
+    if self.data_type() == Attribute::AttributeCell {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeCell::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_pos_x(&self) -> Option<AttributePosX<'a>> {
+    if self.data_type() == Attribute::AttributePosX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePosX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_pos_y(&self) -> Option<AttributePosY<'a>> {
+    if self.data_type() == Attribute::AttributePosY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePosY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_pos_z(&self) -> Option<AttributePosZ<'a>> {
+    if self.data_type() == Attribute::AttributePosZ {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePosZ::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_rot_x(&self) -> Option<AttributeRotX<'a>> {
+    if self.data_type() == Attribute::AttributeRotX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeRotX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_rot_y(&self) -> Option<AttributeRotY<'a>> {
+    if self.data_type() == Attribute::AttributeRotY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeRotY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_rot_z(&self) -> Option<AttributeRotZ<'a>> {
+    if self.data_type() == Attribute::AttributeRotZ {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeRotZ::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_scl_x(&self) -> Option<AttributeSclX<'a>> {
+    if self.data_type() == Attribute::AttributeSclX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeSclX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_scl_y(&self) -> Option<AttributeSclY<'a>> {
+    if self.data_type() == Attribute::AttributeSclY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeSclY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_loscl_x(&self) -> Option<AttributeLosclX<'a>> {
+    if self.data_type() == Attribute::AttributeLosclX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeLosclX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_loscl_y(&self) -> Option<AttributeLosclY<'a>> {
+    if self.data_type() == Attribute::AttributeLosclY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeLosclY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_alpha(&self) -> Option<AttributeAlpha<'a>> {
+    if self.data_type() == Attribute::AttributeAlpha {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeAlpha::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_lo_alpha(&self) -> Option<AttributeLoAlpha<'a>> {
+    if self.data_type() == Attribute::AttributeLoAlpha {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeLoAlpha::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_prio(&self) -> Option<AttributePrio<'a>> {
+    if self.data_type() == Attribute::AttributePrio {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePrio::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_flip_h(&self) -> Option<AttributeFlipH<'a>> {
+    if self.data_type() == Attribute::AttributeFlipH {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeFlipH::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_flip_v(&self) -> Option<AttributeFlipV<'a>> {
+    if self.data_type() == Attribute::AttributeFlipV {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeFlipV::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_hide(&self) -> Option<AttributeHide<'a>> {
+    if self.data_type() == Attribute::AttributeHide {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeHide::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_parts_color(&self) -> Option<AttributePartsColor<'a>> {
+    if self.data_type() == Attribute::AttributePartsColor {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePartsColor::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_shader(&self) -> Option<AttributeShader<'a>> {
+    if self.data_type() == Attribute::AttributeShader {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeShader::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_vertex(&self) -> Option<AttributeVertex<'a>> {
+    if self.data_type() == Attribute::AttributeVertex {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeVertex::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_pivot_x(&self) -> Option<AttributePivotX<'a>> {
+    if self.data_type() == Attribute::AttributePivotX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePivotX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_pivot_y(&self) -> Option<AttributePivotY<'a>> {
+    if self.data_type() == Attribute::AttributePivotY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributePivotY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_anchor_x(&self) -> Option<AttributeAnchorX<'a>> {
+    if self.data_type() == Attribute::AttributeAnchorX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeAnchorX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_anchor_y(&self) -> Option<AttributeAnchorY<'a>> {
+    if self.data_type() == Attribute::AttributeAnchorY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeAnchorY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_size_x(&self) -> Option<AttributeSizeX<'a>> {
+    if self.data_type() == Attribute::AttributeSizeX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeSizeX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_size_y(&self) -> Option<AttributeSizeY<'a>> {
+    if self.data_type() == Attribute::AttributeSizeY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeSizeY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_img_flip_h(&self) -> Option<AttributeImgFlipH<'a>> {
+    if self.data_type() == Attribute::AttributeImgFlipH {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeImgFlipH::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_img_flip_v(&self) -> Option<AttributeImgFlipV<'a>> {
+    if self.data_type() == Attribute::AttributeImgFlipV {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeImgFlipV::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_uvt_x(&self) -> Option<AttributeUvtX<'a>> {
+    if self.data_type() == Attribute::AttributeUvtX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeUvtX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_uvt_y(&self) -> Option<AttributeUvtY<'a>> {
+    if self.data_type() == Attribute::AttributeUvtY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeUvtY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_uvr_z(&self) -> Option<AttributeUvrZ<'a>> {
+    if self.data_type() == Attribute::AttributeUvrZ {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeUvrZ::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_uvs_x(&self) -> Option<AttributeUvsX<'a>> {
+    if self.data_type() == Attribute::AttributeUvsX {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeUvsX::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_uvs_y(&self) -> Option<AttributeUvsY<'a>> {
+    if self.data_type() == Attribute::AttributeUvsY {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeUvsY::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_boundr(&self) -> Option<AttributeBoundr<'a>> {
+    if self.data_type() == Attribute::AttributeBoundr {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeBoundr::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_mask(&self) -> Option<AttributeMask<'a>> {
+    if self.data_type() == Attribute::AttributeMask {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeMask::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_user(&self) -> Option<AttributeUser<'a>> {
+    if self.data_type() == Attribute::AttributeUser {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeUser::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_signal(&self) -> Option<AttributeSignal<'a>> {
+    if self.data_type() == Attribute::AttributeSignal {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeSignal::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_instance(&self) -> Option<AttributeInstance<'a>> {
+    if self.data_type() == Attribute::AttributeInstance {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeInstance::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_attribute_effect(&self) -> Option<AttributeEffect<'a>> {
+    if self.data_type() == Attribute::AttributeEffect {
+      self.data().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { AttributeEffect::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+}
+
+impl flatbuffers::Verifiable for AttributeWrapper<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_union::<Attribute, _>("data_type", Self::VT_DATA_TYPE, "data", Self::VT_DATA, false, |key, v, pos| {
+        match key {
+          Attribute::AttributeCell => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeCell>>("Attribute::AttributeCell", pos),
+          Attribute::AttributePosX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePosX>>("Attribute::AttributePosX", pos),
+          Attribute::AttributePosY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePosY>>("Attribute::AttributePosY", pos),
+          Attribute::AttributePosZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePosZ>>("Attribute::AttributePosZ", pos),
+          Attribute::AttributeRotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeRotX>>("Attribute::AttributeRotX", pos),
+          Attribute::AttributeRotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeRotY>>("Attribute::AttributeRotY", pos),
+          Attribute::AttributeRotZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeRotZ>>("Attribute::AttributeRotZ", pos),
+          Attribute::AttributeSclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSclX>>("Attribute::AttributeSclX", pos),
+          Attribute::AttributeSclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSclY>>("Attribute::AttributeSclY", pos),
+          Attribute::AttributeLosclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeLosclX>>("Attribute::AttributeLosclX", pos),
+          Attribute::AttributeLosclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeLosclY>>("Attribute::AttributeLosclY", pos),
+          Attribute::AttributeAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeAlpha>>("Attribute::AttributeAlpha", pos),
+          Attribute::AttributeLoAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeLoAlpha>>("Attribute::AttributeLoAlpha", pos),
+          Attribute::AttributePrio => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePrio>>("Attribute::AttributePrio", pos),
+          Attribute::AttributeFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFlipH>>("Attribute::AttributeFlipH", pos),
+          Attribute::AttributeFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFlipV>>("Attribute::AttributeFlipV", pos),
+          Attribute::AttributeHide => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeHide>>("Attribute::AttributeHide", pos),
+          Attribute::AttributePartsColor => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePartsColor>>("Attribute::AttributePartsColor", pos),
+          Attribute::AttributeShader => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeShader>>("Attribute::AttributeShader", pos),
+          Attribute::AttributeVertex => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeVertex>>("Attribute::AttributeVertex", pos),
+          Attribute::AttributePivotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePivotX>>("Attribute::AttributePivotX", pos),
+          Attribute::AttributePivotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePivotY>>("Attribute::AttributePivotY", pos),
+          Attribute::AttributeAnchorX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeAnchorX>>("Attribute::AttributeAnchorX", pos),
+          Attribute::AttributeAnchorY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeAnchorY>>("Attribute::AttributeAnchorY", pos),
+          Attribute::AttributeSizeX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSizeX>>("Attribute::AttributeSizeX", pos),
+          Attribute::AttributeSizeY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSizeY>>("Attribute::AttributeSizeY", pos),
+          Attribute::AttributeImgFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeImgFlipH>>("Attribute::AttributeImgFlipH", pos),
+          Attribute::AttributeImgFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeImgFlipV>>("Attribute::AttributeImgFlipV", pos),
+          Attribute::AttributeUvtX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvtX>>("Attribute::AttributeUvtX", pos),
+          Attribute::AttributeUvtY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvtY>>("Attribute::AttributeUvtY", pos),
+          Attribute::AttributeUvrZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvrZ>>("Attribute::AttributeUvrZ", pos),
+          Attribute::AttributeUvsX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvsX>>("Attribute::AttributeUvsX", pos),
+          Attribute::AttributeUvsY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvsY>>("Attribute::AttributeUvsY", pos),
+          Attribute::AttributeBoundr => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBoundr>>("Attribute::AttributeBoundr", pos),
+          Attribute::AttributeMask => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeMask>>("Attribute::AttributeMask", pos),
+          Attribute::AttributeUser => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUser>>("Attribute::AttributeUser", pos),
+          Attribute::AttributeSignal => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSignal>>("Attribute::AttributeSignal", pos),
+          Attribute::AttributeInstance => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeInstance>>("Attribute::AttributeInstance", pos),
+          Attribute::AttributeEffect => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeEffect>>("Attribute::AttributeEffect", pos),
+          _ => Ok(()),
+        }
+     })?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeWrapperArgs {
+    pub data_type: Attribute,
+    pub data: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+}
+impl<'a> Default for AttributeWrapperArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeWrapperArgs {
+      data_type: Attribute::NONE,
+      data: None,
+    }
+  }
+}
+
+pub struct AttributeWrapperBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeWrapperBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_data_type(&mut self, data_type: Attribute) {
+    self.fbb_.push_slot::<Attribute>(AttributeWrapper::VT_DATA_TYPE, data_type, Attribute::NONE);
+  }
+  #[inline]
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AttributeWrapper::VT_DATA, data);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeWrapperBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeWrapperBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeWrapper<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeWrapper<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeWrapper");
+      ds.field("data_type", &self.data_type());
+      match self.data_type() {
+        Attribute::AttributeCell => {
+          if let Some(x) = self.data_as_attribute_cell() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePosX => {
+          if let Some(x) = self.data_as_attribute_pos_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePosY => {
+          if let Some(x) = self.data_as_attribute_pos_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePosZ => {
+          if let Some(x) = self.data_as_attribute_pos_z() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeRotX => {
+          if let Some(x) = self.data_as_attribute_rot_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeRotY => {
+          if let Some(x) = self.data_as_attribute_rot_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeRotZ => {
+          if let Some(x) = self.data_as_attribute_rot_z() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeSclX => {
+          if let Some(x) = self.data_as_attribute_scl_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeSclY => {
+          if let Some(x) = self.data_as_attribute_scl_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeLosclX => {
+          if let Some(x) = self.data_as_attribute_loscl_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeLosclY => {
+          if let Some(x) = self.data_as_attribute_loscl_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeAlpha => {
+          if let Some(x) = self.data_as_attribute_alpha() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeLoAlpha => {
+          if let Some(x) = self.data_as_attribute_lo_alpha() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePrio => {
+          if let Some(x) = self.data_as_attribute_prio() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeFlipH => {
+          if let Some(x) = self.data_as_attribute_flip_h() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeFlipV => {
+          if let Some(x) = self.data_as_attribute_flip_v() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeHide => {
+          if let Some(x) = self.data_as_attribute_hide() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePartsColor => {
+          if let Some(x) = self.data_as_attribute_parts_color() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeShader => {
+          if let Some(x) = self.data_as_attribute_shader() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeVertex => {
+          if let Some(x) = self.data_as_attribute_vertex() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePivotX => {
+          if let Some(x) = self.data_as_attribute_pivot_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributePivotY => {
+          if let Some(x) = self.data_as_attribute_pivot_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeAnchorX => {
+          if let Some(x) = self.data_as_attribute_anchor_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeAnchorY => {
+          if let Some(x) = self.data_as_attribute_anchor_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeSizeX => {
+          if let Some(x) = self.data_as_attribute_size_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeSizeY => {
+          if let Some(x) = self.data_as_attribute_size_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeImgFlipH => {
+          if let Some(x) = self.data_as_attribute_img_flip_h() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeImgFlipV => {
+          if let Some(x) = self.data_as_attribute_img_flip_v() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeUvtX => {
+          if let Some(x) = self.data_as_attribute_uvt_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeUvtY => {
+          if let Some(x) = self.data_as_attribute_uvt_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeUvrZ => {
+          if let Some(x) = self.data_as_attribute_uvr_z() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeUvsX => {
+          if let Some(x) = self.data_as_attribute_uvs_x() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeUvsY => {
+          if let Some(x) = self.data_as_attribute_uvs_y() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeBoundr => {
+          if let Some(x) = self.data_as_attribute_boundr() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeMask => {
+          if let Some(x) = self.data_as_attribute_mask() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeUser => {
+          if let Some(x) = self.data_as_attribute_user() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeSignal => {
+          if let Some(x) = self.data_as_attribute_signal() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeInstance => {
+          if let Some(x) = self.data_as_attribute_instance() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        Attribute::AttributeEffect => {
+          if let Some(x) = self.data_as_attribute_effect() {
+            ds.field("data", &x)
+          } else {
+            ds.field("data", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        _ => {
+          let x: Option<()> = None;
+          ds.field("data", &x)
+        },
+      };
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeWrapperT {
+  pub data: AttributeT,
+}
+impl Default for AttributeWrapperT {
+  fn default() -> Self {
+    Self {
+      data: AttributeT::NONE,
+    }
+  }
+}
+impl AttributeWrapperT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeWrapper<'b>> {
+    let data_type = self.data.attribute_type();
+    let data = self.data.pack(_fbb);
+    AttributeWrapper::create(_fbb, &AttributeWrapperArgs{
+      data_type,
+      data,
+    })
+  }
+}
+pub enum UserDataIntegerOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct UserDataInteger<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for UserDataInteger<'a> {
+  type Inner = UserDataInteger<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> UserDataInteger<'a> {
+  pub const VT_INTEGER: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    UserDataInteger { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args UserDataIntegerArgs
+  ) -> flatbuffers::WIPOffset<UserDataInteger<'bldr>> {
+    let mut builder = UserDataIntegerBuilder::new(_fbb);
+    builder.add_integer(args.integer);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> UserDataIntegerT {
+    let integer = self.integer();
+    UserDataIntegerT {
+      integer,
+    }
+  }
+
+  #[inline]
+  pub fn integer(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(UserDataInteger::VT_INTEGER, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for UserDataInteger<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i32>("integer", Self::VT_INTEGER, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct UserDataIntegerArgs {
+    pub integer: i32,
+}
+impl<'a> Default for UserDataIntegerArgs {
+  #[inline]
+  fn default() -> Self {
+    UserDataIntegerArgs {
+      integer: 0,
+    }
+  }
+}
+
+pub struct UserDataIntegerBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataIntegerBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_integer(&mut self, integer: i32) {
+    self.fbb_.push_slot::<i32>(UserDataInteger::VT_INTEGER, integer, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataIntegerBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    UserDataIntegerBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataInteger<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for UserDataInteger<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("UserDataInteger");
+      ds.field("integer", &self.integer());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserDataIntegerT {
+  pub integer: i32,
+}
+impl Default for UserDataIntegerT {
+  fn default() -> Self {
+    Self {
+      integer: 0,
+    }
+  }
+}
+impl UserDataIntegerT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<UserDataInteger<'b>> {
+    let integer = self.integer;
+    UserDataInteger::create(_fbb, &UserDataIntegerArgs{
+      integer,
+    })
+  }
+}
+pub enum UserDataRectOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct UserDataRect<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for UserDataRect<'a> {
+  type Inner = UserDataRect<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> UserDataRect<'a> {
+  pub const VT_RECT: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    UserDataRect { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args UserDataRectArgs<'args>
+  ) -> flatbuffers::WIPOffset<UserDataRect<'bldr>> {
+    let mut builder = UserDataRectBuilder::new(_fbb);
+    if let Some(x) = args.rect { builder.add_rect(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> UserDataRectT {
+    let rect = self.rect().map(|x| {
+      Box::new(x.unpack())
+    });
+    UserDataRectT {
+      rect,
+    }
+  }
+
+  #[inline]
+  pub fn rect(&self) -> Option<Rect<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Rect>>(UserDataRect::VT_RECT, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for UserDataRect<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("rect", Self::VT_RECT, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct UserDataRectArgs<'a> {
+    pub rect: Option<flatbuffers::WIPOffset<Rect<'a>>>,
+}
+impl<'a> Default for UserDataRectArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    UserDataRectArgs {
+      rect: None,
+    }
+  }
+}
+
+pub struct UserDataRectBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataRectBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_rect(&mut self, rect: flatbuffers::WIPOffset<Rect<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Rect>>(UserDataRect::VT_RECT, rect);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataRectBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    UserDataRectBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataRect<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for UserDataRect<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("UserDataRect");
+      ds.field("rect", &self.rect());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserDataRectT {
+  pub rect: Option<Box<RectT>>,
+}
+impl Default for UserDataRectT {
+  fn default() -> Self {
+    Self {
+      rect: None,
+    }
+  }
+}
+impl UserDataRectT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<UserDataRect<'b>> {
+    let rect = self.rect.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    UserDataRect::create(_fbb, &UserDataRectArgs{
+      rect,
+    })
+  }
+}
+pub enum UserDataPointOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct UserDataPoint<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for UserDataPoint<'a> {
+  type Inner = UserDataPoint<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> UserDataPoint<'a> {
+  pub const VT_POINT: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    UserDataPoint { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args UserDataPointArgs<'args>
+  ) -> flatbuffers::WIPOffset<UserDataPoint<'bldr>> {
+    let mut builder = UserDataPointBuilder::new(_fbb);
+    if let Some(x) = args.point { builder.add_point(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> UserDataPointT {
+    let point = self.point().map(|x| {
+      Box::new(x.unpack())
+    });
+    UserDataPointT {
+      point,
+    }
+  }
+
+  #[inline]
+  pub fn point(&self) -> Option<Vec2<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(UserDataPoint::VT_POINT, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for UserDataPoint<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("point", Self::VT_POINT, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct UserDataPointArgs<'a> {
+    pub point: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
+}
+impl<'a> Default for UserDataPointArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    UserDataPointArgs {
+      point: None,
+    }
+  }
+}
+
+pub struct UserDataPointBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataPointBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_point(&mut self, point: flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(UserDataPoint::VT_POINT, point);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataPointBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    UserDataPointBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataPoint<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for UserDataPoint<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("UserDataPoint");
+      ds.field("point", &self.point());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserDataPointT {
+  pub point: Option<Box<Vec2T>>,
+}
+impl Default for UserDataPointT {
+  fn default() -> Self {
+    Self {
+      point: None,
+    }
+  }
+}
+impl UserDataPointT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<UserDataPoint<'b>> {
+    let point = self.point.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    UserDataPoint::create(_fbb, &UserDataPointArgs{
+      point,
+    })
+  }
+}
+pub enum UserDataStringOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct UserDataString<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for UserDataString<'a> {
+  type Inner = UserDataString<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> UserDataString<'a> {
+  pub const VT_DATA: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    UserDataString { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args UserDataStringArgs<'args>
+  ) -> flatbuffers::WIPOffset<UserDataString<'bldr>> {
+    let mut builder = UserDataStringBuilder::new(_fbb);
+    if let Some(x) = args.data { builder.add_data(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> UserDataStringT {
+    let data = self.data().map(|x| {
+      x.to_string()
+    });
+    UserDataStringT {
+      data,
+    }
+  }
+
+  #[inline]
+  pub fn data(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(UserDataString::VT_DATA, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for UserDataString<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("data", Self::VT_DATA, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct UserDataStringArgs<'a> {
+    pub data: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for UserDataStringArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    UserDataStringArgs {
+      data: None,
+    }
+  }
+}
+
+pub struct UserDataStringBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataStringBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataString::VT_DATA, data);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataStringBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    UserDataStringBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataString<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for UserDataString<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("UserDataString");
+      ds.field("data", &self.data());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserDataStringT {
+  pub data: Option<String>,
+}
+impl Default for UserDataStringT {
+  fn default() -> Self {
+    Self {
+      data: None,
+    }
+  }
+}
+impl UserDataStringT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<UserDataString<'b>> {
+    let data = self.data.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    UserDataString::create(_fbb, &UserDataStringArgs{
+      data,
+    })
+  }
+}
+pub enum UserDataValueWrapperOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct UserDataValueWrapper<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for UserDataValueWrapper<'a> {
+  type Inner = UserDataValueWrapper<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> UserDataValueWrapper<'a> {
+  pub const VT_CONTENT_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_CONTENT: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    UserDataValueWrapper { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args UserDataValueWrapperArgs
+  ) -> flatbuffers::WIPOffset<UserDataValueWrapper<'bldr>> {
+    let mut builder = UserDataValueWrapperBuilder::new(_fbb);
+    if let Some(x) = args.content { builder.add_content(x); }
+    builder.add_content_type(args.content_type);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> UserDataValueWrapperT {
+    let content = match self.content_type() {
+      UserDataValue::NONE => UserDataValueT::NONE,
+      UserDataValue::UserDataInteger => UserDataValueT::UserDataInteger(Box::new(
+        self.content_as_user_data_integer()
+            .expect("Invalid union table, expected `UserDataValue::UserDataInteger`.")
+            .unpack()
+      )),
+      UserDataValue::UserDataRect => UserDataValueT::UserDataRect(Box::new(
+        self.content_as_user_data_rect()
+            .expect("Invalid union table, expected `UserDataValue::UserDataRect`.")
+            .unpack()
+      )),
+      UserDataValue::UserDataPoint => UserDataValueT::UserDataPoint(Box::new(
+        self.content_as_user_data_point()
+            .expect("Invalid union table, expected `UserDataValue::UserDataPoint`.")
+            .unpack()
+      )),
+      UserDataValue::UserDataString => UserDataValueT::UserDataString(Box::new(
+        self.content_as_user_data_string()
+            .expect("Invalid union table, expected `UserDataValue::UserDataString`.")
+            .unpack()
+      )),
+      _ => UserDataValueT::NONE,
+    };
+    UserDataValueWrapperT {
+      content,
+    }
+  }
+
+  #[inline]
+  pub fn content_type(&self) -> UserDataValue {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<UserDataValue>(UserDataValueWrapper::VT_CONTENT_TYPE, Some(UserDataValue::NONE)).unwrap()}
+  }
+  #[inline]
+  pub fn content(&self) -> Option<flatbuffers::Table<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(UserDataValueWrapper::VT_CONTENT, None)}
+  }
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn content_as_user_data_integer(&self) -> Option<UserDataInteger<'a>> {
+    if self.content_type() == UserDataValue::UserDataInteger {
+      self.content().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { UserDataInteger::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn content_as_user_data_rect(&self) -> Option<UserDataRect<'a>> {
+    if self.content_type() == UserDataValue::UserDataRect {
+      self.content().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { UserDataRect::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn content_as_user_data_point(&self) -> Option<UserDataPoint<'a>> {
+    if self.content_type() == UserDataValue::UserDataPoint {
+      self.content().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { UserDataPoint::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn content_as_user_data_string(&self) -> Option<UserDataString<'a>> {
+    if self.content_type() == UserDataValue::UserDataString {
+      self.content().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { UserDataString::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+}
+
+impl flatbuffers::Verifiable for UserDataValueWrapper<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_union::<UserDataValue, _>("content_type", Self::VT_CONTENT_TYPE, "content", Self::VT_CONTENT, false, |key, v, pos| {
+        match key {
+          UserDataValue::UserDataInteger => v.verify_union_variant::<flatbuffers::ForwardsUOffset<UserDataInteger>>("UserDataValue::UserDataInteger", pos),
+          UserDataValue::UserDataRect => v.verify_union_variant::<flatbuffers::ForwardsUOffset<UserDataRect>>("UserDataValue::UserDataRect", pos),
+          UserDataValue::UserDataPoint => v.verify_union_variant::<flatbuffers::ForwardsUOffset<UserDataPoint>>("UserDataValue::UserDataPoint", pos),
+          UserDataValue::UserDataString => v.verify_union_variant::<flatbuffers::ForwardsUOffset<UserDataString>>("UserDataValue::UserDataString", pos),
+          _ => Ok(()),
+        }
+     })?
+     .finish();
+    Ok(())
+  }
+}
+pub struct UserDataValueWrapperArgs {
+    pub content_type: UserDataValue,
+    pub content: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+}
+impl<'a> Default for UserDataValueWrapperArgs {
+  #[inline]
+  fn default() -> Self {
+    UserDataValueWrapperArgs {
+      content_type: UserDataValue::NONE,
+      content: None,
+    }
+  }
+}
+
+pub struct UserDataValueWrapperBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataValueWrapperBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_content_type(&mut self, content_type: UserDataValue) {
+    self.fbb_.push_slot::<UserDataValue>(UserDataValueWrapper::VT_CONTENT_TYPE, content_type, UserDataValue::NONE);
+  }
+  #[inline]
+  pub fn add_content(&mut self, content: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataValueWrapper::VT_CONTENT, content);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataValueWrapperBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    UserDataValueWrapperBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataValueWrapper<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for UserDataValueWrapper<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("UserDataValueWrapper");
+      ds.field("content_type", &self.content_type());
+      match self.content_type() {
+        UserDataValue::UserDataInteger => {
+          if let Some(x) = self.content_as_user_data_integer() {
+            ds.field("content", &x)
+          } else {
+            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        UserDataValue::UserDataRect => {
+          if let Some(x) = self.content_as_user_data_rect() {
+            ds.field("content", &x)
+          } else {
+            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        UserDataValue::UserDataPoint => {
+          if let Some(x) = self.content_as_user_data_point() {
+            ds.field("content", &x)
+          } else {
+            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        UserDataValue::UserDataString => {
+          if let Some(x) = self.content_as_user_data_string() {
+            ds.field("content", &x)
+          } else {
+            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        _ => {
+          let x: Option<()> = None;
+          ds.field("content", &x)
+        },
+      };
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserDataValueWrapperT {
+  pub content: UserDataValueT,
+}
+impl Default for UserDataValueWrapperT {
+  fn default() -> Self {
+    Self {
+      content: UserDataValueT::NONE,
+    }
+  }
+}
+impl UserDataValueWrapperT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<UserDataValueWrapper<'b>> {
+    let content_type = self.content.user_data_value_type();
+    let content = self.content.pack(_fbb);
+    UserDataValueWrapper::create(_fbb, &UserDataValueWrapperArgs{
+      content_type,
+      content,
+    })
+  }
+}
+pub enum UserDataItemOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct UserDataItem<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for UserDataItem<'a> {
+  type Inner = UserDataItem<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> UserDataItem<'a> {
+  pub const VT_FLAGS: flatbuffers::VOffsetT = 4;
   pub const VT_INDEX: flatbuffers::VOffsetT = 6;
-  pub const VT_PARENT_INDEX: flatbuffers::VOffsetT = 8;
-  pub const VT_TYPE_: flatbuffers::VOffsetT = 10;
-  pub const VT_BOUNDS_TYPE: flatbuffers::VOffsetT = 12;
-  pub const VT_INHERIT_TYPE: flatbuffers::VOffsetT = 14;
-  pub const VT_ALPHA_BLEND_TYPE: flatbuffers::VOffsetT = 16;
-  pub const VT_EFFECT_FILENAME: flatbuffers::VOffsetT = 18;
-  pub const VT_COLOR_LABEL: flatbuffers::VOffsetT = 20;
-  pub const VT_MASK_INFLUENCE: flatbuffers::VOffsetT = 22;
+  pub const VT_DATA: flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    Part { _tab: table }
+    UserDataItem { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartArgs<'args>
-  ) -> flatbuffers::WIPOffset<Part<'bldr>> {
-    let mut builder = PartBuilder::new(_fbb);
-    if let Some(x) = args.color_label { builder.add_color_label(x); }
-    if let Some(x) = args.effect_filename { builder.add_effect_filename(x); }
-    builder.add_parent_index(args.parent_index);
+    args: &'args UserDataItemArgs<'args>
+  ) -> flatbuffers::WIPOffset<UserDataItem<'bldr>> {
+    let mut builder = UserDataItemBuilder::new(_fbb);
+    if let Some(x) = args.data { builder.add_data(x); }
     builder.add_index(args.index);
-    if let Some(x) = args.name { builder.add_name(x); }
-    builder.add_mask_influence(args.mask_influence);
-    builder.add_alpha_blend_type(args.alpha_blend_type);
-    builder.add_inherit_type(args.inherit_type);
-    builder.add_bounds_type(args.bounds_type);
-    builder.add_type_(args.type_);
+    builder.add_flags(args.flags);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> PartT {
-    let name = self.name().map(|x| {
-      x.to_string()
-    });
+  pub fn unpack(&self) -> UserDataItemT {
+    let flags = self.flags();
     let index = self.index();
-    let parent_index = self.parent_index();
-    let type_ = self.type_();
-    let bounds_type = self.bounds_type();
-    let inherit_type = self.inherit_type();
-    let alpha_blend_type = self.alpha_blend_type();
-    let effect_filename = self.effect_filename().map(|x| {
-      x.to_string()
+    let data = self.data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
     });
-    let color_label = self.color_label().map(|x| {
-      x.to_string()
-    });
-    let mask_influence = self.mask_influence();
-    PartT {
-      name,
+    UserDataItemT {
+      flags,
       index,
-      parent_index,
-      type_,
-      bounds_type,
-      inherit_type,
-      alpha_blend_type,
-      effect_filename,
-      color_label,
-      mask_influence,
+      data,
     }
   }
 
   #[inline]
-  pub fn name(&self) -> Option<&'a str> {
+  pub fn flags(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Part::VT_NAME, None)}
+    unsafe { self._tab.get::<i16>(UserDataItem::VT_FLAGS, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn index(&self) -> i32 {
+  pub fn index(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(Part::VT_INDEX, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(UserDataItem::VT_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn parent_index(&self) -> i32 {
+  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(Part::VT_PARENT_INDEX, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn type_(&self) -> PartType {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<PartType>(Part::VT_TYPE_, Some(PartType::Null)).unwrap()}
-  }
-  #[inline]
-  pub fn bounds_type(&self) -> BoundsType {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<BoundsType>(Part::VT_BOUNDS_TYPE, Some(BoundsType::None)).unwrap()}
-  }
-  #[inline]
-  pub fn inherit_type(&self) -> InheritType {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<InheritType>(Part::VT_INHERIT_TYPE, Some(InheritType::Parent)).unwrap()}
-  }
-  #[inline]
-  pub fn alpha_blend_type(&self) -> BlendType {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<BlendType>(Part::VT_ALPHA_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
-  }
-  #[inline]
-  pub fn effect_filename(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Part::VT_EFFECT_FILENAME, None)}
-  }
-  #[inline]
-  pub fn color_label(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Part::VT_COLOR_LABEL, None)}
-  }
-  #[inline]
-  pub fn mask_influence(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(Part::VT_MASK_INFLUENCE, Some(false)).unwrap()}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper>>>>(UserDataItem::VT_DATA, None)}
   }
 }
 
-impl flatbuffers::Verifiable for Part<'_> {
+impl flatbuffers::Verifiable for UserDataItem<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
-     .visit_field::<i32>("index", Self::VT_INDEX, false)?
-     .visit_field::<i32>("parent_index", Self::VT_PARENT_INDEX, false)?
-     .visit_field::<PartType>("type_", Self::VT_TYPE_, false)?
-     .visit_field::<BoundsType>("bounds_type", Self::VT_BOUNDS_TYPE, false)?
-     .visit_field::<InheritType>("inherit_type", Self::VT_INHERIT_TYPE, false)?
-     .visit_field::<BlendType>("alpha_blend_type", Self::VT_ALPHA_BLEND_TYPE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("effect_filename", Self::VT_EFFECT_FILENAME, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("color_label", Self::VT_COLOR_LABEL, false)?
-     .visit_field::<bool>("mask_influence", Self::VT_MASK_INFLUENCE, false)?
+     .visit_field::<i16>("flags", Self::VT_FLAGS, false)?
+     .visit_field::<i16>("index", Self::VT_INDEX, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataValueWrapper>>>>("data", Self::VT_DATA, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartArgs<'a> {
-    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub index: i32,
-    pub parent_index: i32,
-    pub type_: PartType,
-    pub bounds_type: BoundsType,
-    pub inherit_type: InheritType,
-    pub alpha_blend_type: BlendType,
-    pub effect_filename: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub color_label: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub mask_influence: bool,
+pub struct UserDataItemArgs<'a> {
+    pub flags: i16,
+    pub index: i16,
+    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper<'a>>>>>,
 }
-impl<'a> Default for PartArgs<'a> {
+impl<'a> Default for UserDataItemArgs<'a> {
   #[inline]
   fn default() -> Self {
-    PartArgs {
-      name: None,
+    UserDataItemArgs {
+      flags: 0,
       index: 0,
-      parent_index: 0,
-      type_: PartType::Null,
-      bounds_type: BoundsType::None,
-      inherit_type: InheritType::Parent,
-      alpha_blend_type: BlendType::Mix,
-      effect_filename: None,
-      color_label: None,
-      mask_influence: false,
+      data: None,
     }
   }
 }
 
-pub struct PartBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct UserDataItemBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataItemBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Part::VT_NAME, name);
+  pub fn add_flags(&mut self, flags: i16) {
+    self.fbb_.push_slot::<i16>(UserDataItem::VT_FLAGS, flags, 0);
   }
   #[inline]
-  pub fn add_index(&mut self, index: i32) {
-    self.fbb_.push_slot::<i32>(Part::VT_INDEX, index, 0);
+  pub fn add_index(&mut self, index: i16) {
+    self.fbb_.push_slot::<i16>(UserDataItem::VT_INDEX, index, 0);
   }
   #[inline]
-  pub fn add_parent_index(&mut self, parent_index: i32) {
-    self.fbb_.push_slot::<i32>(Part::VT_PARENT_INDEX, parent_index, 0);
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataValueWrapper<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataItem::VT_DATA, data);
   }
   #[inline]
-  pub fn add_type_(&mut self, type_: PartType) {
-    self.fbb_.push_slot::<PartType>(Part::VT_TYPE_, type_, PartType::Null);
-  }
-  #[inline]
-  pub fn add_bounds_type(&mut self, bounds_type: BoundsType) {
-    self.fbb_.push_slot::<BoundsType>(Part::VT_BOUNDS_TYPE, bounds_type, BoundsType::None);
-  }
-  #[inline]
-  pub fn add_inherit_type(&mut self, inherit_type: InheritType) {
-    self.fbb_.push_slot::<InheritType>(Part::VT_INHERIT_TYPE, inherit_type, InheritType::Parent);
-  }
-  #[inline]
-  pub fn add_alpha_blend_type(&mut self, alpha_blend_type: BlendType) {
-    self.fbb_.push_slot::<BlendType>(Part::VT_ALPHA_BLEND_TYPE, alpha_blend_type, BlendType::Mix);
-  }
-  #[inline]
-  pub fn add_effect_filename(&mut self, effect_filename: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Part::VT_EFFECT_FILENAME, effect_filename);
-  }
-  #[inline]
-  pub fn add_color_label(&mut self, color_label: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Part::VT_COLOR_LABEL, color_label);
-  }
-  #[inline]
-  pub fn add_mask_influence(&mut self, mask_influence: bool) {
-    self.fbb_.push_slot::<bool>(Part::VT_MASK_INFLUENCE, mask_influence, false);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PartBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataItemBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    PartBuilder {
+    UserDataItemBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<Part<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataItem<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for Part<'_> {
+impl core::fmt::Debug for UserDataItem<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("Part");
-      ds.field("name", &self.name());
+    let mut ds = f.debug_struct("UserDataItem");
+      ds.field("flags", &self.flags());
       ds.field("index", &self.index());
-      ds.field("parent_index", &self.parent_index());
-      ds.field("type_", &self.type_());
-      ds.field("bounds_type", &self.bounds_type());
-      ds.field("inherit_type", &self.inherit_type());
-      ds.field("alpha_blend_type", &self.alpha_blend_type());
-      ds.field("effect_filename", &self.effect_filename());
-      ds.field("color_label", &self.color_label());
-      ds.field("mask_influence", &self.mask_influence());
+      ds.field("data", &self.data());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct PartT {
-  pub name: Option<String>,
-  pub index: i32,
-  pub parent_index: i32,
-  pub type_: PartType,
-  pub bounds_type: BoundsType,
-  pub inherit_type: InheritType,
-  pub alpha_blend_type: BlendType,
-  pub effect_filename: Option<String>,
-  pub color_label: Option<String>,
-  pub mask_influence: bool,
+pub struct UserDataItemT {
+  pub flags: i16,
+  pub index: i16,
+  pub data: Option<Vec<UserDataValueWrapperT>>,
 }
-impl Default for PartT {
+impl Default for UserDataItemT {
   fn default() -> Self {
     Self {
-      name: None,
+      flags: 0,
       index: 0,
-      parent_index: 0,
-      type_: PartType::Null,
-      bounds_type: BoundsType::None,
-      inherit_type: InheritType::Parent,
-      alpha_blend_type: BlendType::Mix,
-      effect_filename: None,
-      color_label: None,
-      mask_influence: false,
+      data: None,
     }
   }
 }
-impl PartT {
+impl UserDataItemT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<Part<'b>> {
-    let name = self.name.as_ref().map(|x|{
-      _fbb.create_string(x)
-    });
+  ) -> flatbuffers::WIPOffset<UserDataItem<'b>> {
+    let flags = self.flags;
     let index = self.index;
-    let parent_index = self.parent_index;
-    let type_ = self.type_;
-    let bounds_type = self.bounds_type;
-    let inherit_type = self.inherit_type;
-    let alpha_blend_type = self.alpha_blend_type;
-    let effect_filename = self.effect_filename.as_ref().map(|x|{
-      _fbb.create_string(x)
+    let data = self.data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let color_label = self.color_label.as_ref().map(|x|{
-      _fbb.create_string(x)
-    });
-    let mask_influence = self.mask_influence;
-    Part::create(_fbb, &PartArgs{
-      name,
+    UserDataItem::create(_fbb, &UserDataItemArgs{
+      flags,
       index,
-      parent_index,
-      type_,
-      bounds_type,
-      inherit_type,
-      alpha_blend_type,
-      effect_filename,
-      color_label,
-      mask_influence,
+      data,
     })
   }
 }
-pub enum PartAnimeOffset {}
+pub enum UserDataPerFrameOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct PartAnime<'a> {
+pub struct UserDataPerFrame<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for PartAnime<'a> {
-  type Inner = PartAnime<'a>;
+impl<'a> flatbuffers::Follow<'a> for UserDataPerFrame<'a> {
+  type Inner = UserDataPerFrame<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> PartAnime<'a> {
-  pub const VT_PART_NAME: flatbuffers::VOffsetT = 4;
+impl<'a> UserDataPerFrame<'a> {
+  pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_DATA: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    PartAnime { _tab: table }
+    UserDataPerFrame { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAnimeArgs<'args>
-  ) -> flatbuffers::WIPOffset<PartAnime<'bldr>> {
-    let mut builder = PartAnimeBuilder::new(_fbb);
-    if let Some(x) = args.part_name { builder.add_part_name(x); }
+    args: &'args UserDataPerFrameArgs<'args>
+  ) -> flatbuffers::WIPOffset<UserDataPerFrame<'bldr>> {
+    let mut builder = UserDataPerFrameBuilder::new(_fbb);
+    if let Some(x) = args.data { builder.add_data(x); }
+    builder.add_frame_index(args.frame_index);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> PartAnimeT {
-    let part_name = self.part_name().map(|x| {
-      x.to_string()
-    });
-    PartAnimeT {
-      part_name,
-    }
-  }
-
-  #[inline]
-  pub fn part_name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(PartAnime::VT_PART_NAME, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for PartAnime<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("part_name", Self::VT_PART_NAME, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct PartAnimeArgs<'a> {
-    pub part_name: Option<flatbuffers::WIPOffset<&'a str>>,
-}
-impl<'a> Default for PartAnimeArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    PartAnimeArgs {
-      part_name: None,
-    }
-  }
-}
-
-pub struct PartAnimeBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAnimeBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_part_name(&mut self, part_name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(PartAnime::VT_PART_NAME, part_name);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimeBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartAnimeBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<PartAnime<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for PartAnime<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("PartAnime");
-      ds.field("part_name", &self.part_name());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct PartAnimeT {
-  pub part_name: Option<String>,
-}
-impl Default for PartAnimeT {
-  fn default() -> Self {
-    Self {
-      part_name: None,
-    }
-  }
-}
-impl PartAnimeT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<PartAnime<'b>> {
-    let part_name = self.part_name.as_ref().map(|x|{
-      _fbb.create_string(x)
-    });
-    PartAnime::create(_fbb, &PartAnimeArgs{
-      part_name,
-    })
-  }
-}
-pub enum MeshBindInfoOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct MeshBindInfo<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for MeshBindInfo<'a> {
-  type Inner = MeshBindInfo<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> MeshBindInfo<'a> {
-  pub const VT_WEIGHT: flatbuffers::VOffsetT = 4;
-  pub const VT_BONE_INDEX: flatbuffers::VOffsetT = 6;
-  pub const VT_OFFSET: flatbuffers::VOffsetT = 8;
-  pub const VT_BIND_BONE_NUM: flatbuffers::VOffsetT = 10;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    MeshBindInfo { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args MeshBindInfoArgs<'args>
-  ) -> flatbuffers::WIPOffset<MeshBindInfo<'bldr>> {
-    let mut builder = MeshBindInfoBuilder::new(_fbb);
-    builder.add_bind_bone_num(args.bind_bone_num);
-    if let Some(x) = args.offset { builder.add_offset(x); }
-    if let Some(x) = args.bone_index { builder.add_bone_index(x); }
-    if let Some(x) = args.weight { builder.add_weight(x); }
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> MeshBindInfoT {
-    let weight = self.weight().map(|x| {
-      x.into_iter().collect()
-    });
-    let bone_index = self.bone_index().map(|x| {
-      x.into_iter().collect()
-    });
-    let offset = self.offset().map(|x| {
+  pub fn unpack(&self) -> UserDataPerFrameT {
+    let frame_index = self.frame_index();
+    let data = self.data().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let bind_bone_num = self.bind_bone_num();
-    MeshBindInfoT {
-      weight,
-      bone_index,
-      offset,
-      bind_bone_num,
+    UserDataPerFrameT {
+      frame_index,
+      data,
     }
   }
 
   #[inline]
-  pub fn weight(&self) -> Option<flatbuffers::Vector<'a, i32>> {
+  pub fn frame_index(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(MeshBindInfo::VT_WEIGHT, None)}
+    unsafe { self._tab.get::<i16>(UserDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn bone_index(&self) -> Option<flatbuffers::Vector<'a, i32>> {
+  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(MeshBindInfo::VT_BONE_INDEX, None)}
-  }
-  #[inline]
-  pub fn offset(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Vec2<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Vec2>>>>(MeshBindInfo::VT_OFFSET, None)}
-  }
-  #[inline]
-  pub fn bind_bone_num(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(MeshBindInfo::VT_BIND_BONE_NUM, Some(0)).unwrap()}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem>>>>(UserDataPerFrame::VT_DATA, None)}
   }
 }
 
-impl flatbuffers::Verifiable for MeshBindInfo<'_> {
+impl flatbuffers::Verifiable for UserDataPerFrame<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i32>>>("weight", Self::VT_WEIGHT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i32>>>("bone_index", Self::VT_BONE_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Vec2>>>>("offset", Self::VT_OFFSET, false)?
-     .visit_field::<i32>("bind_bone_num", Self::VT_BIND_BONE_NUM, false)?
+     .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataItem>>>>("data", Self::VT_DATA, false)?
      .finish();
     Ok(())
   }
 }
-pub struct MeshBindInfoArgs<'a> {
-    pub weight: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i32>>>,
-    pub bone_index: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i32>>>,
-    pub offset: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Vec2<'a>>>>>,
-    pub bind_bone_num: i32,
+pub struct UserDataPerFrameArgs<'a> {
+    pub frame_index: i16,
+    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem<'a>>>>>,
 }
-impl<'a> Default for MeshBindInfoArgs<'a> {
+impl<'a> Default for UserDataPerFrameArgs<'a> {
   #[inline]
   fn default() -> Self {
-    MeshBindInfoArgs {
-      weight: None,
-      bone_index: None,
-      offset: None,
-      bind_bone_num: 0,
+    UserDataPerFrameArgs {
+      frame_index: 0,
+      data: None,
     }
   }
 }
 
-pub struct MeshBindInfoBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct UserDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> MeshBindInfoBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataPerFrameBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_weight(&mut self, weight: flatbuffers::WIPOffset<flatbuffers::Vector<'b , i32>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(MeshBindInfo::VT_WEIGHT, weight);
+  pub fn add_frame_index(&mut self, frame_index: i16) {
+    self.fbb_.push_slot::<i16>(UserDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
   }
   #[inline]
-  pub fn add_bone_index(&mut self, bone_index: flatbuffers::WIPOffset<flatbuffers::Vector<'b , i32>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(MeshBindInfo::VT_BONE_INDEX, bone_index);
+  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataItem<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataPerFrame::VT_DATA, data);
   }
   #[inline]
-  pub fn add_offset(&mut self, offset: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Vec2<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(MeshBindInfo::VT_OFFSET, offset);
-  }
-  #[inline]
-  pub fn add_bind_bone_num(&mut self, bind_bone_num: i32) {
-    self.fbb_.push_slot::<i32>(MeshBindInfo::VT_BIND_BONE_NUM, bind_bone_num, 0);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> MeshBindInfoBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataPerFrameBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    MeshBindInfoBuilder {
+    UserDataPerFrameBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<MeshBindInfo<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataPerFrame<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for MeshBindInfo<'_> {
+impl core::fmt::Debug for UserDataPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("MeshBindInfo");
-      ds.field("weight", &self.weight());
-      ds.field("bone_index", &self.bone_index());
-      ds.field("offset", &self.offset());
-      ds.field("bind_bone_num", &self.bind_bone_num());
+    let mut ds = f.debug_struct("UserDataPerFrame");
+      ds.field("frame_index", &self.frame_index());
+      ds.field("data", &self.data());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct MeshBindInfoT {
-  pub weight: Option<Vec<i32>>,
-  pub bone_index: Option<Vec<i32>>,
-  pub offset: Option<Vec<Vec2T>>,
-  pub bind_bone_num: i32,
+pub struct UserDataPerFrameT {
+  pub frame_index: i16,
+  pub data: Option<Vec<UserDataItemT>>,
 }
-impl Default for MeshBindInfoT {
+impl Default for UserDataPerFrameT {
   fn default() -> Self {
     Self {
-      weight: None,
-      bone_index: None,
-      offset: None,
-      bind_bone_num: 0,
+      frame_index: 0,
+      data: None,
     }
   }
 }
-impl MeshBindInfoT {
+impl UserDataPerFrameT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<MeshBindInfo<'b>> {
-    let weight = self.weight.as_ref().map(|x|{
-      _fbb.create_vector(x)
-    });
-    let bone_index = self.bone_index.as_ref().map(|x|{
-      _fbb.create_vector(x)
-    });
-    let offset = self.offset.as_ref().map(|x|{
+  ) -> flatbuffers::WIPOffset<UserDataPerFrame<'b>> {
+    let frame_index = self.frame_index;
+    let data = self.data.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let bind_bone_num = self.bind_bone_num;
-    MeshBindInfo::create(_fbb, &MeshBindInfoArgs{
-      weight,
-      bone_index,
-      offset,
-      bind_bone_num,
+    UserDataPerFrame::create(_fbb, &UserDataPerFrameArgs{
+      frame_index,
+      data,
     })
   }
 }
-pub enum MeshBindOffset {}
+pub enum SignalDataPerFrameOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct MeshBind<'a> {
+pub struct SignalDataPerFrame<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for MeshBind<'a> {
-  type Inner = MeshBind<'a>;
+impl<'a> flatbuffers::Follow<'a> for SignalDataPerFrame<'a> {
+  type Inner = SignalDataPerFrame<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> MeshBind<'a> {
-  pub const VT_MESH_VERTICES_BIND_ARRAY: flatbuffers::VOffsetT = 4;
+impl<'a> SignalDataPerFrame<'a> {
+  pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    MeshBind { _tab: table }
+    SignalDataPerFrame { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args MeshBindArgs<'args>
-  ) -> flatbuffers::WIPOffset<MeshBind<'bldr>> {
-    let mut builder = MeshBindBuilder::new(_fbb);
-    if let Some(x) = args.mesh_vertices_bind_array { builder.add_mesh_vertices_bind_array(x); }
+    args: &'args SignalDataPerFrameArgs
+  ) -> flatbuffers::WIPOffset<SignalDataPerFrame<'bldr>> {
+    let mut builder = SignalDataPerFrameBuilder::new(_fbb);
+    builder.add_frame_index(args.frame_index);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> MeshBindT {
-    let mesh_vertices_bind_array = self.mesh_vertices_bind_array().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    MeshBindT {
-      mesh_vertices_bind_array,
+  pub fn unpack(&self) -> SignalDataPerFrameT {
+    let frame_index = self.frame_index();
+    SignalDataPerFrameT {
+      frame_index,
     }
   }
 
   #[inline]
-  pub fn mesh_vertices_bind_array(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshBindInfo<'a>>>> {
+  pub fn frame_index(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshBindInfo>>>>(MeshBind::VT_MESH_VERTICES_BIND_ARRAY, None)}
+    unsafe { self._tab.get::<i16>(SignalDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
   }
 }
 
-impl flatbuffers::Verifiable for MeshBind<'_> {
+impl flatbuffers::Verifiable for SignalDataPerFrame<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshBindInfo>>>>("mesh_vertices_bind_array", Self::VT_MESH_VERTICES_BIND_ARRAY, false)?
+     .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
      .finish();
     Ok(())
   }
 }
-pub struct MeshBindArgs<'a> {
-    pub mesh_vertices_bind_array: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshBindInfo<'a>>>>>,
+pub struct SignalDataPerFrameArgs {
+    pub frame_index: i16,
 }
-impl<'a> Default for MeshBindArgs<'a> {
+impl<'a> Default for SignalDataPerFrameArgs {
   #[inline]
   fn default() -> Self {
-    MeshBindArgs {
-      mesh_vertices_bind_array: None,
+    SignalDataPerFrameArgs {
+      frame_index: 0,
     }
   }
 }
 
-pub struct MeshBindBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct SignalDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> MeshBindBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SignalDataPerFrameBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_mesh_vertices_bind_array(&mut self, mesh_vertices_bind_array: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<MeshBindInfo<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(MeshBind::VT_MESH_VERTICES_BIND_ARRAY, mesh_vertices_bind_array);
+  pub fn add_frame_index(&mut self, frame_index: i16) {
+    self.fbb_.push_slot::<i16>(SignalDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> MeshBindBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SignalDataPerFrameBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    MeshBindBuilder {
+    SignalDataPerFrameBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<MeshBind<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<SignalDataPerFrame<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for MeshBind<'_> {
+impl core::fmt::Debug for SignalDataPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("MeshBind");
-      ds.field("mesh_vertices_bind_array", &self.mesh_vertices_bind_array());
+    let mut ds = f.debug_struct("SignalDataPerFrame");
+      ds.field("frame_index", &self.frame_index());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct MeshBindT {
-  pub mesh_vertices_bind_array: Option<Vec<MeshBindInfoT>>,
+pub struct SignalDataPerFrameT {
+  pub frame_index: i16,
 }
-impl Default for MeshBindT {
+impl Default for SignalDataPerFrameT {
   fn default() -> Self {
     Self {
-      mesh_vertices_bind_array: None,
+      frame_index: 0,
     }
   }
 }
-impl MeshBindT {
+impl SignalDataPerFrameT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<MeshBind<'b>> {
-    let mesh_vertices_bind_array = self.mesh_vertices_bind_array.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    MeshBind::create(_fbb, &MeshBindArgs{
-      mesh_vertices_bind_array,
+  ) -> flatbuffers::WIPOffset<SignalDataPerFrame<'b>> {
+    let frame_index = self.frame_index;
+    SignalDataPerFrame::create(_fbb, &SignalDataPerFrameArgs{
+      frame_index,
     })
   }
 }
-pub enum ModelOffset {}
+pub enum AudioDataPerFrameOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct Model<'a> {
+pub struct AudioDataPerFrame<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for Model<'a> {
-  type Inner = Model<'a>;
+impl<'a> flatbuffers::Follow<'a> for AudioDataPerFrame<'a> {
+  type Inner = AudioDataPerFrame<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> Model<'a> {
-  pub const VT_PART_LIST: flatbuffers::VOffsetT = 4;
-  pub const VT_SETUP_ANIMATION: flatbuffers::VOffsetT = 6;
-  pub const VT_MESH_LIST: flatbuffers::VOffsetT = 8;
+impl<'a> AudioDataPerFrame<'a> {
+  pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    Model { _tab: table }
+    AudioDataPerFrame { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args ModelArgs<'args>
-  ) -> flatbuffers::WIPOffset<Model<'bldr>> {
-    let mut builder = ModelBuilder::new(_fbb);
-    if let Some(x) = args.mesh_list { builder.add_mesh_list(x); }
-    if let Some(x) = args.setup_animation { builder.add_setup_animation(x); }
-    if let Some(x) = args.part_list { builder.add_part_list(x); }
+    args: &'args AudioDataPerFrameArgs
+  ) -> flatbuffers::WIPOffset<AudioDataPerFrame<'bldr>> {
+    let mut builder = AudioDataPerFrameBuilder::new(_fbb);
+    builder.add_frame_index(args.frame_index);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> ModelT {
-    let part_list = self.part_list().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let setup_animation = self.setup_animation().map(|x| {
-      x.to_string()
-    });
-    let mesh_list = self.mesh_list().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    ModelT {
-      part_list,
-      setup_animation,
-      mesh_list,
+  pub fn unpack(&self) -> AudioDataPerFrameT {
+    let frame_index = self.frame_index();
+    AudioDataPerFrameT {
+      frame_index,
     }
   }
 
   #[inline]
-  pub fn part_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Part<'a>>>> {
+  pub fn frame_index(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Part>>>>(Model::VT_PART_LIST, None)}
-  }
-  #[inline]
-  pub fn setup_animation(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Model::VT_SETUP_ANIMATION, None)}
-  }
-  #[inline]
-  pub fn mesh_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshBind<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshBind>>>>(Model::VT_MESH_LIST, None)}
+    unsafe { self._tab.get::<i16>(AudioDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
   }
 }
 
-impl flatbuffers::Verifiable for Model<'_> {
+impl flatbuffers::Verifiable for AudioDataPerFrame<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Part>>>>("part_list", Self::VT_PART_LIST, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("setup_animation", Self::VT_SETUP_ANIMATION, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshBind>>>>("mesh_list", Self::VT_MESH_LIST, false)?
+     .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
      .finish();
     Ok(())
   }
 }
-pub struct ModelArgs<'a> {
-    pub part_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Part<'a>>>>>,
-    pub setup_animation: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub mesh_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshBind<'a>>>>>,
+pub struct AudioDataPerFrameArgs {
+    pub frame_index: i16,
 }
-impl<'a> Default for ModelArgs<'a> {
+impl<'a> Default for AudioDataPerFrameArgs {
   #[inline]
   fn default() -> Self {
-    ModelArgs {
-      part_list: None,
-      setup_animation: None,
-      mesh_list: None,
+    AudioDataPerFrameArgs {
+      frame_index: 0,
     }
   }
 }
 
-pub struct ModelBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct AudioDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> ModelBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AudioDataPerFrameBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_part_list(&mut self, part_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Part<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Model::VT_PART_LIST, part_list);
+  pub fn add_frame_index(&mut self, frame_index: i16) {
+    self.fbb_.push_slot::<i16>(AudioDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
   }
   #[inline]
-  pub fn add_setup_animation(&mut self, setup_animation: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Model::VT_SETUP_ANIMATION, setup_animation);
-  }
-  #[inline]
-  pub fn add_mesh_list(&mut self, mesh_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<MeshBind<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Model::VT_MESH_LIST, mesh_list);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> ModelBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AudioDataPerFrameBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    ModelBuilder {
+    AudioDataPerFrameBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<Model<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<AudioDataPerFrame<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for Model<'_> {
+impl core::fmt::Debug for AudioDataPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("Model");
-      ds.field("part_list", &self.part_list());
-      ds.field("setup_animation", &self.setup_animation());
-      ds.field("mesh_list", &self.mesh_list());
+    let mut ds = f.debug_struct("AudioDataPerFrame");
+      ds.field("frame_index", &self.frame_index());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct ModelT {
-  pub part_list: Option<Vec<PartT>>,
-  pub setup_animation: Option<String>,
-  pub mesh_list: Option<Vec<MeshBindT>>,
+pub struct AudioDataPerFrameT {
+  pub frame_index: i16,
 }
-impl Default for ModelT {
+impl Default for AudioDataPerFrameT {
   fn default() -> Self {
     Self {
-      part_list: None,
-      setup_animation: None,
-      mesh_list: None,
+      frame_index: 0,
     }
   }
 }
-impl ModelT {
+impl AudioDataPerFrameT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<Model<'b>> {
-    let part_list = self.part_list.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let setup_animation = self.setup_animation.as_ref().map(|x|{
-      _fbb.create_string(x)
-    });
-    let mesh_list = self.mesh_list.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    Model::create(_fbb, &ModelArgs{
-      part_list,
-      setup_animation,
-      mesh_list,
-    })
-  }
-}
-pub enum LabelOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct Label<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for Label<'a> {
-  type Inner = Label<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> Label<'a> {
-  pub const VT_NAME: flatbuffers::VOffsetT = 4;
-  pub const VT_TIME: flatbuffers::VOffsetT = 6;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    Label { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args LabelArgs<'args>
-  ) -> flatbuffers::WIPOffset<Label<'bldr>> {
-    let mut builder = LabelBuilder::new(_fbb);
-    builder.add_time(args.time);
-    if let Some(x) = args.name { builder.add_name(x); }
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> LabelT {
-    let name = self.name().map(|x| {
-      x.to_string()
-    });
-    let time = self.time();
-    LabelT {
-      name,
-      time,
-    }
-  }
-
-  #[inline]
-  pub fn name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Label::VT_NAME, None)}
-  }
-  #[inline]
-  pub fn time(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(Label::VT_TIME, Some(0)).unwrap()}
-  }
-}
-
-impl flatbuffers::Verifiable for Label<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
-     .visit_field::<i32>("time", Self::VT_TIME, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct LabelArgs<'a> {
-    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub time: i32,
-}
-impl<'a> Default for LabelArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    LabelArgs {
-      name: None,
-      time: 0,
-    }
-  }
-}
-
-pub struct LabelBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> LabelBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Label::VT_NAME, name);
-  }
-  #[inline]
-  pub fn add_time(&mut self, time: i32) {
-    self.fbb_.push_slot::<i32>(Label::VT_TIME, time, 0);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> LabelBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    LabelBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<Label<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for Label<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("Label");
-      ds.field("name", &self.name());
-      ds.field("time", &self.time());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct LabelT {
-  pub name: Option<String>,
-  pub time: i32,
-}
-impl Default for LabelT {
-  fn default() -> Self {
-    Self {
-      name: None,
-      time: 0,
-    }
-  }
-}
-impl LabelT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<Label<'b>> {
-    let name = self.name.as_ref().map(|x|{
-      _fbb.create_string(x)
-    });
-    let time = self.time;
-    Label::create(_fbb, &LabelArgs{
-      name,
-      time,
-    })
-  }
-}
-pub enum AnimationSettingsOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AnimationSettings<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AnimationSettings<'a> {
-  type Inner = AnimationSettings<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AnimationSettings<'a> {
-  pub const VT_FPS: flatbuffers::VOffsetT = 4;
-  pub const VT_FRAME_COUNT: flatbuffers::VOffsetT = 6;
-  pub const VT_CANVAS_SIZE: flatbuffers::VOffsetT = 8;
-  pub const VT_PIVOT: flatbuffers::VOffsetT = 10;
-  pub const VT_START_FRAME: flatbuffers::VOffsetT = 12;
-  pub const VT_END_FRAME: flatbuffers::VOffsetT = 14;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AnimationSettings { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args AnimationSettingsArgs<'args>
-  ) -> flatbuffers::WIPOffset<AnimationSettings<'bldr>> {
-    let mut builder = AnimationSettingsBuilder::new(_fbb);
-    builder.add_end_frame(args.end_frame);
-    builder.add_start_frame(args.start_frame);
-    if let Some(x) = args.pivot { builder.add_pivot(x); }
-    if let Some(x) = args.canvas_size { builder.add_canvas_size(x); }
-    builder.add_frame_count(args.frame_count);
-    builder.add_fps(args.fps);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AnimationSettingsT {
-    let fps = self.fps();
-    let frame_count = self.frame_count();
-    let canvas_size = self.canvas_size().map(|x| {
-      Box::new(x.unpack())
-    });
-    let pivot = self.pivot().map(|x| {
-      Box::new(x.unpack())
-    });
-    let start_frame = self.start_frame();
-    let end_frame = self.end_frame();
-    AnimationSettingsT {
-      fps,
-      frame_count,
-      canvas_size,
-      pivot,
-      start_frame,
-      end_frame,
-    }
-  }
-
-  #[inline]
-  pub fn fps(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AnimationSettings::VT_FPS, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn frame_count(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AnimationSettings::VT_FRAME_COUNT, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn canvas_size(&self) -> Option<Vec2<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(AnimationSettings::VT_CANVAS_SIZE, None)}
-  }
-  #[inline]
-  pub fn pivot(&self) -> Option<Vec2<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Vec2>>(AnimationSettings::VT_PIVOT, None)}
-  }
-  #[inline]
-  pub fn start_frame(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AnimationSettings::VT_START_FRAME, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn end_frame(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(AnimationSettings::VT_END_FRAME, Some(0)).unwrap()}
-  }
-}
-
-impl flatbuffers::Verifiable for AnimationSettings<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
-    v.visit_table(pos)?
-     .visit_field::<i32>("fps", Self::VT_FPS, false)?
-     .visit_field::<i32>("frame_count", Self::VT_FRAME_COUNT, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("canvas_size", Self::VT_CANVAS_SIZE, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("pivot", Self::VT_PIVOT, false)?
-     .visit_field::<i32>("start_frame", Self::VT_START_FRAME, false)?
-     .visit_field::<i32>("end_frame", Self::VT_END_FRAME, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AnimationSettingsArgs<'a> {
-    pub fps: i32,
-    pub frame_count: i32,
-    pub canvas_size: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub pivot: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub start_frame: i32,
-    pub end_frame: i32,
-}
-impl<'a> Default for AnimationSettingsArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    AnimationSettingsArgs {
-      fps: 0,
-      frame_count: 0,
-      canvas_size: None,
-      pivot: None,
-      start_frame: 0,
-      end_frame: 0,
-    }
-  }
-}
-
-pub struct AnimationSettingsBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationSettingsBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_fps(&mut self, fps: i32) {
-    self.fbb_.push_slot::<i32>(AnimationSettings::VT_FPS, fps, 0);
-  }
-  #[inline]
-  pub fn add_frame_count(&mut self, frame_count: i32) {
-    self.fbb_.push_slot::<i32>(AnimationSettings::VT_FRAME_COUNT, frame_count, 0);
-  }
-  #[inline]
-  pub fn add_canvas_size(&mut self, canvas_size: flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(AnimationSettings::VT_CANVAS_SIZE, canvas_size);
-  }
-  #[inline]
-  pub fn add_pivot(&mut self, pivot: flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(AnimationSettings::VT_PIVOT, pivot);
-  }
-  #[inline]
-  pub fn add_start_frame(&mut self, start_frame: i32) {
-    self.fbb_.push_slot::<i32>(AnimationSettings::VT_START_FRAME, start_frame, 0);
-  }
-  #[inline]
-  pub fn add_end_frame(&mut self, end_frame: i32) {
-    self.fbb_.push_slot::<i32>(AnimationSettings::VT_END_FRAME, end_frame, 0);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimationSettingsBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AnimationSettingsBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AnimationSettings<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AnimationSettings<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AnimationSettings");
-      ds.field("fps", &self.fps());
-      ds.field("frame_count", &self.frame_count());
-      ds.field("canvas_size", &self.canvas_size());
-      ds.field("pivot", &self.pivot());
-      ds.field("start_frame", &self.start_frame());
-      ds.field("end_frame", &self.end_frame());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AnimationSettingsT {
-  pub fps: i32,
-  pub frame_count: i32,
-  pub canvas_size: Option<Box<Vec2T>>,
-  pub pivot: Option<Box<Vec2T>>,
-  pub start_frame: i32,
-  pub end_frame: i32,
-}
-impl Default for AnimationSettingsT {
-  fn default() -> Self {
-    Self {
-      fps: 0,
-      frame_count: 0,
-      canvas_size: None,
-      pivot: None,
-      start_frame: 0,
-      end_frame: 0,
-    }
-  }
-}
-impl AnimationSettingsT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AnimationSettings<'b>> {
-    let fps = self.fps;
-    let frame_count = self.frame_count;
-    let canvas_size = self.canvas_size.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let pivot = self.pivot.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let start_frame = self.start_frame;
-    let end_frame = self.end_frame;
-    AnimationSettings::create(_fbb, &AnimationSettingsArgs{
-      fps,
-      frame_count,
-      canvas_size,
-      pivot,
-      start_frame,
-      end_frame,
-    })
-  }
-}
-pub enum AnimationOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct Animation<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for Animation<'a> {
-  type Inner = Animation<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> Animation<'a> {
-  pub const VT_NAME: flatbuffers::VOffsetT = 4;
-  pub const VT_PART_ANIMES: flatbuffers::VOffsetT = 6;
-  pub const VT_LABELS: flatbuffers::VOffsetT = 8;
-  pub const VT_USER_DATA: flatbuffers::VOffsetT = 10;
-  pub const VT_SIGNAL_DATA: flatbuffers::VOffsetT = 12;
-  pub const VT_AUDIO_DATA: flatbuffers::VOffsetT = 14;
-  pub const VT_START_FRAMES: flatbuffers::VOffsetT = 16;
-  pub const VT_END_FRAMES: flatbuffers::VOffsetT = 18;
-  pub const VT_TOTAL_FRAMES: flatbuffers::VOffsetT = 20;
-  pub const VT_FPS: flatbuffers::VOffsetT = 22;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    Animation { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args AnimationArgs<'args>
-  ) -> flatbuffers::WIPOffset<Animation<'bldr>> {
-    let mut builder = AnimationBuilder::new(_fbb);
-    if let Some(x) = args.audio_data { builder.add_audio_data(x); }
-    if let Some(x) = args.signal_data { builder.add_signal_data(x); }
-    if let Some(x) = args.user_data { builder.add_user_data(x); }
-    if let Some(x) = args.labels { builder.add_labels(x); }
-    if let Some(x) = args.part_animes { builder.add_part_animes(x); }
-    if let Some(x) = args.name { builder.add_name(x); }
-    builder.add_fps(args.fps);
-    builder.add_total_frames(args.total_frames);
-    builder.add_end_frames(args.end_frames);
-    builder.add_start_frames(args.start_frames);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AnimationT {
-    let name = {
-      let x = self.name();
-      x.to_string()
-    };
-    let part_animes = self.part_animes().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let labels = self.labels().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let user_data = self.user_data().map(|x| {
-      x.iter().map(|s| s.to_string()).collect()
-    });
-    let signal_data = self.signal_data().map(|x| {
-      x.iter().map(|s| s.to_string()).collect()
-    });
-    let audio_data = self.audio_data().map(|x| {
-      x.iter().map(|s| s.to_string()).collect()
-    });
-    let start_frames = self.start_frames();
-    let end_frames = self.end_frames();
-    let total_frames = self.total_frames();
-    let fps = self.fps();
-    AnimationT {
-      name,
-      part_animes,
-      labels,
-      user_data,
-      signal_data,
-      audio_data,
-      start_frames,
-      end_frames,
-      total_frames,
-      fps,
-    }
-  }
-
-  #[inline]
-  pub fn name(&self) -> &'a str {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Animation::VT_NAME, None).unwrap()}
-  }
-  #[inline]
-  pub fn key_compare_less_than(&self, o: &Animation) -> bool {
-    self.name() < o.name()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
-    let key = self.name();
-    key.cmp(val)
-  }
-  #[inline]
-  pub fn part_animes(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnime<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnime>>>>(Animation::VT_PART_ANIMES, None)}
-  }
-  #[inline]
-  pub fn labels(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label>>>>(Animation::VT_LABELS, None)}
-  }
-  #[inline]
-  pub fn user_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(Animation::VT_USER_DATA, None)}
-  }
-  #[inline]
-  pub fn signal_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(Animation::VT_SIGNAL_DATA, None)}
-  }
-  #[inline]
-  pub fn audio_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>(Animation::VT_AUDIO_DATA, None)}
-  }
-  #[inline]
-  pub fn start_frames(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(Animation::VT_START_FRAMES, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn end_frames(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(Animation::VT_END_FRAMES, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn total_frames(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(Animation::VT_TOTAL_FRAMES, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn fps(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(Animation::VT_FPS, Some(0)).unwrap()}
-  }
-}
-
-impl flatbuffers::Verifiable for Animation<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAnime>>>>("part_animes", Self::VT_PART_ANIMES, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Label>>>>("labels", Self::VT_LABELS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("user_data", Self::VT_USER_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("signal_data", Self::VT_SIGNAL_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<&'_ str>>>>("audio_data", Self::VT_AUDIO_DATA, false)?
-     .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
-     .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
-     .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
-     .visit_field::<i16>("fps", Self::VT_FPS, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AnimationArgs<'a> {
-    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub part_animes: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnime<'a>>>>>,
-    pub labels: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>>>,
-    pub user_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub signal_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub audio_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<&'a str>>>>,
-    pub start_frames: i16,
-    pub end_frames: i16,
-    pub total_frames: i16,
-    pub fps: i16,
-}
-impl<'a> Default for AnimationArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    AnimationArgs {
-      name: None, // required field
-      part_animes: None,
-      labels: None,
-      user_data: None,
-      signal_data: None,
-      audio_data: None,
-      start_frames: 0,
-      end_frames: 0,
-      total_frames: 0,
-      fps: 0,
-    }
-  }
-}
-
-pub struct AnimationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Animation::VT_NAME, name);
-  }
-  #[inline]
-  pub fn add_part_animes(&mut self, part_animes: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<PartAnime<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Animation::VT_PART_ANIMES, part_animes);
-  }
-  #[inline]
-  pub fn add_labels(&mut self, labels: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Label<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Animation::VT_LABELS, labels);
-  }
-  #[inline]
-  pub fn add_user_data(&mut self, user_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Animation::VT_USER_DATA, user_data);
-  }
-  #[inline]
-  pub fn add_signal_data(&mut self, signal_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Animation::VT_SIGNAL_DATA, signal_data);
-  }
-  #[inline]
-  pub fn add_audio_data(&mut self, audio_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<&'b  str>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Animation::VT_AUDIO_DATA, audio_data);
-  }
-  #[inline]
-  pub fn add_start_frames(&mut self, start_frames: i16) {
-    self.fbb_.push_slot::<i16>(Animation::VT_START_FRAMES, start_frames, 0);
-  }
-  #[inline]
-  pub fn add_end_frames(&mut self, end_frames: i16) {
-    self.fbb_.push_slot::<i16>(Animation::VT_END_FRAMES, end_frames, 0);
-  }
-  #[inline]
-  pub fn add_total_frames(&mut self, total_frames: i16) {
-    self.fbb_.push_slot::<i16>(Animation::VT_TOTAL_FRAMES, total_frames, 0);
-  }
-  #[inline]
-  pub fn add_fps(&mut self, fps: i16) {
-    self.fbb_.push_slot::<i16>(Animation::VT_FPS, fps, 0);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimationBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AnimationBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<Animation<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, Animation::VT_NAME,"name");
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for Animation<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("Animation");
-      ds.field("name", &self.name());
-      ds.field("part_animes", &self.part_animes());
-      ds.field("labels", &self.labels());
-      ds.field("user_data", &self.user_data());
-      ds.field("signal_data", &self.signal_data());
-      ds.field("audio_data", &self.audio_data());
-      ds.field("start_frames", &self.start_frames());
-      ds.field("end_frames", &self.end_frames());
-      ds.field("total_frames", &self.total_frames());
-      ds.field("fps", &self.fps());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AnimationT {
-  pub name: String,
-  pub part_animes: Option<Vec<PartAnimeT>>,
-  pub labels: Option<Vec<LabelT>>,
-  pub user_data: Option<Vec<String>>,
-  pub signal_data: Option<Vec<String>>,
-  pub audio_data: Option<Vec<String>>,
-  pub start_frames: i16,
-  pub end_frames: i16,
-  pub total_frames: i16,
-  pub fps: i16,
-}
-impl Default for AnimationT {
-  fn default() -> Self {
-    Self {
-      name: "".to_string(),
-      part_animes: None,
-      labels: None,
-      user_data: None,
-      signal_data: None,
-      audio_data: None,
-      start_frames: 0,
-      end_frames: 0,
-      total_frames: 0,
-      fps: 0,
-    }
-  }
-}
-impl AnimationT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<Animation<'b>> {
-    let name = Some({
-      let x = &self.name;
-      _fbb.create_string(x)
-    });
-    let part_animes = self.part_animes.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let labels = self.labels.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let user_data = self.user_data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
-    });
-    let signal_data = self.signal_data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
-    });
-    let audio_data = self.audio_data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
-    });
-    let start_frames = self.start_frames;
-    let end_frames = self.end_frames;
-    let total_frames = self.total_frames;
-    let fps = self.fps;
-    Animation::create(_fbb, &AnimationArgs{
-      name,
-      part_animes,
-      labels,
-      user_data,
-      signal_data,
-      audio_data,
-      start_frames,
-      end_frames,
-      total_frames,
-      fps,
-    })
-  }
-}
-pub enum AnimePackOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AnimePack<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AnimePack<'a> {
-  type Inner = AnimePack<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AnimePack<'a> {
-  pub const VT_NAME: flatbuffers::VOffsetT = 4;
-  pub const VT_SETTINGS: flatbuffers::VOffsetT = 6;
-  pub const VT_MODEL: flatbuffers::VOffsetT = 8;
-  pub const VT_ANIME_LIST: flatbuffers::VOffsetT = 10;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AnimePack { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args AnimePackArgs<'args>
-  ) -> flatbuffers::WIPOffset<AnimePack<'bldr>> {
-    let mut builder = AnimePackBuilder::new(_fbb);
-    if let Some(x) = args.anime_list { builder.add_anime_list(x); }
-    if let Some(x) = args.model { builder.add_model(x); }
-    if let Some(x) = args.settings { builder.add_settings(x); }
-    if let Some(x) = args.name { builder.add_name(x); }
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AnimePackT {
-    let name = {
-      let x = self.name();
-      x.to_string()
-    };
-    let settings = self.settings().map(|x| {
-      Box::new(x.unpack())
-    });
-    let model = self.model().map(|x| {
-      Box::new(x.unpack())
-    });
-    let anime_list = self.anime_list().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    AnimePackT {
-      name,
-      settings,
-      model,
-      anime_list,
-    }
-  }
-
-  #[inline]
-  pub fn name(&self) -> &'a str {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AnimePack::VT_NAME, None).unwrap()}
-  }
-  #[inline]
-  pub fn key_compare_less_than(&self, o: &AnimePack) -> bool {
-    self.name() < o.name()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
-    let key = self.name();
-    key.cmp(val)
-  }
-  #[inline]
-  pub fn settings(&self) -> Option<AnimationSettings<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<AnimationSettings>>(AnimePack::VT_SETTINGS, None)}
-  }
-  #[inline]
-  pub fn model(&self) -> Option<Model<'a>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Model>>(AnimePack::VT_MODEL, None)}
-  }
-  #[inline]
-  pub fn anime_list(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation>>>>(AnimePack::VT_ANIME_LIST, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for AnimePack<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
-    v.visit_table(pos)?
-     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
-     .visit_field::<flatbuffers::ForwardsUOffset<AnimationSettings>>("settings", Self::VT_SETTINGS, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<Model>>("model", Self::VT_MODEL, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Animation>>>>("anime_list", Self::VT_ANIME_LIST, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AnimePackArgs<'a> {
-    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub settings: Option<flatbuffers::WIPOffset<AnimationSettings<'a>>>,
-    pub model: Option<flatbuffers::WIPOffset<Model<'a>>>,
-    pub anime_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>>>,
-}
-impl<'a> Default for AnimePackArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    AnimePackArgs {
-      name: None, // required field
-      settings: None,
-      model: None,
-      anime_list: None,
-    }
-  }
-}
-
-pub struct AnimePackBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimePackBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimePack::VT_NAME, name);
-  }
-  #[inline]
-  pub fn add_settings(&mut self, settings: flatbuffers::WIPOffset<AnimationSettings<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<AnimationSettings>>(AnimePack::VT_SETTINGS, settings);
-  }
-  #[inline]
-  pub fn add_model(&mut self, model: flatbuffers::WIPOffset<Model<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Model>>(AnimePack::VT_MODEL, model);
-  }
-  #[inline]
-  pub fn add_anime_list(&mut self, anime_list: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Animation<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimePack::VT_ANIME_LIST, anime_list);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimePackBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AnimePackBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AnimePack<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, AnimePack::VT_NAME,"name");
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AnimePack<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AnimePack");
-      ds.field("name", &self.name());
-      ds.field("settings", &self.settings());
-      ds.field("model", &self.model());
-      ds.field("anime_list", &self.anime_list());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AnimePackT {
-  pub name: String,
-  pub settings: Option<Box<AnimationSettingsT>>,
-  pub model: Option<Box<ModelT>>,
-  pub anime_list: Option<Vec<AnimationT>>,
-}
-impl Default for AnimePackT {
-  fn default() -> Self {
-    Self {
-      name: "".to_string(),
-      settings: None,
-      model: None,
-      anime_list: None,
-    }
-  }
-}
-impl AnimePackT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AnimePack<'b>> {
-    let name = Some({
-      let x = &self.name;
-      _fbb.create_string(x)
-    });
-    let settings = self.settings.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let model = self.model.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let anime_list = self.anime_list.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    AnimePack::create(_fbb, &AnimePackArgs{
-      name,
-      settings,
-      model,
-      anime_list,
+  ) -> flatbuffers::WIPOffset<AudioDataPerFrame<'b>> {
+    let frame_index = self.frame_index;
+    AudioDataPerFrame::create(_fbb, &AudioDataPerFrameArgs{
+      frame_index,
     })
   }
 }
@@ -4102,7 +10353,7 @@ impl flatbuffers::Verifiable for Cell<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("rectangle", Self::VT_RECTANGLE, false)?
@@ -4374,7 +10625,7 @@ impl flatbuffers::Verifiable for CellMap<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("image_path", Self::VT_IMAGE_PATH, false)?
@@ -4570,7 +10821,7 @@ impl flatbuffers::Verifiable for EffectParticleInfiniteEmitEnabled<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i32>("flag", Self::VT_FLAG, false)?
      .finish();
@@ -4696,7 +10947,7 @@ impl flatbuffers::Verifiable for EffectParticleTurnToDirectionEnabled<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("rotation", Self::VT_ROTATION, false)?
      .finish();
@@ -4835,7 +11086,7 @@ impl flatbuffers::Verifiable for EffectParticlePointGravity<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("position", Self::VT_POSITION, false)?
      .visit_field::<f32>("power", Self::VT_POWER, false)?
@@ -4999,7 +11250,7 @@ impl flatbuffers::Verifiable for EffectParticleElementTransSize<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("size", Self::VT_SIZE, false)?
      .visit_field::<f32>("scale_factor_min_value", Self::VT_SCALE_FACTOR_MIN_VALUE, false)?
@@ -5175,7 +11426,7 @@ impl flatbuffers::Verifiable for EffectParticleElementSize<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("size", Self::VT_SIZE, false)?
      .visit_field::<f32>("scale_factor_min_value", Self::VT_SCALE_FACTOR_MIN_VALUE, false)?
@@ -5338,7 +11589,7 @@ impl flatbuffers::Verifiable for EffectParticleElementAlphaFade<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("disprange_min_value", Self::VT_DISPRANGE_MIN_VALUE, false)?
      .visit_field::<f32>("disprange_max_value", Self::VT_DISPRANGE_MAX_VALUE, false)?
@@ -5487,7 +11738,7 @@ impl flatbuffers::Verifiable for EffectParticleElementTransColor<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("color_min_value", Self::VT_COLOR_MIN_VALUE, false)?
      .visit_field::<u32>("color_max_value", Self::VT_COLOR_MAX_VALUE, false)?
@@ -5636,7 +11887,7 @@ impl flatbuffers::Verifiable for EffectParticleElementInitColor<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("color_min_value", Self::VT_COLOR_MIN_VALUE, false)?
      .visit_field::<u32>("color_max_value", Self::VT_COLOR_MAX_VALUE, false)?
@@ -5785,7 +12036,7 @@ impl flatbuffers::Verifiable for EffectParticleElementTangentialAcceleration<'_>
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("acceleration_min_value", Self::VT_ACCELERATION_MIN_VALUE, false)?
      .visit_field::<f32>("acceleration_max_value", Self::VT_ACCELERATION_MAX_VALUE, false)?
@@ -5934,7 +12185,7 @@ impl flatbuffers::Verifiable for EffectParticleElementTransSpeed<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("speed_min_value", Self::VT_SPEED_MIN_VALUE, false)?
      .visit_field::<f32>("speed_max_value", Self::VT_SPEED_MAX_VALUE, false)?
@@ -6083,7 +12334,7 @@ impl flatbuffers::Verifiable for EffectParticleElementRotationTrans<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("rotation_factor", Self::VT_ROTATION_FACTOR, false)?
      .visit_field::<f32>("end_life_time_per", Self::VT_END_LIFE_TIME_PER, false)?
@@ -6254,7 +12505,7 @@ impl flatbuffers::Verifiable for EffectParticleElementRotation<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<f32>("rotation_min_value", Self::VT_ROTATION_MIN_VALUE, false)?
      .visit_field::<f32>("rotation_max_value", Self::VT_ROTATION_MAX_VALUE, false)?
@@ -6418,7 +12669,7 @@ impl flatbuffers::Verifiable for EffectParticleElementPosition<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("offset", Self::VT_OFFSET, false)?
      .finish();
@@ -6548,7 +12799,7 @@ impl flatbuffers::Verifiable for EffectParticleElementGravity<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("gravity", Self::VT_GRAVITY, false)?
      .finish();
@@ -6676,7 +12927,7 @@ impl flatbuffers::Verifiable for EffectParticleElementDelay<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i32>("delay_time", Self::VT_DELAY_TIME, false)?
      .finish();
@@ -6802,7 +13053,7 @@ impl flatbuffers::Verifiable for EffectParticleElementRndSeedChange<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i32>("seed", Self::VT_SEED, false)?
      .finish();
@@ -7038,7 +13289,7 @@ impl flatbuffers::Verifiable for EffectParticleElementBasic<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i32>("priority", Self::VT_PRIORITY, false)?
      .visit_field::<i32>("maximum_particle", Self::VT_MAXIMUM_PARTICLE, false)?
@@ -7636,7 +13887,7 @@ impl flatbuffers::Verifiable for EffectNodeBehaviorWrapper<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_union::<EffectNodeBehavior, _>("content_type", Self::VT_CONTENT_TYPE, "content", Self::VT_CONTENT, false, |key, v, pos| {
         match key {
@@ -7973,7 +14224,7 @@ impl flatbuffers::Verifiable for EffectNode<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i16>("index", Self::VT_INDEX, false)?
      .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
@@ -8233,7 +14484,7 @@ impl flatbuffers::Verifiable for Effect<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<i16>("fps", Self::VT_FPS, false)?
@@ -8464,7 +14715,7 @@ impl flatbuffers::Verifiable for SoundFile<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("path", Self::VT_PATH, false)?
@@ -8646,7 +14897,7 @@ impl flatbuffers::Verifiable for SoundList<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SoundFile>>>>("table_data", Self::VT_TABLE_DATA, false)?
@@ -8872,7 +15123,7 @@ impl flatbuffers::Verifiable for FontGlyphBitmap<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("id", Self::VT_ID, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("atlas", Self::VT_ATLAS, false)?
@@ -9244,7 +15495,7 @@ impl flatbuffers::Verifiable for FontBitmap<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name_face", Self::VT_NAME_FACE, false)?
@@ -9489,6 +15740,2389 @@ impl FontBitmapT {
     })
   }
 }
+pub enum MeshDataUVOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct MeshDataUV<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for MeshDataUV<'a> {
+  type Inner = MeshDataUV<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> MeshDataUV<'a> {
+  pub const VT_UV: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    MeshDataUV { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args MeshDataUVArgs<'args>
+  ) -> flatbuffers::WIPOffset<MeshDataUV<'bldr>> {
+    let mut builder = MeshDataUVBuilder::new(_fbb);
+    if let Some(x) = args.uv { builder.add_uv(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> MeshDataUVT {
+    let uv = self.uv().map(|x| {
+      x.into_iter().collect()
+    });
+    MeshDataUVT {
+      uv,
+    }
+  }
+
+  #[inline]
+  pub fn uv(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(MeshDataUV::VT_UV, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for MeshDataUV<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("uv", Self::VT_UV, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct MeshDataUVArgs<'a> {
+    pub uv: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+}
+impl<'a> Default for MeshDataUVArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    MeshDataUVArgs {
+      uv: None,
+    }
+  }
+}
+
+pub struct MeshDataUVBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> MeshDataUVBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_uv(&mut self, uv: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(MeshDataUV::VT_UV, uv);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> MeshDataUVBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    MeshDataUVBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<MeshDataUV<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for MeshDataUV<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("MeshDataUV");
+      ds.field("uv", &self.uv());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct MeshDataUVT {
+  pub uv: Option<Vec<f32>>,
+}
+impl Default for MeshDataUVT {
+  fn default() -> Self {
+    Self {
+      uv: None,
+    }
+  }
+}
+impl MeshDataUVT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<MeshDataUV<'b>> {
+    let uv = self.uv.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
+    MeshDataUV::create(_fbb, &MeshDataUVArgs{
+      uv,
+    })
+  }
+}
+pub enum MeshDataIndicesOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct MeshDataIndices<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for MeshDataIndices<'a> {
+  type Inner = MeshDataIndices<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> MeshDataIndices<'a> {
+  pub const VT_INDICES: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    MeshDataIndices { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args MeshDataIndicesArgs<'args>
+  ) -> flatbuffers::WIPOffset<MeshDataIndices<'bldr>> {
+    let mut builder = MeshDataIndicesBuilder::new(_fbb);
+    if let Some(x) = args.indices { builder.add_indices(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> MeshDataIndicesT {
+    let indices = self.indices().map(|x| {
+      x.into_iter().collect()
+    });
+    MeshDataIndicesT {
+      indices,
+    }
+  }
+
+  #[inline]
+  pub fn indices(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(MeshDataIndices::VT_INDICES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for MeshDataIndices<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>("indices", Self::VT_INDICES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct MeshDataIndicesArgs<'a> {
+    pub indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+}
+impl<'a> Default for MeshDataIndicesArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    MeshDataIndicesArgs {
+      indices: None,
+    }
+  }
+}
+
+pub struct MeshDataIndicesBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> MeshDataIndicesBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_indices(&mut self, indices: flatbuffers::WIPOffset<flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(MeshDataIndices::VT_INDICES, indices);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> MeshDataIndicesBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    MeshDataIndicesBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<MeshDataIndices<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for MeshDataIndices<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("MeshDataIndices");
+      ds.field("indices", &self.indices());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct MeshDataIndicesT {
+  pub indices: Option<Vec<f32>>,
+}
+impl Default for MeshDataIndicesT {
+  fn default() -> Self {
+    Self {
+      indices: None,
+    }
+  }
+}
+impl MeshDataIndicesT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<MeshDataIndices<'b>> {
+    let indices = self.indices.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
+    MeshDataIndices::create(_fbb, &MeshDataIndicesArgs{
+      indices,
+    })
+  }
+}
+pub enum PartAttributesOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartAttributes<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartAttributes<'a> {
+  type Inner = PartAttributes<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> PartAttributes<'a> {
+  pub const VT_CELL_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_POSITION_X: flatbuffers::VOffsetT = 6;
+  pub const VT_POSITION_Y: flatbuffers::VOffsetT = 8;
+  pub const VT_POSITION_Z: flatbuffers::VOffsetT = 10;
+  pub const VT_ROTATION_X: flatbuffers::VOffsetT = 12;
+  pub const VT_ROTATION_Y: flatbuffers::VOffsetT = 14;
+  pub const VT_ROTATION_Z: flatbuffers::VOffsetT = 16;
+  pub const VT_SCALE_X: flatbuffers::VOffsetT = 18;
+  pub const VT_SCALE_Y: flatbuffers::VOffsetT = 20;
+  pub const VT_LOCALSCALE_X: flatbuffers::VOffsetT = 22;
+  pub const VT_LOCALSCALE_Y: flatbuffers::VOffsetT = 24;
+  pub const VT_OPACITY: flatbuffers::VOffsetT = 26;
+  pub const VT_LOCALOPACITY: flatbuffers::VOffsetT = 28;
+  pub const VT_PRIORITY: flatbuffers::VOffsetT = 30;
+  pub const VT_FLIP_V: flatbuffers::VOffsetT = 32;
+  pub const VT_FLIP_H: flatbuffers::VOffsetT = 34;
+  pub const VT_HIDE: flatbuffers::VOffsetT = 36;
+  pub const VT_MASKLIMEN: flatbuffers::VOffsetT = 38;
+  pub const VT_PIVOT_X: flatbuffers::VOffsetT = 40;
+  pub const VT_PIVOT_Y: flatbuffers::VOffsetT = 42;
+  pub const VT_SIZE_X: flatbuffers::VOffsetT = 44;
+  pub const VT_SIZE_Y: flatbuffers::VOffsetT = 46;
+  pub const VT_UV_MOVE_X: flatbuffers::VOffsetT = 48;
+  pub const VT_UV_MOVE_Y: flatbuffers::VOffsetT = 50;
+  pub const VT_UV_ROTATION: flatbuffers::VOffsetT = 52;
+  pub const VT_UV_SCALE_X: flatbuffers::VOffsetT = 54;
+  pub const VT_UV_SCALE_Y: flatbuffers::VOffsetT = 56;
+  pub const VT_BOUNDING_RADIUS: flatbuffers::VOffsetT = 58;
+  pub const VT_INSTANCE_VALUE_CUR_KEYFRAME: flatbuffers::VOffsetT = 60;
+  pub const VT_INSTANCE_VALUE_START_FRAME: flatbuffers::VOffsetT = 62;
+  pub const VT_INSTANCE_VALUE_END_FRAME: flatbuffers::VOffsetT = 64;
+  pub const VT_INSTANCE_VALUE_LOOP_NUM: flatbuffers::VOffsetT = 66;
+  pub const VT_INSTANCE_VALUE_SPEED: flatbuffers::VOffsetT = 68;
+  pub const VT_INSTANCE_VALUE_LOOPFLAG: flatbuffers::VOffsetT = 70;
+  pub const VT_EFFECT_VALUE_CUR_KEYFRAME: flatbuffers::VOffsetT = 72;
+  pub const VT_EFFECT_VALUE_START_TIME: flatbuffers::VOffsetT = 74;
+  pub const VT_EFFECT_VALUE_SPEED: flatbuffers::VOffsetT = 76;
+  pub const VT_EFFECT_VALUE_LOOPFLAG: flatbuffers::VOffsetT = 78;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    PartAttributes { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args PartAttributesArgs
+  ) -> flatbuffers::WIPOffset<PartAttributes<'bldr>> {
+    let mut builder = PartAttributesBuilder::new(_fbb);
+    builder.add_effect_value_loopflag(args.effect_value_loopflag);
+    builder.add_effect_value_speed(args.effect_value_speed);
+    builder.add_effect_value_start_time(args.effect_value_start_time);
+    builder.add_effect_value_cur_keyframe(args.effect_value_cur_keyframe);
+    builder.add_instance_value_loopflag(args.instance_value_loopflag);
+    builder.add_instance_value_speed(args.instance_value_speed);
+    builder.add_instance_value_loop_num(args.instance_value_loop_num);
+    builder.add_instance_value_end_frame(args.instance_value_end_frame);
+    builder.add_instance_value_start_frame(args.instance_value_start_frame);
+    builder.add_instance_value_cur_keyframe(args.instance_value_cur_keyframe);
+    builder.add_bounding_radius(args.bounding_radius);
+    builder.add_uv_scale_y(args.uv_scale_y);
+    builder.add_uv_scale_x(args.uv_scale_x);
+    builder.add_uv_rotation(args.uv_rotation);
+    builder.add_uv_move_y(args.uv_move_y);
+    builder.add_uv_move_x(args.uv_move_x);
+    builder.add_size_y(args.size_y);
+    builder.add_size_x(args.size_x);
+    builder.add_pivot_y(args.pivot_y);
+    builder.add_pivot_x(args.pivot_x);
+    builder.add_localscale_y(args.localscale_y);
+    builder.add_localscale_x(args.localscale_x);
+    builder.add_scale_y(args.scale_y);
+    builder.add_scale_x(args.scale_x);
+    builder.add_rotation_z(args.rotation_z);
+    builder.add_rotation_y(args.rotation_y);
+    builder.add_rotation_x(args.rotation_x);
+    builder.add_position_z(args.position_z);
+    builder.add_position_y(args.position_y);
+    builder.add_position_x(args.position_x);
+    builder.add_masklimen(args.masklimen);
+    builder.add_priority(args.priority);
+    builder.add_localopacity(args.localopacity);
+    builder.add_opacity(args.opacity);
+    builder.add_cell_index(args.cell_index);
+    builder.add_hide(args.hide);
+    builder.add_flip_h(args.flip_h);
+    builder.add_flip_v(args.flip_v);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> PartAttributesT {
+    let cell_index = self.cell_index();
+    let position_x = self.position_x();
+    let position_y = self.position_y();
+    let position_z = self.position_z();
+    let rotation_x = self.rotation_x();
+    let rotation_y = self.rotation_y();
+    let rotation_z = self.rotation_z();
+    let scale_x = self.scale_x();
+    let scale_y = self.scale_y();
+    let localscale_x = self.localscale_x();
+    let localscale_y = self.localscale_y();
+    let opacity = self.opacity();
+    let localopacity = self.localopacity();
+    let priority = self.priority();
+    let flip_v = self.flip_v();
+    let flip_h = self.flip_h();
+    let hide = self.hide();
+    let masklimen = self.masklimen();
+    let pivot_x = self.pivot_x();
+    let pivot_y = self.pivot_y();
+    let size_x = self.size_x();
+    let size_y = self.size_y();
+    let uv_move_x = self.uv_move_x();
+    let uv_move_y = self.uv_move_y();
+    let uv_rotation = self.uv_rotation();
+    let uv_scale_x = self.uv_scale_x();
+    let uv_scale_y = self.uv_scale_y();
+    let bounding_radius = self.bounding_radius();
+    let instance_value_cur_keyframe = self.instance_value_cur_keyframe();
+    let instance_value_start_frame = self.instance_value_start_frame();
+    let instance_value_end_frame = self.instance_value_end_frame();
+    let instance_value_loop_num = self.instance_value_loop_num();
+    let instance_value_speed = self.instance_value_speed();
+    let instance_value_loopflag = self.instance_value_loopflag();
+    let effect_value_cur_keyframe = self.effect_value_cur_keyframe();
+    let effect_value_start_time = self.effect_value_start_time();
+    let effect_value_speed = self.effect_value_speed();
+    let effect_value_loopflag = self.effect_value_loopflag();
+    PartAttributesT {
+      cell_index,
+      position_x,
+      position_y,
+      position_z,
+      rotation_x,
+      rotation_y,
+      rotation_z,
+      scale_x,
+      scale_y,
+      localscale_x,
+      localscale_y,
+      opacity,
+      localopacity,
+      priority,
+      flip_v,
+      flip_h,
+      hide,
+      masklimen,
+      pivot_x,
+      pivot_y,
+      size_x,
+      size_y,
+      uv_move_x,
+      uv_move_y,
+      uv_rotation,
+      uv_scale_x,
+      uv_scale_y,
+      bounding_radius,
+      instance_value_cur_keyframe,
+      instance_value_start_frame,
+      instance_value_end_frame,
+      instance_value_loop_num,
+      instance_value_speed,
+      instance_value_loopflag,
+      effect_value_cur_keyframe,
+      effect_value_start_time,
+      effect_value_speed,
+      effect_value_loopflag,
+    }
+  }
+
+  #[inline]
+  pub fn cell_index(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartAttributes::VT_CELL_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn position_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_POSITION_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn position_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_POSITION_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn position_z(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_POSITION_Z, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn rotation_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ROTATION_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn rotation_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ROTATION_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn rotation_z(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ROTATION_Z, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn scale_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SCALE_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn scale_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SCALE_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn localscale_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALSCALE_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn localscale_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALSCALE_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn opacity(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartAttributes::VT_OPACITY, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn localopacity(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartAttributes::VT_LOCALOPACITY, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn priority(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartAttributes::VT_PRIORITY, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn flip_v(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_FLIP_V, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn flip_h(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_FLIP_H, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn hide(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_HIDE, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn masklimen(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartAttributes::VT_MASKLIMEN, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn pivot_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_PIVOT_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn pivot_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_PIVOT_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn size_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SIZE_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn size_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SIZE_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_move_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_MOVE_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_move_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_MOVE_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_rotation(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_ROTATION, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_scale_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_SCALE_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_scale_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_SCALE_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn bounding_radius(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_BOUNDING_RADIUS, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn instance_value_cur_keyframe(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_INSTANCE_VALUE_CUR_KEYFRAME, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn instance_value_start_frame(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_INSTANCE_VALUE_START_FRAME, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn instance_value_end_frame(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_INSTANCE_VALUE_END_FRAME, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn instance_value_loop_num(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_INSTANCE_VALUE_LOOP_NUM, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn instance_value_speed(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_INSTANCE_VALUE_SPEED, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn instance_value_loopflag(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_INSTANCE_VALUE_LOOPFLAG, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn effect_value_cur_keyframe(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_EFFECT_VALUE_CUR_KEYFRAME, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn effect_value_start_time(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_EFFECT_VALUE_START_TIME, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn effect_value_speed(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_EFFECT_VALUE_SPEED, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn effect_value_loopflag(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(PartAttributes::VT_EFFECT_VALUE_LOOPFLAG, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for PartAttributes<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i16>("cell_index", Self::VT_CELL_INDEX, false)?
+     .visit_field::<f32>("position_x", Self::VT_POSITION_X, false)?
+     .visit_field::<f32>("position_y", Self::VT_POSITION_Y, false)?
+     .visit_field::<f32>("position_z", Self::VT_POSITION_Z, false)?
+     .visit_field::<f32>("rotation_x", Self::VT_ROTATION_X, false)?
+     .visit_field::<f32>("rotation_y", Self::VT_ROTATION_Y, false)?
+     .visit_field::<f32>("rotation_z", Self::VT_ROTATION_Z, false)?
+     .visit_field::<f32>("scale_x", Self::VT_SCALE_X, false)?
+     .visit_field::<f32>("scale_y", Self::VT_SCALE_Y, false)?
+     .visit_field::<f32>("localscale_x", Self::VT_LOCALSCALE_X, false)?
+     .visit_field::<f32>("localscale_y", Self::VT_LOCALSCALE_Y, false)?
+     .visit_field::<i16>("opacity", Self::VT_OPACITY, false)?
+     .visit_field::<i16>("localopacity", Self::VT_LOCALOPACITY, false)?
+     .visit_field::<i16>("priority", Self::VT_PRIORITY, false)?
+     .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
+     .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
+     .visit_field::<bool>("hide", Self::VT_HIDE, false)?
+     .visit_field::<i16>("masklimen", Self::VT_MASKLIMEN, false)?
+     .visit_field::<f32>("pivot_x", Self::VT_PIVOT_X, false)?
+     .visit_field::<f32>("pivot_y", Self::VT_PIVOT_Y, false)?
+     .visit_field::<f32>("size_x", Self::VT_SIZE_X, false)?
+     .visit_field::<f32>("size_y", Self::VT_SIZE_Y, false)?
+     .visit_field::<f32>("uv_move_x", Self::VT_UV_MOVE_X, false)?
+     .visit_field::<f32>("uv_move_y", Self::VT_UV_MOVE_Y, false)?
+     .visit_field::<f32>("uv_rotation", Self::VT_UV_ROTATION, false)?
+     .visit_field::<f32>("uv_scale_x", Self::VT_UV_SCALE_X, false)?
+     .visit_field::<f32>("uv_scale_y", Self::VT_UV_SCALE_Y, false)?
+     .visit_field::<f32>("bounding_radius", Self::VT_BOUNDING_RADIUS, false)?
+     .visit_field::<i32>("instance_value_cur_keyframe", Self::VT_INSTANCE_VALUE_CUR_KEYFRAME, false)?
+     .visit_field::<i32>("instance_value_start_frame", Self::VT_INSTANCE_VALUE_START_FRAME, false)?
+     .visit_field::<i32>("instance_value_end_frame", Self::VT_INSTANCE_VALUE_END_FRAME, false)?
+     .visit_field::<i32>("instance_value_loop_num", Self::VT_INSTANCE_VALUE_LOOP_NUM, false)?
+     .visit_field::<f32>("instance_value_speed", Self::VT_INSTANCE_VALUE_SPEED, false)?
+     .visit_field::<i32>("instance_value_loopflag", Self::VT_INSTANCE_VALUE_LOOPFLAG, false)?
+     .visit_field::<i32>("effect_value_cur_keyframe", Self::VT_EFFECT_VALUE_CUR_KEYFRAME, false)?
+     .visit_field::<i32>("effect_value_start_time", Self::VT_EFFECT_VALUE_START_TIME, false)?
+     .visit_field::<f32>("effect_value_speed", Self::VT_EFFECT_VALUE_SPEED, false)?
+     .visit_field::<i32>("effect_value_loopflag", Self::VT_EFFECT_VALUE_LOOPFLAG, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct PartAttributesArgs {
+    pub cell_index: i16,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub position_z: f32,
+    pub rotation_x: f32,
+    pub rotation_y: f32,
+    pub rotation_z: f32,
+    pub scale_x: f32,
+    pub scale_y: f32,
+    pub localscale_x: f32,
+    pub localscale_y: f32,
+    pub opacity: i16,
+    pub localopacity: i16,
+    pub priority: i16,
+    pub flip_v: bool,
+    pub flip_h: bool,
+    pub hide: bool,
+    pub masklimen: i16,
+    pub pivot_x: f32,
+    pub pivot_y: f32,
+    pub size_x: f32,
+    pub size_y: f32,
+    pub uv_move_x: f32,
+    pub uv_move_y: f32,
+    pub uv_rotation: f32,
+    pub uv_scale_x: f32,
+    pub uv_scale_y: f32,
+    pub bounding_radius: f32,
+    pub instance_value_cur_keyframe: i32,
+    pub instance_value_start_frame: i32,
+    pub instance_value_end_frame: i32,
+    pub instance_value_loop_num: i32,
+    pub instance_value_speed: f32,
+    pub instance_value_loopflag: i32,
+    pub effect_value_cur_keyframe: i32,
+    pub effect_value_start_time: i32,
+    pub effect_value_speed: f32,
+    pub effect_value_loopflag: i32,
+}
+impl<'a> Default for PartAttributesArgs {
+  #[inline]
+  fn default() -> Self {
+    PartAttributesArgs {
+      cell_index: 0,
+      position_x: 0.0,
+      position_y: 0.0,
+      position_z: 0.0,
+      rotation_x: 0.0,
+      rotation_y: 0.0,
+      rotation_z: 0.0,
+      scale_x: 0.0,
+      scale_y: 0.0,
+      localscale_x: 0.0,
+      localscale_y: 0.0,
+      opacity: 0,
+      localopacity: 0,
+      priority: 0,
+      flip_v: false,
+      flip_h: false,
+      hide: false,
+      masklimen: 0,
+      pivot_x: 0.0,
+      pivot_y: 0.0,
+      size_x: 0.0,
+      size_y: 0.0,
+      uv_move_x: 0.0,
+      uv_move_y: 0.0,
+      uv_rotation: 0.0,
+      uv_scale_x: 0.0,
+      uv_scale_y: 0.0,
+      bounding_radius: 0.0,
+      instance_value_cur_keyframe: 0,
+      instance_value_start_frame: 0,
+      instance_value_end_frame: 0,
+      instance_value_loop_num: 0,
+      instance_value_speed: 0.0,
+      instance_value_loopflag: 0,
+      effect_value_cur_keyframe: 0,
+      effect_value_start_time: 0,
+      effect_value_speed: 0.0,
+      effect_value_loopflag: 0,
+    }
+  }
+}
+
+pub struct PartAttributesBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_cell_index(&mut self, cell_index: i16) {
+    self.fbb_.push_slot::<i16>(PartAttributes::VT_CELL_INDEX, cell_index, 0);
+  }
+  #[inline]
+  pub fn add_position_x(&mut self, position_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_POSITION_X, position_x, 0.0);
+  }
+  #[inline]
+  pub fn add_position_y(&mut self, position_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_POSITION_Y, position_y, 0.0);
+  }
+  #[inline]
+  pub fn add_position_z(&mut self, position_z: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_POSITION_Z, position_z, 0.0);
+  }
+  #[inline]
+  pub fn add_rotation_x(&mut self, rotation_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ROTATION_X, rotation_x, 0.0);
+  }
+  #[inline]
+  pub fn add_rotation_y(&mut self, rotation_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ROTATION_Y, rotation_y, 0.0);
+  }
+  #[inline]
+  pub fn add_rotation_z(&mut self, rotation_z: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ROTATION_Z, rotation_z, 0.0);
+  }
+  #[inline]
+  pub fn add_scale_x(&mut self, scale_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SCALE_X, scale_x, 0.0);
+  }
+  #[inline]
+  pub fn add_scale_y(&mut self, scale_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SCALE_Y, scale_y, 0.0);
+  }
+  #[inline]
+  pub fn add_localscale_x(&mut self, localscale_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALSCALE_X, localscale_x, 0.0);
+  }
+  #[inline]
+  pub fn add_localscale_y(&mut self, localscale_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALSCALE_Y, localscale_y, 0.0);
+  }
+  #[inline]
+  pub fn add_opacity(&mut self, opacity: i16) {
+    self.fbb_.push_slot::<i16>(PartAttributes::VT_OPACITY, opacity, 0);
+  }
+  #[inline]
+  pub fn add_localopacity(&mut self, localopacity: i16) {
+    self.fbb_.push_slot::<i16>(PartAttributes::VT_LOCALOPACITY, localopacity, 0);
+  }
+  #[inline]
+  pub fn add_priority(&mut self, priority: i16) {
+    self.fbb_.push_slot::<i16>(PartAttributes::VT_PRIORITY, priority, 0);
+  }
+  #[inline]
+  pub fn add_flip_v(&mut self, flip_v: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_FLIP_V, flip_v, false);
+  }
+  #[inline]
+  pub fn add_flip_h(&mut self, flip_h: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_FLIP_H, flip_h, false);
+  }
+  #[inline]
+  pub fn add_hide(&mut self, hide: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_HIDE, hide, false);
+  }
+  #[inline]
+  pub fn add_masklimen(&mut self, masklimen: i16) {
+    self.fbb_.push_slot::<i16>(PartAttributes::VT_MASKLIMEN, masklimen, 0);
+  }
+  #[inline]
+  pub fn add_pivot_x(&mut self, pivot_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_PIVOT_X, pivot_x, 0.0);
+  }
+  #[inline]
+  pub fn add_pivot_y(&mut self, pivot_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_PIVOT_Y, pivot_y, 0.0);
+  }
+  #[inline]
+  pub fn add_size_x(&mut self, size_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_X, size_x, 0.0);
+  }
+  #[inline]
+  pub fn add_size_y(&mut self, size_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_Y, size_y, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_move_x(&mut self, uv_move_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_MOVE_X, uv_move_x, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_move_y(&mut self, uv_move_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_MOVE_Y, uv_move_y, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_rotation(&mut self, uv_rotation: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_ROTATION, uv_rotation, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_scale_x(&mut self, uv_scale_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_SCALE_X, uv_scale_x, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_scale_y(&mut self, uv_scale_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_SCALE_Y, uv_scale_y, 0.0);
+  }
+  #[inline]
+  pub fn add_bounding_radius(&mut self, bounding_radius: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_BOUNDING_RADIUS, bounding_radius, 0.0);
+  }
+  #[inline]
+  pub fn add_instance_value_cur_keyframe(&mut self, instance_value_cur_keyframe: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_INSTANCE_VALUE_CUR_KEYFRAME, instance_value_cur_keyframe, 0);
+  }
+  #[inline]
+  pub fn add_instance_value_start_frame(&mut self, instance_value_start_frame: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_INSTANCE_VALUE_START_FRAME, instance_value_start_frame, 0);
+  }
+  #[inline]
+  pub fn add_instance_value_end_frame(&mut self, instance_value_end_frame: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_INSTANCE_VALUE_END_FRAME, instance_value_end_frame, 0);
+  }
+  #[inline]
+  pub fn add_instance_value_loop_num(&mut self, instance_value_loop_num: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_INSTANCE_VALUE_LOOP_NUM, instance_value_loop_num, 0);
+  }
+  #[inline]
+  pub fn add_instance_value_speed(&mut self, instance_value_speed: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_INSTANCE_VALUE_SPEED, instance_value_speed, 0.0);
+  }
+  #[inline]
+  pub fn add_instance_value_loopflag(&mut self, instance_value_loopflag: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_INSTANCE_VALUE_LOOPFLAG, instance_value_loopflag, 0);
+  }
+  #[inline]
+  pub fn add_effect_value_cur_keyframe(&mut self, effect_value_cur_keyframe: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_EFFECT_VALUE_CUR_KEYFRAME, effect_value_cur_keyframe, 0);
+  }
+  #[inline]
+  pub fn add_effect_value_start_time(&mut self, effect_value_start_time: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_EFFECT_VALUE_START_TIME, effect_value_start_time, 0);
+  }
+  #[inline]
+  pub fn add_effect_value_speed(&mut self, effect_value_speed: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_EFFECT_VALUE_SPEED, effect_value_speed, 0.0);
+  }
+  #[inline]
+  pub fn add_effect_value_loopflag(&mut self, effect_value_loopflag: i32) {
+    self.fbb_.push_slot::<i32>(PartAttributes::VT_EFFECT_VALUE_LOOPFLAG, effect_value_loopflag, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributesBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    PartAttributesBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<PartAttributes<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for PartAttributes<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("PartAttributes");
+      ds.field("cell_index", &self.cell_index());
+      ds.field("position_x", &self.position_x());
+      ds.field("position_y", &self.position_y());
+      ds.field("position_z", &self.position_z());
+      ds.field("rotation_x", &self.rotation_x());
+      ds.field("rotation_y", &self.rotation_y());
+      ds.field("rotation_z", &self.rotation_z());
+      ds.field("scale_x", &self.scale_x());
+      ds.field("scale_y", &self.scale_y());
+      ds.field("localscale_x", &self.localscale_x());
+      ds.field("localscale_y", &self.localscale_y());
+      ds.field("opacity", &self.opacity());
+      ds.field("localopacity", &self.localopacity());
+      ds.field("priority", &self.priority());
+      ds.field("flip_v", &self.flip_v());
+      ds.field("flip_h", &self.flip_h());
+      ds.field("hide", &self.hide());
+      ds.field("masklimen", &self.masklimen());
+      ds.field("pivot_x", &self.pivot_x());
+      ds.field("pivot_y", &self.pivot_y());
+      ds.field("size_x", &self.size_x());
+      ds.field("size_y", &self.size_y());
+      ds.field("uv_move_x", &self.uv_move_x());
+      ds.field("uv_move_y", &self.uv_move_y());
+      ds.field("uv_rotation", &self.uv_rotation());
+      ds.field("uv_scale_x", &self.uv_scale_x());
+      ds.field("uv_scale_y", &self.uv_scale_y());
+      ds.field("bounding_radius", &self.bounding_radius());
+      ds.field("instance_value_cur_keyframe", &self.instance_value_cur_keyframe());
+      ds.field("instance_value_start_frame", &self.instance_value_start_frame());
+      ds.field("instance_value_end_frame", &self.instance_value_end_frame());
+      ds.field("instance_value_loop_num", &self.instance_value_loop_num());
+      ds.field("instance_value_speed", &self.instance_value_speed());
+      ds.field("instance_value_loopflag", &self.instance_value_loopflag());
+      ds.field("effect_value_cur_keyframe", &self.effect_value_cur_keyframe());
+      ds.field("effect_value_start_time", &self.effect_value_start_time());
+      ds.field("effect_value_speed", &self.effect_value_speed());
+      ds.field("effect_value_loopflag", &self.effect_value_loopflag());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartAttributesT {
+  pub cell_index: i16,
+  pub position_x: f32,
+  pub position_y: f32,
+  pub position_z: f32,
+  pub rotation_x: f32,
+  pub rotation_y: f32,
+  pub rotation_z: f32,
+  pub scale_x: f32,
+  pub scale_y: f32,
+  pub localscale_x: f32,
+  pub localscale_y: f32,
+  pub opacity: i16,
+  pub localopacity: i16,
+  pub priority: i16,
+  pub flip_v: bool,
+  pub flip_h: bool,
+  pub hide: bool,
+  pub masklimen: i16,
+  pub pivot_x: f32,
+  pub pivot_y: f32,
+  pub size_x: f32,
+  pub size_y: f32,
+  pub uv_move_x: f32,
+  pub uv_move_y: f32,
+  pub uv_rotation: f32,
+  pub uv_scale_x: f32,
+  pub uv_scale_y: f32,
+  pub bounding_radius: f32,
+  pub instance_value_cur_keyframe: i32,
+  pub instance_value_start_frame: i32,
+  pub instance_value_end_frame: i32,
+  pub instance_value_loop_num: i32,
+  pub instance_value_speed: f32,
+  pub instance_value_loopflag: i32,
+  pub effect_value_cur_keyframe: i32,
+  pub effect_value_start_time: i32,
+  pub effect_value_speed: f32,
+  pub effect_value_loopflag: i32,
+}
+impl Default for PartAttributesT {
+  fn default() -> Self {
+    Self {
+      cell_index: 0,
+      position_x: 0.0,
+      position_y: 0.0,
+      position_z: 0.0,
+      rotation_x: 0.0,
+      rotation_y: 0.0,
+      rotation_z: 0.0,
+      scale_x: 0.0,
+      scale_y: 0.0,
+      localscale_x: 0.0,
+      localscale_y: 0.0,
+      opacity: 0,
+      localopacity: 0,
+      priority: 0,
+      flip_v: false,
+      flip_h: false,
+      hide: false,
+      masklimen: 0,
+      pivot_x: 0.0,
+      pivot_y: 0.0,
+      size_x: 0.0,
+      size_y: 0.0,
+      uv_move_x: 0.0,
+      uv_move_y: 0.0,
+      uv_rotation: 0.0,
+      uv_scale_x: 0.0,
+      uv_scale_y: 0.0,
+      bounding_radius: 0.0,
+      instance_value_cur_keyframe: 0,
+      instance_value_start_frame: 0,
+      instance_value_end_frame: 0,
+      instance_value_loop_num: 0,
+      instance_value_speed: 0.0,
+      instance_value_loopflag: 0,
+      effect_value_cur_keyframe: 0,
+      effect_value_start_time: 0,
+      effect_value_speed: 0.0,
+      effect_value_loopflag: 0,
+    }
+  }
+}
+impl PartAttributesT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<PartAttributes<'b>> {
+    let cell_index = self.cell_index;
+    let position_x = self.position_x;
+    let position_y = self.position_y;
+    let position_z = self.position_z;
+    let rotation_x = self.rotation_x;
+    let rotation_y = self.rotation_y;
+    let rotation_z = self.rotation_z;
+    let scale_x = self.scale_x;
+    let scale_y = self.scale_y;
+    let localscale_x = self.localscale_x;
+    let localscale_y = self.localscale_y;
+    let opacity = self.opacity;
+    let localopacity = self.localopacity;
+    let priority = self.priority;
+    let flip_v = self.flip_v;
+    let flip_h = self.flip_h;
+    let hide = self.hide;
+    let masklimen = self.masklimen;
+    let pivot_x = self.pivot_x;
+    let pivot_y = self.pivot_y;
+    let size_x = self.size_x;
+    let size_y = self.size_y;
+    let uv_move_x = self.uv_move_x;
+    let uv_move_y = self.uv_move_y;
+    let uv_rotation = self.uv_rotation;
+    let uv_scale_x = self.uv_scale_x;
+    let uv_scale_y = self.uv_scale_y;
+    let bounding_radius = self.bounding_radius;
+    let instance_value_cur_keyframe = self.instance_value_cur_keyframe;
+    let instance_value_start_frame = self.instance_value_start_frame;
+    let instance_value_end_frame = self.instance_value_end_frame;
+    let instance_value_loop_num = self.instance_value_loop_num;
+    let instance_value_speed = self.instance_value_speed;
+    let instance_value_loopflag = self.instance_value_loopflag;
+    let effect_value_cur_keyframe = self.effect_value_cur_keyframe;
+    let effect_value_start_time = self.effect_value_start_time;
+    let effect_value_speed = self.effect_value_speed;
+    let effect_value_loopflag = self.effect_value_loopflag;
+    PartAttributes::create(_fbb, &PartAttributesArgs{
+      cell_index,
+      position_x,
+      position_y,
+      position_z,
+      rotation_x,
+      rotation_y,
+      rotation_z,
+      scale_x,
+      scale_y,
+      localscale_x,
+      localscale_y,
+      opacity,
+      localopacity,
+      priority,
+      flip_v,
+      flip_h,
+      hide,
+      masklimen,
+      pivot_x,
+      pivot_y,
+      size_x,
+      size_y,
+      uv_move_x,
+      uv_move_y,
+      uv_rotation,
+      uv_scale_x,
+      uv_scale_y,
+      bounding_radius,
+      instance_value_cur_keyframe,
+      instance_value_start_frame,
+      instance_value_end_frame,
+      instance_value_loop_num,
+      instance_value_speed,
+      instance_value_loopflag,
+      effect_value_cur_keyframe,
+      effect_value_start_time,
+      effect_value_speed,
+      effect_value_loopflag,
+    })
+  }
+}
+pub enum PartDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartData<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartData<'a> {
+  type Inner = PartData<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> PartData<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_INDEX: flatbuffers::VOffsetT = 6;
+  pub const VT_PARENT_INDEX: flatbuffers::VOffsetT = 8;
+  pub const VT_TYPE_: flatbuffers::VOffsetT = 10;
+  pub const VT_BOUNDSTYPE: flatbuffers::VOffsetT = 12;
+  pub const VT_ALPHABLENDTYPE: flatbuffers::VOffsetT = 14;
+  pub const VT_REFNAME: flatbuffers::VOffsetT = 16;
+  pub const VT_EFFECT_FILENAME: flatbuffers::VOffsetT = 18;
+  pub const VT_COLOR_LABEL: flatbuffers::VOffsetT = 20;
+  pub const VT_MASK_INFLUENCE: flatbuffers::VOffsetT = 22;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    PartData { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args PartDataArgs<'args>
+  ) -> flatbuffers::WIPOffset<PartData<'bldr>> {
+    let mut builder = PartDataBuilder::new(_fbb);
+    if let Some(x) = args.color_label { builder.add_color_label(x); }
+    if let Some(x) = args.effect_filename { builder.add_effect_filename(x); }
+    if let Some(x) = args.refname { builder.add_refname(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_mask_influence(args.mask_influence);
+    builder.add_parent_index(args.parent_index);
+    builder.add_index(args.index);
+    builder.add_alphaBlendType(args.alphaBlendType);
+    builder.add_boundsType(args.boundsType);
+    builder.add_type_(args.type_);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> PartDataT {
+    let name = self.name().map(|x| {
+      x.to_string()
+    });
+    let index = self.index();
+    let parent_index = self.parent_index();
+    let type_ = self.type_();
+    let boundsType = self.boundsType();
+    let alphaBlendType = self.alphaBlendType();
+    let refname = self.refname().map(|x| {
+      x.to_string()
+    });
+    let effect_filename = self.effect_filename().map(|x| {
+      x.to_string()
+    });
+    let color_label = self.color_label().map(|x| {
+      x.to_string()
+    });
+    let mask_influence = self.mask_influence();
+    PartDataT {
+      name,
+      index,
+      parent_index,
+      type_,
+      boundsType,
+      alphaBlendType,
+      refname,
+      effect_filename,
+      color_label,
+      mask_influence,
+    }
+  }
+
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn index(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartData::VT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn parent_index(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartData::VT_PARENT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn type_(&self) -> PartType {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<PartType>(PartData::VT_TYPE_, Some(PartType::Null)).unwrap()}
+  }
+  #[inline]
+  pub fn boundsType(&self) -> BoundsType {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<BoundsType>(PartData::VT_BOUNDSTYPE, Some(BoundsType::None)).unwrap()}
+  }
+  #[inline]
+  pub fn alphaBlendType(&self) -> BlendType {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<BlendType>(PartData::VT_ALPHABLENDTYPE, Some(BlendType::Mix)).unwrap()}
+  }
+  #[inline]
+  pub fn refname(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_REFNAME, None)}
+  }
+  #[inline]
+  pub fn effect_filename(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_EFFECT_FILENAME, None)}
+  }
+  #[inline]
+  pub fn color_label(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_COLOR_LABEL, None)}
+  }
+  #[inline]
+  pub fn mask_influence(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartData::VT_MASK_INFLUENCE, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for PartData<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<i16>("index", Self::VT_INDEX, false)?
+     .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
+     .visit_field::<PartType>("type_", Self::VT_TYPE_, false)?
+     .visit_field::<BoundsType>("boundsType", Self::VT_BOUNDSTYPE, false)?
+     .visit_field::<BlendType>("alphaBlendType", Self::VT_ALPHABLENDTYPE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("refname", Self::VT_REFNAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("effect_filename", Self::VT_EFFECT_FILENAME, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("color_label", Self::VT_COLOR_LABEL, false)?
+     .visit_field::<i16>("mask_influence", Self::VT_MASK_INFLUENCE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct PartDataArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub index: i16,
+    pub parent_index: i16,
+    pub type_: PartType,
+    pub boundsType: BoundsType,
+    pub alphaBlendType: BlendType,
+    pub refname: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub effect_filename: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub color_label: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub mask_influence: i16,
+}
+impl<'a> Default for PartDataArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    PartDataArgs {
+      name: None,
+      index: 0,
+      parent_index: 0,
+      type_: PartType::Null,
+      boundsType: BoundsType::None,
+      alphaBlendType: BlendType::Mix,
+      refname: None,
+      effect_filename: None,
+      color_label: None,
+      mask_influence: 0,
+    }
+  }
+}
+
+pub struct PartDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_index(&mut self, index: i16) {
+    self.fbb_.push_slot::<i16>(PartData::VT_INDEX, index, 0);
+  }
+  #[inline]
+  pub fn add_parent_index(&mut self, parent_index: i16) {
+    self.fbb_.push_slot::<i16>(PartData::VT_PARENT_INDEX, parent_index, 0);
+  }
+  #[inline]
+  pub fn add_type_(&mut self, type_: PartType) {
+    self.fbb_.push_slot::<PartType>(PartData::VT_TYPE_, type_, PartType::Null);
+  }
+  #[inline]
+  pub fn add_boundsType(&mut self, boundsType: BoundsType) {
+    self.fbb_.push_slot::<BoundsType>(PartData::VT_BOUNDSTYPE, boundsType, BoundsType::None);
+  }
+  #[inline]
+  pub fn add_alphaBlendType(&mut self, alphaBlendType: BlendType) {
+    self.fbb_.push_slot::<BlendType>(PartData::VT_ALPHABLENDTYPE, alphaBlendType, BlendType::Mix);
+  }
+  #[inline]
+  pub fn add_refname(&mut self, refname: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_REFNAME, refname);
+  }
+  #[inline]
+  pub fn add_effect_filename(&mut self, effect_filename: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_EFFECT_FILENAME, effect_filename);
+  }
+  #[inline]
+  pub fn add_color_label(&mut self, color_label: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_COLOR_LABEL, color_label);
+  }
+  #[inline]
+  pub fn add_mask_influence(&mut self, mask_influence: i16) {
+    self.fbb_.push_slot::<i16>(PartData::VT_MASK_INFLUENCE, mask_influence, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PartDataBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    PartDataBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<PartData<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for PartData<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("PartData");
+      ds.field("name", &self.name());
+      ds.field("index", &self.index());
+      ds.field("parent_index", &self.parent_index());
+      ds.field("type_", &self.type_());
+      ds.field("boundsType", &self.boundsType());
+      ds.field("alphaBlendType", &self.alphaBlendType());
+      ds.field("refname", &self.refname());
+      ds.field("effect_filename", &self.effect_filename());
+      ds.field("color_label", &self.color_label());
+      ds.field("mask_influence", &self.mask_influence());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartDataT {
+  pub name: Option<String>,
+  pub index: i16,
+  pub parent_index: i16,
+  pub type_: PartType,
+  pub boundsType: BoundsType,
+  pub alphaBlendType: BlendType,
+  pub refname: Option<String>,
+  pub effect_filename: Option<String>,
+  pub color_label: Option<String>,
+  pub mask_influence: i16,
+}
+impl Default for PartDataT {
+  fn default() -> Self {
+    Self {
+      name: None,
+      index: 0,
+      parent_index: 0,
+      type_: PartType::Null,
+      boundsType: BoundsType::None,
+      alphaBlendType: BlendType::Mix,
+      refname: None,
+      effect_filename: None,
+      color_label: None,
+      mask_influence: 0,
+    }
+  }
+}
+impl PartDataT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<PartData<'b>> {
+    let name = self.name.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let index = self.index;
+    let parent_index = self.parent_index;
+    let type_ = self.type_;
+    let boundsType = self.boundsType;
+    let alphaBlendType = self.alphaBlendType;
+    let refname = self.refname.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let effect_filename = self.effect_filename.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let color_label = self.color_label.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let mask_influence = self.mask_influence;
+    PartData::create(_fbb, &PartDataArgs{
+      name,
+      index,
+      parent_index,
+      type_,
+      boundsType,
+      alphaBlendType,
+      refname,
+      effect_filename,
+      color_label,
+      mask_influence,
+    })
+  }
+}
+pub enum PartStateOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartState<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartState<'a> {
+  type Inner = PartState<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> PartState<'a> {
+  pub const VT_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_ATTRIBUTES: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    PartState { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args PartStateArgs<'args>
+  ) -> flatbuffers::WIPOffset<PartState<'bldr>> {
+    let mut builder = PartStateBuilder::new(_fbb);
+    if let Some(x) = args.attributes { builder.add_attributes(x); }
+    builder.add_index(args.index);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> PartStateT {
+    let index = self.index();
+    let attributes = self.attributes().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    PartStateT {
+      index,
+      attributes,
+    }
+  }
+
+  #[inline]
+  pub fn index(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(PartState::VT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn attributes(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AttributeWrapper<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AttributeWrapper>>>>(PartState::VT_ATTRIBUTES, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for PartState<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i16>("index", Self::VT_INDEX, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AttributeWrapper>>>>("attributes", Self::VT_ATTRIBUTES, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct PartStateArgs<'a> {
+    pub index: i16,
+    pub attributes: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AttributeWrapper<'a>>>>>,
+}
+impl<'a> Default for PartStateArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    PartStateArgs {
+      index: 0,
+      attributes: None,
+    }
+  }
+}
+
+pub struct PartStateBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_index(&mut self, index: i16) {
+    self.fbb_.push_slot::<i16>(PartState::VT_INDEX, index, 0);
+  }
+  #[inline]
+  pub fn add_attributes(&mut self, attributes: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AttributeWrapper<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(PartState::VT_ATTRIBUTES, attributes);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PartStateBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    PartStateBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<PartState<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for PartState<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("PartState");
+      ds.field("index", &self.index());
+      ds.field("attributes", &self.attributes());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartStateT {
+  pub index: i16,
+  pub attributes: Option<Vec<AttributeWrapperT>>,
+}
+impl Default for PartStateT {
+  fn default() -> Self {
+    Self {
+      index: 0,
+      attributes: None,
+    }
+  }
+}
+impl PartStateT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<PartState<'b>> {
+    let index = self.index;
+    let attributes = self.attributes.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    PartState::create(_fbb, &PartStateArgs{
+      index,
+      attributes,
+    })
+  }
+}
+pub enum LabelOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct Label<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for Label<'a> {
+  type Inner = Label<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> Label<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_TIME: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    Label { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args LabelArgs<'args>
+  ) -> flatbuffers::WIPOffset<Label<'bldr>> {
+    let mut builder = LabelBuilder::new(_fbb);
+    builder.add_time(args.time);
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> LabelT {
+    let name = {
+      let x = self.name();
+      x.to_string()
+    };
+    let time = self.time();
+    LabelT {
+      name,
+      time,
+    }
+  }
+
+  #[inline]
+  pub fn name(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Label::VT_NAME, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &Label) -> bool {
+    self.name() < o.name()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.name();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn time(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(Label::VT_TIME, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for Label<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<i32>("time", Self::VT_TIME, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct LabelArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub time: i32,
+}
+impl<'a> Default for LabelArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    LabelArgs {
+      name: None, // required field
+      time: 0,
+    }
+  }
+}
+
+pub struct LabelBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> LabelBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Label::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_time(&mut self, time: i32) {
+    self.fbb_.push_slot::<i32>(Label::VT_TIME, time, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> LabelBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    LabelBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<Label<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, Label::VT_NAME,"name");
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for Label<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("Label");
+      ds.field("name", &self.name());
+      ds.field("time", &self.time());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct LabelT {
+  pub name: String,
+  pub time: i32,
+}
+impl Default for LabelT {
+  fn default() -> Self {
+    Self {
+      name: "".to_string(),
+      time: 0,
+    }
+  }
+}
+impl LabelT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<Label<'b>> {
+    let name = Some({
+      let x = &self.name;
+      _fbb.create_string(x)
+    });
+    let time = self.time;
+    Label::create(_fbb, &LabelArgs{
+      name,
+      time,
+    })
+  }
+}
+pub enum AnimationDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AnimationData<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AnimationData<'a> {
+  type Inner = AnimationData<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AnimationData<'a> {
+  pub const VT_NAME: flatbuffers::VOffsetT = 4;
+  pub const VT_SETUP_ANIMATION: flatbuffers::VOffsetT = 6;
+  pub const VT_FRAME_DATA: flatbuffers::VOffsetT = 8;
+  pub const VT_USER_DATA: flatbuffers::VOffsetT = 10;
+  pub const VT_SIGNAL_DATA: flatbuffers::VOffsetT = 12;
+  pub const VT_AUDIO_DATA: flatbuffers::VOffsetT = 14;
+  pub const VT_LABEL_DATA: flatbuffers::VOffsetT = 16;
+  pub const VT_MESHS_DATA_UV: flatbuffers::VOffsetT = 18;
+  pub const VT_MESHS_DATA_INDICES: flatbuffers::VOffsetT = 20;
+  pub const VT_START_FRAMES: flatbuffers::VOffsetT = 22;
+  pub const VT_END_FRAMES: flatbuffers::VOffsetT = 24;
+  pub const VT_TOTAL_FRAMES: flatbuffers::VOffsetT = 26;
+  pub const VT_FPS: flatbuffers::VOffsetT = 28;
+  pub const VT_CANVAS: flatbuffers::VOffsetT = 30;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AnimationData { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args AnimationDataArgs<'args>
+  ) -> flatbuffers::WIPOffset<AnimationData<'bldr>> {
+    let mut builder = AnimationDataBuilder::new(_fbb);
+    if let Some(x) = args.canvas { builder.add_canvas(x); }
+    if let Some(x) = args.meshs_data_indices { builder.add_meshs_data_indices(x); }
+    if let Some(x) = args.meshs_data_uv { builder.add_meshs_data_uv(x); }
+    if let Some(x) = args.label_data { builder.add_label_data(x); }
+    if let Some(x) = args.audio_data { builder.add_audio_data(x); }
+    if let Some(x) = args.signal_data { builder.add_signal_data(x); }
+    if let Some(x) = args.user_data { builder.add_user_data(x); }
+    if let Some(x) = args.frame_data { builder.add_frame_data(x); }
+    if let Some(x) = args.setup_animation { builder.add_setup_animation(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_fps(args.fps);
+    builder.add_total_frames(args.total_frames);
+    builder.add_end_frames(args.end_frames);
+    builder.add_start_frames(args.start_frames);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AnimationDataT {
+    let name = {
+      let x = self.name();
+      x.to_string()
+    };
+    let setup_animation = self.setup_animation().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let frame_data = self.frame_data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let user_data = self.user_data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let signal_data = self.signal_data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let audio_data = self.audio_data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let label_data = self.label_data().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let meshs_data_uv = self.meshs_data_uv().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let meshs_data_indices = self.meshs_data_indices().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let start_frames = self.start_frames();
+    let end_frames = self.end_frames();
+    let total_frames = self.total_frames();
+    let fps = self.fps();
+    let canvas = self.canvas().map(|x| {
+      Box::new(x.unpack())
+    });
+    AnimationDataT {
+      name,
+      setup_animation,
+      frame_data,
+      user_data,
+      signal_data,
+      audio_data,
+      label_data,
+      meshs_data_uv,
+      meshs_data_indices,
+      start_frames,
+      end_frames,
+      total_frames,
+      fps,
+      canvas,
+    }
+  }
+
+  #[inline]
+  pub fn name(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AnimationData::VT_NAME, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &AnimationData) -> bool {
+    self.name() < o.name()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.name();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn setup_animation(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAttributes<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAttributes>>>>(AnimationData::VT_SETUP_ANIMATION, None)}
+  }
+  #[inline]
+  pub fn frame_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState>>>>(AnimationData::VT_FRAME_DATA, None)}
+  }
+  #[inline]
+  pub fn user_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataPerFrame<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataPerFrame>>>>(AnimationData::VT_USER_DATA, None)}
+  }
+  #[inline]
+  pub fn signal_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataPerFrame<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataPerFrame>>>>(AnimationData::VT_SIGNAL_DATA, None)}
+  }
+  #[inline]
+  pub fn audio_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataPerFrame<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataPerFrame>>>>(AnimationData::VT_AUDIO_DATA, None)}
+  }
+  #[inline]
+  pub fn label_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label>>>>(AnimationData::VT_LABEL_DATA, None)}
+  }
+  #[inline]
+  pub fn meshs_data_uv(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV>>>>(AnimationData::VT_MESHS_DATA_UV, None)}
+  }
+  #[inline]
+  pub fn meshs_data_indices(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices>>>>(AnimationData::VT_MESHS_DATA_INDICES, None)}
+  }
+  #[inline]
+  pub fn start_frames(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(AnimationData::VT_START_FRAMES, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn end_frames(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(AnimationData::VT_END_FRAMES, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn total_frames(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(AnimationData::VT_TOTAL_FRAMES, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn fps(&self) -> i16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i16>(AnimationData::VT_FPS, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn canvas(&self) -> Option<Rect<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<Rect>>(AnimationData::VT_CANVAS, None)}
+  }
+}
+
+impl flatbuffers::Verifiable for AnimationData<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAttributes>>>>("setup_animation", Self::VT_SETUP_ANIMATION, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartState>>>>("frame_data", Self::VT_FRAME_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataPerFrame>>>>("user_data", Self::VT_USER_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SignalDataPerFrame>>>>("signal_data", Self::VT_SIGNAL_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AudioDataPerFrame>>>>("audio_data", Self::VT_AUDIO_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Label>>>>("label_data", Self::VT_LABEL_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshDataUV>>>>("meshs_data_uv", Self::VT_MESHS_DATA_UV, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshDataIndices>>>>("meshs_data_indices", Self::VT_MESHS_DATA_INDICES, false)?
+     .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
+     .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
+     .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
+     .visit_field::<i16>("fps", Self::VT_FPS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("canvas", Self::VT_CANVAS, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AnimationDataArgs<'a> {
+    pub name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub setup_animation: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>>,
+    pub frame_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>>>,
+    pub user_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataPerFrame<'a>>>>>,
+    pub signal_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataPerFrame<'a>>>>>,
+    pub audio_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataPerFrame<'a>>>>>,
+    pub label_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>>>,
+    pub meshs_data_uv: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV<'a>>>>>,
+    pub meshs_data_indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices<'a>>>>>,
+    pub start_frames: i16,
+    pub end_frames: i16,
+    pub total_frames: i16,
+    pub fps: i16,
+    pub canvas: Option<flatbuffers::WIPOffset<Rect<'a>>>,
+}
+impl<'a> Default for AnimationDataArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    AnimationDataArgs {
+      name: None, // required field
+      setup_animation: None,
+      frame_data: None,
+      user_data: None,
+      signal_data: None,
+      audio_data: None,
+      label_data: None,
+      meshs_data_uv: None,
+      meshs_data_indices: None,
+      start_frames: 0,
+      end_frames: 0,
+      total_frames: 0,
+      fps: 0,
+      canvas: None,
+    }
+  }
+}
+
+pub struct AnimationDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_setup_animation(&mut self, setup_animation: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<PartAttributes<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_SETUP_ANIMATION, setup_animation);
+  }
+  #[inline]
+  pub fn add_frame_data(&mut self, frame_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<PartState<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_FRAME_DATA, frame_data);
+  }
+  #[inline]
+  pub fn add_user_data(&mut self, user_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataPerFrame<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_USER_DATA, user_data);
+  }
+  #[inline]
+  pub fn add_signal_data(&mut self, signal_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SignalDataPerFrame<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_SIGNAL_DATA, signal_data);
+  }
+  #[inline]
+  pub fn add_audio_data(&mut self, audio_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AudioDataPerFrame<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_AUDIO_DATA, audio_data);
+  }
+  #[inline]
+  pub fn add_label_data(&mut self, label_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Label<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_LABEL_DATA, label_data);
+  }
+  #[inline]
+  pub fn add_meshs_data_uv(&mut self, meshs_data_uv: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<MeshDataUV<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_MESHS_DATA_UV, meshs_data_uv);
+  }
+  #[inline]
+  pub fn add_meshs_data_indices(&mut self, meshs_data_indices: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<MeshDataIndices<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_MESHS_DATA_INDICES, meshs_data_indices);
+  }
+  #[inline]
+  pub fn add_start_frames(&mut self, start_frames: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_START_FRAMES, start_frames, 0);
+  }
+  #[inline]
+  pub fn add_end_frames(&mut self, end_frames: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_END_FRAMES, end_frames, 0);
+  }
+  #[inline]
+  pub fn add_total_frames(&mut self, total_frames: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_TOTAL_FRAMES, total_frames, 0);
+  }
+  #[inline]
+  pub fn add_fps(&mut self, fps: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_FPS, fps, 0);
+  }
+  #[inline]
+  pub fn add_canvas(&mut self, canvas: flatbuffers::WIPOffset<Rect<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Rect>>(AnimationData::VT_CANVAS, canvas);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AnimationDataBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AnimationDataBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AnimationData<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, AnimationData::VT_NAME,"name");
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AnimationData<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AnimationData");
+      ds.field("name", &self.name());
+      ds.field("setup_animation", &self.setup_animation());
+      ds.field("frame_data", &self.frame_data());
+      ds.field("user_data", &self.user_data());
+      ds.field("signal_data", &self.signal_data());
+      ds.field("audio_data", &self.audio_data());
+      ds.field("label_data", &self.label_data());
+      ds.field("meshs_data_uv", &self.meshs_data_uv());
+      ds.field("meshs_data_indices", &self.meshs_data_indices());
+      ds.field("start_frames", &self.start_frames());
+      ds.field("end_frames", &self.end_frames());
+      ds.field("total_frames", &self.total_frames());
+      ds.field("fps", &self.fps());
+      ds.field("canvas", &self.canvas());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnimationDataT {
+  pub name: String,
+  pub setup_animation: Option<Vec<PartAttributesT>>,
+  pub frame_data: Option<Vec<PartStateT>>,
+  pub user_data: Option<Vec<UserDataPerFrameT>>,
+  pub signal_data: Option<Vec<SignalDataPerFrameT>>,
+  pub audio_data: Option<Vec<AudioDataPerFrameT>>,
+  pub label_data: Option<Vec<LabelT>>,
+  pub meshs_data_uv: Option<Vec<MeshDataUVT>>,
+  pub meshs_data_indices: Option<Vec<MeshDataIndicesT>>,
+  pub start_frames: i16,
+  pub end_frames: i16,
+  pub total_frames: i16,
+  pub fps: i16,
+  pub canvas: Option<Box<RectT>>,
+}
+impl Default for AnimationDataT {
+  fn default() -> Self {
+    Self {
+      name: "".to_string(),
+      setup_animation: None,
+      frame_data: None,
+      user_data: None,
+      signal_data: None,
+      audio_data: None,
+      label_data: None,
+      meshs_data_uv: None,
+      meshs_data_indices: None,
+      start_frames: 0,
+      end_frames: 0,
+      total_frames: 0,
+      fps: 0,
+      canvas: None,
+    }
+  }
+}
+impl AnimationDataT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AnimationData<'b>> {
+    let name = Some({
+      let x = &self.name;
+      _fbb.create_string(x)
+    });
+    let setup_animation = self.setup_animation.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let frame_data = self.frame_data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let user_data = self.user_data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let signal_data = self.signal_data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let audio_data = self.audio_data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let label_data = self.label_data.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let meshs_data_uv = self.meshs_data_uv.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let meshs_data_indices = self.meshs_data_indices.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let start_frames = self.start_frames;
+    let end_frames = self.end_frames;
+    let total_frames = self.total_frames;
+    let fps = self.fps;
+    let canvas = self.canvas.as_ref().map(|x|{
+      x.pack(_fbb)
+    });
+    AnimationData::create(_fbb, &AnimationDataArgs{
+      name,
+      setup_animation,
+      frame_data,
+      user_data,
+      signal_data,
+      audio_data,
+      label_data,
+      meshs_data_uv,
+      meshs_data_indices,
+      start_frames,
+      end_frames,
+      total_frames,
+      fps,
+      canvas,
+    })
+  }
+}
 pub enum SsAnimeBinaryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -9506,12 +18140,13 @@ impl<'a> flatbuffers::Follow<'a> for SsAnimeBinary<'a> {
 
 impl<'a> SsAnimeBinary<'a> {
   pub const VT_VERSION: flatbuffers::VOffsetT = 4;
-  pub const VT_ANIMATION_PACK: flatbuffers::VOffsetT = 6;
-  pub const VT_CELL_MAP: flatbuffers::VOffsetT = 8;
-  pub const VT_EFFECT: flatbuffers::VOffsetT = 10;
-  pub const VT_SOUND_LIST: flatbuffers::VOffsetT = 12;
-  pub const VT_FONT_BITMAP: flatbuffers::VOffsetT = 14;
-  pub const VT_DEPENDENCIES: flatbuffers::VOffsetT = 16;
+  pub const VT_PARTS: flatbuffers::VOffsetT = 6;
+  pub const VT_ANIMATIONS: flatbuffers::VOffsetT = 8;
+  pub const VT_CELL_MAP: flatbuffers::VOffsetT = 10;
+  pub const VT_EFFECT: flatbuffers::VOffsetT = 12;
+  pub const VT_SOUND_LIST: flatbuffers::VOffsetT = 14;
+  pub const VT_FONT_BITMAP: flatbuffers::VOffsetT = 16;
+  pub const VT_INSTANCES: flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -9523,20 +18158,24 @@ impl<'a> SsAnimeBinary<'a> {
     args: &'args SsAnimeBinaryArgs<'args>
   ) -> flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
-    if let Some(x) = args.dependencies { builder.add_dependencies(x); }
+    if let Some(x) = args.instances { builder.add_instances(x); }
     if let Some(x) = args.font_bitmap { builder.add_font_bitmap(x); }
     if let Some(x) = args.sound_list { builder.add_sound_list(x); }
     if let Some(x) = args.effect { builder.add_effect(x); }
     if let Some(x) = args.cell_map { builder.add_cell_map(x); }
-    if let Some(x) = args.animation_pack { builder.add_animation_pack(x); }
+    if let Some(x) = args.animations { builder.add_animations(x); }
+    if let Some(x) = args.parts { builder.add_parts(x); }
     builder.add_version(args.version);
     builder.finish()
   }
 
   pub fn unpack(&self) -> SsAnimeBinaryT {
     let version = self.version();
-    let animation_pack = self.animation_pack().map(|x| {
-      Box::new(x.unpack())
+    let parts = self.parts().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let animations = self.animations().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
     });
     let cell_map = self.cell_map().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
@@ -9550,17 +18189,18 @@ impl<'a> SsAnimeBinary<'a> {
     let font_bitmap = self.font_bitmap().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let dependencies = self.dependencies().map(|x| {
+    let instances = self.instances().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     SsAnimeBinaryT {
       version,
-      animation_pack,
+      parts,
+      animations,
       cell_map,
       effect,
       sound_list,
       font_bitmap,
-      dependencies,
+      instances,
     }
   }
 
@@ -9572,11 +18212,18 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<u32>(SsAnimeBinary::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
-  pub fn animation_pack(&self) -> Option<AnimePack<'a>> {
+  pub fn parts(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<AnimePack>>(SsAnimeBinary::VT_ANIMATION_PACK, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartData>>>>(SsAnimeBinary::VT_PARTS, None)}
+  }
+  #[inline]
+  pub fn animations(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimationData<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimationData>>>>(SsAnimeBinary::VT_ANIMATIONS, None)}
   }
   #[inline]
   pub fn cell_map(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
@@ -9607,11 +18254,11 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAP, None)}
   }
   #[inline]
-  pub fn dependencies(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>> {
+  pub fn instances(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimationData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation>>>>(SsAnimeBinary::VT_DEPENDENCIES, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimationData>>>>(SsAnimeBinary::VT_INSTANCES, None)}
   }
 }
 
@@ -9620,39 +18267,42 @@ impl flatbuffers::Verifiable for SsAnimeBinary<'_> {
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    
+    use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<u32>("version", Self::VT_VERSION, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<AnimePack>>("animation_pack", Self::VT_ANIMATION_PACK, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartData>>>>("parts", Self::VT_PARTS, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AnimationData>>>>("animations", Self::VT_ANIMATIONS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<CellMap>>>>("cell_map", Self::VT_CELL_MAP, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Effect>>>>("effect", Self::VT_EFFECT, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SoundList>>>>("sound_list", Self::VT_SOUND_LIST, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmap", Self::VT_FONT_BITMAP, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Animation>>>>("dependencies", Self::VT_DEPENDENCIES, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AnimationData>>>>("instances", Self::VT_INSTANCES, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SsAnimeBinaryArgs<'a> {
     pub version: u32,
-    pub animation_pack: Option<flatbuffers::WIPOffset<AnimePack<'a>>>,
+    pub parts: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartData<'a>>>>>,
+    pub animations: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimationData<'a>>>>>,
     pub cell_map: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
     pub effect: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_list: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmap: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
-    pub dependencies: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Animation<'a>>>>>,
+    pub instances: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AnimationData<'a>>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
   #[inline]
   fn default() -> Self {
     SsAnimeBinaryArgs {
       version: 1,
-      animation_pack: None,
+      parts: None,
+      animations: None,
       cell_map: None,
       effect: None,
       sound_list: None,
       font_bitmap: None,
-      dependencies: None,
+      instances: None,
     }
   }
 }
@@ -9667,8 +18317,12 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, A>
     self.fbb_.push_slot::<u32>(SsAnimeBinary::VT_VERSION, version, 1);
   }
   #[inline]
-  pub fn add_animation_pack(&mut self, animation_pack: flatbuffers::WIPOffset<AnimePack<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<AnimePack>>(SsAnimeBinary::VT_ANIMATION_PACK, animation_pack);
+  pub fn add_parts(&mut self, parts: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<PartData<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_PARTS, parts);
+  }
+  #[inline]
+  pub fn add_animations(&mut self, animations: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AnimationData<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_ANIMATIONS, animations);
   }
   #[inline]
   pub fn add_cell_map(&mut self, cell_map: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
@@ -9687,8 +18341,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, A>
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAP, font_bitmap);
   }
   #[inline]
-  pub fn add_dependencies(&mut self, dependencies: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Animation<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_DEPENDENCIES, dependencies);
+  pub fn add_instances(&mut self, instances: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AnimationData<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_INSTANCES, instances);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SsAnimeBinaryBuilder<'a, 'b, A> {
@@ -9709,12 +18363,13 @@ impl core::fmt::Debug for SsAnimeBinary<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("SsAnimeBinary");
       ds.field("version", &self.version());
-      ds.field("animation_pack", &self.animation_pack());
+      ds.field("parts", &self.parts());
+      ds.field("animations", &self.animations());
       ds.field("cell_map", &self.cell_map());
       ds.field("effect", &self.effect());
       ds.field("sound_list", &self.sound_list());
       ds.field("font_bitmap", &self.font_bitmap());
-      ds.field("dependencies", &self.dependencies());
+      ds.field("instances", &self.instances());
       ds.finish()
   }
 }
@@ -9722,23 +18377,25 @@ impl core::fmt::Debug for SsAnimeBinary<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SsAnimeBinaryT {
   pub version: u32,
-  pub animation_pack: Option<Box<AnimePackT>>,
+  pub parts: Option<Vec<PartDataT>>,
+  pub animations: Option<Vec<AnimationDataT>>,
   pub cell_map: Option<Vec<CellMapT>>,
   pub effect: Option<Vec<EffectT>>,
   pub sound_list: Option<Vec<SoundListT>>,
   pub font_bitmap: Option<Vec<FontBitmapT>>,
-  pub dependencies: Option<Vec<AnimationT>>,
+  pub instances: Option<Vec<AnimationDataT>>,
 }
 impl Default for SsAnimeBinaryT {
   fn default() -> Self {
     Self {
       version: 1,
-      animation_pack: None,
+      parts: None,
+      animations: None,
       cell_map: None,
       effect: None,
       sound_list: None,
       font_bitmap: None,
-      dependencies: None,
+      instances: None,
     }
   }
 }
@@ -9748,8 +18405,11 @@ impl SsAnimeBinaryT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<SsAnimeBinary<'b>> {
     let version = self.version;
-    let animation_pack = self.animation_pack.as_ref().map(|x|{
-      x.pack(_fbb)
+    let parts = self.parts.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let animations = self.animations.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let cell_map = self.cell_map.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
@@ -9763,17 +18423,18 @@ impl SsAnimeBinaryT {
     let font_bitmap = self.font_bitmap.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let dependencies = self.dependencies.as_ref().map(|x|{
+    let instances = self.instances.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     SsAnimeBinary::create(_fbb, &SsAnimeBinaryArgs{
       version,
-      animation_pack,
+      parts,
+      animations,
       cell_map,
       effect,
       sound_list,
       font_bitmap,
-      dependencies,
+      instances,
     })
   }
 }

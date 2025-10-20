@@ -1,19 +1,15 @@
+use std::collections::HashSet;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 pub fn parse_args(args: &[OsString]) -> Vec<PathBuf> {
-    let mut paths: Vec<PathBuf> = args
-        .iter()
-        .filter_map(|arg| {
-            let path = Path::new(arg);
-            path.exists().then(|| collect_sspj_files(path))
-        })
+    args.iter().filter_map(|arg| {
+        let path = Path::new(arg);
+        path.exists().then(|| collect_sspj_files(path))
+    })
         .flatten()
-        .collect();
-    paths.sort_unstable();
-    paths.dedup();
-    paths
+        .collect::<HashSet<_>>().into_iter().collect::<Vec<PathBuf>>()
 }
 
 fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {

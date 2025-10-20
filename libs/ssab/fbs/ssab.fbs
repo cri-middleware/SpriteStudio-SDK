@@ -1,3 +1,5 @@
+// include "common.fbs";
+
 table Vec2 {
   x: float;
   y: float;
@@ -20,8 +22,8 @@ enum TexFilterMode: ubyte {
 }
 
 enum RenderBlendType: ubyte {
-    Mix,
-    Add,
+  Mix,
+  Add,
 }
 
 
@@ -82,78 +84,297 @@ enum BlendType : ubyte {
   Invert,
 }
 
-table Part {
-  name: string;
-  index: int;
-  parent_index: int;
-  type: PartType;
-  bounds_type: BoundsType;
-  inherit_type: InheritType;
-  alpha_blend_type: BlendType;
-  effect_filename: string;
-  color_label: string;
-  mask_influence: bool;
+enum AttributeKind: ubyte {
+  Cell,
+  PosX,
+  PosY,
+  PosZ,
+  RotX,
+  RotY,
+  RotZ,
+  SclX,
+  SclY,
+  LosclX,
+  LosclY,
+  Alpha,
+  LoAlpha,
+  Prio,
+  FlipH,
+  FlipV,
+  Hide,
+  PartsColor,
+  Shader,
+  Vertex,
+  PivotX,
+  PivotY,
+  AnchorX,
+  AnchorY,
+  SizeX,
+  SizeY,
+  ImgFlipH,
+  ImgFlipV,
+  UvtX,
+  UvtY,
+  UvrZ,
+  UvsX,
+  UvsY,
+  Boundr,
+  Mask,
+  User,
+  Signal,
+  Instance,
+  Effect,
 }
 
-table PartAnime {
-  part_name: string;
+table AttributeCell {
+
+}
+
+table AttributePosX {
+
+}
+
+table AttributePosY {
+
+}
+
+table AttributePosZ {
+
+}
+
+table AttributeRotX {
+
+}
+
+table AttributeRotY {
+
+}
+
+table AttributeRotZ {
+
+}
+
+table AttributeSclX {
+
+}
+
+table AttributeSclY {
+
+}
+
+table AttributeLosclX {
+
+}
+
+table AttributeLosclY {
+
+}
+
+table AttributeAlpha {
+
+}
+
+table AttributeLoAlpha {
+
+}
+
+table AttributePrio {
+
+}
+
+table AttributeFlipH {
+
+}
+
+table AttributeFlipV {
+
+}
+
+table AttributeHide {
+
+}
+
+table AttributePartsColor {
+
+}
+
+table AttributeShader {
+
+}
+
+table AttributeVertex {
+
+}
+
+table AttributePivotX {
+
+}
+
+table AttributePivotY {
+
+}
+
+table AttributeAnchorX {
+
+}
+
+table AttributeAnchorY {
+
+}
+
+table AttributeSizeX {
+
+}
+
+table AttributeSizeY {
+
+}
+
+table AttributeImgFlipH {
+
+}
+
+table AttributeImgFlipV {
+
+}
+
+table AttributeUvtX {
+
+}
+
+table AttributeUvtY {
+
+}
+
+table AttributeUvrZ {
+
+}
+
+table AttributeUvsX {
+
+}
+
+table AttributeUvsY {
+
+}
+
+table AttributeBoundr {
+
+}
+
+table AttributeMask {
+
+}
+
+table AttributeUser {
+
+}
+
+table AttributeSignal {
+
+}
+
+table AttributeInstance {
+
+}
+
+table AttributeEffect {
+
+}
+
+
+union Attribute {
+  AttributeCell,
+  AttributePosX,
+  AttributePosY,
+  AttributePosZ,
+  AttributeRotX,
+  AttributeRotY,
+  AttributeRotZ,
+  AttributeSclX,
+  AttributeSclY,
+  AttributeLosclX,
+  AttributeLosclY,
+  AttributeAlpha,
+  AttributeLoAlpha,
+  AttributePrio,
+  AttributeFlipH,
+  AttributeFlipV,
+  AttributeHide,
+  AttributePartsColor,
+  AttributeShader,
+  AttributeVertex,
+  AttributePivotX,
+  AttributePivotY,
+  AttributeAnchorX,
+  AttributeAnchorY,
+  AttributeSizeX,
+  AttributeSizeY,
+  AttributeImgFlipH,
+  AttributeImgFlipV,
+  AttributeUvtX,
+  AttributeUvtY,
+  AttributeUvrZ,
+  AttributeUvsX,
+  AttributeUvsY,
+  AttributeBoundr,
+  AttributeMask,
+  AttributeUser,
+  AttributeSignal,
+  AttributeInstance,
+  AttributeEffect,
+}
+
+table AttributeWrapper {
+  data: Attribute;
+}
+
+table UserDataInteger {
+  integer : int;
+}
+
+table UserDataRect {
+  rect: Rect;
+}
+
+table UserDataPoint {
+  point: Vec2;
+}
+
+table UserDataString {
+  data : string;
+}
+
+union UserDataValue {
+  UserDataInteger,
+  UserDataRect,
+  UserDataPoint,
+  UserDataString,
+}
+
+table UserDataValueWrapper {
+  content: UserDataValue;
+}
+
+table UserDataItem {
+  flags : short;
+  index : short;
+  data : [UserDataValueWrapper];
+}
+
+table UserDataPerFrame {
+  frame_index : short;
+  data : [UserDataItem];
+}
+
+table SignalDataPerFrame {
+  frame_index : short;
   // TODO: impl
 }
 
-table MeshBindInfo {
-  weight: [int];
-  bone_index: [int];
-  offset: [Vec2];
-  bind_bone_num: int;
-}
-
-table MeshBind {
-  mesh_vertices_bind_array: [MeshBindInfo];
-}
-
-table Model {
-  part_list: [Part];
-  setup_animation: string;
-
-  mesh_list: [MeshBind];
-  // bone_list: HashMap<String, i32>,
-}
-
-table Label {
-  name: string;
-  time: int;
-}
-
-table AnimationSettings {
-  fps: int;
-  frame_count: int;
-  canvas_size: Vec2;
-  pivot: Vec2;
-  start_frame: int;
-  end_frame: int;
-}
-
-table Animation {
-  name: string (key);
-  part_animes: [PartAnime];
-
-  labels: [Label];
-
-  user_data: [string]; // TODO: improve
-  signal_data: [string]; // TODO: improve
-  audio_data: [string]; // TODO: improve
-
-  start_frames: short;
-  end_frames: short;
-  total_frames: short;
-  fps : short;
-}
-
-table AnimePack {
-  name: string (key);
-  settings: AnimationSettings;
-  model: Model;
-  anime_list: [Animation];
+table AudioDataPerFrame {
+  frame_index : short;
+  // TODO: impl
 }
 
 table Cell {
@@ -360,17 +581,135 @@ table FontBitmap {
   table_data:[FontGlyphBitmap];
 }
 
+table MeshDataUV {
+    uv : [float];
+}
+table MeshDataIndices {
+    indices : [float];
+}
+
+/*
+  Hide,
+  PartsColor,
+  Shader,
+  Vertex,
+  PivotX,
+  PivotY,
+  AnchorX,
+  AnchorY,
+  SizeX,
+  SizeY,
+  ImgFlipH,
+  ImgFlipV,
+  UvtX,
+  UvtY,
+  UvrZ,
+  UvsX,
+  UvsY,
+  Boundr,
+  Mask,
+  User,
+  Signal,
+  Instance,
+  Effect,
+*/
+
+table PartAttributes {
+  cell_index: short;
+  position_x: float;
+  position_y: float;
+  position_z: float;
+  rotation_x: float;
+  rotation_y: float;
+  rotation_z: float;
+  scale_x: float;
+  scale_y: float;
+  localscale_x: float;
+  localscale_y: float;
+  opacity: short;
+  localopacity: short;
+  priority: short;
+  flip_v: bool;
+  flip_h: bool;
+  hide: bool;
+  masklimen: short;
+  pivot_x: float;
+  pivot_y: float;
+  size_x: float;
+  size_y: float;
+  uv_move_x: float;
+  uv_move_y: float;
+  uv_rotation: float;
+  uv_scale_x: float;
+  uv_scale_y: float;
+  bounding_radius: float;
+  instance_value_cur_keyframe: int;
+  instance_value_start_frame: int;
+  instance_value_end_frame: int;
+  instance_value_loop_num: int;
+  instance_value_speed: float;
+  instance_value_loopflag: int;
+  effect_value_cur_keyframe: int;
+  effect_value_start_time: int;
+  effect_value_speed: float;
+  effect_value_loopflag: int;
+}
+
+table PartData {
+  name: string;
+  index: short;
+  parent_index: short;
+  type: PartType;
+  boundsType: BoundsType;
+  alphaBlendType: BlendType;
+  refname: string;
+  effect_filename: string;
+  color_label: string;
+  mask_influence: short;
+}
+
+table PartState {
+  index: short;
+  attributes: [AttributeWrapper];
+}
+
+table Label {
+  name: string (key);
+  time: int;
+}
+
+table AnimationData {
+  name: string (key);
+
+  setup_animation: [PartAttributes];
+  frame_data: [PartState];
+  user_data: [UserDataPerFrame];
+  signal_data: [SignalDataPerFrame];
+  audio_data: [AudioDataPerFrame];
+  label_data: [Label];
+
+  meshs_data_uv: [MeshDataUV];
+  meshs_data_indices: [MeshDataIndices];
+
+  start_frames: short;
+  end_frames: short;
+  total_frames: short;
+  fps : short;
+
+  canvas: Rect;
+}
+
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
-  animation_pack: AnimePack;
+  parts : [PartData];
+  animations: [AnimationData];
 
   cell_map: [CellMap];
   effect: [Effect];
   sound_list: [SoundList];
   font_bitmap: [FontBitmap];
-
-  dependencies: [Animation];
+  instances: [AnimationData];
 }
 
 file_identifier "SSAB";

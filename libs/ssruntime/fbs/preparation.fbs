@@ -1,0 +1,5 @@
+table Preparation {
+  stub: int;
+}
+
+root_type Preparation;

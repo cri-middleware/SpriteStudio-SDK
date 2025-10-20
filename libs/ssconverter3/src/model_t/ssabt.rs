@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ssab::ssab::{CellMapT, CellT, EffectT, FontBitmapT, RectT, TexFilterMode, TexWrapMode};
+use ssab::ssab::{CellMapT, CellT, EffectT, FontBitmapT};
 use sspj::ssae::SsAnimePack;
 use sspj::ssce::{SsCell, SsCellMap};
 use sspj::sscharmap::SsCharMap;
@@ -43,7 +43,7 @@ pub fn convert_flat_list_from_vec3t_list(point3_list: &[SsPoint3]) -> Option<Vec
 }
 
 pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::RectT {
-    let mut rect = RectT::default();
+    let mut rect = ssab::ssab::RectT::default();
     rect.x1 = x1;
     rect.y1 = y1;
     rect.x2 = x2;
@@ -75,13 +75,13 @@ pub fn convert_cellmapt(cellmap: &SsCellMap) -> CellMapT {
     cell_map_t.image_path = Some(cellmap.image_path.clone());
     cell_map_t.size_original = Some(Box::new(convert_vec2t(&cellmap.pixel_size)));
     cell_map_t.wrap_mode = match cellmap.wrap_mode {
-        sstypes::SsTexWrapMode::Clamp => TexWrapMode::Clamp,
-        sstypes::SsTexWrapMode::Repeat => TexWrapMode::Repeat,
-        sstypes::SsTexWrapMode::Mirror => TexWrapMode::Mirror,
+        sstypes::SsTexWrapMode::Clamp => ssab::ssab::TexWrapMode::Clamp,
+        sstypes::SsTexWrapMode::Repeat => ssab::ssab::TexWrapMode::Repeat,
+        sstypes::SsTexWrapMode::Mirror => ssab::ssab::TexWrapMode::Mirror,
     };
     cell_map_t.filter_mode = match cellmap.filter_mode {
-        sstypes::SsTexFilterMode::Nearest => TexFilterMode::Nearest,
-        sstypes::SsTexFilterMode::Linear => TexFilterMode::Linear,
+        sstypes::SsTexFilterMode::Nearest => ssab::ssab::TexFilterMode::Nearest,
+        sstypes::SsTexFilterMode::Linear => ssab::ssab::TexFilterMode::Linear,
     };
     cell_map_t.cells = convert_cellt_list(&cellmap.cells);
 
@@ -147,12 +147,12 @@ pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCh
 
 pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
-    anime_binary.animation_pack = None;
+    anime_binary.animations = None;
     anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &sspj.cellmap_list);
     anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
     anime_binary.sound_list = ssabt::convert_sound_list(&sspj, &sspj.sound_list);
     anime_binary.font_bitmap = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
-    anime_binary.dependencies = None;
+    anime_binary.instances = None;
 
     anime_binary
 }

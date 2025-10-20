@@ -1,0 +1,6 @@
+
+table Initialization {
+  data: int;
+}
+
+root_type Initialization;

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::Arc;
 use serde::{Deserialize, Deserializer};
 use serde::de::Error;
 use crate::ssattribute::SsAttributeKind;
@@ -241,12 +242,15 @@ impl<'de> Deserialize<'de> for SsMeshBind {
 pub struct SsModel {
     #[serde(deserialize_with = "parse_part_list")]
     pub part_list: Vec<SsPart>,
-    #[serde(default)]
-    pub setup_animation: String,
-
+    
     #[serde(deserialize_with = "parse_mesh_list")]
     pub mesh_list: Vec<SsMeshBind>,
     pub bone_list: HashMap<String, i32>,
+
+    #[serde(default)]
+    pub ref_setup_anime_pack: String,
+    #[serde(default)]
+    pub ref_setup_animation: String,
 }
 fn parse_part_list<'de, D>(deserializer: D) -> Result<Vec<SsPart>, D::Error>
 where
@@ -292,11 +296,16 @@ impl SsLoader for SsAnimePack {
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
         let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
-        ssae.anime_list.iter().for_each(|anime| {
-            if anime.is_setup {
-                ssae.model.setup_animation = anime.name.clone();
+        let r = ssae.anime_list.binary_search_by(|anime| anime.is_setup.cmp(&true));
+        match r {
+            Ok(idx) => {
+                ssae.model.ref_setup_anime_pack = ssae.name.clone();
+                ssae.model.ref_setup_animation = ssae.anime_list[idx].name.clone();
             }
-        });
+            Err(e) => {
+                
+            }
+        }
         Ok(ssae)
     }
 }

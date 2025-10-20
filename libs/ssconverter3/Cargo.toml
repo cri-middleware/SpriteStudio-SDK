@@ -7,12 +7,13 @@ edition = "2024"
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-sspj = { path = "../sspj" }
-ssab = { path = "../ssab" }
 flatbuffers = "25.9.23"
 rayon = "1.11.0"
 walkdir = "2.5.0"
 ordered-float = "5.1.0"
+sspj = { path = "../sspj" }
+ssab = { path = "../ssab" }
+ssanimator = { path = "../ssanimator" }
 
 [profile.release]
 lto = true

@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use ssab::ssab::{Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, Rect, RectArgs, RectT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T};
+use ssab::ssab::{SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT};
+use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -40,8 +41,8 @@ pub struct RectKey {
     pub x2: OrderedFloat<f32>,
     pub y2: OrderedFloat<f32>,
 }
-impl From<&RectT> for RectKey {
-    fn from(value: &RectT) -> Self {
+impl From<&ssab::ssab::RectT> for RectKey {
+    fn from(value: &ssab::ssab::RectT) -> Self {
         Self {
             x1: OrderedFloat(value.x1),
             y1: OrderedFloat(value.y1),
@@ -275,13 +276,13 @@ impl<'bldr> SsabCache<'bldr> {
     ) -> WIPOffset<SsAnimeBinary<'bldr>> {
         let mut anime_binary_args = SsAnimeBinaryArgs::default();
 
-        anime_binary_args.animation_pack = None; // TODO: implement
+        anime_binary_args.animations = None; // TODO: implement
         anime_binary_args.cell_map = ss_anime_binary_t.cell_map.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
         anime_binary_args.effect = None;
         anime_binary_args.sound_list = ss_anime_binary_t.sound_list.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
         anime_binary_args.font_bitmap = ss_anime_binary_t.font_bitmap.as_ref().map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
 
-        anime_binary_args.dependencies = None;
+        anime_binary_args.instances = None;
 
         SsAnimeBinary::create(fb, &anime_binary_args)
     }
