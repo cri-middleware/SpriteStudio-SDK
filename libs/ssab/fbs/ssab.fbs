@@ -1,14 +1,8 @@
-// include "common.fbs";
-
 table Vec2 {
   x: float;
   y: float;
 }
-table Vec3 {
-  x: float;
-  y: float;
-  z: float;
-}
+
 table Rect {
   x1: float;
   y1: float;
@@ -326,7 +320,7 @@ union Attribute {
 }
 
 table AttributeWrapper {
-  data: Attribute;
+  content: Attribute;
 }
 
 table UserDataInteger {
@@ -373,6 +367,11 @@ table SignalDataPerFrame {
 }
 
 table AudioDataPerFrame {
+  frame_index : short;
+  // TODO: impl
+}
+
+table TextureChangeDataPerFrame {
   frame_index : short;
   // TODO: impl
 }
@@ -543,7 +542,6 @@ table Effect {
 
 table SoundFile {
   name: string (key);
-  path: string;
   time_total: uint;
 }
 
@@ -614,6 +612,22 @@ table MeshDataIndices {
   Effect,
 */
 
+table InstanceAttribute {
+  cur_keyframe: int;
+  start_frame: int;
+  end_frame: int;
+  loop_num: int;
+  speed: float;
+  loopflag: int;
+}
+
+table EffectAttribute {
+  cur_keyframe: int;
+  start_time: int;
+  speed: float;
+  loopflag: int;
+}
+
 table PartAttributes {
   cell_index: short;
   position_x: float;
@@ -632,7 +646,7 @@ table PartAttributes {
   flip_v: bool;
   flip_h: bool;
   hide: bool;
-  masklimen: short;
+  mask: short;
   pivot_x: float;
   pivot_y: float;
   size_x: float;
@@ -643,16 +657,13 @@ table PartAttributes {
   uv_scale_x: float;
   uv_scale_y: float;
   bounding_radius: float;
-  instance_value_cur_keyframe: int;
-  instance_value_start_frame: int;
-  instance_value_end_frame: int;
-  instance_value_loop_num: int;
-  instance_value_speed: float;
-  instance_value_loopflag: int;
-  effect_value_cur_keyframe: int;
-  effect_value_start_time: int;
-  effect_value_speed: float;
-  effect_value_loopflag: int;
+  instance: InstanceAttribute;
+  effect: EffectAttribute;
+
+  // vertex_deformation:
+  // skew:
+  // deform:
+  // parts_color:
 }
 
 table PartData {
@@ -660,8 +671,8 @@ table PartData {
   index: short;
   parent_index: short;
   type: PartType;
-  boundsType: BoundsType;
-  alphaBlendType: BlendType;
+  bounds_yype: BoundsType;
+  alpha_blend_type: BlendType;
   refname: string;
   effect_filename: string;
   color_label: string;
@@ -686,6 +697,8 @@ table AnimationData {
   user_data: [UserDataPerFrame];
   signal_data: [SignalDataPerFrame];
   audio_data: [AudioDataPerFrame];
+  texture_change: [TextureChangeDataPerFrame];
+
   label_data: [Label];
 
   meshs_data_uv: [MeshDataUV];
