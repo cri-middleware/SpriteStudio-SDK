@@ -288,7 +288,7 @@ impl<'de> Deserialize<'de> for SsCurve {
                 A: MapAccess<'de>
             {
                 let mut sync_start_end = false;
-                let mut nums: Vec<f32> = Vec::new();
+                let mut nums: Vec<f32> = vec![];
 
                 while let Some((key, value)) = map.next_entry::<String, String>()? {
                     match key.as_str() {

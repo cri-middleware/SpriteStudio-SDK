@@ -35,7 +35,7 @@ impl SsqbCache {
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         sequence_binary_t: &SsSequenceBinaryT
     ) -> WIPOffset<SsSequenceBinary<'bldr>> {
-        let mut sequence_offset_vec = Vec::new();
+        let mut sequence_offset_vec = vec![];
         if let Some(sequences) = sequence_binary_t.sequence_list.as_ref() {
             sequence_offset_vec.reserve(sequences.len());
 
