@@ -28,7 +28,7 @@ fn main() {
     }
     let config = ssconverter3::ConverterConfig::default();
 
-    let mut handlers: Vec<JoinHandle<()>> = Vec::new();
+    let mut handlers: Vec<JoinHandle<()>> = vec![];
     sspj_paths.into_iter().for_each(|p| {
         println!("convert {:?}", p.display());
         handlers.push({

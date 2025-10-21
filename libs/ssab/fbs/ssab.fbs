@@ -1,19 +1,26 @@
-// include "common.fbs";
-
 table Vec2 {
-  x: float;
-  y: float;
+  v1: float;
+  v2: float;
 }
+
 table Vec3 {
-  x: float;
-  y: float;
-  z: float;
+  v1: float;
+  v2: float;
+  v3: float;
 }
+
 table Rect {
   x1: float;
   y1: float;
   x2: float;
   y2: float;
+}
+
+table U8Rect {
+  a: ubyte;
+  r: ubyte;
+  g: ubyte;
+  b: ubyte;
 }
 
 enum TexFilterMode: ubyte {
@@ -25,7 +32,6 @@ enum RenderBlendType: ubyte {
   Mix,
   Add,
 }
-
 
 enum TexWrapMode: ubyte {
   Clamp,
@@ -84,272 +90,145 @@ enum BlendType : ubyte {
   Invert,
 }
 
-enum AttributeKind: ubyte {
-  Cell,
-  PosX,
-  PosY,
-  PosZ,
-  RotX,
-  RotY,
-  RotZ,
-  SclX,
-  SclY,
-  LosclX,
-  LosclY,
-  Alpha,
-  LoAlpha,
-  Prio,
-  FlipH,
-  FlipV,
-  Hide,
-  PartsColor,
-  Shader,
-  Vertex,
-  PivotX,
-  PivotY,
-  AnchorX,
-  AnchorY,
-  SizeX,
-  SizeY,
-  ImgFlipH,
-  ImgFlipV,
-  UvtX,
-  UvtY,
-  UvrZ,
-  UvsX,
-  UvsY,
-  Boundr,
-  Mask,
-  User,
-  Signal,
-  Instance,
-  Effect,
+table BoolValueTable {
+  value: bool;
+}
+
+table IntValueTable {
+  value: int;
+}
+
+table FloatValueTable {
+  value: float;
+}
+
+table Vec2ValueTable {
+  value: Vec2;
+}
+
+table RectValueTable {
+  value: Rect;
+}
+
+table StringValueTable {
+  value: string;
 }
 
 table AttributeCell {
-
-}
-
-table AttributePosX {
-
-}
-
-table AttributePosY {
-
-}
-
-table AttributePosZ {
-
-}
-
-table AttributeRotX {
-
-}
-
-table AttributeRotY {
-
-}
-
-table AttributeRotZ {
-
-}
-
-table AttributeSclX {
-
-}
-
-table AttributeSclY {
-
-}
-
-table AttributeLosclX {
-
-}
-
-table AttributeLosclY {
-
-}
-
-table AttributeAlpha {
-
-}
-
-table AttributeLoAlpha {
-
-}
-
-table AttributePrio {
-
-}
-
-table AttributeFlipH {
-
-}
-
-table AttributeFlipV {
-
-}
-
-table AttributeHide {
-
+ map_id: int;
+ name: string;
 }
 
 table AttributePartsColor {
-
+ rgba: U8Rect;
+ rate: float;
 }
 
 table AttributeShader {
-
+  id: string;
+  param0: float;
+  param1: float;
+  param2: float;
+  param3: float;
+  param4: float;
+  param5: float;
+  param6: float;
+  param7: float;
+  map0_id: int;
+  map0_name: string;
+  map1_id: int;
+  map1_name: string;
 }
 
 table AttributeVertex {
-
-}
-
-table AttributePivotX {
-
-}
-
-table AttributePivotY {
-
-}
-
-table AttributeAnchorX {
-
-}
-
-table AttributeAnchorY {
-
-}
-
-table AttributeSizeX {
-
-}
-
-table AttributeSizeY {
-
-}
-
-table AttributeImgFlipH {
-
-}
-
-table AttributeImgFlipV {
-
-}
-
-table AttributeUvtX {
-
-}
-
-table AttributeUvtY {
-
-}
-
-table AttributeUvrZ {
-
-}
-
-table AttributeUvsX {
-
-}
-
-table AttributeUvsY {
-
-}
-
-table AttributeBoundr {
-
-}
-
-table AttributeMask {
-
-}
-
-table AttributeUser {
-
-}
-
-table AttributeSignal {
-
+  lt: Vec2;
+  rt: Vec2;
+  lb: Vec2;
+  rb: Vec2;
 }
 
 table AttributeInstance {
-
+  infinity_flag: bool;
+  pingpong: bool;
+  independent: bool;
+  loop_num: int;
+  start_label: string;
+  start_offset: int;
+  end_label: string;
+  end_offset: int;
+  speed: float;
 }
 
 table AttributeEffect {
-
+  start_time: int;
+  speed: float;
+  independent: bool;
 }
 
+table AttributeVertexDeformation {
+  // TODO: impl
+}
+
+table AttributeSkew {
+  // TODO: impl
+}
+
+table AttributeDeform {
+  // TODO: impl
+}
 
 union Attribute {
   AttributeCell,
-  AttributePosX,
-  AttributePosY,
-  AttributePosZ,
-  AttributeRotX,
-  AttributeRotY,
-  AttributeRotZ,
-  AttributeSclX,
-  AttributeSclY,
-  AttributeLosclX,
-  AttributeLosclY,
-  AttributeAlpha,
-  AttributeLoAlpha,
-  AttributePrio,
-  AttributeFlipH,
-  AttributeFlipV,
-  AttributeHide,
+  AttributePosX: FloatValueTable,
+  AttributePosY: FloatValueTable,
+  AttributePosZ: FloatValueTable,
+  AttributeRotX: FloatValueTable,
+  AttributeRotY: FloatValueTable,
+  AttributeRotZ: FloatValueTable,
+  AttributeSclX: FloatValueTable,
+  AttributeSclY: FloatValueTable,
+  AttributeLosclX: FloatValueTable,
+  AttributeLosclY: FloatValueTable,
+  AttributeAlpha: FloatValueTable,
+  AttributeLoAlpha: FloatValueTable,
+  AttributePrio: IntValueTable,
+  AttributeFlipH: BoolValueTable,
+  AttributeFlipV: BoolValueTable,
+  AttributeHide: BoolValueTable,
   AttributePartsColor,
   AttributeShader,
   AttributeVertex,
-  AttributePivotX,
-  AttributePivotY,
-  AttributeAnchorX,
-  AttributeAnchorY,
-  AttributeSizeX,
-  AttributeSizeY,
-  AttributeImgFlipH,
-  AttributeImgFlipV,
-  AttributeUvtX,
-  AttributeUvtY,
-  AttributeUvrZ,
-  AttributeUvsX,
-  AttributeUvsY,
-  AttributeBoundr,
-  AttributeMask,
-  AttributeUser,
-  AttributeSignal,
+  AttributePivotX: FloatValueTable,
+  AttributePivotY: FloatValueTable,
+  AttributeAnchorX: FloatValueTable,
+  AttributeAnchorY: FloatValueTable,
+  AttributeSizeX: FloatValueTable,
+  AttributeSizeY: FloatValueTable,
+  AttributeImgFlipH: BoolValueTable,
+  AttributeImgFlipV: BoolValueTable,
+  AttributeUvtX: FloatValueTable,
+  AttributeUvtY: FloatValueTable,
+  AttributeUvrZ: FloatValueTable,
+  AttributeUvsX: FloatValueTable,
+  AttributeUvsY: FloatValueTable,
+  AttributeBoundr: FloatValueTable,
+  AttributeMask: FloatValueTable,
   AttributeInstance,
   AttributeEffect,
+  AttributeVertexDeformation,
+  AttributeSkew,
+  AttributeDeform,
 }
 
 table AttributeWrapper {
-  data: Attribute;
-}
-
-table UserDataInteger {
-  integer : int;
-}
-
-table UserDataRect {
-  rect: Rect;
-}
-
-table UserDataPoint {
-  point: Vec2;
-}
-
-table UserDataString {
-  data : string;
+  content: Attribute;
 }
 
 union UserDataValue {
-  UserDataInteger,
-  UserDataRect,
-  UserDataPoint,
-  UserDataString,
+  UserDataInteger: IntValueTable,
+  UserDataRect: RectValueTable,
+  UserDataPoint: Vec2ValueTable,
+  UserDataString: StringValueTable,
 }
 
 table UserDataValueWrapper {
@@ -357,24 +236,47 @@ table UserDataValueWrapper {
 }
 
 table UserDataItem {
-  flags : short;
-  index : short;
-  data : [UserDataValueWrapper];
+  index: short;
+  data: [UserDataValueWrapper];
 }
 
 table UserDataPerFrame {
-  frame_index : short;
-  data : [UserDataItem];
+  frame_index: short;
+  data: [UserDataItem];
+}
+
+enum SignalComamndParamType: ubyte {
+  Index,
+  Integer,
+  Floating,
+  None,
+}
+
+table SignalComamndParam {
+  param_id: string;
+  type: SignalComamndParamType;
+  value: float;
 }
 
 table SignalDataPerFrame {
-  frame_index : short;
-  // TODO: impl
+  frame_index: short;
+
+  active: bool;
+  command_id: string;
+  params: [SignalComamndParam];
 }
 
 table AudioDataPerFrame {
-  frame_index : short;
-  // TODO: impl
+  frame_index: short;
+
+  sound_list_id: int;
+  sound_name: string;
+  loop_num: int;
+}
+
+table TextureChangeDataPerFrame {
+  frame_index: short;
+  texture_name: string;
 }
 
 table Cell {
@@ -401,17 +303,9 @@ table CellMap {
 }
 
 enum EffectNodeType: ubyte {
-    Root,
-    Emitter,
-    Particle,
-}
-
-table EffectParticleInfiniteEmitEnabled {
-  flag : int;
-}
-
-table EffectParticleTurnToDirectionEnabled {
-  rotation : float;
+  Root,
+  Emitter,
+  Particle,
 }
 
 table EffectParticlePointGravity {
@@ -419,22 +313,9 @@ table EffectParticlePointGravity {
   power : float;
 }
 
-table EffectParticleElementTransSize {
+table RectAndVec2ValueTable {
   size: Rect;
-
-  scale_factor_min_value : float;
-  scale_factor_max_value : float;
-}
-
-table EffectParticleElementSize {
-  size: Rect;
-  scale_factor_min_value : float;
-  scale_factor_max_value : float;
-}
-
-table EffectParticleElementAlphaFade {
-  disprange_min_value : float;
-  disprange_max_value : float;
+  scale_factor_value: Vec2; // min, max
 }
 
 table EffectParticleElementTransColor {
@@ -447,42 +328,14 @@ table EffectParticleElementInitColor {
   color_max_value : uint;
 }
 
-table EffectParticleElementTangentialAcceleration {
-  acceleration_min_value : float;
-  acceleration_max_value : float;
-}
-
-table EffectParticleElementTransSpeed {
-  speed_min_value : float;
-  speed_max_value : float;
-}
-
 table EffectParticleElementRotationTrans {
   rotation_factor : float;
   end_life_time_per : float;
 }
 
 table EffectParticleElementRotation {
-  rotation_min_value : float;
-  rotation_max_value : float;
-  rotation_add_min_value : float;
-  rotation_add_max_value : float;
-}
-
-table EffectParticleElementPosition {
-  offset: Rect;
-}
-
-table EffectParticleElementGravity {
-  gravity: Vec2;
-}
-
-table EffectParticleElementDelay {
-  delay_time : int;
-}
-
-table EffectParticleElementRndSeedChange {
-  seed : int;
+  rotation_value: Vec2; // min, max
+  rotation_add_value: Vec2; // min, max
 }
 
 table EffectParticleElementBasic {
@@ -501,22 +354,22 @@ table EffectParticleElementBasic {
 
 union EffectNodeBehavior {
   EffectParticleElementBasic,
-  EffectParticleElementRndSeedChange,
-  EffectParticleElementDelay,
-  EffectParticleElementGravity,
-  EffectParticleElementPosition,
+  EffectParticleElementRndSeedChange: IntValueTable,
+  EffectParticleElementDelay: IntValueTable,
+  EffectParticleElementGravity: Vec2ValueTable,
+  EffectParticleElementPosition: RectValueTable,
   EffectParticleElementRotation,
   EffectParticleElementRotationTrans,
-  EffectParticleElementTransSpeed,
-  EffectParticleElementTangentialAcceleration,
+  EffectParticleElementTransSpeed: Vec2ValueTable,
+  EffectParticleElementTangentialAcceleration: Vec2ValueTable,
   EffectParticleElementInitColor,
   EffectParticleElementTransColor,
-  EffectParticleElementAlphaFade,
-  EffectParticleElementSize,
-  EffectParticleElementTransSize,
+  EffectParticleElementAlphaFade: Vec2ValueTable,
+  EffectParticleElementSize: RectAndVec2ValueTable,
+  EffectParticleElementTransSize: RectAndVec2ValueTable,
   EffectParticlePointGravity,
-  EffectParticleTurnToDirectionEnabled,
-  EffectParticleInfiniteEmitEnabled,
+  EffectParticleTurnToDirectionEnabled: FloatValueTable,
+  EffectParticleInfiniteEmitEnabled: IntValueTable,
 }
 
 table EffectNodeBehaviorWrapper {
@@ -543,7 +396,6 @@ table Effect {
 
 table SoundFile {
   name: string (key);
-  path: string;
   time_total: uint;
 }
 
@@ -563,7 +415,7 @@ table FontGlyphBitmap {
 }
 
 table FontBitmap {
-  name:string (key);
+  name: string (key);
 
   name_face: string;
   size: ushort;
@@ -577,43 +429,20 @@ table FontBitmap {
   spacing: Vec2;
   size_texture_original: Vec2;
 
-  name_texture:[string];
-  table_data:[FontGlyphBitmap];
+  name_texture: [string];
+  table_data: [FontGlyphBitmap];
 }
 
 table MeshDataUV {
-    uv : [float];
+  uv: [float];
 }
+
 table MeshDataIndices {
-    indices : [float];
+  indices: [float];
 }
 
 /*
-  Hide,
-  PartsColor,
-  Shader,
-  Vertex,
-  PivotX,
-  PivotY,
-  AnchorX,
-  AnchorY,
-  SizeX,
-  SizeY,
-  ImgFlipH,
-  ImgFlipV,
-  UvtX,
-  UvtY,
-  UvrZ,
-  UvsX,
-  UvsY,
-  Boundr,
-  Mask,
-  User,
-  Signal,
-  Instance,
-  Effect,
-*/
-
+// for runtime
 table PartAttributes {
   cell_index: short;
   position_x: float;
@@ -632,7 +461,7 @@ table PartAttributes {
   flip_v: bool;
   flip_h: bool;
   hide: bool;
-  masklimen: short;
+  mask: short;
   pivot_x: float;
   pivot_y: float;
   size_x: float;
@@ -643,26 +472,69 @@ table PartAttributes {
   uv_scale_x: float;
   uv_scale_y: float;
   bounding_radius: float;
-  instance_value_cur_keyframe: int;
-  instance_value_start_frame: int;
-  instance_value_end_frame: int;
-  instance_value_loop_num: int;
-  instance_value_speed: float;
-  instance_value_loopflag: int;
-  effect_value_cur_keyframe: int;
-  effect_value_start_time: int;
-  effect_value_speed: float;
-  effect_value_loopflag: int;
+  instance: InstanceAttribute;
+  effect: EffectAttribute;
+
+  // vertex_deformation:
+  // skew:
+  // deform:
+  // parts_color:
+}
+*/
+
+table PartAttributeInstance {
+  cur_keyframe: int;
+  start_frame: int;
+  end_frame: int;
+  loop_num: int;
+  speed: float;
+  loopflag: int;
+}
+
+table PartAttributeEffect {
+  cur_keyframe: int;
+  start_time: int;
+  speed: float;
+  loopflag: int;
+}
+
+
+table PartAttributes {
+  cell_index: short;
+  position: Vec3;
+  rotation: Vec3;
+  scale: Vec2;
+  local_scale: Vec2;
+  opacity: short;
+  localopacity: short;
+  priority: short;
+  flip_v: bool;
+  flip_h: bool;
+  hide: bool;
+  mask: short;
+  pivot: Vec2;
+  size: Vec2;
+  uv_move: Vec2;
+  uv_rotation: float;
+  uv_scale: Vec2;
+  bounding_radius: float;
+  instance: PartAttributeInstance;
+  effect: PartAttributeEffect;
+
+  // vertex_deformation:
+  // skew:
+  // deform:
+  // parts_color:
 }
 
 table PartData {
+  index: short (key);
   name: string;
-  index: short;
   parent_index: short;
   type: PartType;
-  boundsType: BoundsType;
-  alphaBlendType: BlendType;
-  refname: string;
+  bounds_type: BoundsType;
+  alpha_blend_type: BlendType;
+  refname: string; // instance name
   effect_filename: string;
   color_label: string;
   mask_influence: short;
@@ -686,6 +558,8 @@ table AnimationData {
   user_data: [UserDataPerFrame];
   signal_data: [SignalDataPerFrame];
   audio_data: [AudioDataPerFrame];
+  texture_change: [TextureChangeDataPerFrame];
+
   label_data: [Label];
 
   meshs_data_uv: [MeshDataUV];
@@ -713,4 +587,5 @@ table SsAnimeBinary {
 }
 
 file_identifier "SSAB";
+file_extension "ssab";
 root_type SsAnimeBinary;

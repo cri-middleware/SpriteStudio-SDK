@@ -183,7 +183,7 @@ impl SsLoader for SsCharMap {
 }
 
 fn split_ignoring_quotes(delimiter: char, s: &str) -> Vec<String> {
-    let mut parts = Vec::new();
+    let mut parts = vec![];
     let mut current_part = String::new();
     let mut in_quote = false;
 

@@ -336,15 +336,67 @@ pub struct SsAttributeUser {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
-pub struct SsAttributeSignalCommands {
-    // pub value:
+#[serde(rename_all = "camelCase")]
+pub enum SsAttributeSignalCommandParamType {
+    Index,
+    Integer,
+    Floating,
+    None,
 }
+
+#[derive(Deserialize, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SsAttributeSignalCommandParam {
+    pub param_id: String,
+    #[serde(rename = "type")]
+    pub param_type: SsAttributeSignalCommandParamType,
+    #[serde(default)]
+    pub value: f32,
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SsAttributeSignalCommand {
+    pub active: bool,
+    pub command_id: String,
+    #[serde(deserialize_with = "parse_signal_command_param_list")]
+    pub params: Vec<SsAttributeSignalCommandParam>,
+}
+fn parse_signal_command_param_list<'de, D>(deserializer: D) -> Result<Vec<SsAttributeSignalCommandParam>, D::Error>
+where
+    D: serde::Deserializer<'de>
+{
+    #[derive(Deserialize)]
+    struct SignalCommandParamList {
+        value: Vec<SsAttributeSignalCommandParam>,
+    }
+    Ok(SignalCommandParamList::deserialize(deserializer)?.value)
+}
+
+#[derive(Deserialize, PartialEq, Debug)]
+pub struct SsAttributeSignalKeyValue {
+    #[serde(deserialize_with = "parse_signal_command_list")]
+    pub commands: Vec<SsAttributeSignalCommand>,
+}
+fn parse_signal_command_list<'de, D>(deserializer: D) -> Result<Vec<SsAttributeSignalCommand>, D::Error>
+where
+    D: serde::Deserializer<'de>
+{
+    #[derive(Deserialize)]
+    struct SignalCommandList {
+        value: Vec<SsAttributeSignalCommand>,
+    }
+    Ok(SignalCommandList::deserialize(deserializer)?.value)
+}
+
+
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeSignalKey {
     #[serde(rename = "@time")]
     pub time: i32,
-    pub value: SsAttributeSignalCommands,
+    pub value: SsAttributeSignalKeyValue,
 }
+
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeSignal {
     #[serde(rename = "key")]

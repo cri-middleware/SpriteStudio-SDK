@@ -26,7 +26,9 @@ pub struct SsProjectSetting {
     pub query_export_base_directory: bool,
     pub wrap_mode: SsTexWrapMode,
     pub filter_mode: SsTexFilterMode,
-    pub vertex_anime_float: i32,
+
+    #[serde(default)]
+    pub vertex_anime_float: bool,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

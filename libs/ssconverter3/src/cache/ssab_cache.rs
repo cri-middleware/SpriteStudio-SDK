@@ -2,34 +2,18 @@ use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT};
-use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Vec3, Vec3Args, Vec3T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
+use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
-    pub x: OrderedFloat<f32>,
-    pub y: OrderedFloat<f32>,
+    pub v1: OrderedFloat<f32>,
+    pub v2: OrderedFloat<f32>,
 }
 impl From<&Vec2T> for Vec2Key {
     fn from(v: &Vec2T) -> Self {
         Self {
-            x: OrderedFloat(v.x),
-            y: OrderedFloat(v.y),
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq, Clone)]
-pub struct Vec3Key {
-    pub x: OrderedFloat<f32>,
-    pub y: OrderedFloat<f32>,
-    pub z: OrderedFloat<f32>,
-}
-impl From<&Vec3T> for Vec3Key {
-    fn from(value: &Vec3T) -> Self {
-        Self {
-            x: OrderedFloat(value.x),
-            y: OrderedFloat(value.y),
-            z: OrderedFloat(value.z),
+            v1: OrderedFloat(v.v1),
+            v2: OrderedFloat(v.v2),
         }
     }
 }
@@ -78,7 +62,6 @@ impl From<&CellT> for CellKey {
 
 pub struct SsabCache<'bldr> {
     pub vec2t_cache: HashMap<Vec2Key, WIPOffset<Vec2<'bldr>>>,
-    pub vec3t_cache: HashMap<Vec3Key, WIPOffset<Vec3<'bldr>>>,
     pub rectt_cache: HashMap<RectKey, WIPOffset<Rect<'bldr>>>,
 
     pub cell_cache: HashMap<CellKey, WIPOffset<Cell<'bldr>>>,
@@ -87,7 +70,6 @@ impl<'bldr> SsabCache<'bldr> {
     pub fn new() -> Self {
         Self {
             vec2t_cache: HashMap::new(),
-            vec3t_cache: HashMap::new(),
             rectt_cache: HashMap::new(),
             
             cell_cache: HashMap::new(),
@@ -104,29 +86,10 @@ impl<'bldr> SsabCache<'bldr> {
             return offset;
         }
         let mut vec2_args = Vec2Args::default();
-        vec2_args.x = vec2t.x;
-        vec2_args.y = vec2t.y;
+        vec2_args.v1 = vec2t.v1;
+        vec2_args.v2 = vec2t.v2;
         let offset = Vec2::create(fb, &vec2_args);
         self.vec2t_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_vec3<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-        &mut self,
-        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        vec3t: &Vec3T
-    ) -> WIPOffset<Vec3<'bldr>>
-    {
-        let key = Vec3Key::from(vec3t);
-        if let Some(&offset) = self.vec3t_cache.get(&key) {
-            return offset;
-        }
-        let mut vec3_args = Vec3Args::default();
-        vec3_args.x = vec3t.x;
-        vec3_args.y = vec3t.y;
-        vec3_args.z = vec3t.z;
-        let offset = Vec3::create(fb, &vec3_args);
-        self.vec3t_cache.insert(key, offset);
         offset
     }
 
@@ -212,7 +175,6 @@ impl<'bldr> SsabCache<'bldr> {
         let table_data = table_data_t_vec.iter().map(|table_data_t| {
             let mut sound_file_args = SoundFileArgs::default();
             sound_file_args.name = Some(fb.create_shared_string(&table_data_t.name));
-            sound_file_args.path = table_data_t.path.as_ref().map(|s| fb.create_shared_string(s));
             sound_file_args.time_total = table_data_t.time_total;
 
             SoundFile::create(fb, &sound_file_args)

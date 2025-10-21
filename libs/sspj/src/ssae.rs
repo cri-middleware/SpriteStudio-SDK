@@ -161,9 +161,9 @@ impl FromStr for SsMeshBindInfo {
         if (1 + num * 4) != array.len() as i32 {
             return Err("SsMeshBindInfo::from_str: invalid array length".to_string());
         }
-        let mut weight_vec: Vec<i32> = Vec::new();
-        let mut bone_index_vec: Vec<i32> = Vec::new();
-        let mut offset_vec: Vec<SsPoint2> = Vec::new();
+        let mut weight_vec: Vec<i32> = vec![];
+        let mut bone_index_vec: Vec<i32> = vec![];
+        let mut offset_vec: Vec<SsPoint2> = vec![];
         for idx in 0..num {
             let offset: usize = (1 + idx * 4) as usize;
 

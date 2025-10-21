@@ -24,4 +24,5 @@ table SsSequenceBinary {
 }
 
 file_identifier "SSQB";
+file_extension "ssqb";
 root_type SsSequenceBinary;

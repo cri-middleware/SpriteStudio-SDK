@@ -29,7 +29,7 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
             .collect();
     }
 
-    Vec::new()
+    vec![]
 }
 
 fn is_sspj_file(path: &Path) -> bool {

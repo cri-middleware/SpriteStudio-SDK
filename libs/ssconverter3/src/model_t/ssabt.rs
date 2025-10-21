@@ -12,28 +12,14 @@ use crate::model_t::ssabt;
 
 pub fn convert_vec2t(point2: &SsPoint2) -> ssab::ssab::Vec2T {
     let mut vec = ssab::ssab::Vec2T::default();
-    vec.x = point2.x;
-    vec.y = point2.y;
+    vec.v1 = point2.x;
+    vec.v2 = point2.y;
     vec
 }
 pub fn convert_vec2t_list(point2_list: &[SsPoint2]) -> Option<Vec<ssab::ssab::Vec2T>> {
     Some(point2_list.iter().map(|point2| {
         convert_vec2t(point2)
     }).collect::<Vec<ssab::ssab::Vec2T>>())
-}
-#[allow(dead_code)] // TODO: delete when using the function
-pub fn convert_vec3t(point3: &SsPoint3) -> ssab::ssab::Vec3T {
-    let mut vec = ssab::ssab::Vec3T::default();
-    vec.x = point3.x;
-    vec.y = point3.y;
-    vec.z = point3.z;
-    vec
-}
-#[allow(dead_code)] // TODO: delete when using the function
-pub fn convert_vec3t_list(point3_list: &[SsPoint3]) -> Vec<ssab::ssab::Vec3T> {
-    point3_list.iter().map(|point3| {
-        convert_vec3t(point3)
-    }).collect::<Vec<ssab::ssab::Vec3T>>()
 }
 
 pub fn convert_flat_list_from_vec3t_list(point3_list: &[SsPoint3]) -> Option<Vec<u16>> {
@@ -112,7 +98,6 @@ pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList
         let mut sound_file_t = ssab::ssab::SoundFileT::default();
 
         sound_file_t.name = sssound.alias.clone();
-        sound_file_t.path = Some(sssound.filename.clone());
         sound_file_t.time_total = sssound.msec;
 
         sound_file_t
