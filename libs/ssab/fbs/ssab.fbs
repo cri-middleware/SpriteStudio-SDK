@@ -1,6 +1,12 @@
 table Vec2 {
-  x: float;
-  y: float;
+  v1: float;
+  v2: float;
+}
+
+table Vec3 {
+  v1: float;
+  v2: float;
+  v3: float;
 }
 
 table Rect {
@@ -8,6 +14,13 @@ table Rect {
   y1: float;
   x2: float;
   y2: float;
+}
+
+table U8Rect {
+  a: ubyte;
+  r: ubyte;
+  g: ubyte;
+  b: ubyte;
 }
 
 enum TexFilterMode: ubyte {
@@ -77,117 +90,145 @@ enum BlendType : ubyte {
   Invert,
 }
 
-table AttributeBool {
+table BoolValueTable {
   value: bool;
 }
 
-table AttributeInt {
+table IntValueTable {
   value: int;
 }
 
-table AttributeFloat {
+table FloatValueTable {
   value: float;
 }
 
+table Vec2ValueTable {
+  value: Vec2;
+}
+
+table RectValueTable {
+  value: Rect;
+}
+
+table StringValueTable {
+  value: string;
+}
+
 table AttributeCell {
-  // TODO: impl
+ map_id: int;
+ name: string;
 }
 
 table AttributePartsColor {
-  // TODO: impl
+ rgba: U8Rect;
+ rate: float;
 }
 
 table AttributeShader {
-  // TODO: impl
+  id: string;
+  param0: float;
+  param1: float;
+  param2: float;
+  param3: float;
+  param4: float;
+  param5: float;
+  param6: float;
+  param7: float;
+  map0_id: int;
+  map0_name: string;
+  map1_id: int;
+  map1_name: string;
 }
 
 table AttributeVertex {
-  // TODO: impl
-}
-
-table AttributeUser {
-  // TODO: impl
-}
-
-table AttributeSignal {
-  // TODO: impl
+  lt: Vec2;
+  rt: Vec2;
+  lb: Vec2;
+  rb: Vec2;
 }
 
 table AttributeInstance {
-  // TODO: impl
+  infinity_flag: bool;
+  pingpong: bool;
+  independent: bool;
+  loop_num: int;
+  start_label: string;
+  start_offset: int;
+  end_label: string;
+  end_offset: int;
+  speed: float;
 }
 
 table AttributeEffect {
+  start_time: int;
+  speed: float;
+  independent: bool;
+}
+
+table AttributeVertexDeformation {
+  // TODO: impl
+}
+
+table AttributeSkew {
+  // TODO: impl
+}
+
+table AttributeDeform {
   // TODO: impl
 }
 
 union Attribute {
   AttributeCell,
-  AttributePosX: AttributeFloat,
-  AttributePosY: AttributeFloat,
-  AttributePosZ: AttributeFloat,
-  AttributeRotX: AttributeFloat,
-  AttributeRotY: AttributeFloat,
-  AttributeRotZ: AttributeFloat,
-  AttributeSclX: AttributeFloat,
-  AttributeSclY: AttributeFloat,
-  AttributeLosclX: AttributeFloat,
-  AttributeLosclY: AttributeFloat,
-  AttributeAlpha: AttributeFloat,
-  AttributeLoAlpha: AttributeFloat,
-  AttributePrio: AttributeInt,
-  AttributeFlipH: AttributeBool,
-  AttributeFlipV: AttributeBool,
-  AttributeHide: AttributeBool,
+  AttributePosX: FloatValueTable,
+  AttributePosY: FloatValueTable,
+  AttributePosZ: FloatValueTable,
+  AttributeRotX: FloatValueTable,
+  AttributeRotY: FloatValueTable,
+  AttributeRotZ: FloatValueTable,
+  AttributeSclX: FloatValueTable,
+  AttributeSclY: FloatValueTable,
+  AttributeLosclX: FloatValueTable,
+  AttributeLosclY: FloatValueTable,
+  AttributeAlpha: FloatValueTable,
+  AttributeLoAlpha: FloatValueTable,
+  AttributePrio: IntValueTable,
+  AttributeFlipH: BoolValueTable,
+  AttributeFlipV: BoolValueTable,
+  AttributeHide: BoolValueTable,
   AttributePartsColor,
   AttributeShader,
   AttributeVertex,
-  AttributePivotX: AttributeFloat,
-  AttributePivotY: AttributeFloat,
-  AttributeAnchorX: AttributeFloat,
-  AttributeAnchorY: AttributeFloat,
-  AttributeSizeX: AttributeFloat,
-  AttributeSizeY: AttributeFloat,
-  AttributeImgFlipH: AttributeBool,
-  AttributeImgFlipV: AttributeBool,
-  AttributeUvtX: AttributeFloat,
-  AttributeUvtY: AttributeFloat,
-  AttributeUvrZ: AttributeFloat,
-  AttributeUvsX: AttributeFloat,
-  AttributeUvsY: AttributeFloat,
-  AttributeBoundr: AttributeFloat,
-  AttributeMask: AttributeFloat,
-  AttributeUser,
-  AttributeSignal,
+  AttributePivotX: FloatValueTable,
+  AttributePivotY: FloatValueTable,
+  AttributeAnchorX: FloatValueTable,
+  AttributeAnchorY: FloatValueTable,
+  AttributeSizeX: FloatValueTable,
+  AttributeSizeY: FloatValueTable,
+  AttributeImgFlipH: BoolValueTable,
+  AttributeImgFlipV: BoolValueTable,
+  AttributeUvtX: FloatValueTable,
+  AttributeUvtY: FloatValueTable,
+  AttributeUvrZ: FloatValueTable,
+  AttributeUvsX: FloatValueTable,
+  AttributeUvsY: FloatValueTable,
+  AttributeBoundr: FloatValueTable,
+  AttributeMask: FloatValueTable,
   AttributeInstance,
   AttributeEffect,
+  AttributeVertexDeformation,
+  AttributeSkew,
+  AttributeDeform,
 }
 
 table AttributeWrapper {
   content: Attribute;
 }
 
-table UserDataInteger {
-  integer : int;
-}
-
-table UserDataRect {
-  rect: Rect;
-}
-
-table UserDataPoint {
-  point: Vec2;
-}
-
-table UserDataString {
-  data : string;
-}
-
 union UserDataValue {
-  UserDataInteger,
-  UserDataRect,
-  UserDataPoint,
-  UserDataString,
+  UserDataInteger: IntValueTable,
+  UserDataRect: RectValueTable,
+  UserDataPoint: Vec2ValueTable,
+  UserDataString: StringValueTable,
 }
 
 table UserDataValueWrapper {
@@ -195,7 +236,6 @@ table UserDataValueWrapper {
 }
 
 table UserDataItem {
-  flags: short;
   index: short;
   data: [UserDataValueWrapper];
 }
@@ -263,17 +303,9 @@ table CellMap {
 }
 
 enum EffectNodeType: ubyte {
-    Root,
-    Emitter,
-    Particle,
-}
-
-table EffectParticleInfiniteEmitEnabled {
-  flag : int;
-}
-
-table EffectParticleTurnToDirectionEnabled {
-  rotation : float;
+  Root,
+  Emitter,
+  Particle,
 }
 
 table EffectParticlePointGravity {
@@ -281,22 +313,9 @@ table EffectParticlePointGravity {
   power : float;
 }
 
-table EffectParticleElementTransSize {
+table RectAndVec2ValueTable {
   size: Rect;
-
-  scale_factor_min_value : float;
-  scale_factor_max_value : float;
-}
-
-table EffectParticleElementSize {
-  size: Rect;
-  scale_factor_min_value : float;
-  scale_factor_max_value : float;
-}
-
-table EffectParticleElementAlphaFade {
-  disprange_min_value : float;
-  disprange_max_value : float;
+  scale_factor_value: Vec2; // min, max
 }
 
 table EffectParticleElementTransColor {
@@ -309,42 +328,14 @@ table EffectParticleElementInitColor {
   color_max_value : uint;
 }
 
-table EffectParticleElementTangentialAcceleration {
-  acceleration_min_value : float;
-  acceleration_max_value : float;
-}
-
-table EffectParticleElementTransSpeed {
-  speed_min_value : float;
-  speed_max_value : float;
-}
-
 table EffectParticleElementRotationTrans {
   rotation_factor : float;
   end_life_time_per : float;
 }
 
 table EffectParticleElementRotation {
-  rotation_min_value : float;
-  rotation_max_value : float;
-  rotation_add_min_value : float;
-  rotation_add_max_value : float;
-}
-
-table EffectParticleElementPosition {
-  offset: Rect;
-}
-
-table EffectParticleElementGravity {
-  gravity: Vec2;
-}
-
-table EffectParticleElementDelay {
-  delay_time : int;
-}
-
-table EffectParticleElementRndSeedChange {
-  seed : int;
+  rotation_value: Vec2; // min, max
+  rotation_add_value: Vec2; // min, max
 }
 
 table EffectParticleElementBasic {
@@ -363,22 +354,22 @@ table EffectParticleElementBasic {
 
 union EffectNodeBehavior {
   EffectParticleElementBasic,
-  EffectParticleElementRndSeedChange,
-  EffectParticleElementDelay,
-  EffectParticleElementGravity,
-  EffectParticleElementPosition,
+  EffectParticleElementRndSeedChange: IntValueTable,
+  EffectParticleElementDelay: IntValueTable,
+  EffectParticleElementGravity: Vec2ValueTable,
+  EffectParticleElementPosition: RectValueTable,
   EffectParticleElementRotation,
   EffectParticleElementRotationTrans,
-  EffectParticleElementTransSpeed,
-  EffectParticleElementTangentialAcceleration,
+  EffectParticleElementTransSpeed: Vec2ValueTable,
+  EffectParticleElementTangentialAcceleration: Vec2ValueTable,
   EffectParticleElementInitColor,
   EffectParticleElementTransColor,
-  EffectParticleElementAlphaFade,
-  EffectParticleElementSize,
-  EffectParticleElementTransSize,
+  EffectParticleElementAlphaFade: Vec2ValueTable,
+  EffectParticleElementSize: RectAndVec2ValueTable,
+  EffectParticleElementTransSize: RectAndVec2ValueTable,
   EffectParticlePointGravity,
-  EffectParticleTurnToDirectionEnabled,
-  EffectParticleInfiniteEmitEnabled,
+  EffectParticleTurnToDirectionEnabled: FloatValueTable,
+  EffectParticleInfiniteEmitEnabled: IntValueTable,
 }
 
 table EffectNodeBehaviorWrapper {
@@ -424,7 +415,7 @@ table FontGlyphBitmap {
 }
 
 table FontBitmap {
-  name:string (key);
+  name: string (key);
 
   name_face: string;
   size: ushort;
@@ -438,33 +429,20 @@ table FontBitmap {
   spacing: Vec2;
   size_texture_original: Vec2;
 
-  name_texture:[string];
-  table_data:[FontGlyphBitmap];
+  name_texture: [string];
+  table_data: [FontGlyphBitmap];
 }
 
 table MeshDataUV {
-    uv : [float];
+  uv: [float];
 }
+
 table MeshDataIndices {
-    indices : [float];
+  indices: [float];
 }
 
-table InstanceAttribute {
-  cur_keyframe: int;
-  start_frame: int;
-  end_frame: int;
-  loop_num: int;
-  speed: float;
-  loopflag: int;
-}
-
-table EffectAttribute {
-  cur_keyframe: int;
-  start_time: int;
-  speed: float;
-  loopflag: int;
-}
-
+/*
+// for runtime
 table PartAttributes {
   cell_index: short;
   position_x: float;
@@ -502,15 +480,61 @@ table PartAttributes {
   // deform:
   // parts_color:
 }
+*/
+
+table PartAttributeInstance {
+  cur_keyframe: int;
+  start_frame: int;
+  end_frame: int;
+  loop_num: int;
+  speed: float;
+  loopflag: int;
+}
+
+table PartAttributeEffect {
+  cur_keyframe: int;
+  start_time: int;
+  speed: float;
+  loopflag: int;
+}
+
+
+table PartAttributes {
+  cell_index: short;
+  position: Vec3;
+  rotation: Vec3;
+  scale: Vec2;
+  local_scale: Vec2;
+  opacity: short;
+  localopacity: short;
+  priority: short;
+  flip_v: bool;
+  flip_h: bool;
+  hide: bool;
+  mask: short;
+  pivot: Vec2;
+  size: Vec2;
+  uv_move: Vec2;
+  uv_rotation: float;
+  uv_scale: Vec2;
+  bounding_radius: float;
+  instance: PartAttributeInstance;
+  effect: PartAttributeEffect;
+
+  // vertex_deformation:
+  // skew:
+  // deform:
+  // parts_color:
+}
 
 table PartData {
+  index: short (key);
   name: string;
-  index: short;
   parent_index: short;
   type: PartType;
-  bounds_yype: BoundsType;
+  bounds_type: BoundsType;
   alpha_blend_type: BlendType;
-  refname: string;
+  refname: string; // instance name
   effect_filename: string;
   color_label: string;
   mask_influence: short;

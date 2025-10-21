@@ -12,8 +12,8 @@ use crate::model_t::ssabt;
 
 pub fn convert_vec2t(point2: &SsPoint2) -> ssab::ssab::Vec2T {
     let mut vec = ssab::ssab::Vec2T::default();
-    vec.x = point2.x;
-    vec.y = point2.y;
+    vec.v1 = point2.x;
+    vec.v2 = point2.y;
     vec
 }
 pub fn convert_vec2t_list(point2_list: &[SsPoint2]) -> Option<Vec<ssab::ssab::Vec2T>> {

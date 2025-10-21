@@ -6,14 +6,14 @@ use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Cell, CellArgs, C
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
-    pub x: OrderedFloat<f32>,
-    pub y: OrderedFloat<f32>,
+    pub v1: OrderedFloat<f32>,
+    pub v2: OrderedFloat<f32>,
 }
 impl From<&Vec2T> for Vec2Key {
     fn from(v: &Vec2T) -> Self {
         Self {
-            x: OrderedFloat(v.x),
-            y: OrderedFloat(v.y),
+            v1: OrderedFloat(v.v1),
+            v2: OrderedFloat(v.v2),
         }
     }
 }
@@ -86,8 +86,8 @@ impl<'bldr> SsabCache<'bldr> {
             return offset;
         }
         let mut vec2_args = Vec2Args::default();
-        vec2_args.x = vec2t.x;
-        vec2_args.y = vec2t.y;
+        vec2_args.v1 = vec2t.v1;
+        vec2_args.v2 = vec2t.v2;
         let offset = Vec2::create(fb, &vec2_args);
         self.vec2t_cache.insert(key, offset);
         offset
