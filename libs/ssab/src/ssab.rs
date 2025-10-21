@@ -798,239 +798,6 @@ impl<'a> flatbuffers::Verifiable for BlendType {
 
 impl flatbuffers::SimpleToVerifyInSlice for BlendType {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MIN_ATTRIBUTE_KIND: u8 = 0;
-#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_ATTRIBUTE_KIND: u8 = 38;
-#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-#[allow(non_camel_case_types)]
-pub const ENUM_VALUES_ATTRIBUTE_KIND: [AttributeKind; 39] = [
-  AttributeKind::Cell,
-  AttributeKind::PosX,
-  AttributeKind::PosY,
-  AttributeKind::PosZ,
-  AttributeKind::RotX,
-  AttributeKind::RotY,
-  AttributeKind::RotZ,
-  AttributeKind::SclX,
-  AttributeKind::SclY,
-  AttributeKind::LosclX,
-  AttributeKind::LosclY,
-  AttributeKind::Alpha,
-  AttributeKind::LoAlpha,
-  AttributeKind::Prio,
-  AttributeKind::FlipH,
-  AttributeKind::FlipV,
-  AttributeKind::Hide,
-  AttributeKind::PartsColor,
-  AttributeKind::Shader,
-  AttributeKind::Vertex,
-  AttributeKind::PivotX,
-  AttributeKind::PivotY,
-  AttributeKind::AnchorX,
-  AttributeKind::AnchorY,
-  AttributeKind::SizeX,
-  AttributeKind::SizeY,
-  AttributeKind::ImgFlipH,
-  AttributeKind::ImgFlipV,
-  AttributeKind::UvtX,
-  AttributeKind::UvtY,
-  AttributeKind::UvrZ,
-  AttributeKind::UvsX,
-  AttributeKind::UvsY,
-  AttributeKind::Boundr,
-  AttributeKind::Mask,
-  AttributeKind::User,
-  AttributeKind::Signal,
-  AttributeKind::Instance,
-  AttributeKind::Effect,
-];
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-#[repr(transparent)]
-pub struct AttributeKind(pub u8);
-#[allow(non_upper_case_globals)]
-impl AttributeKind {
-  pub const Cell: Self = Self(0);
-  pub const PosX: Self = Self(1);
-  pub const PosY: Self = Self(2);
-  pub const PosZ: Self = Self(3);
-  pub const RotX: Self = Self(4);
-  pub const RotY: Self = Self(5);
-  pub const RotZ: Self = Self(6);
-  pub const SclX: Self = Self(7);
-  pub const SclY: Self = Self(8);
-  pub const LosclX: Self = Self(9);
-  pub const LosclY: Self = Self(10);
-  pub const Alpha: Self = Self(11);
-  pub const LoAlpha: Self = Self(12);
-  pub const Prio: Self = Self(13);
-  pub const FlipH: Self = Self(14);
-  pub const FlipV: Self = Self(15);
-  pub const Hide: Self = Self(16);
-  pub const PartsColor: Self = Self(17);
-  pub const Shader: Self = Self(18);
-  pub const Vertex: Self = Self(19);
-  pub const PivotX: Self = Self(20);
-  pub const PivotY: Self = Self(21);
-  pub const AnchorX: Self = Self(22);
-  pub const AnchorY: Self = Self(23);
-  pub const SizeX: Self = Self(24);
-  pub const SizeY: Self = Self(25);
-  pub const ImgFlipH: Self = Self(26);
-  pub const ImgFlipV: Self = Self(27);
-  pub const UvtX: Self = Self(28);
-  pub const UvtY: Self = Self(29);
-  pub const UvrZ: Self = Self(30);
-  pub const UvsX: Self = Self(31);
-  pub const UvsY: Self = Self(32);
-  pub const Boundr: Self = Self(33);
-  pub const Mask: Self = Self(34);
-  pub const User: Self = Self(35);
-  pub const Signal: Self = Self(36);
-  pub const Instance: Self = Self(37);
-  pub const Effect: Self = Self(38);
-
-  pub const ENUM_MIN: u8 = 0;
-  pub const ENUM_MAX: u8 = 38;
-  pub const ENUM_VALUES: &'static [Self] = &[
-    Self::Cell,
-    Self::PosX,
-    Self::PosY,
-    Self::PosZ,
-    Self::RotX,
-    Self::RotY,
-    Self::RotZ,
-    Self::SclX,
-    Self::SclY,
-    Self::LosclX,
-    Self::LosclY,
-    Self::Alpha,
-    Self::LoAlpha,
-    Self::Prio,
-    Self::FlipH,
-    Self::FlipV,
-    Self::Hide,
-    Self::PartsColor,
-    Self::Shader,
-    Self::Vertex,
-    Self::PivotX,
-    Self::PivotY,
-    Self::AnchorX,
-    Self::AnchorY,
-    Self::SizeX,
-    Self::SizeY,
-    Self::ImgFlipH,
-    Self::ImgFlipV,
-    Self::UvtX,
-    Self::UvtY,
-    Self::UvrZ,
-    Self::UvsX,
-    Self::UvsY,
-    Self::Boundr,
-    Self::Mask,
-    Self::User,
-    Self::Signal,
-    Self::Instance,
-    Self::Effect,
-  ];
-  /// Returns the variant's name or "" if unknown.
-  pub fn variant_name(self) -> Option<&'static str> {
-    match self {
-      Self::Cell => Some("Cell"),
-      Self::PosX => Some("PosX"),
-      Self::PosY => Some("PosY"),
-      Self::PosZ => Some("PosZ"),
-      Self::RotX => Some("RotX"),
-      Self::RotY => Some("RotY"),
-      Self::RotZ => Some("RotZ"),
-      Self::SclX => Some("SclX"),
-      Self::SclY => Some("SclY"),
-      Self::LosclX => Some("LosclX"),
-      Self::LosclY => Some("LosclY"),
-      Self::Alpha => Some("Alpha"),
-      Self::LoAlpha => Some("LoAlpha"),
-      Self::Prio => Some("Prio"),
-      Self::FlipH => Some("FlipH"),
-      Self::FlipV => Some("FlipV"),
-      Self::Hide => Some("Hide"),
-      Self::PartsColor => Some("PartsColor"),
-      Self::Shader => Some("Shader"),
-      Self::Vertex => Some("Vertex"),
-      Self::PivotX => Some("PivotX"),
-      Self::PivotY => Some("PivotY"),
-      Self::AnchorX => Some("AnchorX"),
-      Self::AnchorY => Some("AnchorY"),
-      Self::SizeX => Some("SizeX"),
-      Self::SizeY => Some("SizeY"),
-      Self::ImgFlipH => Some("ImgFlipH"),
-      Self::ImgFlipV => Some("ImgFlipV"),
-      Self::UvtX => Some("UvtX"),
-      Self::UvtY => Some("UvtY"),
-      Self::UvrZ => Some("UvrZ"),
-      Self::UvsX => Some("UvsX"),
-      Self::UvsY => Some("UvsY"),
-      Self::Boundr => Some("Boundr"),
-      Self::Mask => Some("Mask"),
-      Self::User => Some("User"),
-      Self::Signal => Some("Signal"),
-      Self::Instance => Some("Instance"),
-      Self::Effect => Some("Effect"),
-      _ => None,
-    }
-  }
-}
-impl core::fmt::Debug for AttributeKind {
-  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-    if let Some(name) = self.variant_name() {
-      f.write_str(name)
-    } else {
-      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
-    }
-  }
-}
-impl<'a> flatbuffers::Follow<'a> for AttributeKind {
-  type Inner = Self;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
-    Self(b)
-  }
-}
-
-impl flatbuffers::Push for AttributeKind {
-    type Output = AttributeKind;
-    #[inline]
-    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
-    }
-}
-
-impl flatbuffers::EndianScalar for AttributeKind {
-  type Scalar = u8;
-  #[inline]
-  fn to_little_endian(self) -> u8 {
-    self.0.to_le()
-  }
-  #[inline]
-  #[allow(clippy::wrong_self_convention)]
-  fn from_little_endian(v: u8) -> Self {
-    let b = u8::from_le(v);
-    Self(b)
-  }
-}
-
-impl<'a> flatbuffers::Verifiable for AttributeKind {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    u8::run_verifier(v, pos)
-  }
-}
-
-impl flatbuffers::SimpleToVerifyInSlice for AttributeKind {}
-#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_ATTRIBUTE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_ATTRIBUTE: u8 = 39;
@@ -1294,19 +1061,19 @@ pub enum AttributeT {
   AttributePartsColor(Box<AttributePartsColorT>),
   AttributeShader(Box<AttributeShaderT>),
   AttributeVertex(Box<AttributeVertexT>),
-  AttributePivotX(Box<AttributeBoolT>),
-  AttributePivotY(Box<AttributeBoolT>),
-  AttributeAnchorX(Box<AttributeBoolT>),
-  AttributeAnchorY(Box<AttributeBoolT>),
-  AttributeSizeX(Box<AttributeBoolT>),
-  AttributeSizeY(Box<AttributeBoolT>),
+  AttributePivotX(Box<AttributeFloatT>),
+  AttributePivotY(Box<AttributeFloatT>),
+  AttributeAnchorX(Box<AttributeFloatT>),
+  AttributeAnchorY(Box<AttributeFloatT>),
+  AttributeSizeX(Box<AttributeFloatT>),
+  AttributeSizeY(Box<AttributeFloatT>),
   AttributeImgFlipH(Box<AttributeBoolT>),
   AttributeImgFlipV(Box<AttributeBoolT>),
-  AttributeUvtX(Box<AttributeBoolT>),
-  AttributeUvtY(Box<AttributeBoolT>),
-  AttributeUvrZ(Box<AttributeBoolT>),
-  AttributeUvsX(Box<AttributeBoolT>),
-  AttributeUvsY(Box<AttributeBoolT>),
+  AttributeUvtX(Box<AttributeFloatT>),
+  AttributeUvtY(Box<AttributeFloatT>),
+  AttributeUvrZ(Box<AttributeFloatT>),
+  AttributeUvsX(Box<AttributeFloatT>),
+  AttributeUvsY(Box<AttributeFloatT>),
   AttributeBoundr(Box<AttributeFloatT>),
   AttributeMask(Box<AttributeFloatT>),
   AttributeUser(Box<AttributeUserT>),
@@ -1828,8 +1595,8 @@ impl AttributeT {
   pub fn as_attribute_vertex_mut(&mut self) -> Option<&mut AttributeVertexT> {
     if let Self::AttributeVertex(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_pivot_x(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_pivot_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributePivotX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePivotX(w) = v {
@@ -1841,16 +1608,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_pivot_x(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_pivot_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributePivotX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_pivot_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_pivot_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributePivotX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_pivot_y(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_pivot_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributePivotY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePivotY(w) = v {
@@ -1862,16 +1629,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_pivot_y(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_pivot_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributePivotY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_pivot_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_pivot_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributePivotY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_anchor_x(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_anchor_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeAnchorX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeAnchorX(w) = v {
@@ -1883,16 +1650,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_anchor_x(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_anchor_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeAnchorX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_anchor_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_anchor_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeAnchorX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_anchor_y(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_anchor_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeAnchorY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeAnchorY(w) = v {
@@ -1904,16 +1671,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_anchor_y(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_anchor_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeAnchorY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_anchor_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_anchor_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeAnchorY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_size_x(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_size_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeSizeX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeSizeX(w) = v {
@@ -1925,16 +1692,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_size_x(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_size_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeSizeX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_size_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_size_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeSizeX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_size_y(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_size_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeSizeY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeSizeY(w) = v {
@@ -1946,12 +1713,12 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_size_y(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_size_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeSizeY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_size_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_size_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeSizeY(v) = self { Some(v.as_mut()) } else { None }
   }
   /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
@@ -1996,8 +1763,8 @@ impl AttributeT {
   pub fn as_attribute_img_flip_v_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeImgFlipV(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_uvt_x(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_uvt_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeUvtX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvtX(w) = v {
@@ -2009,16 +1776,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_uvt_x(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_uvt_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeUvtX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_uvt_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_uvt_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeUvtX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_uvt_y(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_uvt_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeUvtY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvtY(w) = v {
@@ -2030,16 +1797,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_uvt_y(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_uvt_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeUvtY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_uvt_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_uvt_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeUvtY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_uvr_z(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_uvr_z(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeUvrZ(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvrZ(w) = v {
@@ -2051,16 +1818,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_uvr_z(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_uvr_z(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeUvrZ(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_uvr_z_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_uvr_z_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeUvrZ(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_uvs_x(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_uvs_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeUvsX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvsX(w) = v {
@@ -2072,16 +1839,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_uvs_x(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_uvs_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeUvsX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_uvs_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_uvs_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeUvsX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
-  pub fn take_attribute_uvs_y(&mut self) -> Option<Box<AttributeBoolT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_uvs_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeUvsY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvsY(w) = v {
@@ -2093,12 +1860,12 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoolT.
-  pub fn as_attribute_uvs_y(&self) -> Option<&AttributeBoolT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_uvs_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeUvsY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
-  pub fn as_attribute_uvs_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_uvs_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeUvsY(v) = self { Some(v.as_mut()) } else { None }
   }
   /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
@@ -5303,13 +5070,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pivot_x(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_pivot_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributePivotX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5318,13 +5085,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pivot_y(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_pivot_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributePivotY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5333,13 +5100,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_anchor_x(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_anchor_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeAnchorX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5348,13 +5115,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_anchor_y(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_anchor_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeAnchorY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5363,13 +5130,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_size_x(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_size_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeSizeX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5378,13 +5145,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_size_y(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_size_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeSizeY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5423,13 +5190,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvt_x(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_uvt_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeUvtX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5438,13 +5205,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvt_y(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_uvt_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeUvtY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5453,13 +5220,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvr_z(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_uvr_z(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeUvrZ {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5468,13 +5235,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvs_x(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_uvs_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeUvsX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5483,13 +5250,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvs_y(&self) -> Option<AttributeBool<'a>> {
+  pub fn content_as_attribute_uvs_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeUvsY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBool::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -5617,19 +5384,19 @@ impl flatbuffers::Verifiable for AttributeWrapper<'_> {
           Attribute::AttributePartsColor => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePartsColor>>("Attribute::AttributePartsColor", pos),
           Attribute::AttributeShader => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeShader>>("Attribute::AttributeShader", pos),
           Attribute::AttributeVertex => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeVertex>>("Attribute::AttributeVertex", pos),
-          Attribute::AttributePivotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributePivotX", pos),
-          Attribute::AttributePivotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributePivotY", pos),
-          Attribute::AttributeAnchorX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeAnchorX", pos),
-          Attribute::AttributeAnchorY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeAnchorY", pos),
-          Attribute::AttributeSizeX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeSizeX", pos),
-          Attribute::AttributeSizeY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeSizeY", pos),
+          Attribute::AttributePivotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributePivotX", pos),
+          Attribute::AttributePivotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributePivotY", pos),
+          Attribute::AttributeAnchorX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeAnchorX", pos),
+          Attribute::AttributeAnchorY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeAnchorY", pos),
+          Attribute::AttributeSizeX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeSizeX", pos),
+          Attribute::AttributeSizeY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeSizeY", pos),
           Attribute::AttributeImgFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeImgFlipH", pos),
           Attribute::AttributeImgFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeImgFlipV", pos),
-          Attribute::AttributeUvtX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvtX", pos),
-          Attribute::AttributeUvtY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvtY", pos),
-          Attribute::AttributeUvrZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvrZ", pos),
-          Attribute::AttributeUvsX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvsX", pos),
-          Attribute::AttributeUvsY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvsY", pos),
+          Attribute::AttributeUvtX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeUvtX", pos),
+          Attribute::AttributeUvtY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeUvtY", pos),
+          Attribute::AttributeUvrZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeUvrZ", pos),
+          Attribute::AttributeUvsX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeUvsX", pos),
+          Attribute::AttributeUvsY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeUvsY", pos),
           Attribute::AttributeBoundr => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeBoundr", pos),
           Attribute::AttributeMask => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeMask", pos),
           Attribute::AttributeUser => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUser>>("Attribute::AttributeUser", pos),
