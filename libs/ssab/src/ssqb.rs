@@ -719,6 +719,8 @@ pub fn ss_sequence_binary_size_prefixed_buffer_has_identifier(buf: &[u8]) -> boo
   flatbuffers::buffer_has_identifier(buf, SS_SEQUENCE_BINARY_IDENTIFIER, true)
 }
 
+pub const SS_SEQUENCE_BINARY_EXTENSION: &str = "ssqb";
+
 #[inline]
 pub fn finish_ss_sequence_binary_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,

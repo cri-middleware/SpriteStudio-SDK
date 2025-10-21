@@ -20,7 +20,6 @@ enum RenderBlendType: ubyte {
   Add,
 }
 
-
 enum TexWrapMode: ubyte {
   Clamp,
   Repeat,
@@ -120,199 +119,86 @@ enum AttributeKind: ubyte {
   Effect,
 }
 
+table AttributeBool {
+  value: bool;
+}
+
+table AttributeInt {
+  value: int;
+}
+
+table AttributeFloat {
+  value: float;
+}
+
 table AttributeCell {
-
-}
-
-table AttributePosX {
-
-}
-
-table AttributePosY {
-
-}
-
-table AttributePosZ {
-
-}
-
-table AttributeRotX {
-
-}
-
-table AttributeRotY {
-
-}
-
-table AttributeRotZ {
-
-}
-
-table AttributeSclX {
-
-}
-
-table AttributeSclY {
-
-}
-
-table AttributeLosclX {
-
-}
-
-table AttributeLosclY {
-
-}
-
-table AttributeAlpha {
-
-}
-
-table AttributeLoAlpha {
-
-}
-
-table AttributePrio {
-
-}
-
-table AttributeFlipH {
-
-}
-
-table AttributeFlipV {
-
-}
-
-table AttributeHide {
-
+  // TODO: impl
 }
 
 table AttributePartsColor {
-
+  // TODO: impl
 }
 
 table AttributeShader {
-
+  // TODO: impl
 }
 
 table AttributeVertex {
-
-}
-
-table AttributePivotX {
-
-}
-
-table AttributePivotY {
-
-}
-
-table AttributeAnchorX {
-
-}
-
-table AttributeAnchorY {
-
-}
-
-table AttributeSizeX {
-
-}
-
-table AttributeSizeY {
-
-}
-
-table AttributeImgFlipH {
-
-}
-
-table AttributeImgFlipV {
-
-}
-
-table AttributeUvtX {
-
-}
-
-table AttributeUvtY {
-
-}
-
-table AttributeUvrZ {
-
-}
-
-table AttributeUvsX {
-
-}
-
-table AttributeUvsY {
-
-}
-
-table AttributeBoundr {
-
-}
-
-table AttributeMask {
-
+  // TODO: impl
 }
 
 table AttributeUser {
-
+  // TODO: impl
 }
 
 table AttributeSignal {
-
+  // TODO: impl
 }
 
 table AttributeInstance {
-
+  // TODO: impl
 }
 
 table AttributeEffect {
-
+  // TODO: impl
 }
-
 
 union Attribute {
   AttributeCell,
-  AttributePosX,
-  AttributePosY,
-  AttributePosZ,
-  AttributeRotX,
-  AttributeRotY,
-  AttributeRotZ,
-  AttributeSclX,
-  AttributeSclY,
-  AttributeLosclX,
-  AttributeLosclY,
-  AttributeAlpha,
-  AttributeLoAlpha,
-  AttributePrio,
-  AttributeFlipH,
-  AttributeFlipV,
-  AttributeHide,
+  AttributePosX: AttributeFloat,
+  AttributePosY: AttributeFloat,
+  AttributePosZ: AttributeFloat,
+  AttributeRotX: AttributeFloat,
+  AttributeRotY: AttributeFloat,
+  AttributeRotZ: AttributeFloat,
+  AttributeSclX: AttributeFloat,
+  AttributeSclY: AttributeFloat,
+  AttributeLosclX: AttributeFloat,
+  AttributeLosclY: AttributeFloat,
+  AttributeAlpha: AttributeFloat,
+  AttributeLoAlpha: AttributeFloat,
+  AttributePrio: AttributeInt,
+  AttributeFlipH: AttributeBool,
+  AttributeFlipV: AttributeBool,
+  AttributeHide: AttributeBool,
   AttributePartsColor,
   AttributeShader,
   AttributeVertex,
-  AttributePivotX,
-  AttributePivotY,
-  AttributeAnchorX,
-  AttributeAnchorY,
-  AttributeSizeX,
-  AttributeSizeY,
-  AttributeImgFlipH,
-  AttributeImgFlipV,
-  AttributeUvtX,
-  AttributeUvtY,
-  AttributeUvrZ,
-  AttributeUvsX,
-  AttributeUvsY,
-  AttributeBoundr,
-  AttributeMask,
+  AttributePivotX: AttributeBool,
+  AttributePivotY: AttributeBool,
+  AttributeAnchorX: AttributeBool,
+  AttributeAnchorY: AttributeBool,
+  AttributeSizeX: AttributeBool,
+  AttributeSizeY: AttributeBool,
+  AttributeImgFlipH: AttributeBool,
+  AttributeImgFlipV: AttributeBool,
+  AttributeUvtX: AttributeBool,
+  AttributeUvtY: AttributeBool,
+  AttributeUvrZ: AttributeBool,
+  AttributeUvsX: AttributeBool,
+  AttributeUvsY: AttributeBool,
+  AttributeBoundr: AttributeFloat,
+  AttributeMask: AttributeFloat,
   AttributeUser,
   AttributeSignal,
   AttributeInstance,
@@ -351,29 +237,48 @@ table UserDataValueWrapper {
 }
 
 table UserDataItem {
-  flags : short;
-  index : short;
-  data : [UserDataValueWrapper];
+  flags: short;
+  index: short;
+  data: [UserDataValueWrapper];
 }
 
 table UserDataPerFrame {
-  frame_index : short;
-  data : [UserDataItem];
+  frame_index: short;
+  data: [UserDataItem];
+}
+
+enum SignalComamndParamType: ubyte {
+  Index,
+  Integer,
+  Floating,
+  None,
+}
+
+table SignalComamndParam {
+  param_id: string;
+  type: SignalComamndParamType;
+  value: float;
 }
 
 table SignalDataPerFrame {
-  frame_index : short;
-  // TODO: impl
+  frame_index: short;
+
+  active: bool;
+  command_id: string;
+  params: [SignalComamndParam];
 }
 
 table AudioDataPerFrame {
-  frame_index : short;
-  // TODO: impl
+  frame_index: short;
+
+  sound_list_id: int;
+  sound_name: string;
+  loop_num: int;
 }
 
 table TextureChangeDataPerFrame {
-  frame_index : short;
-  // TODO: impl
+  frame_index: short;
+  texture_name: string;
 }
 
 table Cell {
@@ -586,32 +491,6 @@ table MeshDataIndices {
     indices : [float];
 }
 
-/*
-  Hide,
-  PartsColor,
-  Shader,
-  Vertex,
-  PivotX,
-  PivotY,
-  AnchorX,
-  AnchorY,
-  SizeX,
-  SizeY,
-  ImgFlipH,
-  ImgFlipV,
-  UvtX,
-  UvtY,
-  UvrZ,
-  UvsX,
-  UvsY,
-  Boundr,
-  Mask,
-  User,
-  Signal,
-  Instance,
-  Effect,
-*/
-
 table InstanceAttribute {
   cur_keyframe: int;
   start_frame: int;
@@ -726,4 +605,5 @@ table SsAnimeBinary {
 }
 
 file_identifier "SSAB";
+file_extension "ssab";
 root_type SsAnimeBinary;

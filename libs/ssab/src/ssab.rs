@@ -1275,40 +1275,40 @@ pub struct AttributeUnionTableOffset {}
 pub enum AttributeT {
   NONE,
   AttributeCell(Box<AttributeCellT>),
-  AttributePosX(Box<AttributePosXT>),
-  AttributePosY(Box<AttributePosYT>),
-  AttributePosZ(Box<AttributePosZT>),
-  AttributeRotX(Box<AttributeRotXT>),
-  AttributeRotY(Box<AttributeRotYT>),
-  AttributeRotZ(Box<AttributeRotZT>),
-  AttributeSclX(Box<AttributeSclXT>),
-  AttributeSclY(Box<AttributeSclYT>),
-  AttributeLosclX(Box<AttributeLosclXT>),
-  AttributeLosclY(Box<AttributeLosclYT>),
-  AttributeAlpha(Box<AttributeAlphaT>),
-  AttributeLoAlpha(Box<AttributeLoAlphaT>),
-  AttributePrio(Box<AttributePrioT>),
-  AttributeFlipH(Box<AttributeFlipHT>),
-  AttributeFlipV(Box<AttributeFlipVT>),
-  AttributeHide(Box<AttributeHideT>),
+  AttributePosX(Box<AttributeFloatT>),
+  AttributePosY(Box<AttributeFloatT>),
+  AttributePosZ(Box<AttributeFloatT>),
+  AttributeRotX(Box<AttributeFloatT>),
+  AttributeRotY(Box<AttributeFloatT>),
+  AttributeRotZ(Box<AttributeFloatT>),
+  AttributeSclX(Box<AttributeFloatT>),
+  AttributeSclY(Box<AttributeFloatT>),
+  AttributeLosclX(Box<AttributeFloatT>),
+  AttributeLosclY(Box<AttributeFloatT>),
+  AttributeAlpha(Box<AttributeFloatT>),
+  AttributeLoAlpha(Box<AttributeFloatT>),
+  AttributePrio(Box<AttributeIntT>),
+  AttributeFlipH(Box<AttributeBoolT>),
+  AttributeFlipV(Box<AttributeBoolT>),
+  AttributeHide(Box<AttributeBoolT>),
   AttributePartsColor(Box<AttributePartsColorT>),
   AttributeShader(Box<AttributeShaderT>),
   AttributeVertex(Box<AttributeVertexT>),
-  AttributePivotX(Box<AttributePivotXT>),
-  AttributePivotY(Box<AttributePivotYT>),
-  AttributeAnchorX(Box<AttributeAnchorXT>),
-  AttributeAnchorY(Box<AttributeAnchorYT>),
-  AttributeSizeX(Box<AttributeSizeXT>),
-  AttributeSizeY(Box<AttributeSizeYT>),
-  AttributeImgFlipH(Box<AttributeImgFlipHT>),
-  AttributeImgFlipV(Box<AttributeImgFlipVT>),
-  AttributeUvtX(Box<AttributeUvtXT>),
-  AttributeUvtY(Box<AttributeUvtYT>),
-  AttributeUvrZ(Box<AttributeUvrZT>),
-  AttributeUvsX(Box<AttributeUvsXT>),
-  AttributeUvsY(Box<AttributeUvsYT>),
-  AttributeBoundr(Box<AttributeBoundrT>),
-  AttributeMask(Box<AttributeMaskT>),
+  AttributePivotX(Box<AttributeBoolT>),
+  AttributePivotY(Box<AttributeBoolT>),
+  AttributeAnchorX(Box<AttributeBoolT>),
+  AttributeAnchorY(Box<AttributeBoolT>),
+  AttributeSizeX(Box<AttributeBoolT>),
+  AttributeSizeY(Box<AttributeBoolT>),
+  AttributeImgFlipH(Box<AttributeBoolT>),
+  AttributeImgFlipV(Box<AttributeBoolT>),
+  AttributeUvtX(Box<AttributeBoolT>),
+  AttributeUvtY(Box<AttributeBoolT>),
+  AttributeUvrZ(Box<AttributeBoolT>),
+  AttributeUvsX(Box<AttributeBoolT>),
+  AttributeUvsY(Box<AttributeBoolT>),
+  AttributeBoundr(Box<AttributeFloatT>),
+  AttributeMask(Box<AttributeFloatT>),
   AttributeUser(Box<AttributeUserT>),
   AttributeSignal(Box<AttributeSignalT>),
   AttributeInstance(Box<AttributeInstanceT>),
@@ -1429,8 +1429,8 @@ impl AttributeT {
   pub fn as_attribute_cell_mut(&mut self) -> Option<&mut AttributeCellT> {
     if let Self::AttributeCell(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributePosXT, setting the union to NONE.
-  pub fn take_attribute_pos_x(&mut self) -> Option<Box<AttributePosXT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_pos_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributePosX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePosX(w) = v {
@@ -1442,16 +1442,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributePosXT.
-  pub fn as_attribute_pos_x(&self) -> Option<&AttributePosXT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_pos_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributePosX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributePosXT.
-  pub fn as_attribute_pos_x_mut(&mut self) -> Option<&mut AttributePosXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_pos_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributePosX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributePosYT, setting the union to NONE.
-  pub fn take_attribute_pos_y(&mut self) -> Option<Box<AttributePosYT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_pos_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributePosY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePosY(w) = v {
@@ -1463,16 +1463,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributePosYT.
-  pub fn as_attribute_pos_y(&self) -> Option<&AttributePosYT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_pos_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributePosY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributePosYT.
-  pub fn as_attribute_pos_y_mut(&mut self) -> Option<&mut AttributePosYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_pos_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributePosY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributePosZT, setting the union to NONE.
-  pub fn take_attribute_pos_z(&mut self) -> Option<Box<AttributePosZT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_pos_z(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributePosZ(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePosZ(w) = v {
@@ -1484,16 +1484,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributePosZT.
-  pub fn as_attribute_pos_z(&self) -> Option<&AttributePosZT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_pos_z(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributePosZ(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributePosZT.
-  pub fn as_attribute_pos_z_mut(&mut self) -> Option<&mut AttributePosZT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_pos_z_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributePosZ(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeRotXT, setting the union to NONE.
-  pub fn take_attribute_rot_x(&mut self) -> Option<Box<AttributeRotXT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_rot_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeRotX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeRotX(w) = v {
@@ -1505,16 +1505,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeRotXT.
-  pub fn as_attribute_rot_x(&self) -> Option<&AttributeRotXT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_rot_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeRotX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeRotXT.
-  pub fn as_attribute_rot_x_mut(&mut self) -> Option<&mut AttributeRotXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_rot_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeRotX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeRotYT, setting the union to NONE.
-  pub fn take_attribute_rot_y(&mut self) -> Option<Box<AttributeRotYT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_rot_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeRotY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeRotY(w) = v {
@@ -1526,16 +1526,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeRotYT.
-  pub fn as_attribute_rot_y(&self) -> Option<&AttributeRotYT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_rot_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeRotY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeRotYT.
-  pub fn as_attribute_rot_y_mut(&mut self) -> Option<&mut AttributeRotYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_rot_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeRotY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeRotZT, setting the union to NONE.
-  pub fn take_attribute_rot_z(&mut self) -> Option<Box<AttributeRotZT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_rot_z(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeRotZ(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeRotZ(w) = v {
@@ -1547,16 +1547,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeRotZT.
-  pub fn as_attribute_rot_z(&self) -> Option<&AttributeRotZT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_rot_z(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeRotZ(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeRotZT.
-  pub fn as_attribute_rot_z_mut(&mut self) -> Option<&mut AttributeRotZT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_rot_z_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeRotZ(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeSclXT, setting the union to NONE.
-  pub fn take_attribute_scl_x(&mut self) -> Option<Box<AttributeSclXT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_scl_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeSclX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeSclX(w) = v {
@@ -1568,16 +1568,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeSclXT.
-  pub fn as_attribute_scl_x(&self) -> Option<&AttributeSclXT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_scl_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeSclX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeSclXT.
-  pub fn as_attribute_scl_x_mut(&mut self) -> Option<&mut AttributeSclXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_scl_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeSclX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeSclYT, setting the union to NONE.
-  pub fn take_attribute_scl_y(&mut self) -> Option<Box<AttributeSclYT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_scl_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeSclY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeSclY(w) = v {
@@ -1589,16 +1589,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeSclYT.
-  pub fn as_attribute_scl_y(&self) -> Option<&AttributeSclYT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_scl_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeSclY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeSclYT.
-  pub fn as_attribute_scl_y_mut(&mut self) -> Option<&mut AttributeSclYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_scl_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeSclY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeLosclXT, setting the union to NONE.
-  pub fn take_attribute_loscl_x(&mut self) -> Option<Box<AttributeLosclXT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_loscl_x(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeLosclX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeLosclX(w) = v {
@@ -1610,16 +1610,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeLosclXT.
-  pub fn as_attribute_loscl_x(&self) -> Option<&AttributeLosclXT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_loscl_x(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeLosclX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeLosclXT.
-  pub fn as_attribute_loscl_x_mut(&mut self) -> Option<&mut AttributeLosclXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_loscl_x_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeLosclX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeLosclYT, setting the union to NONE.
-  pub fn take_attribute_loscl_y(&mut self) -> Option<Box<AttributeLosclYT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_loscl_y(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeLosclY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeLosclY(w) = v {
@@ -1631,16 +1631,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeLosclYT.
-  pub fn as_attribute_loscl_y(&self) -> Option<&AttributeLosclYT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_loscl_y(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeLosclY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeLosclYT.
-  pub fn as_attribute_loscl_y_mut(&mut self) -> Option<&mut AttributeLosclYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_loscl_y_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeLosclY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeAlphaT, setting the union to NONE.
-  pub fn take_attribute_alpha(&mut self) -> Option<Box<AttributeAlphaT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_alpha(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeAlpha(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeAlpha(w) = v {
@@ -1652,16 +1652,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeAlphaT.
-  pub fn as_attribute_alpha(&self) -> Option<&AttributeAlphaT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_alpha(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeAlpha(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeAlphaT.
-  pub fn as_attribute_alpha_mut(&mut self) -> Option<&mut AttributeAlphaT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_alpha_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeAlpha(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeLoAlphaT, setting the union to NONE.
-  pub fn take_attribute_lo_alpha(&mut self) -> Option<Box<AttributeLoAlphaT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_lo_alpha(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeLoAlpha(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeLoAlpha(w) = v {
@@ -1673,16 +1673,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeLoAlphaT.
-  pub fn as_attribute_lo_alpha(&self) -> Option<&AttributeLoAlphaT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_lo_alpha(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeLoAlpha(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeLoAlphaT.
-  pub fn as_attribute_lo_alpha_mut(&mut self) -> Option<&mut AttributeLoAlphaT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_lo_alpha_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeLoAlpha(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributePrioT, setting the union to NONE.
-  pub fn take_attribute_prio(&mut self) -> Option<Box<AttributePrioT>> {
+  /// If the union variant matches, return the owned AttributeIntT, setting the union to NONE.
+  pub fn take_attribute_prio(&mut self) -> Option<Box<AttributeIntT>> {
     if let Self::AttributePrio(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePrio(w) = v {
@@ -1694,16 +1694,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributePrioT.
-  pub fn as_attribute_prio(&self) -> Option<&AttributePrioT> {
+  /// If the union variant matches, return a reference to the AttributeIntT.
+  pub fn as_attribute_prio(&self) -> Option<&AttributeIntT> {
     if let Self::AttributePrio(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributePrioT.
-  pub fn as_attribute_prio_mut(&mut self) -> Option<&mut AttributePrioT> {
+  /// If the union variant matches, return a mutable reference to the AttributeIntT.
+  pub fn as_attribute_prio_mut(&mut self) -> Option<&mut AttributeIntT> {
     if let Self::AttributePrio(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeFlipHT, setting the union to NONE.
-  pub fn take_attribute_flip_h(&mut self) -> Option<Box<AttributeFlipHT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_flip_h(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeFlipH(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeFlipH(w) = v {
@@ -1715,16 +1715,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeFlipHT.
-  pub fn as_attribute_flip_h(&self) -> Option<&AttributeFlipHT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_flip_h(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeFlipH(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeFlipHT.
-  pub fn as_attribute_flip_h_mut(&mut self) -> Option<&mut AttributeFlipHT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_flip_h_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeFlipH(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeFlipVT, setting the union to NONE.
-  pub fn take_attribute_flip_v(&mut self) -> Option<Box<AttributeFlipVT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_flip_v(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeFlipV(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeFlipV(w) = v {
@@ -1736,16 +1736,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeFlipVT.
-  pub fn as_attribute_flip_v(&self) -> Option<&AttributeFlipVT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_flip_v(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeFlipV(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeFlipVT.
-  pub fn as_attribute_flip_v_mut(&mut self) -> Option<&mut AttributeFlipVT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_flip_v_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeFlipV(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeHideT, setting the union to NONE.
-  pub fn take_attribute_hide(&mut self) -> Option<Box<AttributeHideT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_hide(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeHide(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeHide(w) = v {
@@ -1757,12 +1757,12 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeHideT.
-  pub fn as_attribute_hide(&self) -> Option<&AttributeHideT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_hide(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeHide(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeHideT.
-  pub fn as_attribute_hide_mut(&mut self) -> Option<&mut AttributeHideT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_hide_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeHide(v) = self { Some(v.as_mut()) } else { None }
   }
   /// If the union variant matches, return the owned AttributePartsColorT, setting the union to NONE.
@@ -1828,8 +1828,8 @@ impl AttributeT {
   pub fn as_attribute_vertex_mut(&mut self) -> Option<&mut AttributeVertexT> {
     if let Self::AttributeVertex(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributePivotXT, setting the union to NONE.
-  pub fn take_attribute_pivot_x(&mut self) -> Option<Box<AttributePivotXT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_pivot_x(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributePivotX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePivotX(w) = v {
@@ -1841,16 +1841,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributePivotXT.
-  pub fn as_attribute_pivot_x(&self) -> Option<&AttributePivotXT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_pivot_x(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributePivotX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributePivotXT.
-  pub fn as_attribute_pivot_x_mut(&mut self) -> Option<&mut AttributePivotXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_pivot_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributePivotX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributePivotYT, setting the union to NONE.
-  pub fn take_attribute_pivot_y(&mut self) -> Option<Box<AttributePivotYT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_pivot_y(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributePivotY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributePivotY(w) = v {
@@ -1862,16 +1862,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributePivotYT.
-  pub fn as_attribute_pivot_y(&self) -> Option<&AttributePivotYT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_pivot_y(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributePivotY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributePivotYT.
-  pub fn as_attribute_pivot_y_mut(&mut self) -> Option<&mut AttributePivotYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_pivot_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributePivotY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeAnchorXT, setting the union to NONE.
-  pub fn take_attribute_anchor_x(&mut self) -> Option<Box<AttributeAnchorXT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_anchor_x(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeAnchorX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeAnchorX(w) = v {
@@ -1883,16 +1883,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeAnchorXT.
-  pub fn as_attribute_anchor_x(&self) -> Option<&AttributeAnchorXT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_anchor_x(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeAnchorX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeAnchorXT.
-  pub fn as_attribute_anchor_x_mut(&mut self) -> Option<&mut AttributeAnchorXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_anchor_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeAnchorX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeAnchorYT, setting the union to NONE.
-  pub fn take_attribute_anchor_y(&mut self) -> Option<Box<AttributeAnchorYT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_anchor_y(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeAnchorY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeAnchorY(w) = v {
@@ -1904,16 +1904,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeAnchorYT.
-  pub fn as_attribute_anchor_y(&self) -> Option<&AttributeAnchorYT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_anchor_y(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeAnchorY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeAnchorYT.
-  pub fn as_attribute_anchor_y_mut(&mut self) -> Option<&mut AttributeAnchorYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_anchor_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeAnchorY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeSizeXT, setting the union to NONE.
-  pub fn take_attribute_size_x(&mut self) -> Option<Box<AttributeSizeXT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_size_x(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeSizeX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeSizeX(w) = v {
@@ -1925,16 +1925,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeSizeXT.
-  pub fn as_attribute_size_x(&self) -> Option<&AttributeSizeXT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_size_x(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeSizeX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeSizeXT.
-  pub fn as_attribute_size_x_mut(&mut self) -> Option<&mut AttributeSizeXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_size_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeSizeX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeSizeYT, setting the union to NONE.
-  pub fn take_attribute_size_y(&mut self) -> Option<Box<AttributeSizeYT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_size_y(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeSizeY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeSizeY(w) = v {
@@ -1946,16 +1946,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeSizeYT.
-  pub fn as_attribute_size_y(&self) -> Option<&AttributeSizeYT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_size_y(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeSizeY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeSizeYT.
-  pub fn as_attribute_size_y_mut(&mut self) -> Option<&mut AttributeSizeYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_size_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeSizeY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeImgFlipHT, setting the union to NONE.
-  pub fn take_attribute_img_flip_h(&mut self) -> Option<Box<AttributeImgFlipHT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_img_flip_h(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeImgFlipH(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeImgFlipH(w) = v {
@@ -1967,16 +1967,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeImgFlipHT.
-  pub fn as_attribute_img_flip_h(&self) -> Option<&AttributeImgFlipHT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_img_flip_h(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeImgFlipH(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeImgFlipHT.
-  pub fn as_attribute_img_flip_h_mut(&mut self) -> Option<&mut AttributeImgFlipHT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_img_flip_h_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeImgFlipH(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeImgFlipVT, setting the union to NONE.
-  pub fn take_attribute_img_flip_v(&mut self) -> Option<Box<AttributeImgFlipVT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_img_flip_v(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeImgFlipV(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeImgFlipV(w) = v {
@@ -1988,16 +1988,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeImgFlipVT.
-  pub fn as_attribute_img_flip_v(&self) -> Option<&AttributeImgFlipVT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_img_flip_v(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeImgFlipV(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeImgFlipVT.
-  pub fn as_attribute_img_flip_v_mut(&mut self) -> Option<&mut AttributeImgFlipVT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_img_flip_v_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeImgFlipV(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeUvtXT, setting the union to NONE.
-  pub fn take_attribute_uvt_x(&mut self) -> Option<Box<AttributeUvtXT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_uvt_x(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeUvtX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvtX(w) = v {
@@ -2009,16 +2009,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeUvtXT.
-  pub fn as_attribute_uvt_x(&self) -> Option<&AttributeUvtXT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_uvt_x(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeUvtX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeUvtXT.
-  pub fn as_attribute_uvt_x_mut(&mut self) -> Option<&mut AttributeUvtXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_uvt_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeUvtX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeUvtYT, setting the union to NONE.
-  pub fn take_attribute_uvt_y(&mut self) -> Option<Box<AttributeUvtYT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_uvt_y(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeUvtY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvtY(w) = v {
@@ -2030,16 +2030,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeUvtYT.
-  pub fn as_attribute_uvt_y(&self) -> Option<&AttributeUvtYT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_uvt_y(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeUvtY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeUvtYT.
-  pub fn as_attribute_uvt_y_mut(&mut self) -> Option<&mut AttributeUvtYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_uvt_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeUvtY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeUvrZT, setting the union to NONE.
-  pub fn take_attribute_uvr_z(&mut self) -> Option<Box<AttributeUvrZT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_uvr_z(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeUvrZ(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvrZ(w) = v {
@@ -2051,16 +2051,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeUvrZT.
-  pub fn as_attribute_uvr_z(&self) -> Option<&AttributeUvrZT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_uvr_z(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeUvrZ(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeUvrZT.
-  pub fn as_attribute_uvr_z_mut(&mut self) -> Option<&mut AttributeUvrZT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_uvr_z_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeUvrZ(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeUvsXT, setting the union to NONE.
-  pub fn take_attribute_uvs_x(&mut self) -> Option<Box<AttributeUvsXT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_uvs_x(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeUvsX(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvsX(w) = v {
@@ -2072,16 +2072,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeUvsXT.
-  pub fn as_attribute_uvs_x(&self) -> Option<&AttributeUvsXT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_uvs_x(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeUvsX(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeUvsXT.
-  pub fn as_attribute_uvs_x_mut(&mut self) -> Option<&mut AttributeUvsXT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_uvs_x_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeUvsX(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeUvsYT, setting the union to NONE.
-  pub fn take_attribute_uvs_y(&mut self) -> Option<Box<AttributeUvsYT>> {
+  /// If the union variant matches, return the owned AttributeBoolT, setting the union to NONE.
+  pub fn take_attribute_uvs_y(&mut self) -> Option<Box<AttributeBoolT>> {
     if let Self::AttributeUvsY(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeUvsY(w) = v {
@@ -2093,16 +2093,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeUvsYT.
-  pub fn as_attribute_uvs_y(&self) -> Option<&AttributeUvsYT> {
+  /// If the union variant matches, return a reference to the AttributeBoolT.
+  pub fn as_attribute_uvs_y(&self) -> Option<&AttributeBoolT> {
     if let Self::AttributeUvsY(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeUvsYT.
-  pub fn as_attribute_uvs_y_mut(&mut self) -> Option<&mut AttributeUvsYT> {
+  /// If the union variant matches, return a mutable reference to the AttributeBoolT.
+  pub fn as_attribute_uvs_y_mut(&mut self) -> Option<&mut AttributeBoolT> {
     if let Self::AttributeUvsY(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeBoundrT, setting the union to NONE.
-  pub fn take_attribute_boundr(&mut self) -> Option<Box<AttributeBoundrT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_boundr(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeBoundr(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeBoundr(w) = v {
@@ -2114,16 +2114,16 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeBoundrT.
-  pub fn as_attribute_boundr(&self) -> Option<&AttributeBoundrT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_boundr(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeBoundr(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeBoundrT.
-  pub fn as_attribute_boundr_mut(&mut self) -> Option<&mut AttributeBoundrT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_boundr_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeBoundr(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned AttributeMaskT, setting the union to NONE.
-  pub fn take_attribute_mask(&mut self) -> Option<Box<AttributeMaskT>> {
+  /// If the union variant matches, return the owned AttributeFloatT, setting the union to NONE.
+  pub fn take_attribute_mask(&mut self) -> Option<Box<AttributeFloatT>> {
     if let Self::AttributeMask(_) = self {
       let v = core::mem::replace(self, Self::NONE);
       if let Self::AttributeMask(w) = v {
@@ -2135,12 +2135,12 @@ impl AttributeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the AttributeMaskT.
-  pub fn as_attribute_mask(&self) -> Option<&AttributeMaskT> {
+  /// If the union variant matches, return a reference to the AttributeFloatT.
+  pub fn as_attribute_mask(&self) -> Option<&AttributeFloatT> {
     if let Self::AttributeMask(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the AttributeMaskT.
-  pub fn as_attribute_mask_mut(&mut self) -> Option<&mut AttributeMaskT> {
+  /// If the union variant matches, return a mutable reference to the AttributeFloatT.
+  pub fn as_attribute_mask_mut(&mut self) -> Option<&mut AttributeFloatT> {
     if let Self::AttributeMask(v) = self { Some(v.as_mut()) } else { None }
   }
   /// If the union variant matches, return the owned AttributeUserT, setting the union to NONE.
@@ -2446,6 +2446,99 @@ impl UserDataValueT {
     if let Self::UserDataString(v) = self { Some(v.as_mut()) } else { None }
   }
 }
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_SIGNAL_COMAMND_PARAM_TYPE: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_SIGNAL_COMAMND_PARAM_TYPE: u8 = 3;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SIGNAL_COMAMND_PARAM_TYPE: [SignalComamndParamType; 4] = [
+  SignalComamndParamType::Index,
+  SignalComamndParamType::Integer,
+  SignalComamndParamType::Floating,
+  SignalComamndParamType::None,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct SignalComamndParamType(pub u8);
+#[allow(non_upper_case_globals)]
+impl SignalComamndParamType {
+  pub const Index: Self = Self(0);
+  pub const Integer: Self = Self(1);
+  pub const Floating: Self = Self(2);
+  pub const None: Self = Self(3);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 3;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Index,
+    Self::Integer,
+    Self::Floating,
+    Self::None,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::Index => Some("Index"),
+      Self::Integer => Some("Integer"),
+      Self::Floating => Some("Floating"),
+      Self::None => Some("None"),
+      _ => None,
+    }
+  }
+}
+impl core::fmt::Debug for SignalComamndParamType {
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for SignalComamndParamType {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    Self(b)
+  }
+}
+
+impl flatbuffers::Push for SignalComamndParamType {
+    type Output = SignalComamndParamType;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe { flatbuffers::emplace_scalar::<u8>(dst, self.0); }
+    }
+}
+
+impl flatbuffers::EndianScalar for SignalComamndParamType {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> flatbuffers::Verifiable for SignalComamndParamType {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for SignalComamndParamType {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_EFFECT_NODE_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
@@ -3461,6 +3554,384 @@ impl RectT {
     })
   }
 }
+pub enum AttributeBoolOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeBool<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeBool<'a> {
+  type Inner = AttributeBool<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeBool<'a> {
+  pub const VT_VALUE: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeBool { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args AttributeBoolArgs
+  ) -> flatbuffers::WIPOffset<AttributeBool<'bldr>> {
+    let mut builder = AttributeBoolBuilder::new(_fbb);
+    builder.add_value(args.value);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeBoolT {
+    let value = self.value();
+    AttributeBoolT {
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn value(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(AttributeBool::VT_VALUE, Some(false)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeBool<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<bool>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeBoolArgs {
+    pub value: bool,
+}
+impl<'a> Default for AttributeBoolArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeBoolArgs {
+      value: false,
+    }
+  }
+}
+
+pub struct AttributeBoolBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeBoolBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_value(&mut self, value: bool) {
+    self.fbb_.push_slot::<bool>(AttributeBool::VT_VALUE, value, false);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeBoolBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeBoolBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeBool<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeBool<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeBool");
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeBoolT {
+  pub value: bool,
+}
+impl Default for AttributeBoolT {
+  fn default() -> Self {
+    Self {
+      value: false,
+    }
+  }
+}
+impl AttributeBoolT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeBool<'b>> {
+    let value = self.value;
+    AttributeBool::create(_fbb, &AttributeBoolArgs{
+      value,
+    })
+  }
+}
+pub enum AttributeIntOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeInt<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeInt<'a> {
+  type Inner = AttributeInt<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeInt<'a> {
+  pub const VT_VALUE: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeInt { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args AttributeIntArgs
+  ) -> flatbuffers::WIPOffset<AttributeInt<'bldr>> {
+    let mut builder = AttributeIntBuilder::new(_fbb);
+    builder.add_value(args.value);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeIntT {
+    let value = self.value();
+    AttributeIntT {
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn value(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(AttributeInt::VT_VALUE, Some(0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeInt<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<i32>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeIntArgs {
+    pub value: i32,
+}
+impl<'a> Default for AttributeIntArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeIntArgs {
+      value: 0,
+    }
+  }
+}
+
+pub struct AttributeIntBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeIntBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_value(&mut self, value: i32) {
+    self.fbb_.push_slot::<i32>(AttributeInt::VT_VALUE, value, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeIntBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeIntBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeInt<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeInt<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeInt");
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeIntT {
+  pub value: i32,
+}
+impl Default for AttributeIntT {
+  fn default() -> Self {
+    Self {
+      value: 0,
+    }
+  }
+}
+impl AttributeIntT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeInt<'b>> {
+    let value = self.value;
+    AttributeInt::create(_fbb, &AttributeIntArgs{
+      value,
+    })
+  }
+}
+pub enum AttributeFloatOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct AttributeFloat<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for AttributeFloat<'a> {
+  type Inner = AttributeFloat<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> AttributeFloat<'a> {
+  pub const VT_VALUE: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    AttributeFloat { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args AttributeFloatArgs
+  ) -> flatbuffers::WIPOffset<AttributeFloat<'bldr>> {
+    let mut builder = AttributeFloatBuilder::new(_fbb);
+    builder.add_value(args.value);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> AttributeFloatT {
+    let value = self.value();
+    AttributeFloatT {
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn value(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(AttributeFloat::VT_VALUE, Some(0.0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for AttributeFloat<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<f32>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct AttributeFloatArgs {
+    pub value: f32,
+}
+impl<'a> Default for AttributeFloatArgs {
+  #[inline]
+  fn default() -> Self {
+    AttributeFloatArgs {
+      value: 0.0,
+    }
+  }
+}
+
+pub struct AttributeFloatBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeFloatBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_value(&mut self, value: f32) {
+    self.fbb_.push_slot::<f32>(AttributeFloat::VT_VALUE, value, 0.0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeFloatBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    AttributeFloatBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeFloat<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for AttributeFloat<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("AttributeFloat");
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttributeFloatT {
+  pub value: f32,
+}
+impl Default for AttributeFloatT {
+  fn default() -> Self {
+    Self {
+      value: 0.0,
+    }
+  }
+}
+impl AttributeFloatT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<AttributeFloat<'b>> {
+    let value = self.value;
+    AttributeFloat::create(_fbb, &AttributeFloatArgs{
+      value,
+    })
+  }
+}
 pub enum AttributeCellOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -3560,1638 +4031,6 @@ impl AttributeCellT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<AttributeCell<'b>> {
     AttributeCell::create(_fbb, &AttributeCellArgs{
-    })
-  }
-}
-pub enum AttributePosXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributePosX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributePosX<'a> {
-  type Inner = AttributePosX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributePosX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributePosX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributePosXArgs
-  ) -> flatbuffers::WIPOffset<AttributePosX<'bldr>> {
-    let mut builder = AttributePosXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributePosXT {
-    AttributePosXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributePosX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributePosXArgs {
-}
-impl<'a> Default for AttributePosXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributePosXArgs {
-    }
-  }
-}
-
-pub struct AttributePosXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePosXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePosXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributePosXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePosX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributePosX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributePosX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributePosXT {
-}
-impl Default for AttributePosXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributePosXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributePosX<'b>> {
-    AttributePosX::create(_fbb, &AttributePosXArgs{
-    })
-  }
-}
-pub enum AttributePosYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributePosY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributePosY<'a> {
-  type Inner = AttributePosY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributePosY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributePosY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributePosYArgs
-  ) -> flatbuffers::WIPOffset<AttributePosY<'bldr>> {
-    let mut builder = AttributePosYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributePosYT {
-    AttributePosYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributePosY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributePosYArgs {
-}
-impl<'a> Default for AttributePosYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributePosYArgs {
-    }
-  }
-}
-
-pub struct AttributePosYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePosYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePosYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributePosYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePosY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributePosY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributePosY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributePosYT {
-}
-impl Default for AttributePosYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributePosYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributePosY<'b>> {
-    AttributePosY::create(_fbb, &AttributePosYArgs{
-    })
-  }
-}
-pub enum AttributePosZOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributePosZ<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributePosZ<'a> {
-  type Inner = AttributePosZ<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributePosZ<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributePosZ { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributePosZArgs
-  ) -> flatbuffers::WIPOffset<AttributePosZ<'bldr>> {
-    let mut builder = AttributePosZBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributePosZT {
-    AttributePosZT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributePosZ<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributePosZArgs {
-}
-impl<'a> Default for AttributePosZArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributePosZArgs {
-    }
-  }
-}
-
-pub struct AttributePosZBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePosZBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePosZBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributePosZBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePosZ<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributePosZ<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributePosZ");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributePosZT {
-}
-impl Default for AttributePosZT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributePosZT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributePosZ<'b>> {
-    AttributePosZ::create(_fbb, &AttributePosZArgs{
-    })
-  }
-}
-pub enum AttributeRotXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeRotX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeRotX<'a> {
-  type Inner = AttributeRotX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeRotX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeRotX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeRotXArgs
-  ) -> flatbuffers::WIPOffset<AttributeRotX<'bldr>> {
-    let mut builder = AttributeRotXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeRotXT {
-    AttributeRotXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeRotX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeRotXArgs {
-}
-impl<'a> Default for AttributeRotXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeRotXArgs {
-    }
-  }
-}
-
-pub struct AttributeRotXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeRotXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeRotXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeRotXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeRotX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeRotX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeRotX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeRotXT {
-}
-impl Default for AttributeRotXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeRotXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeRotX<'b>> {
-    AttributeRotX::create(_fbb, &AttributeRotXArgs{
-    })
-  }
-}
-pub enum AttributeRotYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeRotY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeRotY<'a> {
-  type Inner = AttributeRotY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeRotY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeRotY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeRotYArgs
-  ) -> flatbuffers::WIPOffset<AttributeRotY<'bldr>> {
-    let mut builder = AttributeRotYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeRotYT {
-    AttributeRotYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeRotY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeRotYArgs {
-}
-impl<'a> Default for AttributeRotYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeRotYArgs {
-    }
-  }
-}
-
-pub struct AttributeRotYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeRotYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeRotYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeRotYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeRotY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeRotY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeRotY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeRotYT {
-}
-impl Default for AttributeRotYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeRotYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeRotY<'b>> {
-    AttributeRotY::create(_fbb, &AttributeRotYArgs{
-    })
-  }
-}
-pub enum AttributeRotZOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeRotZ<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeRotZ<'a> {
-  type Inner = AttributeRotZ<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeRotZ<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeRotZ { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeRotZArgs
-  ) -> flatbuffers::WIPOffset<AttributeRotZ<'bldr>> {
-    let mut builder = AttributeRotZBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeRotZT {
-    AttributeRotZT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeRotZ<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeRotZArgs {
-}
-impl<'a> Default for AttributeRotZArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeRotZArgs {
-    }
-  }
-}
-
-pub struct AttributeRotZBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeRotZBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeRotZBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeRotZBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeRotZ<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeRotZ<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeRotZ");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeRotZT {
-}
-impl Default for AttributeRotZT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeRotZT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeRotZ<'b>> {
-    AttributeRotZ::create(_fbb, &AttributeRotZArgs{
-    })
-  }
-}
-pub enum AttributeSclXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeSclX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeSclX<'a> {
-  type Inner = AttributeSclX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeSclX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeSclX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeSclXArgs
-  ) -> flatbuffers::WIPOffset<AttributeSclX<'bldr>> {
-    let mut builder = AttributeSclXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeSclXT {
-    AttributeSclXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeSclX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeSclXArgs {
-}
-impl<'a> Default for AttributeSclXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeSclXArgs {
-    }
-  }
-}
-
-pub struct AttributeSclXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSclXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSclXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeSclXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSclX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeSclX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeSclX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeSclXT {
-}
-impl Default for AttributeSclXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeSclXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeSclX<'b>> {
-    AttributeSclX::create(_fbb, &AttributeSclXArgs{
-    })
-  }
-}
-pub enum AttributeSclYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeSclY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeSclY<'a> {
-  type Inner = AttributeSclY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeSclY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeSclY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeSclYArgs
-  ) -> flatbuffers::WIPOffset<AttributeSclY<'bldr>> {
-    let mut builder = AttributeSclYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeSclYT {
-    AttributeSclYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeSclY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeSclYArgs {
-}
-impl<'a> Default for AttributeSclYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeSclYArgs {
-    }
-  }
-}
-
-pub struct AttributeSclYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSclYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSclYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeSclYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSclY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeSclY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeSclY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeSclYT {
-}
-impl Default for AttributeSclYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeSclYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeSclY<'b>> {
-    AttributeSclY::create(_fbb, &AttributeSclYArgs{
-    })
-  }
-}
-pub enum AttributeLosclXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeLosclX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeLosclX<'a> {
-  type Inner = AttributeLosclX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeLosclX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeLosclX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeLosclXArgs
-  ) -> flatbuffers::WIPOffset<AttributeLosclX<'bldr>> {
-    let mut builder = AttributeLosclXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeLosclXT {
-    AttributeLosclXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeLosclX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeLosclXArgs {
-}
-impl<'a> Default for AttributeLosclXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeLosclXArgs {
-    }
-  }
-}
-
-pub struct AttributeLosclXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeLosclXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeLosclXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeLosclXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeLosclX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeLosclX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeLosclX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeLosclXT {
-}
-impl Default for AttributeLosclXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeLosclXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeLosclX<'b>> {
-    AttributeLosclX::create(_fbb, &AttributeLosclXArgs{
-    })
-  }
-}
-pub enum AttributeLosclYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeLosclY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeLosclY<'a> {
-  type Inner = AttributeLosclY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeLosclY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeLosclY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeLosclYArgs
-  ) -> flatbuffers::WIPOffset<AttributeLosclY<'bldr>> {
-    let mut builder = AttributeLosclYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeLosclYT {
-    AttributeLosclYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeLosclY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeLosclYArgs {
-}
-impl<'a> Default for AttributeLosclYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeLosclYArgs {
-    }
-  }
-}
-
-pub struct AttributeLosclYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeLosclYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeLosclYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeLosclYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeLosclY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeLosclY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeLosclY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeLosclYT {
-}
-impl Default for AttributeLosclYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeLosclYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeLosclY<'b>> {
-    AttributeLosclY::create(_fbb, &AttributeLosclYArgs{
-    })
-  }
-}
-pub enum AttributeAlphaOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeAlpha<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeAlpha<'a> {
-  type Inner = AttributeAlpha<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeAlpha<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeAlpha { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeAlphaArgs
-  ) -> flatbuffers::WIPOffset<AttributeAlpha<'bldr>> {
-    let mut builder = AttributeAlphaBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeAlphaT {
-    AttributeAlphaT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeAlpha<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeAlphaArgs {
-}
-impl<'a> Default for AttributeAlphaArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeAlphaArgs {
-    }
-  }
-}
-
-pub struct AttributeAlphaBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeAlphaBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeAlphaBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeAlphaBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeAlpha<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeAlpha<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeAlpha");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeAlphaT {
-}
-impl Default for AttributeAlphaT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeAlphaT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeAlpha<'b>> {
-    AttributeAlpha::create(_fbb, &AttributeAlphaArgs{
-    })
-  }
-}
-pub enum AttributeLoAlphaOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeLoAlpha<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeLoAlpha<'a> {
-  type Inner = AttributeLoAlpha<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeLoAlpha<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeLoAlpha { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeLoAlphaArgs
-  ) -> flatbuffers::WIPOffset<AttributeLoAlpha<'bldr>> {
-    let mut builder = AttributeLoAlphaBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeLoAlphaT {
-    AttributeLoAlphaT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeLoAlpha<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeLoAlphaArgs {
-}
-impl<'a> Default for AttributeLoAlphaArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeLoAlphaArgs {
-    }
-  }
-}
-
-pub struct AttributeLoAlphaBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeLoAlphaBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeLoAlphaBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeLoAlphaBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeLoAlpha<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeLoAlpha<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeLoAlpha");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeLoAlphaT {
-}
-impl Default for AttributeLoAlphaT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeLoAlphaT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeLoAlpha<'b>> {
-    AttributeLoAlpha::create(_fbb, &AttributeLoAlphaArgs{
-    })
-  }
-}
-pub enum AttributePrioOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributePrio<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributePrio<'a> {
-  type Inner = AttributePrio<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributePrio<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributePrio { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributePrioArgs
-  ) -> flatbuffers::WIPOffset<AttributePrio<'bldr>> {
-    let mut builder = AttributePrioBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributePrioT {
-    AttributePrioT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributePrio<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributePrioArgs {
-}
-impl<'a> Default for AttributePrioArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributePrioArgs {
-    }
-  }
-}
-
-pub struct AttributePrioBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePrioBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePrioBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributePrioBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePrio<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributePrio<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributePrio");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributePrioT {
-}
-impl Default for AttributePrioT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributePrioT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributePrio<'b>> {
-    AttributePrio::create(_fbb, &AttributePrioArgs{
-    })
-  }
-}
-pub enum AttributeFlipHOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeFlipH<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeFlipH<'a> {
-  type Inner = AttributeFlipH<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeFlipH<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeFlipH { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeFlipHArgs
-  ) -> flatbuffers::WIPOffset<AttributeFlipH<'bldr>> {
-    let mut builder = AttributeFlipHBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeFlipHT {
-    AttributeFlipHT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeFlipH<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeFlipHArgs {
-}
-impl<'a> Default for AttributeFlipHArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeFlipHArgs {
-    }
-  }
-}
-
-pub struct AttributeFlipHBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeFlipHBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeFlipHBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeFlipHBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeFlipH<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeFlipH<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeFlipH");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeFlipHT {
-}
-impl Default for AttributeFlipHT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeFlipHT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeFlipH<'b>> {
-    AttributeFlipH::create(_fbb, &AttributeFlipHArgs{
-    })
-  }
-}
-pub enum AttributeFlipVOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeFlipV<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeFlipV<'a> {
-  type Inner = AttributeFlipV<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeFlipV<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeFlipV { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeFlipVArgs
-  ) -> flatbuffers::WIPOffset<AttributeFlipV<'bldr>> {
-    let mut builder = AttributeFlipVBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeFlipVT {
-    AttributeFlipVT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeFlipV<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeFlipVArgs {
-}
-impl<'a> Default for AttributeFlipVArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeFlipVArgs {
-    }
-  }
-}
-
-pub struct AttributeFlipVBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeFlipVBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeFlipVBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeFlipVBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeFlipV<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeFlipV<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeFlipV");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeFlipVT {
-}
-impl Default for AttributeFlipVT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeFlipVT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeFlipV<'b>> {
-    AttributeFlipV::create(_fbb, &AttributeFlipVArgs{
-    })
-  }
-}
-pub enum AttributeHideOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeHide<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeHide<'a> {
-  type Inner = AttributeHide<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeHide<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeHide { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeHideArgs
-  ) -> flatbuffers::WIPOffset<AttributeHide<'bldr>> {
-    let mut builder = AttributeHideBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeHideT {
-    AttributeHideT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeHide<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeHideArgs {
-}
-impl<'a> Default for AttributeHideArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeHideArgs {
-    }
-  }
-}
-
-pub struct AttributeHideBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeHideBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeHideBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeHideBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeHide<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeHide<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeHide");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeHideT {
-}
-impl Default for AttributeHideT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeHideT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeHide<'b>> {
-    AttributeHide::create(_fbb, &AttributeHideArgs{
     })
   }
 }
@@ -5498,1536 +4337,6 @@ impl AttributeVertexT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<AttributeVertex<'b>> {
     AttributeVertex::create(_fbb, &AttributeVertexArgs{
-    })
-  }
-}
-pub enum AttributePivotXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributePivotX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributePivotX<'a> {
-  type Inner = AttributePivotX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributePivotX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributePivotX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributePivotXArgs
-  ) -> flatbuffers::WIPOffset<AttributePivotX<'bldr>> {
-    let mut builder = AttributePivotXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributePivotXT {
-    AttributePivotXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributePivotX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributePivotXArgs {
-}
-impl<'a> Default for AttributePivotXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributePivotXArgs {
-    }
-  }
-}
-
-pub struct AttributePivotXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePivotXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePivotXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributePivotXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePivotX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributePivotX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributePivotX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributePivotXT {
-}
-impl Default for AttributePivotXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributePivotXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributePivotX<'b>> {
-    AttributePivotX::create(_fbb, &AttributePivotXArgs{
-    })
-  }
-}
-pub enum AttributePivotYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributePivotY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributePivotY<'a> {
-  type Inner = AttributePivotY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributePivotY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributePivotY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributePivotYArgs
-  ) -> flatbuffers::WIPOffset<AttributePivotY<'bldr>> {
-    let mut builder = AttributePivotYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributePivotYT {
-    AttributePivotYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributePivotY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributePivotYArgs {
-}
-impl<'a> Default for AttributePivotYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributePivotYArgs {
-    }
-  }
-}
-
-pub struct AttributePivotYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePivotYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributePivotYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributePivotYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributePivotY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributePivotY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributePivotY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributePivotYT {
-}
-impl Default for AttributePivotYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributePivotYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributePivotY<'b>> {
-    AttributePivotY::create(_fbb, &AttributePivotYArgs{
-    })
-  }
-}
-pub enum AttributeAnchorXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeAnchorX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeAnchorX<'a> {
-  type Inner = AttributeAnchorX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeAnchorX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeAnchorX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeAnchorXArgs
-  ) -> flatbuffers::WIPOffset<AttributeAnchorX<'bldr>> {
-    let mut builder = AttributeAnchorXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeAnchorXT {
-    AttributeAnchorXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeAnchorX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeAnchorXArgs {
-}
-impl<'a> Default for AttributeAnchorXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeAnchorXArgs {
-    }
-  }
-}
-
-pub struct AttributeAnchorXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeAnchorXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeAnchorXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeAnchorXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeAnchorX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeAnchorX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeAnchorX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeAnchorXT {
-}
-impl Default for AttributeAnchorXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeAnchorXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeAnchorX<'b>> {
-    AttributeAnchorX::create(_fbb, &AttributeAnchorXArgs{
-    })
-  }
-}
-pub enum AttributeAnchorYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeAnchorY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeAnchorY<'a> {
-  type Inner = AttributeAnchorY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeAnchorY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeAnchorY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeAnchorYArgs
-  ) -> flatbuffers::WIPOffset<AttributeAnchorY<'bldr>> {
-    let mut builder = AttributeAnchorYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeAnchorYT {
-    AttributeAnchorYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeAnchorY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeAnchorYArgs {
-}
-impl<'a> Default for AttributeAnchorYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeAnchorYArgs {
-    }
-  }
-}
-
-pub struct AttributeAnchorYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeAnchorYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeAnchorYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeAnchorYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeAnchorY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeAnchorY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeAnchorY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeAnchorYT {
-}
-impl Default for AttributeAnchorYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeAnchorYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeAnchorY<'b>> {
-    AttributeAnchorY::create(_fbb, &AttributeAnchorYArgs{
-    })
-  }
-}
-pub enum AttributeSizeXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeSizeX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeSizeX<'a> {
-  type Inner = AttributeSizeX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeSizeX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeSizeX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeSizeXArgs
-  ) -> flatbuffers::WIPOffset<AttributeSizeX<'bldr>> {
-    let mut builder = AttributeSizeXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeSizeXT {
-    AttributeSizeXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeSizeX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeSizeXArgs {
-}
-impl<'a> Default for AttributeSizeXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeSizeXArgs {
-    }
-  }
-}
-
-pub struct AttributeSizeXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSizeXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSizeXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeSizeXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSizeX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeSizeX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeSizeX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeSizeXT {
-}
-impl Default for AttributeSizeXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeSizeXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeSizeX<'b>> {
-    AttributeSizeX::create(_fbb, &AttributeSizeXArgs{
-    })
-  }
-}
-pub enum AttributeSizeYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeSizeY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeSizeY<'a> {
-  type Inner = AttributeSizeY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeSizeY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeSizeY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeSizeYArgs
-  ) -> flatbuffers::WIPOffset<AttributeSizeY<'bldr>> {
-    let mut builder = AttributeSizeYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeSizeYT {
-    AttributeSizeYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeSizeY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeSizeYArgs {
-}
-impl<'a> Default for AttributeSizeYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeSizeYArgs {
-    }
-  }
-}
-
-pub struct AttributeSizeYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSizeYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeSizeYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeSizeYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSizeY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeSizeY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeSizeY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeSizeYT {
-}
-impl Default for AttributeSizeYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeSizeYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeSizeY<'b>> {
-    AttributeSizeY::create(_fbb, &AttributeSizeYArgs{
-    })
-  }
-}
-pub enum AttributeImgFlipHOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeImgFlipH<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeImgFlipH<'a> {
-  type Inner = AttributeImgFlipH<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeImgFlipH<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeImgFlipH { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeImgFlipHArgs
-  ) -> flatbuffers::WIPOffset<AttributeImgFlipH<'bldr>> {
-    let mut builder = AttributeImgFlipHBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeImgFlipHT {
-    AttributeImgFlipHT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeImgFlipH<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeImgFlipHArgs {
-}
-impl<'a> Default for AttributeImgFlipHArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeImgFlipHArgs {
-    }
-  }
-}
-
-pub struct AttributeImgFlipHBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeImgFlipHBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeImgFlipHBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeImgFlipHBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeImgFlipH<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeImgFlipH<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeImgFlipH");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeImgFlipHT {
-}
-impl Default for AttributeImgFlipHT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeImgFlipHT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeImgFlipH<'b>> {
-    AttributeImgFlipH::create(_fbb, &AttributeImgFlipHArgs{
-    })
-  }
-}
-pub enum AttributeImgFlipVOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeImgFlipV<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeImgFlipV<'a> {
-  type Inner = AttributeImgFlipV<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeImgFlipV<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeImgFlipV { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeImgFlipVArgs
-  ) -> flatbuffers::WIPOffset<AttributeImgFlipV<'bldr>> {
-    let mut builder = AttributeImgFlipVBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeImgFlipVT {
-    AttributeImgFlipVT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeImgFlipV<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeImgFlipVArgs {
-}
-impl<'a> Default for AttributeImgFlipVArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeImgFlipVArgs {
-    }
-  }
-}
-
-pub struct AttributeImgFlipVBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeImgFlipVBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeImgFlipVBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeImgFlipVBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeImgFlipV<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeImgFlipV<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeImgFlipV");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeImgFlipVT {
-}
-impl Default for AttributeImgFlipVT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeImgFlipVT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeImgFlipV<'b>> {
-    AttributeImgFlipV::create(_fbb, &AttributeImgFlipVArgs{
-    })
-  }
-}
-pub enum AttributeUvtXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeUvtX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeUvtX<'a> {
-  type Inner = AttributeUvtX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeUvtX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeUvtX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeUvtXArgs
-  ) -> flatbuffers::WIPOffset<AttributeUvtX<'bldr>> {
-    let mut builder = AttributeUvtXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeUvtXT {
-    AttributeUvtXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeUvtX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeUvtXArgs {
-}
-impl<'a> Default for AttributeUvtXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeUvtXArgs {
-    }
-  }
-}
-
-pub struct AttributeUvtXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvtXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvtXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeUvtXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvtX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeUvtX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeUvtX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeUvtXT {
-}
-impl Default for AttributeUvtXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeUvtXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeUvtX<'b>> {
-    AttributeUvtX::create(_fbb, &AttributeUvtXArgs{
-    })
-  }
-}
-pub enum AttributeUvtYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeUvtY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeUvtY<'a> {
-  type Inner = AttributeUvtY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeUvtY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeUvtY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeUvtYArgs
-  ) -> flatbuffers::WIPOffset<AttributeUvtY<'bldr>> {
-    let mut builder = AttributeUvtYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeUvtYT {
-    AttributeUvtYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeUvtY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeUvtYArgs {
-}
-impl<'a> Default for AttributeUvtYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeUvtYArgs {
-    }
-  }
-}
-
-pub struct AttributeUvtYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvtYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvtYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeUvtYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvtY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeUvtY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeUvtY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeUvtYT {
-}
-impl Default for AttributeUvtYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeUvtYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeUvtY<'b>> {
-    AttributeUvtY::create(_fbb, &AttributeUvtYArgs{
-    })
-  }
-}
-pub enum AttributeUvrZOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeUvrZ<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeUvrZ<'a> {
-  type Inner = AttributeUvrZ<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeUvrZ<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeUvrZ { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeUvrZArgs
-  ) -> flatbuffers::WIPOffset<AttributeUvrZ<'bldr>> {
-    let mut builder = AttributeUvrZBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeUvrZT {
-    AttributeUvrZT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeUvrZ<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeUvrZArgs {
-}
-impl<'a> Default for AttributeUvrZArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeUvrZArgs {
-    }
-  }
-}
-
-pub struct AttributeUvrZBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvrZBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvrZBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeUvrZBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvrZ<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeUvrZ<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeUvrZ");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeUvrZT {
-}
-impl Default for AttributeUvrZT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeUvrZT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeUvrZ<'b>> {
-    AttributeUvrZ::create(_fbb, &AttributeUvrZArgs{
-    })
-  }
-}
-pub enum AttributeUvsXOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeUvsX<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeUvsX<'a> {
-  type Inner = AttributeUvsX<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeUvsX<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeUvsX { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeUvsXArgs
-  ) -> flatbuffers::WIPOffset<AttributeUvsX<'bldr>> {
-    let mut builder = AttributeUvsXBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeUvsXT {
-    AttributeUvsXT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeUvsX<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeUvsXArgs {
-}
-impl<'a> Default for AttributeUvsXArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeUvsXArgs {
-    }
-  }
-}
-
-pub struct AttributeUvsXBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvsXBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvsXBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeUvsXBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvsX<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeUvsX<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeUvsX");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeUvsXT {
-}
-impl Default for AttributeUvsXT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeUvsXT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeUvsX<'b>> {
-    AttributeUvsX::create(_fbb, &AttributeUvsXArgs{
-    })
-  }
-}
-pub enum AttributeUvsYOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeUvsY<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeUvsY<'a> {
-  type Inner = AttributeUvsY<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeUvsY<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeUvsY { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeUvsYArgs
-  ) -> flatbuffers::WIPOffset<AttributeUvsY<'bldr>> {
-    let mut builder = AttributeUvsYBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeUvsYT {
-    AttributeUvsYT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeUvsY<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeUvsYArgs {
-}
-impl<'a> Default for AttributeUvsYArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeUvsYArgs {
-    }
-  }
-}
-
-pub struct AttributeUvsYBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeUvsYBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeUvsYBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeUvsYBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeUvsY<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeUvsY<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeUvsY");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeUvsYT {
-}
-impl Default for AttributeUvsYT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeUvsYT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeUvsY<'b>> {
-    AttributeUvsY::create(_fbb, &AttributeUvsYArgs{
-    })
-  }
-}
-pub enum AttributeBoundrOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeBoundr<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeBoundr<'a> {
-  type Inner = AttributeBoundr<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeBoundr<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeBoundr { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeBoundrArgs
-  ) -> flatbuffers::WIPOffset<AttributeBoundr<'bldr>> {
-    let mut builder = AttributeBoundrBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeBoundrT {
-    AttributeBoundrT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeBoundr<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeBoundrArgs {
-}
-impl<'a> Default for AttributeBoundrArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeBoundrArgs {
-    }
-  }
-}
-
-pub struct AttributeBoundrBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeBoundrBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeBoundrBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeBoundrBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeBoundr<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeBoundr<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeBoundr");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeBoundrT {
-}
-impl Default for AttributeBoundrT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeBoundrT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeBoundr<'b>> {
-    AttributeBoundr::create(_fbb, &AttributeBoundrArgs{
-    })
-  }
-}
-pub enum AttributeMaskOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeMask<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeMask<'a> {
-  type Inner = AttributeMask<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AttributeMask<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AttributeMask { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args AttributeMaskArgs
-  ) -> flatbuffers::WIPOffset<AttributeMask<'bldr>> {
-    let mut builder = AttributeMaskBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AttributeMaskT {
-    AttributeMaskT {
-    }
-  }
-}
-
-impl flatbuffers::Verifiable for AttributeMask<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AttributeMaskArgs {
-}
-impl<'a> Default for AttributeMaskArgs {
-  #[inline]
-  fn default() -> Self {
-    AttributeMaskArgs {
-    }
-  }
-}
-
-pub struct AttributeMaskBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeMaskBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeMaskBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AttributeMaskBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AttributeMask<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AttributeMask<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AttributeMask");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeMaskT {
-}
-impl Default for AttributeMaskT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl AttributeMaskT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AttributeMask<'b>> {
-    AttributeMask::create(_fbb, &AttributeMaskArgs{
     })
   }
 }
@@ -7709,13 +5018,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pos_x(&self) -> Option<AttributePosX<'a>> {
+  pub fn content_as_attribute_pos_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributePosX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributePosX::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7724,13 +5033,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pos_y(&self) -> Option<AttributePosY<'a>> {
+  pub fn content_as_attribute_pos_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributePosY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributePosY::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7739,13 +5048,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pos_z(&self) -> Option<AttributePosZ<'a>> {
+  pub fn content_as_attribute_pos_z(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributePosZ {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributePosZ::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7754,13 +5063,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_rot_x(&self) -> Option<AttributeRotX<'a>> {
+  pub fn content_as_attribute_rot_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeRotX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeRotX::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7769,13 +5078,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_rot_y(&self) -> Option<AttributeRotY<'a>> {
+  pub fn content_as_attribute_rot_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeRotY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeRotY::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7784,13 +5093,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_rot_z(&self) -> Option<AttributeRotZ<'a>> {
+  pub fn content_as_attribute_rot_z(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeRotZ {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeRotZ::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7799,13 +5108,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_scl_x(&self) -> Option<AttributeSclX<'a>> {
+  pub fn content_as_attribute_scl_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeSclX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeSclX::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7814,13 +5123,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_scl_y(&self) -> Option<AttributeSclY<'a>> {
+  pub fn content_as_attribute_scl_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeSclY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeSclY::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7829,13 +5138,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_loscl_x(&self) -> Option<AttributeLosclX<'a>> {
+  pub fn content_as_attribute_loscl_x(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeLosclX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeLosclX::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7844,13 +5153,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_loscl_y(&self) -> Option<AttributeLosclY<'a>> {
+  pub fn content_as_attribute_loscl_y(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeLosclY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeLosclY::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7859,13 +5168,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_alpha(&self) -> Option<AttributeAlpha<'a>> {
+  pub fn content_as_attribute_alpha(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeAlpha {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeAlpha::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7874,13 +5183,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_lo_alpha(&self) -> Option<AttributeLoAlpha<'a>> {
+  pub fn content_as_attribute_lo_alpha(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeLoAlpha {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeLoAlpha::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -7889,13 +5198,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_prio(&self) -> Option<AttributePrio<'a>> {
+  pub fn content_as_attribute_prio(&self) -> Option<AttributeInt<'a>> {
     if self.content_type() == Attribute::AttributePrio {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributePrio::init_from_table(t) }
+       unsafe { AttributeInt::init_from_table(t) }
      })
     } else {
       None
@@ -7904,13 +5213,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_flip_h(&self) -> Option<AttributeFlipH<'a>> {
+  pub fn content_as_attribute_flip_h(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeFlipH {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeFlipH::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -7919,13 +5228,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_flip_v(&self) -> Option<AttributeFlipV<'a>> {
+  pub fn content_as_attribute_flip_v(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeFlipV {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeFlipV::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -7934,13 +5243,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_hide(&self) -> Option<AttributeHide<'a>> {
+  pub fn content_as_attribute_hide(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeHide {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeHide::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -7994,13 +5303,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pivot_x(&self) -> Option<AttributePivotX<'a>> {
+  pub fn content_as_attribute_pivot_x(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributePivotX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributePivotX::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8009,13 +5318,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pivot_y(&self) -> Option<AttributePivotY<'a>> {
+  pub fn content_as_attribute_pivot_y(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributePivotY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributePivotY::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8024,13 +5333,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_anchor_x(&self) -> Option<AttributeAnchorX<'a>> {
+  pub fn content_as_attribute_anchor_x(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeAnchorX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeAnchorX::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8039,13 +5348,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_anchor_y(&self) -> Option<AttributeAnchorY<'a>> {
+  pub fn content_as_attribute_anchor_y(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeAnchorY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeAnchorY::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8054,13 +5363,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_size_x(&self) -> Option<AttributeSizeX<'a>> {
+  pub fn content_as_attribute_size_x(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeSizeX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeSizeX::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8069,13 +5378,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_size_y(&self) -> Option<AttributeSizeY<'a>> {
+  pub fn content_as_attribute_size_y(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeSizeY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeSizeY::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8084,13 +5393,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_img_flip_h(&self) -> Option<AttributeImgFlipH<'a>> {
+  pub fn content_as_attribute_img_flip_h(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeImgFlipH {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeImgFlipH::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8099,13 +5408,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_img_flip_v(&self) -> Option<AttributeImgFlipV<'a>> {
+  pub fn content_as_attribute_img_flip_v(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeImgFlipV {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeImgFlipV::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8114,13 +5423,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvt_x(&self) -> Option<AttributeUvtX<'a>> {
+  pub fn content_as_attribute_uvt_x(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeUvtX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeUvtX::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8129,13 +5438,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvt_y(&self) -> Option<AttributeUvtY<'a>> {
+  pub fn content_as_attribute_uvt_y(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeUvtY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeUvtY::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8144,13 +5453,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvr_z(&self) -> Option<AttributeUvrZ<'a>> {
+  pub fn content_as_attribute_uvr_z(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeUvrZ {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeUvrZ::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8159,13 +5468,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvs_x(&self) -> Option<AttributeUvsX<'a>> {
+  pub fn content_as_attribute_uvs_x(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeUvsX {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeUvsX::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8174,13 +5483,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvs_y(&self) -> Option<AttributeUvsY<'a>> {
+  pub fn content_as_attribute_uvs_y(&self) -> Option<AttributeBool<'a>> {
     if self.content_type() == Attribute::AttributeUvsY {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeUvsY::init_from_table(t) }
+       unsafe { AttributeBool::init_from_table(t) }
      })
     } else {
       None
@@ -8189,13 +5498,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_boundr(&self) -> Option<AttributeBoundr<'a>> {
+  pub fn content_as_attribute_boundr(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeBoundr {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeBoundr::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -8204,13 +5513,13 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_mask(&self) -> Option<AttributeMask<'a>> {
+  pub fn content_as_attribute_mask(&self) -> Option<AttributeFloat<'a>> {
     if self.content_type() == Attribute::AttributeMask {
       self.content().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { AttributeMask::init_from_table(t) }
+       unsafe { AttributeFloat::init_from_table(t) }
      })
     } else {
       None
@@ -8289,40 +5598,40 @@ impl flatbuffers::Verifiable for AttributeWrapper<'_> {
      .visit_union::<Attribute, _>("content_type", Self::VT_CONTENT_TYPE, "content", Self::VT_CONTENT, false, |key, v, pos| {
         match key {
           Attribute::AttributeCell => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeCell>>("Attribute::AttributeCell", pos),
-          Attribute::AttributePosX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePosX>>("Attribute::AttributePosX", pos),
-          Attribute::AttributePosY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePosY>>("Attribute::AttributePosY", pos),
-          Attribute::AttributePosZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePosZ>>("Attribute::AttributePosZ", pos),
-          Attribute::AttributeRotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeRotX>>("Attribute::AttributeRotX", pos),
-          Attribute::AttributeRotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeRotY>>("Attribute::AttributeRotY", pos),
-          Attribute::AttributeRotZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeRotZ>>("Attribute::AttributeRotZ", pos),
-          Attribute::AttributeSclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSclX>>("Attribute::AttributeSclX", pos),
-          Attribute::AttributeSclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSclY>>("Attribute::AttributeSclY", pos),
-          Attribute::AttributeLosclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeLosclX>>("Attribute::AttributeLosclX", pos),
-          Attribute::AttributeLosclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeLosclY>>("Attribute::AttributeLosclY", pos),
-          Attribute::AttributeAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeAlpha>>("Attribute::AttributeAlpha", pos),
-          Attribute::AttributeLoAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeLoAlpha>>("Attribute::AttributeLoAlpha", pos),
-          Attribute::AttributePrio => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePrio>>("Attribute::AttributePrio", pos),
-          Attribute::AttributeFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFlipH>>("Attribute::AttributeFlipH", pos),
-          Attribute::AttributeFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFlipV>>("Attribute::AttributeFlipV", pos),
-          Attribute::AttributeHide => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeHide>>("Attribute::AttributeHide", pos),
+          Attribute::AttributePosX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributePosX", pos),
+          Attribute::AttributePosY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributePosY", pos),
+          Attribute::AttributePosZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributePosZ", pos),
+          Attribute::AttributeRotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeRotX", pos),
+          Attribute::AttributeRotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeRotY", pos),
+          Attribute::AttributeRotZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeRotZ", pos),
+          Attribute::AttributeSclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeSclX", pos),
+          Attribute::AttributeSclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeSclY", pos),
+          Attribute::AttributeLosclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeLosclX", pos),
+          Attribute::AttributeLosclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeLosclY", pos),
+          Attribute::AttributeAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeAlpha", pos),
+          Attribute::AttributeLoAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeLoAlpha", pos),
+          Attribute::AttributePrio => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeInt>>("Attribute::AttributePrio", pos),
+          Attribute::AttributeFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeFlipH", pos),
+          Attribute::AttributeFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeFlipV", pos),
+          Attribute::AttributeHide => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeHide", pos),
           Attribute::AttributePartsColor => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePartsColor>>("Attribute::AttributePartsColor", pos),
           Attribute::AttributeShader => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeShader>>("Attribute::AttributeShader", pos),
           Attribute::AttributeVertex => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeVertex>>("Attribute::AttributeVertex", pos),
-          Attribute::AttributePivotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePivotX>>("Attribute::AttributePivotX", pos),
-          Attribute::AttributePivotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePivotY>>("Attribute::AttributePivotY", pos),
-          Attribute::AttributeAnchorX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeAnchorX>>("Attribute::AttributeAnchorX", pos),
-          Attribute::AttributeAnchorY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeAnchorY>>("Attribute::AttributeAnchorY", pos),
-          Attribute::AttributeSizeX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSizeX>>("Attribute::AttributeSizeX", pos),
-          Attribute::AttributeSizeY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSizeY>>("Attribute::AttributeSizeY", pos),
-          Attribute::AttributeImgFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeImgFlipH>>("Attribute::AttributeImgFlipH", pos),
-          Attribute::AttributeImgFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeImgFlipV>>("Attribute::AttributeImgFlipV", pos),
-          Attribute::AttributeUvtX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvtX>>("Attribute::AttributeUvtX", pos),
-          Attribute::AttributeUvtY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvtY>>("Attribute::AttributeUvtY", pos),
-          Attribute::AttributeUvrZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvrZ>>("Attribute::AttributeUvrZ", pos),
-          Attribute::AttributeUvsX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvsX>>("Attribute::AttributeUvsX", pos),
-          Attribute::AttributeUvsY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUvsY>>("Attribute::AttributeUvsY", pos),
-          Attribute::AttributeBoundr => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBoundr>>("Attribute::AttributeBoundr", pos),
-          Attribute::AttributeMask => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeMask>>("Attribute::AttributeMask", pos),
+          Attribute::AttributePivotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributePivotX", pos),
+          Attribute::AttributePivotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributePivotY", pos),
+          Attribute::AttributeAnchorX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeAnchorX", pos),
+          Attribute::AttributeAnchorY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeAnchorY", pos),
+          Attribute::AttributeSizeX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeSizeX", pos),
+          Attribute::AttributeSizeY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeSizeY", pos),
+          Attribute::AttributeImgFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeImgFlipH", pos),
+          Attribute::AttributeImgFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeImgFlipV", pos),
+          Attribute::AttributeUvtX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvtX", pos),
+          Attribute::AttributeUvtY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvtY", pos),
+          Attribute::AttributeUvrZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvrZ", pos),
+          Attribute::AttributeUvsX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvsX", pos),
+          Attribute::AttributeUvsY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeBool>>("Attribute::AttributeUvsY", pos),
+          Attribute::AttributeBoundr => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeBoundr", pos),
+          Attribute::AttributeMask => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeFloat>>("Attribute::AttributeMask", pos),
           Attribute::AttributeUser => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeUser>>("Attribute::AttributeUser", pos),
           Attribute::AttributeSignal => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSignal>>("Attribute::AttributeSignal", pos),
           Attribute::AttributeInstance => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeInstance>>("Attribute::AttributeInstance", pos),
@@ -9800,6 +7109,182 @@ impl UserDataPerFrameT {
     })
   }
 }
+pub enum SignalComamndParamOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct SignalComamndParam<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for SignalComamndParam<'a> {
+  type Inner = SignalComamndParam<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> SignalComamndParam<'a> {
+  pub const VT_PARAM_ID: flatbuffers::VOffsetT = 4;
+  pub const VT_TYPE_: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+    SignalComamndParam { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args SignalComamndParamArgs<'args>
+  ) -> flatbuffers::WIPOffset<SignalComamndParam<'bldr>> {
+    let mut builder = SignalComamndParamBuilder::new(_fbb);
+    builder.add_value(args.value);
+    if let Some(x) = args.param_id { builder.add_param_id(x); }
+    builder.add_type_(args.type_);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> SignalComamndParamT {
+    let param_id = self.param_id().map(|x| {
+      x.to_string()
+    });
+    let type_ = self.type_();
+    let value = self.value();
+    SignalComamndParamT {
+      param_id,
+      type_,
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn param_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SignalComamndParam::VT_PARAM_ID, None)}
+  }
+  #[inline]
+  pub fn type_(&self) -> SignalComamndParamType {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<SignalComamndParamType>(SignalComamndParam::VT_TYPE_, Some(SignalComamndParamType::Index)).unwrap()}
+  }
+  #[inline]
+  pub fn value(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SignalComamndParam::VT_VALUE, Some(0.0)).unwrap()}
+  }
+}
+
+impl flatbuffers::Verifiable for SignalComamndParam<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut flatbuffers::Verifier, pos: usize
+  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+    use self::flatbuffers::Verifiable;
+    v.visit_table(pos)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("param_id", Self::VT_PARAM_ID, false)?
+     .visit_field::<SignalComamndParamType>("type_", Self::VT_TYPE_, false)?
+     .visit_field::<f32>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct SignalComamndParamArgs<'a> {
+    pub param_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub type_: SignalComamndParamType,
+    pub value: f32,
+}
+impl<'a> Default for SignalComamndParamArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    SignalComamndParamArgs {
+      param_id: None,
+      type_: SignalComamndParamType::Index,
+      value: 0.0,
+    }
+  }
+}
+
+pub struct SignalComamndParamBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SignalComamndParamBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_param_id(&mut self, param_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SignalComamndParam::VT_PARAM_ID, param_id);
+  }
+  #[inline]
+  pub fn add_type_(&mut self, type_: SignalComamndParamType) {
+    self.fbb_.push_slot::<SignalComamndParamType>(SignalComamndParam::VT_TYPE_, type_, SignalComamndParamType::Index);
+  }
+  #[inline]
+  pub fn add_value(&mut self, value: f32) {
+    self.fbb_.push_slot::<f32>(SignalComamndParam::VT_VALUE, value, 0.0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SignalComamndParamBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    SignalComamndParamBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<SignalComamndParam<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl core::fmt::Debug for SignalComamndParam<'_> {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    let mut ds = f.debug_struct("SignalComamndParam");
+      ds.field("param_id", &self.param_id());
+      ds.field("type_", &self.type_());
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct SignalComamndParamT {
+  pub param_id: Option<String>,
+  pub type_: SignalComamndParamType,
+  pub value: f32,
+}
+impl Default for SignalComamndParamT {
+  fn default() -> Self {
+    Self {
+      param_id: None,
+      type_: SignalComamndParamType::Index,
+      value: 0.0,
+    }
+  }
+}
+impl SignalComamndParamT {
+  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> flatbuffers::WIPOffset<SignalComamndParam<'b>> {
+    let param_id = self.param_id.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let type_ = self.type_;
+    let value = self.value;
+    SignalComamndParam::create(_fbb, &SignalComamndParamArgs{
+      param_id,
+      type_,
+      value,
+    })
+  }
+}
 pub enum SignalDataPerFrameOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -9817,6 +7302,9 @@ impl<'a> flatbuffers::Follow<'a> for SignalDataPerFrame<'a> {
 
 impl<'a> SignalDataPerFrame<'a> {
   pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_ACTIVE: flatbuffers::VOffsetT = 6;
+  pub const VT_COMMAND_ID: flatbuffers::VOffsetT = 8;
+  pub const VT_PARAMS: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -9825,17 +7313,30 @@ impl<'a> SignalDataPerFrame<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args SignalDataPerFrameArgs
+    args: &'args SignalDataPerFrameArgs<'args>
   ) -> flatbuffers::WIPOffset<SignalDataPerFrame<'bldr>> {
     let mut builder = SignalDataPerFrameBuilder::new(_fbb);
+    if let Some(x) = args.params { builder.add_params(x); }
+    if let Some(x) = args.command_id { builder.add_command_id(x); }
     builder.add_frame_index(args.frame_index);
+    builder.add_active(args.active);
     builder.finish()
   }
 
   pub fn unpack(&self) -> SignalDataPerFrameT {
     let frame_index = self.frame_index();
+    let active = self.active();
+    let command_id = self.command_id().map(|x| {
+      x.to_string()
+    });
+    let params = self.params().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
     SignalDataPerFrameT {
       frame_index,
+      active,
+      command_id,
+      params,
     }
   }
 
@@ -9845,6 +7346,27 @@ impl<'a> SignalDataPerFrame<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i16>(SignalDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn active(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(SignalDataPerFrame::VT_ACTIVE, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn command_id(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SignalDataPerFrame::VT_COMMAND_ID, None)}
+  }
+  #[inline]
+  pub fn params(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalComamndParam<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalComamndParam>>>>(SignalDataPerFrame::VT_PARAMS, None)}
   }
 }
 
@@ -9856,18 +7378,27 @@ impl flatbuffers::Verifiable for SignalDataPerFrame<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
+     .visit_field::<bool>("active", Self::VT_ACTIVE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("command_id", Self::VT_COMMAND_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SignalComamndParam>>>>("params", Self::VT_PARAMS, false)?
      .finish();
     Ok(())
   }
 }
-pub struct SignalDataPerFrameArgs {
+pub struct SignalDataPerFrameArgs<'a> {
     pub frame_index: i16,
+    pub active: bool,
+    pub command_id: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub params: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalComamndParam<'a>>>>>,
 }
-impl<'a> Default for SignalDataPerFrameArgs {
+impl<'a> Default for SignalDataPerFrameArgs<'a> {
   #[inline]
   fn default() -> Self {
     SignalDataPerFrameArgs {
       frame_index: 0,
+      active: false,
+      command_id: None,
+      params: None,
     }
   }
 }
@@ -9880,6 +7411,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SignalDataPerFrameBuilder<'a, '
   #[inline]
   pub fn add_frame_index(&mut self, frame_index: i16) {
     self.fbb_.push_slot::<i16>(SignalDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
+  }
+  #[inline]
+  pub fn add_active(&mut self, active: bool) {
+    self.fbb_.push_slot::<bool>(SignalDataPerFrame::VT_ACTIVE, active, false);
+  }
+  #[inline]
+  pub fn add_command_id(&mut self, command_id: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SignalDataPerFrame::VT_COMMAND_ID, command_id);
+  }
+  #[inline]
+  pub fn add_params(&mut self, params: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SignalComamndParam<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SignalDataPerFrame::VT_PARAMS, params);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SignalDataPerFrameBuilder<'a, 'b, A> {
@@ -9900,6 +7443,9 @@ impl core::fmt::Debug for SignalDataPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("SignalDataPerFrame");
       ds.field("frame_index", &self.frame_index());
+      ds.field("active", &self.active());
+      ds.field("command_id", &self.command_id());
+      ds.field("params", &self.params());
       ds.finish()
   }
 }
@@ -9907,11 +7453,17 @@ impl core::fmt::Debug for SignalDataPerFrame<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SignalDataPerFrameT {
   pub frame_index: i16,
+  pub active: bool,
+  pub command_id: Option<String>,
+  pub params: Option<Vec<SignalComamndParamT>>,
 }
 impl Default for SignalDataPerFrameT {
   fn default() -> Self {
     Self {
       frame_index: 0,
+      active: false,
+      command_id: None,
+      params: None,
     }
   }
 }
@@ -9921,8 +7473,18 @@ impl SignalDataPerFrameT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<SignalDataPerFrame<'b>> {
     let frame_index = self.frame_index;
+    let active = self.active;
+    let command_id = self.command_id.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let params = self.params.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
     SignalDataPerFrame::create(_fbb, &SignalDataPerFrameArgs{
       frame_index,
+      active,
+      command_id,
+      params,
     })
   }
 }
@@ -9943,6 +7505,9 @@ impl<'a> flatbuffers::Follow<'a> for AudioDataPerFrame<'a> {
 
 impl<'a> AudioDataPerFrame<'a> {
   pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_SOUND_LIST_ID: flatbuffers::VOffsetT = 6;
+  pub const VT_SOUND_NAME: flatbuffers::VOffsetT = 8;
+  pub const VT_LOOP_NUM: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -9951,17 +7516,28 @@ impl<'a> AudioDataPerFrame<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args AudioDataPerFrameArgs
+    args: &'args AudioDataPerFrameArgs<'args>
   ) -> flatbuffers::WIPOffset<AudioDataPerFrame<'bldr>> {
     let mut builder = AudioDataPerFrameBuilder::new(_fbb);
+    builder.add_loop_num(args.loop_num);
+    if let Some(x) = args.sound_name { builder.add_sound_name(x); }
+    builder.add_sound_list_id(args.sound_list_id);
     builder.add_frame_index(args.frame_index);
     builder.finish()
   }
 
   pub fn unpack(&self) -> AudioDataPerFrameT {
     let frame_index = self.frame_index();
+    let sound_list_id = self.sound_list_id();
+    let sound_name = self.sound_name().map(|x| {
+      x.to_string()
+    });
+    let loop_num = self.loop_num();
     AudioDataPerFrameT {
       frame_index,
+      sound_list_id,
+      sound_name,
+      loop_num,
     }
   }
 
@@ -9971,6 +7547,27 @@ impl<'a> AudioDataPerFrame<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i16>(AudioDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn sound_list_id(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(AudioDataPerFrame::VT_SOUND_LIST_ID, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn sound_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AudioDataPerFrame::VT_SOUND_NAME, None)}
+  }
+  #[inline]
+  pub fn loop_num(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(AudioDataPerFrame::VT_LOOP_NUM, Some(0)).unwrap()}
   }
 }
 
@@ -9982,18 +7579,27 @@ impl flatbuffers::Verifiable for AudioDataPerFrame<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
+     .visit_field::<i32>("sound_list_id", Self::VT_SOUND_LIST_ID, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("sound_name", Self::VT_SOUND_NAME, false)?
+     .visit_field::<i32>("loop_num", Self::VT_LOOP_NUM, false)?
      .finish();
     Ok(())
   }
 }
-pub struct AudioDataPerFrameArgs {
+pub struct AudioDataPerFrameArgs<'a> {
     pub frame_index: i16,
+    pub sound_list_id: i32,
+    pub sound_name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub loop_num: i32,
 }
-impl<'a> Default for AudioDataPerFrameArgs {
+impl<'a> Default for AudioDataPerFrameArgs<'a> {
   #[inline]
   fn default() -> Self {
     AudioDataPerFrameArgs {
       frame_index: 0,
+      sound_list_id: 0,
+      sound_name: None,
+      loop_num: 0,
     }
   }
 }
@@ -10006,6 +7612,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AudioDataPerFrameBuilder<'a, 'b
   #[inline]
   pub fn add_frame_index(&mut self, frame_index: i16) {
     self.fbb_.push_slot::<i16>(AudioDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
+  }
+  #[inline]
+  pub fn add_sound_list_id(&mut self, sound_list_id: i32) {
+    self.fbb_.push_slot::<i32>(AudioDataPerFrame::VT_SOUND_LIST_ID, sound_list_id, 0);
+  }
+  #[inline]
+  pub fn add_sound_name(&mut self, sound_name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AudioDataPerFrame::VT_SOUND_NAME, sound_name);
+  }
+  #[inline]
+  pub fn add_loop_num(&mut self, loop_num: i32) {
+    self.fbb_.push_slot::<i32>(AudioDataPerFrame::VT_LOOP_NUM, loop_num, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AudioDataPerFrameBuilder<'a, 'b, A> {
@@ -10026,6 +7644,9 @@ impl core::fmt::Debug for AudioDataPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("AudioDataPerFrame");
       ds.field("frame_index", &self.frame_index());
+      ds.field("sound_list_id", &self.sound_list_id());
+      ds.field("sound_name", &self.sound_name());
+      ds.field("loop_num", &self.loop_num());
       ds.finish()
   }
 }
@@ -10033,11 +7654,17 @@ impl core::fmt::Debug for AudioDataPerFrame<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AudioDataPerFrameT {
   pub frame_index: i16,
+  pub sound_list_id: i32,
+  pub sound_name: Option<String>,
+  pub loop_num: i32,
 }
 impl Default for AudioDataPerFrameT {
   fn default() -> Self {
     Self {
       frame_index: 0,
+      sound_list_id: 0,
+      sound_name: None,
+      loop_num: 0,
     }
   }
 }
@@ -10047,8 +7674,16 @@ impl AudioDataPerFrameT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<AudioDataPerFrame<'b>> {
     let frame_index = self.frame_index;
+    let sound_list_id = self.sound_list_id;
+    let sound_name = self.sound_name.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let loop_num = self.loop_num;
     AudioDataPerFrame::create(_fbb, &AudioDataPerFrameArgs{
       frame_index,
+      sound_list_id,
+      sound_name,
+      loop_num,
     })
   }
 }
@@ -10069,6 +7704,7 @@ impl<'a> flatbuffers::Follow<'a> for TextureChangeDataPerFrame<'a> {
 
 impl<'a> TextureChangeDataPerFrame<'a> {
   pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
+  pub const VT_TEXTURE_NAME: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -10077,17 +7713,22 @@ impl<'a> TextureChangeDataPerFrame<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args TextureChangeDataPerFrameArgs
+    args: &'args TextureChangeDataPerFrameArgs<'args>
   ) -> flatbuffers::WIPOffset<TextureChangeDataPerFrame<'bldr>> {
     let mut builder = TextureChangeDataPerFrameBuilder::new(_fbb);
+    if let Some(x) = args.texture_name { builder.add_texture_name(x); }
     builder.add_frame_index(args.frame_index);
     builder.finish()
   }
 
   pub fn unpack(&self) -> TextureChangeDataPerFrameT {
     let frame_index = self.frame_index();
+    let texture_name = self.texture_name().map(|x| {
+      x.to_string()
+    });
     TextureChangeDataPerFrameT {
       frame_index,
+      texture_name,
     }
   }
 
@@ -10097,6 +7738,13 @@ impl<'a> TextureChangeDataPerFrame<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i16>(TextureChangeDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn texture_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(TextureChangeDataPerFrame::VT_TEXTURE_NAME, None)}
   }
 }
 
@@ -10108,18 +7756,21 @@ impl flatbuffers::Verifiable for TextureChangeDataPerFrame<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<&str>>("texture_name", Self::VT_TEXTURE_NAME, false)?
      .finish();
     Ok(())
   }
 }
-pub struct TextureChangeDataPerFrameArgs {
+pub struct TextureChangeDataPerFrameArgs<'a> {
     pub frame_index: i16,
+    pub texture_name: Option<flatbuffers::WIPOffset<&'a str>>,
 }
-impl<'a> Default for TextureChangeDataPerFrameArgs {
+impl<'a> Default for TextureChangeDataPerFrameArgs<'a> {
   #[inline]
   fn default() -> Self {
     TextureChangeDataPerFrameArgs {
       frame_index: 0,
+      texture_name: None,
     }
   }
 }
@@ -10132,6 +7783,10 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> TextureChangeDataPerFrameBuilde
   #[inline]
   pub fn add_frame_index(&mut self, frame_index: i16) {
     self.fbb_.push_slot::<i16>(TextureChangeDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
+  }
+  #[inline]
+  pub fn add_texture_name(&mut self, texture_name: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(TextureChangeDataPerFrame::VT_TEXTURE_NAME, texture_name);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TextureChangeDataPerFrameBuilder<'a, 'b, A> {
@@ -10152,6 +7807,7 @@ impl core::fmt::Debug for TextureChangeDataPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("TextureChangeDataPerFrame");
       ds.field("frame_index", &self.frame_index());
+      ds.field("texture_name", &self.texture_name());
       ds.finish()
   }
 }
@@ -10159,11 +7815,13 @@ impl core::fmt::Debug for TextureChangeDataPerFrame<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextureChangeDataPerFrameT {
   pub frame_index: i16,
+  pub texture_name: Option<String>,
 }
 impl Default for TextureChangeDataPerFrameT {
   fn default() -> Self {
     Self {
       frame_index: 0,
+      texture_name: None,
     }
   }
 }
@@ -10173,8 +7831,12 @@ impl TextureChangeDataPerFrameT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<TextureChangeDataPerFrame<'b>> {
     let frame_index = self.frame_index;
+    let texture_name = self.texture_name.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
     TextureChangeDataPerFrame::create(_fbb, &TextureChangeDataPerFrameArgs{
       frame_index,
+      texture_name,
     })
   }
 }
@@ -18723,6 +16385,8 @@ pub fn ss_anime_binary_buffer_has_identifier(buf: &[u8]) -> bool {
 pub fn ss_anime_binary_size_prefixed_buffer_has_identifier(buf: &[u8]) -> bool {
   flatbuffers::buffer_has_identifier(buf, SS_ANIME_BINARY_IDENTIFIER, true)
 }
+
+pub const SS_ANIME_BINARY_EXTENSION: &str = "ssab";
 
 #[inline]
 pub fn finish_ss_anime_binary_buffer<'a, 'b, A: flatbuffers::Allocator + 'a>(

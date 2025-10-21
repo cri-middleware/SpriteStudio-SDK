@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ffi::OsString;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use ssab::ssab::SsAnimeBinaryT;
+use ssab::ssab::{SsAnimeBinaryT, SS_ANIME_BINARY_EXTENSION};
 use sspj::ssloader::{SsLoader, SspjError};
 use sspj::sspj::SsProject;
 use crate::cache::{ssab_cache, ssqb_cache};
@@ -68,7 +68,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
         let offset = ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t);
         ssab::ssab::finish_ss_anime_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
-        let output_file = format!("{}.ssab", PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
+        let output_file = format!("{}.{}", PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::SS_ANIME_BINARY_EXTENSION);
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
@@ -80,7 +80,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
         ssab::ssqb::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
-        let output_file = format!("{}.ssqb", PathBuf::from(f).file_stem().unwrap().to_str().unwrap());
+        let output_file = format!("{}.{}", PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::SS_SEQUENCE_BINARY_EXTENSION);
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
