@@ -8,7 +8,7 @@ flatbuffers = "25.9.23"
 ssab = { path = "../ssab" }
 
 [lib]
-crate-type = ["rlib", "staticlib", "dylib"]
+crate-type = ["rlib", "staticlib", "cdylib"]
 
 [profile.release]
 lto = true
