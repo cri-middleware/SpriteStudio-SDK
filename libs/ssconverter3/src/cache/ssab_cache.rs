@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use ssab::ssab::{SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT};
+use ssab::ssab::{BoolValueTable, BoolValueTableArgs, BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT};
 use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -37,6 +37,42 @@ impl From<&ssab::ssab::RectT> for RectKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
+pub struct IntValueTableKey {
+    pub value: i32,
+}
+impl From<&IntValueTableT> for IntValueTableKey {
+    fn from(int_value_table_t: &IntValueTableT) -> Self {
+        Self {
+            value: int_value_table_t.value,
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+pub struct BoolValueTableKey {
+    pub value: bool,
+}
+impl From<&BoolValueTableT> for BoolValueTableKey {
+    fn from(int_value_table_t: &BoolValueTableT) -> Self {
+        Self {
+            value: int_value_table_t.value,
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+pub struct FloatValueTableKey {
+    pub value: OrderedFloat<f32>,
+}
+impl From<&FloatValueTableT> for FloatValueTableKey {
+    fn from(float_value_table_t: &FloatValueTableT) -> Self {
+        Self {
+            value: OrderedFloat(float_value_table_t.value),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct CellKey {
     pub name: String,
     pub rectangle: Option<RectKey>,
@@ -44,7 +80,6 @@ pub struct CellKey {
     pub rotated: bool,
     pub table_coordinate: Option<Vec<Vec2Key>>,
     pub table_index_vertex: Option<Vec<u16>>,
-
 }
 impl From<&CellT> for CellKey {
     fn from(value: &CellT) -> Self {
@@ -59,19 +94,24 @@ impl From<&CellT> for CellKey {
     }
 }
 
-
 pub struct SsabCache<'bldr> {
-    pub vec2t_cache: HashMap<Vec2Key, WIPOffset<Vec2<'bldr>>>,
-    pub rectt_cache: HashMap<RectKey, WIPOffset<Rect<'bldr>>>,
+    pub vec2_cache: HashMap<Vec2Key, WIPOffset<Vec2<'bldr>>>,
+    pub rect_cache: HashMap<RectKey, WIPOffset<Rect<'bldr>>>,
+    pub int_value_table_cache: HashMap<IntValueTableKey, WIPOffset<IntValueTable<'bldr>>>,
+    pub bool_value_table_cache: HashMap<BoolValueTableKey, WIPOffset<BoolValueTable<'bldr>>>,
+    pub float_value_table_cache: HashMap<FloatValueTableKey, WIPOffset<FloatValueTable<'bldr>>>,
 
     pub cell_cache: HashMap<CellKey, WIPOffset<Cell<'bldr>>>,
 }
 impl<'bldr> SsabCache<'bldr> {
     pub fn new() -> Self {
         Self {
-            vec2t_cache: HashMap::new(),
-            rectt_cache: HashMap::new(),
-            
+            vec2_cache: HashMap::new(),
+            rect_cache: HashMap::new(),
+            int_value_table_cache: HashMap::new(),
+            bool_value_table_cache: HashMap::new(),
+            float_value_table_cache: HashMap::new(),
+
             cell_cache: HashMap::new(),
         }
     }
@@ -82,25 +122,25 @@ impl<'bldr> SsabCache<'bldr> {
     ) -> WIPOffset<Vec2<'bldr>>
     {
         let key = Vec2Key::from(vec2t);
-        if let Some(&offset) = self.vec2t_cache.get(&key) {
+        if let Some(&offset) = self.vec2_cache.get(&key) {
             return offset;
         }
         let mut vec2_args = Vec2Args::default();
         vec2_args.v1 = vec2t.v1;
         vec2_args.v2 = vec2t.v2;
         let offset = Vec2::create(fb, &vec2_args);
-        self.vec2t_cache.insert(key, offset);
+        self.vec2_cache.insert(key, offset);
         offset
     }
 
-    fn create_shared_rectt<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_rect<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         rectt: &RectT,
     ) -> WIPOffset<Rect<'bldr>>
     {
         let key = RectKey::from(rectt);
-        if let Some(&offset) = self.rectt_cache.get(&key) {
+        if let Some(&offset) = self.rect_cache.get(&key) {
             return offset;
         }
         let mut rect_args = RectArgs::default();
@@ -109,10 +149,57 @@ impl<'bldr> SsabCache<'bldr> {
         rect_args.x2 = rectt.x2;
         rect_args.y2 = rectt.y2;
         let offset = Rect::create(fb, &rect_args);
-        self.rectt_cache.insert(key, offset);
+        self.rect_cache.insert(key, offset);
         offset
     }
 
+    fn create_shared_int_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        int_value_table_t: &IntValueTableT,
+    ) -> WIPOffset<IntValueTable<'bldr>>
+    {
+        let key = IntValueTableKey::from(int_value_table_t);
+        if let Some(&offset) = self.int_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = IntValueTableArgs::default();
+        args.value = int_value_table_t.value;
+        let offset = IntValueTable::create(fb, &args);
+        offset
+    }
+
+    fn create_shared_bool_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        bool_value_table_t: &BoolValueTableT,
+    ) -> WIPOffset<BoolValueTable<'bldr>>
+    {
+        let key = BoolValueTableKey::from(bool_value_table_t);
+        if let Some(&offset) = self.bool_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = BoolValueTableArgs::default();
+        args.value = bool_value_table_t.value;
+        let offset = BoolValueTable::create(fb, &args);
+        offset
+    }
+
+    fn create_shared_float_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        float_value_table_t: &FloatValueTableT,
+    ) -> WIPOffset<FloatValueTable<'bldr>>
+    {
+        let key = FloatValueTableKey::from(float_value_table_t);
+        if let Some(&offset) = self.float_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = FloatValueTableArgs::default();
+        args.value = float_value_table_t.value;
+        let offset = FloatValueTable::create(fb, &args);
+        offset
+    }
 }
 
 impl<'bldr> SsabCache<'bldr> {
@@ -128,7 +215,7 @@ impl<'bldr> SsabCache<'bldr> {
 
         let mut cell_args = CellArgs::default();
         cell_args.name = Some(fb.create_shared_string(&cell.name));
-        cell_args.rectangle = cell.rectangle.as_ref().map(|r|self.create_shared_rectt(fb, r));
+        cell_args.rectangle = cell.rectangle.as_ref().map(|r|self.create_shared_rect(fb, r));
         cell_args.pivot = cell.pivot.as_ref().map(|p| self.create_shared_vec2(fb, p));
         cell_args.rotated = cell.rotated;
         cell_args.table_coordinate = cell.table_coordinate.as_ref().map(|p| {
@@ -240,11 +327,11 @@ impl<'bldr> SsabCache<'bldr> {
 
         anime_binary_args.animations = None; // TODO: implement
         anime_binary_args.cell_map = ss_anime_binary_t.cell_map.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
-        anime_binary_args.effect = None;
+        anime_binary_args.effect = None; // TODO: implement
         anime_binary_args.sound_list = ss_anime_binary_t.sound_list.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
         anime_binary_args.font_bitmap = ss_anime_binary_t.font_bitmap.as_ref().map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
 
-        anime_binary_args.instances = None;
+        anime_binary_args.instances = None; // TODO: implement
 
         SsAnimeBinary::create(fb, &anime_binary_args)
     }
