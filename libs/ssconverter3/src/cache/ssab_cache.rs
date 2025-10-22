@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use ssab::ssab::{BoolValueTable, BoolValueTableArgs, BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT};
+use ssab::ssab::{AnimationData, AnimationDataArgs, AnimationDataT, AudioDataPerFrame, BoolValueTable, BoolValueTableArgs, BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label, MeshDataIndices, MeshDataUV, PartState, SignalDataPerFrame, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, TextureChangeDataPerFrame, UserDataPerFrame};
 use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -125,10 +125,10 @@ impl<'bldr> SsabCache<'bldr> {
         if let Some(&offset) = self.vec2_cache.get(&key) {
             return offset;
         }
-        let mut vec2_args = Vec2Args::default();
-        vec2_args.v1 = vec2t.v1;
-        vec2_args.v2 = vec2t.v2;
-        let offset = Vec2::create(fb, &vec2_args);
+        let mut args = Vec2Args::default();
+        args.v1 = vec2t.v1;
+        args.v2 = vec2t.v2;
+        let offset = Vec2::create(fb, &args);
         self.vec2_cache.insert(key, offset);
         offset
     }
@@ -143,12 +143,12 @@ impl<'bldr> SsabCache<'bldr> {
         if let Some(&offset) = self.rect_cache.get(&key) {
             return offset;
         }
-        let mut rect_args = RectArgs::default();
-        rect_args.x1 = rectt.x1;
-        rect_args.y1 = rectt.y1;
-        rect_args.x2 = rectt.x2;
-        rect_args.y2 = rectt.y2;
-        let offset = Rect::create(fb, &rect_args);
+        let mut args = RectArgs::default();
+        args.x1 = rectt.x1;
+        args.y1 = rectt.y1;
+        args.x2 = rectt.x2;
+        args.y2 = rectt.y2;
+        let offset = Rect::create(fb, &args);
         self.rect_cache.insert(key, offset);
         offset
     }
@@ -213,22 +213,51 @@ impl<'bldr> SsabCache<'bldr> {
             return offset;
         }
 
-        let mut cell_args = CellArgs::default();
-        cell_args.name = Some(fb.create_shared_string(&cell.name));
-        cell_args.rectangle = cell.rectangle.as_ref().map(|r|self.create_shared_rect(fb, r));
-        cell_args.pivot = cell.pivot.as_ref().map(|p| self.create_shared_vec2(fb, p));
-        cell_args.rotated = cell.rotated;
-        cell_args.table_coordinate = cell.table_coordinate.as_ref().map(|p| {
+        let mut args = CellArgs::default();
+        args.name = Some(fb.create_shared_string(&cell.name));
+        args.rectangle = cell.rectangle.as_ref().map(|r|self.create_shared_rect(fb, r));
+        args.pivot = cell.pivot.as_ref().map(|p| self.create_shared_vec2(fb, p));
+        args.rotated = cell.rotated;
+        args.table_coordinate = cell.table_coordinate.as_ref().map(|p| {
             let vec = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<WIPOffset<Vec2<'bldr>>>>();
             fb.create_vector(&vec)
         });
-        cell_args.table_index_vertex = cell.table_index_vertex.as_ref().map(|p| {
+        args.table_index_vertex = cell.table_index_vertex.as_ref().map(|p| {
             fb.create_vector(&p)
         });
 
-        let offset = Cell::create(fb, &cell_args);
+        let offset = Cell::create(fb, &args);
         self.cell_cache.insert(key, offset);
         offset
+    }
+
+    fn create_animation_data_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        animation_data_t_vec: &[AnimationDataT]
+    ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<AnimationData<'bldr>>>> {
+        let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
+            let mut args = AnimationDataArgs::default();
+            args.name = Some(fb.create_shared_string(&animation_data_t.name));
+            args.setup_animation = None; // TODO; impl
+            args.frame_data = None; // TODO; impl
+            args.user_data = None; // TODO; impl
+            args.signal_data = None; // TODO; impl
+            args.audio_data = None; // TODO; impl
+            args.texture_change = None; // TODO; impl
+            args.label_data = None; // TODO; impl
+            args.meshs_data_uv = None; // TODO; impl
+            args.meshs_data_indices = None; // TODO; impl
+            args.start_frames = animation_data_t.start_frames;
+            args.end_frames = animation_data_t.end_frames;
+            args.total_frames = animation_data_t.total_frames;
+            args.fps = animation_data_t.fps;
+            args.canvas = animation_data_t.canvas.as_ref().map(|c| self.create_shared_rect(fb, c));
+
+            AnimationData::create(fb, &args)
+        }).collect::<Vec<WIPOffset<AnimationData<'bldr>>>>();
+
+        fb.create_vector(&animation_data_vec)
     }
 
     fn create_shared_cell_map<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
@@ -237,18 +266,18 @@ impl<'bldr> SsabCache<'bldr> {
         cell_map_t_vec: &[CellMapT]
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<CellMap<'bldr>>>> {
         let cell_map = cell_map_t_vec.iter().map(|cell_map_t| {
-            let mut cell_map_args = CellMapArgs::default();
-            cell_map_args.name = Some(fb.create_shared_string(&cell_map_t.name));
-            cell_map_args.image_path = cell_map_t.image_path.as_ref().map(|s| fb.create_shared_string(s));
-            cell_map_args.size_original = cell_map_t.size_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
-            cell_map_args.wrap_mode = cell_map_t.wrap_mode;
-            cell_map_args.filter_mode = cell_map_t.filter_mode;
-            cell_map_args.cells = cell_map_t.cells.as_ref().map(|c| {
+            let mut args = CellMapArgs::default();
+            args.name = Some(fb.create_shared_string(&cell_map_t.name));
+            args.image_path = cell_map_t.image_path.as_ref().map(|s| fb.create_shared_string(s));
+            args.size_original = cell_map_t.size_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
+            args.wrap_mode = cell_map_t.wrap_mode;
+            args.filter_mode = cell_map_t.filter_mode;
+            args.cells = cell_map_t.cells.as_ref().map(|c| {
                 let a = c.iter().map(|cell| self.create_shared_cell(fb, cell)).collect::<Vec<WIPOffset<Cell<'bldr>>>>();
                 fb.create_vector(&a)
             });
 
-            CellMap::create(fb, &cell_map_args)
+            CellMap::create(fb, &args)
         }).collect::<Vec<WIPOffset<CellMap<'bldr>>>>();
 
         fb.create_vector(&cell_map)
@@ -325,7 +354,7 @@ impl<'bldr> SsabCache<'bldr> {
     ) -> WIPOffset<SsAnimeBinary<'bldr>> {
         let mut anime_binary_args = SsAnimeBinaryArgs::default();
 
-        anime_binary_args.animations = None; // TODO: implement
+        anime_binary_args.animations = ss_anime_binary_t.animations.as_ref().map(|animations| self.create_animation_data_list(fb, animations));
         anime_binary_args.cell_map = ss_anime_binary_t.cell_map.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
         anime_binary_args.effect = None; // TODO: implement
         anime_binary_args.sound_list = ss_anime_binary_t.sound_list.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
