@@ -236,7 +236,7 @@ table UserDataValueWrapper {
 }
 
 table UserDataItem {
-  index: short;
+  part_index: short;
   data: [UserDataValueWrapper];
 }
 
@@ -258,25 +258,41 @@ table SignalComamndParam {
   value: float;
 }
 
-table SignalDataPerFrame {
-  frame_index: short;
+table SignalDataItem {
+  part_index: short;
 
   active: bool;
   command_id: string;
   params: [SignalComamndParam];
 }
 
-table AudioDataPerFrame {
+table SignalDataPerFrame {
   frame_index: short;
+  data: [SignalDataItem];
+}
+
+table AudioDataItem {
+  part_index: short;
 
   sound_list_id: int;
   sound_name: string;
   loop_num: int;
 }
 
+table AudioDataPerFrame {
+  frame_index: short;
+  data: [AudioDataItem];
+}
+
+table TextureChangeDataItem {
+  part_index: short;
+
+  texture_name: string;
+}
+
 table TextureChangeDataPerFrame {
   frame_index: short;
-  texture_name: string;
+  data: [TextureChangeDataItem];
 }
 
 table Cell {
