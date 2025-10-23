@@ -221,7 +221,7 @@ union Attribute {
 }
 
 table AttributeWrapper {
-  content: Attribute;
+  value: Attribute;
 }
 
 union UserDataValue {
@@ -232,18 +232,17 @@ union UserDataValue {
 }
 
 table UserDataValueWrapper {
-  content: UserDataValue;
+  value: UserDataValue;
 }
 
 table UserDataItem {
-  part_index: short;
-  data: [UserDataValueWrapper];
+  part_index: short (key);
+  value: [UserDataValueWrapper];
 }
 
-table UserDataPerFrame {
-  frame_index: short;
-  data: [UserDataItem];
-}
+// table UserData {
+//   items: [UserDataItem];
+// }
 
 enum SignalComamndParamType: ubyte {
   Index,
@@ -259,40 +258,60 @@ table SignalComamndParam {
 }
 
 table SignalDataItem {
-  part_index: short;
+  part_index: short (key);
 
   active: bool;
   command_id: string;
   params: [SignalComamndParam];
 }
 
-table SignalDataPerFrame {
-  frame_index: short;
-  data: [SignalDataItem];
-}
+// table SignalData {
+//   items: [SignalDataItem];
+// }
 
 table AudioDataItem {
-  part_index: short;
+  part_index: short (key);
 
   sound_list_id: int;
   sound_name: string;
   loop_num: int;
 }
 
-table AudioDataPerFrame {
-  frame_index: short;
-  data: [AudioDataItem];
+/*
+table AudioData {
+  items: [AudioDataItem];
 }
+*/
 
 table TextureChangeDataItem {
-  part_index: short;
+  part_index: short (key);
 
   texture_name: string;
 }
 
-table TextureChangeDataPerFrame {
-  frame_index: short;
-  data: [TextureChangeDataItem];
+// table TextureChangeData {
+//   items: [TextureChangeDataItem];
+// }
+
+// union EventData {
+//   UserData,
+//   SignalData,
+//   AudioData,
+//   TextureChangeData,
+// }
+
+// table EventDataWrapper {
+//   value: EventData;
+// }
+
+table EventsPerFrame {
+  frame_index: short (key);
+
+  // events: [EventDataWrapper];
+  user: [UserDataItem];
+  signal: [SignalDataItem];
+  audio: [AudioDataItem];
+  texture: [TextureChangeDataItem];
 }
 
 table Cell {
@@ -389,7 +408,7 @@ union EffectNodeBehavior {
 }
 
 table EffectNodeBehaviorWrapper {
-  content: EffectNodeBehavior;
+  value: EffectNodeBehavior;
 }
 
 table EffectNode {
@@ -571,10 +590,8 @@ table AnimationData {
 
   setup_animation: [PartAttributes];
   frame_data: [PartState];
-  user_data: [UserDataPerFrame];
-  signal_data: [SignalDataPerFrame];
-  audio_data: [AudioDataPerFrame];
-  texture_change: [TextureChangeDataPerFrame];
+
+  events: [EventsPerFrame];
 
   label_data: [Label];
 

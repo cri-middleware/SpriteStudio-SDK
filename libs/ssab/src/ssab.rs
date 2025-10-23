@@ -6227,8 +6227,8 @@ impl<'a> flatbuffers::Follow<'a> for AttributeWrapper<'a> {
 }
 
 impl<'a> AttributeWrapper<'a> {
-  pub const VT_CONTENT_TYPE: flatbuffers::VOffsetT = 4;
-  pub const VT_CONTENT: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUE_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -6240,240 +6240,240 @@ impl<'a> AttributeWrapper<'a> {
     args: &'args AttributeWrapperArgs
   ) -> flatbuffers::WIPOffset<AttributeWrapper<'bldr>> {
     let mut builder = AttributeWrapperBuilder::new(_fbb);
-    if let Some(x) = args.content { builder.add_content(x); }
-    builder.add_content_type(args.content_type);
+    if let Some(x) = args.value { builder.add_value(x); }
+    builder.add_value_type(args.value_type);
     builder.finish()
   }
 
   pub fn unpack(&self) -> AttributeWrapperT {
-    let content = match self.content_type() {
+    let value = match self.value_type() {
       Attribute::NONE => AttributeT::NONE,
       Attribute::AttributeCell => AttributeT::AttributeCell(Box::new(
-        self.content_as_attribute_cell()
+        self.value_as_attribute_cell()
             .expect("Invalid union table, expected `Attribute::AttributeCell`.")
             .unpack()
       )),
       Attribute::AttributePosX => AttributeT::AttributePosX(Box::new(
-        self.content_as_attribute_pos_x()
+        self.value_as_attribute_pos_x()
             .expect("Invalid union table, expected `Attribute::AttributePosX`.")
             .unpack()
       )),
       Attribute::AttributePosY => AttributeT::AttributePosY(Box::new(
-        self.content_as_attribute_pos_y()
+        self.value_as_attribute_pos_y()
             .expect("Invalid union table, expected `Attribute::AttributePosY`.")
             .unpack()
       )),
       Attribute::AttributePosZ => AttributeT::AttributePosZ(Box::new(
-        self.content_as_attribute_pos_z()
+        self.value_as_attribute_pos_z()
             .expect("Invalid union table, expected `Attribute::AttributePosZ`.")
             .unpack()
       )),
       Attribute::AttributeRotX => AttributeT::AttributeRotX(Box::new(
-        self.content_as_attribute_rot_x()
+        self.value_as_attribute_rot_x()
             .expect("Invalid union table, expected `Attribute::AttributeRotX`.")
             .unpack()
       )),
       Attribute::AttributeRotY => AttributeT::AttributeRotY(Box::new(
-        self.content_as_attribute_rot_y()
+        self.value_as_attribute_rot_y()
             .expect("Invalid union table, expected `Attribute::AttributeRotY`.")
             .unpack()
       )),
       Attribute::AttributeRotZ => AttributeT::AttributeRotZ(Box::new(
-        self.content_as_attribute_rot_z()
+        self.value_as_attribute_rot_z()
             .expect("Invalid union table, expected `Attribute::AttributeRotZ`.")
             .unpack()
       )),
       Attribute::AttributeSclX => AttributeT::AttributeSclX(Box::new(
-        self.content_as_attribute_scl_x()
+        self.value_as_attribute_scl_x()
             .expect("Invalid union table, expected `Attribute::AttributeSclX`.")
             .unpack()
       )),
       Attribute::AttributeSclY => AttributeT::AttributeSclY(Box::new(
-        self.content_as_attribute_scl_y()
+        self.value_as_attribute_scl_y()
             .expect("Invalid union table, expected `Attribute::AttributeSclY`.")
             .unpack()
       )),
       Attribute::AttributeLosclX => AttributeT::AttributeLosclX(Box::new(
-        self.content_as_attribute_loscl_x()
+        self.value_as_attribute_loscl_x()
             .expect("Invalid union table, expected `Attribute::AttributeLosclX`.")
             .unpack()
       )),
       Attribute::AttributeLosclY => AttributeT::AttributeLosclY(Box::new(
-        self.content_as_attribute_loscl_y()
+        self.value_as_attribute_loscl_y()
             .expect("Invalid union table, expected `Attribute::AttributeLosclY`.")
             .unpack()
       )),
       Attribute::AttributeAlpha => AttributeT::AttributeAlpha(Box::new(
-        self.content_as_attribute_alpha()
+        self.value_as_attribute_alpha()
             .expect("Invalid union table, expected `Attribute::AttributeAlpha`.")
             .unpack()
       )),
       Attribute::AttributeLoAlpha => AttributeT::AttributeLoAlpha(Box::new(
-        self.content_as_attribute_lo_alpha()
+        self.value_as_attribute_lo_alpha()
             .expect("Invalid union table, expected `Attribute::AttributeLoAlpha`.")
             .unpack()
       )),
       Attribute::AttributePrio => AttributeT::AttributePrio(Box::new(
-        self.content_as_attribute_prio()
+        self.value_as_attribute_prio()
             .expect("Invalid union table, expected `Attribute::AttributePrio`.")
             .unpack()
       )),
       Attribute::AttributeFlipH => AttributeT::AttributeFlipH(Box::new(
-        self.content_as_attribute_flip_h()
+        self.value_as_attribute_flip_h()
             .expect("Invalid union table, expected `Attribute::AttributeFlipH`.")
             .unpack()
       )),
       Attribute::AttributeFlipV => AttributeT::AttributeFlipV(Box::new(
-        self.content_as_attribute_flip_v()
+        self.value_as_attribute_flip_v()
             .expect("Invalid union table, expected `Attribute::AttributeFlipV`.")
             .unpack()
       )),
       Attribute::AttributeHide => AttributeT::AttributeHide(Box::new(
-        self.content_as_attribute_hide()
+        self.value_as_attribute_hide()
             .expect("Invalid union table, expected `Attribute::AttributeHide`.")
             .unpack()
       )),
       Attribute::AttributePartsColor => AttributeT::AttributePartsColor(Box::new(
-        self.content_as_attribute_parts_color()
+        self.value_as_attribute_parts_color()
             .expect("Invalid union table, expected `Attribute::AttributePartsColor`.")
             .unpack()
       )),
       Attribute::AttributeShader => AttributeT::AttributeShader(Box::new(
-        self.content_as_attribute_shader()
+        self.value_as_attribute_shader()
             .expect("Invalid union table, expected `Attribute::AttributeShader`.")
             .unpack()
       )),
       Attribute::AttributeVertex => AttributeT::AttributeVertex(Box::new(
-        self.content_as_attribute_vertex()
+        self.value_as_attribute_vertex()
             .expect("Invalid union table, expected `Attribute::AttributeVertex`.")
             .unpack()
       )),
       Attribute::AttributePivotX => AttributeT::AttributePivotX(Box::new(
-        self.content_as_attribute_pivot_x()
+        self.value_as_attribute_pivot_x()
             .expect("Invalid union table, expected `Attribute::AttributePivotX`.")
             .unpack()
       )),
       Attribute::AttributePivotY => AttributeT::AttributePivotY(Box::new(
-        self.content_as_attribute_pivot_y()
+        self.value_as_attribute_pivot_y()
             .expect("Invalid union table, expected `Attribute::AttributePivotY`.")
             .unpack()
       )),
       Attribute::AttributeAnchorX => AttributeT::AttributeAnchorX(Box::new(
-        self.content_as_attribute_anchor_x()
+        self.value_as_attribute_anchor_x()
             .expect("Invalid union table, expected `Attribute::AttributeAnchorX`.")
             .unpack()
       )),
       Attribute::AttributeAnchorY => AttributeT::AttributeAnchorY(Box::new(
-        self.content_as_attribute_anchor_y()
+        self.value_as_attribute_anchor_y()
             .expect("Invalid union table, expected `Attribute::AttributeAnchorY`.")
             .unpack()
       )),
       Attribute::AttributeSizeX => AttributeT::AttributeSizeX(Box::new(
-        self.content_as_attribute_size_x()
+        self.value_as_attribute_size_x()
             .expect("Invalid union table, expected `Attribute::AttributeSizeX`.")
             .unpack()
       )),
       Attribute::AttributeSizeY => AttributeT::AttributeSizeY(Box::new(
-        self.content_as_attribute_size_y()
+        self.value_as_attribute_size_y()
             .expect("Invalid union table, expected `Attribute::AttributeSizeY`.")
             .unpack()
       )),
       Attribute::AttributeImgFlipH => AttributeT::AttributeImgFlipH(Box::new(
-        self.content_as_attribute_img_flip_h()
+        self.value_as_attribute_img_flip_h()
             .expect("Invalid union table, expected `Attribute::AttributeImgFlipH`.")
             .unpack()
       )),
       Attribute::AttributeImgFlipV => AttributeT::AttributeImgFlipV(Box::new(
-        self.content_as_attribute_img_flip_v()
+        self.value_as_attribute_img_flip_v()
             .expect("Invalid union table, expected `Attribute::AttributeImgFlipV`.")
             .unpack()
       )),
       Attribute::AttributeUvtX => AttributeT::AttributeUvtX(Box::new(
-        self.content_as_attribute_uvt_x()
+        self.value_as_attribute_uvt_x()
             .expect("Invalid union table, expected `Attribute::AttributeUvtX`.")
             .unpack()
       )),
       Attribute::AttributeUvtY => AttributeT::AttributeUvtY(Box::new(
-        self.content_as_attribute_uvt_y()
+        self.value_as_attribute_uvt_y()
             .expect("Invalid union table, expected `Attribute::AttributeUvtY`.")
             .unpack()
       )),
       Attribute::AttributeUvrZ => AttributeT::AttributeUvrZ(Box::new(
-        self.content_as_attribute_uvr_z()
+        self.value_as_attribute_uvr_z()
             .expect("Invalid union table, expected `Attribute::AttributeUvrZ`.")
             .unpack()
       )),
       Attribute::AttributeUvsX => AttributeT::AttributeUvsX(Box::new(
-        self.content_as_attribute_uvs_x()
+        self.value_as_attribute_uvs_x()
             .expect("Invalid union table, expected `Attribute::AttributeUvsX`.")
             .unpack()
       )),
       Attribute::AttributeUvsY => AttributeT::AttributeUvsY(Box::new(
-        self.content_as_attribute_uvs_y()
+        self.value_as_attribute_uvs_y()
             .expect("Invalid union table, expected `Attribute::AttributeUvsY`.")
             .unpack()
       )),
       Attribute::AttributeBoundr => AttributeT::AttributeBoundr(Box::new(
-        self.content_as_attribute_boundr()
+        self.value_as_attribute_boundr()
             .expect("Invalid union table, expected `Attribute::AttributeBoundr`.")
             .unpack()
       )),
       Attribute::AttributeMask => AttributeT::AttributeMask(Box::new(
-        self.content_as_attribute_mask()
+        self.value_as_attribute_mask()
             .expect("Invalid union table, expected `Attribute::AttributeMask`.")
             .unpack()
       )),
       Attribute::AttributeInstance => AttributeT::AttributeInstance(Box::new(
-        self.content_as_attribute_instance()
+        self.value_as_attribute_instance()
             .expect("Invalid union table, expected `Attribute::AttributeInstance`.")
             .unpack()
       )),
       Attribute::AttributeEffect => AttributeT::AttributeEffect(Box::new(
-        self.content_as_attribute_effect()
+        self.value_as_attribute_effect()
             .expect("Invalid union table, expected `Attribute::AttributeEffect`.")
             .unpack()
       )),
       Attribute::AttributeVertexDeformation => AttributeT::AttributeVertexDeformation(Box::new(
-        self.content_as_attribute_vertex_deformation()
+        self.value_as_attribute_vertex_deformation()
             .expect("Invalid union table, expected `Attribute::AttributeVertexDeformation`.")
             .unpack()
       )),
       Attribute::AttributeSkew => AttributeT::AttributeSkew(Box::new(
-        self.content_as_attribute_skew()
+        self.value_as_attribute_skew()
             .expect("Invalid union table, expected `Attribute::AttributeSkew`.")
             .unpack()
       )),
       Attribute::AttributeDeform => AttributeT::AttributeDeform(Box::new(
-        self.content_as_attribute_deform()
+        self.value_as_attribute_deform()
             .expect("Invalid union table, expected `Attribute::AttributeDeform`.")
             .unpack()
       )),
       _ => AttributeT::NONE,
     };
     AttributeWrapperT {
-      content,
+      value,
     }
   }
 
   #[inline]
-  pub fn content_type(&self) -> Attribute {
+  pub fn value_type(&self) -> Attribute {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<Attribute>(AttributeWrapper::VT_CONTENT_TYPE, Some(Attribute::NONE)).unwrap()}
+    unsafe { self._tab.get::<Attribute>(AttributeWrapper::VT_VALUE_TYPE, Some(Attribute::NONE)).unwrap()}
   }
   #[inline]
-  pub fn content(&self) -> Option<flatbuffers::Table<'a>> {
+  pub fn value(&self) -> Option<flatbuffers::Table<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(AttributeWrapper::VT_CONTENT, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(AttributeWrapper::VT_VALUE, None)}
   }
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_cell(&self) -> Option<AttributeCell<'a>> {
-    if self.content_type() == Attribute::AttributeCell {
-      self.content().map(|t| {
+  pub fn value_as_attribute_cell(&self) -> Option<AttributeCell<'a>> {
+    if self.value_type() == Attribute::AttributeCell {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6486,9 +6486,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pos_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributePosX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_pos_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributePosX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6501,9 +6501,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pos_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributePosY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_pos_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributePosY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6516,9 +6516,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pos_z(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributePosZ {
-      self.content().map(|t| {
+  pub fn value_as_attribute_pos_z(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributePosZ {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6531,9 +6531,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_rot_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeRotX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_rot_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeRotX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6546,9 +6546,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_rot_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeRotY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_rot_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeRotY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6561,9 +6561,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_rot_z(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeRotZ {
-      self.content().map(|t| {
+  pub fn value_as_attribute_rot_z(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeRotZ {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6576,9 +6576,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_scl_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeSclX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_scl_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeSclX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6591,9 +6591,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_scl_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeSclY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_scl_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeSclY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6606,9 +6606,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_loscl_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeLosclX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_loscl_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeLosclX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6621,9 +6621,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_loscl_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeLosclY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_loscl_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeLosclY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6636,9 +6636,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_alpha(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeAlpha {
-      self.content().map(|t| {
+  pub fn value_as_attribute_alpha(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeAlpha {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6651,9 +6651,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_lo_alpha(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeLoAlpha {
-      self.content().map(|t| {
+  pub fn value_as_attribute_lo_alpha(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeLoAlpha {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6666,9 +6666,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_prio(&self) -> Option<IntValueTable<'a>> {
-    if self.content_type() == Attribute::AttributePrio {
-      self.content().map(|t| {
+  pub fn value_as_attribute_prio(&self) -> Option<IntValueTable<'a>> {
+    if self.value_type() == Attribute::AttributePrio {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6681,9 +6681,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_flip_h(&self) -> Option<BoolValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeFlipH {
-      self.content().map(|t| {
+  pub fn value_as_attribute_flip_h(&self) -> Option<BoolValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeFlipH {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6696,9 +6696,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_flip_v(&self) -> Option<BoolValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeFlipV {
-      self.content().map(|t| {
+  pub fn value_as_attribute_flip_v(&self) -> Option<BoolValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeFlipV {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6711,9 +6711,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_hide(&self) -> Option<BoolValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeHide {
-      self.content().map(|t| {
+  pub fn value_as_attribute_hide(&self) -> Option<BoolValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeHide {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6726,9 +6726,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_parts_color(&self) -> Option<AttributePartsColor<'a>> {
-    if self.content_type() == Attribute::AttributePartsColor {
-      self.content().map(|t| {
+  pub fn value_as_attribute_parts_color(&self) -> Option<AttributePartsColor<'a>> {
+    if self.value_type() == Attribute::AttributePartsColor {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6741,9 +6741,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_shader(&self) -> Option<AttributeShader<'a>> {
-    if self.content_type() == Attribute::AttributeShader {
-      self.content().map(|t| {
+  pub fn value_as_attribute_shader(&self) -> Option<AttributeShader<'a>> {
+    if self.value_type() == Attribute::AttributeShader {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6756,9 +6756,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_vertex(&self) -> Option<AttributeVertex<'a>> {
-    if self.content_type() == Attribute::AttributeVertex {
-      self.content().map(|t| {
+  pub fn value_as_attribute_vertex(&self) -> Option<AttributeVertex<'a>> {
+    if self.value_type() == Attribute::AttributeVertex {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6771,9 +6771,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pivot_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributePivotX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_pivot_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributePivotX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6786,9 +6786,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_pivot_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributePivotY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_pivot_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributePivotY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6801,9 +6801,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_anchor_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeAnchorX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_anchor_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeAnchorX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6816,9 +6816,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_anchor_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeAnchorY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_anchor_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeAnchorY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6831,9 +6831,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_size_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeSizeX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_size_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeSizeX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6846,9 +6846,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_size_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeSizeY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_size_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeSizeY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6861,9 +6861,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_img_flip_h(&self) -> Option<BoolValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeImgFlipH {
-      self.content().map(|t| {
+  pub fn value_as_attribute_img_flip_h(&self) -> Option<BoolValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeImgFlipH {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6876,9 +6876,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_img_flip_v(&self) -> Option<BoolValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeImgFlipV {
-      self.content().map(|t| {
+  pub fn value_as_attribute_img_flip_v(&self) -> Option<BoolValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeImgFlipV {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6891,9 +6891,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvt_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeUvtX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_uvt_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeUvtX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6906,9 +6906,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvt_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeUvtY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_uvt_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeUvtY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6921,9 +6921,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvr_z(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeUvrZ {
-      self.content().map(|t| {
+  pub fn value_as_attribute_uvr_z(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeUvrZ {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6936,9 +6936,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvs_x(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeUvsX {
-      self.content().map(|t| {
+  pub fn value_as_attribute_uvs_x(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeUvsX {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6951,9 +6951,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_uvs_y(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeUvsY {
-      self.content().map(|t| {
+  pub fn value_as_attribute_uvs_y(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeUvsY {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6966,9 +6966,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_boundr(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeBoundr {
-      self.content().map(|t| {
+  pub fn value_as_attribute_boundr(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeBoundr {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6981,9 +6981,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_mask(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == Attribute::AttributeMask {
-      self.content().map(|t| {
+  pub fn value_as_attribute_mask(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == Attribute::AttributeMask {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -6996,9 +6996,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_instance(&self) -> Option<AttributeInstance<'a>> {
-    if self.content_type() == Attribute::AttributeInstance {
-      self.content().map(|t| {
+  pub fn value_as_attribute_instance(&self) -> Option<AttributeInstance<'a>> {
+    if self.value_type() == Attribute::AttributeInstance {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7011,9 +7011,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_effect(&self) -> Option<AttributeEffect<'a>> {
-    if self.content_type() == Attribute::AttributeEffect {
-      self.content().map(|t| {
+  pub fn value_as_attribute_effect(&self) -> Option<AttributeEffect<'a>> {
+    if self.value_type() == Attribute::AttributeEffect {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7026,9 +7026,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_vertex_deformation(&self) -> Option<AttributeVertexDeformation<'a>> {
-    if self.content_type() == Attribute::AttributeVertexDeformation {
-      self.content().map(|t| {
+  pub fn value_as_attribute_vertex_deformation(&self) -> Option<AttributeVertexDeformation<'a>> {
+    if self.value_type() == Attribute::AttributeVertexDeformation {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7041,9 +7041,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_skew(&self) -> Option<AttributeSkew<'a>> {
-    if self.content_type() == Attribute::AttributeSkew {
-      self.content().map(|t| {
+  pub fn value_as_attribute_skew(&self) -> Option<AttributeSkew<'a>> {
+    if self.value_type() == Attribute::AttributeSkew {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7056,9 +7056,9 @@ impl<'a> AttributeWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_attribute_deform(&self) -> Option<AttributeDeform<'a>> {
-    if self.content_type() == Attribute::AttributeDeform {
-      self.content().map(|t| {
+  pub fn value_as_attribute_deform(&self) -> Option<AttributeDeform<'a>> {
+    if self.value_type() == Attribute::AttributeDeform {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7078,7 +7078,7 @@ impl flatbuffers::Verifiable for AttributeWrapper<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_union::<Attribute, _>("content_type", Self::VT_CONTENT_TYPE, "content", Self::VT_CONTENT, false, |key, v, pos| {
+     .visit_union::<Attribute, _>("value_type", Self::VT_VALUE_TYPE, "value", Self::VT_VALUE, false, |key, v, pos| {
         match key {
           Attribute::AttributeCell => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeCell>>("Attribute::AttributeCell", pos),
           Attribute::AttributePosX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributePosX", pos),
@@ -7128,15 +7128,15 @@ impl flatbuffers::Verifiable for AttributeWrapper<'_> {
   }
 }
 pub struct AttributeWrapperArgs {
-    pub content_type: Attribute,
-    pub content: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+    pub value_type: Attribute,
+    pub value: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
 }
 impl<'a> Default for AttributeWrapperArgs {
   #[inline]
   fn default() -> Self {
     AttributeWrapperArgs {
-      content_type: Attribute::NONE,
-      content: None,
+      value_type: Attribute::NONE,
+      value: None,
     }
   }
 }
@@ -7147,12 +7147,12 @@ pub struct AttributeWrapperBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeWrapperBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_content_type(&mut self, content_type: Attribute) {
-    self.fbb_.push_slot::<Attribute>(AttributeWrapper::VT_CONTENT_TYPE, content_type, Attribute::NONE);
+  pub fn add_value_type(&mut self, value_type: Attribute) {
+    self.fbb_.push_slot::<Attribute>(AttributeWrapper::VT_VALUE_TYPE, value_type, Attribute::NONE);
   }
   #[inline]
-  pub fn add_content(&mut self, content: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AttributeWrapper::VT_CONTENT, content);
+  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AttributeWrapper::VT_VALUE, value);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AttributeWrapperBuilder<'a, 'b, A> {
@@ -7172,291 +7172,291 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeWrapperBuilder<'a, 'b,
 impl core::fmt::Debug for AttributeWrapper<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("AttributeWrapper");
-      ds.field("content_type", &self.content_type());
-      match self.content_type() {
+      ds.field("value_type", &self.value_type());
+      match self.value_type() {
         Attribute::AttributeCell => {
-          if let Some(x) = self.content_as_attribute_cell() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_cell() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePosX => {
-          if let Some(x) = self.content_as_attribute_pos_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_pos_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePosY => {
-          if let Some(x) = self.content_as_attribute_pos_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_pos_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePosZ => {
-          if let Some(x) = self.content_as_attribute_pos_z() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_pos_z() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeRotX => {
-          if let Some(x) = self.content_as_attribute_rot_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_rot_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeRotY => {
-          if let Some(x) = self.content_as_attribute_rot_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_rot_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeRotZ => {
-          if let Some(x) = self.content_as_attribute_rot_z() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_rot_z() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeSclX => {
-          if let Some(x) = self.content_as_attribute_scl_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_scl_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeSclY => {
-          if let Some(x) = self.content_as_attribute_scl_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_scl_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeLosclX => {
-          if let Some(x) = self.content_as_attribute_loscl_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_loscl_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeLosclY => {
-          if let Some(x) = self.content_as_attribute_loscl_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_loscl_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeAlpha => {
-          if let Some(x) = self.content_as_attribute_alpha() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_alpha() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeLoAlpha => {
-          if let Some(x) = self.content_as_attribute_lo_alpha() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_lo_alpha() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePrio => {
-          if let Some(x) = self.content_as_attribute_prio() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_prio() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeFlipH => {
-          if let Some(x) = self.content_as_attribute_flip_h() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_flip_h() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeFlipV => {
-          if let Some(x) = self.content_as_attribute_flip_v() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_flip_v() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeHide => {
-          if let Some(x) = self.content_as_attribute_hide() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_hide() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePartsColor => {
-          if let Some(x) = self.content_as_attribute_parts_color() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_parts_color() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeShader => {
-          if let Some(x) = self.content_as_attribute_shader() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_shader() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeVertex => {
-          if let Some(x) = self.content_as_attribute_vertex() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_vertex() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePivotX => {
-          if let Some(x) = self.content_as_attribute_pivot_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_pivot_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributePivotY => {
-          if let Some(x) = self.content_as_attribute_pivot_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_pivot_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeAnchorX => {
-          if let Some(x) = self.content_as_attribute_anchor_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_anchor_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeAnchorY => {
-          if let Some(x) = self.content_as_attribute_anchor_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_anchor_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeSizeX => {
-          if let Some(x) = self.content_as_attribute_size_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_size_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeSizeY => {
-          if let Some(x) = self.content_as_attribute_size_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_size_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeImgFlipH => {
-          if let Some(x) = self.content_as_attribute_img_flip_h() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_img_flip_h() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeImgFlipV => {
-          if let Some(x) = self.content_as_attribute_img_flip_v() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_img_flip_v() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeUvtX => {
-          if let Some(x) = self.content_as_attribute_uvt_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_uvt_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeUvtY => {
-          if let Some(x) = self.content_as_attribute_uvt_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_uvt_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeUvrZ => {
-          if let Some(x) = self.content_as_attribute_uvr_z() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_uvr_z() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeUvsX => {
-          if let Some(x) = self.content_as_attribute_uvs_x() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_uvs_x() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeUvsY => {
-          if let Some(x) = self.content_as_attribute_uvs_y() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_uvs_y() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeBoundr => {
-          if let Some(x) = self.content_as_attribute_boundr() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_boundr() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeMask => {
-          if let Some(x) = self.content_as_attribute_mask() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_mask() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeInstance => {
-          if let Some(x) = self.content_as_attribute_instance() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_instance() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeEffect => {
-          if let Some(x) = self.content_as_attribute_effect() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_effect() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeVertexDeformation => {
-          if let Some(x) = self.content_as_attribute_vertex_deformation() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_vertex_deformation() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeSkew => {
-          if let Some(x) = self.content_as_attribute_skew() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_skew() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         Attribute::AttributeDeform => {
-          if let Some(x) = self.content_as_attribute_deform() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_attribute_deform() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         _ => {
           let x: Option<()> = None;
-          ds.field("content", &x)
+          ds.field("value", &x)
         },
       };
       ds.finish()
@@ -7465,12 +7465,12 @@ impl core::fmt::Debug for AttributeWrapper<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AttributeWrapperT {
-  pub content: AttributeT,
+  pub value: AttributeT,
 }
 impl Default for AttributeWrapperT {
   fn default() -> Self {
     Self {
-      content: AttributeT::NONE,
+      value: AttributeT::NONE,
     }
   }
 }
@@ -7479,11 +7479,11 @@ impl AttributeWrapperT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<AttributeWrapper<'b>> {
-    let content_type = self.content.attribute_type();
-    let content = self.content.pack(_fbb);
+    let value_type = self.value.attribute_type();
+    let value = self.value.pack(_fbb);
     AttributeWrapper::create(_fbb, &AttributeWrapperArgs{
-      content_type,
-      content,
+      value_type,
+      value,
     })
   }
 }
@@ -7503,8 +7503,8 @@ impl<'a> flatbuffers::Follow<'a> for UserDataValueWrapper<'a> {
 }
 
 impl<'a> UserDataValueWrapper<'a> {
-  pub const VT_CONTENT_TYPE: flatbuffers::VOffsetT = 4;
-  pub const VT_CONTENT: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUE_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -7516,60 +7516,60 @@ impl<'a> UserDataValueWrapper<'a> {
     args: &'args UserDataValueWrapperArgs
   ) -> flatbuffers::WIPOffset<UserDataValueWrapper<'bldr>> {
     let mut builder = UserDataValueWrapperBuilder::new(_fbb);
-    if let Some(x) = args.content { builder.add_content(x); }
-    builder.add_content_type(args.content_type);
+    if let Some(x) = args.value { builder.add_value(x); }
+    builder.add_value_type(args.value_type);
     builder.finish()
   }
 
   pub fn unpack(&self) -> UserDataValueWrapperT {
-    let content = match self.content_type() {
+    let value = match self.value_type() {
       UserDataValue::NONE => UserDataValueT::NONE,
       UserDataValue::UserDataInteger => UserDataValueT::UserDataInteger(Box::new(
-        self.content_as_user_data_integer()
+        self.value_as_user_data_integer()
             .expect("Invalid union table, expected `UserDataValue::UserDataInteger`.")
             .unpack()
       )),
       UserDataValue::UserDataRect => UserDataValueT::UserDataRect(Box::new(
-        self.content_as_user_data_rect()
+        self.value_as_user_data_rect()
             .expect("Invalid union table, expected `UserDataValue::UserDataRect`.")
             .unpack()
       )),
       UserDataValue::UserDataPoint => UserDataValueT::UserDataPoint(Box::new(
-        self.content_as_user_data_point()
+        self.value_as_user_data_point()
             .expect("Invalid union table, expected `UserDataValue::UserDataPoint`.")
             .unpack()
       )),
       UserDataValue::UserDataString => UserDataValueT::UserDataString(Box::new(
-        self.content_as_user_data_string()
+        self.value_as_user_data_string()
             .expect("Invalid union table, expected `UserDataValue::UserDataString`.")
             .unpack()
       )),
       _ => UserDataValueT::NONE,
     };
     UserDataValueWrapperT {
-      content,
+      value,
     }
   }
 
   #[inline]
-  pub fn content_type(&self) -> UserDataValue {
+  pub fn value_type(&self) -> UserDataValue {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<UserDataValue>(UserDataValueWrapper::VT_CONTENT_TYPE, Some(UserDataValue::NONE)).unwrap()}
+    unsafe { self._tab.get::<UserDataValue>(UserDataValueWrapper::VT_VALUE_TYPE, Some(UserDataValue::NONE)).unwrap()}
   }
   #[inline]
-  pub fn content(&self) -> Option<flatbuffers::Table<'a>> {
+  pub fn value(&self) -> Option<flatbuffers::Table<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(UserDataValueWrapper::VT_CONTENT, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(UserDataValueWrapper::VT_VALUE, None)}
   }
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_user_data_integer(&self) -> Option<IntValueTable<'a>> {
-    if self.content_type() == UserDataValue::UserDataInteger {
-      self.content().map(|t| {
+  pub fn value_as_user_data_integer(&self) -> Option<IntValueTable<'a>> {
+    if self.value_type() == UserDataValue::UserDataInteger {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7582,9 +7582,9 @@ impl<'a> UserDataValueWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_user_data_rect(&self) -> Option<RectValueTable<'a>> {
-    if self.content_type() == UserDataValue::UserDataRect {
-      self.content().map(|t| {
+  pub fn value_as_user_data_rect(&self) -> Option<RectValueTable<'a>> {
+    if self.value_type() == UserDataValue::UserDataRect {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7597,9 +7597,9 @@ impl<'a> UserDataValueWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_user_data_point(&self) -> Option<Vec2ValueTable<'a>> {
-    if self.content_type() == UserDataValue::UserDataPoint {
-      self.content().map(|t| {
+  pub fn value_as_user_data_point(&self) -> Option<Vec2ValueTable<'a>> {
+    if self.value_type() == UserDataValue::UserDataPoint {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7612,9 +7612,9 @@ impl<'a> UserDataValueWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_user_data_string(&self) -> Option<StringValueTable<'a>> {
-    if self.content_type() == UserDataValue::UserDataString {
-      self.content().map(|t| {
+  pub fn value_as_user_data_string(&self) -> Option<StringValueTable<'a>> {
+    if self.value_type() == UserDataValue::UserDataString {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -7634,7 +7634,7 @@ impl flatbuffers::Verifiable for UserDataValueWrapper<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_union::<UserDataValue, _>("content_type", Self::VT_CONTENT_TYPE, "content", Self::VT_CONTENT, false, |key, v, pos| {
+     .visit_union::<UserDataValue, _>("value_type", Self::VT_VALUE_TYPE, "value", Self::VT_VALUE, false, |key, v, pos| {
         match key {
           UserDataValue::UserDataInteger => v.verify_union_variant::<flatbuffers::ForwardsUOffset<IntValueTable>>("UserDataValue::UserDataInteger", pos),
           UserDataValue::UserDataRect => v.verify_union_variant::<flatbuffers::ForwardsUOffset<RectValueTable>>("UserDataValue::UserDataRect", pos),
@@ -7648,15 +7648,15 @@ impl flatbuffers::Verifiable for UserDataValueWrapper<'_> {
   }
 }
 pub struct UserDataValueWrapperArgs {
-    pub content_type: UserDataValue,
-    pub content: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+    pub value_type: UserDataValue,
+    pub value: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
 }
 impl<'a> Default for UserDataValueWrapperArgs {
   #[inline]
   fn default() -> Self {
     UserDataValueWrapperArgs {
-      content_type: UserDataValue::NONE,
-      content: None,
+      value_type: UserDataValue::NONE,
+      value: None,
     }
   }
 }
@@ -7667,12 +7667,12 @@ pub struct UserDataValueWrapperBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + '
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataValueWrapperBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_content_type(&mut self, content_type: UserDataValue) {
-    self.fbb_.push_slot::<UserDataValue>(UserDataValueWrapper::VT_CONTENT_TYPE, content_type, UserDataValue::NONE);
+  pub fn add_value_type(&mut self, value_type: UserDataValue) {
+    self.fbb_.push_slot::<UserDataValue>(UserDataValueWrapper::VT_VALUE_TYPE, value_type, UserDataValue::NONE);
   }
   #[inline]
-  pub fn add_content(&mut self, content: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataValueWrapper::VT_CONTENT, content);
+  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataValueWrapper::VT_VALUE, value);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataValueWrapperBuilder<'a, 'b, A> {
@@ -7692,39 +7692,39 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataValueWrapperBuilder<'a,
 impl core::fmt::Debug for UserDataValueWrapper<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("UserDataValueWrapper");
-      ds.field("content_type", &self.content_type());
-      match self.content_type() {
+      ds.field("value_type", &self.value_type());
+      match self.value_type() {
         UserDataValue::UserDataInteger => {
-          if let Some(x) = self.content_as_user_data_integer() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_user_data_integer() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         UserDataValue::UserDataRect => {
-          if let Some(x) = self.content_as_user_data_rect() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_user_data_rect() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         UserDataValue::UserDataPoint => {
-          if let Some(x) = self.content_as_user_data_point() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_user_data_point() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         UserDataValue::UserDataString => {
-          if let Some(x) = self.content_as_user_data_string() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_user_data_string() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         _ => {
           let x: Option<()> = None;
-          ds.field("content", &x)
+          ds.field("value", &x)
         },
       };
       ds.finish()
@@ -7733,12 +7733,12 @@ impl core::fmt::Debug for UserDataValueWrapper<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserDataValueWrapperT {
-  pub content: UserDataValueT,
+  pub value: UserDataValueT,
 }
 impl Default for UserDataValueWrapperT {
   fn default() -> Self {
     Self {
-      content: UserDataValueT::NONE,
+      value: UserDataValueT::NONE,
     }
   }
 }
@@ -7747,11 +7747,11 @@ impl UserDataValueWrapperT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<UserDataValueWrapper<'b>> {
-    let content_type = self.content.user_data_value_type();
-    let content = self.content.pack(_fbb);
+    let value_type = self.value.user_data_value_type();
+    let value = self.value.pack(_fbb);
     UserDataValueWrapper::create(_fbb, &UserDataValueWrapperArgs{
-      content_type,
-      content,
+      value_type,
+      value,
     })
   }
 }
@@ -7772,7 +7772,7 @@ impl<'a> flatbuffers::Follow<'a> for UserDataItem<'a> {
 
 impl<'a> UserDataItem<'a> {
   pub const VT_PART_INDEX: flatbuffers::VOffsetT = 4;
-  pub const VT_DATA: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -7784,19 +7784,19 @@ impl<'a> UserDataItem<'a> {
     args: &'args UserDataItemArgs<'args>
   ) -> flatbuffers::WIPOffset<UserDataItem<'bldr>> {
     let mut builder = UserDataItemBuilder::new(_fbb);
-    if let Some(x) = args.data { builder.add_data(x); }
+    if let Some(x) = args.value { builder.add_value(x); }
     builder.add_part_index(args.part_index);
     builder.finish()
   }
 
   pub fn unpack(&self) -> UserDataItemT {
     let part_index = self.part_index();
-    let data = self.data().map(|x| {
+    let value = self.value().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     UserDataItemT {
       part_index,
-      data,
+      value,
     }
   }
 
@@ -7808,11 +7808,21 @@ impl<'a> UserDataItem<'a> {
     unsafe { self._tab.get::<i16>(UserDataItem::VT_PART_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper<'a>>>> {
+  pub fn key_compare_less_than(&self, o: &UserDataItem) -> bool {
+    self.part_index() < o.part_index()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+    let key = self.part_index();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn value(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper>>>>(UserDataItem::VT_DATA, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper>>>>(UserDataItem::VT_VALUE, None)}
   }
 }
 
@@ -7824,21 +7834,21 @@ impl flatbuffers::Verifiable for UserDataItem<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i16>("part_index", Self::VT_PART_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataValueWrapper>>>>("data", Self::VT_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataValueWrapper>>>>("value", Self::VT_VALUE, false)?
      .finish();
     Ok(())
   }
 }
 pub struct UserDataItemArgs<'a> {
     pub part_index: i16,
-    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper<'a>>>>>,
+    pub value: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataValueWrapper<'a>>>>>,
 }
 impl<'a> Default for UserDataItemArgs<'a> {
   #[inline]
   fn default() -> Self {
     UserDataItemArgs {
       part_index: 0,
-      data: None,
+      value: None,
     }
   }
 }
@@ -7853,8 +7863,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataItemBuilder<'a, 'b, A> 
     self.fbb_.push_slot::<i16>(UserDataItem::VT_PART_INDEX, part_index, 0);
   }
   #[inline]
-  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataValueWrapper<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataItem::VT_DATA, data);
+  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataValueWrapper<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataItem::VT_VALUE, value);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataItemBuilder<'a, 'b, A> {
@@ -7875,7 +7885,7 @@ impl core::fmt::Debug for UserDataItem<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("UserDataItem");
       ds.field("part_index", &self.part_index());
-      ds.field("data", &self.data());
+      ds.field("value", &self.value());
       ds.finish()
   }
 }
@@ -7883,13 +7893,13 @@ impl core::fmt::Debug for UserDataItem<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct UserDataItemT {
   pub part_index: i16,
-  pub data: Option<Vec<UserDataValueWrapperT>>,
+  pub value: Option<Vec<UserDataValueWrapperT>>,
 }
 impl Default for UserDataItemT {
   fn default() -> Self {
     Self {
       part_index: 0,
-      data: None,
+      value: None,
     }
   }
 }
@@ -7899,165 +7909,12 @@ impl UserDataItemT {
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<UserDataItem<'b>> {
     let part_index = self.part_index;
-    let data = self.data.as_ref().map(|x|{
+    let value = self.value.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     UserDataItem::create(_fbb, &UserDataItemArgs{
       part_index,
-      data,
-    })
-  }
-}
-pub enum UserDataPerFrameOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct UserDataPerFrame<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for UserDataPerFrame<'a> {
-  type Inner = UserDataPerFrame<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> UserDataPerFrame<'a> {
-  pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
-  pub const VT_DATA: flatbuffers::VOffsetT = 6;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    UserDataPerFrame { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args UserDataPerFrameArgs<'args>
-  ) -> flatbuffers::WIPOffset<UserDataPerFrame<'bldr>> {
-    let mut builder = UserDataPerFrameBuilder::new(_fbb);
-    if let Some(x) = args.data { builder.add_data(x); }
-    builder.add_frame_index(args.frame_index);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> UserDataPerFrameT {
-    let frame_index = self.frame_index();
-    let data = self.data().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    UserDataPerFrameT {
-      frame_index,
-      data,
-    }
-  }
-
-  #[inline]
-  pub fn frame_index(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(UserDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem>>>>(UserDataPerFrame::VT_DATA, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for UserDataPerFrame<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataItem>>>>("data", Self::VT_DATA, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct UserDataPerFrameArgs<'a> {
-    pub frame_index: i16,
-    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem<'a>>>>>,
-}
-impl<'a> Default for UserDataPerFrameArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    UserDataPerFrameArgs {
-      frame_index: 0,
-      data: None,
-    }
-  }
-}
-
-pub struct UserDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> UserDataPerFrameBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_frame_index(&mut self, frame_index: i16) {
-    self.fbb_.push_slot::<i16>(UserDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
-  }
-  #[inline]
-  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataItem<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(UserDataPerFrame::VT_DATA, data);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> UserDataPerFrameBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    UserDataPerFrameBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<UserDataPerFrame<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for UserDataPerFrame<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("UserDataPerFrame");
-      ds.field("frame_index", &self.frame_index());
-      ds.field("data", &self.data());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct UserDataPerFrameT {
-  pub frame_index: i16,
-  pub data: Option<Vec<UserDataItemT>>,
-}
-impl Default for UserDataPerFrameT {
-  fn default() -> Self {
-    Self {
-      frame_index: 0,
-      data: None,
-    }
-  }
-}
-impl UserDataPerFrameT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<UserDataPerFrame<'b>> {
-    let frame_index = self.frame_index;
-    let data = self.data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    UserDataPerFrame::create(_fbb, &UserDataPerFrameArgs{
-      frame_index,
-      data,
+      value,
     })
   }
 }
@@ -8300,6 +8157,16 @@ impl<'a> SignalDataItem<'a> {
     unsafe { self._tab.get::<i16>(SignalDataItem::VT_PART_INDEX, Some(0)).unwrap()}
   }
   #[inline]
+  pub fn key_compare_less_than(&self, o: &SignalDataItem) -> bool {
+    self.part_index() < o.part_index()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+    let key = self.part_index();
+    key.cmp(&val)
+  }
+  #[inline]
   pub fn active(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
@@ -8440,159 +8307,6 @@ impl SignalDataItemT {
     })
   }
 }
-pub enum SignalDataPerFrameOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct SignalDataPerFrame<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for SignalDataPerFrame<'a> {
-  type Inner = SignalDataPerFrame<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> SignalDataPerFrame<'a> {
-  pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
-  pub const VT_DATA: flatbuffers::VOffsetT = 6;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    SignalDataPerFrame { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args SignalDataPerFrameArgs<'args>
-  ) -> flatbuffers::WIPOffset<SignalDataPerFrame<'bldr>> {
-    let mut builder = SignalDataPerFrameBuilder::new(_fbb);
-    if let Some(x) = args.data { builder.add_data(x); }
-    builder.add_frame_index(args.frame_index);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> SignalDataPerFrameT {
-    let frame_index = self.frame_index();
-    let data = self.data().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    SignalDataPerFrameT {
-      frame_index,
-      data,
-    }
-  }
-
-  #[inline]
-  pub fn frame_index(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(SignalDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataItem<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataItem>>>>(SignalDataPerFrame::VT_DATA, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for SignalDataPerFrame<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SignalDataItem>>>>("data", Self::VT_DATA, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct SignalDataPerFrameArgs<'a> {
-    pub frame_index: i16,
-    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataItem<'a>>>>>,
-}
-impl<'a> Default for SignalDataPerFrameArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    SignalDataPerFrameArgs {
-      frame_index: 0,
-      data: None,
-    }
-  }
-}
-
-pub struct SignalDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> SignalDataPerFrameBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_frame_index(&mut self, frame_index: i16) {
-    self.fbb_.push_slot::<i16>(SignalDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
-  }
-  #[inline]
-  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SignalDataItem<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SignalDataPerFrame::VT_DATA, data);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> SignalDataPerFrameBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    SignalDataPerFrameBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<SignalDataPerFrame<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for SignalDataPerFrame<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("SignalDataPerFrame");
-      ds.field("frame_index", &self.frame_index());
-      ds.field("data", &self.data());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct SignalDataPerFrameT {
-  pub frame_index: i16,
-  pub data: Option<Vec<SignalDataItemT>>,
-}
-impl Default for SignalDataPerFrameT {
-  fn default() -> Self {
-    Self {
-      frame_index: 0,
-      data: None,
-    }
-  }
-}
-impl SignalDataPerFrameT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<SignalDataPerFrame<'b>> {
-    let frame_index = self.frame_index;
-    let data = self.data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    SignalDataPerFrame::create(_fbb, &SignalDataPerFrameArgs{
-      frame_index,
-      data,
-    })
-  }
-}
 pub enum AudioDataItemOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -8652,6 +8366,16 @@ impl<'a> AudioDataItem<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i16>(AudioDataItem::VT_PART_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &AudioDataItem) -> bool {
+    self.part_index() < o.part_index()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+    let key = self.part_index();
+    key.cmp(&val)
   }
   #[inline]
   pub fn sound_list_id(&self) -> i32 {
@@ -8792,159 +8516,6 @@ impl AudioDataItemT {
     })
   }
 }
-pub enum AudioDataPerFrameOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AudioDataPerFrame<'a> {
-  pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AudioDataPerFrame<'a> {
-  type Inner = AudioDataPerFrame<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> AudioDataPerFrame<'a> {
-  pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
-  pub const VT_DATA: flatbuffers::VOffsetT = 6;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    AudioDataPerFrame { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args AudioDataPerFrameArgs<'args>
-  ) -> flatbuffers::WIPOffset<AudioDataPerFrame<'bldr>> {
-    let mut builder = AudioDataPerFrameBuilder::new(_fbb);
-    if let Some(x) = args.data { builder.add_data(x); }
-    builder.add_frame_index(args.frame_index);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> AudioDataPerFrameT {
-    let frame_index = self.frame_index();
-    let data = self.data().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    AudioDataPerFrameT {
-      frame_index,
-      data,
-    }
-  }
-
-  #[inline]
-  pub fn frame_index(&self) -> i16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(AudioDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataItem<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataItem>>>>(AudioDataPerFrame::VT_DATA, None)}
-  }
-}
-
-impl flatbuffers::Verifiable for AudioDataPerFrame<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut flatbuffers::Verifier, pos: usize
-  ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-    use self::flatbuffers::Verifiable;
-    v.visit_table(pos)?
-     .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AudioDataItem>>>>("data", Self::VT_DATA, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct AudioDataPerFrameArgs<'a> {
-    pub frame_index: i16,
-    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataItem<'a>>>>>,
-}
-impl<'a> Default for AudioDataPerFrameArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    AudioDataPerFrameArgs {
-      frame_index: 0,
-      data: None,
-    }
-  }
-}
-
-pub struct AudioDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AudioDataPerFrameBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_frame_index(&mut self, frame_index: i16) {
-    self.fbb_.push_slot::<i16>(AudioDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
-  }
-  #[inline]
-  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AudioDataItem<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AudioDataPerFrame::VT_DATA, data);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> AudioDataPerFrameBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    AudioDataPerFrameBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<AudioDataPerFrame<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl core::fmt::Debug for AudioDataPerFrame<'_> {
-  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("AudioDataPerFrame");
-      ds.field("frame_index", &self.frame_index());
-      ds.field("data", &self.data());
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AudioDataPerFrameT {
-  pub frame_index: i16,
-  pub data: Option<Vec<AudioDataItemT>>,
-}
-impl Default for AudioDataPerFrameT {
-  fn default() -> Self {
-    Self {
-      frame_index: 0,
-      data: None,
-    }
-  }
-}
-impl AudioDataPerFrameT {
-  pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<AudioDataPerFrame<'b>> {
-    let frame_index = self.frame_index;
-    let data = self.data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    AudioDataPerFrame::create(_fbb, &AudioDataPerFrameArgs{
-      frame_index,
-      data,
-    })
-  }
-}
 pub enum TextureChangeDataItemOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -8996,6 +8567,16 @@ impl<'a> TextureChangeDataItem<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i16>(TextureChangeDataItem::VT_PART_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &TextureChangeDataItem) -> bool {
+    self.part_index() < o.part_index()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+    let key = self.part_index();
+    key.cmp(&val)
   }
   #[inline]
   pub fn texture_name(&self) -> Option<&'a str> {
@@ -9098,48 +8679,66 @@ impl TextureChangeDataItemT {
     })
   }
 }
-pub enum TextureChangeDataPerFrameOffset {}
+pub enum EventsPerFrameOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct TextureChangeDataPerFrame<'a> {
+pub struct EventsPerFrame<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for TextureChangeDataPerFrame<'a> {
-  type Inner = TextureChangeDataPerFrame<'a>;
+impl<'a> flatbuffers::Follow<'a> for EventsPerFrame<'a> {
+  type Inner = EventsPerFrame<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> TextureChangeDataPerFrame<'a> {
+impl<'a> EventsPerFrame<'a> {
   pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
-  pub const VT_DATA: flatbuffers::VOffsetT = 6;
+  pub const VT_USER: flatbuffers::VOffsetT = 6;
+  pub const VT_SIGNAL: flatbuffers::VOffsetT = 8;
+  pub const VT_AUDIO: flatbuffers::VOffsetT = 10;
+  pub const VT_TEXTURE: flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-    TextureChangeDataPerFrame { _tab: table }
+    EventsPerFrame { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args TextureChangeDataPerFrameArgs<'args>
-  ) -> flatbuffers::WIPOffset<TextureChangeDataPerFrame<'bldr>> {
-    let mut builder = TextureChangeDataPerFrameBuilder::new(_fbb);
-    if let Some(x) = args.data { builder.add_data(x); }
+    args: &'args EventsPerFrameArgs<'args>
+  ) -> flatbuffers::WIPOffset<EventsPerFrame<'bldr>> {
+    let mut builder = EventsPerFrameBuilder::new(_fbb);
+    if let Some(x) = args.texture { builder.add_texture(x); }
+    if let Some(x) = args.audio { builder.add_audio(x); }
+    if let Some(x) = args.signal { builder.add_signal(x); }
+    if let Some(x) = args.user { builder.add_user(x); }
     builder.add_frame_index(args.frame_index);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> TextureChangeDataPerFrameT {
+  pub fn unpack(&self) -> EventsPerFrameT {
     let frame_index = self.frame_index();
-    let data = self.data().map(|x| {
+    let user = self.user().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    TextureChangeDataPerFrameT {
+    let signal = self.signal().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let audio = self.audio().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    let texture = self.texture().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
+    });
+    EventsPerFrameT {
       frame_index,
-      data,
+      user,
+      signal,
+      audio,
+      texture,
     }
   }
 
@@ -9148,18 +8747,49 @@ impl<'a> TextureChangeDataPerFrame<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(TextureChangeDataPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(EventsPerFrame::VT_FRAME_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataItem<'a>>>> {
+  pub fn key_compare_less_than(&self, o: &EventsPerFrame) -> bool {
+    self.frame_index() < o.frame_index()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+    let key = self.frame_index();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn user(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataItem>>>>(TextureChangeDataPerFrame::VT_DATA, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem>>>>(EventsPerFrame::VT_USER, None)}
+  }
+  #[inline]
+  pub fn signal(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataItem<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataItem>>>>(EventsPerFrame::VT_SIGNAL, None)}
+  }
+  #[inline]
+  pub fn audio(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataItem<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataItem>>>>(EventsPerFrame::VT_AUDIO, None)}
+  }
+  #[inline]
+  pub fn texture(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataItem<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataItem>>>>(EventsPerFrame::VT_TEXTURE, None)}
   }
 }
 
-impl flatbuffers::Verifiable for TextureChangeDataPerFrame<'_> {
+impl flatbuffers::Verifiable for EventsPerFrame<'_> {
   #[inline]
   fn run_verifier(
     v: &mut flatbuffers::Verifier, pos: usize
@@ -9167,87 +8797,129 @@ impl flatbuffers::Verifiable for TextureChangeDataPerFrame<'_> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
      .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<TextureChangeDataItem>>>>("data", Self::VT_DATA, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataItem>>>>("user", Self::VT_USER, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SignalDataItem>>>>("signal", Self::VT_SIGNAL, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AudioDataItem>>>>("audio", Self::VT_AUDIO, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<TextureChangeDataItem>>>>("texture", Self::VT_TEXTURE, false)?
      .finish();
     Ok(())
   }
 }
-pub struct TextureChangeDataPerFrameArgs<'a> {
+pub struct EventsPerFrameArgs<'a> {
     pub frame_index: i16,
-    pub data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataItem<'a>>>>>,
+    pub user: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataItem<'a>>>>>,
+    pub signal: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataItem<'a>>>>>,
+    pub audio: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataItem<'a>>>>>,
+    pub texture: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataItem<'a>>>>>,
 }
-impl<'a> Default for TextureChangeDataPerFrameArgs<'a> {
+impl<'a> Default for EventsPerFrameArgs<'a> {
   #[inline]
   fn default() -> Self {
-    TextureChangeDataPerFrameArgs {
+    EventsPerFrameArgs {
       frame_index: 0,
-      data: None,
+      user: None,
+      signal: None,
+      audio: None,
+      texture: None,
     }
   }
 }
 
-pub struct TextureChangeDataPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+pub struct EventsPerFrameBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> TextureChangeDataPerFrameBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> EventsPerFrameBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_frame_index(&mut self, frame_index: i16) {
-    self.fbb_.push_slot::<i16>(TextureChangeDataPerFrame::VT_FRAME_INDEX, frame_index, 0);
+    self.fbb_.push_slot::<i16>(EventsPerFrame::VT_FRAME_INDEX, frame_index, 0);
   }
   #[inline]
-  pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<TextureChangeDataItem<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(TextureChangeDataPerFrame::VT_DATA, data);
+  pub fn add_user(&mut self, user: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataItem<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_USER, user);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> TextureChangeDataPerFrameBuilder<'a, 'b, A> {
+  pub fn add_signal(&mut self, signal: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SignalDataItem<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_SIGNAL, signal);
+  }
+  #[inline]
+  pub fn add_audio(&mut self, audio: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AudioDataItem<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_AUDIO, audio);
+  }
+  #[inline]
+  pub fn add_texture(&mut self, texture: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<TextureChangeDataItem<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_TEXTURE, texture);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> EventsPerFrameBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    TextureChangeDataPerFrameBuilder {
+    EventsPerFrameBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<TextureChangeDataPerFrame<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<EventsPerFrame<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl core::fmt::Debug for TextureChangeDataPerFrame<'_> {
+impl core::fmt::Debug for EventsPerFrame<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-    let mut ds = f.debug_struct("TextureChangeDataPerFrame");
+    let mut ds = f.debug_struct("EventsPerFrame");
       ds.field("frame_index", &self.frame_index());
-      ds.field("data", &self.data());
+      ds.field("user", &self.user());
+      ds.field("signal", &self.signal());
+      ds.field("audio", &self.audio());
+      ds.field("texture", &self.texture());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct TextureChangeDataPerFrameT {
+pub struct EventsPerFrameT {
   pub frame_index: i16,
-  pub data: Option<Vec<TextureChangeDataItemT>>,
+  pub user: Option<Vec<UserDataItemT>>,
+  pub signal: Option<Vec<SignalDataItemT>>,
+  pub audio: Option<Vec<AudioDataItemT>>,
+  pub texture: Option<Vec<TextureChangeDataItemT>>,
 }
-impl Default for TextureChangeDataPerFrameT {
+impl Default for EventsPerFrameT {
   fn default() -> Self {
     Self {
       frame_index: 0,
-      data: None,
+      user: None,
+      signal: None,
+      audio: None,
+      texture: None,
     }
   }
 }
-impl TextureChangeDataPerFrameT {
+impl EventsPerFrameT {
   pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> flatbuffers::WIPOffset<TextureChangeDataPerFrame<'b>> {
+  ) -> flatbuffers::WIPOffset<EventsPerFrame<'b>> {
     let frame_index = self.frame_index;
-    let data = self.data.as_ref().map(|x|{
+    let user = self.user.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    TextureChangeDataPerFrame::create(_fbb, &TextureChangeDataPerFrameArgs{
+    let signal = self.signal.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let audio = self.audio.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    let texture = self.texture.as_ref().map(|x|{
+      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    });
+    EventsPerFrame::create(_fbb, &EventsPerFrameArgs{
       frame_index,
-      data,
+      user,
+      signal,
+      audio,
+      texture,
     })
   }
 }
@@ -11081,8 +10753,8 @@ impl<'a> flatbuffers::Follow<'a> for EffectNodeBehaviorWrapper<'a> {
 }
 
 impl<'a> EffectNodeBehaviorWrapper<'a> {
-  pub const VT_CONTENT_TYPE: flatbuffers::VOffsetT = 4;
-  pub const VT_CONTENT: flatbuffers::VOffsetT = 6;
+  pub const VT_VALUE_TYPE: flatbuffers::VOffsetT = 4;
+  pub const VT_VALUE: flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -11094,125 +10766,125 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
     args: &'args EffectNodeBehaviorWrapperArgs
   ) -> flatbuffers::WIPOffset<EffectNodeBehaviorWrapper<'bldr>> {
     let mut builder = EffectNodeBehaviorWrapperBuilder::new(_fbb);
-    if let Some(x) = args.content { builder.add_content(x); }
-    builder.add_content_type(args.content_type);
+    if let Some(x) = args.value { builder.add_value(x); }
+    builder.add_value_type(args.value_type);
     builder.finish()
   }
 
   pub fn unpack(&self) -> EffectNodeBehaviorWrapperT {
-    let content = match self.content_type() {
+    let value = match self.value_type() {
       EffectNodeBehavior::NONE => EffectNodeBehaviorT::NONE,
       EffectNodeBehavior::EffectParticleElementBasic => EffectNodeBehaviorT::EffectParticleElementBasic(Box::new(
-        self.content_as_effect_particle_element_basic()
+        self.value_as_effect_particle_element_basic()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementBasic`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementRndSeedChange => EffectNodeBehaviorT::EffectParticleElementRndSeedChange(Box::new(
-        self.content_as_effect_particle_element_rnd_seed_change()
+        self.value_as_effect_particle_element_rnd_seed_change()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementRndSeedChange`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementDelay => EffectNodeBehaviorT::EffectParticleElementDelay(Box::new(
-        self.content_as_effect_particle_element_delay()
+        self.value_as_effect_particle_element_delay()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementDelay`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementGravity => EffectNodeBehaviorT::EffectParticleElementGravity(Box::new(
-        self.content_as_effect_particle_element_gravity()
+        self.value_as_effect_particle_element_gravity()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementGravity`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementPosition => EffectNodeBehaviorT::EffectParticleElementPosition(Box::new(
-        self.content_as_effect_particle_element_position()
+        self.value_as_effect_particle_element_position()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementPosition`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementRotation => EffectNodeBehaviorT::EffectParticleElementRotation(Box::new(
-        self.content_as_effect_particle_element_rotation()
+        self.value_as_effect_particle_element_rotation()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementRotation`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementRotationTrans => EffectNodeBehaviorT::EffectParticleElementRotationTrans(Box::new(
-        self.content_as_effect_particle_element_rotation_trans()
+        self.value_as_effect_particle_element_rotation_trans()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementRotationTrans`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementTransSpeed => EffectNodeBehaviorT::EffectParticleElementTransSpeed(Box::new(
-        self.content_as_effect_particle_element_trans_speed()
+        self.value_as_effect_particle_element_trans_speed()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementTransSpeed`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementTangentialAcceleration => EffectNodeBehaviorT::EffectParticleElementTangentialAcceleration(Box::new(
-        self.content_as_effect_particle_element_tangential_acceleration()
+        self.value_as_effect_particle_element_tangential_acceleration()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementTangentialAcceleration`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementInitColor => EffectNodeBehaviorT::EffectParticleElementInitColor(Box::new(
-        self.content_as_effect_particle_element_init_color()
+        self.value_as_effect_particle_element_init_color()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementInitColor`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementTransColor => EffectNodeBehaviorT::EffectParticleElementTransColor(Box::new(
-        self.content_as_effect_particle_element_trans_color()
+        self.value_as_effect_particle_element_trans_color()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementTransColor`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementAlphaFade => EffectNodeBehaviorT::EffectParticleElementAlphaFade(Box::new(
-        self.content_as_effect_particle_element_alpha_fade()
+        self.value_as_effect_particle_element_alpha_fade()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementAlphaFade`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementSize => EffectNodeBehaviorT::EffectParticleElementSize(Box::new(
-        self.content_as_effect_particle_element_size()
+        self.value_as_effect_particle_element_size()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementSize`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleElementTransSize => EffectNodeBehaviorT::EffectParticleElementTransSize(Box::new(
-        self.content_as_effect_particle_element_trans_size()
+        self.value_as_effect_particle_element_trans_size()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleElementTransSize`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticlePointGravity => EffectNodeBehaviorT::EffectParticlePointGravity(Box::new(
-        self.content_as_effect_particle_point_gravity()
+        self.value_as_effect_particle_point_gravity()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticlePointGravity`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleTurnToDirectionEnabled => EffectNodeBehaviorT::EffectParticleTurnToDirectionEnabled(Box::new(
-        self.content_as_effect_particle_turn_to_direction_enabled()
+        self.value_as_effect_particle_turn_to_direction_enabled()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleTurnToDirectionEnabled`.")
             .unpack()
       )),
       EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => EffectNodeBehaviorT::EffectParticleInfiniteEmitEnabled(Box::new(
-        self.content_as_effect_particle_infinite_emit_enabled()
+        self.value_as_effect_particle_infinite_emit_enabled()
             .expect("Invalid union table, expected `EffectNodeBehavior::EffectParticleInfiniteEmitEnabled`.")
             .unpack()
       )),
       _ => EffectNodeBehaviorT::NONE,
     };
     EffectNodeBehaviorWrapperT {
-      content,
+      value,
     }
   }
 
   #[inline]
-  pub fn content_type(&self) -> EffectNodeBehavior {
+  pub fn value_type(&self) -> EffectNodeBehavior {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<EffectNodeBehavior>(EffectNodeBehaviorWrapper::VT_CONTENT_TYPE, Some(EffectNodeBehavior::NONE)).unwrap()}
+    unsafe { self._tab.get::<EffectNodeBehavior>(EffectNodeBehaviorWrapper::VT_VALUE_TYPE, Some(EffectNodeBehavior::NONE)).unwrap()}
   }
   #[inline]
-  pub fn content(&self) -> Option<flatbuffers::Table<'a>> {
+  pub fn value(&self) -> Option<flatbuffers::Table<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(EffectNodeBehaviorWrapper::VT_CONTENT, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(EffectNodeBehaviorWrapper::VT_VALUE, None)}
   }
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_basic(&self) -> Option<EffectParticleElementBasic<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementBasic {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_basic(&self) -> Option<EffectParticleElementBasic<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementBasic {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11225,9 +10897,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_rnd_seed_change(&self) -> Option<IntValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementRndSeedChange {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_rnd_seed_change(&self) -> Option<IntValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementRndSeedChange {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11240,9 +10912,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_delay(&self) -> Option<IntValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementDelay {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_delay(&self) -> Option<IntValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementDelay {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11255,9 +10927,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_gravity(&self) -> Option<Vec2ValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementGravity {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_gravity(&self) -> Option<Vec2ValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementGravity {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11270,9 +10942,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_position(&self) -> Option<RectValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementPosition {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_position(&self) -> Option<RectValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementPosition {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11285,9 +10957,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_rotation(&self) -> Option<EffectParticleElementRotation<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementRotation {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_rotation(&self) -> Option<EffectParticleElementRotation<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementRotation {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11300,9 +10972,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_rotation_trans(&self) -> Option<EffectParticleElementRotationTrans<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementRotationTrans {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_rotation_trans(&self) -> Option<EffectParticleElementRotationTrans<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementRotationTrans {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11315,9 +10987,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_trans_speed(&self) -> Option<Vec2ValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementTransSpeed {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_trans_speed(&self) -> Option<Vec2ValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementTransSpeed {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11330,9 +11002,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_tangential_acceleration(&self) -> Option<Vec2ValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementTangentialAcceleration {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_tangential_acceleration(&self) -> Option<Vec2ValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementTangentialAcceleration {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11345,9 +11017,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_init_color(&self) -> Option<EffectParticleElementInitColor<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementInitColor {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_init_color(&self) -> Option<EffectParticleElementInitColor<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementInitColor {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11360,9 +11032,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_trans_color(&self) -> Option<EffectParticleElementTransColor<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementTransColor {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_trans_color(&self) -> Option<EffectParticleElementTransColor<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementTransColor {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11375,9 +11047,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_alpha_fade(&self) -> Option<Vec2ValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementAlphaFade {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_alpha_fade(&self) -> Option<Vec2ValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementAlphaFade {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11390,9 +11062,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_size(&self) -> Option<RectAndVec2ValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementSize {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_size(&self) -> Option<RectAndVec2ValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementSize {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11405,9 +11077,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_element_trans_size(&self) -> Option<RectAndVec2ValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleElementTransSize {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_element_trans_size(&self) -> Option<RectAndVec2ValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleElementTransSize {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11420,9 +11092,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_point_gravity(&self) -> Option<EffectParticlePointGravity<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticlePointGravity {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_point_gravity(&self) -> Option<EffectParticlePointGravity<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticlePointGravity {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11435,9 +11107,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_turn_to_direction_enabled(&self) -> Option<FloatValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleTurnToDirectionEnabled {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_turn_to_direction_enabled(&self) -> Option<FloatValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleTurnToDirectionEnabled {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11450,9 +11122,9 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn content_as_effect_particle_infinite_emit_enabled(&self) -> Option<IntValueTable<'a>> {
-    if self.content_type() == EffectNodeBehavior::EffectParticleInfiniteEmitEnabled {
-      self.content().map(|t| {
+  pub fn value_as_effect_particle_infinite_emit_enabled(&self) -> Option<IntValueTable<'a>> {
+    if self.value_type() == EffectNodeBehavior::EffectParticleInfiniteEmitEnabled {
+      self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -11472,7 +11144,7 @@ impl flatbuffers::Verifiable for EffectNodeBehaviorWrapper<'_> {
   ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
     use self::flatbuffers::Verifiable;
     v.visit_table(pos)?
-     .visit_union::<EffectNodeBehavior, _>("content_type", Self::VT_CONTENT_TYPE, "content", Self::VT_CONTENT, false, |key, v, pos| {
+     .visit_union::<EffectNodeBehavior, _>("value_type", Self::VT_VALUE_TYPE, "value", Self::VT_VALUE, false, |key, v, pos| {
         match key {
           EffectNodeBehavior::EffectParticleElementBasic => v.verify_union_variant::<flatbuffers::ForwardsUOffset<EffectParticleElementBasic>>("EffectNodeBehavior::EffectParticleElementBasic", pos),
           EffectNodeBehavior::EffectParticleElementRndSeedChange => v.verify_union_variant::<flatbuffers::ForwardsUOffset<IntValueTable>>("EffectNodeBehavior::EffectParticleElementRndSeedChange", pos),
@@ -11499,15 +11171,15 @@ impl flatbuffers::Verifiable for EffectNodeBehaviorWrapper<'_> {
   }
 }
 pub struct EffectNodeBehaviorWrapperArgs {
-    pub content_type: EffectNodeBehavior,
-    pub content: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+    pub value_type: EffectNodeBehavior,
+    pub value: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
 }
 impl<'a> Default for EffectNodeBehaviorWrapperArgs {
   #[inline]
   fn default() -> Self {
     EffectNodeBehaviorWrapperArgs {
-      content_type: EffectNodeBehavior::NONE,
-      content: None,
+      value_type: EffectNodeBehavior::NONE,
+      value: None,
     }
   }
 }
@@ -11518,12 +11190,12 @@ pub struct EffectNodeBehaviorWrapperBuilder<'a: 'b, 'b, A: flatbuffers::Allocato
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> EffectNodeBehaviorWrapperBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_content_type(&mut self, content_type: EffectNodeBehavior) {
-    self.fbb_.push_slot::<EffectNodeBehavior>(EffectNodeBehaviorWrapper::VT_CONTENT_TYPE, content_type, EffectNodeBehavior::NONE);
+  pub fn add_value_type(&mut self, value_type: EffectNodeBehavior) {
+    self.fbb_.push_slot::<EffectNodeBehavior>(EffectNodeBehaviorWrapper::VT_VALUE_TYPE, value_type, EffectNodeBehavior::NONE);
   }
   #[inline]
-  pub fn add_content(&mut self, content: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(EffectNodeBehaviorWrapper::VT_CONTENT, content);
+  pub fn add_value(&mut self, value: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(EffectNodeBehaviorWrapper::VT_VALUE, value);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> EffectNodeBehaviorWrapperBuilder<'a, 'b, A> {
@@ -11543,130 +11215,130 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> EffectNodeBehaviorWrapperBuilde
 impl core::fmt::Debug for EffectNodeBehaviorWrapper<'_> {
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     let mut ds = f.debug_struct("EffectNodeBehaviorWrapper");
-      ds.field("content_type", &self.content_type());
-      match self.content_type() {
+      ds.field("value_type", &self.value_type());
+      match self.value_type() {
         EffectNodeBehavior::EffectParticleElementBasic => {
-          if let Some(x) = self.content_as_effect_particle_element_basic() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_basic() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementRndSeedChange => {
-          if let Some(x) = self.content_as_effect_particle_element_rnd_seed_change() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_rnd_seed_change() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementDelay => {
-          if let Some(x) = self.content_as_effect_particle_element_delay() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_delay() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementGravity => {
-          if let Some(x) = self.content_as_effect_particle_element_gravity() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_gravity() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementPosition => {
-          if let Some(x) = self.content_as_effect_particle_element_position() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_position() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementRotation => {
-          if let Some(x) = self.content_as_effect_particle_element_rotation() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_rotation() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementRotationTrans => {
-          if let Some(x) = self.content_as_effect_particle_element_rotation_trans() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_rotation_trans() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementTransSpeed => {
-          if let Some(x) = self.content_as_effect_particle_element_trans_speed() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_trans_speed() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementTangentialAcceleration => {
-          if let Some(x) = self.content_as_effect_particle_element_tangential_acceleration() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_tangential_acceleration() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementInitColor => {
-          if let Some(x) = self.content_as_effect_particle_element_init_color() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_init_color() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementTransColor => {
-          if let Some(x) = self.content_as_effect_particle_element_trans_color() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_trans_color() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementAlphaFade => {
-          if let Some(x) = self.content_as_effect_particle_element_alpha_fade() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_alpha_fade() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementSize => {
-          if let Some(x) = self.content_as_effect_particle_element_size() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_size() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleElementTransSize => {
-          if let Some(x) = self.content_as_effect_particle_element_trans_size() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_element_trans_size() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticlePointGravity => {
-          if let Some(x) = self.content_as_effect_particle_point_gravity() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_point_gravity() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleTurnToDirectionEnabled => {
-          if let Some(x) = self.content_as_effect_particle_turn_to_direction_enabled() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_turn_to_direction_enabled() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => {
-          if let Some(x) = self.content_as_effect_particle_infinite_emit_enabled() {
-            ds.field("content", &x)
+          if let Some(x) = self.value_as_effect_particle_infinite_emit_enabled() {
+            ds.field("value", &x)
           } else {
-            ds.field("content", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         _ => {
           let x: Option<()> = None;
-          ds.field("content", &x)
+          ds.field("value", &x)
         },
       };
       ds.finish()
@@ -11675,12 +11347,12 @@ impl core::fmt::Debug for EffectNodeBehaviorWrapper<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct EffectNodeBehaviorWrapperT {
-  pub content: EffectNodeBehaviorT,
+  pub value: EffectNodeBehaviorT,
 }
 impl Default for EffectNodeBehaviorWrapperT {
   fn default() -> Self {
     Self {
-      content: EffectNodeBehaviorT::NONE,
+      value: EffectNodeBehaviorT::NONE,
     }
   }
 }
@@ -11689,11 +11361,11 @@ impl EffectNodeBehaviorWrapperT {
     &self,
     _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>
   ) -> flatbuffers::WIPOffset<EffectNodeBehaviorWrapper<'b>> {
-    let content_type = self.content.effect_node_behavior_type();
-    let content = self.content.pack(_fbb);
+    let value_type = self.value.effect_node_behavior_type();
+    let value = self.value.pack(_fbb);
     EffectNodeBehaviorWrapper::create(_fbb, &EffectNodeBehaviorWrapperArgs{
-      content_type,
-      content,
+      value_type,
+      value,
     })
   }
 }
@@ -15292,18 +14964,15 @@ impl<'a> AnimationData<'a> {
   pub const VT_NAME: flatbuffers::VOffsetT = 4;
   pub const VT_SETUP_ANIMATION: flatbuffers::VOffsetT = 6;
   pub const VT_FRAME_DATA: flatbuffers::VOffsetT = 8;
-  pub const VT_USER_DATA: flatbuffers::VOffsetT = 10;
-  pub const VT_SIGNAL_DATA: flatbuffers::VOffsetT = 12;
-  pub const VT_AUDIO_DATA: flatbuffers::VOffsetT = 14;
-  pub const VT_TEXTURE_CHANGE: flatbuffers::VOffsetT = 16;
-  pub const VT_LABEL_DATA: flatbuffers::VOffsetT = 18;
-  pub const VT_MESHS_DATA_UV: flatbuffers::VOffsetT = 20;
-  pub const VT_MESHS_DATA_INDICES: flatbuffers::VOffsetT = 22;
-  pub const VT_START_FRAMES: flatbuffers::VOffsetT = 24;
-  pub const VT_END_FRAMES: flatbuffers::VOffsetT = 26;
-  pub const VT_TOTAL_FRAMES: flatbuffers::VOffsetT = 28;
-  pub const VT_FPS: flatbuffers::VOffsetT = 30;
-  pub const VT_CANVAS: flatbuffers::VOffsetT = 32;
+  pub const VT_EVENTS: flatbuffers::VOffsetT = 10;
+  pub const VT_LABEL_DATA: flatbuffers::VOffsetT = 12;
+  pub const VT_MESHS_DATA_UV: flatbuffers::VOffsetT = 14;
+  pub const VT_MESHS_DATA_INDICES: flatbuffers::VOffsetT = 16;
+  pub const VT_START_FRAMES: flatbuffers::VOffsetT = 18;
+  pub const VT_END_FRAMES: flatbuffers::VOffsetT = 20;
+  pub const VT_TOTAL_FRAMES: flatbuffers::VOffsetT = 22;
+  pub const VT_FPS: flatbuffers::VOffsetT = 24;
+  pub const VT_CANVAS: flatbuffers::VOffsetT = 26;
 
   #[inline]
   pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -15319,10 +14988,7 @@ impl<'a> AnimationData<'a> {
     if let Some(x) = args.meshs_data_indices { builder.add_meshs_data_indices(x); }
     if let Some(x) = args.meshs_data_uv { builder.add_meshs_data_uv(x); }
     if let Some(x) = args.label_data { builder.add_label_data(x); }
-    if let Some(x) = args.texture_change { builder.add_texture_change(x); }
-    if let Some(x) = args.audio_data { builder.add_audio_data(x); }
-    if let Some(x) = args.signal_data { builder.add_signal_data(x); }
-    if let Some(x) = args.user_data { builder.add_user_data(x); }
+    if let Some(x) = args.events { builder.add_events(x); }
     if let Some(x) = args.frame_data { builder.add_frame_data(x); }
     if let Some(x) = args.setup_animation { builder.add_setup_animation(x); }
     if let Some(x) = args.name { builder.add_name(x); }
@@ -15344,16 +15010,7 @@ impl<'a> AnimationData<'a> {
     let frame_data = self.frame_data().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let user_data = self.user_data().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let signal_data = self.signal_data().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let audio_data = self.audio_data().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
-    let texture_change = self.texture_change().map(|x| {
+    let events = self.events().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let label_data = self.label_data().map(|x| {
@@ -15376,10 +15033,7 @@ impl<'a> AnimationData<'a> {
       name,
       setup_animation,
       frame_data,
-      user_data,
-      signal_data,
-      audio_data,
-      texture_change,
+      events,
       label_data,
       meshs_data_uv,
       meshs_data_indices,
@@ -15423,32 +15077,11 @@ impl<'a> AnimationData<'a> {
     unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState>>>>(AnimationData::VT_FRAME_DATA, None)}
   }
   #[inline]
-  pub fn user_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataPerFrame<'a>>>> {
+  pub fn events(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataPerFrame>>>>(AnimationData::VT_USER_DATA, None)}
-  }
-  #[inline]
-  pub fn signal_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataPerFrame<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataPerFrame>>>>(AnimationData::VT_SIGNAL_DATA, None)}
-  }
-  #[inline]
-  pub fn audio_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataPerFrame<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataPerFrame>>>>(AnimationData::VT_AUDIO_DATA, None)}
-  }
-  #[inline]
-  pub fn texture_change(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataPerFrame<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataPerFrame>>>>(AnimationData::VT_TEXTURE_CHANGE, None)}
+    unsafe { self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<EventsPerFrame>>>>(AnimationData::VT_EVENTS, None)}
   }
   #[inline]
   pub fn label_data(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>> {
@@ -15518,10 +15151,7 @@ impl flatbuffers::Verifiable for AnimationData<'_> {
      .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAttributes>>>>("setup_animation", Self::VT_SETUP_ANIMATION, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartState>>>>("frame_data", Self::VT_FRAME_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<UserDataPerFrame>>>>("user_data", Self::VT_USER_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<SignalDataPerFrame>>>>("signal_data", Self::VT_SIGNAL_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<AudioDataPerFrame>>>>("audio_data", Self::VT_AUDIO_DATA, false)?
-     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<TextureChangeDataPerFrame>>>>("texture_change", Self::VT_TEXTURE_CHANGE, false)?
+     .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<EventsPerFrame>>>>("events", Self::VT_EVENTS, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Label>>>>("label_data", Self::VT_LABEL_DATA, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshDataUV>>>>("meshs_data_uv", Self::VT_MESHS_DATA_UV, false)?
      .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshDataIndices>>>>("meshs_data_indices", Self::VT_MESHS_DATA_INDICES, false)?
@@ -15538,10 +15168,7 @@ pub struct AnimationDataArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub setup_animation: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>>,
     pub frame_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>>>,
-    pub user_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<UserDataPerFrame<'a>>>>>,
-    pub signal_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<SignalDataPerFrame<'a>>>>>,
-    pub audio_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<AudioDataPerFrame<'a>>>>>,
-    pub texture_change: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<TextureChangeDataPerFrame<'a>>>>>,
+    pub events: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>>>,
     pub label_data: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>>>,
     pub meshs_data_uv: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV<'a>>>>>,
     pub meshs_data_indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices<'a>>>>>,
@@ -15558,10 +15185,7 @@ impl<'a> Default for AnimationDataArgs<'a> {
       name: None, // required field
       setup_animation: None,
       frame_data: None,
-      user_data: None,
-      signal_data: None,
-      audio_data: None,
-      texture_change: None,
+      events: None,
       label_data: None,
       meshs_data_uv: None,
       meshs_data_indices: None,
@@ -15592,20 +15216,8 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, A>
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_FRAME_DATA, frame_data);
   }
   #[inline]
-  pub fn add_user_data(&mut self, user_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<UserDataPerFrame<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_USER_DATA, user_data);
-  }
-  #[inline]
-  pub fn add_signal_data(&mut self, signal_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<SignalDataPerFrame<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_SIGNAL_DATA, signal_data);
-  }
-  #[inline]
-  pub fn add_audio_data(&mut self, audio_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<AudioDataPerFrame<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_AUDIO_DATA, audio_data);
-  }
-  #[inline]
-  pub fn add_texture_change(&mut self, texture_change: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<TextureChangeDataPerFrame<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_TEXTURE_CHANGE, texture_change);
+  pub fn add_events(&mut self, events: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<EventsPerFrame<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnimationData::VT_EVENTS, events);
   }
   #[inline]
   pub fn add_label_data(&mut self, label_data: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Label<'b >>>>) {
@@ -15661,10 +15273,7 @@ impl core::fmt::Debug for AnimationData<'_> {
       ds.field("name", &self.name());
       ds.field("setup_animation", &self.setup_animation());
       ds.field("frame_data", &self.frame_data());
-      ds.field("user_data", &self.user_data());
-      ds.field("signal_data", &self.signal_data());
-      ds.field("audio_data", &self.audio_data());
-      ds.field("texture_change", &self.texture_change());
+      ds.field("events", &self.events());
       ds.field("label_data", &self.label_data());
       ds.field("meshs_data_uv", &self.meshs_data_uv());
       ds.field("meshs_data_indices", &self.meshs_data_indices());
@@ -15682,10 +15291,7 @@ pub struct AnimationDataT {
   pub name: String,
   pub setup_animation: Option<Vec<PartAttributesT>>,
   pub frame_data: Option<Vec<PartStateT>>,
-  pub user_data: Option<Vec<UserDataPerFrameT>>,
-  pub signal_data: Option<Vec<SignalDataPerFrameT>>,
-  pub audio_data: Option<Vec<AudioDataPerFrameT>>,
-  pub texture_change: Option<Vec<TextureChangeDataPerFrameT>>,
+  pub events: Option<Vec<EventsPerFrameT>>,
   pub label_data: Option<Vec<LabelT>>,
   pub meshs_data_uv: Option<Vec<MeshDataUVT>>,
   pub meshs_data_indices: Option<Vec<MeshDataIndicesT>>,
@@ -15701,10 +15307,7 @@ impl Default for AnimationDataT {
       name: "".to_string(),
       setup_animation: None,
       frame_data: None,
-      user_data: None,
-      signal_data: None,
-      audio_data: None,
-      texture_change: None,
+      events: None,
       label_data: None,
       meshs_data_uv: None,
       meshs_data_indices: None,
@@ -15731,16 +15334,7 @@ impl AnimationDataT {
     let frame_data = self.frame_data.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let user_data = self.user_data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let signal_data = self.signal_data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let audio_data = self.audio_data.as_ref().map(|x|{
-      let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
-    let texture_change = self.texture_change.as_ref().map(|x|{
+    let events = self.events.as_ref().map(|x|{
       let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let label_data = self.label_data.as_ref().map(|x|{
@@ -15763,10 +15357,7 @@ impl AnimationDataT {
       name,
       setup_animation,
       frame_data,
-      user_data,
-      signal_data,
-      audio_data,
-      texture_change,
+      events,
       label_data,
       meshs_data_uv,
       meshs_data_indices,

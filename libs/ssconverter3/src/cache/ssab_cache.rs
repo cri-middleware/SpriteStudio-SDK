@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use ssab::ssab::{AnimationData, AnimationDataArgs, AnimationDataT, AudioDataPerFrame, BoolValueTable, BoolValueTableArgs, BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label, MeshDataIndices, MeshDataUV, PartState, SignalDataPerFrame, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, TextureChangeDataPerFrame, UserDataPerFrame};
+use ssab::ssab::{AnimationData, AnimationDataArgs, AnimationDataT, BoolValueTable, BoolValueTableArgs, BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label, MeshDataIndices, MeshDataUV, PartState, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, };
 use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -241,10 +241,7 @@ impl<'bldr> SsabCache<'bldr> {
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
             args.setup_animation = None; // TODO; impl
             args.frame_data = None; // TODO; impl
-            args.user_data = None; // TODO; impl
-            args.signal_data = None; // TODO; impl
-            args.audio_data = None; // TODO; impl
-            args.texture_change = None; // TODO; impl
+            args.events = None; // TODO; impl
             args.label_data = None; // TODO; impl
             args.meshs_data_uv = None; // TODO; impl
             args.meshs_data_indices = None; // TODO; impl

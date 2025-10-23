@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ssab::ssab::{AnimationDataT, AudioDataPerFrameT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, MeshDataIndicesT, MeshDataUVT, PartAttributesT, PartStateT, RectT, SignalDataPerFrameT, TextureChangeDataPerFrameT, UserDataPerFrameT};
+use ssab::ssab::{AnimationDataT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, MeshDataIndicesT, MeshDataUVT, PartAttributesT, PartStateT, RectT};
 use sspj::ssae::{SsAnimation, SsAnimePack};
 use sspj::ssce::{SsCell, SsCellMap};
 use sspj::sscharmap::SsCharMap;
