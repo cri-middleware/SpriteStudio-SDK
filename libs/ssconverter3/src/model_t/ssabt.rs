@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use ssab::ssab::{CellMapT, CellT, EffectT, FontBitmapT};
-use sspj::ssae::SsAnimePack;
+use ssab::ssab::{AnimationDataT, AudioDataPerFrameT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, MeshDataIndicesT, MeshDataUVT, PartAttributesT, PartStateT, RectT, SignalDataPerFrameT, TextureChangeDataPerFrameT, UserDataPerFrameT};
+use sspj::ssae::{SsAnimation, SsAnimePack};
 use sspj::ssce::{SsCell, SsCellMap};
 use sspj::sscharmap::SsCharMap;
 use sspj::ssee::SsEffectFile;
@@ -36,6 +36,44 @@ pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::RectT {
     rect.y2 = y2;
 
     rect
+}
+
+fn convert_animedatat(anime_data: &SsAnimation, setup_animation: &SsAnimation) -> AnimationDataT {
+    let mut anime_data_t = AnimationDataT::default();
+
+    anime_data_t.name = anime_data.name.clone();
+    // anime_data_t.setup_animation = setup_animation;
+
+    // anime_data_t.frame_data;
+
+    /*
+    anime_data_t.user_data;
+    anime_data_t.signal_data;
+    anime_data_t.audio_data;
+    anime_data_t.texture_change;
+    anime_data_t.label_data;
+    anime_data_t.meshs_data_uv;
+    anime_data_t.meshs_data_indices;
+    anime_data_t.start_frames;
+    anime_data_t.end_frames;
+    anime_data_t.total_frames;
+    anime_data_t.fps;
+    anime_data_t.canvas;
+     */
+
+    anime_data_t
+}
+fn convert_animation_data_list(sspj: &&SsProject, anime_data_list: &[SsAnimation]) -> Option<Vec<AnimationDataT>> {
+    let Some(setup_animation) = anime_data_list.iter().find(|anime_data| anime_data.is_setup) else {
+        // not found setup animation
+        return None;
+    };
+    Some(anime_data_list.iter().filter_map(|anime_data| {
+        if anime_data == setup_animation {
+            return None;
+        }
+        Some(convert_animedatat(anime_data, setup_animation))
+    }).collect::<Vec<AnimationDataT>>())
 }
 
 pub fn convert_cellt(sscell: &SsCell) -> CellT {
@@ -132,7 +170,7 @@ pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCh
 
 pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
-    anime_binary.animations = None;
+    anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack.anime_list);
     anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &sspj.cellmap_list);
     anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
     anime_binary.sound_list = ssabt::convert_sound_list(&sspj, &sspj.sound_list);
