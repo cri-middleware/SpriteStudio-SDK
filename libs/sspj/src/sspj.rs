@@ -130,8 +130,14 @@ impl SsLoader for SsProject {
             let parent_path = parent.to_path_buf();
             let audiopack_names = sspj.audiopack_names.clone();
             std::thread::spawn(move || {
-                audiopack_names.par_iter().filter_map(|audiopack| {
-                    SsAudioPack::load_from_file(&parent_path.join(audiopack)).ok()
+                audiopack_names.par_iter().map(|audiopack| {
+                    let r = SsAudioPack::load_from_file(&parent_path.join(audiopack));
+                    match r {
+                        Ok(audiopack_data) => audiopack_data,
+                        Err(e) => {
+                            panic!("Failed to load a audiopack: {:?}, {:?}", audiopack, e);
+                        }
+                    }
                 }).collect::<Vec<SsAudioPack>>()
             })
         };
@@ -140,8 +146,14 @@ impl SsLoader for SsProject {
             let parent_path = parent.to_path_buf();
             let sequencepack_names = sspj.sequencepack_names.clone();
             std::thread::spawn(move || {
-                sequencepack_names.par_iter().filter_map(|sequencepack| {
-                    SsSequencePack::load_from_file(&parent_path.join(sequencepack)).ok()
+                sequencepack_names.par_iter().map(|sequencepack| {
+                    let r = SsSequencePack::load_from_file(&parent_path.join(sequencepack));
+                    match r {
+                        Ok(sequencepack_data) => sequencepack_data,
+                        Err(e) => {
+                            panic!("Failed to load a sequencepack: {:?}, {:?}", sequencepack, e);
+                        }
+                    }
                 }).collect::<Vec<SsSequencePack>>()
             })
         };
@@ -151,8 +163,12 @@ impl SsLoader for SsProject {
             let charmap_names = sspj.charmap_names.clone();
             std::thread::spawn(move || {
                 charmap_names.par_iter().filter_map(|charmap_name| {
-                    let Ok(charmap_data) = SsCharMap::load_from_file(&parent_path.join(charmap_name)) else {
-                        return None;
+                    let r = SsCharMap::load_from_file(&parent_path.join(charmap_name));
+                    let charmap_data = match r {
+                        Ok(charmap_data) => charmap_data,
+                        Err(e) => {
+                            panic!("Failed to load a charmap: {:?}, {:?}", charmap_name, e);
+                        }
                     };
                     Some((charmap_name.to_string(), charmap_data))
                 }).collect::<HashMap<String, SsCharMap>>()
@@ -163,13 +179,17 @@ impl SsLoader for SsProject {
             let parent_path = parent.to_path_buf();
             let cellmap_names = sspj.cellmap_names.clone();
             std::thread::spawn(move || {
-                cellmap_names.par_iter().filter_map(|cellmap| {
-                    let ssce_path = &parent_path.join(cellmap);
-                    let Ok(mut ssce) = SsCellMap::load_from_file(&ssce_path) else {
-                        return None;
+                cellmap_names.par_iter().map(|cellmap| {
+                    let ssce_path = parent_path.join(cellmap);
+                    let r = SsCellMap::load_from_file(&ssce_path);
+                    let mut ssce = match r {
+                        Ok(ssce) => ssce,
+                        Err(e) => {
+                            panic!("Failed to load a cellmap: {:?}, {:?}", ssce_path, e);
+                        }
                     };
                     ssce.load_file_path = ssce_path.to_string_lossy().to_string();
-                    Some(ssce)
+                    ssce
                 }).collect::<Vec<SsCellMap>>()
             })
         };
@@ -178,8 +198,14 @@ impl SsLoader for SsProject {
             let parent_path = parent.to_path_buf();
             let effect_file_names = sspj.effect_file_names.clone();
             std::thread::spawn(move || {
-                effect_file_names.par_iter().filter_map(|effect_file| {
-                    SsEffectFile::load_from_file(&parent_path.join(effect_file)).ok()
+                effect_file_names.par_iter().map(|effect_file| {
+                    let r = SsEffectFile::load_from_file(&parent_path.join(effect_file));
+                    match r {
+                        Ok(effect_file_data) => effect_file_data,
+                        Err(e) => {
+                            panic!("Failed to load a effect file: {:?}, {:?}", effect_file, e);
+                        }
+                    }
                 }).collect::<Vec<SsEffectFile>>()
             })
         };
@@ -188,8 +214,14 @@ impl SsLoader for SsProject {
             let parent_path = parent.to_path_buf();
             let animepack_names = sspj.animepack_names.clone();
             std::thread::spawn(move || {
-                animepack_names.par_iter().filter_map(|animepack| {
-                    SsAnimePack::load_from_file(&parent_path.join(animepack)).ok()
+                animepack_names.par_iter().map(|animepack| {
+                    let r = SsAnimePack::load_from_file(&parent_path.join(animepack));
+                    match r {
+                        Ok(animepack_data) => animepack_data,
+                        Err(e) => {
+                            panic!("Failed to load a animepack: {:?}, {:?}", animepack, e);
+                        }
+                    }
                 }).collect::<Vec<SsAnimePack>>()
             })
         };
