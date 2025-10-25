@@ -265,10 +265,6 @@ table SignalDataItem {
   params: [SignalComamndParam];
 }
 
-// table SignalData {
-//   items: [SignalDataItem];
-// }
-
 table AudioDataItem {
   part_index: short (key);
 
@@ -277,41 +273,29 @@ table AudioDataItem {
   loop_num: int;
 }
 
-/*
-table AudioData {
-  items: [AudioDataItem];
-}
-*/
-
 table TextureChangeDataItem {
   part_index: short (key);
 
   texture_name: string;
 }
 
-// table TextureChangeData {
-//   items: [TextureChangeDataItem];
-// }
+table  InstanceDataItem {
+  // TODO: impl
+}
 
-// union EventData {
-//   UserData,
-//   SignalData,
-//   AudioData,
-//   TextureChangeData,
-// }
-
-// table EventDataWrapper {
-//   value: EventData;
-// }
+table EffectDataItem {
+  // TODO: impl
+}
 
 table EventsPerFrame {
   frame_index: short (key);
 
-  // events: [EventDataWrapper];
   user: [UserDataItem];
   signal: [SignalDataItem];
   audio: [AudioDataItem];
-  texture: [TextureChangeDataItem];
+
+  instance: [InstanceDataItem];
+  effect: [EffectDataItem];
 }
 
 table Cell {
@@ -476,47 +460,6 @@ table MeshDataIndices {
   indices: [float];
 }
 
-/*
-// for runtime
-table PartAttributes {
-  cell_index: short;
-  position_x: float;
-  position_y: float;
-  position_z: float;
-  rotation_x: float;
-  rotation_y: float;
-  rotation_z: float;
-  scale_x: float;
-  scale_y: float;
-  localscale_x: float;
-  localscale_y: float;
-  opacity: short;
-  localopacity: short;
-  priority: short;
-  flip_v: bool;
-  flip_h: bool;
-  hide: bool;
-  mask: short;
-  pivot_x: float;
-  pivot_y: float;
-  size_x: float;
-  size_y: float;
-  uv_move_x: float;
-  uv_move_y: float;
-  uv_rotation: float;
-  uv_scale_x: float;
-  uv_scale_y: float;
-  bounding_radius: float;
-  instance: InstanceAttribute;
-  effect: EffectAttribute;
-
-  // vertex_deformation:
-  // skew:
-  // deform:
-  // parts_color:
-}
-*/
-
 table PartAttributeInstance {
   cur_keyframe: int;
   start_frame: int;
@@ -563,7 +506,7 @@ table PartAttributes {
 }
 
 table PartData {
-  index: short (key);
+  part_index: short (key);
   name: string;
   parent_index: short;
   type: PartType;
@@ -576,7 +519,7 @@ table PartData {
 }
 
 table PartState {
-  index: short;
+  part_index: short;
   attributes: [AttributeWrapper];
 }
 
@@ -588,7 +531,7 @@ table Label {
 table AnimationData {
   name: string (key);
 
-  setup_animation: [PartAttributes];
+  initial_data: [PartAttributes];
   frame_data: [PartState];
 
   events: [EventsPerFrame];

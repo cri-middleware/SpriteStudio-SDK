@@ -1,13 +1,13 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use ssab::ssab::{AnimationDataT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, MeshDataIndicesT, MeshDataUVT, PartAttributesT, PartStateT, RectT};
-use sspj::ssae::{SsAnimation, SsAnimePack};
+use sspj::ssae::{SsAnimation, SsAnimePack, SsPart};
 use sspj::ssce::{SsCell, SsCellMap};
 use sspj::sscharmap::SsCharMap;
 use sspj::ssee::SsEffectFile;
 use sspj::sspj::SsProject;
 use sspj::ssse::{SsAudioPack, SsSoundFileList};
 use sspj::sstypes;
-use sspj::sstypes::{SsPoint2, SsPoint3};
+use sspj::sstypes::{SsPartType, SsPoint2, SsPoint3};
 use crate::model_t::ssabt;
 
 pub fn convert_vec2t(point2: &SsPoint2) -> ssab::ssab::Vec2T {
@@ -42,33 +42,36 @@ fn convert_animedatat(anime_data: &SsAnimation, setup_animation: &SsAnimation) -
     let mut anime_data_t = AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.clone();
+    anime_data_t.fps = anime_data.settings.fps as i16;
+    let mut canvas = ssab::ssab::RectT::default();
+    canvas.x1 = anime_data.settings.pivot.x;
+    canvas.y1 = anime_data.settings.pivot.y;
+    canvas.x2 = anime_data.settings.canvas_size.x;
+    canvas.y2 = anime_data.settings.canvas_size.y;
+    anime_data_t.canvas = Some(Box::new(canvas));
+    anime_data_t.start_frames = anime_data.settings.start_frame as i16;
+    anime_data_t.end_frames = anime_data.settings.end_frame as i16;
+    anime_data_t.total_frames = anime_data.settings.frame_count as i16;
+
     // anime_data_t.setup_animation = setup_animation;
 
-    // anime_data_t.frame_data;
-
     /*
-    anime_data_t.user_data;
-    anime_data_t.signal_data;
-    anime_data_t.audio_data;
-    anime_data_t.texture_change;
+    anime_data_t.frame_data;
+    anime_data_t.events;
     anime_data_t.label_data;
     anime_data_t.meshs_data_uv;
     anime_data_t.meshs_data_indices;
-    anime_data_t.start_frames;
-    anime_data_t.end_frames;
-    anime_data_t.total_frames;
-    anime_data_t.fps;
-    anime_data_t.canvas;
      */
 
     anime_data_t
 }
-fn convert_animation_data_list(sspj: &&SsProject, anime_data_list: &[SsAnimation]) -> Option<Vec<AnimationDataT>> {
-    let Some(setup_animation) = anime_data_list.iter().find(|anime_data| anime_data.is_setup) else {
+fn convert_animation_data_list(sspj: &&SsProject, anime_pack: &SsAnimePack) -> Option<Vec<AnimationDataT>> {
+    let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
         return None;
     };
-    Some(anime_data_list.iter().filter_map(|anime_data| {
+
+    Some(anime_pack.anime_list.iter().filter_map(|anime_data| {
         if anime_data == setup_animation {
             return None;
         }
@@ -112,6 +115,9 @@ pub fn convert_cellmapt(cellmap: &SsCellMap) -> CellMapT {
     cell_map_t
 }
 pub fn convert_cellmapt_list(sspj: &SsProject, cellmap_names: &[SsCellMap]) -> Option<Vec<CellMapT>> {
+    if cellmap_names.is_empty() {
+        return None;
+    }
     Some(cellmap_names.iter().map(|cellmap| {
         convert_cellmapt(cellmap)
     }).collect::<Vec<CellMapT>>())
@@ -168,14 +174,64 @@ pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCh
     }).collect::<Vec<FontBitmapT>>())
 }
 
+fn get_cellmap_names_of_instance(anime_pack: &SsAnimePack, sspj: &SsProject) -> Vec<String> {
+    anime_pack.model.part_list.iter().filter(|part| {
+        part.part_type == SsPartType::Instance
+    }).filter_map(|part| {
+        let Some(a) = sspj.anime_list.iter().find(|anime| anime.name == part.ref_anime_pack) else {
+            return None;
+        };
+        Some(a.cellmap_names.iter().map(|cellmap_name| {
+            cellmap_name.replace(".ssce", "")
+        }).collect::<Vec<String>>())
+    }).flatten().collect::<Vec<String>>()
+}
+
 pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
-    anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack.anime_list);
-    anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &sspj.cellmap_list);
+    anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack);
     anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
-    anime_binary.sound_list = ssabt::convert_sound_list(&sspj, &sspj.sound_list);
+
+    anime_binary.sound_list = if anime_pack.model.part_list.iter().filter(|part| {
+        part.part_type == SsPartType::Audio
+    }).collect::<Vec<&SsPart>>().is_empty() {
+        // don't use sound
+        None
+    } else {
+        convert_sound_list(&sspj, &sspj.sound_list)
+    };
     anime_binary.font_bitmap = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
-    anime_binary.instances = None;
+    anime_binary.instances = None; // TODO: impl
+
+    let mut cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| {
+        cellmap_file.replace(".ssce", "")
+    }).collect::<HashSet<String>>();
+    get_cellmap_names_of_instance(&anime_pack, &sspj).iter().for_each(|cellmap_name| {
+        cellmap_names.insert(cellmap_name.clone());
+    });
+    if anime_pack.model.part_list.iter().filter(|part| {
+        part.part_type == SsPartType::Effect
+    }).collect::<Vec<&SsPart>>().is_empty() != true {
+        sspj.effect_file_list.iter().for_each(|effect_file| {
+            effect_file.effect_data.node_list.iter().for_each(|node| {
+                let cellmap_name = node.behavior.cell_map_name.replace(".ssce", "");
+                cellmap_names.insert(cellmap_name);
+            })
+        });
+    };
+    anime_binary.instances.as_ref().map(|instances| {
+        instances.iter().for_each(|instance| {
+            let splt = instance.name.split("/").collect::<Vec<&str>>();
+            let animepack = splt[0];
+            get_cellmap_names_of_instance(anime_pack, sspj).iter().for_each(|cellmap_name| {
+                cellmap_names.insert(cellmap_name.clone());
+            })
+        })
+    });
+    let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| {
+        sspj.cellmap_list.iter().find(|cellmap| cellmap.name == *cellmap_name).cloned()
+    }).collect::<Vec<SsCellMap>>();
+    anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
 
     anime_binary
 }

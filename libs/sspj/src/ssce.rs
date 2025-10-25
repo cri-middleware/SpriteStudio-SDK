@@ -2,7 +2,7 @@ use serde::Deserialize;
 use crate::ssloader::{SsLoader, SspjError};
 use crate::sstypes::*;
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum SsMeshDivType {
     Unknown,
@@ -11,7 +11,7 @@ pub enum SsMeshDivType {
     Boxdiv,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SsCell {
     pub name: String,
@@ -66,7 +66,7 @@ where
 }
 
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename = "SpriteStudioCellMap")]
 #[serde(rename_all(deserialize = "camelCase"))]
 pub struct SsCellMap {

@@ -3,7 +3,7 @@ use serde::{Deserialize};
 use std::str::FromStr;
 use serde::de::{MapAccess, Visitor};
 
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Clone, Debug)]
 pub struct SsPoint2 {
     pub x: f32,
     pub y: f32,
@@ -41,7 +41,7 @@ impl<'de> Deserialize<'de> for SsPoint2 {
     }
 }
 
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Clone, Debug)]
 pub struct SsPoint3 {
     pub x: f32,
     pub y: f32,
@@ -236,7 +236,7 @@ pub enum SsSequenceType {
     Top,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum SsTexWrapMode {
     Clamp,
@@ -244,7 +244,7 @@ pub enum SsTexWrapMode {
     Mirror,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum SsTexFilterMode {
     #[serde(rename = "nearlest")]

@@ -239,7 +239,7 @@ impl<'bldr> SsabCache<'bldr> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.setup_animation = None; // TODO; impl
+            args.initial_data = None; // TODO; impl
             args.frame_data = None; // TODO; impl
             args.events = None; // TODO; impl
             args.label_data = None; // TODO; impl

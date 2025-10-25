@@ -1,3 +1,41 @@
+table PartAttributes {
+  cell_index: short;
+  position_x: float;
+  position_y: float;
+  position_z: float;
+  rotation_x: float;
+  rotation_y: float;
+  rotation_z: float;
+  scale_x: float;
+  scale_y: float;
+  localscale_x: float;
+  localscale_y: float;
+  opacity: short;
+  localopacity: short;
+  priority: short;
+  flip_v: bool;
+  flip_h: bool;
+  hide: bool;
+  mask: short;
+  pivot_x: float;
+  pivot_y: float;
+  size_x: float;
+  size_y: float;
+  uv_move_x: float;
+  uv_move_y: float;
+  uv_rotation: float;
+  uv_scale_x: float;
+  uv_scale_y: float;
+  bounding_radius: float;
+  instance: InstanceAttribute;
+  effect: EffectAttribute;
+
+  // vertex_deformation:
+  // skew:
+  // deform:
+  // parts_color:
+}
+
 table Preparation {
   stub: int;
 }

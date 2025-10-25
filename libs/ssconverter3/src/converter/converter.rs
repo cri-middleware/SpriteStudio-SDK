@@ -55,12 +55,6 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig) -> Result
         ssqbt::convert_ss_sequence_binary_t(sequence)
     }).collect::<Vec<ssab::ssqb::SsSequenceBinaryT>>();
 
-
-    ssab_model_list.iter_mut().for_each(|_ss_anime_binary_t| {
-        // optimize ssab ssab structures (e.g. add dependency animations, remove unused ss*e data)
-
-    });
-
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.iter().zip(sspj.animepack_names.iter()).map(|(anime_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
