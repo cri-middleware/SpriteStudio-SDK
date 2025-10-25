@@ -188,7 +188,7 @@ impl SsLoader for SsProject {
                             panic!("Failed to load a cellmap: {:?}, {:?}", ssce_path, e);
                         }
                     };
-                    ssce.load_file_path = ssce_path.to_string_lossy().to_string();
+                    ssce.load_file_path = ssce_path.file_name().unwrap().to_string_lossy().to_string();
                     ssce
                 }).collect::<Vec<SsCellMap>>()
             })

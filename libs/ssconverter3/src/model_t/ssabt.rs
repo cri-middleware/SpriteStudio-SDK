@@ -182,7 +182,7 @@ fn get_cellmap_names_of_instance(anime_pack: &SsAnimePack, sspj: &SsProject) -> 
             return None;
         };
         Some(a.cellmap_names.iter().map(|cellmap_name| {
-            cellmap_name.replace(".ssce", "")
+            cellmap_name.clone()
         }).collect::<Vec<String>>())
     }).flatten().collect::<Vec<String>>()
 }
@@ -204,7 +204,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> 
     anime_binary.instances = None; // TODO: impl
 
     let mut cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| {
-        cellmap_file.replace(".ssce", "")
+        cellmap_file.clone()
     }).collect::<HashSet<String>>();
     get_cellmap_names_of_instance(&anime_pack, &sspj).iter().for_each(|cellmap_name| {
         cellmap_names.insert(cellmap_name.clone());
@@ -214,8 +214,8 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> 
     }).collect::<Vec<&SsPart>>().is_empty() != true {
         sspj.effect_file_list.iter().for_each(|effect_file| {
             effect_file.effect_data.node_list.iter().for_each(|node| {
-                let cellmap_name = node.behavior.cell_map_name.replace(".ssce", "");
-                cellmap_names.insert(cellmap_name);
+                if node.behavior.cell_map_name.is_empty() { return; }
+                cellmap_names.insert(node.behavior.cell_map_name.clone());
             })
         });
     };
@@ -229,7 +229,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject) -> 
         })
     });
     let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| {
-        sspj.cellmap_list.iter().find(|cellmap| cellmap.name == *cellmap_name).cloned()
+        sspj.cellmap_list.iter().find(|cellmap| cellmap.load_file_path == *cellmap_name).cloned()
     }).collect::<Vec<SsCellMap>>();
     anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
 
