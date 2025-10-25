@@ -1,3 +1,5 @@
+namespace ss.runtime;
+
 table PartAttributes {
   cell_index: short;
   position_x: float;
@@ -27,8 +29,8 @@ table PartAttributes {
   uv_scale_x: float;
   uv_scale_y: float;
   bounding_radius: float;
-  instance: InstanceAttribute;
-  effect: EffectAttribute;
+  // instance: InstanceAttribute;
+  // effect: EffectAttribute;
 
   // vertex_deformation:
   // skew:
@@ -38,6 +40,7 @@ table PartAttributes {
 
 table Preparation {
   stub: int;
+  attr: [PartAttributes];
 }
 
 root_type Preparation;

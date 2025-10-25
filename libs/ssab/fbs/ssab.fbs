@@ -240,10 +240,6 @@ table UserDataItem {
   value: [UserDataValueWrapper];
 }
 
-// table UserData {
-//   items: [UserDataItem];
-// }
-
 enum SignalComamndParamType: ubyte {
   Index,
   Integer,
