@@ -2,9 +2,9 @@ use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{
     AnimationData, AnimationDataArgs, AnimationDataT, BoolValueTable, BoolValueTableArgs,
-    BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable,
-    IntValueTableArgs, IntValueTableT, Label, MeshDataIndices, MeshDataUV, PartState,
-    SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT,
+    BoolValueTableT, Effect, EffectArgs, EffectNodeT, EffectT, FloatValueTable,
+    FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label,
+    MeshDataIndices, MeshDataUV, PartState, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
@@ -350,6 +350,33 @@ impl<'bldr> SsabCache<'bldr> {
         fb.create_vector(&table_data)
     }
 
+    fn create_shared_effect_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        effet_list_t_vec: &[EffectT],
+    ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<Effect<'bldr>>>> {
+        let sound_list = effet_list_t_vec
+            .iter()
+            .map(|effect_t| {
+                let mut effect_args = EffectArgs::default();
+                effect_args.name = Some(fb.create_shared_string(&effect_t.name));
+                effect_args.fps = effect_t.fps;
+                effect_args.is_lock_rand_seed = effect_t.is_lock_rand_seed;
+                effect_args.lock_rand_seed = effect_t.lock_rand_seed;
+                effect_args.layout_scale = effect_t
+                    .layout_scale
+                    .as_ref()
+                    .map(|v| self.create_shared_vec2(fb, v));
+                // TODO: impl
+                // effect_args.effect_node: Option<Vec<EffectNodeT>>,
+
+                Effect::create(fb, &effect_args)
+            })
+            .collect::<Vec<WIPOffset<Effect<'bldr>>>>();
+
+        fb.create_vector(&sound_list)
+    }
+
     fn create_shared_sound_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
@@ -441,7 +468,10 @@ impl<'bldr> SsabCache<'bldr> {
             .cell_map
             .as_ref()
             .map(|cell_map| self.create_shared_cell_map(fb, cell_map));
-        anime_binary_args.effect = None; // TODO: implement
+        anime_binary_args.effect = ss_anime_binary_t
+            .effect
+            .as_ref()
+            .map(|effect| self.create_shared_effect_list(fb, effect));
         anime_binary_args.sound_list = ss_anime_binary_t
             .sound_list
             .as_ref()

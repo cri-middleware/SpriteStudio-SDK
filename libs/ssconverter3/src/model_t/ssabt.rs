@@ -163,6 +163,9 @@ fn convert_effect_list(
     _sspj: &SsProject,
     effect_file_vec: &[SsEffectFile],
 ) -> Option<Vec<EffectT>> {
+    if effect_file_vec.is_empty() {
+        return None;
+    }
     Some(
         effect_file_vec
             .iter()
@@ -274,7 +277,28 @@ pub fn convert_ss_anime_binary_t(
 ) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
     anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack);
-    anime_binary.effect = ssabt::convert_effect_list(&sspj, &sspj.effect_file_list);
+    let using_effect_file_names = anime_pack
+        .model
+        .part_list
+        .iter()
+        .filter_map(|part| {
+            if part.part_type == SsPartType::Effect {
+                Some(part.ref_effect_name.clone())
+            } else {
+                None
+            }
+        })
+        .collect::<HashSet<String>>();
+    let effect_file_list = using_effect_file_names
+        .iter()
+        .filter_map(|using_effect_file_name| {
+            sspj.effect_file_list
+                .iter()
+                .find(|effect_file| effect_file.name == *using_effect_file_name)
+                .cloned()
+        })
+        .collect::<Vec<SsEffectFile>>();
+    anime_binary.effect = ssabt::convert_effect_list(&sspj, &effect_file_list);
 
     anime_binary.sound_list = if anime_pack
         .model

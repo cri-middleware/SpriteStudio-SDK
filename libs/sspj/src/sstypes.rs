@@ -87,7 +87,7 @@ impl<'de> Deserialize<'de> for SsPoint3 {
     }
 }
 
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Clone, Debug)]
 pub struct SsU8Color {
     pub a: u8,
     pub r: u8,
@@ -263,7 +263,7 @@ pub enum SsTexFilterMode {
     Linear,
 }
 
-#[derive(Deserialize, PartialEq, Default, Debug)]
+#[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 pub enum SsRenderBlendType {
     #[default]
     Mix,
