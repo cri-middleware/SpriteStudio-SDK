@@ -7,7 +7,6 @@ pub enum SspjError {
     FntParseError(String),
 }
 
-
 pub trait SsLoader {
     type Output;
     fn load_from_file(path: &Path) -> Result<Self::Output, SspjError> {

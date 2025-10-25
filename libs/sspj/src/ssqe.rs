@@ -1,6 +1,6 @@
-use serde::Deserialize;
 use crate::ssloader::{SsLoader, SspjError};
 use crate::sstypes::SsSequenceType;
+use serde::Deserialize;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -22,7 +22,7 @@ pub struct SsSequence {
 }
 fn parse_ss_sequence_item_list<'de, D>(deserializer: D) -> Result<Vec<SsSequenceItem>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct SequenceItemList {
@@ -56,7 +56,7 @@ impl SsLoader for SsSequencePack {
 
 fn parse_ss_sequence_list<'de, D>(deserializer: D) -> Result<Vec<SsSequence>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct SequenceList {
@@ -67,9 +67,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
-    use rayon::prelude::*;
     use super::*;
+    use rayon::prelude::*;
+    use std::path::{Path, PathBuf};
 
     fn load_ssqe(path: &Path) {
         let r = SsSequencePack::load_from_file(path);
@@ -95,9 +95,7 @@ mod tests {
 
     #[test]
     fn parse_ssce() {
-        [
-            "tests/overall/sequence.ssqe",
-        ].par_iter().for_each(|&f| {
+        ["tests/overall/sequence.ssqe"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssqe(&p.as_path());
         });

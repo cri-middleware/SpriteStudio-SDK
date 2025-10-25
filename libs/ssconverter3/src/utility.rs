@@ -4,12 +4,15 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 pub fn parse_args(args: &[OsString]) -> Vec<PathBuf> {
-    args.iter().filter_map(|arg| {
-        let path = Path::new(arg);
-        path.exists().then(|| collect_sspj_files(path))
-    })
+    args.iter()
+        .filter_map(|arg| {
+            let path = Path::new(arg);
+            path.exists().then(|| collect_sspj_files(path))
+        })
         .flatten()
-        .collect::<HashSet<_>>().into_iter().collect::<Vec<PathBuf>>()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<PathBuf>>()
 }
 
 fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
@@ -20,7 +23,8 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
     if path.is_dir() {
         return WalkDir::new(path)
             .into_iter()
-            .filter_entry(|entry| { let name = entry.file_name();
+            .filter_entry(|entry| {
+                let name = entry.file_name();
                 !name.to_string_lossy().starts_with(".git")
             })
             .filter_map(Result::ok)
@@ -34,7 +38,8 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
 
 fn is_sspj_file(path: &Path) -> bool {
     path.is_file()
-        && path.extension()
-        .and_then(|ext| ext.to_str())
-        .map_or(false, |ext| ext == "sspj")
+        && path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map_or(false, |ext| ext == "sspj")
 }

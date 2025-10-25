@@ -1,7 +1,6 @@
-mod model_t;
 mod cache;
 mod converter;
-
+mod model_t;
 
 pub mod utility;
 pub use converter::converter::*;
@@ -28,9 +27,9 @@ pub struct CResultConvert {
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
     use super::*;
     use rayon::prelude::*;
+    use std::path::{Path, PathBuf};
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
         "tests/ParticleEffect/ParticleEffect.sspj",
@@ -67,10 +66,11 @@ mod tests {
             let config = ConverterConfig::default();
             let r = convert_sspj_to_ssab_files(&get_test_base_path().join(p).as_path(), &config);
             match r {
-                Ok(_) => { assert!(true) },
+                Ok(_) => {
+                    assert!(true)
+                }
                 Err(e) => assert!(false, "{:?}", e),
             }
         });
     }
-
 }

@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use std::str::FromStr;
-use std::sync::Arc;
-use serde::{Deserialize, Deserializer};
-use serde::de::Error;
 use crate::ssattribute::SsAttributeKind;
 use crate::ssloader::{SsLoader, SspjError};
 use crate::sstypes::*;
+use serde::de::Error;
+use serde::{Deserialize, Deserializer};
+use std::collections::HashMap;
+use std::str::FromStr;
+use std::sync::Arc;
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -20,7 +20,7 @@ pub struct SsAnimationSettings {
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "UPPERCASE")]
- pub struct InheritRates {
+pub struct InheritRates {
     pub alph: bool,
     pub iflh: bool,
     pub iflv: bool,
@@ -73,7 +73,6 @@ pub struct SsPart {
     pub ik_depth: i32,
     #[serde(rename = "IKRotationArrow", default)]
     pub ik_rotation_arrow: SsIkRotationArrow,
-
     // m_pPartValueInfo // TODO:
 }
 
@@ -86,7 +85,7 @@ pub struct SsPartAnime {
 }
 fn parse_ss_attribute_list<'de, D>(deserializer: D) -> Result<Vec<SsAttributeKind>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -96,7 +95,6 @@ where
     }
     Ok(PartAnimeList::deserialize(deserializer)?.attribute)
 }
-
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -119,7 +117,7 @@ pub struct SsAnimation {
 }
 fn parse_ss_part_anime_list<'de, D>(deserializer: D) -> Result<Vec<SsPartAnime>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -132,7 +130,7 @@ where
 
 fn parse_ss_label_list<'de, D>(deserializer: D) -> Result<Vec<SsLabel>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct LabelList {
@@ -153,7 +151,10 @@ impl FromStr for SsMeshBindInfo {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let array: Vec<f32> = s.split_whitespace().filter_map(|sub| sub.parse::<f32>().ok()).collect();
+        let array: Vec<f32> = s
+            .split_whitespace()
+            .filter_map(|sub| sub.parse::<f32>().ok())
+            .collect();
         if array.is_empty() {
             return Err("SsMeshBindInfo::from_str: array.len() <= 1".to_string());
         }
@@ -186,11 +187,13 @@ impl FromStr for SsMeshBindInfo {
 impl<'de> Deserialize<'de> for SsMeshBindInfo {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de>
+        D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
         if s.is_empty() {
-            Err(D::Error::custom("SsMeshBindInfo::deserialize: s.is_empty()"))
+            Err(D::Error::custom(
+                "SsMeshBindInfo::deserialize: s.is_empty()",
+            ))
         } else {
             Self::from_str(&s).map_err(serde::de::Error::custom)
         }
@@ -209,13 +212,18 @@ impl FromStr for SsMeshBind {
         if items.len() == 0 {
             return Ok(Self::default());
         }
-        let ss_mesh_bind_vec = items.iter().filter_map(|item| {
-            if item.is_empty() { return None; }
-            let Ok(r) = SsMeshBindInfo::from_str(item) else {
-                return None;
-            };
-            Some(r)
-        }).collect::<Vec<SsMeshBindInfo>>();
+        let ss_mesh_bind_vec = items
+            .iter()
+            .filter_map(|item| {
+                if item.is_empty() {
+                    return None;
+                }
+                let Ok(r) = SsMeshBindInfo::from_str(item) else {
+                    return None;
+                };
+                Some(r)
+            })
+            .collect::<Vec<SsMeshBindInfo>>();
         Ok(SsMeshBind {
             mesh_vertices_bind_array: ss_mesh_bind_vec,
         })
@@ -225,7 +233,7 @@ impl FromStr for SsMeshBind {
 impl<'de> Deserialize<'de> for SsMeshBind {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: Deserializer<'de>
+        D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
         if s.is_empty() {
@@ -236,13 +244,12 @@ impl<'de> Deserialize<'de> for SsMeshBind {
     }
 }
 
-
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SsModel {
     #[serde(deserialize_with = "parse_part_list")]
     pub part_list: Vec<SsPart>,
-    
+
     #[serde(deserialize_with = "parse_mesh_list")]
     pub mesh_list: Vec<SsMeshBind>,
     pub bone_list: HashMap<String, i32>,
@@ -254,7 +261,7 @@ pub struct SsModel {
 }
 fn parse_part_list<'de, D>(deserializer: D) -> Result<Vec<SsPart>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct PartList {
@@ -265,7 +272,7 @@ where
 
 fn parse_mesh_list<'de, D>(deserializer: D) -> Result<Vec<SsMeshBind>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct MeshList {
@@ -274,7 +281,6 @@ where
     }
     Ok(MeshList::deserialize(deserializer)?.value)
 }
-
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename = "SpriteStudioAnimePack")]
@@ -295,16 +301,17 @@ impl SsLoader for SsAnimePack {
     type Output = SsAnimePack;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
-        let r = ssae.anime_list.binary_search_by(|anime| anime.is_setup.cmp(&true));
+        let mut ssae =
+            quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
+        let r = ssae
+            .anime_list
+            .binary_search_by(|anime| anime.is_setup.cmp(&true));
         match r {
             Ok(idx) => {
                 ssae.model.ref_setup_anime_pack = ssae.name.clone();
                 ssae.model.ref_setup_animation = ssae.anime_list[idx].name.clone();
             }
-            Err(e) => {
-                
-            }
+            Err(e) => {}
         }
         Ok(ssae)
     }
@@ -312,7 +319,7 @@ impl SsLoader for SsAnimePack {
 
 fn parse_cellmap_names<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct CellmapNames {
@@ -324,7 +331,7 @@ where
 
 fn parse_anime_list<'de, D>(deserializer: D) -> Result<Vec<SsAnimation>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct AnimeList {
@@ -333,14 +340,13 @@ where
     Ok(AnimeList::deserialize(deserializer)?.anime)
 }
 
-
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
-    use rayon::prelude::*;
     use super::*;
+    use rayon::prelude::*;
+    use std::path::{Path, PathBuf};
 
-    fn load_ssae(path : &Path) {
+    fn load_ssae(path: &Path) {
         let r = SsAnimePack::load_from_file(path);
         match r {
             Ok(ss_anime_pack) => {
@@ -385,7 +391,9 @@ mod tests {
             "tests/overall/Text.ssae",
             "tests/overall/TextureChange.ssae",
             "tests/overall/UserData.ssae",
-        ].par_iter().for_each( |&f| {
+        ]
+        .par_iter()
+        .for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssae(&p.as_path());
         });
@@ -434,7 +442,9 @@ mod tests {
             "tests/ParticleEffect/e038.ssae",
             "tests/ParticleEffect/e039.ssae",
             "tests/ParticleEffect/e040a.ssae",
-        ].par_iter().for_each( |&f| {
+        ]
+        .par_iter()
+        .for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssae(&p.as_path());
         });
@@ -483,7 +493,9 @@ mod tests {
             "tests/allPartsV7/shape.ssae",
             "tests/allPartsV7/sound.ssae",
             "tests/allPartsV7/text.ssae",
-        ].par_iter().for_each( |&f| {
+        ]
+        .par_iter()
+        .for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssae(&p.as_path());
         });

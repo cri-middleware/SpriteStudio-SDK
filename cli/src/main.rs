@@ -1,17 +1,19 @@
+use ssconverter3;
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::thread::JoinHandle;
-use ssconverter3;
 
 fn print_usage(prog: &OsStr) {
     let p = prog.to_string_lossy();
-    let formatted_output = format!(r#"
+    let formatted_output = format!(
+        r#"
 single sspj file usage:
 $ {} <sspj_file>
 
 multiple sspj files usage:
 $ {} <sspj_file OR directory> [sspj_file OR directory...]
-"#,p, p,
+"#,
+        p, p,
     );
     println!("{}", formatted_output);
 }
@@ -42,14 +44,14 @@ fn main() {
             })
         })
     });
-    handlers.into_iter().for_each(|h| {h.join().unwrap()});
+    handlers.into_iter().for_each(|h| h.join().unwrap());
 }
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
     use super::*;
     use rayon::prelude::*;
+    use std::path::{Path, PathBuf};
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
         "tests/ParticleEffect/ParticleEffect.sspj",
@@ -71,12 +73,16 @@ mod tests {
         TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
             let config = ssconverter3::ConverterConfig::default();
-            let r = ssconverter3::convert_sspj_to_ssab_files(&get_test_base_path().join(p).as_path(), &config);
+            let r = ssconverter3::convert_sspj_to_ssab_files(
+                &get_test_base_path().join(p).as_path(),
+                &config,
+            );
             match r {
-                Ok(_) => { assert!(true) },
+                Ok(_) => {
+                    assert!(true)
+                }
                 Err(e) => assert!(false, "{:?}", e),
             }
         });
     }
-
 }

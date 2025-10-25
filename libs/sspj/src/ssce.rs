@@ -1,6 +1,6 @@
-use serde::Deserialize;
 use crate::ssloader::{SsLoader, SspjError};
 use crate::sstypes::*;
+use serde::Deserialize;
 
 #[derive(Deserialize, PartialEq, Clone, Default, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -44,19 +44,19 @@ pub struct SsCell {
 }
 fn parse_ss_point2_list<'de, D>(deserializer: D) -> Result<Vec<SsPoint2>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct Point2List {
         #[serde(default)]
         value: Vec<SsPoint2>,
     }
-     Ok(Point2List::deserialize(deserializer)?.value)
+    Ok(Point2List::deserialize(deserializer)?.value)
 }
 
 fn parse_ss_point3_list<'de, D>(deserializer: D) -> Result<Vec<SsPoint3>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct Point3List {
@@ -65,7 +65,6 @@ where
     }
     Ok(Point3List::deserialize(deserializer)?.value)
 }
-
 
 #[derive(Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename = "SpriteStudioCellMap")]
@@ -92,11 +91,10 @@ impl SsLoader for SsCellMap {
     fn load(s: &str) -> Result<Self::Output, SspjError> {
         quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)
     }
-
 }
 fn parse_ss_cells<'de, D>(deserializer: D) -> Result<Vec<SsCell>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct Cells {
@@ -107,9 +105,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
-    use rayon::prelude::*;
     use super::*;
+    use rayon::prelude::*;
+    use std::path::{Path, PathBuf};
 
     fn load_ssce(path: &Path) {
         let r = SsCellMap::load_from_file(path);
@@ -140,7 +138,9 @@ mod tests {
             "tests/overall/box_00_00.ssce",
             "tests/overall/common.ssce",
             "tests/ParticleEffect/ss_effect.ssce",
-        ].par_iter().for_each(|&f| {
+        ]
+        .par_iter()
+        .for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssce(&p.as_path());
         });
