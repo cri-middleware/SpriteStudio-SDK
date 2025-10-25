@@ -176,7 +176,7 @@ impl SsLoader for SsProject {
         };
 
         let cellmap_handle = {
-            let parent_path = parent.to_path_buf();
+            let parent_path = parent.to_path_buf().join(&sspj.settings.cell_map_base_directory);
             let cellmap_names = sspj.cellmap_names.clone();
             std::thread::spawn(move || {
                 cellmap_names.par_iter().map(|cellmap| {
@@ -195,7 +195,7 @@ impl SsLoader for SsProject {
         };
 
         let effect_handle = {
-            let parent_path = parent.to_path_buf();
+            let parent_path = parent.to_path_buf().join(&sspj.settings.effect_base_directory);
             let effect_file_names = sspj.effect_file_names.clone();
             std::thread::spawn(move || {
                 effect_file_names.par_iter().map(|effect_file| {
@@ -211,7 +211,7 @@ impl SsLoader for SsProject {
         };
 
         let animepack_handle = {
-            let parent_path = parent.to_path_buf();
+            let parent_path = parent.to_path_buf().join(&sspj.settings.anime_base_directory);
             let animepack_names = sspj.animepack_names.clone();
             std::thread::spawn(move || {
                 animepack_names.par_iter().map(|animepack| {

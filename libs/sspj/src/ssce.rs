@@ -2,9 +2,10 @@ use serde::Deserialize;
 use crate::ssloader::{SsLoader, SspjError};
 use crate::sstypes::*;
 
-#[derive(Deserialize, PartialEq, Clone, Debug)]
+#[derive(Deserialize, PartialEq, Clone, Default, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum SsMeshDivType {
+    #[default]
     Unknown,
     #[serde(rename = "polyline")]
     PolylineBase,
@@ -19,21 +20,21 @@ pub struct SsCell {
     pub size: SsPoint2,
     pub pivot: SsPoint2,
     pub rotated: bool,
-    #[serde(rename = "ismesh")]
+    #[serde(rename = "ismesh", default)]
     pub is_mesh: bool,
 
-    #[serde(deserialize_with = "parse_ss_point2_list")]
+    #[serde(deserialize_with = "parse_ss_point2_list", default)]
     pub inner_point: Vec<SsPoint2>,
-    #[serde(deserialize_with = "parse_ss_point2_list")]
+    #[serde(deserialize_with = "parse_ss_point2_list", default)]
     pub outer_point: Vec<SsPoint2>,
 
-    #[serde(deserialize_with = "parse_ss_point2_list")]
+    #[serde(deserialize_with = "parse_ss_point2_list", default)]
     pub mesh_point_list: Vec<SsPoint2>,
 
-    #[serde(deserialize_with = "parse_ss_point3_list")]
+    #[serde(deserialize_with = "parse_ss_point3_list", default)]
     pub mesh_tri_list: Vec<SsPoint3>,
 
-    #[serde(rename = "divtype")]
+    #[serde(rename = "divtype", default)]
     pub div_type: SsMeshDivType,
 
     #[serde(rename = "divw", default)]
@@ -138,6 +139,7 @@ mod tests {
             "tests/overall/9slice_64tile.ssce",
             "tests/overall/box_00_00.ssce",
             "tests/overall/common.ssce",
+            "tests/ParticleEffect/ss_effect.ssce",
         ].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssce(&p.as_path());

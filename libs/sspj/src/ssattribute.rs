@@ -154,7 +154,7 @@ pub struct SsAttributePartsColor {
     pub keys: Vec<SsAttributePartsColorKey>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeShaderKeyValueMap {
     pub map_id: i32,
@@ -169,11 +169,17 @@ pub struct SsAttributeShaderKeyValue {
     pub param1: f32,
     pub param2: f32,
     pub param3: f32,
+    #[serde(default)]
     pub param4: f32,
+    #[serde(default)]
     pub param5: f32,
+    #[serde(default)]
     pub param6: f32,
+    #[serde(default)]
     pub param7: f32,
+    #[serde(default)]
     pub map0: SsAttributeShaderKeyValueMap,
+    #[serde(default)]
     pub map1: SsAttributeShaderKeyValueMap,
 }
 
