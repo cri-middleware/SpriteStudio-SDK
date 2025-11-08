@@ -115,13 +115,13 @@ table StringValueTable {
 }
 
 table AttributeCell {
- map_id: int;
+ map_id: int; // hash or name
  name: string;
 }
 
 table AttributePartsColor {
- rgba: U8Rect;
- rate: float;
+  // TOOD: implement
+  // ベイクする (Converter2 を参照する)
 }
 
 table AttributeShader {
@@ -148,7 +148,6 @@ table AttributeVertex {
 }
 
 table AttributeInstance {
-  infinity_flag: bool;
   pingpong: bool;
   independent: bool;
   loop_num: int;
@@ -165,16 +164,9 @@ table AttributeEffect {
   independent: bool;
 }
 
-table AttributeVertexDeformation {
-  // TODO: impl
-}
-
-table AttributeSkew {
-  // TODO: impl
-}
-
 table AttributeDeform {
-  // TODO: impl
+  coordinate: [Vec2];
+  index: [short];
 }
 
 union Attribute {
@@ -215,8 +207,7 @@ union Attribute {
   AttributeMask: FloatValueTable,
   AttributeInstance,
   AttributeEffect,
-  AttributeVertexDeformation,
-  AttributeSkew,
+  AttributeSkew: Vec2ValueTable,
   AttributeDeform,
 }
 
@@ -276,11 +267,11 @@ table TextureChangeDataItem {
 }
 
 table  InstanceDataItem {
-  // TODO: impl
+  part_index: short (key);
 }
 
 table EffectDataItem {
-  // TODO: impl
+  part_index: short (key);
 }
 
 table EventsPerFrame {
@@ -301,8 +292,8 @@ table Cell {
   pivot: Vec2;
   rotated: bool;
 
-  table_coordinate:[Vec2];
-  table_index_vertex:[ushort];
+  table_coordinate: [Vec2];
+  table_index_vertex: [ushort];
 }
 
 table CellMap {
@@ -519,6 +510,11 @@ table PartState {
   attributes: [AttributeWrapper];
 }
 
+table FrameData {
+  frame_index: short;
+  parts: [PartState];
+}
+
 table Label {
   name: string (key);
   time: int;
@@ -528,7 +524,7 @@ table AnimationData {
   name: string (key);
 
   initial_data: [PartAttributes];
-  frame_data: [PartState];
+  frame_data: [FrameData];
 
   events: [EventsPerFrame];
 

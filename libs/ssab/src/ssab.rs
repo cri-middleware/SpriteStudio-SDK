@@ -874,13 +874,13 @@ pub const ENUM_MIN_ATTRIBUTE: u8 = 0;
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
-pub const ENUM_MAX_ATTRIBUTE: u8 = 40;
+pub const ENUM_MAX_ATTRIBUTE: u8 = 39;
 #[deprecated(
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_ATTRIBUTE: [Attribute; 41] = [
+pub const ENUM_VALUES_ATTRIBUTE: [Attribute; 40] = [
     Attribute::NONE,
     Attribute::AttributeCell,
     Attribute::AttributePosX,
@@ -919,7 +919,6 @@ pub const ENUM_VALUES_ATTRIBUTE: [Attribute; 41] = [
     Attribute::AttributeMask,
     Attribute::AttributeInstance,
     Attribute::AttributeEffect,
-    Attribute::AttributeVertexDeformation,
     Attribute::AttributeSkew,
     Attribute::AttributeDeform,
 ];
@@ -967,12 +966,11 @@ impl Attribute {
     pub const AttributeMask: Self = Self(35);
     pub const AttributeInstance: Self = Self(36);
     pub const AttributeEffect: Self = Self(37);
-    pub const AttributeVertexDeformation: Self = Self(38);
-    pub const AttributeSkew: Self = Self(39);
-    pub const AttributeDeform: Self = Self(40);
+    pub const AttributeSkew: Self = Self(38);
+    pub const AttributeDeform: Self = Self(39);
 
     pub const ENUM_MIN: u8 = 0;
-    pub const ENUM_MAX: u8 = 40;
+    pub const ENUM_MAX: u8 = 39;
     pub const ENUM_VALUES: &'static [Self] = &[
         Self::NONE,
         Self::AttributeCell,
@@ -1012,7 +1010,6 @@ impl Attribute {
         Self::AttributeMask,
         Self::AttributeInstance,
         Self::AttributeEffect,
-        Self::AttributeVertexDeformation,
         Self::AttributeSkew,
         Self::AttributeDeform,
     ];
@@ -1057,7 +1054,6 @@ impl Attribute {
             Self::AttributeMask => Some("AttributeMask"),
             Self::AttributeInstance => Some("AttributeInstance"),
             Self::AttributeEffect => Some("AttributeEffect"),
-            Self::AttributeVertexDeformation => Some("AttributeVertexDeformation"),
             Self::AttributeSkew => Some("AttributeSkew"),
             Self::AttributeDeform => Some("AttributeDeform"),
             _ => None,
@@ -1162,8 +1158,7 @@ pub enum AttributeT {
     AttributeMask(Box<FloatValueTableT>),
     AttributeInstance(Box<AttributeInstanceT>),
     AttributeEffect(Box<AttributeEffectT>),
-    AttributeVertexDeformation(Box<AttributeVertexDeformationT>),
-    AttributeSkew(Box<AttributeSkewT>),
+    AttributeSkew(Box<Vec2ValueTableT>),
     AttributeDeform(Box<AttributeDeformT>),
 }
 impl Default for AttributeT {
@@ -1212,7 +1207,6 @@ impl AttributeT {
             Self::AttributeMask(_) => Attribute::AttributeMask,
             Self::AttributeInstance(_) => Attribute::AttributeInstance,
             Self::AttributeEffect(_) => Attribute::AttributeEffect,
-            Self::AttributeVertexDeformation(_) => Attribute::AttributeVertexDeformation,
             Self::AttributeSkew(_) => Attribute::AttributeSkew,
             Self::AttributeDeform(_) => Attribute::AttributeDeform,
         }
@@ -1260,7 +1254,6 @@ impl AttributeT {
             Self::AttributeMask(v) => Some(v.pack(fbb).as_union_value()),
             Self::AttributeInstance(v) => Some(v.pack(fbb).as_union_value()),
             Self::AttributeEffect(v) => Some(v.pack(fbb).as_union_value()),
-            Self::AttributeVertexDeformation(v) => Some(v.pack(fbb).as_union_value()),
             Self::AttributeSkew(v) => Some(v.pack(fbb).as_union_value()),
             Self::AttributeDeform(v) => Some(v.pack(fbb).as_union_value()),
         }
@@ -2338,41 +2331,8 @@ impl AttributeT {
             None
         }
     }
-    /// If the union variant matches, return the owned AttributeVertexDeformationT, setting the union to NONE.
-    pub fn take_attribute_vertex_deformation(
-        &mut self,
-    ) -> Option<Box<AttributeVertexDeformationT>> {
-        if let Self::AttributeVertexDeformation(_) = self {
-            let v = core::mem::replace(self, Self::NONE);
-            if let Self::AttributeVertexDeformation(w) = v {
-                Some(w)
-            } else {
-                unreachable!()
-            }
-        } else {
-            None
-        }
-    }
-    /// If the union variant matches, return a reference to the AttributeVertexDeformationT.
-    pub fn as_attribute_vertex_deformation(&self) -> Option<&AttributeVertexDeformationT> {
-        if let Self::AttributeVertexDeformation(v) = self {
-            Some(v.as_ref())
-        } else {
-            None
-        }
-    }
-    /// If the union variant matches, return a mutable reference to the AttributeVertexDeformationT.
-    pub fn as_attribute_vertex_deformation_mut(
-        &mut self,
-    ) -> Option<&mut AttributeVertexDeformationT> {
-        if let Self::AttributeVertexDeformation(v) = self {
-            Some(v.as_mut())
-        } else {
-            None
-        }
-    }
-    /// If the union variant matches, return the owned AttributeSkewT, setting the union to NONE.
-    pub fn take_attribute_skew(&mut self) -> Option<Box<AttributeSkewT>> {
+    /// If the union variant matches, return the owned Vec2ValueTableT, setting the union to NONE.
+    pub fn take_attribute_skew(&mut self) -> Option<Box<Vec2ValueTableT>> {
         if let Self::AttributeSkew(_) = self {
             let v = core::mem::replace(self, Self::NONE);
             if let Self::AttributeSkew(w) = v {
@@ -2384,16 +2344,16 @@ impl AttributeT {
             None
         }
     }
-    /// If the union variant matches, return a reference to the AttributeSkewT.
-    pub fn as_attribute_skew(&self) -> Option<&AttributeSkewT> {
+    /// If the union variant matches, return a reference to the Vec2ValueTableT.
+    pub fn as_attribute_skew(&self) -> Option<&Vec2ValueTableT> {
         if let Self::AttributeSkew(v) = self {
             Some(v.as_ref())
         } else {
             None
         }
     }
-    /// If the union variant matches, return a mutable reference to the AttributeSkewT.
-    pub fn as_attribute_skew_mut(&mut self) -> Option<&mut AttributeSkewT> {
+    /// If the union variant matches, return a mutable reference to the Vec2ValueTableT.
+    pub fn as_attribute_skew_mut(&mut self) -> Option<&mut Vec2ValueTableT> {
         if let Self::AttributeSkew(v) = self {
             Some(v.as_mut())
         } else {
@@ -5333,9 +5293,6 @@ impl<'a> flatbuffers::Follow<'a> for AttributePartsColor<'a> {
 }
 
 impl<'a> AttributePartsColor<'a> {
-    pub const VT_RGBA: flatbuffers::VOffsetT = 4;
-    pub const VT_RATE: flatbuffers::VOffsetT = 6;
-
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
         AttributePartsColor { _tab: table }
@@ -5343,42 +5300,14 @@ impl<'a> AttributePartsColor<'a> {
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args AttributePartsColorArgs<'args>,
+        _args: &'args AttributePartsColorArgs,
     ) -> flatbuffers::WIPOffset<AttributePartsColor<'bldr>> {
         let mut builder = AttributePartsColorBuilder::new(_fbb);
-        builder.add_rate(args.rate);
-        if let Some(x) = args.rgba {
-            builder.add_rgba(x);
-        }
         builder.finish()
     }
 
     pub fn unpack(&self) -> AttributePartsColorT {
-        let rgba = self.rgba().map(|x| Box::new(x.unpack()));
-        let rate = self.rate();
-        AttributePartsColorT { rgba, rate }
-    }
-
-    #[inline]
-    pub fn rgba(&self) -> Option<U8Rect<'a>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<U8Rect>>(AttributePartsColor::VT_RGBA, None)
-        }
-    }
-    #[inline]
-    pub fn rate(&self) -> f32 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<f32>(AttributePartsColor::VT_RATE, Some(0.0))
-                .unwrap()
-        }
+        AttributePartsColorT {}
     }
 }
 
@@ -5389,24 +5318,15 @@ impl flatbuffers::Verifiable for AttributePartsColor<'_> {
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?
-            .visit_field::<flatbuffers::ForwardsUOffset<U8Rect>>("rgba", Self::VT_RGBA, false)?
-            .visit_field::<f32>("rate", Self::VT_RATE, false)?
-            .finish();
+        v.visit_table(pos)?.finish();
         Ok(())
     }
 }
-pub struct AttributePartsColorArgs<'a> {
-    pub rgba: Option<flatbuffers::WIPOffset<U8Rect<'a>>>,
-    pub rate: f32,
-}
-impl<'a> Default for AttributePartsColorArgs<'a> {
+pub struct AttributePartsColorArgs {}
+impl<'a> Default for AttributePartsColorArgs {
     #[inline]
     fn default() -> Self {
-        AttributePartsColorArgs {
-            rgba: None,
-            rate: 0.0,
-        }
+        AttributePartsColorArgs {}
     }
 }
 
@@ -5415,16 +5335,6 @@ pub struct AttributePartsColorBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePartsColorBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_rgba(&mut self, rgba: flatbuffers::WIPOffset<U8Rect<'b>>) {
-        self.fbb_
-            .push_slot_always::<flatbuffers::WIPOffset<U8Rect>>(AttributePartsColor::VT_RGBA, rgba);
-    }
-    #[inline]
-    pub fn add_rate(&mut self, rate: f32) {
-        self.fbb_
-            .push_slot::<f32>(AttributePartsColor::VT_RATE, rate, 0.0);
-    }
     #[inline]
     pub fn new(
         _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
@@ -5445,23 +5355,15 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributePartsColorBuilder<'a, 
 impl core::fmt::Debug for AttributePartsColor<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("AttributePartsColor");
-        ds.field("rgba", &self.rgba());
-        ds.field("rate", &self.rate());
         ds.finish()
     }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct AttributePartsColorT {
-    pub rgba: Option<Box<U8RectT>>,
-    pub rate: f32,
-}
+pub struct AttributePartsColorT {}
 impl Default for AttributePartsColorT {
     fn default() -> Self {
-        Self {
-            rgba: None,
-            rate: 0.0,
-        }
+        Self {}
     }
 }
 impl AttributePartsColorT {
@@ -5469,9 +5371,7 @@ impl AttributePartsColorT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<AttributePartsColor<'b>> {
-        let rgba = self.rgba.as_ref().map(|x| x.pack(_fbb));
-        let rate = self.rate;
-        AttributePartsColor::create(_fbb, &AttributePartsColorArgs { rgba, rate })
+        AttributePartsColor::create(_fbb, &AttributePartsColorArgs {})
     }
 }
 pub enum AttributeShaderOffset {}
@@ -6196,15 +6096,14 @@ impl<'a> flatbuffers::Follow<'a> for AttributeInstance<'a> {
 }
 
 impl<'a> AttributeInstance<'a> {
-    pub const VT_INFINITY_FLAG: flatbuffers::VOffsetT = 4;
-    pub const VT_PINGPONG: flatbuffers::VOffsetT = 6;
-    pub const VT_INDEPENDENT: flatbuffers::VOffsetT = 8;
-    pub const VT_LOOP_NUM: flatbuffers::VOffsetT = 10;
-    pub const VT_START_LABEL: flatbuffers::VOffsetT = 12;
-    pub const VT_START_OFFSET: flatbuffers::VOffsetT = 14;
-    pub const VT_END_LABEL: flatbuffers::VOffsetT = 16;
-    pub const VT_END_OFFSET: flatbuffers::VOffsetT = 18;
-    pub const VT_SPEED: flatbuffers::VOffsetT = 20;
+    pub const VT_PINGPONG: flatbuffers::VOffsetT = 4;
+    pub const VT_INDEPENDENT: flatbuffers::VOffsetT = 6;
+    pub const VT_LOOP_NUM: flatbuffers::VOffsetT = 8;
+    pub const VT_START_LABEL: flatbuffers::VOffsetT = 10;
+    pub const VT_START_OFFSET: flatbuffers::VOffsetT = 12;
+    pub const VT_END_LABEL: flatbuffers::VOffsetT = 14;
+    pub const VT_END_OFFSET: flatbuffers::VOffsetT = 16;
+    pub const VT_SPEED: flatbuffers::VOffsetT = 18;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -6228,12 +6127,10 @@ impl<'a> AttributeInstance<'a> {
         builder.add_loop_num(args.loop_num);
         builder.add_independent(args.independent);
         builder.add_pingpong(args.pingpong);
-        builder.add_infinity_flag(args.infinity_flag);
         builder.finish()
     }
 
     pub fn unpack(&self) -> AttributeInstanceT {
-        let infinity_flag = self.infinity_flag();
         let pingpong = self.pingpong();
         let independent = self.independent();
         let loop_num = self.loop_num();
@@ -6243,7 +6140,6 @@ impl<'a> AttributeInstance<'a> {
         let end_offset = self.end_offset();
         let speed = self.speed();
         AttributeInstanceT {
-            infinity_flag,
             pingpong,
             independent,
             loop_num,
@@ -6255,17 +6151,6 @@ impl<'a> AttributeInstance<'a> {
         }
     }
 
-    #[inline]
-    pub fn infinity_flag(&self) -> bool {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<bool>(AttributeInstance::VT_INFINITY_FLAG, Some(false))
-                .unwrap()
-        }
-    }
     #[inline]
     pub fn pingpong(&self) -> bool {
         // Safety:
@@ -6362,7 +6247,6 @@ impl flatbuffers::Verifiable for AttributeInstance<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
-            .visit_field::<bool>("infinity_flag", Self::VT_INFINITY_FLAG, false)?
             .visit_field::<bool>("pingpong", Self::VT_PINGPONG, false)?
             .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
             .visit_field::<i32>("loop_num", Self::VT_LOOP_NUM, false)?
@@ -6384,7 +6268,6 @@ impl flatbuffers::Verifiable for AttributeInstance<'_> {
     }
 }
 pub struct AttributeInstanceArgs<'a> {
-    pub infinity_flag: bool,
     pub pingpong: bool,
     pub independent: bool,
     pub loop_num: i32,
@@ -6398,7 +6281,6 @@ impl<'a> Default for AttributeInstanceArgs<'a> {
     #[inline]
     fn default() -> Self {
         AttributeInstanceArgs {
-            infinity_flag: false,
             pingpong: false,
             independent: false,
             loop_num: 0,
@@ -6416,11 +6298,6 @@ pub struct AttributeInstanceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> 
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeInstanceBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_infinity_flag(&mut self, infinity_flag: bool) {
-        self.fbb_
-            .push_slot::<bool>(AttributeInstance::VT_INFINITY_FLAG, infinity_flag, false);
-    }
     #[inline]
     pub fn add_pingpong(&mut self, pingpong: bool) {
         self.fbb_
@@ -6485,7 +6362,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeInstanceBuilder<'a, 'b
 impl core::fmt::Debug for AttributeInstance<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("AttributeInstance");
-        ds.field("infinity_flag", &self.infinity_flag());
         ds.field("pingpong", &self.pingpong());
         ds.field("independent", &self.independent());
         ds.field("loop_num", &self.loop_num());
@@ -6500,7 +6376,6 @@ impl core::fmt::Debug for AttributeInstance<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct AttributeInstanceT {
-    pub infinity_flag: bool,
     pub pingpong: bool,
     pub independent: bool,
     pub loop_num: i32,
@@ -6513,7 +6388,6 @@ pub struct AttributeInstanceT {
 impl Default for AttributeInstanceT {
     fn default() -> Self {
         Self {
-            infinity_flag: false,
             pingpong: false,
             independent: false,
             loop_num: 0,
@@ -6530,7 +6404,6 @@ impl AttributeInstanceT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<AttributeInstance<'b>> {
-        let infinity_flag = self.infinity_flag;
         let pingpong = self.pingpong;
         let independent = self.independent;
         let loop_num = self.loop_num;
@@ -6542,7 +6415,6 @@ impl AttributeInstanceT {
         AttributeInstance::create(
             _fbb,
             &AttributeInstanceArgs {
-                infinity_flag,
                 pingpong,
                 independent,
                 loop_num,
@@ -6750,204 +6622,6 @@ impl AttributeEffectT {
         )
     }
 }
-pub enum AttributeVertexDeformationOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeVertexDeformation<'a> {
-    pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeVertexDeformation<'a> {
-    type Inner = AttributeVertexDeformation<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
-        }
-    }
-}
-
-impl<'a> AttributeVertexDeformation<'a> {
-    #[inline]
-    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        AttributeVertexDeformation { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        _args: &'args AttributeVertexDeformationArgs,
-    ) -> flatbuffers::WIPOffset<AttributeVertexDeformation<'bldr>> {
-        let mut builder = AttributeVertexDeformationBuilder::new(_fbb);
-        builder.finish()
-    }
-
-    pub fn unpack(&self) -> AttributeVertexDeformationT {
-        AttributeVertexDeformationT {}
-    }
-}
-
-impl flatbuffers::Verifiable for AttributeVertexDeformation<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?.finish();
-        Ok(())
-    }
-}
-pub struct AttributeVertexDeformationArgs {}
-impl<'a> Default for AttributeVertexDeformationArgs {
-    #[inline]
-    fn default() -> Self {
-        AttributeVertexDeformationArgs {}
-    }
-}
-
-pub struct AttributeVertexDeformationBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeVertexDeformationBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> AttributeVertexDeformationBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        AttributeVertexDeformationBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> flatbuffers::WIPOffset<AttributeVertexDeformation<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        flatbuffers::WIPOffset::new(o.value())
-    }
-}
-
-impl core::fmt::Debug for AttributeVertexDeformation<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let mut ds = f.debug_struct("AttributeVertexDeformation");
-        ds.finish()
-    }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeVertexDeformationT {}
-impl Default for AttributeVertexDeformationT {
-    fn default() -> Self {
-        Self {}
-    }
-}
-impl AttributeVertexDeformationT {
-    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-        &self,
-        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-    ) -> flatbuffers::WIPOffset<AttributeVertexDeformation<'b>> {
-        AttributeVertexDeformation::create(_fbb, &AttributeVertexDeformationArgs {})
-    }
-}
-pub enum AttributeSkewOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct AttributeSkew<'a> {
-    pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for AttributeSkew<'a> {
-    type Inner = AttributeSkew<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
-        }
-    }
-}
-
-impl<'a> AttributeSkew<'a> {
-    #[inline]
-    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        AttributeSkew { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        _args: &'args AttributeSkewArgs,
-    ) -> flatbuffers::WIPOffset<AttributeSkew<'bldr>> {
-        let mut builder = AttributeSkewBuilder::new(_fbb);
-        builder.finish()
-    }
-
-    pub fn unpack(&self) -> AttributeSkewT {
-        AttributeSkewT {}
-    }
-}
-
-impl flatbuffers::Verifiable for AttributeSkew<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?.finish();
-        Ok(())
-    }
-}
-pub struct AttributeSkewArgs {}
-impl<'a> Default for AttributeSkewArgs {
-    #[inline]
-    fn default() -> Self {
-        AttributeSkewArgs {}
-    }
-}
-
-pub struct AttributeSkewBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeSkewBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> AttributeSkewBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        AttributeSkewBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> flatbuffers::WIPOffset<AttributeSkew<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        flatbuffers::WIPOffset::new(o.value())
-    }
-}
-
-impl core::fmt::Debug for AttributeSkew<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let mut ds = f.debug_struct("AttributeSkew");
-        ds.finish()
-    }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct AttributeSkewT {}
-impl Default for AttributeSkewT {
-    fn default() -> Self {
-        Self {}
-    }
-}
-impl AttributeSkewT {
-    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-        &self,
-        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-    ) -> flatbuffers::WIPOffset<AttributeSkew<'b>> {
-        AttributeSkew::create(_fbb, &AttributeSkewArgs {})
-    }
-}
 pub enum AttributeDeformOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -6966,6 +6640,9 @@ impl<'a> flatbuffers::Follow<'a> for AttributeDeform<'a> {
 }
 
 impl<'a> AttributeDeform<'a> {
+    pub const VT_COORDINATE: flatbuffers::VOffsetT = 4;
+    pub const VT_INDEX: flatbuffers::VOffsetT = 6;
+
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
         AttributeDeform { _tab: table }
@@ -6973,14 +6650,51 @@ impl<'a> AttributeDeform<'a> {
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        _args: &'args AttributeDeformArgs,
+        args: &'args AttributeDeformArgs<'args>,
     ) -> flatbuffers::WIPOffset<AttributeDeform<'bldr>> {
         let mut builder = AttributeDeformBuilder::new(_fbb);
+        if let Some(x) = args.index {
+            builder.add_index(x);
+        }
+        if let Some(x) = args.coordinate {
+            builder.add_coordinate(x);
+        }
         builder.finish()
     }
 
     pub fn unpack(&self) -> AttributeDeformT {
-        AttributeDeformT {}
+        let coordinate = self
+            .coordinate()
+            .map(|x| x.iter().map(|t| t.unpack()).collect());
+        let index = self.index().map(|x| x.into_iter().collect());
+        AttributeDeformT { coordinate, index }
+    }
+
+    #[inline]
+    pub fn coordinate(
+        &self,
+    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Vec2<'a>>>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab.get::<flatbuffers::ForwardsUOffset<
+                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Vec2>>,
+            >>(AttributeDeform::VT_COORDINATE, None)
+        }
+    }
+    #[inline]
+    pub fn index(&self) -> Option<flatbuffers::Vector<'a, i16>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i16>>>(
+                    AttributeDeform::VT_INDEX,
+                    None,
+                )
+        }
     }
 }
 
@@ -6991,15 +6705,32 @@ impl flatbuffers::Verifiable for AttributeDeform<'_> {
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?.finish();
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<
+                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Vec2>>,
+            >>("coordinate", Self::VT_COORDINATE, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i16>>>(
+                "index",
+                Self::VT_INDEX,
+                false,
+            )?
+            .finish();
         Ok(())
     }
 }
-pub struct AttributeDeformArgs {}
-impl<'a> Default for AttributeDeformArgs {
+pub struct AttributeDeformArgs<'a> {
+    pub coordinate: Option<
+        flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Vec2<'a>>>>,
+    >,
+    pub index: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i16>>>,
+}
+impl<'a> Default for AttributeDeformArgs<'a> {
     #[inline]
     fn default() -> Self {
-        AttributeDeformArgs {}
+        AttributeDeformArgs {
+            coordinate: None,
+            index: None,
+        }
     }
 }
 
@@ -7008,6 +6739,23 @@ pub struct AttributeDeformBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeDeformBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_coordinate(
+        &mut self,
+        coordinate: flatbuffers::WIPOffset<
+            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<Vec2<'b>>>,
+        >,
+    ) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            AttributeDeform::VT_COORDINATE,
+            coordinate,
+        );
+    }
+    #[inline]
+    pub fn add_index(&mut self, index: flatbuffers::WIPOffset<flatbuffers::Vector<'b, i16>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<_>>(AttributeDeform::VT_INDEX, index);
+    }
     #[inline]
     pub fn new(
         _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
@@ -7028,15 +6776,23 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AttributeDeformBuilder<'a, 'b, 
 impl core::fmt::Debug for AttributeDeform<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("AttributeDeform");
+        ds.field("coordinate", &self.coordinate());
+        ds.field("index", &self.index());
         ds.finish()
     }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct AttributeDeformT {}
+pub struct AttributeDeformT {
+    pub coordinate: Option<Vec<Vec2T>>,
+    pub index: Option<Vec<i16>>,
+}
 impl Default for AttributeDeformT {
     fn default() -> Self {
-        Self {}
+        Self {
+            coordinate: None,
+            index: None,
+        }
     }
 }
 impl AttributeDeformT {
@@ -7044,7 +6800,12 @@ impl AttributeDeformT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<AttributeDeform<'b>> {
-        AttributeDeform::create(_fbb, &AttributeDeformArgs {})
+        let coordinate = self.coordinate.as_ref().map(|x| {
+            let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
+            _fbb.create_vector(&w)
+        });
+        let index = self.index.as_ref().map(|x| _fbb.create_vector(x));
+        AttributeDeform::create(_fbb, &AttributeDeformArgs { coordinate, index })
     }
 }
 pub enum AttributeWrapperOffset {}
@@ -7087,209 +6848,204 @@ impl<'a> AttributeWrapper<'a> {
 
     pub fn unpack(&self) -> AttributeWrapperT {
         let value = match self.value_type() {
-      Attribute::NONE => AttributeT::NONE,
-      Attribute::AttributeCell => AttributeT::AttributeCell(Box::new(
-        self.value_as_attribute_cell()
-            .expect("Invalid union table, expected `Attribute::AttributeCell`.")
-            .unpack()
-      )),
-      Attribute::AttributePosX => AttributeT::AttributePosX(Box::new(
-        self.value_as_attribute_pos_x()
-            .expect("Invalid union table, expected `Attribute::AttributePosX`.")
-            .unpack()
-      )),
-      Attribute::AttributePosY => AttributeT::AttributePosY(Box::new(
-        self.value_as_attribute_pos_y()
-            .expect("Invalid union table, expected `Attribute::AttributePosY`.")
-            .unpack()
-      )),
-      Attribute::AttributePosZ => AttributeT::AttributePosZ(Box::new(
-        self.value_as_attribute_pos_z()
-            .expect("Invalid union table, expected `Attribute::AttributePosZ`.")
-            .unpack()
-      )),
-      Attribute::AttributeRotX => AttributeT::AttributeRotX(Box::new(
-        self.value_as_attribute_rot_x()
-            .expect("Invalid union table, expected `Attribute::AttributeRotX`.")
-            .unpack()
-      )),
-      Attribute::AttributeRotY => AttributeT::AttributeRotY(Box::new(
-        self.value_as_attribute_rot_y()
-            .expect("Invalid union table, expected `Attribute::AttributeRotY`.")
-            .unpack()
-      )),
-      Attribute::AttributeRotZ => AttributeT::AttributeRotZ(Box::new(
-        self.value_as_attribute_rot_z()
-            .expect("Invalid union table, expected `Attribute::AttributeRotZ`.")
-            .unpack()
-      )),
-      Attribute::AttributeSclX => AttributeT::AttributeSclX(Box::new(
-        self.value_as_attribute_scl_x()
-            .expect("Invalid union table, expected `Attribute::AttributeSclX`.")
-            .unpack()
-      )),
-      Attribute::AttributeSclY => AttributeT::AttributeSclY(Box::new(
-        self.value_as_attribute_scl_y()
-            .expect("Invalid union table, expected `Attribute::AttributeSclY`.")
-            .unpack()
-      )),
-      Attribute::AttributeLosclX => AttributeT::AttributeLosclX(Box::new(
-        self.value_as_attribute_loscl_x()
-            .expect("Invalid union table, expected `Attribute::AttributeLosclX`.")
-            .unpack()
-      )),
-      Attribute::AttributeLosclY => AttributeT::AttributeLosclY(Box::new(
-        self.value_as_attribute_loscl_y()
-            .expect("Invalid union table, expected `Attribute::AttributeLosclY`.")
-            .unpack()
-      )),
-      Attribute::AttributeAlpha => AttributeT::AttributeAlpha(Box::new(
-        self.value_as_attribute_alpha()
-            .expect("Invalid union table, expected `Attribute::AttributeAlpha`.")
-            .unpack()
-      )),
-      Attribute::AttributeLoAlpha => AttributeT::AttributeLoAlpha(Box::new(
-        self.value_as_attribute_lo_alpha()
-            .expect("Invalid union table, expected `Attribute::AttributeLoAlpha`.")
-            .unpack()
-      )),
-      Attribute::AttributePrio => AttributeT::AttributePrio(Box::new(
-        self.value_as_attribute_prio()
-            .expect("Invalid union table, expected `Attribute::AttributePrio`.")
-            .unpack()
-      )),
-      Attribute::AttributeFlipH => AttributeT::AttributeFlipH(Box::new(
-        self.value_as_attribute_flip_h()
-            .expect("Invalid union table, expected `Attribute::AttributeFlipH`.")
-            .unpack()
-      )),
-      Attribute::AttributeFlipV => AttributeT::AttributeFlipV(Box::new(
-        self.value_as_attribute_flip_v()
-            .expect("Invalid union table, expected `Attribute::AttributeFlipV`.")
-            .unpack()
-      )),
-      Attribute::AttributeHide => AttributeT::AttributeHide(Box::new(
-        self.value_as_attribute_hide()
-            .expect("Invalid union table, expected `Attribute::AttributeHide`.")
-            .unpack()
-      )),
-      Attribute::AttributePartsColor => AttributeT::AttributePartsColor(Box::new(
-        self.value_as_attribute_parts_color()
-            .expect("Invalid union table, expected `Attribute::AttributePartsColor`.")
-            .unpack()
-      )),
-      Attribute::AttributeShader => AttributeT::AttributeShader(Box::new(
-        self.value_as_attribute_shader()
-            .expect("Invalid union table, expected `Attribute::AttributeShader`.")
-            .unpack()
-      )),
-      Attribute::AttributeVertex => AttributeT::AttributeVertex(Box::new(
-        self.value_as_attribute_vertex()
-            .expect("Invalid union table, expected `Attribute::AttributeVertex`.")
-            .unpack()
-      )),
-      Attribute::AttributePivotX => AttributeT::AttributePivotX(Box::new(
-        self.value_as_attribute_pivot_x()
-            .expect("Invalid union table, expected `Attribute::AttributePivotX`.")
-            .unpack()
-      )),
-      Attribute::AttributePivotY => AttributeT::AttributePivotY(Box::new(
-        self.value_as_attribute_pivot_y()
-            .expect("Invalid union table, expected `Attribute::AttributePivotY`.")
-            .unpack()
-      )),
-      Attribute::AttributeAnchorX => AttributeT::AttributeAnchorX(Box::new(
-        self.value_as_attribute_anchor_x()
-            .expect("Invalid union table, expected `Attribute::AttributeAnchorX`.")
-            .unpack()
-      )),
-      Attribute::AttributeAnchorY => AttributeT::AttributeAnchorY(Box::new(
-        self.value_as_attribute_anchor_y()
-            .expect("Invalid union table, expected `Attribute::AttributeAnchorY`.")
-            .unpack()
-      )),
-      Attribute::AttributeSizeX => AttributeT::AttributeSizeX(Box::new(
-        self.value_as_attribute_size_x()
-            .expect("Invalid union table, expected `Attribute::AttributeSizeX`.")
-            .unpack()
-      )),
-      Attribute::AttributeSizeY => AttributeT::AttributeSizeY(Box::new(
-        self.value_as_attribute_size_y()
-            .expect("Invalid union table, expected `Attribute::AttributeSizeY`.")
-            .unpack()
-      )),
-      Attribute::AttributeImgFlipH => AttributeT::AttributeImgFlipH(Box::new(
-        self.value_as_attribute_img_flip_h()
-            .expect("Invalid union table, expected `Attribute::AttributeImgFlipH`.")
-            .unpack()
-      )),
-      Attribute::AttributeImgFlipV => AttributeT::AttributeImgFlipV(Box::new(
-        self.value_as_attribute_img_flip_v()
-            .expect("Invalid union table, expected `Attribute::AttributeImgFlipV`.")
-            .unpack()
-      )),
-      Attribute::AttributeUvtX => AttributeT::AttributeUvtX(Box::new(
-        self.value_as_attribute_uvt_x()
-            .expect("Invalid union table, expected `Attribute::AttributeUvtX`.")
-            .unpack()
-      )),
-      Attribute::AttributeUvtY => AttributeT::AttributeUvtY(Box::new(
-        self.value_as_attribute_uvt_y()
-            .expect("Invalid union table, expected `Attribute::AttributeUvtY`.")
-            .unpack()
-      )),
-      Attribute::AttributeUvrZ => AttributeT::AttributeUvrZ(Box::new(
-        self.value_as_attribute_uvr_z()
-            .expect("Invalid union table, expected `Attribute::AttributeUvrZ`.")
-            .unpack()
-      )),
-      Attribute::AttributeUvsX => AttributeT::AttributeUvsX(Box::new(
-        self.value_as_attribute_uvs_x()
-            .expect("Invalid union table, expected `Attribute::AttributeUvsX`.")
-            .unpack()
-      )),
-      Attribute::AttributeUvsY => AttributeT::AttributeUvsY(Box::new(
-        self.value_as_attribute_uvs_y()
-            .expect("Invalid union table, expected `Attribute::AttributeUvsY`.")
-            .unpack()
-      )),
-      Attribute::AttributeBoundr => AttributeT::AttributeBoundr(Box::new(
-        self.value_as_attribute_boundr()
-            .expect("Invalid union table, expected `Attribute::AttributeBoundr`.")
-            .unpack()
-      )),
-      Attribute::AttributeMask => AttributeT::AttributeMask(Box::new(
-        self.value_as_attribute_mask()
-            .expect("Invalid union table, expected `Attribute::AttributeMask`.")
-            .unpack()
-      )),
-      Attribute::AttributeInstance => AttributeT::AttributeInstance(Box::new(
-        self.value_as_attribute_instance()
-            .expect("Invalid union table, expected `Attribute::AttributeInstance`.")
-            .unpack()
-      )),
-      Attribute::AttributeEffect => AttributeT::AttributeEffect(Box::new(
-        self.value_as_attribute_effect()
-            .expect("Invalid union table, expected `Attribute::AttributeEffect`.")
-            .unpack()
-      )),
-      Attribute::AttributeVertexDeformation => AttributeT::AttributeVertexDeformation(Box::new(
-        self.value_as_attribute_vertex_deformation()
-            .expect("Invalid union table, expected `Attribute::AttributeVertexDeformation`.")
-            .unpack()
-      )),
-      Attribute::AttributeSkew => AttributeT::AttributeSkew(Box::new(
-        self.value_as_attribute_skew()
-            .expect("Invalid union table, expected `Attribute::AttributeSkew`.")
-            .unpack()
-      )),
-      Attribute::AttributeDeform => AttributeT::AttributeDeform(Box::new(
-        self.value_as_attribute_deform()
-            .expect("Invalid union table, expected `Attribute::AttributeDeform`.")
-            .unpack()
-      )),
-      _ => AttributeT::NONE,
-    };
+            Attribute::NONE => AttributeT::NONE,
+            Attribute::AttributeCell => AttributeT::AttributeCell(Box::new(
+                self.value_as_attribute_cell()
+                    .expect("Invalid union table, expected `Attribute::AttributeCell`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePosX => AttributeT::AttributePosX(Box::new(
+                self.value_as_attribute_pos_x()
+                    .expect("Invalid union table, expected `Attribute::AttributePosX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePosY => AttributeT::AttributePosY(Box::new(
+                self.value_as_attribute_pos_y()
+                    .expect("Invalid union table, expected `Attribute::AttributePosY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePosZ => AttributeT::AttributePosZ(Box::new(
+                self.value_as_attribute_pos_z()
+                    .expect("Invalid union table, expected `Attribute::AttributePosZ`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeRotX => AttributeT::AttributeRotX(Box::new(
+                self.value_as_attribute_rot_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeRotX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeRotY => AttributeT::AttributeRotY(Box::new(
+                self.value_as_attribute_rot_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeRotY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeRotZ => AttributeT::AttributeRotZ(Box::new(
+                self.value_as_attribute_rot_z()
+                    .expect("Invalid union table, expected `Attribute::AttributeRotZ`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeSclX => AttributeT::AttributeSclX(Box::new(
+                self.value_as_attribute_scl_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeSclX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeSclY => AttributeT::AttributeSclY(Box::new(
+                self.value_as_attribute_scl_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeSclY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeLosclX => AttributeT::AttributeLosclX(Box::new(
+                self.value_as_attribute_loscl_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeLosclX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeLosclY => AttributeT::AttributeLosclY(Box::new(
+                self.value_as_attribute_loscl_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeLosclY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeAlpha => AttributeT::AttributeAlpha(Box::new(
+                self.value_as_attribute_alpha()
+                    .expect("Invalid union table, expected `Attribute::AttributeAlpha`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeLoAlpha => AttributeT::AttributeLoAlpha(Box::new(
+                self.value_as_attribute_lo_alpha()
+                    .expect("Invalid union table, expected `Attribute::AttributeLoAlpha`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePrio => AttributeT::AttributePrio(Box::new(
+                self.value_as_attribute_prio()
+                    .expect("Invalid union table, expected `Attribute::AttributePrio`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeFlipH => AttributeT::AttributeFlipH(Box::new(
+                self.value_as_attribute_flip_h()
+                    .expect("Invalid union table, expected `Attribute::AttributeFlipH`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeFlipV => AttributeT::AttributeFlipV(Box::new(
+                self.value_as_attribute_flip_v()
+                    .expect("Invalid union table, expected `Attribute::AttributeFlipV`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeHide => AttributeT::AttributeHide(Box::new(
+                self.value_as_attribute_hide()
+                    .expect("Invalid union table, expected `Attribute::AttributeHide`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePartsColor => AttributeT::AttributePartsColor(Box::new(
+                self.value_as_attribute_parts_color()
+                    .expect("Invalid union table, expected `Attribute::AttributePartsColor`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeShader => AttributeT::AttributeShader(Box::new(
+                self.value_as_attribute_shader()
+                    .expect("Invalid union table, expected `Attribute::AttributeShader`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeVertex => AttributeT::AttributeVertex(Box::new(
+                self.value_as_attribute_vertex()
+                    .expect("Invalid union table, expected `Attribute::AttributeVertex`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePivotX => AttributeT::AttributePivotX(Box::new(
+                self.value_as_attribute_pivot_x()
+                    .expect("Invalid union table, expected `Attribute::AttributePivotX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributePivotY => AttributeT::AttributePivotY(Box::new(
+                self.value_as_attribute_pivot_y()
+                    .expect("Invalid union table, expected `Attribute::AttributePivotY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeAnchorX => AttributeT::AttributeAnchorX(Box::new(
+                self.value_as_attribute_anchor_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeAnchorX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeAnchorY => AttributeT::AttributeAnchorY(Box::new(
+                self.value_as_attribute_anchor_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeAnchorY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeSizeX => AttributeT::AttributeSizeX(Box::new(
+                self.value_as_attribute_size_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeSizeX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeSizeY => AttributeT::AttributeSizeY(Box::new(
+                self.value_as_attribute_size_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeSizeY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeImgFlipH => AttributeT::AttributeImgFlipH(Box::new(
+                self.value_as_attribute_img_flip_h()
+                    .expect("Invalid union table, expected `Attribute::AttributeImgFlipH`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeImgFlipV => AttributeT::AttributeImgFlipV(Box::new(
+                self.value_as_attribute_img_flip_v()
+                    .expect("Invalid union table, expected `Attribute::AttributeImgFlipV`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeUvtX => AttributeT::AttributeUvtX(Box::new(
+                self.value_as_attribute_uvt_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeUvtX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeUvtY => AttributeT::AttributeUvtY(Box::new(
+                self.value_as_attribute_uvt_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeUvtY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeUvrZ => AttributeT::AttributeUvrZ(Box::new(
+                self.value_as_attribute_uvr_z()
+                    .expect("Invalid union table, expected `Attribute::AttributeUvrZ`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeUvsX => AttributeT::AttributeUvsX(Box::new(
+                self.value_as_attribute_uvs_x()
+                    .expect("Invalid union table, expected `Attribute::AttributeUvsX`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeUvsY => AttributeT::AttributeUvsY(Box::new(
+                self.value_as_attribute_uvs_y()
+                    .expect("Invalid union table, expected `Attribute::AttributeUvsY`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeBoundr => AttributeT::AttributeBoundr(Box::new(
+                self.value_as_attribute_boundr()
+                    .expect("Invalid union table, expected `Attribute::AttributeBoundr`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeMask => AttributeT::AttributeMask(Box::new(
+                self.value_as_attribute_mask()
+                    .expect("Invalid union table, expected `Attribute::AttributeMask`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeInstance => AttributeT::AttributeInstance(Box::new(
+                self.value_as_attribute_instance()
+                    .expect("Invalid union table, expected `Attribute::AttributeInstance`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeEffect => AttributeT::AttributeEffect(Box::new(
+                self.value_as_attribute_effect()
+                    .expect("Invalid union table, expected `Attribute::AttributeEffect`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeSkew => AttributeT::AttributeSkew(Box::new(
+                self.value_as_attribute_skew()
+                    .expect("Invalid union table, expected `Attribute::AttributeSkew`.")
+                    .unpack(),
+            )),
+            Attribute::AttributeDeform => AttributeT::AttributeDeform(Box::new(
+                self.value_as_attribute_deform()
+                    .expect("Invalid union table, expected `Attribute::AttributeDeform`.")
+                    .unpack(),
+            )),
+            _ => AttributeT::NONE,
+        };
         AttributeWrapperT { value }
     }
 
@@ -7874,28 +7630,13 @@ impl<'a> AttributeWrapper<'a> {
 
     #[inline]
     #[allow(non_snake_case)]
-    pub fn value_as_attribute_vertex_deformation(&self) -> Option<AttributeVertexDeformation<'a>> {
-        if self.value_type() == Attribute::AttributeVertexDeformation {
-            self.value().map(|t| {
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid union in this slot
-                unsafe { AttributeVertexDeformation::init_from_table(t) }
-            })
-        } else {
-            None
-        }
-    }
-
-    #[inline]
-    #[allow(non_snake_case)]
-    pub fn value_as_attribute_skew(&self) -> Option<AttributeSkew<'a>> {
+    pub fn value_as_attribute_skew(&self) -> Option<Vec2ValueTable<'a>> {
         if self.value_type() == Attribute::AttributeSkew {
             self.value().map(|t| {
                 // Safety:
                 // Created from a valid Table for this object
                 // Which contains a valid union in this slot
-                unsafe { AttributeSkew::init_from_table(t) }
+                unsafe { Vec2ValueTable::init_from_table(t) }
             })
         } else {
             None
@@ -7926,52 +7667,212 @@ impl flatbuffers::Verifiable for AttributeWrapper<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
-     .visit_union::<Attribute, _>("value_type", Self::VT_VALUE_TYPE, "value", Self::VT_VALUE, false, |key, v, pos| {
-        match key {
-          Attribute::AttributeCell => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeCell>>("Attribute::AttributeCell", pos),
-          Attribute::AttributePosX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributePosX", pos),
-          Attribute::AttributePosY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributePosY", pos),
-          Attribute::AttributePosZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributePosZ", pos),
-          Attribute::AttributeRotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeRotX", pos),
-          Attribute::AttributeRotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeRotY", pos),
-          Attribute::AttributeRotZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeRotZ", pos),
-          Attribute::AttributeSclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeSclX", pos),
-          Attribute::AttributeSclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeSclY", pos),
-          Attribute::AttributeLosclX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeLosclX", pos),
-          Attribute::AttributeLosclY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeLosclY", pos),
-          Attribute::AttributeAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeAlpha", pos),
-          Attribute::AttributeLoAlpha => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeLoAlpha", pos),
-          Attribute::AttributePrio => v.verify_union_variant::<flatbuffers::ForwardsUOffset<IntValueTable>>("Attribute::AttributePrio", pos),
-          Attribute::AttributeFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>("Attribute::AttributeFlipH", pos),
-          Attribute::AttributeFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>("Attribute::AttributeFlipV", pos),
-          Attribute::AttributeHide => v.verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>("Attribute::AttributeHide", pos),
-          Attribute::AttributePartsColor => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePartsColor>>("Attribute::AttributePartsColor", pos),
-          Attribute::AttributeShader => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeShader>>("Attribute::AttributeShader", pos),
-          Attribute::AttributeVertex => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeVertex>>("Attribute::AttributeVertex", pos),
-          Attribute::AttributePivotX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributePivotX", pos),
-          Attribute::AttributePivotY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributePivotY", pos),
-          Attribute::AttributeAnchorX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeAnchorX", pos),
-          Attribute::AttributeAnchorY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeAnchorY", pos),
-          Attribute::AttributeSizeX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeSizeX", pos),
-          Attribute::AttributeSizeY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeSizeY", pos),
-          Attribute::AttributeImgFlipH => v.verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>("Attribute::AttributeImgFlipH", pos),
-          Attribute::AttributeImgFlipV => v.verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>("Attribute::AttributeImgFlipV", pos),
-          Attribute::AttributeUvtX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeUvtX", pos),
-          Attribute::AttributeUvtY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeUvtY", pos),
-          Attribute::AttributeUvrZ => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeUvrZ", pos),
-          Attribute::AttributeUvsX => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeUvsX", pos),
-          Attribute::AttributeUvsY => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeUvsY", pos),
-          Attribute::AttributeBoundr => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeBoundr", pos),
-          Attribute::AttributeMask => v.verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>("Attribute::AttributeMask", pos),
-          Attribute::AttributeInstance => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeInstance>>("Attribute::AttributeInstance", pos),
-          Attribute::AttributeEffect => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeEffect>>("Attribute::AttributeEffect", pos),
-          Attribute::AttributeVertexDeformation => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeVertexDeformation>>("Attribute::AttributeVertexDeformation", pos),
-          Attribute::AttributeSkew => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeSkew>>("Attribute::AttributeSkew", pos),
-          Attribute::AttributeDeform => v.verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeDeform>>("Attribute::AttributeDeform", pos),
-          _ => Ok(()),
-        }
-     })?
-     .finish();
+            .visit_union::<Attribute, _>(
+                "value_type",
+                Self::VT_VALUE_TYPE,
+                "value",
+                Self::VT_VALUE,
+                false,
+                |key, v, pos| match key {
+                    Attribute::AttributeCell => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeCell>>(
+                            "Attribute::AttributeCell",
+                            pos,
+                        ),
+                    Attribute::AttributePosX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributePosX",
+                            pos,
+                        ),
+                    Attribute::AttributePosY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributePosY",
+                            pos,
+                        ),
+                    Attribute::AttributePosZ => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributePosZ",
+                            pos,
+                        ),
+                    Attribute::AttributeRotX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeRotX",
+                            pos,
+                        ),
+                    Attribute::AttributeRotY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeRotY",
+                            pos,
+                        ),
+                    Attribute::AttributeRotZ => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeRotZ",
+                            pos,
+                        ),
+                    Attribute::AttributeSclX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeSclX",
+                            pos,
+                        ),
+                    Attribute::AttributeSclY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeSclY",
+                            pos,
+                        ),
+                    Attribute::AttributeLosclX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeLosclX",
+                            pos,
+                        ),
+                    Attribute::AttributeLosclY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeLosclY",
+                            pos,
+                        ),
+                    Attribute::AttributeAlpha => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeAlpha",
+                            pos,
+                        ),
+                    Attribute::AttributeLoAlpha => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeLoAlpha",
+                            pos,
+                        ),
+                    Attribute::AttributePrio => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<IntValueTable>>(
+                            "Attribute::AttributePrio",
+                            pos,
+                        ),
+                    Attribute::AttributeFlipH => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>(
+                            "Attribute::AttributeFlipH",
+                            pos,
+                        ),
+                    Attribute::AttributeFlipV => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>(
+                            "Attribute::AttributeFlipV",
+                            pos,
+                        ),
+                    Attribute::AttributeHide => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>(
+                            "Attribute::AttributeHide",
+                            pos,
+                        ),
+                    Attribute::AttributePartsColor => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributePartsColor>>(
+                            "Attribute::AttributePartsColor",
+                            pos,
+                        ),
+                    Attribute::AttributeShader => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeShader>>(
+                            "Attribute::AttributeShader",
+                            pos,
+                        ),
+                    Attribute::AttributeVertex => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeVertex>>(
+                            "Attribute::AttributeVertex",
+                            pos,
+                        ),
+                    Attribute::AttributePivotX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributePivotX",
+                            pos,
+                        ),
+                    Attribute::AttributePivotY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributePivotY",
+                            pos,
+                        ),
+                    Attribute::AttributeAnchorX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeAnchorX",
+                            pos,
+                        ),
+                    Attribute::AttributeAnchorY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeAnchorY",
+                            pos,
+                        ),
+                    Attribute::AttributeSizeX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeSizeX",
+                            pos,
+                        ),
+                    Attribute::AttributeSizeY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeSizeY",
+                            pos,
+                        ),
+                    Attribute::AttributeImgFlipH => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>(
+                            "Attribute::AttributeImgFlipH",
+                            pos,
+                        ),
+                    Attribute::AttributeImgFlipV => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<BoolValueTable>>(
+                            "Attribute::AttributeImgFlipV",
+                            pos,
+                        ),
+                    Attribute::AttributeUvtX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeUvtX",
+                            pos,
+                        ),
+                    Attribute::AttributeUvtY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeUvtY",
+                            pos,
+                        ),
+                    Attribute::AttributeUvrZ => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeUvrZ",
+                            pos,
+                        ),
+                    Attribute::AttributeUvsX => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeUvsX",
+                            pos,
+                        ),
+                    Attribute::AttributeUvsY => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeUvsY",
+                            pos,
+                        ),
+                    Attribute::AttributeBoundr => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeBoundr",
+                            pos,
+                        ),
+                    Attribute::AttributeMask => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<FloatValueTable>>(
+                            "Attribute::AttributeMask",
+                            pos,
+                        ),
+                    Attribute::AttributeInstance => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeInstance>>(
+                            "Attribute::AttributeInstance",
+                            pos,
+                        ),
+                    Attribute::AttributeEffect => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeEffect>>(
+                            "Attribute::AttributeEffect",
+                            pos,
+                        ),
+                    Attribute::AttributeSkew => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<Vec2ValueTable>>(
+                            "Attribute::AttributeSkew",
+                            pos,
+                        ),
+                    Attribute::AttributeDeform => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<AttributeDeform>>(
+                            "Attribute::AttributeDeform",
+                            pos,
+                        ),
+                    _ => Ok(()),
+                },
+            )?
+            .finish();
         Ok(())
     }
 }
@@ -8391,16 +8292,6 @@ impl core::fmt::Debug for AttributeWrapper<'_> {
             }
             Attribute::AttributeEffect => {
                 if let Some(x) = self.value_as_attribute_effect() {
-                    ds.field("value", &x)
-                } else {
-                    ds.field(
-                        "value",
-                        &"InvalidFlatbuffer: Union discriminant does not match value.",
-                    )
-                }
-            }
-            Attribute::AttributeVertexDeformation => {
-                if let Some(x) = self.value_as_attribute_vertex_deformation() {
                     ds.field("value", &x)
                 } else {
                     ds.field(
@@ -9878,6 +9769,8 @@ impl<'a> flatbuffers::Follow<'a> for InstanceDataItem<'a> {
 }
 
 impl<'a> InstanceDataItem<'a> {
+    pub const VT_PART_INDEX: flatbuffers::VOffsetT = 4;
+
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
         InstanceDataItem { _tab: table }
@@ -9885,14 +9778,38 @@ impl<'a> InstanceDataItem<'a> {
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        _args: &'args InstanceDataItemArgs,
+        args: &'args InstanceDataItemArgs,
     ) -> flatbuffers::WIPOffset<InstanceDataItem<'bldr>> {
         let mut builder = InstanceDataItemBuilder::new(_fbb);
+        builder.add_part_index(args.part_index);
         builder.finish()
     }
 
     pub fn unpack(&self) -> InstanceDataItemT {
-        InstanceDataItemT {}
+        let part_index = self.part_index();
+        InstanceDataItemT { part_index }
+    }
+
+    #[inline]
+    pub fn part_index(&self) -> i16 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i16>(InstanceDataItem::VT_PART_INDEX, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn key_compare_less_than(&self, o: &InstanceDataItem) -> bool {
+        self.part_index() < o.part_index()
+    }
+
+    #[inline]
+    pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+        let key = self.part_index();
+        key.cmp(&val)
     }
 }
 
@@ -9903,15 +9820,19 @@ impl flatbuffers::Verifiable for InstanceDataItem<'_> {
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?.finish();
+        v.visit_table(pos)?
+            .visit_field::<i16>("part_index", Self::VT_PART_INDEX, false)?
+            .finish();
         Ok(())
     }
 }
-pub struct InstanceDataItemArgs {}
+pub struct InstanceDataItemArgs {
+    pub part_index: i16,
+}
 impl<'a> Default for InstanceDataItemArgs {
     #[inline]
     fn default() -> Self {
-        InstanceDataItemArgs {}
+        InstanceDataItemArgs { part_index: 0 }
     }
 }
 
@@ -9920,6 +9841,11 @@ pub struct InstanceDataItemBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> InstanceDataItemBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_part_index(&mut self, part_index: i16) {
+        self.fbb_
+            .push_slot::<i16>(InstanceDataItem::VT_PART_INDEX, part_index, 0);
+    }
     #[inline]
     pub fn new(
         _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
@@ -9940,15 +9866,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> InstanceDataItemBuilder<'a, 'b,
 impl core::fmt::Debug for InstanceDataItem<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("InstanceDataItem");
+        ds.field("part_index", &self.part_index());
         ds.finish()
     }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct InstanceDataItemT {}
+pub struct InstanceDataItemT {
+    pub part_index: i16,
+}
 impl Default for InstanceDataItemT {
     fn default() -> Self {
-        Self {}
+        Self { part_index: 0 }
     }
 }
 impl InstanceDataItemT {
@@ -9956,7 +9885,8 @@ impl InstanceDataItemT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<InstanceDataItem<'b>> {
-        InstanceDataItem::create(_fbb, &InstanceDataItemArgs {})
+        let part_index = self.part_index;
+        InstanceDataItem::create(_fbb, &InstanceDataItemArgs { part_index })
     }
 }
 pub enum EffectDataItemOffset {}
@@ -9977,6 +9907,8 @@ impl<'a> flatbuffers::Follow<'a> for EffectDataItem<'a> {
 }
 
 impl<'a> EffectDataItem<'a> {
+    pub const VT_PART_INDEX: flatbuffers::VOffsetT = 4;
+
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
         EffectDataItem { _tab: table }
@@ -9984,14 +9916,38 @@ impl<'a> EffectDataItem<'a> {
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        _args: &'args EffectDataItemArgs,
+        args: &'args EffectDataItemArgs,
     ) -> flatbuffers::WIPOffset<EffectDataItem<'bldr>> {
         let mut builder = EffectDataItemBuilder::new(_fbb);
+        builder.add_part_index(args.part_index);
         builder.finish()
     }
 
     pub fn unpack(&self) -> EffectDataItemT {
-        EffectDataItemT {}
+        let part_index = self.part_index();
+        EffectDataItemT { part_index }
+    }
+
+    #[inline]
+    pub fn part_index(&self) -> i16 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i16>(EffectDataItem::VT_PART_INDEX, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn key_compare_less_than(&self, o: &EffectDataItem) -> bool {
+        self.part_index() < o.part_index()
+    }
+
+    #[inline]
+    pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+        let key = self.part_index();
+        key.cmp(&val)
     }
 }
 
@@ -10002,15 +9958,19 @@ impl flatbuffers::Verifiable for EffectDataItem<'_> {
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?.finish();
+        v.visit_table(pos)?
+            .visit_field::<i16>("part_index", Self::VT_PART_INDEX, false)?
+            .finish();
         Ok(())
     }
 }
-pub struct EffectDataItemArgs {}
+pub struct EffectDataItemArgs {
+    pub part_index: i16,
+}
 impl<'a> Default for EffectDataItemArgs {
     #[inline]
     fn default() -> Self {
-        EffectDataItemArgs {}
+        EffectDataItemArgs { part_index: 0 }
     }
 }
 
@@ -10019,6 +9979,11 @@ pub struct EffectDataItemBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> EffectDataItemBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_part_index(&mut self, part_index: i16) {
+        self.fbb_
+            .push_slot::<i16>(EffectDataItem::VT_PART_INDEX, part_index, 0);
+    }
     #[inline]
     pub fn new(
         _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
@@ -10039,15 +10004,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> EffectDataItemBuilder<'a, 'b, A
 impl core::fmt::Debug for EffectDataItem<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("EffectDataItem");
+        ds.field("part_index", &self.part_index());
         ds.finish()
     }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct EffectDataItemT {}
+pub struct EffectDataItemT {
+    pub part_index: i16,
+}
 impl Default for EffectDataItemT {
     fn default() -> Self {
-        Self {}
+        Self { part_index: 0 }
     }
 }
 impl EffectDataItemT {
@@ -10055,7 +10023,8 @@ impl EffectDataItemT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<EffectDataItem<'b>> {
-        EffectDataItem::create(_fbb, &EffectDataItemArgs {})
+        let part_index = self.part_index;
+        EffectDataItem::create(_fbb, &EffectDataItemArgs { part_index })
     }
 }
 pub enum EventsPerFrameOffset {}
@@ -17298,6 +17267,180 @@ impl PartStateT {
         )
     }
 }
+pub enum FrameDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct FrameData<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for FrameData<'a> {
+    type Inner = FrameData<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> FrameData<'a> {
+    pub const VT_FRAME_INDEX: flatbuffers::VOffsetT = 4;
+    pub const VT_PARTS: flatbuffers::VOffsetT = 6;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        FrameData { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args FrameDataArgs<'args>,
+    ) -> flatbuffers::WIPOffset<FrameData<'bldr>> {
+        let mut builder = FrameDataBuilder::new(_fbb);
+        if let Some(x) = args.parts {
+            builder.add_parts(x);
+        }
+        builder.add_frame_index(args.frame_index);
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> FrameDataT {
+        let frame_index = self.frame_index();
+        let parts = self.parts().map(|x| x.iter().map(|t| t.unpack()).collect());
+        FrameDataT { frame_index, parts }
+    }
+
+    #[inline]
+    pub fn frame_index(&self) -> i16 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i16>(FrameData::VT_FRAME_INDEX, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn parts(
+        &self,
+    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab.get::<flatbuffers::ForwardsUOffset<
+                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState>>,
+            >>(FrameData::VT_PARTS, None)
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for FrameData<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<i16>("frame_index", Self::VT_FRAME_INDEX, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<
+                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartState>>,
+            >>("parts", Self::VT_PARTS, false)?
+            .finish();
+        Ok(())
+    }
+}
+pub struct FrameDataArgs<'a> {
+    pub frame_index: i16,
+    pub parts: Option<
+        flatbuffers::WIPOffset<
+            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>,
+        >,
+    >,
+}
+impl<'a> Default for FrameDataArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        FrameDataArgs {
+            frame_index: 0,
+            parts: None,
+        }
+    }
+}
+
+pub struct FrameDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> FrameDataBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_frame_index(&mut self, frame_index: i16) {
+        self.fbb_
+            .push_slot::<i16>(FrameData::VT_FRAME_INDEX, frame_index, 0);
+    }
+    #[inline]
+    pub fn add_parts(
+        &mut self,
+        parts: flatbuffers::WIPOffset<
+            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<PartState<'b>>>,
+        >,
+    ) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<_>>(FrameData::VT_PARTS, parts);
+    }
+    #[inline]
+    pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> FrameDataBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        FrameDataBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<FrameData<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for FrameData<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("FrameData");
+        ds.field("frame_index", &self.frame_index());
+        ds.field("parts", &self.parts());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct FrameDataT {
+    pub frame_index: i16,
+    pub parts: Option<Vec<PartStateT>>,
+}
+impl Default for FrameDataT {
+    fn default() -> Self {
+        Self {
+            frame_index: 0,
+            parts: None,
+        }
+    }
+}
+impl FrameDataT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<FrameData<'b>> {
+        let frame_index = self.frame_index;
+        let parts = self.parts.as_ref().map(|x| {
+            let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
+            _fbb.create_vector(&w)
+        });
+        FrameData::create(_fbb, &FrameDataArgs { frame_index, parts })
+    }
+}
 pub enum LabelOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -17621,13 +17764,13 @@ impl<'a> AnimationData<'a> {
     #[inline]
     pub fn frame_data(
         &self,
-    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>> {
+    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FrameData<'a>>>> {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab.get::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState>>,
+                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FrameData>>,
             >>(AnimationData::VT_FRAME_DATA, None)
         }
     }
@@ -17752,7 +17895,7 @@ impl flatbuffers::Verifiable for AnimationData<'_> {
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAttributes>>,
             >>("initial_data", Self::VT_INITIAL_DATA, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartState>>,
+                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<FrameData>>,
             >>("frame_data", Self::VT_FRAME_DATA, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<EventsPerFrame>>,
@@ -17784,7 +17927,7 @@ pub struct AnimationDataArgs<'a> {
     >,
     pub frame_data: Option<
         flatbuffers::WIPOffset<
-            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartState<'a>>>,
+            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<FrameData<'a>>>,
         >,
     >,
     pub events: Option<
@@ -17857,7 +18000,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, A>
     pub fn add_frame_data(
         &mut self,
         frame_data: flatbuffers::WIPOffset<
-            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<PartState<'b>>>,
+            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<FrameData<'b>>>,
         >,
     ) {
         self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
@@ -17976,7 +18119,7 @@ impl core::fmt::Debug for AnimationData<'_> {
 pub struct AnimationDataT {
     pub name: String,
     pub initial_data: Option<Vec<PartAttributesT>>,
-    pub frame_data: Option<Vec<PartStateT>>,
+    pub frame_data: Option<Vec<FrameDataT>>,
     pub events: Option<Vec<EventsPerFrameT>>,
     pub label_data: Option<Vec<LabelT>>,
     pub meshs_data_uv: Option<Vec<MeshDataUVT>>,
