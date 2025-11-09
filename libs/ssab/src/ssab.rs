@@ -13948,7 +13948,7 @@ impl<'a> flatbuffers::Follow<'a> for PartAttributes<'a> {
 }
 
 impl<'a> PartAttributes<'a> {
-    pub const VT_CELL_INDEX: flatbuffers::VOffsetT = 4;
+    pub const VT_CELL: flatbuffers::VOffsetT = 4;
     pub const VT_POSITION: flatbuffers::VOffsetT = 6;
     pub const VT_ROTATION: flatbuffers::VOffsetT = 8;
     pub const VT_SCALE: flatbuffers::VOffsetT = 10;
@@ -14030,10 +14030,12 @@ impl<'a> PartAttributes<'a> {
         if let Some(x) = args.position {
             builder.add_position(x);
         }
+        if let Some(x) = args.cell {
+            builder.add_cell(x);
+        }
         builder.add_priority(args.priority);
         builder.add_localopacity(args.localopacity);
         builder.add_opacity(args.opacity);
-        builder.add_cell_index(args.cell_index);
         builder.add_hide(args.hide);
         builder.add_flip_h(args.flip_h);
         builder.add_flip_v(args.flip_v);
@@ -14041,7 +14043,7 @@ impl<'a> PartAttributes<'a> {
     }
 
     pub fn unpack(&self) -> PartAttributesT {
-        let cell_index = self.cell_index();
+        let cell = self.cell().map(|x| Box::new(x.unpack()));
         let position = self.position().map(|x| Box::new(x.unpack()));
         let rotation = self.rotation().map(|x| Box::new(x.unpack()));
         let scale = self.scale().map(|x| Box::new(x.unpack()));
@@ -14066,7 +14068,7 @@ impl<'a> PartAttributes<'a> {
         let skew = self.skew().map(|x| Box::new(x.unpack()));
         let deform = self.deform().map(|x| Box::new(x.unpack()));
         PartAttributesT {
-            cell_index,
+            cell,
             position,
             rotation,
             scale,
@@ -14094,14 +14096,16 @@ impl<'a> PartAttributes<'a> {
     }
 
     #[inline]
-    pub fn cell_index(&self) -> i16 {
+    pub fn cell(&self) -> Option<PartAttributeCell<'a>> {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<i16>(PartAttributes::VT_CELL_INDEX, Some(0))
-                .unwrap()
+                .get::<flatbuffers::ForwardsUOffset<PartAttributeCell>>(
+                    PartAttributes::VT_CELL,
+                    None,
+                )
         }
     }
     #[inline]
@@ -14370,7 +14374,11 @@ impl flatbuffers::Verifiable for PartAttributes<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
-            .visit_field::<i16>("cell_index", Self::VT_CELL_INDEX, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeCell>>(
+                "cell",
+                Self::VT_CELL,
+                false,
+            )?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec3>>(
                 "position",
                 Self::VT_POSITION,
@@ -14439,7 +14447,7 @@ impl flatbuffers::Verifiable for PartAttributes<'_> {
     }
 }
 pub struct PartAttributesArgs<'a> {
-    pub cell_index: i16,
+    pub cell: Option<flatbuffers::WIPOffset<PartAttributeCell<'a>>>,
     pub position: Option<flatbuffers::WIPOffset<Vec3<'a>>>,
     pub rotation: Option<flatbuffers::WIPOffset<Vec3<'a>>>,
     pub scale: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
@@ -14468,7 +14476,7 @@ impl<'a> Default for PartAttributesArgs<'a> {
     #[inline]
     fn default() -> Self {
         PartAttributesArgs {
-            cell_index: 0,
+            cell: None,
             position: None,
             rotation: None,
             scale: None,
@@ -14502,9 +14510,12 @@ pub struct PartAttributesBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b, A> {
     #[inline]
-    pub fn add_cell_index(&mut self, cell_index: i16) {
+    pub fn add_cell(&mut self, cell: flatbuffers::WIPOffset<PartAttributeCell<'b>>) {
         self.fbb_
-            .push_slot::<i16>(PartAttributes::VT_CELL_INDEX, cell_index, 0);
+            .push_slot_always::<flatbuffers::WIPOffset<PartAttributeCell>>(
+                PartAttributes::VT_CELL,
+                cell,
+            );
     }
     #[inline]
     pub fn add_position(&mut self, position: flatbuffers::WIPOffset<Vec3<'b>>) {
@@ -14670,7 +14681,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b, A
 impl core::fmt::Debug for PartAttributes<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartAttributes");
-        ds.field("cell_index", &self.cell_index());
+        ds.field("cell", &self.cell());
         ds.field("position", &self.position());
         ds.field("rotation", &self.rotation());
         ds.field("scale", &self.scale());
@@ -14700,7 +14711,7 @@ impl core::fmt::Debug for PartAttributes<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributesT {
-    pub cell_index: i16,
+    pub cell: Option<Box<PartAttributeCellT>>,
     pub position: Option<Box<Vec3T>>,
     pub rotation: Option<Box<Vec3T>>,
     pub scale: Option<Box<Vec2T>>,
@@ -14728,7 +14739,7 @@ pub struct PartAttributesT {
 impl Default for PartAttributesT {
     fn default() -> Self {
         Self {
-            cell_index: 0,
+            cell: None,
             position: None,
             rotation: None,
             scale: None,
@@ -14760,7 +14771,7 @@ impl PartAttributesT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartAttributes<'b>> {
-        let cell_index = self.cell_index;
+        let cell = self.cell.as_ref().map(|x| x.pack(_fbb));
         let position = self.position.as_ref().map(|x| x.pack(_fbb));
         let rotation = self.rotation.as_ref().map(|x| x.pack(_fbb));
         let scale = self.scale.as_ref().map(|x| x.pack(_fbb));
@@ -14787,7 +14798,7 @@ impl PartAttributesT {
         PartAttributes::create(
             _fbb,
             &PartAttributesArgs {
-                cell_index,
+                cell,
                 position,
                 rotation,
                 scale,

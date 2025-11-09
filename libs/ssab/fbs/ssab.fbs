@@ -403,7 +403,7 @@ table PartAttributeShader {
 }
 
 table PartAttributes {
-  cell_index: short;
+  cell: PartAttributeCell;
   position: Vec3;
   rotation: Vec3;
   scale: Vec2;
