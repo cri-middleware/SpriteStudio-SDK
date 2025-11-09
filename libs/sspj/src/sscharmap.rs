@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use serde::Deserialize;
 use crate::ssloader::{SsLoader, SspjError};
 use crate::sstypes::{SsIRect, SsPoint2};
+use serde::Deserialize;
+use std::collections::HashMap;
 
 pub trait CharMapLoader {
     type Output;
@@ -88,7 +88,7 @@ impl CharMapLoader for SsCharMapChar {
             },
             offset: SsPoint2 {
                 x: parts["xoffset"].parse::<f32>().unwrap(),
-                y: parts["yoffset"].parse::<f32>().unwrap()
+                y: parts["yoffset"].parse::<f32>().unwrap(),
             },
             xadvance: parts["xadvance"].parse::<i32>().unwrap(),
             page: parts["page"].parse::<i32>().unwrap(),
@@ -133,11 +133,16 @@ impl SsLoader for SsCharMap {
                 continue;
             }
             let order = splits[0];
-            let parts = split_ignoring_quotes(' ', splits[1]).iter().filter_map(|x| {
-                let kv = split_ignoring_quotes('=', x.trim());
-                if kv.len() != 2 { return None;}
-                Some((kv[0].to_string(), kv[1].to_string()))
-            }).collect::<HashMap<String, String>>();
+            let parts = split_ignoring_quotes(' ', splits[1])
+                .iter()
+                .filter_map(|x| {
+                    let kv = split_ignoring_quotes('=', x.trim());
+                    if kv.len() != 2 {
+                        return None;
+                    }
+                    Some((kv[0].to_string(), kv[1].to_string()))
+                })
+                .collect::<HashMap<String, String>>();
 
             match order {
                 "info" => {
@@ -172,10 +177,18 @@ impl SsLoader for SsCharMap {
         }
         // validation
         if chars_count != ss_char_map.chars.len() {
-            return Err(SspjError::FntParseError(format!("Invalid number of chars count={} chars.len()={}", chars_count, ss_char_map.chars.len())));
+            return Err(SspjError::FntParseError(format!(
+                "Invalid number of chars count={} chars.len()={}",
+                chars_count,
+                ss_char_map.chars.len()
+            )));
         }
         if kernings_count != ss_char_map.kernings.len() {
-            return Err(SspjError::FntParseError(format!("Invalid number of kernings count={} kernings.len()={}", kernings_count, ss_char_map.kernings.len())));
+            return Err(SspjError::FntParseError(format!(
+                "Invalid number of kernings count={} kernings.len()={}",
+                kernings_count,
+                ss_char_map.kernings.len()
+            )));
         }
 
         Ok(ss_char_map)
@@ -216,11 +229,11 @@ fn split_ignoring_quotes(delimiter: char, s: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use rayon::prelude::*;
     use std::path::{Path, PathBuf};
-    use super::*;
 
-    fn load_ssfnt(path : &Path) {
+    fn load_ssfnt(path: &Path) {
         let r = SsCharMap::load_from_file(path);
         match r {
             Ok(ss_char_map) => {
@@ -247,7 +260,9 @@ mod tests {
         [
             "tests/overall/font/RoundedMPlus.fnt",
             "tests/allPartsV7/font/Sample_PixelMplus12.fnt",
-        ].par_iter().for_each( |&f| {
+        ]
+        .par_iter()
+        .for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssfnt(&p.as_path());
         });

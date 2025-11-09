@@ -1,6 +1,6 @@
 mod anime_decoder;
-mod part_state;
 mod cellmap;
+mod part_state;
 
 pub use anime_decoder::*;
 

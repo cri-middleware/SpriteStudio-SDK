@@ -1,23 +1,35 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
-use ssab::ssqb::{Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SsSequenceBinary, SsSequenceBinaryArgs, SsSequenceBinaryT};
+use ssab::ssqb::{
+    Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SsSequenceBinary,
+    SsSequenceBinaryArgs, SsSequenceBinaryT,
+};
 
-pub struct SsqbCache {
-    
-}
+pub struct SsqbCache {}
 impl SsqbCache {
     pub fn new() -> Self {
         Self {}
     }
 
-    pub fn create_shared_sequence_item_list<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    pub fn create_shared_sequence_item_list<
+        'bldr: 'args,
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         sequence_item_t_list: &[SequenceItemT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SequenceItem<'bldr>>>> {
         let mut sequence_item_offset_vec = Vec::with_capacity(sequence_item_t_list.len());
         for sequence_item_t in sequence_item_t_list {
-            let ref_anime_pack = sequence_item_t.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
-            let ref_anime = sequence_item_t.ref_anime.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
+            let ref_anime_pack = sequence_item_t
+                .ref_anime_pack
+                .as_ref()
+                .map(|s| fb.create_shared_string(s.as_ref()));
+            let ref_anime = sequence_item_t
+                .ref_anime
+                .as_ref()
+                .map(|s| fb.create_shared_string(s.as_ref()));
 
             let sequence_item_arg = SequenceItemArgs {
                 ref_anime_pack,
@@ -30,10 +42,15 @@ impl SsqbCache {
 
         fb.create_vector(&sequence_item_offset_vec)
     }
-    pub fn create_shared_sequence_binary<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    pub fn create_shared_sequence_binary<
+        'bldr: 'args,
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        sequence_binary_t: &SsSequenceBinaryT
+        sequence_binary_t: &SsSequenceBinaryT,
     ) -> WIPOffset<SsSequenceBinary<'bldr>> {
         let mut sequence_offset_vec = vec![];
         if let Some(sequences) = sequence_binary_t.sequence_list.as_ref() {
@@ -41,7 +58,8 @@ impl SsqbCache {
 
             for sequence in sequences {
                 let name = fb.create_shared_string(&sequence.name);
-                let list = self.create_shared_sequence_item_list(fb, sequence.list.as_ref().unwrap());
+                let list =
+                    self.create_shared_sequence_item_list(fb, sequence.list.as_ref().unwrap());
                 let sequence_arg = SequenceArgs {
                     name: Some(name),
                     index: sequence.index,

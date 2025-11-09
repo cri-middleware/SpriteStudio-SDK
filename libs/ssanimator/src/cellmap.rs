@@ -1,8 +1,8 @@
+use sspj::ssce::{SsCell, SsCellMap};
+use sspj::sstypes::{SsPoint2, SsTexFilterMode, SsTexWrapMode};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Weak;
-use sspj::ssce::{SsCell, SsCellMap};
-use sspj::sstypes::{SsPoint2, SsTexFilterMode, SsTexWrapMode};
 
 pub struct SsCellValue {
     pub cell: Option<Weak<RefCell<SsCellMap>>>,
@@ -14,7 +14,13 @@ impl SsCellValue {
     pub fn default() -> Self {
         Self {
             cell: None,
-            uvs: [SsPoint2::default(), SsPoint2::default(), SsPoint2::default(), SsPoint2::default(), SsPoint2::default()],
+            uvs: [
+                SsPoint2::default(),
+                SsPoint2::default(),
+                SsPoint2::default(),
+                SsPoint2::default(),
+                SsPoint2::default(),
+            ],
             wrap_mode: SsTexWrapMode::Clamp,
             filter_mode: SsTexFilterMode::Nearest,
         }
@@ -32,6 +38,4 @@ impl SsCelMapLinker {
     }
 }
 
-pub struct SsCellMapList {
-    
-}
+pub struct SsCellMapList {}

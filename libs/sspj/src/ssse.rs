@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::ssloader::{SsLoader, SspjError};
+use serde::Deserialize;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -21,7 +21,7 @@ pub struct SsSoundFileList {
 }
 fn parse_ss_soundfile<'de, D>(deserializer: D) -> Result<Vec<SsSoundFile>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize, PartialEq)]
     struct Sounds {
@@ -49,8 +49,8 @@ impl SsLoader for SsAudioPack {
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
     use super::*;
+    use std::path::{Path, PathBuf};
 
     fn load_ssse(path: &Path) {
         let r = SsAudioPack::load_from_file(path);

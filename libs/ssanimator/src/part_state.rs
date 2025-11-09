@@ -1,22 +1,21 @@
-use std::cell::RefCell;
-use std::rc::Weak;
 use sspj::ssae::SsPart;
 use sspj::sstypes::{SsBlendType, SsPartType, SsPoint2, SsPoint3};
+use std::cell::RefCell;
+use std::rc::Weak;
 
 pub struct SsPartState {
     index: i32,
 
-    vertices: [f32; 30 /*3 * 10*/],
-    colors: [f32; 40/*4 * 10*/],
-    uvs: [f32; 20/*2 * 10*/],
-    matrix: [f32; 16/*4 * 4*/],
-    matrix_local: [f32; 16/*4 * 4*/],
+    vertices: [f32; 30],
+    colors: [f32; 40],
+    uvs: [f32; 20],
+    matrix: [f32; 16],
+    matrix_local: [f32; 16],
 
     parent: Option<Weak<RefCell<SsPartState>>>,
 
     // TODO:
     // float* 			inheritRates;	///< 継承設定の参照先。inheritType がparentだと親のを見に行く。透過的に遡るのでルートから先に設定されている必要がある。
-
     position: SsPoint3,
     rotation: SsPoint3,
     scale: SsPoint2,
@@ -61,7 +60,6 @@ pub struct SsPartState {
     // SsSignalAttr	signalValue;
 
     // SsInstanceAttr	instanceValue;
-
     alpha_blend_type: SsBlendType,
 
     // std::unique_ptr<SsAnimeDecoder>		refAnime;
@@ -70,7 +68,6 @@ pub struct SsPartState {
     //add SS7.1
     //std::unique_ptr<SsPart> partTypeAnimeVaule;
     //--
-
     part_type: SsPartType,
 
     masklimen: i32,
@@ -81,7 +78,6 @@ pub struct SsPartState {
     //SsDeformAttr	deformValue;
     //SsAudioAttr		audioValue;
     //SsTexChangeAttr	changeTextureValue;
-
     part: Option<Weak<RefCell<SsPart>>>,
 }
 
@@ -99,7 +95,6 @@ impl SsPartState {
             parent: None,
 
             // float* 			inheritRates;	///< 継承設定の参照先。inheritType がparentだと親のを見に行く。透過的に遡るのでルートから先に設定されている必要がある。
-
             position: SsPoint3::default(),
             rotation: SsPoint3::default(),
             scale: SsPoint2 { x: 1.0, y: 1.0 },
@@ -132,7 +127,6 @@ impl SsPartState {
             SsVertexAnime	vertexValue;	///< 頂点アニメの値
             SsEffectAttr	effectValue;	///< エフェクトの値
             */
-
             effect_time: 0,
             effect_time_total: 0.0,
             effectseed: 0,
@@ -149,7 +143,6 @@ impl SsPartState {
             // SsSignalAttr	signalValue;
 
             // SsInstanceAttr	instanceValue;
-
             alpha_blend_type: SsBlendType::Mix,
 
             // std::unique_ptr<SsAnimeDecoder>		refAnime;
@@ -158,7 +151,6 @@ impl SsPartState {
             //add SS7.1
             //std::unique_ptr<SsPart> partTypeAnimeVaule;
             //--
-
             part_type: SsPartType::Null,
 
             masklimen: 0,
@@ -169,7 +161,6 @@ impl SsPartState {
             //SsDeformAttr	deformValue;
             //SsAudioAttr		audioValue;
             //SsTexChangeAttr	changeTextureValue;
-
             part: None,
         }
     }

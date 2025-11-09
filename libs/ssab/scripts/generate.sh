@@ -10,4 +10,6 @@ do
     flatc --rust --gen-compare --gen-object-api --gen-mutable $f
     mv "${name}_generated.rs" "./src/$name.rs"
 done
+
+cargo fmt --all
 popd > /dev/null

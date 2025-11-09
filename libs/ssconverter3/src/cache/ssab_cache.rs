@@ -1,8 +1,17 @@
-use std::collections::HashMap;
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
-use ssab::ssab::{AnimationData, AnimationDataArgs, AnimationDataT, BoolValueTable, BoolValueTableArgs, BoolValueTableT, FloatValueTable, FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label, MeshDataIndices, MeshDataUV, PartState, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, };
-use ssab::ssab::{Rect, RectArgs, RectT, Vec2, Vec2Args, Vec2T, Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs, SoundListT, };
+use ssab::ssab::{
+    AnimationData, AnimationDataArgs, AnimationDataT, BoolValueTable, BoolValueTableArgs,
+    BoolValueTableT, Effect, EffectArgs, EffectNodeT, EffectT, FloatValueTable,
+    FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label,
+    MeshDataIndices, MeshDataUV, PartState, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT,
+};
+use ssab::ssab::{
+    Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
+    Rect, RectArgs, RectT, SoundFile, SoundFileArgs, SoundFileT, SoundList, SoundListArgs,
+    SoundListT, Vec2, Vec2Args, Vec2T,
+};
+use std::collections::HashMap;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -88,8 +97,14 @@ impl From<&CellT> for CellKey {
             rectangle: value.rectangle.as_ref().map(|r| RectKey::from(r.as_ref())),
             pivot: value.pivot.as_ref().map(|p| Vec2Key::from(p.as_ref())),
             rotated: value.rotated,
-            table_coordinate: value.table_coordinate.as_ref().map(|t| t.iter().map(|v| Vec2Key::from(v)).collect::<Vec<Vec2Key>>()),
-            table_index_vertex: value.table_index_vertex.as_ref().map(|t| t.iter().map(|v| *v).collect::<Vec<u16>>()),
+            table_coordinate: value
+                .table_coordinate
+                .as_ref()
+                .map(|t| t.iter().map(|v| Vec2Key::from(v)).collect::<Vec<Vec2Key>>()),
+            table_index_vertex: value
+                .table_index_vertex
+                .as_ref()
+                .map(|t| t.iter().map(|v| *v).collect::<Vec<u16>>()),
         }
     }
 }
@@ -118,9 +133,8 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_vec2<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        vec2t: &Vec2T
-    ) -> WIPOffset<Vec2<'bldr>>
-    {
+        vec2t: &Vec2T,
+    ) -> WIPOffset<Vec2<'bldr>> {
         let key = Vec2Key::from(vec2t);
         if let Some(&offset) = self.vec2_cache.get(&key) {
             return offset;
@@ -137,8 +151,7 @@ impl<'bldr> SsabCache<'bldr> {
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         rectt: &RectT,
-    ) -> WIPOffset<Rect<'bldr>>
-    {
+    ) -> WIPOffset<Rect<'bldr>> {
         let key = RectKey::from(rectt);
         if let Some(&offset) = self.rect_cache.get(&key) {
             return offset;
@@ -153,12 +166,15 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
-    fn create_shared_int_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_int_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         int_value_table_t: &IntValueTableT,
-    ) -> WIPOffset<IntValueTable<'bldr>>
-    {
+    ) -> WIPOffset<IntValueTable<'bldr>> {
         let key = IntValueTableKey::from(int_value_table_t);
         if let Some(&offset) = self.int_value_table_cache.get(&key) {
             return offset;
@@ -169,12 +185,15 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
-    fn create_shared_bool_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_bool_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         bool_value_table_t: &BoolValueTableT,
-    ) -> WIPOffset<BoolValueTable<'bldr>>
-    {
+    ) -> WIPOffset<BoolValueTable<'bldr>> {
         let key = BoolValueTableKey::from(bool_value_table_t);
         if let Some(&offset) = self.bool_value_table_cache.get(&key) {
             return offset;
@@ -185,12 +204,15 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
-    fn create_shared_float_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_float_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         float_value_table_t: &FloatValueTableT,
-    ) -> WIPOffset<FloatValueTable<'bldr>>
-    {
+    ) -> WIPOffset<FloatValueTable<'bldr>> {
         let key = FloatValueTableKey::from(float_value_table_t);
         if let Some(&offset) = self.float_value_table_cache.get(&key) {
             return offset;
@@ -215,44 +237,61 @@ impl<'bldr> SsabCache<'bldr> {
 
         let mut args = CellArgs::default();
         args.name = Some(fb.create_shared_string(&cell.name));
-        args.rectangle = cell.rectangle.as_ref().map(|r|self.create_shared_rect(fb, r));
+        args.rectangle = cell
+            .rectangle
+            .as_ref()
+            .map(|r| self.create_shared_rect(fb, r));
         args.pivot = cell.pivot.as_ref().map(|p| self.create_shared_vec2(fb, p));
         args.rotated = cell.rotated;
         args.table_coordinate = cell.table_coordinate.as_ref().map(|p| {
-            let vec = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<WIPOffset<Vec2<'bldr>>>>();
+            let vec = p
+                .iter()
+                .map(|v| self.create_shared_vec2(fb, v))
+                .collect::<Vec<WIPOffset<Vec2<'bldr>>>>();
             fb.create_vector(&vec)
         });
-        args.table_index_vertex = cell.table_index_vertex.as_ref().map(|p| {
-            fb.create_vector(&p)
-        });
+        args.table_index_vertex = cell
+            .table_index_vertex
+            .as_ref()
+            .map(|p| fb.create_vector(&p));
 
         let offset = Cell::create(fb, &args);
         self.cell_cache.insert(key, offset);
         offset
     }
 
-    fn create_animation_data_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_animation_data_list<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        animation_data_t_vec: &[AnimationDataT]
+        animation_data_t_vec: &[AnimationDataT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<AnimationData<'bldr>>>> {
-        let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
-            let mut args = AnimationDataArgs::default();
-            args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.initial_data = None; // TODO; impl
-            args.frame_data = None; // TODO; impl
-            args.events = None; // TODO; impl
-            args.label_data = None; // TODO; impl
-            args.meshs_data_uv = None; // TODO; impl
-            args.meshs_data_indices = None; // TODO; impl
-            args.start_frames = animation_data_t.start_frames;
-            args.end_frames = animation_data_t.end_frames;
-            args.total_frames = animation_data_t.total_frames;
-            args.fps = animation_data_t.fps;
-            args.canvas = animation_data_t.canvas.as_ref().map(|c| self.create_shared_rect(fb, c));
+        let animation_data_vec = animation_data_t_vec
+            .iter()
+            .map(|animation_data_t| {
+                let mut args = AnimationDataArgs::default();
+                args.name = Some(fb.create_shared_string(&animation_data_t.name));
+                args.initial_data = None; // TODO; impl
+                args.frame_data = None; // TODO; impl
+                args.events = None; // TODO; impl
+                args.label_data = None; // TODO; impl
+                args.meshs_data_uv = None; // TODO; impl
+                args.meshs_data_indices = None; // TODO; impl
+                args.start_frames = animation_data_t.start_frames;
+                args.end_frames = animation_data_t.end_frames;
+                args.total_frames = animation_data_t.total_frames;
+                args.fps = animation_data_t.fps;
+                args.canvas = animation_data_t
+                    .canvas
+                    .as_ref()
+                    .map(|c| self.create_shared_rect(fb, c));
 
-            AnimationData::create(fb, &args)
-        }).collect::<Vec<WIPOffset<AnimationData<'bldr>>>>();
+                AnimationData::create(fb, &args)
+            })
+            .collect::<Vec<WIPOffset<AnimationData<'bldr>>>>();
 
         fb.create_vector(&animation_data_vec)
     }
@@ -260,22 +299,34 @@ impl<'bldr> SsabCache<'bldr> {
     fn create_shared_cell_map<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        cell_map_t_vec: &[CellMapT]
+        cell_map_t_vec: &[CellMapT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<CellMap<'bldr>>>> {
-        let cell_map = cell_map_t_vec.iter().map(|cell_map_t| {
-            let mut args = CellMapArgs::default();
-            args.name = Some(fb.create_shared_string(&cell_map_t.name));
-            args.image_path = cell_map_t.image_path.as_ref().map(|s| fb.create_shared_string(s));
-            args.size_original = cell_map_t.size_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
-            args.wrap_mode = cell_map_t.wrap_mode;
-            args.filter_mode = cell_map_t.filter_mode;
-            args.cells = cell_map_t.cells.as_ref().map(|c| {
-                let a = c.iter().map(|cell| self.create_shared_cell(fb, cell)).collect::<Vec<WIPOffset<Cell<'bldr>>>>();
-                fb.create_vector(&a)
-            });
+        let cell_map = cell_map_t_vec
+            .iter()
+            .map(|cell_map_t| {
+                let mut args = CellMapArgs::default();
+                args.name = Some(fb.create_shared_string(&cell_map_t.name));
+                args.image_path = cell_map_t
+                    .image_path
+                    .as_ref()
+                    .map(|s| fb.create_shared_string(s));
+                args.size_original = cell_map_t
+                    .size_original
+                    .as_ref()
+                    .map(|s| self.create_shared_vec2(fb, s));
+                args.wrap_mode = cell_map_t.wrap_mode;
+                args.filter_mode = cell_map_t.filter_mode;
+                args.cells = cell_map_t.cells.as_ref().map(|c| {
+                    let a = c
+                        .iter()
+                        .map(|cell| self.create_shared_cell(fb, cell))
+                        .collect::<Vec<WIPOffset<Cell<'bldr>>>>();
+                    fb.create_vector(&a)
+                });
 
-            CellMap::create(fb, &args)
-        }).collect::<Vec<WIPOffset<CellMap<'bldr>>>>();
+                CellMap::create(fb, &args)
+            })
+            .collect::<Vec<WIPOffset<CellMap<'bldr>>>>();
 
         fb.create_vector(&cell_map)
     }
@@ -285,30 +336,66 @@ impl<'bldr> SsabCache<'bldr> {
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         table_data_t_vec: &[SoundFileT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SoundFile<'bldr>>>> {
-        let table_data = table_data_t_vec.iter().map(|table_data_t| {
-            let mut sound_file_args = SoundFileArgs::default();
-            sound_file_args.name = Some(fb.create_shared_string(&table_data_t.name));
-            sound_file_args.time_total = table_data_t.time_total;
+        let table_data = table_data_t_vec
+            .iter()
+            .map(|table_data_t| {
+                let mut sound_file_args = SoundFileArgs::default();
+                sound_file_args.name = Some(fb.create_shared_string(&table_data_t.name));
+                sound_file_args.time_total = table_data_t.time_total;
 
-            SoundFile::create(fb, &sound_file_args)
-        }).collect::<Vec<WIPOffset<SoundFile<'bldr>>>>();
+                SoundFile::create(fb, &sound_file_args)
+            })
+            .collect::<Vec<WIPOffset<SoundFile<'bldr>>>>();
 
         fb.create_vector(&table_data)
+    }
+
+    fn create_shared_effect_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        effet_list_t_vec: &[EffectT],
+    ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<Effect<'bldr>>>> {
+        let sound_list = effet_list_t_vec
+            .iter()
+            .map(|effect_t| {
+                let mut effect_args = EffectArgs::default();
+                effect_args.name = Some(fb.create_shared_string(&effect_t.name));
+                effect_args.fps = effect_t.fps;
+                effect_args.is_lock_rand_seed = effect_t.is_lock_rand_seed;
+                effect_args.lock_rand_seed = effect_t.lock_rand_seed;
+                effect_args.layout_scale = effect_t
+                    .layout_scale
+                    .as_ref()
+                    .map(|v| self.create_shared_vec2(fb, v));
+                // TODO: impl
+                // effect_args.effect_node: Option<Vec<EffectNodeT>>,
+
+                Effect::create(fb, &effect_args)
+            })
+            .collect::<Vec<WIPOffset<Effect<'bldr>>>>();
+
+        fb.create_vector(&sound_list)
     }
 
     fn create_shared_sound_list<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        sound_list_t_vec: &[SoundListT]
+        sound_list_t_vec: &[SoundListT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SoundList<'bldr>>>> {
-        let sound_list = sound_list_t_vec.iter().map(|sound_list_t| {
-            let mut sound_list_args = SoundListArgs::default();
-            sound_list_args.name = Some(fb.create_shared_string(&sound_list_t.name));
-            //sound_list_args.table_data = self.create_shared_table_data(fb, &sound_list_t.table_data);
-            sound_list_args.table_data = sound_list_t.table_data.as_ref().map(|table_data| { self.create_shared_table_data(fb, table_data) });
+        let sound_list = sound_list_t_vec
+            .iter()
+            .map(|sound_list_t| {
+                let mut sound_list_args = SoundListArgs::default();
+                sound_list_args.name = Some(fb.create_shared_string(&sound_list_t.name));
+                //sound_list_args.table_data = self.create_shared_table_data(fb, &sound_list_t.table_data);
+                sound_list_args.table_data = sound_list_t
+                    .table_data
+                    .as_ref()
+                    .map(|table_data| self.create_shared_table_data(fb, table_data));
 
-            SoundList::create(fb, &sound_list_args)
-        }).collect::<Vec<WIPOffset<SoundList<'bldr>>>>();
+                SoundList::create(fb, &sound_list_args)
+            })
+            .collect::<Vec<WIPOffset<SoundList<'bldr>>>>();
 
         fb.create_vector(&sound_list)
     }
@@ -318,48 +405,84 @@ impl<'bldr> SsabCache<'bldr> {
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         font_bitmap_t_vec: &[FontBitmapT],
     ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<FontBitmap<'bldr>>>> {
-        let font_bitmap = font_bitmap_t_vec.iter().map(|font_bitmap_t| {
-            let mut font_bitmap_args = FontBitmapArgs::default();
-            font_bitmap_args.name = Some(fb.create_shared_string(&font_bitmap_t.name));
-            font_bitmap_args.name_face = font_bitmap_t.name_face.as_ref().map(|s| fb.create_shared_string(s));
-            font_bitmap_args.size = font_bitmap_t.size;
-            font_bitmap_args.padding_l = font_bitmap_t.padding_l;
-            font_bitmap_args.padding_r = font_bitmap_t.padding_r;
-            font_bitmap_args.padding_u = font_bitmap_t.padding_u;
-            font_bitmap_args.padding_d = font_bitmap_t.padding_d;
-            font_bitmap_args.base = font_bitmap_t.base;
-            font_bitmap_args.height_line = font_bitmap_t.height_line;
-            font_bitmap_args.scale = font_bitmap_t.scale.as_ref().map(|s| self.create_shared_vec2(fb, s));
-            font_bitmap_args.spacing = font_bitmap_t.spacing.as_ref().map(|s| self.create_shared_vec2(fb, s));
-            font_bitmap_args.size_texture_original = font_bitmap_t.size_texture_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
-            font_bitmap_args.name_texture = font_bitmap_t.name_texture.as_ref().map(|s| {
-                let a = s.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
-                fb.create_vector(&a)
-            });
-            font_bitmap_args.table_data =  None;
+        let font_bitmap = font_bitmap_t_vec
+            .iter()
+            .map(|font_bitmap_t| {
+                let mut font_bitmap_args = FontBitmapArgs::default();
+                font_bitmap_args.name = Some(fb.create_shared_string(&font_bitmap_t.name));
+                font_bitmap_args.name_face = font_bitmap_t
+                    .name_face
+                    .as_ref()
+                    .map(|s| fb.create_shared_string(s));
+                font_bitmap_args.size = font_bitmap_t.size;
+                font_bitmap_args.padding_l = font_bitmap_t.padding_l;
+                font_bitmap_args.padding_r = font_bitmap_t.padding_r;
+                font_bitmap_args.padding_u = font_bitmap_t.padding_u;
+                font_bitmap_args.padding_d = font_bitmap_t.padding_d;
+                font_bitmap_args.base = font_bitmap_t.base;
+                font_bitmap_args.height_line = font_bitmap_t.height_line;
+                font_bitmap_args.scale = font_bitmap_t
+                    .scale
+                    .as_ref()
+                    .map(|s| self.create_shared_vec2(fb, s));
+                font_bitmap_args.spacing = font_bitmap_t
+                    .spacing
+                    .as_ref()
+                    .map(|s| self.create_shared_vec2(fb, s));
+                font_bitmap_args.size_texture_original = font_bitmap_t
+                    .size_texture_original
+                    .as_ref()
+                    .map(|s| self.create_shared_vec2(fb, s));
+                font_bitmap_args.name_texture = font_bitmap_t.name_texture.as_ref().map(|s| {
+                    let a = s
+                        .iter()
+                        .map(|s| fb.create_shared_string(s))
+                        .collect::<Vec<_>>();
+                    fb.create_vector(&a)
+                });
+                font_bitmap_args.table_data = None;
 
-            FontBitmap::create(fb, &font_bitmap_args)
-        }).collect::<Vec<WIPOffset<FontBitmap<'bldr>>>>();
+                FontBitmap::create(fb, &font_bitmap_args)
+            })
+            .collect::<Vec<WIPOffset<FontBitmap<'bldr>>>>();
 
         fb.create_vector(&font_bitmap)
     }
 
-    pub fn create_shared_anime_binary<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    pub fn create_shared_anime_binary<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        ss_anime_binary_t: &SsAnimeBinaryT
+        ss_anime_binary_t: &SsAnimeBinaryT,
     ) -> WIPOffset<SsAnimeBinary<'bldr>> {
         let mut anime_binary_args = SsAnimeBinaryArgs::default();
 
-        anime_binary_args.animations = ss_anime_binary_t.animations.as_ref().map(|animations| self.create_animation_data_list(fb, animations));
-        anime_binary_args.cell_map = ss_anime_binary_t.cell_map.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
-        anime_binary_args.effect = None; // TODO: implement
-        anime_binary_args.sound_list = ss_anime_binary_t.sound_list.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
-        anime_binary_args.font_bitmap = ss_anime_binary_t.font_bitmap.as_ref().map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
+        anime_binary_args.animations = ss_anime_binary_t
+            .animations
+            .as_ref()
+            .map(|animations| self.create_animation_data_list(fb, animations));
+        anime_binary_args.cell_map = ss_anime_binary_t
+            .cell_map
+            .as_ref()
+            .map(|cell_map| self.create_shared_cell_map(fb, cell_map));
+        anime_binary_args.effect = ss_anime_binary_t
+            .effect
+            .as_ref()
+            .map(|effect| self.create_shared_effect_list(fb, effect));
+        anime_binary_args.sound_list = ss_anime_binary_t
+            .sound_list
+            .as_ref()
+            .map(|sound_list| self.create_shared_sound_list(fb, sound_list));
+        anime_binary_args.font_bitmap = ss_anime_binary_t
+            .font_bitmap
+            .as_ref()
+            .map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
 
         anime_binary_args.instances = None; // TODO: implement
 
         SsAnimeBinary::create(fb, &anime_binary_args)
     }
 }
-

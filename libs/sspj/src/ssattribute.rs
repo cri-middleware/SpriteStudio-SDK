@@ -1,7 +1,9 @@
-use std::fmt::Formatter;
-use serde::de::{MapAccess, Visitor};
+use crate::sstypes::{
+    SsBlendType, SsColorBlendTarget, SsCurve, SsIRect, SsInterpolationType, SsPoint2, SsU8Color,
+};
 use serde::Deserialize;
-use crate::sstypes::{SsBlendType, SsColorBlendTarget, SsCurve, SsIRect, SsInterpolationType, SsPoint2, SsU8Color};
+use serde::de::{MapAccess, Visitor};
+use std::fmt::Formatter;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -154,7 +156,7 @@ pub struct SsAttributePartsColor {
     pub keys: Vec<SsAttributePartsColorKey>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeShaderKeyValueMap {
     pub map_id: i32,
@@ -169,11 +171,17 @@ pub struct SsAttributeShaderKeyValue {
     pub param1: f32,
     pub param2: f32,
     pub param3: f32,
+    #[serde(default)]
     pub param4: f32,
+    #[serde(default)]
     pub param5: f32,
+    #[serde(default)]
     pub param6: f32,
+    #[serde(default)]
     pub param7: f32,
+    #[serde(default)]
     pub map0: SsAttributeShaderKeyValueMap,
+    #[serde(default)]
     pub map1: SsAttributeShaderKeyValueMap,
 }
 
@@ -362,9 +370,11 @@ pub struct SsAttributeSignalCommand {
     #[serde(deserialize_with = "parse_signal_command_param_list")]
     pub params: Vec<SsAttributeSignalCommandParam>,
 }
-fn parse_signal_command_param_list<'de, D>(deserializer: D) -> Result<Vec<SsAttributeSignalCommandParam>, D::Error>
+fn parse_signal_command_param_list<'de, D>(
+    deserializer: D,
+) -> Result<Vec<SsAttributeSignalCommandParam>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct SignalCommandParamList {
@@ -378,9 +388,11 @@ pub struct SsAttributeSignalKeyValue {
     #[serde(deserialize_with = "parse_signal_command_list")]
     pub commands: Vec<SsAttributeSignalCommand>,
 }
-fn parse_signal_command_list<'de, D>(deserializer: D) -> Result<Vec<SsAttributeSignalCommand>, D::Error>
+fn parse_signal_command_list<'de, D>(
+    deserializer: D,
+) -> Result<Vec<SsAttributeSignalCommand>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     #[derive(Deserialize)]
     struct SignalCommandList {
@@ -388,7 +400,6 @@ where
     }
     Ok(SignalCommandList::deserialize(deserializer)?.value)
 }
-
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeSignalKey {
@@ -466,27 +477,30 @@ pub struct SsAttributeDeformKeyValue {
 }
 fn parse_ss_point3_list<'de, D>(deserializer: D) -> Result<Vec<SsDeformValue>, D::Error>
 where
-    D: serde::Deserializer<'de>
+    D: serde::Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
-    let items: Vec<f32> = s.split_whitespace().filter_map(|sub| sub.parse::<f32>().ok()).collect();
+    let items: Vec<f32> = s
+        .split_whitespace()
+        .filter_map(|sub| sub.parse::<f32>().ok())
+        .collect();
     if items.is_empty() {
-        return Err(serde::de::Error::custom("empty"))
+        return Err(serde::de::Error::custom("empty"));
     }
     let num = items[0] as i32;
     if num * 3 + 1 != items.len() as i32 {
         return Err(serde::de::Error::custom("invalid the number of items"));
     }
-    Ok(
-        (0..num).map(|idx| {
+    Ok((0..num)
+        .map(|idx| {
             let offset = 1 + (idx * 3) as usize;
             SsDeformValue {
                 x_index: items[offset + 0],
                 x: items[offset + 1],
                 y: items[offset + 2],
             }
-        }).collect()
-    )
+        })
+        .collect())
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -590,7 +604,7 @@ pub enum SsAttributeKind {
 impl<'de> Deserialize<'de> for SsAttributeKind {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de>
+        D: serde::Deserializer<'de>,
     {
         struct SsAttributeKindVisitor;
         impl<'de> Visitor<'de> for SsAttributeKindVisitor {
@@ -601,196 +615,289 @@ impl<'de> Deserialize<'de> for SsAttributeKind {
             }
             fn visit_map<A>(self, mut map: A) -> Result<SsAttributeKind, A::Error>
             where
-                A: MapAccess<'de>
+                A: MapAccess<'de>,
             {
                 if let Some((key, value)) = map.next_entry::<String, String>()? {
                     return match key.as_str() {
                         "@tag" => match value.as_str() {
                             "CELL" => {
-                                let cell = SsAttributeCell::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let cell = SsAttributeCell::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::Cell(cell))
-                            },
+                            }
                             "POSX" => {
-                                let posx = SsAttributePosX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let posx = SsAttributePosX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::PosX(posx))
-                            },
+                            }
                             "POSY" => {
-                                let posy = SsAttributePosY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let posy = SsAttributePosY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::PosY(posy))
-                            },
+                            }
                             "POSZ" => {
-                                let posz = SsAttributePosZ::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let posz = SsAttributePosZ::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::PosZ(posz))
-                            },
+                            }
                             "ROTX" => {
-                                let rotx = SsAttributeRotX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let rotx = SsAttributeRotX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::RotX(rotx))
-                            },
+                            }
                             "ROTY" => {
-                                let roty = SsAttributeRotY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let roty = SsAttributeRotY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::RotY(roty))
-                            },
+                            }
                             "ROTZ" => {
-                                let rotz = SsAttributeRotZ::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let rotz = SsAttributeRotZ::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::RotZ(rotz))
-                            },
+                            }
                             "SCLX" => {
-                                let sclx = SsAttributeSclX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let sclx = SsAttributeSclX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::SclX(sclx))
-                            },
+                            }
                             "SCLY" => {
-                                let scly = SsAttributeSclY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let scly = SsAttributeSclY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::SclY(scly))
-                            },
+                            }
                             "LSCX" => {
-                                let lscx = SsAttributeSclX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let lscx = SsAttributeSclX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::LosclX(lscx))
-                            },
+                            }
                             "LSCY" => {
-                                let lscy = SsAttributeSclY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let lscy = SsAttributeSclY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::LosclY(lscy))
-                            },
+                            }
                             "ALPH" => {
-                                let alpha = SsAttributeAlpha::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let alpha = SsAttributeAlpha::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::Alpha(alpha))
-                            },
+                            }
                             "LALP" => {
-                                let loalpha = SsAttributeLocalAlpha::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let loalpha = SsAttributeLocalAlpha::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::LoAlpha(loalpha))
-                            },
+                            }
                             "PRIO" => {
-                                let prio = SsAttributePrio::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let prio = SsAttributePrio::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::Prio(prio))
-                            },
+                            }
                             "FLPH" => {
-                                let flip_h = SsAttributeFlipH::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let flip_h = SsAttributeFlipH::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::FlipH(flip_h))
-                            },
+                            }
                             "FLPV" => {
-                                let flip_v = SsAttributeFlipV::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let flip_v = SsAttributeFlipV::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::FlipV(flip_v))
-                            },
+                            }
                             "HIDE" => {
-                                let hide = SsAttributeHide::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let hide = SsAttributeHide::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::Hide(hide))
-                            },
+                            }
                             "PCOL" => {
-                                let parts_color = SsAttributePartsColor::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
+                                let parts_color = SsAttributePartsColor::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
                                 Ok(SsAttributeKind::PartsColor(parts_color))
-                            },
+                            }
                             "VCOL" => {
                                 // warn!("VCOL is deprecated");
                                 Ok(SsAttributeKind::Color)
-                            },
-                            "SHDR" => {
-                                let shader = SsAttributeShader::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Shader(shader))
-                            },
-                            "VERT" => {
-                                let vertex = SsAttributeVertex::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Vertex(vertex))
-                            },
-                            "PVTX" => {
-                                let pivot_x = SsAttributePivotX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::PivotX(pivot_x))
-                            },
-                            "PVTY" => {
-                                let pivot_y = SsAttributePivotY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::PivotY(pivot_y))
-                            },
-                            "ANCX" => {
-                                let anchor_x = SsAttributeAnchorX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::AnchorX(anchor_x))
-                            },
-                            "ANCY" => {
-                                let anchor_y = SsAttributeAnchorY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::AnchorY(anchor_y))
-                            },
-                            "SIZX" => {
-                                let size_x = SsAttributeSizeX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::SizeX(size_x))
-                            },
-                            "SIZY" => {
-                                let size_y = SsAttributeSizeY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::SizeY(size_y))
-                            },
-                            "IFLH" => {
-                                let img_flip_h = SsAttributeImgFlipH::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::ImgFlipH(img_flip_h))
-                            },
-                            "IFLV" => {
-                                let img_flip_v = SsAttributeImgFlipV::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::ImgFlipV(img_flip_v))
-                            },
-                            "UVTX" => {
-                                let uvtx = SsAttributeUvtX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::UvtX(uvtx))
-                            },
-                            "UVTY" => {
-                                let uvty = SsAttributeUvtY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::UvtY(uvty))
-                            },
-                            "UVRZ" => {
-                                let uvrz = SsAttributeUvrZ::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::UvrZ(uvrz))
-                            },
-                            "UVSX" => {
-                                let uvsx = SsAttributeUvsX::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::UvsX(uvsx))
-                            },
-                            "UVSY" => {
-                                let uvsy = SsAttributeUvsY::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::UvsY(uvsy))
-                            },
-                            "BNDR" => {
-                                let boundr = SsAttributeBoundr::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Boundr(boundr))
-                            },
-                            "MASK" => {
-                                let mask = SsAttributeMask::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Mask(mask))
-                            },
-                            "USER" => {
-                                let user = SsAttributeUser::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::User(user))
-                            },
-                            "SIGN" => {
-                                let signal = SsAttributeSignal::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Signal(signal))
-                            },
-                            "IPRM" => {
-                                let instance = SsAttributeInstance::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Instance(instance))
-                            },
-                            "EFCT" => {
-                                let effect = SsAttributeEffect::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Effect(effect))
-                            },
-                            "DEFM" => {
-                                let deform = SsAttributeDeform::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Deform(deform))
-                            },
-                            "ADIO" => {
-                                let audio = SsAttributeAudio::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Audio(audio))
-                            },
-                            "TCHG" => {
-                                let texchange = SsAttributeTexchange::deserialize(serde::de::value::MapAccessDeserializer::new(map))?;
-                                Ok(SsAttributeKind::Texchange(texchange))
-                            },
-                            _ => {
-                                return Err(serde::de::Error::custom(format!("unknown attribute type: {}", value)))
                             }
-                        }
+                            "SHDR" => {
+                                let shader = SsAttributeShader::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Shader(shader))
+                            }
+                            "VERT" => {
+                                let vertex = SsAttributeVertex::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Vertex(vertex))
+                            }
+                            "PVTX" => {
+                                let pivot_x = SsAttributePivotX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::PivotX(pivot_x))
+                            }
+                            "PVTY" => {
+                                let pivot_y = SsAttributePivotY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::PivotY(pivot_y))
+                            }
+                            "ANCX" => {
+                                let anchor_x = SsAttributeAnchorX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::AnchorX(anchor_x))
+                            }
+                            "ANCY" => {
+                                let anchor_y = SsAttributeAnchorY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::AnchorY(anchor_y))
+                            }
+                            "SIZX" => {
+                                let size_x = SsAttributeSizeX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::SizeX(size_x))
+                            }
+                            "SIZY" => {
+                                let size_y = SsAttributeSizeY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::SizeY(size_y))
+                            }
+                            "IFLH" => {
+                                let img_flip_h = SsAttributeImgFlipH::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::ImgFlipH(img_flip_h))
+                            }
+                            "IFLV" => {
+                                let img_flip_v = SsAttributeImgFlipV::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::ImgFlipV(img_flip_v))
+                            }
+                            "UVTX" => {
+                                let uvtx = SsAttributeUvtX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::UvtX(uvtx))
+                            }
+                            "UVTY" => {
+                                let uvty = SsAttributeUvtY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::UvtY(uvty))
+                            }
+                            "UVRZ" => {
+                                let uvrz = SsAttributeUvrZ::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::UvrZ(uvrz))
+                            }
+                            "UVSX" => {
+                                let uvsx = SsAttributeUvsX::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::UvsX(uvsx))
+                            }
+                            "UVSY" => {
+                                let uvsy = SsAttributeUvsY::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::UvsY(uvsy))
+                            }
+                            "BNDR" => {
+                                let boundr = SsAttributeBoundr::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Boundr(boundr))
+                            }
+                            "MASK" => {
+                                let mask = SsAttributeMask::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Mask(mask))
+                            }
+                            "USER" => {
+                                let user = SsAttributeUser::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::User(user))
+                            }
+                            "SIGN" => {
+                                let signal = SsAttributeSignal::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Signal(signal))
+                            }
+                            "IPRM" => {
+                                let instance = SsAttributeInstance::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Instance(instance))
+                            }
+                            "EFCT" => {
+                                let effect = SsAttributeEffect::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Effect(effect))
+                            }
+                            "DEFM" => {
+                                let deform = SsAttributeDeform::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Deform(deform))
+                            }
+                            "ADIO" => {
+                                let audio = SsAttributeAudio::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Audio(audio))
+                            }
+                            "TCHG" => {
+                                let texchange = SsAttributeTexchange::deserialize(
+                                    serde::de::value::MapAccessDeserializer::new(map),
+                                )?;
+                                Ok(SsAttributeKind::Texchange(texchange))
+                            }
+                            _ => {
+                                return Err(serde::de::Error::custom(format!(
+                                    "unknown attribute type: {}",
+                                    value
+                                )));
+                            }
+                        },
                         _ => {
-                            return Err(serde::de::Error::custom(format!("expected @name attribute, found: {}", key)))
+                            return Err(serde::de::Error::custom(format!(
+                                "expected @name attribute, found: {}",
+                                key
+                            )));
                         }
-                    }
+                    };
                 }
-                Err(serde::de::Error::custom(format!("expected `type` attribute")))
+                Err(serde::de::Error::custom(format!(
+                    "expected `type` attribute"
+                )))
             }
         }
-        deserializer.deserialize_map(SsAttributeKindVisitor).map_err(serde::de::Error::custom)
+        deserializer
+            .deserialize_map(SsAttributeKindVisitor)
+            .map_err(serde::de::Error::custom)
     }
 }
-

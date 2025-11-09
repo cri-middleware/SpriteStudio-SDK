@@ -114,116 +114,6 @@ table StringValueTable {
   value: string;
 }
 
-table AttributeCell {
- map_id: int;
- name: string;
-}
-
-table AttributePartsColor {
- rgba: U8Rect;
- rate: float;
-}
-
-table AttributeShader {
-  id: string;
-  param0: float;
-  param1: float;
-  param2: float;
-  param3: float;
-  param4: float;
-  param5: float;
-  param6: float;
-  param7: float;
-  map0_id: int;
-  map0_name: string;
-  map1_id: int;
-  map1_name: string;
-}
-
-table AttributeVertex {
-  lt: Vec2;
-  rt: Vec2;
-  lb: Vec2;
-  rb: Vec2;
-}
-
-table AttributeInstance {
-  infinity_flag: bool;
-  pingpong: bool;
-  independent: bool;
-  loop_num: int;
-  start_label: string;
-  start_offset: int;
-  end_label: string;
-  end_offset: int;
-  speed: float;
-}
-
-table AttributeEffect {
-  start_time: int;
-  speed: float;
-  independent: bool;
-}
-
-table AttributeVertexDeformation {
-  // TODO: impl
-}
-
-table AttributeSkew {
-  // TODO: impl
-}
-
-table AttributeDeform {
-  // TODO: impl
-}
-
-union Attribute {
-  AttributeCell,
-  AttributePosX: FloatValueTable,
-  AttributePosY: FloatValueTable,
-  AttributePosZ: FloatValueTable,
-  AttributeRotX: FloatValueTable,
-  AttributeRotY: FloatValueTable,
-  AttributeRotZ: FloatValueTable,
-  AttributeSclX: FloatValueTable,
-  AttributeSclY: FloatValueTable,
-  AttributeLosclX: FloatValueTable,
-  AttributeLosclY: FloatValueTable,
-  AttributeAlpha: FloatValueTable,
-  AttributeLoAlpha: FloatValueTable,
-  AttributePrio: IntValueTable,
-  AttributeFlipH: BoolValueTable,
-  AttributeFlipV: BoolValueTable,
-  AttributeHide: BoolValueTable,
-  AttributePartsColor,
-  AttributeShader,
-  AttributeVertex,
-  AttributePivotX: FloatValueTable,
-  AttributePivotY: FloatValueTable,
-  AttributeAnchorX: FloatValueTable,
-  AttributeAnchorY: FloatValueTable,
-  AttributeSizeX: FloatValueTable,
-  AttributeSizeY: FloatValueTable,
-  AttributeImgFlipH: BoolValueTable,
-  AttributeImgFlipV: BoolValueTable,
-  AttributeUvtX: FloatValueTable,
-  AttributeUvtY: FloatValueTable,
-  AttributeUvrZ: FloatValueTable,
-  AttributeUvsX: FloatValueTable,
-  AttributeUvsY: FloatValueTable,
-  AttributeBoundr: FloatValueTable,
-  AttributeMask: FloatValueTable,
-  AttributeInstance,
-  AttributeEffect,
-  AttributeVertexDeformation,
-  AttributeSkew,
-  AttributeDeform,
-}
-
-table AttributeWrapper {
-  value: Attribute;
-}
-
 union UserDataValue {
   UserDataInteger: IntValueTable,
   UserDataRect: RectValueTable,
@@ -239,10 +129,6 @@ table UserDataItem {
   part_index: short (key);
   value: [UserDataValueWrapper];
 }
-
-// table UserData {
-//   items: [UserDataItem];
-// }
 
 enum SignalComamndParamType: ubyte {
   Index,
@@ -280,11 +166,11 @@ table TextureChangeDataItem {
 }
 
 table  InstanceDataItem {
-  // TODO: impl
+  part_index: short (key);
 }
 
 table EffectDataItem {
-  // TODO: impl
+  part_index: short (key);
 }
 
 table EventsPerFrame {
@@ -305,8 +191,8 @@ table Cell {
   pivot: Vec2;
   rotated: bool;
 
-  table_coordinate:[Vec2];
-  table_index_vertex:[ushort];
+  table_coordinate: [Vec2];
+  table_index_vertex: [ushort];
 }
 
 table CellMap {
@@ -460,13 +346,32 @@ table MeshDataIndices {
   indices: [float];
 }
 
+table PartAttributeCell {
+ map_id: int; // hash or name
+ name: string;
+}
+
+table PartAttributePartsColor {
+  // TOOD: implement
+  // ベイクする (Converter2 を参照する)
+}
+
+table PartAttributeVertex {
+  lt: Vec2;
+  rt: Vec2;
+  lb: Vec2;
+  rb: Vec2;
+}
+
 table PartAttributeInstance {
-  cur_keyframe: int;
-  start_frame: int;
-  end_frame: int;
+  pingpong: bool;
+  independent: bool;
   loop_num: int;
+  start_label: string;
+  start_offset: int;
+  end_label: string;
+  end_offset: int;
   speed: float;
-  loopflag: int;
 }
 
 table PartAttributeEffect {
@@ -476,6 +381,26 @@ table PartAttributeEffect {
   loopflag: int;
 }
 
+table PartAttributeDeform {
+  coordinate: [Vec2];
+  index: [short];
+}
+
+table PartAttributeShader {
+  id: string;
+  param0: float;
+  param1: float;
+  param2: float;
+  param3: float;
+  param4: float;
+  param5: float;
+  param6: float;
+  param7: float;
+  map0_id: int;
+  map0_name: string;
+  map1_id: int;
+  map1_name: string;
+}
 
 table PartAttributes {
   cell_index: short;
@@ -489,20 +414,19 @@ table PartAttributes {
   flip_v: bool;
   flip_h: bool;
   hide: bool;
-  mask: short;
+  parts_color: PartAttributePartsColor;
+  shader: PartAttributeShader;
+  vertex: PartAttributeVertex;
   pivot: Vec2;
   size: Vec2;
-  uv_move: Vec2;
-  uv_rotation: float;
+  uv_move: Vec3;
   uv_scale: Vec2;
   bounding_radius: float;
+  mask: float;
   instance: PartAttributeInstance;
   effect: PartAttributeEffect;
-
-  // vertex_deformation:
-  // skew:
-  // deform:
-  // parts_color:
+  skew: Vec2;
+  deform: PartAttributeDeform;
 }
 
 table PartData {
@@ -518,9 +442,60 @@ table PartData {
   mask_influence: short;
 }
 
+union Attribute {
+  AttributeCell: PartAttributeCell,
+  AttributePosX: FloatValueTable,
+  AttributePosY: FloatValueTable,
+  AttributePosZ: FloatValueTable,
+  AttributeRotX: FloatValueTable,
+  AttributeRotY: FloatValueTable,
+  AttributeRotZ: FloatValueTable,
+  AttributeSclX: FloatValueTable,
+  AttributeSclY: FloatValueTable,
+  AttributeLosclX: FloatValueTable,
+  AttributeLosclY: FloatValueTable,
+  AttributeAlpha: FloatValueTable,
+  AttributeLoAlpha: FloatValueTable,
+  AttributePrio: IntValueTable,
+  AttributeFlipH: BoolValueTable,
+  AttributeFlipV: BoolValueTable,
+  AttributeHide: BoolValueTable,
+  AttributePartsColor: PartAttributePartsColor,
+  AttributeShader: PartAttributeShader,
+  AttributeVertex: PartAttributeVertex,
+  AttributePivotX: FloatValueTable,
+  AttributePivotY: FloatValueTable,
+  AttributeAnchorX: FloatValueTable,
+  AttributeAnchorY: FloatValueTable,
+  AttributeSizeX: FloatValueTable,
+  AttributeSizeY: FloatValueTable,
+  AttributeImgFlipH: BoolValueTable,
+  AttributeImgFlipV: BoolValueTable,
+  AttributeUvtX: FloatValueTable,
+  AttributeUvtY: FloatValueTable,
+  AttributeUvrZ: FloatValueTable,
+  AttributeUvsX: FloatValueTable,
+  AttributeUvsY: FloatValueTable,
+  AttributeBoundr: FloatValueTable,
+  AttributeMask: FloatValueTable,
+  AttributeInstance: PartAttributeInstance,
+  AttributeEffect: PartAttributeEffect,
+  AttributeSkew: Vec2ValueTable,
+  AttributeDeform: PartAttributeDeform,
+}
+
+table AttributeWrapper {
+  value: Attribute;
+}
+
 table PartState {
   part_index: short;
   attributes: [AttributeWrapper];
+}
+
+table FrameData {
+  frame_index: short;
+  parts: [PartState];
 }
 
 table Label {
@@ -532,7 +507,7 @@ table AnimationData {
   name: string (key);
 
   initial_data: [PartAttributes];
-  frame_data: [PartState];
+  frame_data: [FrameData];
 
   events: [EventsPerFrame];
 
@@ -544,7 +519,7 @@ table AnimationData {
   start_frames: short;
   end_frames: short;
   total_frames: short;
-  fps : short;
+  fps: short;
 
   canvas: Rect;
 }
