@@ -125,11 +125,6 @@ enum InterpolationType : ubyte {
   Num,
 }
 
-
-table BoolValueEntry {
-  value: bool;
-}
-
 table IntValueEntry {
   value: int;
 }
@@ -146,78 +141,44 @@ table RectValueEntry {
   value: Rect;
 }
 
-table StringValueEntry {
-  value: string;
+table EventUserData {
+  part_index: ushort (key);
+
+  value: PartAttributeUserData;
 }
 
-union UserDataValue {
-  UserDataInteger: IntValueEntry,
-  UserDataRect: RectValueEntry,
-  UserDataPoint: Vec2ValueEntry,
-  UserDataString: StringValueEntry,
+table EventSignal {
+  part_index: ushort (key);
+
+  value: PartAttributeSignal;
 }
 
-table UserDataValueWrapper {
-  value: UserDataValue;
+table EventAudio {
+  part_index: ushort (key);
+
+  value: PartAsttributeAudio;
 }
 
-table UserDataItem {
-  part_index: short (key);
-  value: [UserDataValueWrapper];
-}
-
-enum SignalComamndParamType: ubyte {
-  Index,
-  Integer,
-  Floating,
-  None,
-}
-
-table SignalComamndParam {
-  param_id: string;
-  type: SignalComamndParamType;
-  value: float;
-}
-
-table SignalDataItem {
+table EventInstance {
   part_index: short (key);
 
-  active: bool;
-  command_id: string;
-  params: [SignalComamndParam];
+  value: PartAttributeInstance;
 }
 
-table AudioDataItem {
-  part_index: short (key);
+table EventEffect {
+  part_index: ushort (key);
 
-  sound_list_id: int;
-  sound_name: string;
-  loop_num: int;
-}
-
-table TextureChangeDataItem {
-  part_index: short (key);
-
-  texture_name: string;
-}
-
-table  InstanceDataItem {
-  part_index: short (key);
-}
-
-table EffectDataItem {
-  part_index: short (key);
+  value: PartAttributeEffect;
 }
 
 table EventsPerFrame {
-  frame_index: short (key);
+  frame_index: ushort (key);
 
-  user: [UserDataItem];
-  signal: [SignalDataItem];
-  audio: [AudioDataItem];
-
-  instance: [InstanceDataItem];
-  effect: [EffectDataItem];
+  user: [EventUserData];
+  signal: [EventSignal];
+  audio: [EventAudio];
+  instance: [EventInstance];
+  effect: [EventEffect];
 }
 
 table Cell {
@@ -346,7 +307,7 @@ table SoundList {
 }
 
 table FontGlyphBitmap {
-  id: uint (key);
+  id: ushort (key);
   atlas: Rect;
   offset: Vec2;
   width_advance: float;
@@ -388,8 +349,11 @@ table PartAttributeCell {
 }
 
 table PartAttributePartsColor {
-  // TOOD: implement
+  // TODO: implement
+
   // ベイクする (Converter2 を参照する)
+  // vertex に統一した方がいいのかも
+  // 4頂点のカラー(rgba)情報
 }
 
 table PartAttributeVertex {
@@ -438,12 +402,36 @@ table PartAttributeShader {
   map1_name: string;
 }
 
-table PartAttributeSignal {
-  // TODO: impl
+table PartAttributeUserData {
+  integer: IntValueEntry;
+  rect: Rect;
+  point: Vec2;
+  str: string;
 }
 
-table PartAttributeAudio {
-  // TODO: impl
+enum SignalComamndParamType: ubyte {
+  Index,
+  Integer,
+  Floating,
+  None,
+}
+
+table SignalComamndParam {
+  param_id: string;
+  type: SignalComamndParamType;
+  value: float;
+}
+
+table PartAttributeSignal {
+  active: bool;
+  command_id: string;
+  params: [SignalComamndParam];
+}
+
+table PartAsttributeAudio {
+  sound_list_id: int;
+  sound_name: string;
+  loop_num: int;
 }
 
 table PartAttributes {
@@ -467,17 +455,14 @@ table PartAttributes {
   uv_scale: Vec2;
   bounding_radius: float;
   mask: float;
-  instance: PartAttributeInstance;
-  effect: PartAttributeEffect;
   skew: Vec2;
   deform: PartAttributeDeform;
-  signal: PartAttributeSignal;
-  Audio: PartAttributeAudio;
+
   texture: string;
 }
 
 table PartData {
-  part_index: short (key);
+  part_index: ushort (key);
   name: string;
   parent_index: short;
   type: PartType;
@@ -573,18 +558,6 @@ table PartAnimationDataDeform {
   value: PartAttributeDeform;
 }
 
-table PartAnimationDataSignal {
-  index: ushort (key);
-
-  value: PartAttributeSignal;
-}
-
-table PartAnimationDataAudio {
-  index: ushort (key);
-
-  value: PartAttributeAudio;
-}
-
 table PartAnimationData {
   cell_array: [PartAnimationDataCellValue];
   pos_x_array: [PartAnimationDataFloatValue];
@@ -621,12 +594,8 @@ table PartAnimationData {
   uvs_y_array: [PartAnimationDataFloatValue];
   boundr_array: [PartAnimationDataFloatValue];
   mask_array: [PartAnimationDataFloatValue];
-  instance_array: [PartAnimationDataInstance];
-  effect_array: [PartAnimationDataEffect];
   skew_array: [PartAnimationDataVec2];
   deform_array: [PartAnimationDataDeform];
-  signal_array: [PartAnimationDataSignal];
-  audio_array: [PartAnimationDataAudio];
   texture_array: [PartAnimationDataString];
 }
 

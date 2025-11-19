@@ -1,8 +1,7 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{
-    AnimationData, AnimationDataArgs, AnimationDataT, BoolValueEntry, BoolValueEntryArgs,
-    BoolValueEntryT, Effect, EffectArgs, EffectNodeT, EffectT, FloatValueEntry,
+    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT, FloatValueEntry,
     FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs, IntValueEntryT, Label,
     MeshDataIndices, MeshDataUV, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT,
 };
@@ -58,18 +57,6 @@ impl From<&IntValueEntryT> for IntValueEntryKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct BoolValueEntryKey {
-    pub value: bool,
-}
-impl From<&BoolValueEntryT> for BoolValueEntryKey {
-    fn from(int_value_table_t: &BoolValueEntryT) -> Self {
-        Self {
-            value: int_value_table_t.value,
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct FloatValueEntryKey {
     pub value: OrderedFloat<f32>,
 }
@@ -113,7 +100,6 @@ pub struct SsabCache<'bldr> {
     pub vec2_cache: HashMap<Vec2Key, WIPOffset<Vec2<'bldr>>>,
     pub rect_cache: HashMap<RectKey, WIPOffset<Rect<'bldr>>>,
     pub int_value_table_cache: HashMap<IntValueEntryKey, WIPOffset<IntValueEntry<'bldr>>>,
-    pub bool_value_table_cache: HashMap<BoolValueEntryKey, WIPOffset<BoolValueEntry<'bldr>>>,
     pub float_value_table_cache: HashMap<FloatValueEntryKey, WIPOffset<FloatValueEntry<'bldr>>>,
 
     pub cell_cache: HashMap<CellKey, WIPOffset<Cell<'bldr>>>,
@@ -124,7 +110,6 @@ impl<'bldr> SsabCache<'bldr> {
             vec2_cache: HashMap::new(),
             rect_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
-            bool_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
 
             cell_cache: HashMap::new(),
@@ -182,25 +167,6 @@ impl<'bldr> SsabCache<'bldr> {
         let mut args = IntValueEntryArgs::default();
         args.value = int_value_table_t.value;
         let offset = IntValueEntry::create(fb, &args);
-        offset
-    }
-
-    fn create_shared_bool_value_table<
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: flatbuffers::Allocator + 'bldr,
-    >(
-        &mut self,
-        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        bool_value_table_t: &BoolValueEntryT,
-    ) -> WIPOffset<BoolValueEntry<'bldr>> {
-        let key = BoolValueEntryKey::from(bool_value_table_t);
-        if let Some(&offset) = self.bool_value_table_cache.get(&key) {
-            return offset;
-        }
-        let mut args = BoolValueEntryArgs::default();
-        args.value = bool_value_table_t.value;
-        let offset = BoolValueEntry::create(fb, &args);
         offset
     }
 
