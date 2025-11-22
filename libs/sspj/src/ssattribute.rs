@@ -132,8 +132,11 @@ pub struct SsAttributePartsColorKeyValue {
     pub target: SsColorBlendTarget,
     pub blend_type: SsBlendType,
 
+    // ---
     #[serde(default)]
     pub color: SsAttributePartsColorKeyValueColor,
+
+    // ---
     #[serde(rename = "LT", default)]
     pub lt: SsAttributePartsColorKeyValueColor,
     #[serde(rename = "RT", default)]
@@ -142,6 +145,7 @@ pub struct SsAttributePartsColorKeyValue {
     pub lb: SsAttributePartsColorKeyValueColor,
     #[serde(rename = "RB", default)]
     pub rb: SsAttributePartsColorKeyValueColor,
+    // ---
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

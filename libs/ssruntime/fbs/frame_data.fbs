@@ -81,14 +81,6 @@ table PartAttributeShader {
   map1_name: string;
 }
 
-table PartAttributeSignal {
-  // TODO: impl
-}
-
-table PartAttributeAudio {
-  // TODO: impl
-}
-
 union Attribute {
   AttributeCell: PartAttributeCell,
   AttributePosX: FloatValueTable,
@@ -125,17 +117,14 @@ union Attribute {
   AttributeUvsY: FloatValueTable,
   AttributeBoundr: FloatValueTable,
   AttributeMask: FloatValueTable,
-  AttributeInstance: PartAttributeInstance,
-  AttributeEffect: PartAttributeEffect,
   AttributeSkew: Vec2ValueTable,
   AttributeDeform: PartAttributeDeform,
-  AttributeSignal: PartAttributeSignal,
-  AttributeAudio: PartAttributeAudio,
   AttributeTexture: StringValueTable,
 }
 
 table PartState {
   part_index: short;
+
   attributes: [AttributeWrapper];
 }
 
@@ -144,7 +133,6 @@ table AttributeWrapper {
 }
 
 table FrameData {
-  frame_index: short;
   parts: [PartState];
 }
 

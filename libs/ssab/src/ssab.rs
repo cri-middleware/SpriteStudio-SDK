@@ -869,6 +869,98 @@ impl flatbuffers::SimpleToVerifyInSlice for BlendType {}
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
+pub const ENUM_MIN_COLOR_BLEND_TARGET: u8 = 0;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+pub const ENUM_MAX_COLOR_BLEND_TARGET: u8 = 1;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_COLOR_BLEND_TARGET: [ColorBlendTarget; 2] =
+    [ColorBlendTarget::Whole, ColorBlendTarget::Vertex];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct ColorBlendTarget(pub u8);
+#[allow(non_upper_case_globals)]
+impl ColorBlendTarget {
+    pub const Whole: Self = Self(0);
+    pub const Vertex: Self = Self(1);
+
+    pub const ENUM_MIN: u8 = 0;
+    pub const ENUM_MAX: u8 = 1;
+    pub const ENUM_VALUES: &'static [Self] = &[Self::Whole, Self::Vertex];
+    /// Returns the variant's name or "" if unknown.
+    pub fn variant_name(self) -> Option<&'static str> {
+        match self {
+            Self::Whole => Some("Whole"),
+            Self::Vertex => Some("Vertex"),
+            _ => None,
+        }
+    }
+}
+impl core::fmt::Debug for ColorBlendTarget {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if let Some(name) = self.variant_name() {
+            f.write_str(name)
+        } else {
+            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+        }
+    }
+}
+impl<'a> flatbuffers::Follow<'a> for ColorBlendTarget {
+    type Inner = Self;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+        Self(b)
+    }
+}
+
+impl flatbuffers::Push for ColorBlendTarget {
+    type Output = ColorBlendTarget;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe {
+            flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        }
+    }
+}
+
+impl flatbuffers::EndianScalar for ColorBlendTarget {
+    type Scalar = u8;
+    #[inline]
+    fn to_little_endian(self) -> u8 {
+        self.0.to_le()
+    }
+    #[inline]
+    #[allow(clippy::wrong_self_convention)]
+    fn from_little_endian(v: u8) -> Self {
+        let b = u8::from_le(v);
+        Self(b)
+    }
+}
+
+impl<'a> flatbuffers::Verifiable for ColorBlendTarget {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        u8::run_verifier(v, pos)
+    }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for ColorBlendTarget {}
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
 pub const ENUM_MIN_INTERPOLATION_TYPE: u8 = 0;
 #[deprecated(
     since = "2.0.0",
@@ -9725,6 +9817,175 @@ impl PartAttributeCellT {
         PartAttributeCell::create(_fbb, &PartAttributeCellArgs { map_id, name })
     }
 }
+pub enum SsAttributePartsColorKeyValueColorOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct SsAttributePartsColorKeyValueColor<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for SsAttributePartsColorKeyValueColor<'a> {
+    type Inner = SsAttributePartsColorKeyValueColor<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> SsAttributePartsColorKeyValueColor<'a> {
+    pub const VT_RGBA: flatbuffers::VOffsetT = 4;
+    pub const VT_RATE: flatbuffers::VOffsetT = 6;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        SsAttributePartsColorKeyValueColor { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args SsAttributePartsColorKeyValueColorArgs<'args>,
+    ) -> flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'bldr>> {
+        let mut builder = SsAttributePartsColorKeyValueColorBuilder::new(_fbb);
+        builder.add_rate(args.rate);
+        if let Some(x) = args.rgba {
+            builder.add_rgba(x);
+        }
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> SsAttributePartsColorKeyValueColorT {
+        let rgba = self.rgba().map(|x| Box::new(x.unpack()));
+        let rate = self.rate();
+        SsAttributePartsColorKeyValueColorT { rgba, rate }
+    }
+
+    #[inline]
+    pub fn rgba(&self) -> Option<U8Rect<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab.get::<flatbuffers::ForwardsUOffset<U8Rect>>(
+                SsAttributePartsColorKeyValueColor::VT_RGBA,
+                None,
+            )
+        }
+    }
+    #[inline]
+    pub fn rate(&self) -> f32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<f32>(SsAttributePartsColorKeyValueColor::VT_RATE, Some(0.0))
+                .unwrap()
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for SsAttributePartsColorKeyValueColor<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<U8Rect>>("rgba", Self::VT_RGBA, false)?
+            .visit_field::<f32>("rate", Self::VT_RATE, false)?
+            .finish();
+        Ok(())
+    }
+}
+pub struct SsAttributePartsColorKeyValueColorArgs<'a> {
+    pub rgba: Option<flatbuffers::WIPOffset<U8Rect<'a>>>,
+    pub rate: f32,
+}
+impl<'a> Default for SsAttributePartsColorKeyValueColorArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        SsAttributePartsColorKeyValueColorArgs {
+            rgba: None,
+            rate: 0.0,
+        }
+    }
+}
+
+pub struct SsAttributePartsColorKeyValueColorBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a>
+    SsAttributePartsColorKeyValueColorBuilder<'a, 'b, A>
+{
+    #[inline]
+    pub fn add_rgba(&mut self, rgba: flatbuffers::WIPOffset<U8Rect<'b>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<U8Rect>>(
+                SsAttributePartsColorKeyValueColor::VT_RGBA,
+                rgba,
+            );
+    }
+    #[inline]
+    pub fn add_rate(&mut self, rate: f32) {
+        self.fbb_
+            .push_slot::<f32>(SsAttributePartsColorKeyValueColor::VT_RATE, rate, 0.0);
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> SsAttributePartsColorKeyValueColorBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        SsAttributePartsColorKeyValueColorBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for SsAttributePartsColorKeyValueColor<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("SsAttributePartsColorKeyValueColor");
+        ds.field("rgba", &self.rgba());
+        ds.field("rate", &self.rate());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct SsAttributePartsColorKeyValueColorT {
+    pub rgba: Option<Box<U8RectT>>,
+    pub rate: f32,
+}
+impl Default for SsAttributePartsColorKeyValueColorT {
+    fn default() -> Self {
+        Self {
+            rgba: None,
+            rate: 0.0,
+        }
+    }
+}
+impl SsAttributePartsColorKeyValueColorT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>> {
+        let rgba = self.rgba.as_ref().map(|x| x.pack(_fbb));
+        let rate = self.rate;
+        SsAttributePartsColorKeyValueColor::create(
+            _fbb,
+            &SsAttributePartsColorKeyValueColorArgs { rgba, rate },
+        )
+    }
+}
 pub enum PartAttributePartsColorOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -9743,6 +10004,14 @@ impl<'a> flatbuffers::Follow<'a> for PartAttributePartsColor<'a> {
 }
 
 impl<'a> PartAttributePartsColor<'a> {
+    pub const VT_TARGET: flatbuffers::VOffsetT = 4;
+    pub const VT_BLEND_TYPE: flatbuffers::VOffsetT = 6;
+    pub const VT_COLOR: flatbuffers::VOffsetT = 8;
+    pub const VT_LT: flatbuffers::VOffsetT = 10;
+    pub const VT_RT: flatbuffers::VOffsetT = 12;
+    pub const VT_LB: flatbuffers::VOffsetT = 14;
+    pub const VT_RB: flatbuffers::VOffsetT = 16;
+
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
         PartAttributePartsColor { _tab: table }
@@ -9750,14 +10019,137 @@ impl<'a> PartAttributePartsColor<'a> {
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        _args: &'args PartAttributePartsColorArgs,
+        args: &'args PartAttributePartsColorArgs<'args>,
     ) -> flatbuffers::WIPOffset<PartAttributePartsColor<'bldr>> {
         let mut builder = PartAttributePartsColorBuilder::new(_fbb);
+        if let Some(x) = args.rb {
+            builder.add_rb(x);
+        }
+        if let Some(x) = args.lb {
+            builder.add_lb(x);
+        }
+        if let Some(x) = args.rt {
+            builder.add_rt(x);
+        }
+        if let Some(x) = args.lt {
+            builder.add_lt(x);
+        }
+        if let Some(x) = args.color {
+            builder.add_color(x);
+        }
+        builder.add_blend_type(args.blend_type);
+        builder.add_target(args.target);
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartAttributePartsColorT {
-        PartAttributePartsColorT {}
+        let target = self.target();
+        let blend_type = self.blend_type();
+        let color = self.color().map(|x| Box::new(x.unpack()));
+        let lt = self.lt().map(|x| Box::new(x.unpack()));
+        let rt = self.rt().map(|x| Box::new(x.unpack()));
+        let lb = self.lb().map(|x| Box::new(x.unpack()));
+        let rb = self.rb().map(|x| Box::new(x.unpack()));
+        PartAttributePartsColorT {
+            target,
+            blend_type,
+            color,
+            lt,
+            rt,
+            lb,
+            rb,
+        }
+    }
+
+    #[inline]
+    pub fn target(&self) -> ColorBlendTarget {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<ColorBlendTarget>(
+                    PartAttributePartsColor::VT_TARGET,
+                    Some(ColorBlendTarget::Whole),
+                )
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn blend_type(&self) -> BlendType {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<BlendType>(PartAttributePartsColor::VT_BLEND_TYPE, Some(BlendType::Mix))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn color(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                    PartAttributePartsColor::VT_COLOR,
+                    None,
+                )
+        }
+    }
+    #[inline]
+    pub fn lt(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                    PartAttributePartsColor::VT_LT,
+                    None,
+                )
+        }
+    }
+    #[inline]
+    pub fn rt(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                    PartAttributePartsColor::VT_RT,
+                    None,
+                )
+        }
+    }
+    #[inline]
+    pub fn lb(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                    PartAttributePartsColor::VT_LB,
+                    None,
+                )
+        }
+    }
+    #[inline]
+    pub fn rb(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                    PartAttributePartsColor::VT_RB,
+                    None,
+                )
+        }
     }
 }
 
@@ -9768,15 +10160,59 @@ impl flatbuffers::Verifiable for PartAttributePartsColor<'_> {
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?.finish();
+        v.visit_table(pos)?
+            .visit_field::<ColorBlendTarget>("target", Self::VT_TARGET, false)?
+            .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                "color",
+                Self::VT_COLOR,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                "lt",
+                Self::VT_LT,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                "rt",
+                Self::VT_RT,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                "lb",
+                Self::VT_LB,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
+                "rb",
+                Self::VT_RB,
+                false,
+            )?
+            .finish();
         Ok(())
     }
 }
-pub struct PartAttributePartsColorArgs {}
-impl<'a> Default for PartAttributePartsColorArgs {
+pub struct PartAttributePartsColorArgs<'a> {
+    pub target: ColorBlendTarget,
+    pub blend_type: BlendType,
+    pub color: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
+    pub lt: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
+    pub rt: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
+    pub lb: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
+    pub rb: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
+}
+impl<'a> Default for PartAttributePartsColorArgs<'a> {
     #[inline]
     fn default() -> Self {
-        PartAttributePartsColorArgs {}
+        PartAttributePartsColorArgs {
+            target: ColorBlendTarget::Whole,
+            blend_type: BlendType::Mix,
+            color: None,
+            lt: None,
+            rt: None,
+            lb: None,
+            rb: None,
+        }
     }
 }
 
@@ -9785,6 +10221,65 @@ pub struct PartAttributePartsColorBuilder<'a: 'b, 'b, A: flatbuffers::Allocator 
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributePartsColorBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_target(&mut self, target: ColorBlendTarget) {
+        self.fbb_.push_slot::<ColorBlendTarget>(
+            PartAttributePartsColor::VT_TARGET,
+            target,
+            ColorBlendTarget::Whole,
+        );
+    }
+    #[inline]
+    pub fn add_blend_type(&mut self, blend_type: BlendType) {
+        self.fbb_.push_slot::<BlendType>(
+            PartAttributePartsColor::VT_BLEND_TYPE,
+            blend_type,
+            BlendType::Mix,
+        );
+    }
+    #[inline]
+    pub fn add_color(
+        &mut self,
+        color: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>,
+    ) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(
+                PartAttributePartsColor::VT_COLOR,
+                color,
+            );
+    }
+    #[inline]
+    pub fn add_lt(&mut self, lt: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(
+                PartAttributePartsColor::VT_LT,
+                lt,
+            );
+    }
+    #[inline]
+    pub fn add_rt(&mut self, rt: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(
+                PartAttributePartsColor::VT_RT,
+                rt,
+            );
+    }
+    #[inline]
+    pub fn add_lb(&mut self, lb: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(
+                PartAttributePartsColor::VT_LB,
+                lb,
+            );
+    }
+    #[inline]
+    pub fn add_rb(&mut self, rb: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(
+                PartAttributePartsColor::VT_RB,
+                rb,
+            );
+    }
     #[inline]
     pub fn new(
         _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
@@ -9805,15 +10300,38 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributePartsColorBuilder<
 impl core::fmt::Debug for PartAttributePartsColor<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartAttributePartsColor");
+        ds.field("target", &self.target());
+        ds.field("blend_type", &self.blend_type());
+        ds.field("color", &self.color());
+        ds.field("lt", &self.lt());
+        ds.field("rt", &self.rt());
+        ds.field("lb", &self.lb());
+        ds.field("rb", &self.rb());
         ds.finish()
     }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct PartAttributePartsColorT {}
+pub struct PartAttributePartsColorT {
+    pub target: ColorBlendTarget,
+    pub blend_type: BlendType,
+    pub color: Option<Box<SsAttributePartsColorKeyValueColorT>>,
+    pub lt: Option<Box<SsAttributePartsColorKeyValueColorT>>,
+    pub rt: Option<Box<SsAttributePartsColorKeyValueColorT>>,
+    pub lb: Option<Box<SsAttributePartsColorKeyValueColorT>>,
+    pub rb: Option<Box<SsAttributePartsColorKeyValueColorT>>,
+}
 impl Default for PartAttributePartsColorT {
     fn default() -> Self {
-        Self {}
+        Self {
+            target: ColorBlendTarget::Whole,
+            blend_type: BlendType::Mix,
+            color: None,
+            lt: None,
+            rt: None,
+            lb: None,
+            rb: None,
+        }
     }
 }
 impl PartAttributePartsColorT {
@@ -9821,7 +10339,25 @@ impl PartAttributePartsColorT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartAttributePartsColor<'b>> {
-        PartAttributePartsColor::create(_fbb, &PartAttributePartsColorArgs {})
+        let target = self.target;
+        let blend_type = self.blend_type;
+        let color = self.color.as_ref().map(|x| x.pack(_fbb));
+        let lt = self.lt.as_ref().map(|x| x.pack(_fbb));
+        let rt = self.rt.as_ref().map(|x| x.pack(_fbb));
+        let lb = self.lb.as_ref().map(|x| x.pack(_fbb));
+        let rb = self.rb.as_ref().map(|x| x.pack(_fbb));
+        PartAttributePartsColor::create(
+            _fbb,
+            &PartAttributePartsColorArgs {
+                target,
+                blend_type,
+                color,
+                lt,
+                rt,
+                lb,
+                rb,
+            },
+        )
     }
 }
 pub enum PartAttributeVertexOffset {}
@@ -13026,16 +13562,15 @@ impl<'a> flatbuffers::Follow<'a> for PartData<'a> {
 }
 
 impl<'a> PartData<'a> {
-    pub const VT_PART_INDEX: flatbuffers::VOffsetT = 4;
-    pub const VT_NAME: flatbuffers::VOffsetT = 6;
-    pub const VT_PARENT_INDEX: flatbuffers::VOffsetT = 8;
-    pub const VT_TYPE_: flatbuffers::VOffsetT = 10;
-    pub const VT_BOUNDS_TYPE: flatbuffers::VOffsetT = 12;
-    pub const VT_ALPHA_BLEND_TYPE: flatbuffers::VOffsetT = 14;
-    pub const VT_REFNAME: flatbuffers::VOffsetT = 16;
-    pub const VT_EFFECT_FILENAME: flatbuffers::VOffsetT = 18;
-    pub const VT_COLOR_LABEL: flatbuffers::VOffsetT = 20;
-    pub const VT_MASK_INFLUENCE: flatbuffers::VOffsetT = 22;
+    pub const VT_NAME: flatbuffers::VOffsetT = 4;
+    pub const VT_PARENT_INDEX: flatbuffers::VOffsetT = 6;
+    pub const VT_TYPE_: flatbuffers::VOffsetT = 8;
+    pub const VT_BOUNDS_TYPE: flatbuffers::VOffsetT = 10;
+    pub const VT_ALPHA_BLEND_TYPE: flatbuffers::VOffsetT = 12;
+    pub const VT_REFNAME: flatbuffers::VOffsetT = 14;
+    pub const VT_EFFECT_FILENAME: flatbuffers::VOffsetT = 16;
+    pub const VT_COLOR_LABEL: flatbuffers::VOffsetT = 18;
+    pub const VT_MASK_INFLUENCE: flatbuffers::VOffsetT = 20;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -13061,7 +13596,6 @@ impl<'a> PartData<'a> {
         }
         builder.add_mask_influence(args.mask_influence);
         builder.add_parent_index(args.parent_index);
-        builder.add_part_index(args.part_index);
         builder.add_alpha_blend_type(args.alpha_blend_type);
         builder.add_bounds_type(args.bounds_type);
         builder.add_type_(args.type_);
@@ -13069,7 +13603,6 @@ impl<'a> PartData<'a> {
     }
 
     pub fn unpack(&self) -> PartDataT {
-        let part_index = self.part_index();
         let name = self.name().map(|x| x.to_string());
         let parent_index = self.parent_index();
         let type_ = self.type_();
@@ -13080,7 +13613,6 @@ impl<'a> PartData<'a> {
         let color_label = self.color_label().map(|x| x.to_string());
         let mask_influence = self.mask_influence();
         PartDataT {
-            part_index,
             name,
             parent_index,
             type_,
@@ -13093,27 +13625,6 @@ impl<'a> PartData<'a> {
         }
     }
 
-    #[inline]
-    pub fn part_index(&self) -> u16 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<u16>(PartData::VT_PART_INDEX, Some(0))
-                .unwrap()
-        }
-    }
-    #[inline]
-    pub fn key_compare_less_than(&self, o: &PartData) -> bool {
-        self.part_index() < o.part_index()
-    }
-
-    #[inline]
-    pub fn key_compare_with_value(&self, val: u16) -> ::core::cmp::Ordering {
-        let key = self.part_index();
-        key.cmp(&val)
-    }
     #[inline]
     pub fn name(&self) -> Option<&'a str> {
         // Safety:
@@ -13219,7 +13730,6 @@ impl flatbuffers::Verifiable for PartData<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
-            .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
             .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
             .visit_field::<PartType>("type_", Self::VT_TYPE_, false)?
@@ -13242,7 +13752,6 @@ impl flatbuffers::Verifiable for PartData<'_> {
     }
 }
 pub struct PartDataArgs<'a> {
-    pub part_index: u16,
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub parent_index: i16,
     pub type_: PartType,
@@ -13257,7 +13766,6 @@ impl<'a> Default for PartDataArgs<'a> {
     #[inline]
     fn default() -> Self {
         PartDataArgs {
-            part_index: 0,
             name: None,
             parent_index: 0,
             type_: PartType::Null,
@@ -13276,11 +13784,6 @@ pub struct PartDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_part_index(&mut self, part_index: u16) {
-        self.fbb_
-            .push_slot::<u16>(PartData::VT_PART_INDEX, part_index, 0);
-    }
     #[inline]
     pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b str>) {
         self.fbb_
@@ -13349,7 +13852,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
 impl core::fmt::Debug for PartData<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartData");
-        ds.field("part_index", &self.part_index());
         ds.field("name", &self.name());
         ds.field("parent_index", &self.parent_index());
         ds.field("type_", &self.type_());
@@ -13365,7 +13867,6 @@ impl core::fmt::Debug for PartData<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartDataT {
-    pub part_index: u16,
     pub name: Option<String>,
     pub parent_index: i16,
     pub type_: PartType,
@@ -13379,7 +13880,6 @@ pub struct PartDataT {
 impl Default for PartDataT {
     fn default() -> Self {
         Self {
-            part_index: 0,
             name: None,
             parent_index: 0,
             type_: PartType::Null,
@@ -13397,7 +13897,6 @@ impl PartDataT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartData<'b>> {
-        let part_index = self.part_index;
         let name = self.name.as_ref().map(|x| _fbb.create_string(x));
         let parent_index = self.parent_index;
         let type_ = self.type_;
@@ -13410,7 +13909,6 @@ impl PartDataT {
         PartData::create(
             _fbb,
             &PartDataArgs {
-                part_index,
                 name,
                 parent_index,
                 type_,

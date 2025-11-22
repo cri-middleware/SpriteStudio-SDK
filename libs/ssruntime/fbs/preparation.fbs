@@ -18,29 +18,39 @@ table PartAttributes {
   flip_v: bool;
   flip_h: bool;
   hide: bool;
-  mask: short;
-  pivot_x: float;
-  pivot_y: float;
-  size_x: float;
-  size_y: float;
-  uv_move_x: float;
-  uv_move_y: float;
-  uv_rotation: float;
-  uv_scale_x: float;
-  uv_scale_y: float;
+  parts_color: PartAttributePartsColor;
+  shader: PartAttributeShader;
+  vertex: PartAttributeVertex;
+  pivot: Vec2;
+  size: Vec2;
+  uv_move: Vec3;
+  uv_scale: Vec2;
   bounding_radius: float;
-  // instance: InstanceAttribute;
-  // effect: EffectAttribute;
+  mask: float;
+  instance: PartAttributeInstance;
+  effect: PartAttributeEffect;
+  skew: Vec2;
+  deform: PartAttributeDeform;
 
-  // vertex_deformation:
-  // skew:
-  // deform:
-  // parts_color:
+  texture: string;
 }
 
 table Preparation {
-  stub: int;
-  attr: [PartAttributes];
+  initial_data: [PartAttributes];
+
+  events: [EventsPerFrame];
+
+  label_data: [Label];
+
+  meshs_data_uv: [MeshDataUV];
+  meshs_data_indices: [MeshDataIndices];
+
+  start_frames: short;
+  end_frames: short;
+  total_frames: short;
+  fps: short;
+
+  canvas: Rect;
 }
 
 root_type Preparation;

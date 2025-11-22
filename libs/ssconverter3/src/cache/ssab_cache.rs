@@ -1,9 +1,10 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{
-    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT, FloatValueEntry,
-    FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs, IntValueEntryT, Label,
-    MeshDataIndices, MeshDataUV, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT,
+    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT,
+    FloatValueEntry, FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs,
+    IntValueEntryT, Label, MeshDataIndices, MeshDataUV, SsAnimeBinary, SsAnimeBinaryArgs,
+    SsAnimeBinaryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,

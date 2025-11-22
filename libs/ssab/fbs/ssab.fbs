@@ -90,6 +90,11 @@ enum BlendType : ubyte {
   Invert,
 }
 
+enum ColorBlendTarget : ubyte {
+  Whole,
+  Vertex,
+}
+
 enum InterpolationType : ubyte {
   None,
   Linear,
@@ -348,12 +353,20 @@ table PartAttributeCell {
  name: string;
 }
 
-table PartAttributePartsColor {
-  // TODO: implement
+table  SsAttributePartsColorKeyValueColor {
+  rgba: U8Rect;
+  rate: float;
+}
 
-  // ベイクする (Converter2 を参照する)
-  // vertex に統一した方がいいのかも
-  // 4頂点のカラー(rgba)情報
+table PartAttributePartsColor {
+  target: ColorBlendTarget;
+  blend_type: BlendType;
+
+  color: SsAttributePartsColorKeyValueColor;
+  lt: SsAttributePartsColorKeyValueColor;
+  rt: SsAttributePartsColorKeyValueColor;
+  lb: SsAttributePartsColorKeyValueColor;
+  rb: SsAttributePartsColorKeyValueColor;
 }
 
 table PartAttributeVertex {
@@ -462,12 +475,13 @@ table PartAttributes {
 }
 
 table PartData {
-  part_index: ushort (key);
   name: string;
   parent_index: short;
   type: PartType;
   bounds_type: BoundsType;
   alpha_blend_type: BlendType;
+
+  // TODO: improve supporting all type of parttype
   refname: string; // instance name
   effect_filename: string;
   color_label: string;
