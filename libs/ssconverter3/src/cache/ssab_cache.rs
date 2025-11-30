@@ -1,10 +1,10 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{
-    AnimationData, AnimationDataArgs, AnimationDataT, BoolValueTable, BoolValueTableArgs,
-    BoolValueTableT, Effect, EffectArgs, EffectNodeT, EffectT, FloatValueTable,
-    FloatValueTableArgs, FloatValueTableT, IntValueTable, IntValueTableArgs, IntValueTableT, Label,
-    MeshDataIndices, MeshDataUV, PartState, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT,
+    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT,
+    FloatValueEntry, FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs,
+    IntValueEntryT, Label, MeshDataIndices, MeshDataUV, SsAnimeBinary, SsAnimeBinaryArgs,
+    SsAnimeBinaryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
@@ -46,11 +46,11 @@ impl From<&ssab::ssab::RectT> for RectKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct IntValueTableKey {
+pub struct IntValueEntryKey {
     pub value: i32,
 }
-impl From<&IntValueTableT> for IntValueTableKey {
-    fn from(int_value_table_t: &IntValueTableT) -> Self {
+impl From<&IntValueEntryT> for IntValueEntryKey {
+    fn from(int_value_table_t: &IntValueEntryT) -> Self {
         Self {
             value: int_value_table_t.value,
         }
@@ -58,23 +58,11 @@ impl From<&IntValueTableT> for IntValueTableKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct BoolValueTableKey {
-    pub value: bool,
-}
-impl From<&BoolValueTableT> for BoolValueTableKey {
-    fn from(int_value_table_t: &BoolValueTableT) -> Self {
-        Self {
-            value: int_value_table_t.value,
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq, Clone)]
-pub struct FloatValueTableKey {
+pub struct FloatValueEntryKey {
     pub value: OrderedFloat<f32>,
 }
-impl From<&FloatValueTableT> for FloatValueTableKey {
-    fn from(float_value_table_t: &FloatValueTableT) -> Self {
+impl From<&FloatValueEntryT> for FloatValueEntryKey {
+    fn from(float_value_table_t: &FloatValueEntryT) -> Self {
         Self {
             value: OrderedFloat(float_value_table_t.value),
         }
@@ -112,9 +100,8 @@ impl From<&CellT> for CellKey {
 pub struct SsabCache<'bldr> {
     pub vec2_cache: HashMap<Vec2Key, WIPOffset<Vec2<'bldr>>>,
     pub rect_cache: HashMap<RectKey, WIPOffset<Rect<'bldr>>>,
-    pub int_value_table_cache: HashMap<IntValueTableKey, WIPOffset<IntValueTable<'bldr>>>,
-    pub bool_value_table_cache: HashMap<BoolValueTableKey, WIPOffset<BoolValueTable<'bldr>>>,
-    pub float_value_table_cache: HashMap<FloatValueTableKey, WIPOffset<FloatValueTable<'bldr>>>,
+    pub int_value_table_cache: HashMap<IntValueEntryKey, WIPOffset<IntValueEntry<'bldr>>>,
+    pub float_value_table_cache: HashMap<FloatValueEntryKey, WIPOffset<FloatValueEntry<'bldr>>>,
 
     pub cell_cache: HashMap<CellKey, WIPOffset<Cell<'bldr>>>,
 }
@@ -124,7 +111,6 @@ impl<'bldr> SsabCache<'bldr> {
             vec2_cache: HashMap::new(),
             rect_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
-            bool_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
 
             cell_cache: HashMap::new(),
@@ -173,34 +159,15 @@ impl<'bldr> SsabCache<'bldr> {
     >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        int_value_table_t: &IntValueTableT,
-    ) -> WIPOffset<IntValueTable<'bldr>> {
-        let key = IntValueTableKey::from(int_value_table_t);
+        int_value_table_t: &IntValueEntryT,
+    ) -> WIPOffset<IntValueEntry<'bldr>> {
+        let key = IntValueEntryKey::from(int_value_table_t);
         if let Some(&offset) = self.int_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = IntValueTableArgs::default();
+        let mut args = IntValueEntryArgs::default();
         args.value = int_value_table_t.value;
-        let offset = IntValueTable::create(fb, &args);
-        offset
-    }
-
-    fn create_shared_bool_value_table<
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: flatbuffers::Allocator + 'bldr,
-    >(
-        &mut self,
-        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        bool_value_table_t: &BoolValueTableT,
-    ) -> WIPOffset<BoolValueTable<'bldr>> {
-        let key = BoolValueTableKey::from(bool_value_table_t);
-        if let Some(&offset) = self.bool_value_table_cache.get(&key) {
-            return offset;
-        }
-        let mut args = BoolValueTableArgs::default();
-        args.value = bool_value_table_t.value;
-        let offset = BoolValueTable::create(fb, &args);
+        let offset = IntValueEntry::create(fb, &args);
         offset
     }
 
@@ -211,15 +178,15 @@ impl<'bldr> SsabCache<'bldr> {
     >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        float_value_table_t: &FloatValueTableT,
-    ) -> WIPOffset<FloatValueTable<'bldr>> {
-        let key = FloatValueTableKey::from(float_value_table_t);
+        float_value_table_t: &FloatValueEntryT,
+    ) -> WIPOffset<FloatValueEntry<'bldr>> {
+        let key = FloatValueEntryKey::from(float_value_table_t);
         if let Some(&offset) = self.float_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = FloatValueTableArgs::default();
+        let mut args = FloatValueEntryArgs::default();
         args.value = float_value_table_t.value;
-        let offset = FloatValueTable::create(fb, &args);
+        let offset = FloatValueEntry::create(fb, &args);
         offset
     }
 }
@@ -275,7 +242,7 @@ impl<'bldr> SsabCache<'bldr> {
                 let mut args = AnimationDataArgs::default();
                 args.name = Some(fb.create_shared_string(&animation_data_t.name));
                 args.initial_data = None; // TODO; impl
-                args.frame_data = None; // TODO; impl
+                args.part_animation_data = None; // TODO; impl
                 args.events = None; // TODO; impl
                 args.label_data = None; // TODO; impl
                 args.meshs_data_uv = None; // TODO; impl

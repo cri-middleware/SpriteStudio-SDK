@@ -90,98 +90,100 @@ enum BlendType : ubyte {
   Invert,
 }
 
-table BoolValueTable {
-  value: bool;
+enum ColorBlendTarget : ubyte {
+  Whole,
+  Vertex,
 }
 
-table IntValueTable {
+enum InterpolationType : ubyte {
+  None,
+  Linear,
+  Hermite,
+  Bezier,
+  Acceleration,
+  Deceleration,
+
+  EaseIn,
+  EaseOut,
+  EaseInOut,
+
+  EaseExponentialIn,
+  EaseExponentialOut,
+  EaseExponentialInOut,
+
+  EaseSineIn,
+  EaseSineOut,
+  EaseSineInOut,
+
+  EaseElasticIn,
+  EaseElasticOut,
+  EaseElasticInOut,
+
+  EaseBounceIn,
+  EaseBounceOut,
+  EaseBounceInOut,
+
+  EaseBackIn,
+  EaseBackOut,
+  EaseBackInOut,
+
+  Num,
+}
+
+table IntValueEntry {
   value: int;
 }
 
-table FloatValueTable {
+table FloatValueEntry {
   value: float;
 }
 
-table Vec2ValueTable {
+table Vec2ValueEntry {
   value: Vec2;
 }
 
-table RectValueTable {
+table RectValueEntry {
   value: Rect;
 }
 
-table StringValueTable {
-  value: string;
+table EventUserData {
+  part_index: ushort (key);
+
+  value: PartAttributeUserData;
 }
 
-union UserDataValue {
-  UserDataInteger: IntValueTable,
-  UserDataRect: RectValueTable,
-  UserDataPoint: Vec2ValueTable,
-  UserDataString: StringValueTable,
+table EventSignal {
+  part_index: ushort (key);
+
+  value: PartAttributeSignal;
 }
 
-table UserDataValueWrapper {
-  value: UserDataValue;
+table EventAudio {
+  part_index: ushort (key);
+
+  value: PartAsttributeAudio;
 }
 
-table UserDataItem {
-  part_index: short (key);
-  value: [UserDataValueWrapper];
-}
-
-enum SignalComamndParamType: ubyte {
-  Index,
-  Integer,
-  Floating,
-  None,
-}
-
-table SignalComamndParam {
-  param_id: string;
-  type: SignalComamndParamType;
-  value: float;
-}
-
-table SignalDataItem {
+table EventInstance {
   part_index: short (key);
 
-  active: bool;
-  command_id: string;
-  params: [SignalComamndParam];
+  value: PartAttributeInstance;
 }
 
-table AudioDataItem {
-  part_index: short (key);
+table EventEffect {
+  part_index: ushort (key);
 
-  sound_list_id: int;
-  sound_name: string;
-  loop_num: int;
-}
-
-table TextureChangeDataItem {
-  part_index: short (key);
-
-  texture_name: string;
-}
-
-table  InstanceDataItem {
-  part_index: short (key);
-}
-
-table EffectDataItem {
-  part_index: short (key);
+  value: PartAttributeEffect;
 }
 
 table EventsPerFrame {
-  frame_index: short (key);
+  frame_index: ushort (key);
 
-  user: [UserDataItem];
-  signal: [SignalDataItem];
-  audio: [AudioDataItem];
-
-  instance: [InstanceDataItem];
-  effect: [EffectDataItem];
+  user: [EventUserData];
+  signal: [EventSignal];
+  audio: [EventAudio];
+  instance: [EventInstance];
+  effect: [EventEffect];
 }
 
 table Cell {
@@ -259,22 +261,22 @@ table EffectParticleElementBasic {
 
 union EffectNodeBehavior {
   EffectParticleElementBasic,
-  EffectParticleElementRndSeedChange: IntValueTable,
-  EffectParticleElementDelay: IntValueTable,
-  EffectParticleElementGravity: Vec2ValueTable,
-  EffectParticleElementPosition: RectValueTable,
+  EffectParticleElementRndSeedChange: IntValueEntry,
+  EffectParticleElementDelay: IntValueEntry,
+  EffectParticleElementGravity: Vec2ValueEntry,
+  EffectParticleElementPosition: RectValueEntry,
   EffectParticleElementRotation,
   EffectParticleElementRotationTrans,
-  EffectParticleElementTransSpeed: Vec2ValueTable,
-  EffectParticleElementTangentialAcceleration: Vec2ValueTable,
+  EffectParticleElementTransSpeed: Vec2ValueEntry,
+  EffectParticleElementTangentialAcceleration: Vec2ValueEntry,
   EffectParticleElementInitColor,
   EffectParticleElementTransColor,
-  EffectParticleElementAlphaFade: Vec2ValueTable,
+  EffectParticleElementAlphaFade: Vec2ValueEntry,
   EffectParticleElementSize: RectAndVec2ValueTable,
   EffectParticleElementTransSize: RectAndVec2ValueTable,
   EffectParticlePointGravity,
-  EffectParticleTurnToDirectionEnabled: FloatValueTable,
-  EffectParticleInfiniteEmitEnabled: IntValueTable,
+  EffectParticleTurnToDirectionEnabled: FloatValueEntry,
+  EffectParticleInfiniteEmitEnabled: IntValueEntry,
 }
 
 table EffectNodeBehaviorWrapper {
@@ -310,7 +312,7 @@ table SoundList {
 }
 
 table FontGlyphBitmap {
-  id: uint (key);
+  id: ushort (key);
   atlas: Rect;
   offset: Vec2;
   width_advance: float;
@@ -351,9 +353,20 @@ table PartAttributeCell {
  name: string;
 }
 
+table  SsAttributePartsColorKeyValueColor {
+  rgba: U8Rect;
+  rate: float;
+}
+
 table PartAttributePartsColor {
-  // TOOD: implement
-  // ベイクする (Converter2 を参照する)
+  target: ColorBlendTarget;
+  blend_type: BlendType;
+
+  color: SsAttributePartsColorKeyValueColor;
+  lt: SsAttributePartsColorKeyValueColor;
+  rt: SsAttributePartsColorKeyValueColor;
+  lb: SsAttributePartsColorKeyValueColor;
+  rb: SsAttributePartsColorKeyValueColor;
 }
 
 table PartAttributeVertex {
@@ -402,6 +415,38 @@ table PartAttributeShader {
   map1_name: string;
 }
 
+table PartAttributeUserData {
+  integer: IntValueEntry;
+  rect: Rect;
+  point: Vec2;
+  str: string;
+}
+
+enum SignalComamndParamType: ubyte {
+  Index,
+  Integer,
+  Floating,
+  None,
+}
+
+table SignalComamndParam {
+  param_id: string;
+  type: SignalComamndParamType;
+  value: float;
+}
+
+table PartAttributeSignal {
+  active: bool;
+  command_id: string;
+  params: [SignalComamndParam];
+}
+
+table PartAsttributeAudio {
+  sound_list_id: int;
+  sound_name: string;
+  loop_num: int;
+}
+
 table PartAttributes {
   cell: PartAttributeCell;
   position: Vec3;
@@ -423,79 +468,24 @@ table PartAttributes {
   uv_scale: Vec2;
   bounding_radius: float;
   mask: float;
-  instance: PartAttributeInstance;
-  effect: PartAttributeEffect;
   skew: Vec2;
   deform: PartAttributeDeform;
+
+  texture: string;
 }
 
 table PartData {
-  part_index: short (key);
   name: string;
   parent_index: short;
   type: PartType;
   bounds_type: BoundsType;
   alpha_blend_type: BlendType;
+
+  // TODO: improve supporting all type of parttype
   refname: string; // instance name
   effect_filename: string;
   color_label: string;
   mask_influence: short;
-}
-
-union Attribute {
-  AttributeCell: PartAttributeCell,
-  AttributePosX: FloatValueTable,
-  AttributePosY: FloatValueTable,
-  AttributePosZ: FloatValueTable,
-  AttributeRotX: FloatValueTable,
-  AttributeRotY: FloatValueTable,
-  AttributeRotZ: FloatValueTable,
-  AttributeSclX: FloatValueTable,
-  AttributeSclY: FloatValueTable,
-  AttributeLosclX: FloatValueTable,
-  AttributeLosclY: FloatValueTable,
-  AttributeAlpha: FloatValueTable,
-  AttributeLoAlpha: FloatValueTable,
-  AttributePrio: IntValueTable,
-  AttributeFlipH: BoolValueTable,
-  AttributeFlipV: BoolValueTable,
-  AttributeHide: BoolValueTable,
-  AttributePartsColor: PartAttributePartsColor,
-  AttributeShader: PartAttributeShader,
-  AttributeVertex: PartAttributeVertex,
-  AttributePivotX: FloatValueTable,
-  AttributePivotY: FloatValueTable,
-  AttributeAnchorX: FloatValueTable,
-  AttributeAnchorY: FloatValueTable,
-  AttributeSizeX: FloatValueTable,
-  AttributeSizeY: FloatValueTable,
-  AttributeImgFlipH: BoolValueTable,
-  AttributeImgFlipV: BoolValueTable,
-  AttributeUvtX: FloatValueTable,
-  AttributeUvtY: FloatValueTable,
-  AttributeUvrZ: FloatValueTable,
-  AttributeUvsX: FloatValueTable,
-  AttributeUvsY: FloatValueTable,
-  AttributeBoundr: FloatValueTable,
-  AttributeMask: FloatValueTable,
-  AttributeInstance: PartAttributeInstance,
-  AttributeEffect: PartAttributeEffect,
-  AttributeSkew: Vec2ValueTable,
-  AttributeDeform: PartAttributeDeform,
-}
-
-table AttributeWrapper {
-  value: Attribute;
-}
-
-table PartState {
-  part_index: short;
-  attributes: [AttributeWrapper];
-}
-
-table FrameData {
-  frame_index: short;
-  parts: [PartState];
 }
 
 table Label {
@@ -503,11 +493,131 @@ table Label {
   time: int;
 }
 
+table PartAnimationDataCellValue {
+  index: ushort (key);
+
+  value: PartAttributeCell;
+}
+
+table PartAnimationDataFloatValue {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: float;
+}
+
+table PartAnimationDataIntValue {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: int;
+}
+
+table PartAnimationDataBoolValue {
+  index: ushort (key);
+
+  value: bool;
+}
+
+table PartAnimationDataString {
+  index: ushort (key);
+
+  value: string;
+}
+
+table PartAnimationDataPartsColor {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: PartAttributePartsColor;
+}
+
+table PartAnimationDataShader {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: PartAttributeShader;
+}
+
+table PartAnimationDataVertex {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: PartAttributeVertex;
+}
+
+table PartAnimationDataInstance {
+  index: ushort (key);
+
+  value: PartAttributeInstance;
+}
+
+table PartAnimationDataEffect {
+  index: ushort (key);
+
+  value: PartAttributeEffect;
+}
+
+table PartAnimationDataVec2 {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: Vec2;
+}
+
+table PartAnimationDataDeform {
+  index: ushort (key);
+  interpolation: InterpolationType;
+
+  value: PartAttributeDeform;
+}
+
+table PartAnimationData {
+  cell_array: [PartAnimationDataCellValue];
+  pos_x_array: [PartAnimationDataFloatValue];
+  pos_y_array: [PartAnimationDataFloatValue];
+  pos_z_array: [PartAnimationDataFloatValue];
+  rot_x_array: [PartAnimationDataFloatValue];
+  rot_y_array: [PartAnimationDataFloatValue];
+  rot_z_array: [PartAnimationDataFloatValue];
+  scl_x_array: [PartAnimationDataFloatValue];
+  scl_y_array: [PartAnimationDataFloatValue];
+  loscl_x_array: [PartAnimationDataFloatValue];
+  loscl_y_array: [PartAnimationDataFloatValue];
+  alpha_array: [PartAnimationDataFloatValue];
+  lo_alpha_array: [PartAnimationDataFloatValue];
+  prio_array: [PartAnimationDataIntValue];
+  flip_h_array: [PartAnimationDataBoolValue];
+  flip_v_array: [PartAnimationDataBoolValue];
+  hide_array: [PartAnimationDataBoolValue];
+  parts_color_array: [PartAnimationDataPartsColor];
+  shader_array: [PartAnimationDataShader];
+  vertex_array: [PartAnimationDataVertex];
+  pivot_x_array: [PartAnimationDataFloatValue];
+  pivot_y_array: [PartAnimationDataFloatValue];
+  anchor_x_array: [PartAnimationDataFloatValue];
+  anchor_y_array: [PartAnimationDataFloatValue];
+  size_x_array: [PartAnimationDataFloatValue];
+  size_y_array: [PartAnimationDataFloatValue];
+  img_flip_h_array: [PartAnimationDataBoolValue];
+  img_flip_v_array: [PartAnimationDataBoolValue];
+  uvt_x_array: [PartAnimationDataFloatValue];
+  uvt_y_array: [PartAnimationDataFloatValue];
+  uvr_z_array: [PartAnimationDataFloatValue];
+  uvs_x_array: [PartAnimationDataFloatValue];
+  uvs_y_array: [PartAnimationDataFloatValue];
+  boundr_array: [PartAnimationDataFloatValue];
+  mask_array: [PartAnimationDataFloatValue];
+  skew_array: [PartAnimationDataVec2];
+  deform_array: [PartAnimationDataDeform];
+  texture_array: [PartAnimationDataString];
+}
+
 table AnimationData {
   name: string (key);
 
   initial_data: [PartAttributes];
-  frame_data: [FrameData];
+  part_animation_data: [PartAnimationData];
 
   events: [EventsPerFrame];
 
