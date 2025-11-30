@@ -717,13 +717,13 @@ pub const ENUM_MIN_INTERPOLATION_TYPE: u8 = 0;
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
-pub const ENUM_MAX_INTERPOLATION_TYPE: u8 = 24;
+pub const ENUM_MAX_INTERPOLATION_TYPE: u8 = 23;
 #[deprecated(
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_INTERPOLATION_TYPE: [InterpolationType; 25] = [
+pub const ENUM_VALUES_INTERPOLATION_TYPE: [InterpolationType; 24] = [
     InterpolationType::None,
     InterpolationType::Linear,
     InterpolationType::Hermite,
@@ -748,7 +748,6 @@ pub const ENUM_VALUES_INTERPOLATION_TYPE: [InterpolationType; 25] = [
     InterpolationType::EaseBackIn,
     InterpolationType::EaseBackOut,
     InterpolationType::EaseBackInOut,
-    InterpolationType::Num,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -780,10 +779,9 @@ impl InterpolationType {
     pub const EaseBackIn: Self = Self(21);
     pub const EaseBackOut: Self = Self(22);
     pub const EaseBackInOut: Self = Self(23);
-    pub const Num: Self = Self(24);
 
     pub const ENUM_MIN: u8 = 0;
-    pub const ENUM_MAX: u8 = 24;
+    pub const ENUM_MAX: u8 = 23;
     pub const ENUM_VALUES: &'static [Self] = &[
         Self::None,
         Self::Linear,
@@ -809,7 +807,6 @@ impl InterpolationType {
         Self::EaseBackIn,
         Self::EaseBackOut,
         Self::EaseBackInOut,
-        Self::Num,
     ];
     /// Returns the variant's name or "" if unknown.
     pub fn variant_name(self) -> Option<&'static str> {
@@ -838,7 +835,6 @@ impl InterpolationType {
             Self::EaseBackIn => Some("EaseBackIn"),
             Self::EaseBackOut => Some("EaseBackOut"),
             Self::EaseBackInOut => Some("EaseBackInOut"),
-            Self::Num => Some("Num"),
             _ => None,
         }
     }
@@ -14393,7 +14389,6 @@ impl<'a> PartTypeText<'a> {
         args: &'args PartTypeTextArgs<'args>,
     ) -> flatbuffers::WIPOffset<PartTypeText<'bldr>> {
         let mut builder = PartTypeTextBuilder::new(_fbb);
-        builder.add_e_anchor(args.e_anchor);
         builder.add_text_height(args.text_height);
         builder.add_text_width(args.text_width);
         builder.add_text_space(args.text_space);
@@ -14407,6 +14402,7 @@ impl<'a> PartTypeText<'a> {
         if let Some(x) = args.text {
             builder.add_text(x);
         }
+        builder.add_e_anchor(args.e_anchor);
         builder.add_text_mask(args.text_mask);
         builder.add_text_smooth(args.text_smooth);
         builder.add_text_bitmap(args.text_bitmap);
@@ -14548,13 +14544,13 @@ impl<'a> PartTypeText<'a> {
         }
     }
     #[inline]
-    pub fn e_anchor(&self) -> i32 {
+    pub fn e_anchor(&self) -> TextAnchor {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<i32>(PartTypeText::VT_E_ANCHOR, Some(0))
+                .get::<TextAnchor>(PartTypeText::VT_E_ANCHOR, Some(TextAnchor::LT))
                 .unwrap()
         }
     }
@@ -14586,7 +14582,7 @@ impl flatbuffers::Verifiable for PartTypeText<'_> {
             .visit_field::<bool>("text_mask", Self::VT_TEXT_MASK, false)?
             .visit_field::<i32>("text_width", Self::VT_TEXT_WIDTH, false)?
             .visit_field::<i32>("text_height", Self::VT_TEXT_HEIGHT, false)?
-            .visit_field::<i32>("e_anchor", Self::VT_E_ANCHOR, false)?
+            .visit_field::<TextAnchor>("e_anchor", Self::VT_E_ANCHOR, false)?
             .finish();
         Ok(())
     }
@@ -14602,7 +14598,7 @@ pub struct PartTypeTextArgs<'a> {
     pub text_mask: bool,
     pub text_width: i32,
     pub text_height: i32,
-    pub e_anchor: i32,
+    pub e_anchor: TextAnchor,
 }
 impl<'a> Default for PartTypeTextArgs<'a> {
     #[inline]
@@ -14618,7 +14614,7 @@ impl<'a> Default for PartTypeTextArgs<'a> {
             text_mask: false,
             text_width: 0,
             text_height: 0,
-            e_anchor: 0,
+            e_anchor: TextAnchor::LT,
         }
     }
 }
@@ -14683,9 +14679,9 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeTextBuilder<'a, 'b, A> 
             .push_slot::<i32>(PartTypeText::VT_TEXT_HEIGHT, text_height, 0);
     }
     #[inline]
-    pub fn add_e_anchor(&mut self, e_anchor: i32) {
+    pub fn add_e_anchor(&mut self, e_anchor: TextAnchor) {
         self.fbb_
-            .push_slot::<i32>(PartTypeText::VT_E_ANCHOR, e_anchor, 0);
+            .push_slot::<TextAnchor>(PartTypeText::VT_E_ANCHOR, e_anchor, TextAnchor::LT);
     }
     #[inline]
     pub fn new(
@@ -14734,7 +14730,7 @@ pub struct PartTypeTextT {
     pub text_mask: bool,
     pub text_width: i32,
     pub text_height: i32,
-    pub e_anchor: i32,
+    pub e_anchor: TextAnchor,
 }
 impl Default for PartTypeTextT {
     fn default() -> Self {
@@ -14749,7 +14745,7 @@ impl Default for PartTypeTextT {
             text_mask: false,
             text_width: 0,
             text_height: 0,
-            e_anchor: 0,
+            e_anchor: TextAnchor::LT,
         }
     }
 }

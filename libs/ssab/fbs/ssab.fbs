@@ -72,6 +72,7 @@ enum BlendType : ubyte {
 
 enum InterpolationType : ubyte {
   None,
+
   Linear,
   Hermite,
   Bezier,
@@ -101,8 +102,6 @@ enum InterpolationType : ubyte {
   EaseBackIn,
   EaseBackOut,
   EaseBackInOut,
-
-  Num,
 }
 
 table IntValueEntry {
@@ -481,7 +480,7 @@ table PartTypeText {
   text_mask: bool;
   text_width: int;
   text_height: int;
-  e_anchor: int;
+  e_anchor: TextAnchor;
 }
 
 table PartTypeNines {
