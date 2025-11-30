@@ -387,163 +387,6 @@ impl flatbuffers::SimpleToVerifyInSlice for MeshDivType {}
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
-pub const ENUM_MIN_PART_TYPE: u8 = 0;
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
-pub const ENUM_MAX_PART_TYPE: u8 = 16;
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
-#[allow(non_camel_case_types)]
-pub const ENUM_VALUES_PART_TYPE: [PartType; 17] = [
-    PartType::Null,
-    PartType::Normal,
-    PartType::Shape,
-    PartType::Text,
-    PartType::Nines,
-    PartType::Instance,
-    PartType::Armature,
-    PartType::Effect,
-    PartType::Mesh,
-    PartType::Movenode,
-    PartType::Constraint,
-    PartType::Mask,
-    PartType::Joint,
-    PartType::Bonepoint,
-    PartType::TransformConstraint,
-    PartType::Camera,
-    PartType::Audio,
-];
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-#[repr(transparent)]
-pub struct PartType(pub u8);
-#[allow(non_upper_case_globals)]
-impl PartType {
-    pub const Null: Self = Self(0);
-    pub const Normal: Self = Self(1);
-    pub const Shape: Self = Self(2);
-    pub const Text: Self = Self(3);
-    pub const Nines: Self = Self(4);
-    pub const Instance: Self = Self(5);
-    pub const Armature: Self = Self(6);
-    pub const Effect: Self = Self(7);
-    pub const Mesh: Self = Self(8);
-    pub const Movenode: Self = Self(9);
-    pub const Constraint: Self = Self(10);
-    pub const Mask: Self = Self(11);
-    pub const Joint: Self = Self(12);
-    pub const Bonepoint: Self = Self(13);
-    pub const TransformConstraint: Self = Self(14);
-    pub const Camera: Self = Self(15);
-    pub const Audio: Self = Self(16);
-
-    pub const ENUM_MIN: u8 = 0;
-    pub const ENUM_MAX: u8 = 16;
-    pub const ENUM_VALUES: &'static [Self] = &[
-        Self::Null,
-        Self::Normal,
-        Self::Shape,
-        Self::Text,
-        Self::Nines,
-        Self::Instance,
-        Self::Armature,
-        Self::Effect,
-        Self::Mesh,
-        Self::Movenode,
-        Self::Constraint,
-        Self::Mask,
-        Self::Joint,
-        Self::Bonepoint,
-        Self::TransformConstraint,
-        Self::Camera,
-        Self::Audio,
-    ];
-    /// Returns the variant's name or "" if unknown.
-    pub fn variant_name(self) -> Option<&'static str> {
-        match self {
-            Self::Null => Some("Null"),
-            Self::Normal => Some("Normal"),
-            Self::Shape => Some("Shape"),
-            Self::Text => Some("Text"),
-            Self::Nines => Some("Nines"),
-            Self::Instance => Some("Instance"),
-            Self::Armature => Some("Armature"),
-            Self::Effect => Some("Effect"),
-            Self::Mesh => Some("Mesh"),
-            Self::Movenode => Some("Movenode"),
-            Self::Constraint => Some("Constraint"),
-            Self::Mask => Some("Mask"),
-            Self::Joint => Some("Joint"),
-            Self::Bonepoint => Some("Bonepoint"),
-            Self::TransformConstraint => Some("TransformConstraint"),
-            Self::Camera => Some("Camera"),
-            Self::Audio => Some("Audio"),
-            _ => None,
-        }
-    }
-}
-impl core::fmt::Debug for PartType {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        if let Some(name) = self.variant_name() {
-            f.write_str(name)
-        } else {
-            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
-        }
-    }
-}
-impl<'a> flatbuffers::Follow<'a> for PartType {
-    type Inner = Self;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
-        Self(b)
-    }
-}
-
-impl flatbuffers::Push for PartType {
-    type Output = PartType;
-    #[inline]
-    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        unsafe {
-            flatbuffers::emplace_scalar::<u8>(dst, self.0);
-        }
-    }
-}
-
-impl flatbuffers::EndianScalar for PartType {
-    type Scalar = u8;
-    #[inline]
-    fn to_little_endian(self) -> u8 {
-        self.0.to_le()
-    }
-    #[inline]
-    #[allow(clippy::wrong_self_convention)]
-    fn from_little_endian(v: u8) -> Self {
-        let b = u8::from_le(v);
-        Self(b)
-    }
-}
-
-impl<'a> flatbuffers::Verifiable for PartType {
-    #[inline]
-    fn run_verifier(
-        v: &mut flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
-        u8::run_verifier(v, pos)
-    }
-}
-
-impl flatbuffers::SimpleToVerifyInSlice for PartType {}
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
 pub const ENUM_MIN_BOUNDS_TYPE: u8 = 0;
 #[deprecated(
     since = "2.0.0",
@@ -865,98 +708,6 @@ impl<'a> flatbuffers::Verifiable for BlendType {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for BlendType {}
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
-pub const ENUM_MIN_COLOR_BLEND_TARGET: u8 = 0;
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
-pub const ENUM_MAX_COLOR_BLEND_TARGET: u8 = 1;
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
-#[allow(non_camel_case_types)]
-pub const ENUM_VALUES_COLOR_BLEND_TARGET: [ColorBlendTarget; 2] =
-    [ColorBlendTarget::Whole, ColorBlendTarget::Vertex];
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-#[repr(transparent)]
-pub struct ColorBlendTarget(pub u8);
-#[allow(non_upper_case_globals)]
-impl ColorBlendTarget {
-    pub const Whole: Self = Self(0);
-    pub const Vertex: Self = Self(1);
-
-    pub const ENUM_MIN: u8 = 0;
-    pub const ENUM_MAX: u8 = 1;
-    pub const ENUM_VALUES: &'static [Self] = &[Self::Whole, Self::Vertex];
-    /// Returns the variant's name or "" if unknown.
-    pub fn variant_name(self) -> Option<&'static str> {
-        match self {
-            Self::Whole => Some("Whole"),
-            Self::Vertex => Some("Vertex"),
-            _ => None,
-        }
-    }
-}
-impl core::fmt::Debug for ColorBlendTarget {
-    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        if let Some(name) = self.variant_name() {
-            f.write_str(name)
-        } else {
-            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
-        }
-    }
-}
-impl<'a> flatbuffers::Follow<'a> for ColorBlendTarget {
-    type Inner = Self;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
-        Self(b)
-    }
-}
-
-impl flatbuffers::Push for ColorBlendTarget {
-    type Output = ColorBlendTarget;
-    #[inline]
-    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        unsafe {
-            flatbuffers::emplace_scalar::<u8>(dst, self.0);
-        }
-    }
-}
-
-impl flatbuffers::EndianScalar for ColorBlendTarget {
-    type Scalar = u8;
-    #[inline]
-    fn to_little_endian(self) -> u8 {
-        self.0.to_le()
-    }
-    #[inline]
-    #[allow(clippy::wrong_self_convention)]
-    fn from_little_endian(v: u8) -> Self {
-        let b = u8::from_le(v);
-        Self(b)
-    }
-}
-
-impl<'a> flatbuffers::Verifiable for ColorBlendTarget {
-    #[inline]
-    fn run_verifier(
-        v: &mut flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
-        u8::run_verifier(v, pos)
-    }
-}
-
-impl flatbuffers::SimpleToVerifyInSlice for ColorBlendTarget {}
 #[deprecated(
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
@@ -2153,6 +1904,868 @@ impl<'a> flatbuffers::Verifiable for SignalComamndParamType {
 }
 
 impl flatbuffers::SimpleToVerifyInSlice for SignalComamndParamType {}
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+pub const ENUM_MIN_TEXT_ANCHOR: u8 = 0;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+pub const ENUM_MAX_TEXT_ANCHOR: u8 = 255;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TEXT_ANCHOR: [TextAnchor; 10] = [
+    TextAnchor::LT,
+    TextAnchor::LC,
+    TextAnchor::LB,
+    TextAnchor::CT,
+    TextAnchor::CC,
+    TextAnchor::CB,
+    TextAnchor::RT,
+    TextAnchor::RC,
+    TextAnchor::RB,
+    TextAnchor::NO,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct TextAnchor(pub u8);
+#[allow(non_upper_case_globals)]
+impl TextAnchor {
+    pub const LT: Self = Self(0);
+    pub const LC: Self = Self(1);
+    pub const LB: Self = Self(2);
+    pub const CT: Self = Self(16);
+    pub const CC: Self = Self(17);
+    pub const CB: Self = Self(18);
+    pub const RT: Self = Self(32);
+    pub const RC: Self = Self(33);
+    pub const RB: Self = Self(34);
+    pub const NO: Self = Self(255);
+
+    pub const ENUM_MIN: u8 = 0;
+    pub const ENUM_MAX: u8 = 255;
+    pub const ENUM_VALUES: &'static [Self] = &[
+        Self::LT,
+        Self::LC,
+        Self::LB,
+        Self::CT,
+        Self::CC,
+        Self::CB,
+        Self::RT,
+        Self::RC,
+        Self::RB,
+        Self::NO,
+    ];
+    /// Returns the variant's name or "" if unknown.
+    pub fn variant_name(self) -> Option<&'static str> {
+        match self {
+            Self::LT => Some("LT"),
+            Self::LC => Some("LC"),
+            Self::LB => Some("LB"),
+            Self::CT => Some("CT"),
+            Self::CC => Some("CC"),
+            Self::CB => Some("CB"),
+            Self::RT => Some("RT"),
+            Self::RC => Some("RC"),
+            Self::RB => Some("RB"),
+            Self::NO => Some("NO"),
+            _ => None,
+        }
+    }
+}
+impl core::fmt::Debug for TextAnchor {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if let Some(name) = self.variant_name() {
+            f.write_str(name)
+        } else {
+            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+        }
+    }
+}
+impl<'a> flatbuffers::Follow<'a> for TextAnchor {
+    type Inner = Self;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+        Self(b)
+    }
+}
+
+impl flatbuffers::Push for TextAnchor {
+    type Output = TextAnchor;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe {
+            flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        }
+    }
+}
+
+impl flatbuffers::EndianScalar for TextAnchor {
+    type Scalar = u8;
+    #[inline]
+    fn to_little_endian(self) -> u8 {
+        self.0.to_le()
+    }
+    #[inline]
+    #[allow(clippy::wrong_self_convention)]
+    fn from_little_endian(v: u8) -> Self {
+        let b = u8::from_le(v);
+        Self(b)
+    }
+}
+
+impl<'a> flatbuffers::Verifiable for TextAnchor {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        u8::run_verifier(v, pos)
+    }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for TextAnchor {}
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+pub const ENUM_MIN_PART_TYPE: u8 = 0;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+pub const ENUM_MAX_PART_TYPE: u8 = 17;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_PART_TYPE: [PartType; 18] = [
+    PartType::NONE,
+    PartType::PartTypeNull,
+    PartType::PartTypeNormal,
+    PartType::PartTypeShape,
+    PartType::PartTypeText,
+    PartType::PartTypeNines,
+    PartType::PartTypeInstance,
+    PartType::PartTypeArmature,
+    PartType::PartTypeEffect,
+    PartType::PartTypeMesh,
+    PartType::PartTypeMovenode,
+    PartType::PartTypeConstraint,
+    PartType::PartTypeMask,
+    PartType::PartTypeJoint,
+    PartType::PartTypeBonepoint,
+    PartType::PartTypeTransformConstraint,
+    PartType::PartTypeCamera,
+    PartType::PartTypeAudio,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct PartType(pub u8);
+#[allow(non_upper_case_globals)]
+impl PartType {
+    pub const NONE: Self = Self(0);
+    pub const PartTypeNull: Self = Self(1);
+    pub const PartTypeNormal: Self = Self(2);
+    pub const PartTypeShape: Self = Self(3);
+    pub const PartTypeText: Self = Self(4);
+    pub const PartTypeNines: Self = Self(5);
+    pub const PartTypeInstance: Self = Self(6);
+    pub const PartTypeArmature: Self = Self(7);
+    pub const PartTypeEffect: Self = Self(8);
+    pub const PartTypeMesh: Self = Self(9);
+    pub const PartTypeMovenode: Self = Self(10);
+    pub const PartTypeConstraint: Self = Self(11);
+    pub const PartTypeMask: Self = Self(12);
+    pub const PartTypeJoint: Self = Self(13);
+    pub const PartTypeBonepoint: Self = Self(14);
+    pub const PartTypeTransformConstraint: Self = Self(15);
+    pub const PartTypeCamera: Self = Self(16);
+    pub const PartTypeAudio: Self = Self(17);
+
+    pub const ENUM_MIN: u8 = 0;
+    pub const ENUM_MAX: u8 = 17;
+    pub const ENUM_VALUES: &'static [Self] = &[
+        Self::NONE,
+        Self::PartTypeNull,
+        Self::PartTypeNormal,
+        Self::PartTypeShape,
+        Self::PartTypeText,
+        Self::PartTypeNines,
+        Self::PartTypeInstance,
+        Self::PartTypeArmature,
+        Self::PartTypeEffect,
+        Self::PartTypeMesh,
+        Self::PartTypeMovenode,
+        Self::PartTypeConstraint,
+        Self::PartTypeMask,
+        Self::PartTypeJoint,
+        Self::PartTypeBonepoint,
+        Self::PartTypeTransformConstraint,
+        Self::PartTypeCamera,
+        Self::PartTypeAudio,
+    ];
+    /// Returns the variant's name or "" if unknown.
+    pub fn variant_name(self) -> Option<&'static str> {
+        match self {
+            Self::NONE => Some("NONE"),
+            Self::PartTypeNull => Some("PartTypeNull"),
+            Self::PartTypeNormal => Some("PartTypeNormal"),
+            Self::PartTypeShape => Some("PartTypeShape"),
+            Self::PartTypeText => Some("PartTypeText"),
+            Self::PartTypeNines => Some("PartTypeNines"),
+            Self::PartTypeInstance => Some("PartTypeInstance"),
+            Self::PartTypeArmature => Some("PartTypeArmature"),
+            Self::PartTypeEffect => Some("PartTypeEffect"),
+            Self::PartTypeMesh => Some("PartTypeMesh"),
+            Self::PartTypeMovenode => Some("PartTypeMovenode"),
+            Self::PartTypeConstraint => Some("PartTypeConstraint"),
+            Self::PartTypeMask => Some("PartTypeMask"),
+            Self::PartTypeJoint => Some("PartTypeJoint"),
+            Self::PartTypeBonepoint => Some("PartTypeBonepoint"),
+            Self::PartTypeTransformConstraint => Some("PartTypeTransformConstraint"),
+            Self::PartTypeCamera => Some("PartTypeCamera"),
+            Self::PartTypeAudio => Some("PartTypeAudio"),
+            _ => None,
+        }
+    }
+}
+impl core::fmt::Debug for PartType {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if let Some(name) = self.variant_name() {
+            f.write_str(name)
+        } else {
+            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+        }
+    }
+}
+impl<'a> flatbuffers::Follow<'a> for PartType {
+    type Inner = Self;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+        Self(b)
+    }
+}
+
+impl flatbuffers::Push for PartType {
+    type Output = PartType;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe {
+            flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        }
+    }
+}
+
+impl flatbuffers::EndianScalar for PartType {
+    type Scalar = u8;
+    #[inline]
+    fn to_little_endian(self) -> u8 {
+        self.0.to_le()
+    }
+    #[inline]
+    #[allow(clippy::wrong_self_convention)]
+    fn from_little_endian(v: u8) -> Self {
+        let b = u8::from_le(v);
+        Self(b)
+    }
+}
+
+impl<'a> flatbuffers::Verifiable for PartType {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        u8::run_verifier(v, pos)
+    }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for PartType {}
+pub struct PartTypeUnionTableOffset {}
+
+#[allow(clippy::upper_case_acronyms)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub enum PartTypeT {
+    NONE,
+    PartTypeNull(Box<PartTypeNoneT>),
+    PartTypeNormal(Box<PartTypeNoneT>),
+    PartTypeShape(Box<PartTypeShapeT>),
+    PartTypeText(Box<PartTypeTextT>),
+    PartTypeNines(Box<PartTypeNinesT>),
+    PartTypeInstance(Box<PartTypeInstanceT>),
+    PartTypeArmature(Box<PartTypeArmatureT>),
+    PartTypeEffect(Box<PartTypeEffectT>),
+    PartTypeMesh(Box<PartTypeNoneT>),
+    PartTypeMovenode(Box<PartTypeNoneT>),
+    PartTypeConstraint(Box<PartTypeNoneT>),
+    PartTypeMask(Box<PartTypeNoneT>),
+    PartTypeJoint(Box<PartTypeNoneT>),
+    PartTypeBonepoint(Box<PartTypeNoneT>),
+    PartTypeTransformConstraint(Box<PartTypeNoneT>),
+    PartTypeCamera(Box<PartTypeNoneT>),
+    PartTypeAudio(Box<PartTypeNoneT>),
+}
+impl Default for PartTypeT {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+impl PartTypeT {
+    pub fn part_type_type(&self) -> PartType {
+        match self {
+            Self::NONE => PartType::NONE,
+            Self::PartTypeNull(_) => PartType::PartTypeNull,
+            Self::PartTypeNormal(_) => PartType::PartTypeNormal,
+            Self::PartTypeShape(_) => PartType::PartTypeShape,
+            Self::PartTypeText(_) => PartType::PartTypeText,
+            Self::PartTypeNines(_) => PartType::PartTypeNines,
+            Self::PartTypeInstance(_) => PartType::PartTypeInstance,
+            Self::PartTypeArmature(_) => PartType::PartTypeArmature,
+            Self::PartTypeEffect(_) => PartType::PartTypeEffect,
+            Self::PartTypeMesh(_) => PartType::PartTypeMesh,
+            Self::PartTypeMovenode(_) => PartType::PartTypeMovenode,
+            Self::PartTypeConstraint(_) => PartType::PartTypeConstraint,
+            Self::PartTypeMask(_) => PartType::PartTypeMask,
+            Self::PartTypeJoint(_) => PartType::PartTypeJoint,
+            Self::PartTypeBonepoint(_) => PartType::PartTypeBonepoint,
+            Self::PartTypeTransformConstraint(_) => PartType::PartTypeTransformConstraint,
+            Self::PartTypeCamera(_) => PartType::PartTypeCamera,
+            Self::PartTypeAudio(_) => PartType::PartTypeAudio,
+        }
+    }
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>> {
+        match self {
+            Self::NONE => None,
+            Self::PartTypeNull(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeNormal(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeShape(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeText(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeNines(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeInstance(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeArmature(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeEffect(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeMesh(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeMovenode(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeConstraint(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeMask(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeJoint(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeBonepoint(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeTransformConstraint(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeCamera(v) => Some(v.pack(fbb).as_union_value()),
+            Self::PartTypeAudio(v) => Some(v.pack(fbb).as_union_value()),
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_null(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeNull(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeNull(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_null(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeNull(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_null_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeNull(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_normal(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeNormal(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeNormal(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_normal(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeNormal(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_normal_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeNormal(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeShapeT, setting the union to NONE.
+    pub fn take_part_type_shape(&mut self) -> Option<Box<PartTypeShapeT>> {
+        if let Self::PartTypeShape(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeShape(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeShapeT.
+    pub fn as_part_type_shape(&self) -> Option<&PartTypeShapeT> {
+        if let Self::PartTypeShape(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeShapeT.
+    pub fn as_part_type_shape_mut(&mut self) -> Option<&mut PartTypeShapeT> {
+        if let Self::PartTypeShape(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeTextT, setting the union to NONE.
+    pub fn take_part_type_text(&mut self) -> Option<Box<PartTypeTextT>> {
+        if let Self::PartTypeText(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeText(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeTextT.
+    pub fn as_part_type_text(&self) -> Option<&PartTypeTextT> {
+        if let Self::PartTypeText(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeTextT.
+    pub fn as_part_type_text_mut(&mut self) -> Option<&mut PartTypeTextT> {
+        if let Self::PartTypeText(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNinesT, setting the union to NONE.
+    pub fn take_part_type_nines(&mut self) -> Option<Box<PartTypeNinesT>> {
+        if let Self::PartTypeNines(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeNines(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNinesT.
+    pub fn as_part_type_nines(&self) -> Option<&PartTypeNinesT> {
+        if let Self::PartTypeNines(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNinesT.
+    pub fn as_part_type_nines_mut(&mut self) -> Option<&mut PartTypeNinesT> {
+        if let Self::PartTypeNines(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeInstanceT, setting the union to NONE.
+    pub fn take_part_type_instance(&mut self) -> Option<Box<PartTypeInstanceT>> {
+        if let Self::PartTypeInstance(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeInstance(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeInstanceT.
+    pub fn as_part_type_instance(&self) -> Option<&PartTypeInstanceT> {
+        if let Self::PartTypeInstance(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeInstanceT.
+    pub fn as_part_type_instance_mut(&mut self) -> Option<&mut PartTypeInstanceT> {
+        if let Self::PartTypeInstance(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeArmatureT, setting the union to NONE.
+    pub fn take_part_type_armature(&mut self) -> Option<Box<PartTypeArmatureT>> {
+        if let Self::PartTypeArmature(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeArmature(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeArmatureT.
+    pub fn as_part_type_armature(&self) -> Option<&PartTypeArmatureT> {
+        if let Self::PartTypeArmature(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeArmatureT.
+    pub fn as_part_type_armature_mut(&mut self) -> Option<&mut PartTypeArmatureT> {
+        if let Self::PartTypeArmature(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeEffectT, setting the union to NONE.
+    pub fn take_part_type_effect(&mut self) -> Option<Box<PartTypeEffectT>> {
+        if let Self::PartTypeEffect(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeEffect(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeEffectT.
+    pub fn as_part_type_effect(&self) -> Option<&PartTypeEffectT> {
+        if let Self::PartTypeEffect(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeEffectT.
+    pub fn as_part_type_effect_mut(&mut self) -> Option<&mut PartTypeEffectT> {
+        if let Self::PartTypeEffect(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_mesh(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeMesh(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeMesh(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_mesh(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeMesh(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_mesh_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeMesh(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_movenode(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeMovenode(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeMovenode(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_movenode(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeMovenode(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_movenode_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeMovenode(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_constraint(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeConstraint(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeConstraint(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_constraint(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeConstraint(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_constraint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeConstraint(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_mask(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeMask(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeMask(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_mask(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeMask(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_mask_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeMask(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_joint(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeJoint(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeJoint(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_joint(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeJoint(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_joint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeJoint(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_bonepoint(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeBonepoint(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeBonepoint(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_bonepoint(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeBonepoint(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_bonepoint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeBonepoint(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_transform_constraint(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeTransformConstraint(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeTransformConstraint(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_transform_constraint(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeTransformConstraint(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_transform_constraint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeTransformConstraint(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_camera(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeCamera(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeCamera(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_camera(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeCamera(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_camera_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeCamera(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_audio(&mut self) -> Option<Box<PartTypeNoneT>> {
+        if let Self::PartTypeAudio(_) = self {
+            let v = core::mem::replace(self, Self::NONE);
+            if let Self::PartTypeAudio(w) = v {
+                Some(w)
+            } else {
+                unreachable!()
+            }
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_audio(&self) -> Option<&PartTypeNoneT> {
+        if let Self::PartTypeAudio(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_audio_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+        if let Self::PartTypeAudio(v) = self {
+            Some(v.as_mut())
+        } else {
+            None
+        }
+    }
+}
 pub enum Vec2Offset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -10004,13 +10617,11 @@ impl<'a> flatbuffers::Follow<'a> for PartAttributePartsColor<'a> {
 }
 
 impl<'a> PartAttributePartsColor<'a> {
-    pub const VT_TARGET: flatbuffers::VOffsetT = 4;
-    pub const VT_BLEND_TYPE: flatbuffers::VOffsetT = 6;
-    pub const VT_COLOR: flatbuffers::VOffsetT = 8;
-    pub const VT_LT: flatbuffers::VOffsetT = 10;
-    pub const VT_RT: flatbuffers::VOffsetT = 12;
-    pub const VT_LB: flatbuffers::VOffsetT = 14;
-    pub const VT_RB: flatbuffers::VOffsetT = 16;
+    pub const VT_BLEND_TYPE: flatbuffers::VOffsetT = 4;
+    pub const VT_LT: flatbuffers::VOffsetT = 6;
+    pub const VT_RT: flatbuffers::VOffsetT = 8;
+    pub const VT_LB: flatbuffers::VOffsetT = 10;
+    pub const VT_RB: flatbuffers::VOffsetT = 12;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -10034,26 +10645,18 @@ impl<'a> PartAttributePartsColor<'a> {
         if let Some(x) = args.lt {
             builder.add_lt(x);
         }
-        if let Some(x) = args.color {
-            builder.add_color(x);
-        }
         builder.add_blend_type(args.blend_type);
-        builder.add_target(args.target);
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartAttributePartsColorT {
-        let target = self.target();
         let blend_type = self.blend_type();
-        let color = self.color().map(|x| Box::new(x.unpack()));
         let lt = self.lt().map(|x| Box::new(x.unpack()));
         let rt = self.rt().map(|x| Box::new(x.unpack()));
         let lb = self.lb().map(|x| Box::new(x.unpack()));
         let rb = self.rb().map(|x| Box::new(x.unpack()));
         PartAttributePartsColorT {
-            target,
             blend_type,
-            color,
             lt,
             rt,
             lb,
@@ -10061,20 +10664,6 @@ impl<'a> PartAttributePartsColor<'a> {
         }
     }
 
-    #[inline]
-    pub fn target(&self) -> ColorBlendTarget {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<ColorBlendTarget>(
-                    PartAttributePartsColor::VT_TARGET,
-                    Some(ColorBlendTarget::Whole),
-                )
-                .unwrap()
-        }
-    }
     #[inline]
     pub fn blend_type(&self) -> BlendType {
         // Safety:
@@ -10084,19 +10673,6 @@ impl<'a> PartAttributePartsColor<'a> {
             self._tab
                 .get::<BlendType>(PartAttributePartsColor::VT_BLEND_TYPE, Some(BlendType::Mix))
                 .unwrap()
-        }
-    }
-    #[inline]
-    pub fn color(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
-                    PartAttributePartsColor::VT_COLOR,
-                    None,
-                )
         }
     }
     #[inline]
@@ -10161,13 +10737,7 @@ impl flatbuffers::Verifiable for PartAttributePartsColor<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
-            .visit_field::<ColorBlendTarget>("target", Self::VT_TARGET, false)?
             .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
-                "color",
-                Self::VT_COLOR,
-                false,
-            )?
             .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
                 "lt",
                 Self::VT_LT,
@@ -10193,9 +10763,7 @@ impl flatbuffers::Verifiable for PartAttributePartsColor<'_> {
     }
 }
 pub struct PartAttributePartsColorArgs<'a> {
-    pub target: ColorBlendTarget,
     pub blend_type: BlendType,
-    pub color: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
     pub lt: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
     pub rt: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
     pub lb: Option<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
@@ -10205,9 +10773,7 @@ impl<'a> Default for PartAttributePartsColorArgs<'a> {
     #[inline]
     fn default() -> Self {
         PartAttributePartsColorArgs {
-            target: ColorBlendTarget::Whole,
             blend_type: BlendType::Mix,
-            color: None,
             lt: None,
             rt: None,
             lb: None,
@@ -10222,31 +10788,12 @@ pub struct PartAttributePartsColorBuilder<'a: 'b, 'b, A: flatbuffers::Allocator 
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributePartsColorBuilder<'a, 'b, A> {
     #[inline]
-    pub fn add_target(&mut self, target: ColorBlendTarget) {
-        self.fbb_.push_slot::<ColorBlendTarget>(
-            PartAttributePartsColor::VT_TARGET,
-            target,
-            ColorBlendTarget::Whole,
-        );
-    }
-    #[inline]
     pub fn add_blend_type(&mut self, blend_type: BlendType) {
         self.fbb_.push_slot::<BlendType>(
             PartAttributePartsColor::VT_BLEND_TYPE,
             blend_type,
             BlendType::Mix,
         );
-    }
-    #[inline]
-    pub fn add_color(
-        &mut self,
-        color: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>,
-    ) {
-        self.fbb_
-            .push_slot_always::<flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(
-                PartAttributePartsColor::VT_COLOR,
-                color,
-            );
     }
     #[inline]
     pub fn add_lt(&mut self, lt: flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>>) {
@@ -10300,9 +10847,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributePartsColorBuilder<
 impl core::fmt::Debug for PartAttributePartsColor<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartAttributePartsColor");
-        ds.field("target", &self.target());
         ds.field("blend_type", &self.blend_type());
-        ds.field("color", &self.color());
         ds.field("lt", &self.lt());
         ds.field("rt", &self.rt());
         ds.field("lb", &self.lb());
@@ -10313,9 +10858,7 @@ impl core::fmt::Debug for PartAttributePartsColor<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributePartsColorT {
-    pub target: ColorBlendTarget,
     pub blend_type: BlendType,
-    pub color: Option<Box<SsAttributePartsColorKeyValueColorT>>,
     pub lt: Option<Box<SsAttributePartsColorKeyValueColorT>>,
     pub rt: Option<Box<SsAttributePartsColorKeyValueColorT>>,
     pub lb: Option<Box<SsAttributePartsColorKeyValueColorT>>,
@@ -10324,9 +10867,7 @@ pub struct PartAttributePartsColorT {
 impl Default for PartAttributePartsColorT {
     fn default() -> Self {
         Self {
-            target: ColorBlendTarget::Whole,
             blend_type: BlendType::Mix,
-            color: None,
             lt: None,
             rt: None,
             lb: None,
@@ -10339,9 +10880,7 @@ impl PartAttributePartsColorT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartAttributePartsColor<'b>> {
-        let target = self.target;
         let blend_type = self.blend_type;
-        let color = self.color.as_ref().map(|x| x.pack(_fbb));
         let lt = self.lt.as_ref().map(|x| x.pack(_fbb));
         let rt = self.rt.as_ref().map(|x| x.pack(_fbb));
         let lb = self.lb.as_ref().map(|x| x.pack(_fbb));
@@ -10349,9 +10888,7 @@ impl PartAttributePartsColorT {
         PartAttributePartsColor::create(
             _fbb,
             &PartAttributePartsColorArgs {
-                target,
                 blend_type,
-                color,
                 lt,
                 rt,
                 lb,
@@ -12749,9 +13286,7 @@ impl<'a> PartAttributes<'a> {
         args: &'args PartAttributesArgs<'args>,
     ) -> flatbuffers::WIPOffset<PartAttributes<'bldr>> {
         let mut builder = PartAttributesBuilder::new(_fbb);
-        if let Some(x) = args.texture {
-            builder.add_texture(x);
-        }
+        builder.add_texture(args.texture);
         if let Some(x) = args.deform {
             builder.add_deform(x);
         }
@@ -12828,7 +13363,7 @@ impl<'a> PartAttributes<'a> {
         let mask = self.mask();
         let skew = self.skew().map(|x| Box::new(x.unpack()));
         let deform = self.deform().map(|x| Box::new(x.unpack()));
-        let texture = self.texture().map(|x| x.to_string());
+        let texture = self.texture();
         PartAttributesT {
             cell,
             position,
@@ -13100,13 +13635,14 @@ impl<'a> PartAttributes<'a> {
         }
     }
     #[inline]
-    pub fn texture(&self) -> Option<&'a str> {
+    pub fn texture(&self) -> i32 {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartAttributes::VT_TEXTURE, None)
+                .get::<i32>(PartAttributes::VT_TEXTURE, Some(0))
+                .unwrap()
         }
     }
 }
@@ -13177,7 +13713,7 @@ impl flatbuffers::Verifiable for PartAttributes<'_> {
                 Self::VT_DEFORM,
                 false,
             )?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>("texture", Self::VT_TEXTURE, false)?
+            .visit_field::<i32>("texture", Self::VT_TEXTURE, false)?
             .finish();
         Ok(())
     }
@@ -13205,7 +13741,7 @@ pub struct PartAttributesArgs<'a> {
     pub mask: f32,
     pub skew: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
     pub deform: Option<flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
-    pub texture: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub texture: i32,
 }
 impl<'a> Default for PartAttributesArgs<'a> {
     #[inline]
@@ -13233,7 +13769,7 @@ impl<'a> Default for PartAttributesArgs<'a> {
             mask: 0.0,
             skew: None,
             deform: None,
-            texture: None,
+            texture: 0,
         }
     }
 }
@@ -13380,9 +13916,9 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b, A
             );
     }
     #[inline]
-    pub fn add_texture(&mut self, texture: flatbuffers::WIPOffset<&'b str>) {
+    pub fn add_texture(&mut self, texture: i32) {
         self.fbb_
-            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartAttributes::VT_TEXTURE, texture);
+            .push_slot::<i32>(PartAttributes::VT_TEXTURE, texture, 0);
     }
     #[inline]
     pub fn new(
@@ -13455,7 +13991,7 @@ pub struct PartAttributesT {
     pub mask: f32,
     pub skew: Option<Box<Vec2T>>,
     pub deform: Option<Box<PartAttributeDeformT>>,
-    pub texture: Option<String>,
+    pub texture: i32,
 }
 impl Default for PartAttributesT {
     fn default() -> Self {
@@ -13482,7 +14018,7 @@ impl Default for PartAttributesT {
             mask: 0.0,
             skew: None,
             deform: None,
-            texture: None,
+            texture: 0,
         }
     }
 }
@@ -13513,7 +14049,7 @@ impl PartAttributesT {
         let mask = self.mask;
         let skew = self.skew.as_ref().map(|x| x.pack(_fbb));
         let deform = self.deform.as_ref().map(|x| x.pack(_fbb));
-        let texture = self.texture.as_ref().map(|x| _fbb.create_string(x));
+        let texture = self.texture;
         PartAttributes::create(
             _fbb,
             &PartAttributesArgs {
@@ -13544,6 +14080,1558 @@ impl PartAttributesT {
         )
     }
 }
+pub enum PartTypeNoneOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeNone<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeNone<'a> {
+    type Inner = PartTypeNone<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeNone<'a> {
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeNone { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        _args: &'args PartTypeNoneArgs,
+    ) -> flatbuffers::WIPOffset<PartTypeNone<'bldr>> {
+        let mut builder = PartTypeNoneBuilder::new(_fbb);
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeNoneT {
+        PartTypeNoneT {}
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeNone<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?.finish();
+        Ok(())
+    }
+}
+pub struct PartTypeNoneArgs {}
+impl<'a> Default for PartTypeNoneArgs {
+    #[inline]
+    fn default() -> Self {
+        PartTypeNoneArgs {}
+    }
+}
+
+pub struct PartTypeNoneBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeNoneBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeNoneBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeNoneBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeNone<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeNone<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeNone");
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeNoneT {}
+impl Default for PartTypeNoneT {
+    fn default() -> Self {
+        Self {}
+    }
+}
+impl PartTypeNoneT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeNone<'b>> {
+        PartTypeNone::create(_fbb, &PartTypeNoneArgs {})
+    }
+}
+pub enum PartTypeShapeOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeShape<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeShape<'a> {
+    type Inner = PartTypeShape<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeShape<'a> {
+    pub const VT_SHAPE_TYPE: flatbuffers::VOffsetT = 4;
+    pub const VT_SHAPE_MAASK: flatbuffers::VOffsetT = 6;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeShape { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartTypeShapeArgs<'args>,
+    ) -> flatbuffers::WIPOffset<PartTypeShape<'bldr>> {
+        let mut builder = PartTypeShapeBuilder::new(_fbb);
+        if let Some(x) = args.shape_type {
+            builder.add_shape_type(x);
+        }
+        builder.add_shape_maask(args.shape_maask);
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeShapeT {
+        let shape_type = self.shape_type().map(|x| x.to_string());
+        let shape_maask = self.shape_maask();
+        PartTypeShapeT {
+            shape_type,
+            shape_maask,
+        }
+    }
+
+    #[inline]
+    pub fn shape_type(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeShape::VT_SHAPE_TYPE, None)
+        }
+    }
+    #[inline]
+    pub fn shape_maask(&self) -> bool {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<bool>(PartTypeShape::VT_SHAPE_MAASK, Some(false))
+                .unwrap()
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeShape<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "shape_type",
+                Self::VT_SHAPE_TYPE,
+                false,
+            )?
+            .visit_field::<bool>("shape_maask", Self::VT_SHAPE_MAASK, false)?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartTypeShapeArgs<'a> {
+    pub shape_type: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub shape_maask: bool,
+}
+impl<'a> Default for PartTypeShapeArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        PartTypeShapeArgs {
+            shape_type: None,
+            shape_maask: false,
+        }
+    }
+}
+
+pub struct PartTypeShapeBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeShapeBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_shape_type(&mut self, shape_type: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeShape::VT_SHAPE_TYPE,
+            shape_type,
+        );
+    }
+    #[inline]
+    pub fn add_shape_maask(&mut self, shape_maask: bool) {
+        self.fbb_
+            .push_slot::<bool>(PartTypeShape::VT_SHAPE_MAASK, shape_maask, false);
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeShapeBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeShapeBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeShape<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeShape<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeShape");
+        ds.field("shape_type", &self.shape_type());
+        ds.field("shape_maask", &self.shape_maask());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeShapeT {
+    pub shape_type: Option<String>,
+    pub shape_maask: bool,
+}
+impl Default for PartTypeShapeT {
+    fn default() -> Self {
+        Self {
+            shape_type: None,
+            shape_maask: false,
+        }
+    }
+}
+impl PartTypeShapeT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeShape<'b>> {
+        let shape_type = self.shape_type.as_ref().map(|x| _fbb.create_string(x));
+        let shape_maask = self.shape_maask;
+        PartTypeShape::create(
+            _fbb,
+            &PartTypeShapeArgs {
+                shape_type,
+                shape_maask,
+            },
+        )
+    }
+}
+pub enum PartTypeTextOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeText<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeText<'a> {
+    type Inner = PartTypeText<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeText<'a> {
+    pub const VT_TEXT: flatbuffers::VOffsetT = 4;
+    pub const VT_TEXT_BITMAP: flatbuffers::VOffsetT = 6;
+    pub const VT_TEXT_FAMILY: flatbuffers::VOffsetT = 8;
+    pub const VT_TEXT_CHAR_MAP: flatbuffers::VOffsetT = 10;
+    pub const VT_TEXT_SIZE: flatbuffers::VOffsetT = 12;
+    pub const VT_TEXT_SPACE: flatbuffers::VOffsetT = 14;
+    pub const VT_TEXT_SMOOTH: flatbuffers::VOffsetT = 16;
+    pub const VT_TEXT_MASK: flatbuffers::VOffsetT = 18;
+    pub const VT_TEXT_WIDTH: flatbuffers::VOffsetT = 20;
+    pub const VT_TEXT_HEIGHT: flatbuffers::VOffsetT = 22;
+    pub const VT_E_ANCHOR: flatbuffers::VOffsetT = 24;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeText { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartTypeTextArgs<'args>,
+    ) -> flatbuffers::WIPOffset<PartTypeText<'bldr>> {
+        let mut builder = PartTypeTextBuilder::new(_fbb);
+        builder.add_e_anchor(args.e_anchor);
+        builder.add_text_height(args.text_height);
+        builder.add_text_width(args.text_width);
+        builder.add_text_space(args.text_space);
+        builder.add_text_size(args.text_size);
+        if let Some(x) = args.text_char_map {
+            builder.add_text_char_map(x);
+        }
+        if let Some(x) = args.text_family {
+            builder.add_text_family(x);
+        }
+        if let Some(x) = args.text {
+            builder.add_text(x);
+        }
+        builder.add_text_mask(args.text_mask);
+        builder.add_text_smooth(args.text_smooth);
+        builder.add_text_bitmap(args.text_bitmap);
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeTextT {
+        let text = self.text().map(|x| x.to_string());
+        let text_bitmap = self.text_bitmap();
+        let text_family = self.text_family().map(|x| x.to_string());
+        let text_char_map = self.text_char_map().map(|x| x.to_string());
+        let text_size = self.text_size();
+        let text_space = self.text_space();
+        let text_smooth = self.text_smooth();
+        let text_mask = self.text_mask();
+        let text_width = self.text_width();
+        let text_height = self.text_height();
+        let e_anchor = self.e_anchor();
+        PartTypeTextT {
+            text,
+            text_bitmap,
+            text_family,
+            text_char_map,
+            text_size,
+            text_space,
+            text_smooth,
+            text_mask,
+            text_width,
+            text_height,
+            e_anchor,
+        }
+    }
+
+    #[inline]
+    pub fn text(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeText::VT_TEXT, None)
+        }
+    }
+    #[inline]
+    pub fn text_bitmap(&self) -> bool {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<bool>(PartTypeText::VT_TEXT_BITMAP, Some(false))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn text_family(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeText::VT_TEXT_FAMILY, None)
+        }
+    }
+    #[inline]
+    pub fn text_char_map(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeText::VT_TEXT_CHAR_MAP, None)
+        }
+    }
+    #[inline]
+    pub fn text_size(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeText::VT_TEXT_SIZE, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn text_space(&self) -> f32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<f32>(PartTypeText::VT_TEXT_SPACE, Some(0.0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn text_smooth(&self) -> bool {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<bool>(PartTypeText::VT_TEXT_SMOOTH, Some(false))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn text_mask(&self) -> bool {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<bool>(PartTypeText::VT_TEXT_MASK, Some(false))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn text_width(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeText::VT_TEXT_WIDTH, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn text_height(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeText::VT_TEXT_HEIGHT, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn e_anchor(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeText::VT_E_ANCHOR, Some(0))
+                .unwrap()
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeText<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
+            .visit_field::<bool>("text_bitmap", Self::VT_TEXT_BITMAP, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "text_family",
+                Self::VT_TEXT_FAMILY,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "text_char_map",
+                Self::VT_TEXT_CHAR_MAP,
+                false,
+            )?
+            .visit_field::<i32>("text_size", Self::VT_TEXT_SIZE, false)?
+            .visit_field::<f32>("text_space", Self::VT_TEXT_SPACE, false)?
+            .visit_field::<bool>("text_smooth", Self::VT_TEXT_SMOOTH, false)?
+            .visit_field::<bool>("text_mask", Self::VT_TEXT_MASK, false)?
+            .visit_field::<i32>("text_width", Self::VT_TEXT_WIDTH, false)?
+            .visit_field::<i32>("text_height", Self::VT_TEXT_HEIGHT, false)?
+            .visit_field::<i32>("e_anchor", Self::VT_E_ANCHOR, false)?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartTypeTextArgs<'a> {
+    pub text: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_bitmap: bool,
+    pub text_family: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_char_map: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub text_size: i32,
+    pub text_space: f32,
+    pub text_smooth: bool,
+    pub text_mask: bool,
+    pub text_width: i32,
+    pub text_height: i32,
+    pub e_anchor: i32,
+}
+impl<'a> Default for PartTypeTextArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        PartTypeTextArgs {
+            text: None,
+            text_bitmap: false,
+            text_family: None,
+            text_char_map: None,
+            text_size: 0,
+            text_space: 0.0,
+            text_smooth: false,
+            text_mask: false,
+            text_width: 0,
+            text_height: 0,
+            e_anchor: 0,
+        }
+    }
+}
+
+pub struct PartTypeTextBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeTextBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_text(&mut self, text: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartTypeText::VT_TEXT, text);
+    }
+    #[inline]
+    pub fn add_text_bitmap(&mut self, text_bitmap: bool) {
+        self.fbb_
+            .push_slot::<bool>(PartTypeText::VT_TEXT_BITMAP, text_bitmap, false);
+    }
+    #[inline]
+    pub fn add_text_family(&mut self, text_family: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeText::VT_TEXT_FAMILY,
+            text_family,
+        );
+    }
+    #[inline]
+    pub fn add_text_char_map(&mut self, text_char_map: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeText::VT_TEXT_CHAR_MAP,
+            text_char_map,
+        );
+    }
+    #[inline]
+    pub fn add_text_size(&mut self, text_size: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeText::VT_TEXT_SIZE, text_size, 0);
+    }
+    #[inline]
+    pub fn add_text_space(&mut self, text_space: f32) {
+        self.fbb_
+            .push_slot::<f32>(PartTypeText::VT_TEXT_SPACE, text_space, 0.0);
+    }
+    #[inline]
+    pub fn add_text_smooth(&mut self, text_smooth: bool) {
+        self.fbb_
+            .push_slot::<bool>(PartTypeText::VT_TEXT_SMOOTH, text_smooth, false);
+    }
+    #[inline]
+    pub fn add_text_mask(&mut self, text_mask: bool) {
+        self.fbb_
+            .push_slot::<bool>(PartTypeText::VT_TEXT_MASK, text_mask, false);
+    }
+    #[inline]
+    pub fn add_text_width(&mut self, text_width: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeText::VT_TEXT_WIDTH, text_width, 0);
+    }
+    #[inline]
+    pub fn add_text_height(&mut self, text_height: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeText::VT_TEXT_HEIGHT, text_height, 0);
+    }
+    #[inline]
+    pub fn add_e_anchor(&mut self, e_anchor: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeText::VT_E_ANCHOR, e_anchor, 0);
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeTextBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeTextBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeText<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeText<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeText");
+        ds.field("text", &self.text());
+        ds.field("text_bitmap", &self.text_bitmap());
+        ds.field("text_family", &self.text_family());
+        ds.field("text_char_map", &self.text_char_map());
+        ds.field("text_size", &self.text_size());
+        ds.field("text_space", &self.text_space());
+        ds.field("text_smooth", &self.text_smooth());
+        ds.field("text_mask", &self.text_mask());
+        ds.field("text_width", &self.text_width());
+        ds.field("text_height", &self.text_height());
+        ds.field("e_anchor", &self.e_anchor());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeTextT {
+    pub text: Option<String>,
+    pub text_bitmap: bool,
+    pub text_family: Option<String>,
+    pub text_char_map: Option<String>,
+    pub text_size: i32,
+    pub text_space: f32,
+    pub text_smooth: bool,
+    pub text_mask: bool,
+    pub text_width: i32,
+    pub text_height: i32,
+    pub e_anchor: i32,
+}
+impl Default for PartTypeTextT {
+    fn default() -> Self {
+        Self {
+            text: None,
+            text_bitmap: false,
+            text_family: None,
+            text_char_map: None,
+            text_size: 0,
+            text_space: 0.0,
+            text_smooth: false,
+            text_mask: false,
+            text_width: 0,
+            text_height: 0,
+            e_anchor: 0,
+        }
+    }
+}
+impl PartTypeTextT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeText<'b>> {
+        let text = self.text.as_ref().map(|x| _fbb.create_string(x));
+        let text_bitmap = self.text_bitmap;
+        let text_family = self.text_family.as_ref().map(|x| _fbb.create_string(x));
+        let text_char_map = self.text_char_map.as_ref().map(|x| _fbb.create_string(x));
+        let text_size = self.text_size;
+        let text_space = self.text_space;
+        let text_smooth = self.text_smooth;
+        let text_mask = self.text_mask;
+        let text_width = self.text_width;
+        let text_height = self.text_height;
+        let e_anchor = self.e_anchor;
+        PartTypeText::create(
+            _fbb,
+            &PartTypeTextArgs {
+                text,
+                text_bitmap,
+                text_family,
+                text_char_map,
+                text_size,
+                text_space,
+                text_smooth,
+                text_mask,
+                text_width,
+                text_height,
+                e_anchor,
+            },
+        )
+    }
+}
+pub enum PartTypeNinesOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeNines<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeNines<'a> {
+    type Inner = PartTypeNines<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeNines<'a> {
+    pub const VT_NINES_MARGIN_L: flatbuffers::VOffsetT = 4;
+    pub const VT_NINES_MARGIN_R: flatbuffers::VOffsetT = 6;
+    pub const VT_NINES_MARGIN_T: flatbuffers::VOffsetT = 8;
+    pub const VT_NINES_MARGIN_B: flatbuffers::VOffsetT = 10;
+    pub const VT_NINES_FILL_MODE: flatbuffers::VOffsetT = 12;
+    pub const VT_NINES_MASK: flatbuffers::VOffsetT = 14;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeNines { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartTypeNinesArgs,
+    ) -> flatbuffers::WIPOffset<PartTypeNines<'bldr>> {
+        let mut builder = PartTypeNinesBuilder::new(_fbb);
+        builder.add_nines_fill_mode(args.nines_fill_mode);
+        builder.add_nines_margin_b(args.nines_margin_b);
+        builder.add_nines_margin_t(args.nines_margin_t);
+        builder.add_nines_margin_r(args.nines_margin_r);
+        builder.add_nines_margin_l(args.nines_margin_l);
+        builder.add_nines_mask(args.nines_mask);
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeNinesT {
+        let nines_margin_l = self.nines_margin_l();
+        let nines_margin_r = self.nines_margin_r();
+        let nines_margin_t = self.nines_margin_t();
+        let nines_margin_b = self.nines_margin_b();
+        let nines_fill_mode = self.nines_fill_mode();
+        let nines_mask = self.nines_mask();
+        PartTypeNinesT {
+            nines_margin_l,
+            nines_margin_r,
+            nines_margin_t,
+            nines_margin_b,
+            nines_fill_mode,
+            nines_mask,
+        }
+    }
+
+    #[inline]
+    pub fn nines_margin_l(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeNines::VT_NINES_MARGIN_L, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn nines_margin_r(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeNines::VT_NINES_MARGIN_R, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn nines_margin_t(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeNines::VT_NINES_MARGIN_T, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn nines_margin_b(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeNines::VT_NINES_MARGIN_B, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn nines_fill_mode(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeNines::VT_NINES_FILL_MODE, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn nines_mask(&self) -> bool {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<bool>(PartTypeNines::VT_NINES_MASK, Some(false))
+                .unwrap()
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeNines<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<i32>("nines_margin_l", Self::VT_NINES_MARGIN_L, false)?
+            .visit_field::<i32>("nines_margin_r", Self::VT_NINES_MARGIN_R, false)?
+            .visit_field::<i32>("nines_margin_t", Self::VT_NINES_MARGIN_T, false)?
+            .visit_field::<i32>("nines_margin_b", Self::VT_NINES_MARGIN_B, false)?
+            .visit_field::<i32>("nines_fill_mode", Self::VT_NINES_FILL_MODE, false)?
+            .visit_field::<bool>("nines_mask", Self::VT_NINES_MASK, false)?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartTypeNinesArgs {
+    pub nines_margin_l: i32,
+    pub nines_margin_r: i32,
+    pub nines_margin_t: i32,
+    pub nines_margin_b: i32,
+    pub nines_fill_mode: i32,
+    pub nines_mask: bool,
+}
+impl<'a> Default for PartTypeNinesArgs {
+    #[inline]
+    fn default() -> Self {
+        PartTypeNinesArgs {
+            nines_margin_l: 0,
+            nines_margin_r: 0,
+            nines_margin_t: 0,
+            nines_margin_b: 0,
+            nines_fill_mode: 0,
+            nines_mask: false,
+        }
+    }
+}
+
+pub struct PartTypeNinesBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeNinesBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_nines_margin_l(&mut self, nines_margin_l: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeNines::VT_NINES_MARGIN_L, nines_margin_l, 0);
+    }
+    #[inline]
+    pub fn add_nines_margin_r(&mut self, nines_margin_r: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeNines::VT_NINES_MARGIN_R, nines_margin_r, 0);
+    }
+    #[inline]
+    pub fn add_nines_margin_t(&mut self, nines_margin_t: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeNines::VT_NINES_MARGIN_T, nines_margin_t, 0);
+    }
+    #[inline]
+    pub fn add_nines_margin_b(&mut self, nines_margin_b: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeNines::VT_NINES_MARGIN_B, nines_margin_b, 0);
+    }
+    #[inline]
+    pub fn add_nines_fill_mode(&mut self, nines_fill_mode: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeNines::VT_NINES_FILL_MODE, nines_fill_mode, 0);
+    }
+    #[inline]
+    pub fn add_nines_mask(&mut self, nines_mask: bool) {
+        self.fbb_
+            .push_slot::<bool>(PartTypeNines::VT_NINES_MASK, nines_mask, false);
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeNinesBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeNinesBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeNines<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeNines<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeNines");
+        ds.field("nines_margin_l", &self.nines_margin_l());
+        ds.field("nines_margin_r", &self.nines_margin_r());
+        ds.field("nines_margin_t", &self.nines_margin_t());
+        ds.field("nines_margin_b", &self.nines_margin_b());
+        ds.field("nines_fill_mode", &self.nines_fill_mode());
+        ds.field("nines_mask", &self.nines_mask());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeNinesT {
+    pub nines_margin_l: i32,
+    pub nines_margin_r: i32,
+    pub nines_margin_t: i32,
+    pub nines_margin_b: i32,
+    pub nines_fill_mode: i32,
+    pub nines_mask: bool,
+}
+impl Default for PartTypeNinesT {
+    fn default() -> Self {
+        Self {
+            nines_margin_l: 0,
+            nines_margin_r: 0,
+            nines_margin_t: 0,
+            nines_margin_b: 0,
+            nines_fill_mode: 0,
+            nines_mask: false,
+        }
+    }
+}
+impl PartTypeNinesT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeNines<'b>> {
+        let nines_margin_l = self.nines_margin_l;
+        let nines_margin_r = self.nines_margin_r;
+        let nines_margin_t = self.nines_margin_t;
+        let nines_margin_b = self.nines_margin_b;
+        let nines_fill_mode = self.nines_fill_mode;
+        let nines_mask = self.nines_mask;
+        PartTypeNines::create(
+            _fbb,
+            &PartTypeNinesArgs {
+                nines_margin_l,
+                nines_margin_r,
+                nines_margin_t,
+                nines_margin_b,
+                nines_fill_mode,
+                nines_mask,
+            },
+        )
+    }
+}
+pub enum PartTypeInstanceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeInstance<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeInstance<'a> {
+    type Inner = PartTypeInstance<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeInstance<'a> {
+    pub const VT_REF_ANIME_PACK: flatbuffers::VOffsetT = 4;
+    pub const VT_REF_ANIME: flatbuffers::VOffsetT = 6;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeInstance { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartTypeInstanceArgs<'args>,
+    ) -> flatbuffers::WIPOffset<PartTypeInstance<'bldr>> {
+        let mut builder = PartTypeInstanceBuilder::new(_fbb);
+        if let Some(x) = args.ref_anime {
+            builder.add_ref_anime(x);
+        }
+        if let Some(x) = args.ref_anime_pack {
+            builder.add_ref_anime_pack(x);
+        }
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeInstanceT {
+        let ref_anime_pack = self.ref_anime_pack().map(|x| x.to_string());
+        let ref_anime = self.ref_anime().map(|x| x.to_string());
+        PartTypeInstanceT {
+            ref_anime_pack,
+            ref_anime,
+        }
+    }
+
+    #[inline]
+    pub fn ref_anime_pack(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(
+                PartTypeInstance::VT_REF_ANIME_PACK,
+                None,
+            )
+        }
+    }
+    #[inline]
+    pub fn ref_anime(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeInstance::VT_REF_ANIME, None)
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeInstance<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "ref_anime_pack",
+                Self::VT_REF_ANIME_PACK,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "ref_anime",
+                Self::VT_REF_ANIME,
+                false,
+            )?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartTypeInstanceArgs<'a> {
+    pub ref_anime_pack: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub ref_anime: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for PartTypeInstanceArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        PartTypeInstanceArgs {
+            ref_anime_pack: None,
+            ref_anime: None,
+        }
+    }
+}
+
+pub struct PartTypeInstanceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_ref_anime_pack(&mut self, ref_anime_pack: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeInstance::VT_REF_ANIME_PACK,
+            ref_anime_pack,
+        );
+    }
+    #[inline]
+    pub fn add_ref_anime(&mut self, ref_anime: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeInstance::VT_REF_ANIME,
+            ref_anime,
+        );
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeInstanceBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeInstanceBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeInstance<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeInstance<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeInstance");
+        ds.field("ref_anime_pack", &self.ref_anime_pack());
+        ds.field("ref_anime", &self.ref_anime());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeInstanceT {
+    pub ref_anime_pack: Option<String>,
+    pub ref_anime: Option<String>,
+}
+impl Default for PartTypeInstanceT {
+    fn default() -> Self {
+        Self {
+            ref_anime_pack: None,
+            ref_anime: None,
+        }
+    }
+}
+impl PartTypeInstanceT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeInstance<'b>> {
+        let ref_anime_pack = self.ref_anime_pack.as_ref().map(|x| _fbb.create_string(x));
+        let ref_anime = self.ref_anime.as_ref().map(|x| _fbb.create_string(x));
+        PartTypeInstance::create(
+            _fbb,
+            &PartTypeInstanceArgs {
+                ref_anime_pack,
+                ref_anime,
+            },
+        )
+    }
+}
+pub enum PartTypeArmatureOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeArmature<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeArmature<'a> {
+    type Inner = PartTypeArmature<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeArmature<'a> {
+    pub const VT_BONELENGTH: flatbuffers::VOffsetT = 4;
+    pub const VT_BONEPOSITION: flatbuffers::VOffsetT = 6;
+    pub const VT_BONEROTATION: flatbuffers::VOffsetT = 8;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeArmature { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartTypeArmatureArgs<'args>,
+    ) -> flatbuffers::WIPOffset<PartTypeArmature<'bldr>> {
+        let mut builder = PartTypeArmatureBuilder::new(_fbb);
+        builder.add_boneRotation(args.boneRotation);
+        if let Some(x) = args.bonePosition {
+            builder.add_bonePosition(x);
+        }
+        builder.add_boneLength(args.boneLength);
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeArmatureT {
+        let boneLength = self.boneLength();
+        let bonePosition = self.bonePosition().map(|x| Box::new(x.unpack()));
+        let boneRotation = self.boneRotation();
+        PartTypeArmatureT {
+            boneLength,
+            bonePosition,
+            boneRotation,
+        }
+    }
+
+    #[inline]
+    pub fn boneLength(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartTypeArmature::VT_BONELENGTH, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn bonePosition(&self) -> Option<Vec2<'a>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<Vec2>>(PartTypeArmature::VT_BONEPOSITION, None)
+        }
+    }
+    #[inline]
+    pub fn boneRotation(&self) -> f32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<f32>(PartTypeArmature::VT_BONEROTATION, Some(0.0))
+                .unwrap()
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeArmature<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<i32>("boneLength", Self::VT_BONELENGTH, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>(
+                "bonePosition",
+                Self::VT_BONEPOSITION,
+                false,
+            )?
+            .visit_field::<f32>("boneRotation", Self::VT_BONEROTATION, false)?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartTypeArmatureArgs<'a> {
+    pub boneLength: i32,
+    pub bonePosition: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub boneRotation: f32,
+}
+impl<'a> Default for PartTypeArmatureArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        PartTypeArmatureArgs {
+            boneLength: 0,
+            bonePosition: None,
+            boneRotation: 0.0,
+        }
+    }
+}
+
+pub struct PartTypeArmatureBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeArmatureBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_boneLength(&mut self, boneLength: i32) {
+        self.fbb_
+            .push_slot::<i32>(PartTypeArmature::VT_BONELENGTH, boneLength, 0);
+    }
+    #[inline]
+    pub fn add_bonePosition(&mut self, bonePosition: flatbuffers::WIPOffset<Vec2<'b>>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(
+            PartTypeArmature::VT_BONEPOSITION,
+            bonePosition,
+        );
+    }
+    #[inline]
+    pub fn add_boneRotation(&mut self, boneRotation: f32) {
+        self.fbb_
+            .push_slot::<f32>(PartTypeArmature::VT_BONEROTATION, boneRotation, 0.0);
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeArmatureBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeArmatureBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeArmature<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeArmature<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeArmature");
+        ds.field("boneLength", &self.boneLength());
+        ds.field("bonePosition", &self.bonePosition());
+        ds.field("boneRotation", &self.boneRotation());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeArmatureT {
+    pub boneLength: i32,
+    pub bonePosition: Option<Box<Vec2T>>,
+    pub boneRotation: f32,
+}
+impl Default for PartTypeArmatureT {
+    fn default() -> Self {
+        Self {
+            boneLength: 0,
+            bonePosition: None,
+            boneRotation: 0.0,
+        }
+    }
+}
+impl PartTypeArmatureT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeArmature<'b>> {
+        let boneLength = self.boneLength;
+        let bonePosition = self.bonePosition.as_ref().map(|x| x.pack(_fbb));
+        let boneRotation = self.boneRotation;
+        PartTypeArmature::create(
+            _fbb,
+            &PartTypeArmatureArgs {
+                boneLength,
+                bonePosition,
+                boneRotation,
+            },
+        )
+    }
+}
+pub enum PartTypeEffectOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartTypeEffect<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartTypeEffect<'a> {
+    type Inner = PartTypeEffect<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartTypeEffect<'a> {
+    pub const VT_REF_EFFECT_NAME: flatbuffers::VOffsetT = 4;
+    pub const VT_REF_EFFECT_UID: flatbuffers::VOffsetT = 6;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartTypeEffect { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartTypeEffectArgs<'args>,
+    ) -> flatbuffers::WIPOffset<PartTypeEffect<'bldr>> {
+        let mut builder = PartTypeEffectBuilder::new(_fbb);
+        if let Some(x) = args.ref_effect_uid {
+            builder.add_ref_effect_uid(x);
+        }
+        if let Some(x) = args.ref_effect_name {
+            builder.add_ref_effect_name(x);
+        }
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartTypeEffectT {
+        let ref_effect_name = self.ref_effect_name().map(|x| x.to_string());
+        let ref_effect_uid = self.ref_effect_uid().map(|x| x.to_string());
+        PartTypeEffectT {
+            ref_effect_name,
+            ref_effect_uid,
+        }
+    }
+
+    #[inline]
+    pub fn ref_effect_name(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeEffect::VT_REF_EFFECT_NAME, None)
+        }
+    }
+    #[inline]
+    pub fn ref_effect_uid(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeEffect::VT_REF_EFFECT_UID, None)
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartTypeEffect<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "ref_effect_name",
+                Self::VT_REF_EFFECT_NAME,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
+                "ref_effect_uid",
+                Self::VT_REF_EFFECT_UID,
+                false,
+            )?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartTypeEffectArgs<'a> {
+    pub ref_effect_name: Option<flatbuffers::WIPOffset<&'a str>>,
+    pub ref_effect_uid: Option<flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for PartTypeEffectArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        PartTypeEffectArgs {
+            ref_effect_name: None,
+            ref_effect_uid: None,
+        }
+    }
+}
+
+pub struct PartTypeEffectBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeEffectBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_ref_effect_name(&mut self, ref_effect_name: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeEffect::VT_REF_EFFECT_NAME,
+            ref_effect_name,
+        );
+    }
+    #[inline]
+    pub fn add_ref_effect_uid(&mut self, ref_effect_uid: flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartTypeEffect::VT_REF_EFFECT_UID,
+            ref_effect_uid,
+        );
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartTypeEffectBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartTypeEffectBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeEffect<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartTypeEffect<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartTypeEffect");
+        ds.field("ref_effect_name", &self.ref_effect_name());
+        ds.field("ref_effect_uid", &self.ref_effect_uid());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartTypeEffectT {
+    pub ref_effect_name: Option<String>,
+    pub ref_effect_uid: Option<String>,
+}
+impl Default for PartTypeEffectT {
+    fn default() -> Self {
+        Self {
+            ref_effect_name: None,
+            ref_effect_uid: None,
+        }
+    }
+}
+impl PartTypeEffectT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartTypeEffect<'b>> {
+        let ref_effect_name = self.ref_effect_name.as_ref().map(|x| _fbb.create_string(x));
+        let ref_effect_uid = self.ref_effect_uid.as_ref().map(|x| _fbb.create_string(x));
+        PartTypeEffect::create(
+            _fbb,
+            &PartTypeEffectArgs {
+                ref_effect_name,
+                ref_effect_uid,
+            },
+        )
+    }
+}
 pub enum PartDataOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -13564,13 +15652,8 @@ impl<'a> flatbuffers::Follow<'a> for PartData<'a> {
 impl<'a> PartData<'a> {
     pub const VT_NAME: flatbuffers::VOffsetT = 4;
     pub const VT_PARENT_INDEX: flatbuffers::VOffsetT = 6;
-    pub const VT_TYPE_: flatbuffers::VOffsetT = 8;
-    pub const VT_BOUNDS_TYPE: flatbuffers::VOffsetT = 10;
-    pub const VT_ALPHA_BLEND_TYPE: flatbuffers::VOffsetT = 12;
-    pub const VT_REFNAME: flatbuffers::VOffsetT = 14;
-    pub const VT_EFFECT_FILENAME: flatbuffers::VOffsetT = 16;
-    pub const VT_COLOR_LABEL: flatbuffers::VOffsetT = 18;
-    pub const VT_MASK_INFLUENCE: flatbuffers::VOffsetT = 20;
+    pub const VT_TYPE_TYPE: flatbuffers::VOffsetT = 8;
+    pub const VT_TYPE_: flatbuffers::VOffsetT = 10;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -13582,46 +15665,113 @@ impl<'a> PartData<'a> {
         args: &'args PartDataArgs<'args>,
     ) -> flatbuffers::WIPOffset<PartData<'bldr>> {
         let mut builder = PartDataBuilder::new(_fbb);
-        if let Some(x) = args.color_label {
-            builder.add_color_label(x);
-        }
-        if let Some(x) = args.effect_filename {
-            builder.add_effect_filename(x);
-        }
-        if let Some(x) = args.refname {
-            builder.add_refname(x);
+        if let Some(x) = args.type_ {
+            builder.add_type_(x);
         }
         if let Some(x) = args.name {
             builder.add_name(x);
         }
-        builder.add_mask_influence(args.mask_influence);
         builder.add_parent_index(args.parent_index);
-        builder.add_alpha_blend_type(args.alpha_blend_type);
-        builder.add_bounds_type(args.bounds_type);
-        builder.add_type_(args.type_);
+        builder.add_type_type(args.type_type);
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartDataT {
         let name = self.name().map(|x| x.to_string());
         let parent_index = self.parent_index();
-        let type_ = self.type_();
-        let bounds_type = self.bounds_type();
-        let alpha_blend_type = self.alpha_blend_type();
-        let refname = self.refname().map(|x| x.to_string());
-        let effect_filename = self.effect_filename().map(|x| x.to_string());
-        let color_label = self.color_label().map(|x| x.to_string());
-        let mask_influence = self.mask_influence();
+        let type_ = match self.type_type() {
+      PartType::NONE => PartTypeT::NONE,
+      PartType::PartTypeNull => PartTypeT::PartTypeNull(Box::new(
+        self.type__as_part_type_null()
+            .expect("Invalid union table, expected `PartType::PartTypeNull`.")
+            .unpack()
+      )),
+      PartType::PartTypeNormal => PartTypeT::PartTypeNormal(Box::new(
+        self.type__as_part_type_normal()
+            .expect("Invalid union table, expected `PartType::PartTypeNormal`.")
+            .unpack()
+      )),
+      PartType::PartTypeShape => PartTypeT::PartTypeShape(Box::new(
+        self.type__as_part_type_shape()
+            .expect("Invalid union table, expected `PartType::PartTypeShape`.")
+            .unpack()
+      )),
+      PartType::PartTypeText => PartTypeT::PartTypeText(Box::new(
+        self.type__as_part_type_text()
+            .expect("Invalid union table, expected `PartType::PartTypeText`.")
+            .unpack()
+      )),
+      PartType::PartTypeNines => PartTypeT::PartTypeNines(Box::new(
+        self.type__as_part_type_nines()
+            .expect("Invalid union table, expected `PartType::PartTypeNines`.")
+            .unpack()
+      )),
+      PartType::PartTypeInstance => PartTypeT::PartTypeInstance(Box::new(
+        self.type__as_part_type_instance()
+            .expect("Invalid union table, expected `PartType::PartTypeInstance`.")
+            .unpack()
+      )),
+      PartType::PartTypeArmature => PartTypeT::PartTypeArmature(Box::new(
+        self.type__as_part_type_armature()
+            .expect("Invalid union table, expected `PartType::PartTypeArmature`.")
+            .unpack()
+      )),
+      PartType::PartTypeEffect => PartTypeT::PartTypeEffect(Box::new(
+        self.type__as_part_type_effect()
+            .expect("Invalid union table, expected `PartType::PartTypeEffect`.")
+            .unpack()
+      )),
+      PartType::PartTypeMesh => PartTypeT::PartTypeMesh(Box::new(
+        self.type__as_part_type_mesh()
+            .expect("Invalid union table, expected `PartType::PartTypeMesh`.")
+            .unpack()
+      )),
+      PartType::PartTypeMovenode => PartTypeT::PartTypeMovenode(Box::new(
+        self.type__as_part_type_movenode()
+            .expect("Invalid union table, expected `PartType::PartTypeMovenode`.")
+            .unpack()
+      )),
+      PartType::PartTypeConstraint => PartTypeT::PartTypeConstraint(Box::new(
+        self.type__as_part_type_constraint()
+            .expect("Invalid union table, expected `PartType::PartTypeConstraint`.")
+            .unpack()
+      )),
+      PartType::PartTypeMask => PartTypeT::PartTypeMask(Box::new(
+        self.type__as_part_type_mask()
+            .expect("Invalid union table, expected `PartType::PartTypeMask`.")
+            .unpack()
+      )),
+      PartType::PartTypeJoint => PartTypeT::PartTypeJoint(Box::new(
+        self.type__as_part_type_joint()
+            .expect("Invalid union table, expected `PartType::PartTypeJoint`.")
+            .unpack()
+      )),
+      PartType::PartTypeBonepoint => PartTypeT::PartTypeBonepoint(Box::new(
+        self.type__as_part_type_bonepoint()
+            .expect("Invalid union table, expected `PartType::PartTypeBonepoint`.")
+            .unpack()
+      )),
+      PartType::PartTypeTransformConstraint => PartTypeT::PartTypeTransformConstraint(Box::new(
+        self.type__as_part_type_transform_constraint()
+            .expect("Invalid union table, expected `PartType::PartTypeTransformConstraint`.")
+            .unpack()
+      )),
+      PartType::PartTypeCamera => PartTypeT::PartTypeCamera(Box::new(
+        self.type__as_part_type_camera()
+            .expect("Invalid union table, expected `PartType::PartTypeCamera`.")
+            .unpack()
+      )),
+      PartType::PartTypeAudio => PartTypeT::PartTypeAudio(Box::new(
+        self.type__as_part_type_audio()
+            .expect("Invalid union table, expected `PartType::PartTypeAudio`.")
+            .unpack()
+      )),
+      _ => PartTypeT::NONE,
+    };
         PartDataT {
             name,
             parent_index,
             type_,
-            bounds_type,
-            alpha_blend_type,
-            refname,
-            effect_filename,
-            color_label,
-            mask_influence,
         }
     }
 
@@ -13647,77 +15797,281 @@ impl<'a> PartData<'a> {
         }
     }
     #[inline]
-    pub fn type_(&self) -> PartType {
+    pub fn type_type(&self) -> PartType {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<PartType>(PartData::VT_TYPE_, Some(PartType::Null))
+                .get::<PartType>(PartData::VT_TYPE_TYPE, Some(PartType::NONE))
                 .unwrap()
         }
     }
     #[inline]
-    pub fn bounds_type(&self) -> BoundsType {
+    pub fn type_(&self) -> Option<flatbuffers::Table<'a>> {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<BoundsType>(PartData::VT_BOUNDS_TYPE, Some(BoundsType::None))
-                .unwrap()
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(
+                    PartData::VT_TYPE_,
+                    None,
+                )
         }
     }
     #[inline]
-    pub fn alpha_blend_type(&self) -> BlendType {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<BlendType>(PartData::VT_ALPHA_BLEND_TYPE, Some(BlendType::Mix))
-                .unwrap()
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_null(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeNull {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
         }
     }
+
     #[inline]
-    pub fn refname(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_REFNAME, None)
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_normal(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeNormal {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
         }
     }
+
     #[inline]
-    pub fn effect_filename(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_EFFECT_FILENAME, None)
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_shape(&self) -> Option<PartTypeShape<'a>> {
+        if self.type_type() == PartType::PartTypeShape {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeShape::init_from_table(t) }
+            })
+        } else {
+            None
         }
     }
+
     #[inline]
-    pub fn color_label(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartData::VT_COLOR_LABEL, None)
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_text(&self) -> Option<PartTypeText<'a>> {
+        if self.type_type() == PartType::PartTypeText {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeText::init_from_table(t) }
+            })
+        } else {
+            None
         }
     }
+
     #[inline]
-    pub fn mask_influence(&self) -> i16 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<i16>(PartData::VT_MASK_INFLUENCE, Some(0))
-                .unwrap()
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_nines(&self) -> Option<PartTypeNines<'a>> {
+        if self.type_type() == PartType::PartTypeNines {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNines::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_instance(&self) -> Option<PartTypeInstance<'a>> {
+        if self.type_type() == PartType::PartTypeInstance {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeInstance::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_armature(&self) -> Option<PartTypeArmature<'a>> {
+        if self.type_type() == PartType::PartTypeArmature {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeArmature::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_effect(&self) -> Option<PartTypeEffect<'a>> {
+        if self.type_type() == PartType::PartTypeEffect {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeEffect::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_mesh(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeMesh {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_movenode(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeMovenode {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_constraint(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeConstraint {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_mask(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeMask {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_joint(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeJoint {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_bonepoint(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeBonepoint {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_transform_constraint(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeTransformConstraint {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_camera(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeCamera {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    #[allow(non_snake_case)]
+    pub fn type__as_part_type_audio(&self) -> Option<PartTypeNone<'a>> {
+        if self.type_type() == PartType::PartTypeAudio {
+            self.type_().map(|t| {
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid union in this slot
+                unsafe { PartTypeNone::init_from_table(t) }
+            })
+        } else {
+            None
         }
     }
 }
@@ -13732,21 +16086,101 @@ impl flatbuffers::Verifiable for PartData<'_> {
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
             .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
-            .visit_field::<PartType>("type_", Self::VT_TYPE_, false)?
-            .visit_field::<BoundsType>("bounds_type", Self::VT_BOUNDS_TYPE, false)?
-            .visit_field::<BlendType>("alpha_blend_type", Self::VT_ALPHA_BLEND_TYPE, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>("refname", Self::VT_REFNAME, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
-                "effect_filename",
-                Self::VT_EFFECT_FILENAME,
+            .visit_union::<PartType, _>(
+                "type_type",
+                Self::VT_TYPE_TYPE,
+                "type_",
+                Self::VT_TYPE_,
                 false,
+                |key, v, pos| match key {
+                    PartType::PartTypeNull => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeNull",
+                            pos,
+                        ),
+                    PartType::PartTypeNormal => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeNormal",
+                            pos,
+                        ),
+                    PartType::PartTypeShape => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeShape>>(
+                            "PartType::PartTypeShape",
+                            pos,
+                        ),
+                    PartType::PartTypeText => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeText>>(
+                            "PartType::PartTypeText",
+                            pos,
+                        ),
+                    PartType::PartTypeNines => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNines>>(
+                            "PartType::PartTypeNines",
+                            pos,
+                        ),
+                    PartType::PartTypeInstance => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeInstance>>(
+                            "PartType::PartTypeInstance",
+                            pos,
+                        ),
+                    PartType::PartTypeArmature => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeArmature>>(
+                            "PartType::PartTypeArmature",
+                            pos,
+                        ),
+                    PartType::PartTypeEffect => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeEffect>>(
+                            "PartType::PartTypeEffect",
+                            pos,
+                        ),
+                    PartType::PartTypeMesh => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeMesh",
+                            pos,
+                        ),
+                    PartType::PartTypeMovenode => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeMovenode",
+                            pos,
+                        ),
+                    PartType::PartTypeConstraint => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeConstraint",
+                            pos,
+                        ),
+                    PartType::PartTypeMask => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeMask",
+                            pos,
+                        ),
+                    PartType::PartTypeJoint => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeJoint",
+                            pos,
+                        ),
+                    PartType::PartTypeBonepoint => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeBonepoint",
+                            pos,
+                        ),
+                    PartType::PartTypeTransformConstraint => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeTransformConstraint",
+                            pos,
+                        ),
+                    PartType::PartTypeCamera => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeCamera",
+                            pos,
+                        ),
+                    PartType::PartTypeAudio => v
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
+                            "PartType::PartTypeAudio",
+                            pos,
+                        ),
+                    _ => Ok(()),
+                },
             )?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
-                "color_label",
-                Self::VT_COLOR_LABEL,
-                false,
-            )?
-            .visit_field::<i16>("mask_influence", Self::VT_MASK_INFLUENCE, false)?
             .finish();
         Ok(())
     }
@@ -13754,13 +16188,8 @@ impl flatbuffers::Verifiable for PartData<'_> {
 pub struct PartDataArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub parent_index: i16,
-    pub type_: PartType,
-    pub bounds_type: BoundsType,
-    pub alpha_blend_type: BlendType,
-    pub refname: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub effect_filename: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub color_label: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub mask_influence: i16,
+    pub type_type: PartType,
+    pub type_: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
 }
 impl<'a> Default for PartDataArgs<'a> {
     #[inline]
@@ -13768,13 +16197,8 @@ impl<'a> Default for PartDataArgs<'a> {
         PartDataArgs {
             name: None,
             parent_index: 0,
-            type_: PartType::Null,
-            bounds_type: BoundsType::None,
-            alpha_blend_type: BlendType::Mix,
-            refname: None,
-            effect_filename: None,
-            color_label: None,
-            mask_influence: 0,
+            type_type: PartType::NONE,
+            type_: None,
         }
     }
 }
@@ -13795,44 +16219,14 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
             .push_slot::<i16>(PartData::VT_PARENT_INDEX, parent_index, 0);
     }
     #[inline]
-    pub fn add_type_(&mut self, type_: PartType) {
+    pub fn add_type_type(&mut self, type_type: PartType) {
         self.fbb_
-            .push_slot::<PartType>(PartData::VT_TYPE_, type_, PartType::Null);
+            .push_slot::<PartType>(PartData::VT_TYPE_TYPE, type_type, PartType::NONE);
     }
     #[inline]
-    pub fn add_bounds_type(&mut self, bounds_type: BoundsType) {
+    pub fn add_type_(&mut self, type_: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
         self.fbb_
-            .push_slot::<BoundsType>(PartData::VT_BOUNDS_TYPE, bounds_type, BoundsType::None);
-    }
-    #[inline]
-    pub fn add_alpha_blend_type(&mut self, alpha_blend_type: BlendType) {
-        self.fbb_.push_slot::<BlendType>(
-            PartData::VT_ALPHA_BLEND_TYPE,
-            alpha_blend_type,
-            BlendType::Mix,
-        );
-    }
-    #[inline]
-    pub fn add_refname(&mut self, refname: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_
-            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_REFNAME, refname);
-    }
-    #[inline]
-    pub fn add_effect_filename(&mut self, effect_filename: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
-            PartData::VT_EFFECT_FILENAME,
-            effect_filename,
-        );
-    }
-    #[inline]
-    pub fn add_color_label(&mut self, color_label: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_
-            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_COLOR_LABEL, color_label);
-    }
-    #[inline]
-    pub fn add_mask_influence(&mut self, mask_influence: i16) {
-        self.fbb_
-            .push_slot::<i16>(PartData::VT_MASK_INFLUENCE, mask_influence, 0);
+            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartData::VT_TYPE_, type_);
     }
     #[inline]
     pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>) -> PartDataBuilder<'a, 'b, A> {
@@ -13854,13 +16248,183 @@ impl core::fmt::Debug for PartData<'_> {
         let mut ds = f.debug_struct("PartData");
         ds.field("name", &self.name());
         ds.field("parent_index", &self.parent_index());
-        ds.field("type_", &self.type_());
-        ds.field("bounds_type", &self.bounds_type());
-        ds.field("alpha_blend_type", &self.alpha_blend_type());
-        ds.field("refname", &self.refname());
-        ds.field("effect_filename", &self.effect_filename());
-        ds.field("color_label", &self.color_label());
-        ds.field("mask_influence", &self.mask_influence());
+        ds.field("type_type", &self.type_type());
+        match self.type_type() {
+            PartType::PartTypeNull => {
+                if let Some(x) = self.type__as_part_type_null() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeNormal => {
+                if let Some(x) = self.type__as_part_type_normal() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeShape => {
+                if let Some(x) = self.type__as_part_type_shape() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeText => {
+                if let Some(x) = self.type__as_part_type_text() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeNines => {
+                if let Some(x) = self.type__as_part_type_nines() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeInstance => {
+                if let Some(x) = self.type__as_part_type_instance() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeArmature => {
+                if let Some(x) = self.type__as_part_type_armature() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeEffect => {
+                if let Some(x) = self.type__as_part_type_effect() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeMesh => {
+                if let Some(x) = self.type__as_part_type_mesh() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeMovenode => {
+                if let Some(x) = self.type__as_part_type_movenode() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeConstraint => {
+                if let Some(x) = self.type__as_part_type_constraint() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeMask => {
+                if let Some(x) = self.type__as_part_type_mask() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeJoint => {
+                if let Some(x) = self.type__as_part_type_joint() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeBonepoint => {
+                if let Some(x) = self.type__as_part_type_bonepoint() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeTransformConstraint => {
+                if let Some(x) = self.type__as_part_type_transform_constraint() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeCamera => {
+                if let Some(x) = self.type__as_part_type_camera() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            PartType::PartTypeAudio => {
+                if let Some(x) = self.type__as_part_type_audio() {
+                    ds.field("type_", &x)
+                } else {
+                    ds.field(
+                        "type_",
+                        &"InvalidFlatbuffer: Union discriminant does not match value.",
+                    )
+                }
+            }
+            _ => {
+                let x: Option<()> = None;
+                ds.field("type_", &x)
+            }
+        };
         ds.finish()
     }
 }
@@ -13869,26 +16433,14 @@ impl core::fmt::Debug for PartData<'_> {
 pub struct PartDataT {
     pub name: Option<String>,
     pub parent_index: i16,
-    pub type_: PartType,
-    pub bounds_type: BoundsType,
-    pub alpha_blend_type: BlendType,
-    pub refname: Option<String>,
-    pub effect_filename: Option<String>,
-    pub color_label: Option<String>,
-    pub mask_influence: i16,
+    pub type_: PartTypeT,
 }
 impl Default for PartDataT {
     fn default() -> Self {
         Self {
             name: None,
             parent_index: 0,
-            type_: PartType::Null,
-            bounds_type: BoundsType::None,
-            alpha_blend_type: BlendType::Mix,
-            refname: None,
-            effect_filename: None,
-            color_label: None,
-            mask_influence: 0,
+            type_: PartTypeT::NONE,
         }
     }
 }
@@ -13899,25 +16451,15 @@ impl PartDataT {
     ) -> flatbuffers::WIPOffset<PartData<'b>> {
         let name = self.name.as_ref().map(|x| _fbb.create_string(x));
         let parent_index = self.parent_index;
-        let type_ = self.type_;
-        let bounds_type = self.bounds_type;
-        let alpha_blend_type = self.alpha_blend_type;
-        let refname = self.refname.as_ref().map(|x| _fbb.create_string(x));
-        let effect_filename = self.effect_filename.as_ref().map(|x| _fbb.create_string(x));
-        let color_label = self.color_label.as_ref().map(|x| _fbb.create_string(x));
-        let mask_influence = self.mask_influence;
+        let type_type = self.type_.part_type_type();
+        let type_ = self.type_.pack(_fbb);
         PartData::create(
             _fbb,
             &PartDataArgs {
                 name,
                 parent_index,
+                type_type,
                 type_,
-                bounds_type,
-                alpha_blend_type,
-                refname,
-                effect_filename,
-                color_label,
-                mask_influence,
             },
         )
     }
@@ -14859,177 +17401,6 @@ impl PartAnimationDataBoolValueT {
         let index = self.index;
         let value = self.value;
         PartAnimationDataBoolValue::create(_fbb, &PartAnimationDataBoolValueArgs { index, value })
-    }
-}
-pub enum PartAnimationDataStringOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartAnimationDataString<'a> {
-    pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for PartAnimationDataString<'a> {
-    type Inner = PartAnimationDataString<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
-        }
-    }
-}
-
-impl<'a> PartAnimationDataString<'a> {
-    pub const VT_INDEX: flatbuffers::VOffsetT = 4;
-    pub const VT_VALUE: flatbuffers::VOffsetT = 6;
-
-    #[inline]
-    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        PartAnimationDataString { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args PartAnimationDataStringArgs<'args>,
-    ) -> flatbuffers::WIPOffset<PartAnimationDataString<'bldr>> {
-        let mut builder = PartAnimationDataStringBuilder::new(_fbb);
-        if let Some(x) = args.value {
-            builder.add_value(x);
-        }
-        builder.add_index(args.index);
-        builder.finish()
-    }
-
-    pub fn unpack(&self) -> PartAnimationDataStringT {
-        let index = self.index();
-        let value = self.value().map(|x| x.to_string());
-        PartAnimationDataStringT { index, value }
-    }
-
-    #[inline]
-    pub fn index(&self) -> u16 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<u16>(PartAnimationDataString::VT_INDEX, Some(0))
-                .unwrap()
-        }
-    }
-    #[inline]
-    pub fn key_compare_less_than(&self, o: &PartAnimationDataString) -> bool {
-        self.index() < o.index()
-    }
-
-    #[inline]
-    pub fn key_compare_with_value(&self, val: u16) -> ::core::cmp::Ordering {
-        let key = self.index();
-        key.cmp(&val)
-    }
-    #[inline]
-    pub fn value(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartAnimationDataString::VT_VALUE, None)
-        }
-    }
-}
-
-impl flatbuffers::Verifiable for PartAnimationDataString<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?
-            .visit_field::<u16>("index", Self::VT_INDEX, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>("value", Self::VT_VALUE, false)?
-            .finish();
-        Ok(())
-    }
-}
-pub struct PartAnimationDataStringArgs<'a> {
-    pub index: u16,
-    pub value: Option<flatbuffers::WIPOffset<&'a str>>,
-}
-impl<'a> Default for PartAnimationDataStringArgs<'a> {
-    #[inline]
-    fn default() -> Self {
-        PartAnimationDataStringArgs {
-            index: 0,
-            value: None,
-        }
-    }
-}
-
-pub struct PartAnimationDataStringBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAnimationDataStringBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_index(&mut self, index: u16) {
-        self.fbb_
-            .push_slot::<u16>(PartAnimationDataString::VT_INDEX, index, 0);
-    }
-    #[inline]
-    pub fn add_value(&mut self, value: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
-            PartAnimationDataString::VT_VALUE,
-            value,
-        );
-    }
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> PartAnimationDataStringBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        PartAnimationDataStringBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> flatbuffers::WIPOffset<PartAnimationDataString<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        flatbuffers::WIPOffset::new(o.value())
-    }
-}
-
-impl core::fmt::Debug for PartAnimationDataString<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let mut ds = f.debug_struct("PartAnimationDataString");
-        ds.field("index", &self.index());
-        ds.field("value", &self.value());
-        ds.finish()
-    }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct PartAnimationDataStringT {
-    pub index: u16,
-    pub value: Option<String>,
-}
-impl Default for PartAnimationDataStringT {
-    fn default() -> Self {
-        Self {
-            index: 0,
-            value: None,
-        }
-    }
-}
-impl PartAnimationDataStringT {
-    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-        &self,
-        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-    ) -> flatbuffers::WIPOffset<PartAnimationDataString<'b>> {
-        let index = self.index;
-        let value = self.value.as_ref().map(|x| _fbb.create_string(x));
-        PartAnimationDataString::create(_fbb, &PartAnimationDataStringArgs { index, value })
     }
 }
 pub enum PartAnimationDataPartsColorOffset {}
@@ -17380,14 +19751,14 @@ impl<'a> PartAnimationData<'a> {
     #[inline]
     pub fn texture_array(
         &self,
-    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationDataString<'a>>>>
+    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>>
     {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab.get::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationDataString>>,
+                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>,
             >>(PartAnimationData::VT_TEXTURE_ARRAY, None)
         }
     }
@@ -17513,7 +19884,7 @@ impl flatbuffers::Verifiable for PartAnimationData<'_> {
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>,
             >>("deform_array", Self::VT_DEFORM_ARRAY, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAnimationDataString>>,
+                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>,
             >>("texture_array", Self::VT_TEXTURE_ARRAY, false)?
             .finish();
         Ok(())
@@ -17707,7 +20078,7 @@ pub struct PartAnimationDataArgs<'a> {
     >,
     pub texture_array: Option<
         flatbuffers::WIPOffset<
-            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationDataString<'a>>>,
+            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>,
         >,
     >,
 }
@@ -18210,7 +20581,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 'b
     pub fn add_texture_array(
         &mut self,
         texture_array: flatbuffers::WIPOffset<
-            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<PartAnimationDataString<'b>>>,
+            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'b>>>,
         >,
     ) {
         self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
@@ -18319,7 +20690,7 @@ pub struct PartAnimationDataT {
     pub mask_array: Option<Vec<PartAnimationDataFloatValueT>>,
     pub skew_array: Option<Vec<PartAnimationDataVec2T>>,
     pub deform_array: Option<Vec<PartAnimationDataDeformT>>,
-    pub texture_array: Option<Vec<PartAnimationDataStringT>>,
+    pub texture_array: Option<Vec<PartAnimationDataIntValueT>>,
 }
 impl Default for PartAnimationDataT {
     fn default() -> Self {
@@ -18567,6 +20938,270 @@ impl PartAnimationDataT {
         )
     }
 }
+pub enum PartMeshDataOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartMeshData<'a> {
+    pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for PartMeshData<'a> {
+    type Inner = PartMeshData<'a>;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
+        }
+    }
+}
+
+impl<'a> PartMeshData<'a> {
+    pub const VT_UV: flatbuffers::VOffsetT = 4;
+    pub const VT_INDICES: flatbuffers::VOffsetT = 6;
+    pub const VT_COUNT_COORDINATE_MESH: flatbuffers::VOffsetT = 8;
+    pub const VT_INDEX_COORDINATE_DEFORM: flatbuffers::VOffsetT = 10;
+
+    #[inline]
+    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        PartMeshData { _tab: table }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        args: &'args PartMeshDataArgs<'args>,
+    ) -> flatbuffers::WIPOffset<PartMeshData<'bldr>> {
+        let mut builder = PartMeshDataBuilder::new(_fbb);
+        if let Some(x) = args.index_coordinate_deform {
+            builder.add_index_coordinate_deform(x);
+        }
+        builder.add_count_coordinate_mesh(args.count_coordinate_mesh);
+        if let Some(x) = args.indices {
+            builder.add_indices(x);
+        }
+        if let Some(x) = args.uv {
+            builder.add_uv(x);
+        }
+        builder.finish()
+    }
+
+    pub fn unpack(&self) -> PartMeshDataT {
+        let uv = self.uv().map(|x| x.into_iter().collect());
+        let indices = self.indices().map(|x| x.into_iter().collect());
+        let count_coordinate_mesh = self.count_coordinate_mesh();
+        let index_coordinate_deform = self
+            .index_coordinate_deform()
+            .map(|x| x.into_iter().collect());
+        PartMeshDataT {
+            uv,
+            indices,
+            count_coordinate_mesh,
+            index_coordinate_deform,
+        }
+    }
+
+    #[inline]
+    pub fn uv(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(
+                    PartMeshData::VT_UV,
+                    None,
+                )
+        }
+    }
+    #[inline]
+    pub fn indices(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(
+                    PartMeshData::VT_INDICES,
+                    None,
+                )
+        }
+    }
+    #[inline]
+    pub fn count_coordinate_mesh(&self) -> i32 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<i32>(PartMeshData::VT_COUNT_COORDINATE_MESH, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn index_coordinate_deform(&self) -> Option<flatbuffers::Vector<'a, i32>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(
+                    PartMeshData::VT_INDEX_COORDINATE_DEFORM,
+                    None,
+                )
+        }
+    }
+}
+
+impl flatbuffers::Verifiable for PartMeshData<'_> {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        v.visit_table(pos)?
+            .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>(
+                "uv",
+                Self::VT_UV,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>(
+                "indices",
+                Self::VT_INDICES,
+                false,
+            )?
+            .visit_field::<i32>(
+                "count_coordinate_mesh",
+                Self::VT_COUNT_COORDINATE_MESH,
+                false,
+            )?
+            .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i32>>>(
+                "index_coordinate_deform",
+                Self::VT_INDEX_COORDINATE_DEFORM,
+                false,
+            )?
+            .finish();
+        Ok(())
+    }
+}
+pub struct PartMeshDataArgs<'a> {
+    pub uv: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+    pub count_coordinate_mesh: i32,
+    pub index_coordinate_deform: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i32>>>,
+}
+impl<'a> Default for PartMeshDataArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        PartMeshDataArgs {
+            uv: None,
+            indices: None,
+            count_coordinate_mesh: 0,
+            index_coordinate_deform: None,
+        }
+    }
+}
+
+pub struct PartMeshDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
+    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartMeshDataBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_uv(&mut self, uv: flatbuffers::WIPOffset<flatbuffers::Vector<'b, f32>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartMeshData::VT_UV, uv);
+    }
+    #[inline]
+    pub fn add_indices(&mut self, indices: flatbuffers::WIPOffset<flatbuffers::Vector<'b, f32>>) {
+        self.fbb_
+            .push_slot_always::<flatbuffers::WIPOffset<_>>(PartMeshData::VT_INDICES, indices);
+    }
+    #[inline]
+    pub fn add_count_coordinate_mesh(&mut self, count_coordinate_mesh: i32) {
+        self.fbb_.push_slot::<i32>(
+            PartMeshData::VT_COUNT_COORDINATE_MESH,
+            count_coordinate_mesh,
+            0,
+        );
+    }
+    #[inline]
+    pub fn add_index_coordinate_deform(
+        &mut self,
+        index_coordinate_deform: flatbuffers::WIPOffset<flatbuffers::Vector<'b, i32>>,
+    ) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            PartMeshData::VT_INDEX_COORDINATE_DEFORM,
+            index_coordinate_deform,
+        );
+    }
+    #[inline]
+    pub fn new(
+        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
+    ) -> PartMeshDataBuilder<'a, 'b, A> {
+        let start = _fbb.start_table();
+        PartMeshDataBuilder {
+            fbb_: _fbb,
+            start_: start,
+        }
+    }
+    #[inline]
+    pub fn finish(self) -> flatbuffers::WIPOffset<PartMeshData<'a>> {
+        let o = self.fbb_.end_table(self.start_);
+        flatbuffers::WIPOffset::new(o.value())
+    }
+}
+
+impl core::fmt::Debug for PartMeshData<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let mut ds = f.debug_struct("PartMeshData");
+        ds.field("uv", &self.uv());
+        ds.field("indices", &self.indices());
+        ds.field("count_coordinate_mesh", &self.count_coordinate_mesh());
+        ds.field("index_coordinate_deform", &self.index_coordinate_deform());
+        ds.finish()
+    }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartMeshDataT {
+    pub uv: Option<Vec<f32>>,
+    pub indices: Option<Vec<f32>>,
+    pub count_coordinate_mesh: i32,
+    pub index_coordinate_deform: Option<Vec<i32>>,
+}
+impl Default for PartMeshDataT {
+    fn default() -> Self {
+        Self {
+            uv: None,
+            indices: None,
+            count_coordinate_mesh: 0,
+            index_coordinate_deform: None,
+        }
+    }
+}
+impl PartMeshDataT {
+    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
+        &self,
+        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
+    ) -> flatbuffers::WIPOffset<PartMeshData<'b>> {
+        let uv = self.uv.as_ref().map(|x| _fbb.create_vector(x));
+        let indices = self.indices.as_ref().map(|x| _fbb.create_vector(x));
+        let count_coordinate_mesh = self.count_coordinate_mesh;
+        let index_coordinate_deform = self
+            .index_coordinate_deform
+            .as_ref()
+            .map(|x| _fbb.create_vector(x));
+        PartMeshData::create(
+            _fbb,
+            &PartMeshDataArgs {
+                uv,
+                indices,
+                count_coordinate_mesh,
+                index_coordinate_deform,
+            },
+        )
+    }
+}
 pub enum AnimationDataOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -18588,15 +21223,14 @@ impl<'a> AnimationData<'a> {
     pub const VT_NAME: flatbuffers::VOffsetT = 4;
     pub const VT_INITIAL_DATA: flatbuffers::VOffsetT = 6;
     pub const VT_PART_ANIMATION_DATA: flatbuffers::VOffsetT = 8;
-    pub const VT_EVENTS: flatbuffers::VOffsetT = 10;
-    pub const VT_LABEL_DATA: flatbuffers::VOffsetT = 12;
-    pub const VT_MESHS_DATA_UV: flatbuffers::VOffsetT = 14;
-    pub const VT_MESHS_DATA_INDICES: flatbuffers::VOffsetT = 16;
-    pub const VT_START_FRAMES: flatbuffers::VOffsetT = 18;
-    pub const VT_END_FRAMES: flatbuffers::VOffsetT = 20;
-    pub const VT_TOTAL_FRAMES: flatbuffers::VOffsetT = 22;
-    pub const VT_FPS: flatbuffers::VOffsetT = 24;
-    pub const VT_CANVAS: flatbuffers::VOffsetT = 26;
+    pub const VT_PART_MESH_DATA: flatbuffers::VOffsetT = 10;
+    pub const VT_EVENTS: flatbuffers::VOffsetT = 12;
+    pub const VT_LABEL_DATA: flatbuffers::VOffsetT = 14;
+    pub const VT_START_FRAMES: flatbuffers::VOffsetT = 16;
+    pub const VT_END_FRAMES: flatbuffers::VOffsetT = 18;
+    pub const VT_TOTAL_FRAMES: flatbuffers::VOffsetT = 20;
+    pub const VT_FPS: flatbuffers::VOffsetT = 22;
+    pub const VT_CANVAS: flatbuffers::VOffsetT = 24;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -18611,17 +21245,14 @@ impl<'a> AnimationData<'a> {
         if let Some(x) = args.canvas {
             builder.add_canvas(x);
         }
-        if let Some(x) = args.meshs_data_indices {
-            builder.add_meshs_data_indices(x);
-        }
-        if let Some(x) = args.meshs_data_uv {
-            builder.add_meshs_data_uv(x);
-        }
         if let Some(x) = args.label_data {
             builder.add_label_data(x);
         }
         if let Some(x) = args.events {
             builder.add_events(x);
+        }
+        if let Some(x) = args.part_mesh_data {
+            builder.add_part_mesh_data(x);
         }
         if let Some(x) = args.part_animation_data {
             builder.add_part_animation_data(x);
@@ -18650,17 +21281,14 @@ impl<'a> AnimationData<'a> {
         let part_animation_data = self
             .part_animation_data()
             .map(|x| x.iter().map(|t| t.unpack()).collect());
+        let part_mesh_data = self
+            .part_mesh_data()
+            .map(|x| x.iter().map(|t| t.unpack()).collect());
         let events = self
             .events()
             .map(|x| x.iter().map(|t| t.unpack()).collect());
         let label_data = self
             .label_data()
-            .map(|x| x.iter().map(|t| t.unpack()).collect());
-        let meshs_data_uv = self
-            .meshs_data_uv()
-            .map(|x| x.iter().map(|t| t.unpack()).collect());
-        let meshs_data_indices = self
-            .meshs_data_indices()
             .map(|x| x.iter().map(|t| t.unpack()).collect());
         let start_frames = self.start_frames();
         let end_frames = self.end_frames();
@@ -18671,10 +21299,9 @@ impl<'a> AnimationData<'a> {
             name,
             initial_data,
             part_animation_data,
+            part_mesh_data,
             events,
             label_data,
-            meshs_data_uv,
-            meshs_data_indices,
             start_frames,
             end_frames,
             total_frames,
@@ -18731,6 +21358,19 @@ impl<'a> AnimationData<'a> {
         }
     }
     #[inline]
+    pub fn part_mesh_data(
+        &self,
+    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartMeshData<'a>>>> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab.get::<flatbuffers::ForwardsUOffset<
+                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartMeshData>>,
+            >>(AnimationData::VT_PART_MESH_DATA, None)
+        }
+    }
+    #[inline]
     pub fn events(
         &self,
     ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>> {
@@ -18754,32 +21394,6 @@ impl<'a> AnimationData<'a> {
             self._tab.get::<flatbuffers::ForwardsUOffset<
                 flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label>>,
             >>(AnimationData::VT_LABEL_DATA, None)
-        }
-    }
-    #[inline]
-    pub fn meshs_data_uv(
-        &self,
-    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV<'a>>>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab.get::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV>>,
-            >>(AnimationData::VT_MESHS_DATA_UV, None)
-        }
-    }
-    #[inline]
-    pub fn meshs_data_indices(
-        &self,
-    ) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices<'a>>>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab.get::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices>>,
-            >>(AnimationData::VT_MESHS_DATA_INDICES, None)
         }
     }
     #[inline]
@@ -18854,17 +21468,14 @@ impl flatbuffers::Verifiable for AnimationData<'_> {
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAnimationData>>,
             >>("part_animation_data", Self::VT_PART_ANIMATION_DATA, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
+                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartMeshData>>,
+            >>("part_mesh_data", Self::VT_PART_MESH_DATA, false)?
+            .visit_field::<flatbuffers::ForwardsUOffset<
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<EventsPerFrame>>,
             >>("events", Self::VT_EVENTS, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Label>>,
             >>("label_data", Self::VT_LABEL_DATA, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshDataUV>>,
-            >>("meshs_data_uv", Self::VT_MESHS_DATA_UV, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<
-                flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<MeshDataIndices>>,
-            >>("meshs_data_indices", Self::VT_MESHS_DATA_INDICES, false)?
             .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
             .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
             .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
@@ -18886,6 +21497,11 @@ pub struct AnimationDataArgs<'a> {
             flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartAnimationData<'a>>>,
         >,
     >,
+    pub part_mesh_data: Option<
+        flatbuffers::WIPOffset<
+            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<PartMeshData<'a>>>,
+        >,
+    >,
     pub events: Option<
         flatbuffers::WIPOffset<
             flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>,
@@ -18893,16 +21509,6 @@ pub struct AnimationDataArgs<'a> {
     >,
     pub label_data: Option<
         flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Label<'a>>>>,
-    >,
-    pub meshs_data_uv: Option<
-        flatbuffers::WIPOffset<
-            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataUV<'a>>>,
-        >,
-    >,
-    pub meshs_data_indices: Option<
-        flatbuffers::WIPOffset<
-            flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<MeshDataIndices<'a>>>,
-        >,
     >,
     pub start_frames: i16,
     pub end_frames: i16,
@@ -18917,10 +21523,9 @@ impl<'a> Default for AnimationDataArgs<'a> {
             name: None, // required field
             initial_data: None,
             part_animation_data: None,
+            part_mesh_data: None,
             events: None,
             label_data: None,
-            meshs_data_uv: None,
-            meshs_data_indices: None,
             start_frames: 0,
             end_frames: 0,
             total_frames: 0,
@@ -18965,6 +21570,18 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, A>
         );
     }
     #[inline]
+    pub fn add_part_mesh_data(
+        &mut self,
+        part_mesh_data: flatbuffers::WIPOffset<
+            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<PartMeshData<'b>>>,
+        >,
+    ) {
+        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+            AnimationData::VT_PART_MESH_DATA,
+            part_mesh_data,
+        );
+    }
+    #[inline]
     pub fn add_events(
         &mut self,
         events: flatbuffers::WIPOffset<
@@ -18984,30 +21601,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, A>
         self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
             AnimationData::VT_LABEL_DATA,
             label_data,
-        );
-    }
-    #[inline]
-    pub fn add_meshs_data_uv(
-        &mut self,
-        meshs_data_uv: flatbuffers::WIPOffset<
-            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<MeshDataUV<'b>>>,
-        >,
-    ) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
-            AnimationData::VT_MESHS_DATA_UV,
-            meshs_data_uv,
-        );
-    }
-    #[inline]
-    pub fn add_meshs_data_indices(
-        &mut self,
-        meshs_data_indices: flatbuffers::WIPOffset<
-            flatbuffers::Vector<'b, flatbuffers::ForwardsUOffset<MeshDataIndices<'b>>>,
-        >,
-    ) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
-            AnimationData::VT_MESHS_DATA_INDICES,
-            meshs_data_indices,
         );
     }
     #[inline]
@@ -19058,10 +21651,9 @@ impl core::fmt::Debug for AnimationData<'_> {
         ds.field("name", &self.name());
         ds.field("initial_data", &self.initial_data());
         ds.field("part_animation_data", &self.part_animation_data());
+        ds.field("part_mesh_data", &self.part_mesh_data());
         ds.field("events", &self.events());
         ds.field("label_data", &self.label_data());
-        ds.field("meshs_data_uv", &self.meshs_data_uv());
-        ds.field("meshs_data_indices", &self.meshs_data_indices());
         ds.field("start_frames", &self.start_frames());
         ds.field("end_frames", &self.end_frames());
         ds.field("total_frames", &self.total_frames());
@@ -19076,10 +21668,9 @@ pub struct AnimationDataT {
     pub name: String,
     pub initial_data: Option<Vec<PartAttributesT>>,
     pub part_animation_data: Option<Vec<PartAnimationDataT>>,
+    pub part_mesh_data: Option<Vec<PartMeshDataT>>,
     pub events: Option<Vec<EventsPerFrameT>>,
     pub label_data: Option<Vec<LabelT>>,
-    pub meshs_data_uv: Option<Vec<MeshDataUVT>>,
-    pub meshs_data_indices: Option<Vec<MeshDataIndicesT>>,
     pub start_frames: i16,
     pub end_frames: i16,
     pub total_frames: i16,
@@ -19092,10 +21683,9 @@ impl Default for AnimationDataT {
             name: "".to_string(),
             initial_data: None,
             part_animation_data: None,
+            part_mesh_data: None,
             events: None,
             label_data: None,
-            meshs_data_uv: None,
-            meshs_data_indices: None,
             start_frames: 0,
             end_frames: 0,
             total_frames: 0,
@@ -19121,19 +21711,15 @@ impl AnimationDataT {
             let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
             _fbb.create_vector(&w)
         });
+        let part_mesh_data = self.part_mesh_data.as_ref().map(|x| {
+            let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
+            _fbb.create_vector(&w)
+        });
         let events = self.events.as_ref().map(|x| {
             let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
             _fbb.create_vector(&w)
         });
         let label_data = self.label_data.as_ref().map(|x| {
-            let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-            _fbb.create_vector(&w)
-        });
-        let meshs_data_uv = self.meshs_data_uv.as_ref().map(|x| {
-            let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-            _fbb.create_vector(&w)
-        });
-        let meshs_data_indices = self.meshs_data_indices.as_ref().map(|x| {
             let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
             _fbb.create_vector(&w)
         });
@@ -19148,10 +21734,9 @@ impl AnimationDataT {
                 name,
                 initial_data,
                 part_animation_data,
+                part_mesh_data,
                 events,
                 label_data,
-                meshs_data_uv,
-                meshs_data_indices,
                 start_frames,
                 end_frames,
                 total_frames,
