@@ -3,8 +3,9 @@ use ordered_float::OrderedFloat;
 use ssab::ssab::{
     AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT,
     FloatValueEntry, FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs,
-    IntValueEntryT, Label, MeshDataIndices, MeshDataUV, SsAnimeBinary, SsAnimeBinaryArgs,
-    SsAnimeBinaryT,
+    IntValueEntryT, Label, MeshDataIndices, MeshDataUV, RectValueEntry, RectValueEntryArgs,
+    RectValueEntryT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2ValueEntry,
+    Vec2ValueEntryArgs, Vec2ValueEntryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
@@ -26,6 +27,14 @@ impl From<&Vec2T> for Vec2Key {
         }
     }
 }
+impl Vec2Key {
+    fn new(x: f32, y: f32) -> Self {
+        Self {
+            v1: OrderedFloat(x),
+            v2: OrderedFloat(y),
+        }
+    }
+}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct RectKey {
@@ -41,6 +50,16 @@ impl From<&ssab::ssab::RectT> for RectKey {
             y1: OrderedFloat(value.y1),
             x2: OrderedFloat(value.x2),
             y2: OrderedFloat(value.y2),
+        }
+    }
+}
+impl RectKey {
+    fn new(x1: f32, y1: f32, x2: f32, y2: f32) -> Self {
+        Self {
+            x1: OrderedFloat(x1),
+            y1: OrderedFloat(y1),
+            x2: OrderedFloat(x2),
+            y2: OrderedFloat(y2),
         }
     }
 }
@@ -65,6 +84,38 @@ impl From<&FloatValueEntryT> for FloatValueEntryKey {
     fn from(float_value_table_t: &FloatValueEntryT) -> Self {
         Self {
             value: OrderedFloat(float_value_table_t.value),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+pub struct Vec2ValueEntryKey {
+    pub value: Vec2Key,
+}
+impl From<&Vec2ValueEntryT> for Vec2ValueEntryKey {
+    fn from(vec2_value_table_t: &Vec2ValueEntryT) -> Self {
+        let value = vec2_value_table_t.value.clone().unwrap();
+        let v1 = value.v1;
+        let v2 = value.v2;
+        Self {
+            value: Vec2Key::new(v1, v2),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+pub struct RectValueEntryKey {
+    pub value: RectKey,
+}
+impl From<&RectValueEntryT> for RectValueEntryKey {
+    fn from(rect_value_table_t: &RectValueEntryT) -> Self {
+        let value = rect_value_table_t.value.clone().unwrap();
+        let x1 = value.x1;
+        let y1 = value.y1;
+        let x2 = value.x2;
+        let y2 = value.y2;
+        Self {
+            value: RectKey::new(x1, y1, x2, y2),
         }
     }
 }
@@ -102,6 +153,8 @@ pub struct SsabCache<'bldr> {
     pub rect_cache: HashMap<RectKey, WIPOffset<Rect<'bldr>>>,
     pub int_value_table_cache: HashMap<IntValueEntryKey, WIPOffset<IntValueEntry<'bldr>>>,
     pub float_value_table_cache: HashMap<FloatValueEntryKey, WIPOffset<FloatValueEntry<'bldr>>>,
+    pub vec2_value_table_cache: HashMap<Vec2ValueEntryKey, WIPOffset<Vec2ValueEntry<'bldr>>>,
+    pub rect_value_table_cache: HashMap<RectValueEntryKey, WIPOffset<RectValueEntry<'bldr>>>,
 
     pub cell_cache: HashMap<CellKey, WIPOffset<Cell<'bldr>>>,
 }
@@ -112,6 +165,8 @@ impl<'bldr> SsabCache<'bldr> {
             rect_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
+            vec2_value_table_cache: HashMap::new(),
+            rect_value_table_cache: HashMap::new(),
 
             cell_cache: HashMap::new(),
         }
@@ -189,6 +244,46 @@ impl<'bldr> SsabCache<'bldr> {
         let offset = FloatValueEntry::create(fb, &args);
         offset
     }
+
+    fn create_shared_vec2_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        vec2_value_table_t: &Vec2ValueEntryT,
+    ) -> WIPOffset<Vec2ValueEntry<'bldr>> {
+        let key = Vec2ValueEntryKey::from(vec2_value_table_t);
+        if let Some(&offset) = self.vec2_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = Vec2ValueEntryArgs::default();
+        let v = vec2_value_table_t.value.as_ref().unwrap();
+        args.value = Some(self.create_shared_vec2(fb, &v));
+        let offset = Vec2ValueEntry::create(fb, &args);
+        offset
+    }
+
+    fn create_shared_rect_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
+        &mut self,
+        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
+        rect_value_table_t: &RectValueEntryT,
+    ) -> WIPOffset<RectValueEntry<'bldr>> {
+        let key = RectValueEntryKey::from(rect_value_table_t);
+        if let Some(&offset) = self.rect_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = RectValueEntryArgs::default();
+        let v = rect_value_table_t.value.as_ref().unwrap();
+        args.value = Some(self.create_shared_rect(fb, &v));
+        let offset = RectValueEntry::create(fb, &args);
+        offset
+    }
 }
 
 impl<'bldr> SsabCache<'bldr> {
@@ -243,10 +338,9 @@ impl<'bldr> SsabCache<'bldr> {
                 args.name = Some(fb.create_shared_string(&animation_data_t.name));
                 args.initial_data = None; // TODO; impl
                 args.part_animation_data = None; // TODO; impl
+                args.part_mesh_data = None; // TODO: impl
                 args.events = None; // TODO; impl
                 args.label_data = None; // TODO; impl
-                args.meshs_data_uv = None; // TODO; impl
-                args.meshs_data_indices = None; // TODO; impl
                 args.start_frames = animation_data_t.start_frames;
                 args.end_frames = animation_data_t.end_frames;
                 args.total_frames = animation_data_t.total_frames;
