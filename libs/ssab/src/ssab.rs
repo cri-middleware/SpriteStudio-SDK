@@ -1904,6 +1904,115 @@ impl flatbuffers::SimpleToVerifyInSlice for SignalComamndParamType {}
     since = "2.0.0",
     note = "Use associated constants instead. This will no longer be generated in 2021."
 )]
+pub const ENUM_MIN_SHAPE_TYPE: u8 = 0;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+pub const ENUM_MAX_SHAPE_TYPE: u8 = 4;
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SHAPE_TYPE: [ShapeType; 5] = [
+    ShapeType::Unknown,
+    ShapeType::Triangle,
+    ShapeType::Rectangle,
+    ShapeType::Arrow,
+    ShapeType::Star,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct ShapeType(pub u8);
+#[allow(non_upper_case_globals)]
+impl ShapeType {
+    pub const Unknown: Self = Self(0);
+    pub const Triangle: Self = Self(1);
+    pub const Rectangle: Self = Self(2);
+    pub const Arrow: Self = Self(3);
+    pub const Star: Self = Self(4);
+
+    pub const ENUM_MIN: u8 = 0;
+    pub const ENUM_MAX: u8 = 4;
+    pub const ENUM_VALUES: &'static [Self] = &[
+        Self::Unknown,
+        Self::Triangle,
+        Self::Rectangle,
+        Self::Arrow,
+        Self::Star,
+    ];
+    /// Returns the variant's name or "" if unknown.
+    pub fn variant_name(self) -> Option<&'static str> {
+        match self {
+            Self::Unknown => Some("Unknown"),
+            Self::Triangle => Some("Triangle"),
+            Self::Rectangle => Some("Rectangle"),
+            Self::Arrow => Some("Arrow"),
+            Self::Star => Some("Star"),
+            _ => None,
+        }
+    }
+}
+impl core::fmt::Debug for ShapeType {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if let Some(name) = self.variant_name() {
+            f.write_str(name)
+        } else {
+            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+        }
+    }
+}
+impl<'a> flatbuffers::Follow<'a> for ShapeType {
+    type Inner = Self;
+    #[inline]
+    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        let b = unsafe { flatbuffers::read_scalar_at::<u8>(buf, loc) };
+        Self(b)
+    }
+}
+
+impl flatbuffers::Push for ShapeType {
+    type Output = ShapeType;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe {
+            flatbuffers::emplace_scalar::<u8>(dst, self.0);
+        }
+    }
+}
+
+impl flatbuffers::EndianScalar for ShapeType {
+    type Scalar = u8;
+    #[inline]
+    fn to_little_endian(self) -> u8 {
+        self.0.to_le()
+    }
+    #[inline]
+    #[allow(clippy::wrong_self_convention)]
+    fn from_little_endian(v: u8) -> Self {
+        let b = u8::from_le(v);
+        Self(b)
+    }
+}
+
+impl<'a> flatbuffers::Verifiable for ShapeType {
+    #[inline]
+    fn run_verifier(
+        v: &mut flatbuffers::Verifier,
+        pos: usize,
+    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
+        use self::flatbuffers::Verifiable;
+        u8::run_verifier(v, pos)
+    }
+}
+
+impl flatbuffers::SimpleToVerifyInSlice for ShapeType {}
+#[deprecated(
+    since = "2.0.0",
+    note = "Use associated constants instead. This will no longer be generated in 2021."
+)]
 pub const ENUM_MIN_TEXT_ANCHOR: u8 = 0;
 #[deprecated(
     since = "2.0.0",
@@ -2203,7 +2312,7 @@ pub enum PartTypeT {
     PartTypeText(Box<PartTypeTextT>),
     PartTypeNines(Box<PartTypeNinesT>),
     PartTypeInstance(Box<PartTypeInstanceT>),
-    PartTypeArmature(Box<PartTypeArmatureT>),
+    PartTypeArmature(Box<PartTypeNoneT>),
     PartTypeEffect(Box<PartTypeEffectT>),
     PartTypeMesh(Box<PartTypeNoneT>),
     PartTypeMovenode(Box<PartTypeNoneT>),
@@ -2442,8 +2551,8 @@ impl PartTypeT {
             None
         }
     }
-    /// If the union variant matches, return the owned PartTypeArmatureT, setting the union to NONE.
-    pub fn take_part_type_armature(&mut self) -> Option<Box<PartTypeArmatureT>> {
+    /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
+    pub fn take_part_type_armature(&mut self) -> Option<Box<PartTypeNoneT>> {
         if let Self::PartTypeArmature(_) = self {
             let v = core::mem::replace(self, Self::NONE);
             if let Self::PartTypeArmature(w) = v {
@@ -2455,16 +2564,16 @@ impl PartTypeT {
             None
         }
     }
-    /// If the union variant matches, return a reference to the PartTypeArmatureT.
-    pub fn as_part_type_armature(&self) -> Option<&PartTypeArmatureT> {
+    /// If the union variant matches, return a reference to the PartTypeNoneT.
+    pub fn as_part_type_armature(&self) -> Option<&PartTypeNoneT> {
         if let Self::PartTypeArmature(v) = self {
             Some(v.as_ref())
         } else {
             None
         }
     }
-    /// If the union variant matches, return a mutable reference to the PartTypeArmatureT.
-    pub fn as_part_type_armature_mut(&mut self) -> Option<&mut PartTypeArmatureT> {
+    /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
+    pub fn as_part_type_armature_mut(&mut self) -> Option<&mut PartTypeNoneT> {
         if let Self::PartTypeArmature(v) = self {
             Some(v.as_mut())
         } else {
@@ -14194,7 +14303,7 @@ impl<'a> flatbuffers::Follow<'a> for PartTypeShape<'a> {
 
 impl<'a> PartTypeShape<'a> {
     pub const VT_SHAPE_TYPE: flatbuffers::VOffsetT = 4;
-    pub const VT_SHAPE_MAASK: flatbuffers::VOffsetT = 6;
+    pub const VT_SHAPE_MASK: flatbuffers::VOffsetT = 6;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -14203,43 +14312,42 @@ impl<'a> PartTypeShape<'a> {
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args PartTypeShapeArgs<'args>,
+        args: &'args PartTypeShapeArgs,
     ) -> flatbuffers::WIPOffset<PartTypeShape<'bldr>> {
         let mut builder = PartTypeShapeBuilder::new(_fbb);
-        if let Some(x) = args.shape_type {
-            builder.add_shape_type(x);
-        }
-        builder.add_shape_maask(args.shape_maask);
+        builder.add_shape_mask(args.shape_mask);
+        builder.add_shape_type(args.shape_type);
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartTypeShapeT {
-        let shape_type = self.shape_type().map(|x| x.to_string());
-        let shape_maask = self.shape_maask();
+        let shape_type = self.shape_type();
+        let shape_mask = self.shape_mask();
         PartTypeShapeT {
             shape_type,
-            shape_maask,
+            shape_mask,
         }
     }
 
     #[inline]
-    pub fn shape_type(&self) -> Option<&'a str> {
+    pub fn shape_type(&self) -> ShapeType {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeShape::VT_SHAPE_TYPE, None)
+                .get::<ShapeType>(PartTypeShape::VT_SHAPE_TYPE, Some(ShapeType::Unknown))
+                .unwrap()
         }
     }
     #[inline]
-    pub fn shape_maask(&self) -> bool {
+    pub fn shape_mask(&self) -> bool {
         // Safety:
         // Created from valid Table for this object
         // which contains a valid value in this slot
         unsafe {
             self._tab
-                .get::<bool>(PartTypeShape::VT_SHAPE_MAASK, Some(false))
+                .get::<bool>(PartTypeShape::VT_SHAPE_MASK, Some(false))
                 .unwrap()
         }
     }
@@ -14253,26 +14361,22 @@ impl flatbuffers::Verifiable for PartTypeShape<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
-                "shape_type",
-                Self::VT_SHAPE_TYPE,
-                false,
-            )?
-            .visit_field::<bool>("shape_maask", Self::VT_SHAPE_MAASK, false)?
+            .visit_field::<ShapeType>("shape_type", Self::VT_SHAPE_TYPE, false)?
+            .visit_field::<bool>("shape_mask", Self::VT_SHAPE_MASK, false)?
             .finish();
         Ok(())
     }
 }
-pub struct PartTypeShapeArgs<'a> {
-    pub shape_type: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub shape_maask: bool,
+pub struct PartTypeShapeArgs {
+    pub shape_type: ShapeType,
+    pub shape_mask: bool,
 }
-impl<'a> Default for PartTypeShapeArgs<'a> {
+impl<'a> Default for PartTypeShapeArgs {
     #[inline]
     fn default() -> Self {
         PartTypeShapeArgs {
-            shape_type: None,
-            shape_maask: false,
+            shape_type: ShapeType::Unknown,
+            shape_mask: false,
         }
     }
 }
@@ -14283,16 +14387,17 @@ pub struct PartTypeShapeBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeShapeBuilder<'a, 'b, A> {
     #[inline]
-    pub fn add_shape_type(&mut self, shape_type: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
+    pub fn add_shape_type(&mut self, shape_type: ShapeType) {
+        self.fbb_.push_slot::<ShapeType>(
             PartTypeShape::VT_SHAPE_TYPE,
             shape_type,
+            ShapeType::Unknown,
         );
     }
     #[inline]
-    pub fn add_shape_maask(&mut self, shape_maask: bool) {
+    pub fn add_shape_mask(&mut self, shape_mask: bool) {
         self.fbb_
-            .push_slot::<bool>(PartTypeShape::VT_SHAPE_MAASK, shape_maask, false);
+            .push_slot::<bool>(PartTypeShape::VT_SHAPE_MASK, shape_mask, false);
     }
     #[inline]
     pub fn new(
@@ -14315,21 +14420,21 @@ impl core::fmt::Debug for PartTypeShape<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartTypeShape");
         ds.field("shape_type", &self.shape_type());
-        ds.field("shape_maask", &self.shape_maask());
+        ds.field("shape_mask", &self.shape_mask());
         ds.finish()
     }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartTypeShapeT {
-    pub shape_type: Option<String>,
-    pub shape_maask: bool,
+    pub shape_type: ShapeType,
+    pub shape_mask: bool,
 }
 impl Default for PartTypeShapeT {
     fn default() -> Self {
         Self {
-            shape_type: None,
-            shape_maask: false,
+            shape_type: ShapeType::Unknown,
+            shape_mask: false,
         }
     }
 }
@@ -14338,13 +14443,13 @@ impl PartTypeShapeT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartTypeShape<'b>> {
-        let shape_type = self.shape_type.as_ref().map(|x| _fbb.create_string(x));
-        let shape_maask = self.shape_maask;
+        let shape_type = self.shape_type;
+        let shape_mask = self.shape_mask;
         PartTypeShape::create(
             _fbb,
             &PartTypeShapeArgs {
                 shape_type,
-                shape_maask,
+                shape_mask,
             },
         )
     }
@@ -15080,8 +15185,7 @@ impl<'a> flatbuffers::Follow<'a> for PartTypeInstance<'a> {
 }
 
 impl<'a> PartTypeInstance<'a> {
-    pub const VT_REF_ANIME_PACK: flatbuffers::VOffsetT = 4;
-    pub const VT_REF_ANIME: flatbuffers::VOffsetT = 6;
+    pub const VT_REF_ANIME: flatbuffers::VOffsetT = 4;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -15096,33 +15200,14 @@ impl<'a> PartTypeInstance<'a> {
         if let Some(x) = args.ref_anime {
             builder.add_ref_anime(x);
         }
-        if let Some(x) = args.ref_anime_pack {
-            builder.add_ref_anime_pack(x);
-        }
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartTypeInstanceT {
-        let ref_anime_pack = self.ref_anime_pack().map(|x| x.to_string());
         let ref_anime = self.ref_anime().map(|x| x.to_string());
-        PartTypeInstanceT {
-            ref_anime_pack,
-            ref_anime,
-        }
+        PartTypeInstanceT { ref_anime }
     }
 
-    #[inline]
-    pub fn ref_anime_pack(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(
-                PartTypeInstance::VT_REF_ANIME_PACK,
-                None,
-            )
-        }
-    }
     #[inline]
     pub fn ref_anime(&self) -> Option<&'a str> {
         // Safety:
@@ -15144,11 +15229,6 @@ impl flatbuffers::Verifiable for PartTypeInstance<'_> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
-                "ref_anime_pack",
-                Self::VT_REF_ANIME_PACK,
-                false,
-            )?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
                 "ref_anime",
                 Self::VT_REF_ANIME,
                 false,
@@ -15158,16 +15238,12 @@ impl flatbuffers::Verifiable for PartTypeInstance<'_> {
     }
 }
 pub struct PartTypeInstanceArgs<'a> {
-    pub ref_anime_pack: Option<flatbuffers::WIPOffset<&'a str>>,
     pub ref_anime: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for PartTypeInstanceArgs<'a> {
     #[inline]
     fn default() -> Self {
-        PartTypeInstanceArgs {
-            ref_anime_pack: None,
-            ref_anime: None,
-        }
+        PartTypeInstanceArgs { ref_anime: None }
     }
 }
 
@@ -15176,13 +15252,6 @@ pub struct PartTypeInstanceBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_ref_anime_pack(&mut self, ref_anime_pack: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
-            PartTypeInstance::VT_REF_ANIME_PACK,
-            ref_anime_pack,
-        );
-    }
     #[inline]
     pub fn add_ref_anime(&mut self, ref_anime: flatbuffers::WIPOffset<&'b str>) {
         self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
@@ -15210,7 +15279,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, 'b,
 impl core::fmt::Debug for PartTypeInstance<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartTypeInstance");
-        ds.field("ref_anime_pack", &self.ref_anime_pack());
         ds.field("ref_anime", &self.ref_anime());
         ds.finish()
     }
@@ -15218,15 +15286,11 @@ impl core::fmt::Debug for PartTypeInstance<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartTypeInstanceT {
-    pub ref_anime_pack: Option<String>,
     pub ref_anime: Option<String>,
 }
 impl Default for PartTypeInstanceT {
     fn default() -> Self {
-        Self {
-            ref_anime_pack: None,
-            ref_anime: None,
-        }
+        Self { ref_anime: None }
     }
 }
 impl PartTypeInstanceT {
@@ -15234,217 +15298,8 @@ impl PartTypeInstanceT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartTypeInstance<'b>> {
-        let ref_anime_pack = self.ref_anime_pack.as_ref().map(|x| _fbb.create_string(x));
         let ref_anime = self.ref_anime.as_ref().map(|x| _fbb.create_string(x));
-        PartTypeInstance::create(
-            _fbb,
-            &PartTypeInstanceArgs {
-                ref_anime_pack,
-                ref_anime,
-            },
-        )
-    }
-}
-pub enum PartTypeArmatureOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartTypeArmature<'a> {
-    pub _tab: flatbuffers::Table<'a>,
-}
-
-impl<'a> flatbuffers::Follow<'a> for PartTypeArmature<'a> {
-    type Inner = PartTypeArmature<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { flatbuffers::Table::new(buf, loc) },
-        }
-    }
-}
-
-impl<'a> PartTypeArmature<'a> {
-    pub const VT_BONELENGTH: flatbuffers::VOffsetT = 4;
-    pub const VT_BONEPOSITION: flatbuffers::VOffsetT = 6;
-    pub const VT_BONEROTATION: flatbuffers::VOffsetT = 8;
-
-    #[inline]
-    pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        PartTypeArmature { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
-        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args PartTypeArmatureArgs<'args>,
-    ) -> flatbuffers::WIPOffset<PartTypeArmature<'bldr>> {
-        let mut builder = PartTypeArmatureBuilder::new(_fbb);
-        builder.add_boneRotation(args.boneRotation);
-        if let Some(x) = args.bonePosition {
-            builder.add_bonePosition(x);
-        }
-        builder.add_boneLength(args.boneLength);
-        builder.finish()
-    }
-
-    pub fn unpack(&self) -> PartTypeArmatureT {
-        let boneLength = self.boneLength();
-        let bonePosition = self.bonePosition().map(|x| Box::new(x.unpack()));
-        let boneRotation = self.boneRotation();
-        PartTypeArmatureT {
-            boneLength,
-            bonePosition,
-            boneRotation,
-        }
-    }
-
-    #[inline]
-    pub fn boneLength(&self) -> i32 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<i32>(PartTypeArmature::VT_BONELENGTH, Some(0))
-                .unwrap()
-        }
-    }
-    #[inline]
-    pub fn bonePosition(&self) -> Option<Vec2<'a>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<Vec2>>(PartTypeArmature::VT_BONEPOSITION, None)
-        }
-    }
-    #[inline]
-    pub fn boneRotation(&self) -> f32 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<f32>(PartTypeArmature::VT_BONEROTATION, Some(0.0))
-                .unwrap()
-        }
-    }
-}
-
-impl flatbuffers::Verifiable for PartTypeArmature<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
-        v.visit_table(pos)?
-            .visit_field::<i32>("boneLength", Self::VT_BONELENGTH, false)?
-            .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>(
-                "bonePosition",
-                Self::VT_BONEPOSITION,
-                false,
-            )?
-            .visit_field::<f32>("boneRotation", Self::VT_BONEROTATION, false)?
-            .finish();
-        Ok(())
-    }
-}
-pub struct PartTypeArmatureArgs<'a> {
-    pub boneLength: i32,
-    pub bonePosition: Option<flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub boneRotation: f32,
-}
-impl<'a> Default for PartTypeArmatureArgs<'a> {
-    #[inline]
-    fn default() -> Self {
-        PartTypeArmatureArgs {
-            boneLength: 0,
-            bonePosition: None,
-            boneRotation: 0.0,
-        }
-    }
-}
-
-pub struct PartTypeArmatureBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeArmatureBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_boneLength(&mut self, boneLength: i32) {
-        self.fbb_
-            .push_slot::<i32>(PartTypeArmature::VT_BONELENGTH, boneLength, 0);
-    }
-    #[inline]
-    pub fn add_bonePosition(&mut self, bonePosition: flatbuffers::WIPOffset<Vec2<'b>>) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Vec2>>(
-            PartTypeArmature::VT_BONEPOSITION,
-            bonePosition,
-        );
-    }
-    #[inline]
-    pub fn add_boneRotation(&mut self, boneRotation: f32) {
-        self.fbb_
-            .push_slot::<f32>(PartTypeArmature::VT_BONEROTATION, boneRotation, 0.0);
-    }
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> PartTypeArmatureBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        PartTypeArmatureBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> flatbuffers::WIPOffset<PartTypeArmature<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        flatbuffers::WIPOffset::new(o.value())
-    }
-}
-
-impl core::fmt::Debug for PartTypeArmature<'_> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let mut ds = f.debug_struct("PartTypeArmature");
-        ds.field("boneLength", &self.boneLength());
-        ds.field("bonePosition", &self.bonePosition());
-        ds.field("boneRotation", &self.boneRotation());
-        ds.finish()
-    }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct PartTypeArmatureT {
-    pub boneLength: i32,
-    pub bonePosition: Option<Box<Vec2T>>,
-    pub boneRotation: f32,
-}
-impl Default for PartTypeArmatureT {
-    fn default() -> Self {
-        Self {
-            boneLength: 0,
-            bonePosition: None,
-            boneRotation: 0.0,
-        }
-    }
-}
-impl PartTypeArmatureT {
-    pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-        &self,
-        _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-    ) -> flatbuffers::WIPOffset<PartTypeArmature<'b>> {
-        let boneLength = self.boneLength;
-        let bonePosition = self.bonePosition.as_ref().map(|x| x.pack(_fbb));
-        let boneRotation = self.boneRotation;
-        PartTypeArmature::create(
-            _fbb,
-            &PartTypeArmatureArgs {
-                boneLength,
-                bonePosition,
-                boneRotation,
-            },
-        )
+        PartTypeInstance::create(_fbb, &PartTypeInstanceArgs { ref_anime })
     }
 }
 pub enum PartTypeEffectOffset {}
@@ -15466,7 +15321,6 @@ impl<'a> flatbuffers::Follow<'a> for PartTypeEffect<'a> {
 
 impl<'a> PartTypeEffect<'a> {
     pub const VT_REF_EFFECT_NAME: flatbuffers::VOffsetT = 4;
-    pub const VT_REF_EFFECT_UID: flatbuffers::VOffsetT = 6;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -15478,9 +15332,6 @@ impl<'a> PartTypeEffect<'a> {
         args: &'args PartTypeEffectArgs<'args>,
     ) -> flatbuffers::WIPOffset<PartTypeEffect<'bldr>> {
         let mut builder = PartTypeEffectBuilder::new(_fbb);
-        if let Some(x) = args.ref_effect_uid {
-            builder.add_ref_effect_uid(x);
-        }
         if let Some(x) = args.ref_effect_name {
             builder.add_ref_effect_name(x);
         }
@@ -15489,11 +15340,7 @@ impl<'a> PartTypeEffect<'a> {
 
     pub fn unpack(&self) -> PartTypeEffectT {
         let ref_effect_name = self.ref_effect_name().map(|x| x.to_string());
-        let ref_effect_uid = self.ref_effect_uid().map(|x| x.to_string());
-        PartTypeEffectT {
-            ref_effect_name,
-            ref_effect_uid,
-        }
+        PartTypeEffectT { ref_effect_name }
     }
 
     #[inline]
@@ -15504,16 +15351,6 @@ impl<'a> PartTypeEffect<'a> {
         unsafe {
             self._tab
                 .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeEffect::VT_REF_EFFECT_NAME, None)
-        }
-    }
-    #[inline]
-    pub fn ref_effect_uid(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<flatbuffers::ForwardsUOffset<&str>>(PartTypeEffect::VT_REF_EFFECT_UID, None)
         }
     }
 }
@@ -15531,25 +15368,18 @@ impl flatbuffers::Verifiable for PartTypeEffect<'_> {
                 Self::VT_REF_EFFECT_NAME,
                 false,
             )?
-            .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
-                "ref_effect_uid",
-                Self::VT_REF_EFFECT_UID,
-                false,
-            )?
             .finish();
         Ok(())
     }
 }
 pub struct PartTypeEffectArgs<'a> {
     pub ref_effect_name: Option<flatbuffers::WIPOffset<&'a str>>,
-    pub ref_effect_uid: Option<flatbuffers::WIPOffset<&'a str>>,
 }
 impl<'a> Default for PartTypeEffectArgs<'a> {
     #[inline]
     fn default() -> Self {
         PartTypeEffectArgs {
             ref_effect_name: None,
-            ref_effect_uid: None,
         }
     }
 }
@@ -15564,13 +15394,6 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartTypeEffectBuilder<'a, 'b, A
         self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
             PartTypeEffect::VT_REF_EFFECT_NAME,
             ref_effect_name,
-        );
-    }
-    #[inline]
-    pub fn add_ref_effect_uid(&mut self, ref_effect_uid: flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
-            PartTypeEffect::VT_REF_EFFECT_UID,
-            ref_effect_uid,
         );
     }
     #[inline]
@@ -15594,7 +15417,6 @@ impl core::fmt::Debug for PartTypeEffect<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartTypeEffect");
         ds.field("ref_effect_name", &self.ref_effect_name());
-        ds.field("ref_effect_uid", &self.ref_effect_uid());
         ds.finish()
     }
 }
@@ -15602,13 +15424,11 @@ impl core::fmt::Debug for PartTypeEffect<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartTypeEffectT {
     pub ref_effect_name: Option<String>,
-    pub ref_effect_uid: Option<String>,
 }
 impl Default for PartTypeEffectT {
     fn default() -> Self {
         Self {
             ref_effect_name: None,
-            ref_effect_uid: None,
         }
     }
 }
@@ -15618,14 +15438,7 @@ impl PartTypeEffectT {
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartTypeEffect<'b>> {
         let ref_effect_name = self.ref_effect_name.as_ref().map(|x| _fbb.create_string(x));
-        let ref_effect_uid = self.ref_effect_uid.as_ref().map(|x| _fbb.create_string(x));
-        PartTypeEffect::create(
-            _fbb,
-            &PartTypeEffectArgs {
-                ref_effect_name,
-                ref_effect_uid,
-            },
-        )
+        PartTypeEffect::create(_fbb, &PartTypeEffectArgs { ref_effect_name })
     }
 }
 pub enum PartDataOffset {}
@@ -15648,8 +15461,10 @@ impl<'a> flatbuffers::Follow<'a> for PartData<'a> {
 impl<'a> PartData<'a> {
     pub const VT_NAME: flatbuffers::VOffsetT = 4;
     pub const VT_PARENT_INDEX: flatbuffers::VOffsetT = 6;
-    pub const VT_TYPE_TYPE: flatbuffers::VOffsetT = 8;
-    pub const VT_TYPE_: flatbuffers::VOffsetT = 10;
+    pub const VT_BOUNDS_TYPE: flatbuffers::VOffsetT = 8;
+    pub const VT_BLEND_TYPE: flatbuffers::VOffsetT = 10;
+    pub const VT_TYPE_TYPE: flatbuffers::VOffsetT = 12;
+    pub const VT_TYPE_: flatbuffers::VOffsetT = 14;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -15669,12 +15484,16 @@ impl<'a> PartData<'a> {
         }
         builder.add_parent_index(args.parent_index);
         builder.add_type_type(args.type_type);
+        builder.add_blend_type(args.blend_type);
+        builder.add_bounds_type(args.bounds_type);
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartDataT {
         let name = self.name().map(|x| x.to_string());
         let parent_index = self.parent_index();
+        let bounds_type = self.bounds_type();
+        let blend_type = self.blend_type();
         let type_ = match self.type_type() {
       PartType::NONE => PartTypeT::NONE,
       PartType::PartTypeNull => PartTypeT::PartTypeNull(Box::new(
@@ -15767,6 +15586,8 @@ impl<'a> PartData<'a> {
         PartDataT {
             name,
             parent_index,
+            bounds_type,
+            blend_type,
             type_,
         }
     }
@@ -15789,6 +15610,28 @@ impl<'a> PartData<'a> {
         unsafe {
             self._tab
                 .get::<i16>(PartData::VT_PARENT_INDEX, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn bounds_type(&self) -> BoundsType {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<BoundsType>(PartData::VT_BOUNDS_TYPE, Some(BoundsType::None))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn blend_type(&self) -> BlendType {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<BlendType>(PartData::VT_BLEND_TYPE, Some(BlendType::Mix))
                 .unwrap()
         }
     }
@@ -15908,13 +15751,13 @@ impl<'a> PartData<'a> {
 
     #[inline]
     #[allow(non_snake_case)]
-    pub fn type__as_part_type_armature(&self) -> Option<PartTypeArmature<'a>> {
+    pub fn type__as_part_type_armature(&self) -> Option<PartTypeNone<'a>> {
         if self.type_type() == PartType::PartTypeArmature {
             self.type_().map(|t| {
                 // Safety:
                 // Created from a valid Table for this object
                 // Which contains a valid union in this slot
-                unsafe { PartTypeArmature::init_from_table(t) }
+                unsafe { PartTypeNone::init_from_table(t) }
             })
         } else {
             None
@@ -16082,6 +15925,8 @@ impl flatbuffers::Verifiable for PartData<'_> {
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
             .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
+            .visit_field::<BoundsType>("bounds_type", Self::VT_BOUNDS_TYPE, false)?
+            .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
             .visit_union::<PartType, _>(
                 "type_type",
                 Self::VT_TYPE_TYPE,
@@ -16120,7 +15965,7 @@ impl flatbuffers::Verifiable for PartData<'_> {
                             pos,
                         ),
                     PartType::PartTypeArmature => v
-                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeArmature>>(
+                        .verify_union_variant::<flatbuffers::ForwardsUOffset<PartTypeNone>>(
                             "PartType::PartTypeArmature",
                             pos,
                         ),
@@ -16184,6 +16029,8 @@ impl flatbuffers::Verifiable for PartData<'_> {
 pub struct PartDataArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a str>>,
     pub parent_index: i16,
+    pub bounds_type: BoundsType,
+    pub blend_type: BlendType,
     pub type_type: PartType,
     pub type_: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
 }
@@ -16193,6 +16040,8 @@ impl<'a> Default for PartDataArgs<'a> {
         PartDataArgs {
             name: None,
             parent_index: 0,
+            bounds_type: BoundsType::None,
+            blend_type: BlendType::Mix,
             type_type: PartType::NONE,
             type_: None,
         }
@@ -16213,6 +16062,16 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
     pub fn add_parent_index(&mut self, parent_index: i16) {
         self.fbb_
             .push_slot::<i16>(PartData::VT_PARENT_INDEX, parent_index, 0);
+    }
+    #[inline]
+    pub fn add_bounds_type(&mut self, bounds_type: BoundsType) {
+        self.fbb_
+            .push_slot::<BoundsType>(PartData::VT_BOUNDS_TYPE, bounds_type, BoundsType::None);
+    }
+    #[inline]
+    pub fn add_blend_type(&mut self, blend_type: BlendType) {
+        self.fbb_
+            .push_slot::<BlendType>(PartData::VT_BLEND_TYPE, blend_type, BlendType::Mix);
     }
     #[inline]
     pub fn add_type_type(&mut self, type_type: PartType) {
@@ -16244,6 +16103,8 @@ impl core::fmt::Debug for PartData<'_> {
         let mut ds = f.debug_struct("PartData");
         ds.field("name", &self.name());
         ds.field("parent_index", &self.parent_index());
+        ds.field("bounds_type", &self.bounds_type());
+        ds.field("blend_type", &self.blend_type());
         ds.field("type_type", &self.type_type());
         match self.type_type() {
             PartType::PartTypeNull => {
@@ -16429,6 +16290,8 @@ impl core::fmt::Debug for PartData<'_> {
 pub struct PartDataT {
     pub name: Option<String>,
     pub parent_index: i16,
+    pub bounds_type: BoundsType,
+    pub blend_type: BlendType,
     pub type_: PartTypeT,
 }
 impl Default for PartDataT {
@@ -16436,6 +16299,8 @@ impl Default for PartDataT {
         Self {
             name: None,
             parent_index: 0,
+            bounds_type: BoundsType::None,
+            blend_type: BlendType::Mix,
             type_: PartTypeT::NONE,
         }
     }
@@ -16447,6 +16312,8 @@ impl PartDataT {
     ) -> flatbuffers::WIPOffset<PartData<'b>> {
         let name = self.name.as_ref().map(|x| _fbb.create_string(x));
         let parent_index = self.parent_index;
+        let bounds_type = self.bounds_type;
+        let blend_type = self.blend_type;
         let type_type = self.type_.part_type_type();
         let type_ = self.type_.pack(_fbb);
         PartData::create(
@@ -16454,6 +16321,8 @@ impl PartDataT {
             &PartDataArgs {
                 name,
                 parent_index,
+                bounds_type,
+                blend_type,
                 type_type,
                 type_,
             },
@@ -20952,10 +20821,11 @@ impl<'a> flatbuffers::Follow<'a> for PartMeshData<'a> {
 }
 
 impl<'a> PartMeshData<'a> {
-    pub const VT_UV: flatbuffers::VOffsetT = 4;
-    pub const VT_INDICES: flatbuffers::VOffsetT = 6;
-    pub const VT_COUNT_COORDINATE_MESH: flatbuffers::VOffsetT = 8;
-    pub const VT_INDEX_COORDINATE_DEFORM: flatbuffers::VOffsetT = 10;
+    pub const VT_PART_INDEX: flatbuffers::VOffsetT = 4;
+    pub const VT_UV: flatbuffers::VOffsetT = 6;
+    pub const VT_INDICES: flatbuffers::VOffsetT = 8;
+    pub const VT_COUNT_COORDINATE_MESH: flatbuffers::VOffsetT = 10;
+    pub const VT_INDEX_COORDINATE_DEFORM: flatbuffers::VOffsetT = 12;
 
     #[inline]
     pub unsafe fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
@@ -20977,10 +20847,12 @@ impl<'a> PartMeshData<'a> {
         if let Some(x) = args.uv {
             builder.add_uv(x);
         }
+        builder.add_part_index(args.part_index);
         builder.finish()
     }
 
     pub fn unpack(&self) -> PartMeshDataT {
+        let part_index = self.part_index();
         let uv = self.uv().map(|x| x.into_iter().collect());
         let indices = self.indices().map(|x| x.into_iter().collect());
         let count_coordinate_mesh = self.count_coordinate_mesh();
@@ -20988,6 +20860,7 @@ impl<'a> PartMeshData<'a> {
             .index_coordinate_deform()
             .map(|x| x.into_iter().collect());
         PartMeshDataT {
+            part_index,
             uv,
             indices,
             count_coordinate_mesh,
@@ -20995,6 +20868,27 @@ impl<'a> PartMeshData<'a> {
         }
     }
 
+    #[inline]
+    pub fn part_index(&self) -> u16 {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<u16>(PartMeshData::VT_PART_INDEX, Some(0))
+                .unwrap()
+        }
+    }
+    #[inline]
+    pub fn key_compare_less_than(&self, o: &PartMeshData) -> bool {
+        self.part_index() < o.part_index()
+    }
+
+    #[inline]
+    pub fn key_compare_with_value(&self, val: u16) -> ::core::cmp::Ordering {
+        let key = self.part_index();
+        key.cmp(&val)
+    }
     #[inline]
     pub fn uv(&self) -> Option<flatbuffers::Vector<'a, f32>> {
         // Safety:
@@ -21055,6 +20949,7 @@ impl flatbuffers::Verifiable for PartMeshData<'_> {
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
         use self::flatbuffers::Verifiable;
         v.visit_table(pos)?
+            .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>(
                 "uv",
                 Self::VT_UV,
@@ -21080,6 +20975,7 @@ impl flatbuffers::Verifiable for PartMeshData<'_> {
     }
 }
 pub struct PartMeshDataArgs<'a> {
+    pub part_index: u16,
     pub uv: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
     pub indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
     pub count_coordinate_mesh: i32,
@@ -21089,6 +20985,7 @@ impl<'a> Default for PartMeshDataArgs<'a> {
     #[inline]
     fn default() -> Self {
         PartMeshDataArgs {
+            part_index: 0,
             uv: None,
             indices: None,
             count_coordinate_mesh: 0,
@@ -21102,6 +20999,11 @@ pub struct PartMeshDataBuilder<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> {
     start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartMeshDataBuilder<'a, 'b, A> {
+    #[inline]
+    pub fn add_part_index(&mut self, part_index: u16) {
+        self.fbb_
+            .push_slot::<u16>(PartMeshData::VT_PART_INDEX, part_index, 0);
+    }
     #[inline]
     pub fn add_uv(&mut self, uv: flatbuffers::WIPOffset<flatbuffers::Vector<'b, f32>>) {
         self.fbb_
@@ -21150,6 +21052,7 @@ impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> PartMeshDataBuilder<'a, 'b, A> 
 impl core::fmt::Debug for PartMeshData<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut ds = f.debug_struct("PartMeshData");
+        ds.field("part_index", &self.part_index());
         ds.field("uv", &self.uv());
         ds.field("indices", &self.indices());
         ds.field("count_coordinate_mesh", &self.count_coordinate_mesh());
@@ -21160,6 +21063,7 @@ impl core::fmt::Debug for PartMeshData<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartMeshDataT {
+    pub part_index: u16,
     pub uv: Option<Vec<f32>>,
     pub indices: Option<Vec<f32>>,
     pub count_coordinate_mesh: i32,
@@ -21168,6 +21072,7 @@ pub struct PartMeshDataT {
 impl Default for PartMeshDataT {
     fn default() -> Self {
         Self {
+            part_index: 0,
             uv: None,
             indices: None,
             count_coordinate_mesh: 0,
@@ -21180,6 +21085,7 @@ impl PartMeshDataT {
         &self,
         _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> flatbuffers::WIPOffset<PartMeshData<'b>> {
+        let part_index = self.part_index;
         let uv = self.uv.as_ref().map(|x| _fbb.create_vector(x));
         let indices = self.indices.as_ref().map(|x| _fbb.create_vector(x));
         let count_coordinate_mesh = self.count_coordinate_mesh;
@@ -21190,6 +21096,7 @@ impl PartMeshDataT {
         PartMeshData::create(
             _fbb,
             &PartMeshDataArgs {
+                part_index,
                 uv,
                 indices,
                 count_coordinate_mesh,

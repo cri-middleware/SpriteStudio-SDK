@@ -450,9 +450,17 @@ table PartTypeNone {
   // nothing
 }
 
+enum ShapeType : ubyte {
+  Unknown,
+  Triangle,
+  Rectangle,
+  Arrow,
+  Star,
+}
+
 table PartTypeShape {
-  shape_type: string;
-  shape_maask: bool;
+  shape_type: ShapeType;
+  shape_mask: bool;
 }
 
 enum TextAnchor : ubyte {
@@ -493,19 +501,11 @@ table PartTypeNines {
 }
 
 table PartTypeInstance {
-  ref_anime_pack: string;
   ref_anime: string;
-}
-
-table PartTypeArmature {
-  boneLength: int;
-  bonePosition: Vec2;
-  boneRotation: float;
 }
 
 table PartTypeEffect {
   ref_effect_name: string;
-  ref_effect_uid: string;
 }
 
 union PartType {
@@ -515,7 +515,7 @@ union PartType {
   PartTypeText,
   PartTypeNines,
   PartTypeInstance,
-  PartTypeArmature,
+  PartTypeArmature: PartTypeNone,
   PartTypeEffect,
   PartTypeMesh: PartTypeNone,
   PartTypeMovenode: PartTypeNone,
@@ -531,6 +531,8 @@ union PartType {
 table PartData {
   name: string;
   parent_index: short;
+  bounds_type: BoundsType;
+  blend_type: BlendType;
 
   type: PartType;
 }
@@ -656,6 +658,8 @@ table PartAnimationData {
 }
 
 table PartMeshData {
+  part_index: ushort (key);
+
   uv: [float];
   indices: [float];
   count_coordinate_mesh: int;
