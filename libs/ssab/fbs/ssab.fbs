@@ -45,26 +45,6 @@ enum MeshDivType: ubyte {
   Boxdiv,
 }
 
-enum PartType: ubyte {
-  Null,
-  Normal,
-  Shape,
-  Text,
-  Nines,
-  Instance,
-  Armature,
-  Effect,
-  Mesh,
-  Movenode,
-  Constraint,
-  Mask,
-  Joint,
-  Bonepoint,
-  TransformConstraint,
-  Camera,
-  Audio,
-}
-
 enum BoundsType : ubyte {
   None,
   Quad,
@@ -90,13 +70,9 @@ enum BlendType : ubyte {
   Invert,
 }
 
-enum ColorBlendTarget : ubyte {
-  Whole,
-  Vertex,
-}
-
 enum InterpolationType : ubyte {
   None,
+
   Linear,
   Hermite,
   Bezier,
@@ -126,8 +102,6 @@ enum InterpolationType : ubyte {
   EaseBackIn,
   EaseBackOut,
   EaseBackInOut,
-
-  Num,
 }
 
 table IntValueEntry {
@@ -359,10 +333,8 @@ table  SsAttributePartsColorKeyValueColor {
 }
 
 table PartAttributePartsColor {
-  target: ColorBlendTarget;
   blend_type: BlendType;
 
-  color: SsAttributePartsColorKeyValueColor;
   lt: SsAttributePartsColorKeyValueColor;
   rt: SsAttributePartsColorKeyValueColor;
   lb: SsAttributePartsColorKeyValueColor;
@@ -471,21 +443,98 @@ table PartAttributes {
   skew: Vec2;
   deform: PartAttributeDeform;
 
-  texture: string;
+  texture: int;
+}
+
+table PartTypeNone {
+  // nothing
+}
+
+enum ShapeType : ubyte {
+  Unknown,
+  Triangle,
+  Rectangle,
+  Arrow,
+  Star,
+}
+
+table PartTypeShape {
+  shape_type: ShapeType;
+  shape_mask: bool;
+}
+
+enum TextAnchor : ubyte {
+  NO = 0xFF,
+
+  LT = 0x00,
+  LC = 0x01,
+  LB = 0x02,
+  CT = 0x10,
+  CC = 0x11,
+  CB = 0x12,
+  RT = 0x20,
+  RC = 0x21,
+  RB = 0x22,
+}
+
+table PartTypeText {
+  text: string;
+  text_bitmap: bool;
+  text_family: string;
+  text_char_map: string;
+  text_size: int;
+  text_space: float;
+  text_smooth: bool;
+  text_mask: bool;
+  text_width: int;
+  text_height: int;
+  e_anchor: TextAnchor;
+}
+
+table PartTypeNines {
+  nines_margin_l: int;
+  nines_margin_r: int;
+  nines_margin_t: int;
+  nines_margin_b: int;
+  nines_fill_mode: int;
+  nines_mask: bool;
+}
+
+table PartTypeInstance {
+  ref_anime: string;
+}
+
+table PartTypeEffect {
+  ref_effect_name: string;
+}
+
+union PartType {
+  PartTypeNull: PartTypeNone,
+  PartTypeNormal: PartTypeNone,
+  PartTypeShape,
+  PartTypeText,
+  PartTypeNines,
+  PartTypeInstance,
+  PartTypeArmature: PartTypeNone,
+  PartTypeEffect,
+  PartTypeMesh: PartTypeNone,
+  PartTypeMovenode: PartTypeNone,
+  PartTypeConstraint: PartTypeNone,
+  PartTypeMask: PartTypeNone,
+  PartTypeJoint: PartTypeNone,
+  PartTypeBonepoint: PartTypeNone,
+  PartTypeTransformConstraint: PartTypeNone,
+  PartTypeCamera: PartTypeNone,
+  PartTypeAudio: PartTypeNone,
 }
 
 table PartData {
   name: string;
   parent_index: short;
-  type: PartType;
   bounds_type: BoundsType;
-  alpha_blend_type: BlendType;
+  blend_type: BlendType;
 
-  // TODO: improve supporting all type of parttype
-  refname: string; // instance name
-  effect_filename: string;
-  color_label: string;
-  mask_influence: short;
+  type: PartType;
 }
 
 table Label {
@@ -501,14 +550,14 @@ table PartAnimationDataCellValue {
 
 table PartAnimationDataFloatValue {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: float;
 }
 
 table PartAnimationDataIntValue {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: int;
 }
@@ -519,29 +568,23 @@ table PartAnimationDataBoolValue {
   value: bool;
 }
 
-table PartAnimationDataString {
-  index: ushort (key);
-
-  value: string;
-}
-
 table PartAnimationDataPartsColor {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: PartAttributePartsColor;
 }
 
 table PartAnimationDataShader {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: PartAttributeShader;
 }
 
 table PartAnimationDataVertex {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: PartAttributeVertex;
 }
@@ -560,14 +603,14 @@ table PartAnimationDataEffect {
 
 table PartAnimationDataVec2 {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: Vec2;
 }
 
 table PartAnimationDataDeform {
   index: ushort (key);
-  interpolation: InterpolationType;
+  interpolation: InterpolationType = None;
 
   value: PartAttributeDeform;
 }
@@ -610,7 +653,17 @@ table PartAnimationData {
   mask_array: [PartAnimationDataFloatValue];
   skew_array: [PartAnimationDataVec2];
   deform_array: [PartAnimationDataDeform];
-  texture_array: [PartAnimationDataString];
+
+  texture_array: [PartAnimationDataIntValue];
+}
+
+table PartMeshData {
+  part_index: ushort (key);
+
+  uv: [float];
+  indices: [float];
+  count_coordinate_mesh: int;
+  index_coordinate_deform: [int];
 }
 
 table AnimationData {
@@ -618,13 +671,11 @@ table AnimationData {
 
   initial_data: [PartAttributes];
   part_animation_data: [PartAnimationData];
+  part_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
 
   label_data: [Label];
-
-  meshs_data_uv: [MeshDataUV];
-  meshs_data_indices: [MeshDataIndices];
 
   start_frames: short;
   end_frames: short;
