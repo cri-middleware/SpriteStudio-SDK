@@ -314,14 +314,6 @@ table FontBitmap {
   table_data: [FontGlyphBitmap];
 }
 
-table MeshDataUV {
-  uv: [float];
-}
-
-table MeshDataIndices {
-  indices: [float];
-}
-
 table PartAttributeCell {
  map_id: int; // hash or name
  name: string;
