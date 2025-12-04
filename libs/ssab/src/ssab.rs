@@ -2,11 +2,8 @@
 
 // @generated
 
-use core::cmp::Ordering;
-use core::mem;
 
 extern crate flatbuffers;
-use self::flatbuffers::{EndianScalar, Follow};
 
 #[deprecated(
     since = "2.0.0",
@@ -94,7 +91,6 @@ impl<'a> flatbuffers::Verifiable for TexFilterMode {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -186,7 +182,6 @@ impl<'a> flatbuffers::Verifiable for RenderBlendType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -280,7 +275,6 @@ impl<'a> flatbuffers::Verifiable for TexWrapMode {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -377,7 +371,6 @@ impl<'a> flatbuffers::Verifiable for MeshDivType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -490,7 +483,6 @@ impl<'a> flatbuffers::Verifiable for BoundsType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -581,7 +573,6 @@ impl<'a> flatbuffers::Verifiable for InheritType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -702,7 +693,6 @@ impl<'a> flatbuffers::Verifiable for BlendType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -887,7 +877,6 @@ impl<'a> flatbuffers::Verifiable for InterpolationType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -984,7 +973,6 @@ impl<'a> flatbuffers::Verifiable for EffectNodeType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -1149,7 +1137,6 @@ impl<'a> flatbuffers::Verifiable for EffectNodeBehavior {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -1894,7 +1881,6 @@ impl<'a> flatbuffers::Verifiable for SignalComamndParamType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -2003,7 +1989,6 @@ impl<'a> flatbuffers::Verifiable for ShapeType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -2132,7 +2117,6 @@ impl<'a> flatbuffers::Verifiable for TextAnchor {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -2293,7 +2277,6 @@ impl<'a> flatbuffers::Verifiable for PartType {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
         u8::run_verifier(v, pos)
     }
 }
@@ -2935,7 +2918,7 @@ impl flatbuffers::Verifiable for Vec2<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<f32>("v1", Self::VT_V1, false)?
             .visit_field::<f32>("v2", Self::VT_V2, false)?
@@ -3085,7 +3068,7 @@ impl flatbuffers::Verifiable for Vec3<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<f32>("v1", Self::VT_V1, false)?
             .visit_field::<f32>("v2", Self::VT_V2, false)?
@@ -3262,7 +3245,7 @@ impl flatbuffers::Verifiable for Rect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<f32>("x1", Self::VT_X1, false)?
             .visit_field::<f32>("y1", Self::VT_Y1, false)?
@@ -3450,7 +3433,7 @@ impl flatbuffers::Verifiable for U8Rect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u8>("a", Self::VT_A, false)?
             .visit_field::<u8>("r", Self::VT_R, false)?
@@ -3612,7 +3595,7 @@ impl flatbuffers::Verifiable for IntValueEntry<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i32>("value", Self::VT_VALUE, false)?
             .finish();
@@ -3740,7 +3723,7 @@ impl flatbuffers::Verifiable for FloatValueEntry<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<f32>("value", Self::VT_VALUE, false)?
             .finish();
@@ -3869,7 +3852,7 @@ impl flatbuffers::Verifiable for Vec2ValueEntry<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("value", Self::VT_VALUE, false)?
             .finish();
@@ -3998,7 +3981,7 @@ impl flatbuffers::Verifiable for RectValueEntry<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("value", Self::VT_VALUE, false)?
             .finish();
@@ -4154,7 +4137,7 @@ impl flatbuffers::Verifiable for EventUserData<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeUserData>>(
@@ -4333,7 +4316,7 @@ impl flatbuffers::Verifiable for EventSignal<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeSignal>>(
@@ -4512,7 +4495,7 @@ impl flatbuffers::Verifiable for EventAudio<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAsttributeAudio>>(
@@ -4691,7 +4674,7 @@ impl flatbuffers::Verifiable for EventInstance<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeInstance>>(
@@ -4870,7 +4853,7 @@ impl flatbuffers::Verifiable for EventEffect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeEffect>>(
@@ -5134,7 +5117,7 @@ impl flatbuffers::Verifiable for EventsPerFrame<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("frame_index", Self::VT_FRAME_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
@@ -5510,7 +5493,7 @@ impl flatbuffers::Verifiable for Cell<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<flatbuffers::ForwardsUOffset<Rect>>(
@@ -5840,7 +5823,7 @@ impl flatbuffers::Verifiable for CellMap<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
@@ -6086,7 +6069,7 @@ impl flatbuffers::Verifiable for EffectParticlePointGravity<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>(
                 "position",
@@ -6260,7 +6243,7 @@ impl flatbuffers::Verifiable for RectAndVec2ValueTable<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("size", Self::VT_SIZE, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>(
@@ -6433,7 +6416,7 @@ impl flatbuffers::Verifiable for EffectParticleElementTransColor<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u32>("color_min_value", Self::VT_COLOR_MIN_VALUE, false)?
             .visit_field::<u32>("color_max_value", Self::VT_COLOR_MAX_VALUE, false)?
@@ -6606,7 +6589,7 @@ impl flatbuffers::Verifiable for EffectParticleElementInitColor<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u32>("color_min_value", Self::VT_COLOR_MIN_VALUE, false)?
             .visit_field::<u32>("color_max_value", Self::VT_COLOR_MAX_VALUE, false)?
@@ -6785,7 +6768,7 @@ impl flatbuffers::Verifiable for EffectParticleElementRotationTrans<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<f32>("rotation_factor", Self::VT_ROTATION_FACTOR, false)?
             .visit_field::<f32>("end_life_time_per", Self::VT_END_LIFE_TIME_PER, false)?
@@ -6966,7 +6949,7 @@ impl flatbuffers::Verifiable for EffectParticleElementRotation<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>(
                 "rotation_value",
@@ -7280,7 +7263,7 @@ impl flatbuffers::Verifiable for EffectParticleElementBasic<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i32>("priority", Self::VT_PRIORITY, false)?
             .visit_field::<i32>("maximum_particle", Self::VT_MAXIMUM_PARTICLE, false)?
@@ -7942,7 +7925,7 @@ impl flatbuffers::Verifiable for EffectNodeBehaviorWrapper<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
      .visit_union::<EffectNodeBehavior, _>("value_type", Self::VT_VALUE_TYPE, "value", Self::VT_VALUE, false, |key, v, pos| {
         match key {
@@ -8367,7 +8350,7 @@ impl flatbuffers::Verifiable for EffectNode<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i16>("index", Self::VT_INDEX, false)?
             .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
@@ -8680,7 +8663,7 @@ impl flatbuffers::Verifiable for Effect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<i16>("fps", Self::VT_FPS, false)?
@@ -8932,7 +8915,7 @@ impl flatbuffers::Verifiable for SoundFile<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<u32>("time_total", Self::VT_TIME_TOTAL, false)?
@@ -9113,7 +9096,7 @@ impl flatbuffers::Verifiable for SoundList<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<flatbuffers::ForwardsUOffset<
@@ -9378,7 +9361,7 @@ impl flatbuffers::Verifiable for FontGlyphBitmap<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("id", Self::VT_ID, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<Rect>>("atlas", Self::VT_ATLAS, false)?
@@ -9813,7 +9796,7 @@ impl flatbuffers::Verifiable for FontBitmap<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
@@ -10177,7 +10160,7 @@ impl flatbuffers::Verifiable for PartAttributeCell<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i32>("map_id", Self::VT_MAP_ID, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
@@ -10338,7 +10321,7 @@ impl flatbuffers::Verifiable for SsAttributePartsColorKeyValueColor<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<U8Rect>>("rgba", Self::VT_RGBA, false)?
             .visit_field::<f32>("rate", Self::VT_RATE, false)?
@@ -10568,7 +10551,7 @@ impl flatbuffers::Verifiable for PartAttributePartsColor<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(
@@ -10834,7 +10817,7 @@ impl flatbuffers::Verifiable for PartAttributeVertex<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("lt", Self::VT_LT, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<Vec2>>("rt", Self::VT_RT, false)?
@@ -11115,7 +11098,7 @@ impl flatbuffers::Verifiable for PartAttributeInstance<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<bool>("pingpong", Self::VT_PINGPONG, false)?
             .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
@@ -11402,7 +11385,7 @@ impl flatbuffers::Verifiable for PartAttributeEffect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i32>("cur_keyframe", Self::VT_CUR_KEYFRAME, false)?
             .visit_field::<i32>("start_time", Self::VT_START_TIME, false)?
@@ -11602,7 +11585,7 @@ impl flatbuffers::Verifiable for PartAttributeDeform<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<Vec2>>,
@@ -11949,7 +11932,7 @@ impl flatbuffers::Verifiable for PartAttributeShader<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
             .visit_field::<f32>("param0", Self::VT_PARAM0, false)?
@@ -12308,7 +12291,7 @@ impl flatbuffers::Verifiable for PartAttributeUserData<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<IntValueEntry>>(
                 "integer",
@@ -12529,7 +12512,7 @@ impl flatbuffers::Verifiable for SignalComamndParam<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
                 "param_id",
@@ -12740,7 +12723,7 @@ impl flatbuffers::Verifiable for PartAttributeSignal<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<bool>("active", Self::VT_ACTIVE, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
@@ -12956,7 +12939,7 @@ impl flatbuffers::Verifiable for PartAsttributeAudio<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i32>("sound_list_id", Self::VT_SOUND_LIST_ID, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
@@ -13486,7 +13469,7 @@ impl flatbuffers::Verifiable for PartAttributes<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeCell>>(
                 "cell",
@@ -13955,7 +13938,7 @@ impl flatbuffers::Verifiable for PartTypeNone<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?.finish();
         Ok(())
     }
@@ -14087,7 +14070,7 @@ impl flatbuffers::Verifiable for PartTypeShape<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<ShapeType>("shape_type", Self::VT_SHAPE_TYPE, false)?
             .visit_field::<bool>("shape_mask", Self::VT_SHAPE_MASK, false)?
@@ -14395,7 +14378,7 @@ impl flatbuffers::Verifiable for PartTypeText<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
             .visit_field::<bool>("text_bitmap", Self::VT_TEXT_BITMAP, false)?
@@ -14751,7 +14734,7 @@ impl flatbuffers::Verifiable for PartTypeNines<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<i32>("nines_margin_l", Self::VT_NINES_MARGIN_L, false)?
             .visit_field::<i32>("nines_margin_r", Self::VT_NINES_MARGIN_R, false)?
@@ -14954,7 +14937,7 @@ impl flatbuffers::Verifiable for PartTypeInstance<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
                 "ref_anime",
@@ -15089,7 +15072,7 @@ impl flatbuffers::Verifiable for PartTypeEffect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>(
                 "ref_effect_name",
@@ -15649,7 +15632,7 @@ impl flatbuffers::Verifiable for PartData<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
             .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
@@ -16140,7 +16123,7 @@ impl flatbuffers::Verifiable for Label<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<i32>("time", Self::VT_TIME, false)?
@@ -16313,7 +16296,7 @@ impl flatbuffers::Verifiable for PartAnimationDataCellValue<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeCell>>(
@@ -16509,7 +16492,7 @@ impl flatbuffers::Verifiable for PartAnimationDataFloatValue<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -16720,7 +16703,7 @@ impl flatbuffers::Verifiable for PartAnimationDataIntValue<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -16910,7 +16893,7 @@ impl flatbuffers::Verifiable for PartAnimationDataBoolValue<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<bool>("value", Self::VT_VALUE, false)?
@@ -17103,7 +17086,7 @@ impl flatbuffers::Verifiable for PartAnimationDataPartsColor<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -17325,7 +17308,7 @@ impl flatbuffers::Verifiable for PartAnimationDataShader<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -17547,7 +17530,7 @@ impl flatbuffers::Verifiable for PartAnimationDataVertex<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -17748,7 +17731,7 @@ impl flatbuffers::Verifiable for PartAnimationDataInstance<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeInstance>>(
@@ -17927,7 +17910,7 @@ impl flatbuffers::Verifiable for PartAnimationDataEffect<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeEffect>>(
@@ -18124,7 +18107,7 @@ impl flatbuffers::Verifiable for PartAnimationDataVec2<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -18341,7 +18324,7 @@ impl flatbuffers::Verifiable for PartAnimationDataDeform<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("index", Self::VT_INDEX, false)?
             .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
@@ -19363,7 +19346,7 @@ impl flatbuffers::Verifiable for PartAnimationData<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<
                 flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<PartAnimationDataCellValue>>,
@@ -20675,7 +20658,7 @@ impl flatbuffers::Verifiable for PartMeshData<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>(
@@ -21089,7 +21072,7 @@ impl flatbuffers::Verifiable for AnimationData<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
             .visit_field::<flatbuffers::ForwardsUOffset<
@@ -21582,7 +21565,7 @@ impl flatbuffers::Verifiable for SsAnimeBinary<'_> {
         v: &mut flatbuffers::Verifier,
         pos: usize,
     ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
-        use self::flatbuffers::Verifiable;
+        
         v.visit_table(pos)?
             .visit_field::<u32>("version", Self::VT_VERSION, false)?
             .visit_field::<flatbuffers::ForwardsUOffset<
