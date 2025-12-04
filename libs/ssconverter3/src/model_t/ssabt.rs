@@ -1,7 +1,6 @@
 use crate::model_t::ssabt;
 use ssab::ssab::{
-    AnimationDataT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, 
-    PartAttributesT, RectT,
+    AnimationDataT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, PartAttributesT, RectT,
 };
 use sspj::ssae::{SsAnimation, SsAnimePack, SsPart};
 use sspj::ssce::{SsCell, SsCellMap};

@@ -3,9 +3,8 @@ use ordered_float::OrderedFloat;
 use ssab::ssab::{
     AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT,
     FloatValueEntry, FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs,
-    IntValueEntryT, Label, RectValueEntry, RectValueEntryArgs,
-    RectValueEntryT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2ValueEntry,
-    Vec2ValueEntryArgs, Vec2ValueEntryT,
+    IntValueEntryT, Label, RectValueEntry, RectValueEntryArgs, RectValueEntryT, SsAnimeBinary,
+    SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2ValueEntry, Vec2ValueEntryArgs, Vec2ValueEntryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
