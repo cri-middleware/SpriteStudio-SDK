@@ -21859,7 +21859,7 @@ impl SsAnimeBinaryT {
 /// `root_as_ss_anime_binary_unchecked`.
 pub fn root_as_ss_anime_binary(
     buf: &[u8],
-) -> Result<SsAnimeBinary, flatbuffers::InvalidFlatbuffer> {
+) -> Result<SsAnimeBinary<'_>, flatbuffers::InvalidFlatbuffer> {
     flatbuffers::root::<SsAnimeBinary>(buf)
 }
 #[inline]
@@ -21871,7 +21871,7 @@ pub fn root_as_ss_anime_binary(
 /// `size_prefixed_root_as_ss_anime_binary_unchecked`.
 pub fn size_prefixed_root_as_ss_anime_binary(
     buf: &[u8],
-) -> Result<SsAnimeBinary, flatbuffers::InvalidFlatbuffer> {
+) -> Result<SsAnimeBinary<'_>, flatbuffers::InvalidFlatbuffer> {
     flatbuffers::size_prefixed_root::<SsAnimeBinary>(buf)
 }
 #[inline]
@@ -21904,14 +21904,14 @@ pub fn size_prefixed_root_as_ss_anime_binary_with_opts<'b, 'o>(
 /// Assumes, without verification, that a buffer of bytes contains a SsAnimeBinary and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid `SsAnimeBinary`.
-pub unsafe fn root_as_ss_anime_binary_unchecked(buf: &[u8]) -> SsAnimeBinary {
+pub unsafe fn root_as_ss_anime_binary_unchecked(buf: &[u8]) -> SsAnimeBinary<'_> {
     unsafe { flatbuffers::root_unchecked::<SsAnimeBinary>(buf) }
 }
 #[inline]
 /// Assumes, without verification, that a buffer of bytes contains a size prefixed SsAnimeBinary and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid size prefixed `SsAnimeBinary`.
-pub unsafe fn size_prefixed_root_as_ss_anime_binary_unchecked(buf: &[u8]) -> SsAnimeBinary {
+pub unsafe fn size_prefixed_root_as_ss_anime_binary_unchecked(buf: &[u8]) -> SsAnimeBinary<'_> {
     unsafe { flatbuffers::size_prefixed_root_unchecked::<SsAnimeBinary>(buf) }
 }
 pub const SS_ANIME_BINARY_IDENTIFIER: &str = "SSAB";

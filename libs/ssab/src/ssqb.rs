@@ -758,7 +758,7 @@ impl SsSequenceBinaryT {
 /// `root_as_ss_sequence_binary_unchecked`.
 pub fn root_as_ss_sequence_binary(
     buf: &[u8],
-) -> Result<SsSequenceBinary, flatbuffers::InvalidFlatbuffer> {
+) -> Result<SsSequenceBinary<'_>, flatbuffers::InvalidFlatbuffer> {
     flatbuffers::root::<SsSequenceBinary>(buf)
 }
 #[inline]
@@ -770,7 +770,7 @@ pub fn root_as_ss_sequence_binary(
 /// `size_prefixed_root_as_ss_sequence_binary_unchecked`.
 pub fn size_prefixed_root_as_ss_sequence_binary(
     buf: &[u8],
-) -> Result<SsSequenceBinary, flatbuffers::InvalidFlatbuffer> {
+) -> Result<SsSequenceBinary<'_>, flatbuffers::InvalidFlatbuffer> {
     flatbuffers::size_prefixed_root::<SsSequenceBinary>(buf)
 }
 #[inline]
@@ -803,14 +803,16 @@ pub fn size_prefixed_root_as_ss_sequence_binary_with_opts<'b, 'o>(
 /// Assumes, without verification, that a buffer of bytes contains a SsSequenceBinary and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid `SsSequenceBinary`.
-pub unsafe fn root_as_ss_sequence_binary_unchecked(buf: &[u8]) -> SsSequenceBinary {
+pub unsafe fn root_as_ss_sequence_binary_unchecked(buf: &[u8]) -> SsSequenceBinary<'_> {
     unsafe { flatbuffers::root_unchecked::<SsSequenceBinary>(buf) }
 }
 #[inline]
 /// Assumes, without verification, that a buffer of bytes contains a size prefixed SsSequenceBinary and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid size prefixed `SsSequenceBinary`.
-pub unsafe fn size_prefixed_root_as_ss_sequence_binary_unchecked(buf: &[u8]) -> SsSequenceBinary {
+pub unsafe fn size_prefixed_root_as_ss_sequence_binary_unchecked(
+    buf: &[u8],
+) -> SsSequenceBinary<'_> {
     unsafe { flatbuffers::size_prefixed_root_unchecked::<SsSequenceBinary>(buf) }
 }
 pub const SS_SEQUENCE_BINARY_IDENTIFIER: &str = "SSQB";
