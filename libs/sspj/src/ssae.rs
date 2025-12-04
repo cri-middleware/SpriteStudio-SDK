@@ -5,7 +5,6 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Arc;
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -311,7 +310,7 @@ impl SsLoader for SsAnimePack {
                 ssae.model.ref_setup_anime_pack = ssae.name.clone();
                 ssae.model.ref_setup_animation = ssae.anime_list[idx].name.clone();
             }
-            Err(e) => {}
+            Err(_e) => {}
         }
         Ok(ssae)
     }

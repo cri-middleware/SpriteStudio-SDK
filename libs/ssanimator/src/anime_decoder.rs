@@ -4,8 +4,6 @@ use sspj::ssae::{SsAnimation, SsModel, SsPart, SsPartAnime};
 use sspj::sspj::SsProject;
 use sspj::ssqe::SsSequence;
 use std::collections::HashMap;
-use std::rc::Weak;
-use std::sync::Arc;
 
 #[derive(Default)]
 pub struct SsAnimeDecoder<'a> {
