@@ -1,6 +1,6 @@
 use crate::cache::{ssab_cache, ssqb_cache};
 use crate::model_t::{ssabt, ssqbt};
-use ssab::ssab::{SS_ANIME_BINARY_EXTENSION, SsAnimeBinaryT};
+use ssab::ssab::SsAnimeBinaryT;
 use sspj::ssloader::{SsLoader, SspjError};
 use sspj::sspj::SsProject;
 use std::collections::HashMap;

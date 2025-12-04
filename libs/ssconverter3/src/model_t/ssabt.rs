@@ -1,6 +1,6 @@
 use crate::model_t::ssabt;
 use ssab::ssab::{
-    AnimationDataT, CellMapT, CellT, EffectT, FontBitmapT, LabelT, PartAttributesT, RectT,
+    AnimationDataT, CellMapT, CellT, EffectT, FontBitmapT
 };
 use sspj::ssae::{SsAnimation, SsAnimePack, SsPart};
 use sspj::ssce::{SsCell, SsCellMap};
@@ -46,7 +46,7 @@ pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::RectT {
     rect
 }
 
-fn convert_animedatat(anime_data: &SsAnimation, setup_animation: &SsAnimation) -> AnimationDataT {
+fn convert_animedatat(anime_data: &SsAnimation, _setup_animation: &SsAnimation) -> AnimationDataT {
     let mut anime_data_t = AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.clone();
@@ -74,7 +74,7 @@ fn convert_animedatat(anime_data: &SsAnimation, setup_animation: &SsAnimation) -
     anime_data_t
 }
 fn convert_animation_data_list(
-    sspj: &&SsProject,
+    _sspj: &&SsProject,
     anime_pack: &SsAnimePack,
 ) -> Option<Vec<AnimationDataT>> {
     let Some(setup_animation) = anime_pack
@@ -144,7 +144,7 @@ pub fn convert_cellmapt(cellmap: &SsCellMap) -> CellMapT {
     cell_map_t
 }
 pub fn convert_cellmapt_list(
-    sspj: &SsProject,
+    _sspj: &SsProject,
     cellmap_names: &[SsCellMap],
 ) -> Option<Vec<CellMapT>> {
     if cellmap_names.is_empty() {
@@ -346,7 +346,7 @@ pub fn convert_ss_anime_binary_t(
     anime_binary.instances.as_ref().map(|instances| {
         instances.iter().for_each(|instance| {
             let splt = instance.name.split("/").collect::<Vec<&str>>();
-            let animepack = splt[0];
+            let _animepack = splt[0];
             get_cellmap_names_of_instance(anime_pack, sspj)
                 .iter()
                 .for_each(|cellmap_name| {

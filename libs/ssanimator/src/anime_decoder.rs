@@ -47,7 +47,7 @@ impl<'a> SsAnimeDecoder<'a> {
         &mut self,
         model: &'a SsModel,
         anime: &'a SsAnimation,
-        cellmap: &SsCellMapList,
+        _cellmap: &SsCellMapList,
         sspj: &'a mut SsProject,
     ) {
         self.part_anime_dic.clear();
