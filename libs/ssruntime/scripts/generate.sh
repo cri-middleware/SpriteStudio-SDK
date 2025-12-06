@@ -4,16 +4,18 @@ BASE_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 pushd $BASE_DIR > /dev/null
 
-FLATC=flatc
+/bin/mkdir -p src/runtime
+
+FLATC=../../../../google/flatbuffers/build/flatc
 
 ${FLATC} --rust fbs/initialize.fbs
-/bin/mv initialize_generated.rs src/initialize.rs
+/bin/mv initialize_generated.rs src/runtime/initialize.rs
 
 ${FLATC} --rust fbs/preparation.fbs
-/bin/mv preparation_generated.rs src/preparation.rs
+/bin/mv preparation_generated.rs src/runtime/preparation.rs
 
 ${FLATC} --rust fbs/framedata.fbs
-/bin/mv framedata_generated.rs src/framedata.rs
+/bin/mv framedata_generated.rs src/runtime/framedata.rs
 
 
 cargo fmt --all
