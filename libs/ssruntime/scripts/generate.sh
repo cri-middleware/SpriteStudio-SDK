@@ -9,7 +9,7 @@ FLATC=flatc
 ${FLATC} --rust fbs/initialize.fbs
 /bin/mv initialize_generated.rs src/initialize.rs
 
-${FLATC} --rust --gen-object-api --gen-mutable fbs/preparation.fbs
+${FLATC} --rust fbs/preparation.fbs
 /bin/mv preparation_generated.rs src/preparation.rs
 
 ${FLATC} --rust fbs/framedata.fbs

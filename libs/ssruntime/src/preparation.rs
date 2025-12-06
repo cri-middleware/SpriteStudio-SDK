@@ -375,24 +375,6 @@ pub mod ss {
                     );
                 }
             }
-
-            pub fn unpack(&self) -> Vec2T {
-                Vec2T {
-                    x: self.x(),
-                    y: self.y(),
-                }
-            }
-        }
-
-        #[derive(Debug, Clone, PartialEq, Default)]
-        pub struct Vec2T {
-            pub x: f32,
-            pub y: f32,
-        }
-        impl Vec2T {
-            pub fn pack(&self) -> Vec2 {
-                Vec2::new(self.x, self.y)
-            }
         }
 
         // struct Vec3, aligned to 4
@@ -553,26 +535,6 @@ pub mod ss {
                         core::mem::size_of::<<f32 as EndianScalar>::Scalar>(),
                     );
                 }
-            }
-
-            pub fn unpack(&self) -> Vec3T {
-                Vec3T {
-                    x: self.x(),
-                    y: self.y(),
-                    z: self.z(),
-                }
-            }
-        }
-
-        #[derive(Debug, Clone, PartialEq, Default)]
-        pub struct Vec3T {
-            pub x: f32,
-            pub y: f32,
-            pub z: f32,
-        }
-        impl Vec3T {
-            pub fn pack(&self) -> Vec3 {
-                Vec3::new(self.x, self.y, self.z)
             }
         }
 
@@ -766,28 +728,6 @@ pub mod ss {
                     );
                 }
             }
-
-            pub fn unpack(&self) -> U8RectT {
-                U8RectT {
-                    a: self.a(),
-                    r: self.r(),
-                    g: self.g(),
-                    b: self.b(),
-                }
-            }
-        }
-
-        #[derive(Debug, Clone, PartialEq, Default)]
-        pub struct U8RectT {
-            pub a: u8,
-            pub r: u8,
-            pub g: u8,
-            pub b: u8,
-        }
-        impl U8RectT {
-            pub fn pack(&self) -> U8Rect {
-                U8Rect::new(self.a, self.r, self.g, self.b)
-            }
         }
 
         // struct Rect, aligned to 4
@@ -980,28 +920,6 @@ pub mod ss {
                     );
                 }
             }
-
-            pub fn unpack(&self) -> RectT {
-                RectT {
-                    x1: self.x1(),
-                    y1: self.y1(),
-                    x2: self.x2(),
-                    y2: self.y2(),
-                }
-            }
-        }
-
-        #[derive(Debug, Clone, PartialEq, Default)]
-        pub struct RectT {
-            pub x1: f32,
-            pub y1: f32,
-            pub x2: f32,
-            pub y2: f32,
-        }
-        impl RectT {
-            pub fn pack(&self) -> Rect {
-                Rect::new(self.x1, self.y1, self.x2, self.y2)
-            }
         }
 
         pub enum IntValueEntryOffset {}
@@ -1041,11 +959,6 @@ pub mod ss {
                 let mut builder = IntValueEntryBuilder::new(_fbb);
                 builder.add_value(args.value);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> IntValueEntryT {
-                let value = self.value();
-                IntValueEntryT { value }
             }
 
             #[inline]
@@ -1118,25 +1031,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct IntValueEntryT {
-            pub value: i32,
-        }
-        impl Default for IntValueEntryT {
-            fn default() -> Self {
-                Self { value: 0 }
-            }
-        }
-        impl IntValueEntryT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<IntValueEntry<'b>> {
-                let value = self.value;
-                IntValueEntry::create(_fbb, &IntValueEntryArgs { value })
-            }
-        }
         pub enum PartAttributeCellOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -1178,12 +1072,6 @@ pub mod ss {
                 }
                 builder.add_map_id(args.map_id);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeCellT {
-                let map_id = self.map_id();
-                let name = self.name().map(|x| x.to_string());
-                PartAttributeCellT { map_id, name }
             }
 
             #[inline]
@@ -1283,30 +1171,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeCellT {
-            pub map_id: i32,
-            pub name: Option<String>,
-        }
-        impl Default for PartAttributeCellT {
-            fn default() -> Self {
-                Self {
-                    map_id: 0,
-                    name: None,
-                }
-            }
-        }
-        impl PartAttributeCellT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeCell<'b>> {
-                let map_id = self.map_id;
-                let name = self.name.as_ref().map(|x| _fbb.create_string(x));
-                PartAttributeCell::create(_fbb, &PartAttributeCellArgs { map_id, name })
-            }
-        }
         pub enum SsAttributePartsColorKeyValueColorOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -1348,12 +1212,6 @@ pub mod ss {
                     builder.add_rgba(x);
                 }
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> SsAttributePartsColorKeyValueColorT {
-                let rgba = self.rgba().map(|x| x.unpack());
-                let rate = self.rate();
-                SsAttributePartsColorKeyValueColorT { rgba, rate }
             }
 
             #[inline]
@@ -1453,34 +1311,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct SsAttributePartsColorKeyValueColorT {
-            pub rgba: Option<U8RectT>,
-            pub rate: f32,
-        }
-        impl Default for SsAttributePartsColorKeyValueColorT {
-            fn default() -> Self {
-                Self {
-                    rgba: None,
-                    rate: 0.0,
-                }
-            }
-        }
-        impl SsAttributePartsColorKeyValueColorT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>> {
-                let rgba_tmp = self.rgba.as_ref().map(|x| x.pack());
-                let rgba = rgba_tmp.as_ref();
-                let rate = self.rate;
-                SsAttributePartsColorKeyValueColor::create(
-                    _fbb,
-                    &SsAttributePartsColorKeyValueColorArgs { rgba, rate },
-                )
-            }
-        }
         pub enum PartAttributePartsColorOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -1534,21 +1364,6 @@ pub mod ss {
                 }
                 builder.add_blend_type(args.blend_type);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributePartsColorT {
-                let blend_type = self.blend_type();
-                let lt = self.lt().map(|x| Box::new(x.unpack()));
-                let rt = self.rt().map(|x| Box::new(x.unpack()));
-                let lb = self.lb().map(|x| Box::new(x.unpack()));
-                let rb = self.rb().map(|x| Box::new(x.unpack()));
-                PartAttributePartsColorT {
-                    blend_type,
-                    lt,
-                    rt,
-                    lb,
-                    rb,
-                }
             }
 
             #[inline]
@@ -1741,48 +1556,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributePartsColorT {
-            pub blend_type: BlendType,
-            pub lt: Option<Box<SsAttributePartsColorKeyValueColorT>>,
-            pub rt: Option<Box<SsAttributePartsColorKeyValueColorT>>,
-            pub lb: Option<Box<SsAttributePartsColorKeyValueColorT>>,
-            pub rb: Option<Box<SsAttributePartsColorKeyValueColorT>>,
-        }
-        impl Default for PartAttributePartsColorT {
-            fn default() -> Self {
-                Self {
-                    blend_type: BlendType::Mix,
-                    lt: None,
-                    rt: None,
-                    lb: None,
-                    rb: None,
-                }
-            }
-        }
-        impl PartAttributePartsColorT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributePartsColor<'b>> {
-                let blend_type = self.blend_type;
-                let lt = self.lt.as_ref().map(|x| x.pack(_fbb));
-                let rt = self.rt.as_ref().map(|x| x.pack(_fbb));
-                let lb = self.lb.as_ref().map(|x| x.pack(_fbb));
-                let rb = self.rb.as_ref().map(|x| x.pack(_fbb));
-                PartAttributePartsColor::create(
-                    _fbb,
-                    &PartAttributePartsColorArgs {
-                        blend_type,
-                        lt,
-                        rt,
-                        lb,
-                        rb,
-                    },
-                )
-            }
-        }
         pub enum PartAttributeVertexOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -1834,14 +1607,6 @@ pub mod ss {
                     builder.add_lt(x);
                 }
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeVertexT {
-                let lt = self.lt().map(|x| x.unpack());
-                let rt = self.rt().map(|x| x.unpack());
-                let lb = self.lb().map(|x| x.unpack());
-                let rb = self.rb().map(|x| x.unpack());
-                PartAttributeVertexT { lt, rt, lb, rb }
             }
 
             #[inline]
@@ -1960,40 +1725,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeVertexT {
-            pub lt: Option<Vec2T>,
-            pub rt: Option<Vec2T>,
-            pub lb: Option<Vec2T>,
-            pub rb: Option<Vec2T>,
-        }
-        impl Default for PartAttributeVertexT {
-            fn default() -> Self {
-                Self {
-                    lt: None,
-                    rt: None,
-                    lb: None,
-                    rb: None,
-                }
-            }
-        }
-        impl PartAttributeVertexT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeVertex<'b>> {
-                let lt_tmp = self.lt.as_ref().map(|x| x.pack());
-                let lt = lt_tmp.as_ref();
-                let rt_tmp = self.rt.as_ref().map(|x| x.pack());
-                let rt = rt_tmp.as_ref();
-                let lb_tmp = self.lb.as_ref().map(|x| x.pack());
-                let lb = lb_tmp.as_ref();
-                let rb_tmp = self.rb.as_ref().map(|x| x.pack());
-                let rb = rb_tmp.as_ref();
-                PartAttributeVertex::create(_fbb, &PartAttributeVertexArgs { lt, rt, lb, rb })
-            }
-        }
         pub enum PartAttributeInstanceOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -2049,27 +1780,6 @@ pub mod ss {
                 builder.add_independent(args.independent);
                 builder.add_pingpong(args.pingpong);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeInstanceT {
-                let pingpong = self.pingpong();
-                let independent = self.independent();
-                let loop_num = self.loop_num();
-                let start_label = self.start_label().map(|x| x.to_string());
-                let start_offset = self.start_offset();
-                let end_label = self.end_label().map(|x| x.to_string());
-                let end_offset = self.end_offset();
-                let speed = self.speed();
-                PartAttributeInstanceT {
-                    pingpong,
-                    independent,
-                    loop_num,
-                    start_label,
-                    start_offset,
-                    end_label,
-                    end_offset,
-                    speed,
-                }
             }
 
             #[inline]
@@ -2301,60 +2011,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeInstanceT {
-            pub pingpong: bool,
-            pub independent: bool,
-            pub loop_num: i32,
-            pub start_label: Option<String>,
-            pub start_offset: i32,
-            pub end_label: Option<String>,
-            pub end_offset: i32,
-            pub speed: f32,
-        }
-        impl Default for PartAttributeInstanceT {
-            fn default() -> Self {
-                Self {
-                    pingpong: false,
-                    independent: false,
-                    loop_num: 0,
-                    start_label: None,
-                    start_offset: 0,
-                    end_label: None,
-                    end_offset: 0,
-                    speed: 0.0,
-                }
-            }
-        }
-        impl PartAttributeInstanceT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeInstance<'b>> {
-                let pingpong = self.pingpong;
-                let independent = self.independent;
-                let loop_num = self.loop_num;
-                let start_label = self.start_label.as_ref().map(|x| _fbb.create_string(x));
-                let start_offset = self.start_offset;
-                let end_label = self.end_label.as_ref().map(|x| _fbb.create_string(x));
-                let end_offset = self.end_offset;
-                let speed = self.speed;
-                PartAttributeInstance::create(
-                    _fbb,
-                    &PartAttributeInstanceArgs {
-                        pingpong,
-                        independent,
-                        loop_num,
-                        start_label,
-                        start_offset,
-                        end_label,
-                        end_offset,
-                        speed,
-                    },
-                )
-            }
-        }
         pub enum PartAttributeEffectOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -2398,19 +2054,6 @@ pub mod ss {
                 builder.add_start_time(args.start_time);
                 builder.add_cur_keyframe(args.cur_keyframe);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeEffectT {
-                let cur_keyframe = self.cur_keyframe();
-                let start_time = self.start_time();
-                let speed = self.speed();
-                let loopflag = self.loopflag();
-                PartAttributeEffectT {
-                    cur_keyframe,
-                    start_time,
-                    speed,
-                    loopflag,
-                }
             }
 
             #[inline]
@@ -2545,44 +2188,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeEffectT {
-            pub cur_keyframe: i32,
-            pub start_time: i32,
-            pub speed: f32,
-            pub loopflag: i32,
-        }
-        impl Default for PartAttributeEffectT {
-            fn default() -> Self {
-                Self {
-                    cur_keyframe: 0,
-                    start_time: 0,
-                    speed: 0.0,
-                    loopflag: 0,
-                }
-            }
-        }
-        impl PartAttributeEffectT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeEffect<'b>> {
-                let cur_keyframe = self.cur_keyframe;
-                let start_time = self.start_time;
-                let speed = self.speed;
-                let loopflag = self.loopflag;
-                PartAttributeEffect::create(
-                    _fbb,
-                    &PartAttributeEffectArgs {
-                        cur_keyframe,
-                        start_time,
-                        speed,
-                        loopflag,
-                    },
-                )
-            }
-        }
         pub enum PartAttributeDeformOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -2626,14 +2231,6 @@ pub mod ss {
                     builder.add_coordinate(x);
                 }
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeDeformT {
-                let coordinate = self
-                    .coordinate()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let index = self.index().map(|x| x.into_iter().collect());
-                PartAttributeDeformT { coordinate, index }
             }
 
             #[inline]
@@ -2750,33 +2347,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeDeformT {
-            pub coordinate: Option<Vec<Vec2T>>,
-            pub index: Option<Vec<i16>>,
-        }
-        impl Default for PartAttributeDeformT {
-            fn default() -> Self {
-                Self {
-                    coordinate: None,
-                    index: None,
-                }
-            }
-        }
-        impl PartAttributeDeformT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeDeform<'b>> {
-                let coordinate = self.coordinate.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack()).collect();
-                    _fbb.create_vector(&w)
-                });
-                let index = self.index.as_ref().map(|x| _fbb.create_vector(x));
-                PartAttributeDeform::create(_fbb, &PartAttributeDeformArgs { coordinate, index })
-            }
-        }
         pub enum PartAttributeShaderOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -2844,37 +2414,6 @@ pub mod ss {
                     builder.add_id(x);
                 }
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeShaderT {
-                let id = self.id().map(|x| x.to_string());
-                let param0 = self.param0();
-                let param1 = self.param1();
-                let param2 = self.param2();
-                let param3 = self.param3();
-                let param4 = self.param4();
-                let param5 = self.param5();
-                let param6 = self.param6();
-                let param7 = self.param7();
-                let map0_id = self.map0_id();
-                let map0_name = self.map0_name().map(|x| x.to_string());
-                let map1_id = self.map1_id();
-                let map1_name = self.map1_name().map(|x| x.to_string());
-                PartAttributeShaderT {
-                    id,
-                    param0,
-                    param1,
-                    param2,
-                    param3,
-                    param4,
-                    param5,
-                    param6,
-                    param7,
-                    map0_id,
-                    map0_name,
-                    map1_id,
-                    map1_name,
-                }
             }
 
             #[inline]
@@ -3202,80 +2741,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeShaderT {
-            pub id: Option<String>,
-            pub param0: f32,
-            pub param1: f32,
-            pub param2: f32,
-            pub param3: f32,
-            pub param4: f32,
-            pub param5: f32,
-            pub param6: f32,
-            pub param7: f32,
-            pub map0_id: i32,
-            pub map0_name: Option<String>,
-            pub map1_id: i32,
-            pub map1_name: Option<String>,
-        }
-        impl Default for PartAttributeShaderT {
-            fn default() -> Self {
-                Self {
-                    id: None,
-                    param0: 0.0,
-                    param1: 0.0,
-                    param2: 0.0,
-                    param3: 0.0,
-                    param4: 0.0,
-                    param5: 0.0,
-                    param6: 0.0,
-                    param7: 0.0,
-                    map0_id: 0,
-                    map0_name: None,
-                    map1_id: 0,
-                    map1_name: None,
-                }
-            }
-        }
-        impl PartAttributeShaderT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeShader<'b>> {
-                let id = self.id.as_ref().map(|x| _fbb.create_string(x));
-                let param0 = self.param0;
-                let param1 = self.param1;
-                let param2 = self.param2;
-                let param3 = self.param3;
-                let param4 = self.param4;
-                let param5 = self.param5;
-                let param6 = self.param6;
-                let param7 = self.param7;
-                let map0_id = self.map0_id;
-                let map0_name = self.map0_name.as_ref().map(|x| _fbb.create_string(x));
-                let map1_id = self.map1_id;
-                let map1_name = self.map1_name.as_ref().map(|x| _fbb.create_string(x));
-                PartAttributeShader::create(
-                    _fbb,
-                    &PartAttributeShaderArgs {
-                        id,
-                        param0,
-                        param1,
-                        param2,
-                        param3,
-                        param4,
-                        param5,
-                        param6,
-                        param7,
-                        map0_id,
-                        map0_name,
-                        map1_id,
-                        map1_name,
-                    },
-                )
-            }
-        }
         pub enum PartAttributeUserDataOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -3327,19 +2792,6 @@ pub mod ss {
                     builder.add_integer(x);
                 }
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeUserDataT {
-                let integer = self.integer().map(|x| Box::new(x.unpack()));
-                let rect = self.rect().map(|x| x.unpack());
-                let point = self.point().map(|x| x.unpack());
-                let str = self.str().map(|x| x.to_string());
-                PartAttributeUserDataT {
-                    integer,
-                    rect,
-                    point,
-                    str,
-                }
             }
 
             #[inline]
@@ -3478,46 +2930,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeUserDataT {
-            pub integer: Option<Box<IntValueEntryT>>,
-            pub rect: Option<RectT>,
-            pub point: Option<Vec2T>,
-            pub str: Option<String>,
-        }
-        impl Default for PartAttributeUserDataT {
-            fn default() -> Self {
-                Self {
-                    integer: None,
-                    rect: None,
-                    point: None,
-                    str: None,
-                }
-            }
-        }
-        impl PartAttributeUserDataT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeUserData<'b>> {
-                let integer = self.integer.as_ref().map(|x| x.pack(_fbb));
-                let rect_tmp = self.rect.as_ref().map(|x| x.pack());
-                let rect = rect_tmp.as_ref();
-                let point_tmp = self.point.as_ref().map(|x| x.pack());
-                let point = point_tmp.as_ref();
-                let str = self.str.as_ref().map(|x| _fbb.create_string(x));
-                PartAttributeUserData::create(
-                    _fbb,
-                    &PartAttributeUserDataArgs {
-                        integer,
-                        rect,
-                        point,
-                        str,
-                    },
-                )
-            }
-        }
         pub enum SignalCommandParamOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -3561,17 +2973,6 @@ pub mod ss {
                 }
                 builder.add_type_(args.type_);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> SignalCommandParamT {
-                let param_id = self.param_id().map(|x| x.to_string());
-                let type_ = self.type_();
-                let value = self.value();
-                SignalCommandParamT {
-                    param_id,
-                    type_,
-                    value,
-                }
             }
 
             #[inline]
@@ -3699,40 +3100,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct SignalCommandParamT {
-            pub param_id: Option<String>,
-            pub type_: SignalCommandParamType,
-            pub value: f32,
-        }
-        impl Default for SignalCommandParamT {
-            fn default() -> Self {
-                Self {
-                    param_id: None,
-                    type_: SignalCommandParamType::Index,
-                    value: 0.0,
-                }
-            }
-        }
-        impl SignalCommandParamT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<SignalCommandParam<'b>> {
-                let param_id = self.param_id.as_ref().map(|x| _fbb.create_string(x));
-                let type_ = self.type_;
-                let value = self.value;
-                SignalCommandParam::create(
-                    _fbb,
-                    &SignalCommandParamArgs {
-                        param_id,
-                        type_,
-                        value,
-                    },
-                )
-            }
-        }
         pub enum PartAttributeSignalOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -3778,19 +3145,6 @@ pub mod ss {
                 }
                 builder.add_active(args.active);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeSignalT {
-                let active = self.active();
-                let command_id = self.command_id().map(|x| x.to_string());
-                let params = self
-                    .params()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                PartAttributeSignalT {
-                    active,
-                    command_id,
-                    params,
-                }
             }
 
             #[inline]
@@ -3928,43 +3282,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeSignalT {
-            pub active: bool,
-            pub command_id: Option<String>,
-            pub params: Option<Vec<SignalCommandParamT>>,
-        }
-        impl Default for PartAttributeSignalT {
-            fn default() -> Self {
-                Self {
-                    active: false,
-                    command_id: None,
-                    params: None,
-                }
-            }
-        }
-        impl PartAttributeSignalT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeSignal<'b>> {
-                let active = self.active;
-                let command_id = self.command_id.as_ref().map(|x| _fbb.create_string(x));
-                let params = self.params.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                PartAttributeSignal::create(
-                    _fbb,
-                    &PartAttributeSignalArgs {
-                        active,
-                        command_id,
-                        params,
-                    },
-                )
-            }
-        }
         pub enum PartAttributeAudioOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -4008,17 +3325,6 @@ pub mod ss {
                 }
                 builder.add_sound_list_id(args.sound_list_id);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributeAudioT {
-                let sound_list_id = self.sound_list_id();
-                let sound_name = self.sound_name().map(|x| x.to_string());
-                let loop_num = self.loop_num();
-                PartAttributeAudioT {
-                    sound_list_id,
-                    sound_name,
-                    loop_num,
-                }
             }
 
             #[inline]
@@ -4140,40 +3446,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributeAudioT {
-            pub sound_list_id: i32,
-            pub sound_name: Option<String>,
-            pub loop_num: i32,
-        }
-        impl Default for PartAttributeAudioT {
-            fn default() -> Self {
-                Self {
-                    sound_list_id: 0,
-                    sound_name: None,
-                    loop_num: 0,
-                }
-            }
-        }
-        impl PartAttributeAudioT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributeAudio<'b>> {
-                let sound_list_id = self.sound_list_id;
-                let sound_name = self.sound_name.as_ref().map(|x| _fbb.create_string(x));
-                let loop_num = self.loop_num;
-                PartAttributeAudio::create(
-                    _fbb,
-                    &PartAttributeAudioArgs {
-                        sound_list_id,
-                        sound_name,
-                        loop_num,
-                    },
-                )
-            }
-        }
         pub enum PartAttributesOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -4283,57 +3555,6 @@ pub mod ss {
                 builder.add_flip_h(args.flip_h);
                 builder.add_flip_v(args.flip_v);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartAttributesT {
-                let cell = self.cell().map(|x| Box::new(x.unpack()));
-                let position = self.position().map(|x| x.unpack());
-                let rotation = self.rotation().map(|x| x.unpack());
-                let scale = self.scale().map(|x| x.unpack());
-                let local_scale = self.local_scale().map(|x| x.unpack());
-                let opacity = self.opacity();
-                let localopacity = self.localopacity();
-                let priority = self.priority();
-                let flip_v = self.flip_v();
-                let flip_h = self.flip_h();
-                let hide = self.hide();
-                let parts_color = self.parts_color().map(|x| Box::new(x.unpack()));
-                let shader = self.shader().map(|x| Box::new(x.unpack()));
-                let vertex = self.vertex().map(|x| Box::new(x.unpack()));
-                let pivot = self.pivot().map(|x| x.unpack());
-                let size = self.size().map(|x| x.unpack());
-                let uv_move = self.uv_move().map(|x| x.unpack());
-                let uv_scale = self.uv_scale().map(|x| x.unpack());
-                let bounding_radius = self.bounding_radius();
-                let mask = self.mask();
-                let skew = self.skew().map(|x| x.unpack());
-                let deform = self.deform().map(|x| Box::new(x.unpack()));
-                let texture = self.texture();
-                PartAttributesT {
-                    cell,
-                    position,
-                    rotation,
-                    scale,
-                    local_scale,
-                    opacity,
-                    localopacity,
-                    priority,
-                    flip_v,
-                    flip_h,
-                    hide,
-                    parts_color,
-                    shader,
-                    vertex,
-                    pivot,
-                    size,
-                    uv_move,
-                    uv_scale,
-                    bounding_radius,
-                    mask,
-                    skew,
-                    deform,
-                    texture,
-                }
             }
 
             #[inline]
@@ -4863,129 +4084,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartAttributesT {
-            pub cell: Option<Box<PartAttributeCellT>>,
-            pub position: Option<Vec3T>,
-            pub rotation: Option<Vec3T>,
-            pub scale: Option<Vec2T>,
-            pub local_scale: Option<Vec2T>,
-            pub opacity: i16,
-            pub localopacity: i16,
-            pub priority: i16,
-            pub flip_v: bool,
-            pub flip_h: bool,
-            pub hide: bool,
-            pub parts_color: Option<Box<PartAttributePartsColorT>>,
-            pub shader: Option<Box<PartAttributeShaderT>>,
-            pub vertex: Option<Box<PartAttributeVertexT>>,
-            pub pivot: Option<Vec2T>,
-            pub size: Option<Vec2T>,
-            pub uv_move: Option<Vec3T>,
-            pub uv_scale: Option<Vec2T>,
-            pub bounding_radius: f32,
-            pub mask: f32,
-            pub skew: Option<Vec2T>,
-            pub deform: Option<Box<PartAttributeDeformT>>,
-            pub texture: i32,
-        }
-        impl Default for PartAttributesT {
-            fn default() -> Self {
-                Self {
-                    cell: None,
-                    position: None,
-                    rotation: None,
-                    scale: None,
-                    local_scale: None,
-                    opacity: 0,
-                    localopacity: 0,
-                    priority: 0,
-                    flip_v: false,
-                    flip_h: false,
-                    hide: false,
-                    parts_color: None,
-                    shader: None,
-                    vertex: None,
-                    pivot: None,
-                    size: None,
-                    uv_move: None,
-                    uv_scale: None,
-                    bounding_radius: 0.0,
-                    mask: 0.0,
-                    skew: None,
-                    deform: None,
-                    texture: 0,
-                }
-            }
-        }
-        impl PartAttributesT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartAttributes<'b>> {
-                let cell = self.cell.as_ref().map(|x| x.pack(_fbb));
-                let position_tmp = self.position.as_ref().map(|x| x.pack());
-                let position = position_tmp.as_ref();
-                let rotation_tmp = self.rotation.as_ref().map(|x| x.pack());
-                let rotation = rotation_tmp.as_ref();
-                let scale_tmp = self.scale.as_ref().map(|x| x.pack());
-                let scale = scale_tmp.as_ref();
-                let local_scale_tmp = self.local_scale.as_ref().map(|x| x.pack());
-                let local_scale = local_scale_tmp.as_ref();
-                let opacity = self.opacity;
-                let localopacity = self.localopacity;
-                let priority = self.priority;
-                let flip_v = self.flip_v;
-                let flip_h = self.flip_h;
-                let hide = self.hide;
-                let parts_color = self.parts_color.as_ref().map(|x| x.pack(_fbb));
-                let shader = self.shader.as_ref().map(|x| x.pack(_fbb));
-                let vertex = self.vertex.as_ref().map(|x| x.pack(_fbb));
-                let pivot_tmp = self.pivot.as_ref().map(|x| x.pack());
-                let pivot = pivot_tmp.as_ref();
-                let size_tmp = self.size.as_ref().map(|x| x.pack());
-                let size = size_tmp.as_ref();
-                let uv_move_tmp = self.uv_move.as_ref().map(|x| x.pack());
-                let uv_move = uv_move_tmp.as_ref();
-                let uv_scale_tmp = self.uv_scale.as_ref().map(|x| x.pack());
-                let uv_scale = uv_scale_tmp.as_ref();
-                let bounding_radius = self.bounding_radius;
-                let mask = self.mask;
-                let skew_tmp = self.skew.as_ref().map(|x| x.pack());
-                let skew = skew_tmp.as_ref();
-                let deform = self.deform.as_ref().map(|x| x.pack(_fbb));
-                let texture = self.texture;
-                PartAttributes::create(
-                    _fbb,
-                    &PartAttributesArgs {
-                        cell,
-                        position,
-                        rotation,
-                        scale,
-                        local_scale,
-                        opacity,
-                        localopacity,
-                        priority,
-                        flip_v,
-                        flip_h,
-                        hide,
-                        parts_color,
-                        shader,
-                        vertex,
-                        pivot,
-                        size,
-                        uv_move,
-                        uv_scale,
-                        bounding_radius,
-                        mask,
-                        skew,
-                        deform,
-                        texture,
-                    },
-                )
-            }
-        }
         pub enum PartMeshDataOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -5037,23 +4135,6 @@ pub mod ss {
                 }
                 builder.add_part_index(args.part_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> PartMeshDataT {
-                let part_index = self.part_index();
-                let uv = self.uv().map(|x| x.into_iter().collect());
-                let indices = self.indices().map(|x| x.into_iter().collect());
-                let count_coordinate_mesh = self.count_coordinate_mesh();
-                let index_coordinate_deform = self
-                    .index_coordinate_deform()
-                    .map(|x| x.into_iter().collect());
-                PartMeshDataT {
-                    part_index,
-                    uv,
-                    indices,
-                    count_coordinate_mesh,
-                    index_coordinate_deform,
-                }
             }
 
             #[inline]
@@ -5244,51 +4325,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct PartMeshDataT {
-            pub part_index: u16,
-            pub uv: Option<Vec<f32>>,
-            pub indices: Option<Vec<i32>>,
-            pub count_coordinate_mesh: i32,
-            pub index_coordinate_deform: Option<Vec<i32>>,
-        }
-        impl Default for PartMeshDataT {
-            fn default() -> Self {
-                Self {
-                    part_index: 0,
-                    uv: None,
-                    indices: None,
-                    count_coordinate_mesh: 0,
-                    index_coordinate_deform: None,
-                }
-            }
-        }
-        impl PartMeshDataT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<PartMeshData<'b>> {
-                let part_index = self.part_index;
-                let uv = self.uv.as_ref().map(|x| _fbb.create_vector(x));
-                let indices = self.indices.as_ref().map(|x| _fbb.create_vector(x));
-                let count_coordinate_mesh = self.count_coordinate_mesh;
-                let index_coordinate_deform = self
-                    .index_coordinate_deform
-                    .as_ref()
-                    .map(|x| _fbb.create_vector(x));
-                PartMeshData::create(
-                    _fbb,
-                    &PartMeshDataArgs {
-                        part_index,
-                        uv,
-                        indices,
-                        count_coordinate_mesh,
-                        index_coordinate_deform,
-                    },
-                )
-            }
-        }
         pub enum EventUserDataOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -5330,12 +4366,6 @@ pub mod ss {
                 }
                 builder.add_part_index(args.part_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> EventUserDataT {
-                let part_index = self.part_index();
-                let value = self.value().map(|x| Box::new(x.unpack()));
-                EventUserDataT { part_index, value }
             }
 
             #[inline]
@@ -5449,30 +4479,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct EventUserDataT {
-            pub part_index: u16,
-            pub value: Option<Box<PartAttributeUserDataT>>,
-        }
-        impl Default for EventUserDataT {
-            fn default() -> Self {
-                Self {
-                    part_index: 0,
-                    value: None,
-                }
-            }
-        }
-        impl EventUserDataT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<EventUserData<'b>> {
-                let part_index = self.part_index;
-                let value = self.value.as_ref().map(|x| x.pack(_fbb));
-                EventUserData::create(_fbb, &EventUserDataArgs { part_index, value })
-            }
-        }
         pub enum EventSignalOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -5514,12 +4520,6 @@ pub mod ss {
                 }
                 builder.add_part_index(args.part_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> EventSignalT {
-                let part_index = self.part_index();
-                let value = self.value().map(|x| Box::new(x.unpack()));
-                EventSignalT { part_index, value }
             }
 
             #[inline]
@@ -5633,30 +4633,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct EventSignalT {
-            pub part_index: u16,
-            pub value: Option<Box<PartAttributeSignalT>>,
-        }
-        impl Default for EventSignalT {
-            fn default() -> Self {
-                Self {
-                    part_index: 0,
-                    value: None,
-                }
-            }
-        }
-        impl EventSignalT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<EventSignal<'b>> {
-                let part_index = self.part_index;
-                let value = self.value.as_ref().map(|x| x.pack(_fbb));
-                EventSignal::create(_fbb, &EventSignalArgs { part_index, value })
-            }
-        }
         pub enum EventAudioOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -5698,12 +4674,6 @@ pub mod ss {
                 }
                 builder.add_part_index(args.part_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> EventAudioT {
-                let part_index = self.part_index();
-                let value = self.value().map(|x| Box::new(x.unpack()));
-                EventAudioT { part_index, value }
             }
 
             #[inline]
@@ -5817,30 +4787,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct EventAudioT {
-            pub part_index: u16,
-            pub value: Option<Box<PartAttributeAudioT>>,
-        }
-        impl Default for EventAudioT {
-            fn default() -> Self {
-                Self {
-                    part_index: 0,
-                    value: None,
-                }
-            }
-        }
-        impl EventAudioT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<EventAudio<'b>> {
-                let part_index = self.part_index;
-                let value = self.value.as_ref().map(|x| x.pack(_fbb));
-                EventAudio::create(_fbb, &EventAudioArgs { part_index, value })
-            }
-        }
         pub enum EventInstanceOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -5882,12 +4828,6 @@ pub mod ss {
                 }
                 builder.add_part_index(args.part_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> EventInstanceT {
-                let part_index = self.part_index();
-                let value = self.value().map(|x| Box::new(x.unpack()));
-                EventInstanceT { part_index, value }
             }
 
             #[inline]
@@ -6001,30 +4941,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct EventInstanceT {
-            pub part_index: u16,
-            pub value: Option<Box<PartAttributeInstanceT>>,
-        }
-        impl Default for EventInstanceT {
-            fn default() -> Self {
-                Self {
-                    part_index: 0,
-                    value: None,
-                }
-            }
-        }
-        impl EventInstanceT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<EventInstance<'b>> {
-                let part_index = self.part_index;
-                let value = self.value.as_ref().map(|x| x.pack(_fbb));
-                EventInstance::create(_fbb, &EventInstanceArgs { part_index, value })
-            }
-        }
         pub enum EventEffectOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -6066,12 +4982,6 @@ pub mod ss {
                 }
                 builder.add_part_index(args.part_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> EventEffectT {
-                let part_index = self.part_index();
-                let value = self.value().map(|x| Box::new(x.unpack()));
-                EventEffectT { part_index, value }
             }
 
             #[inline]
@@ -6185,30 +5095,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct EventEffectT {
-            pub part_index: u16,
-            pub value: Option<Box<PartAttributeEffectT>>,
-        }
-        impl Default for EventEffectT {
-            fn default() -> Self {
-                Self {
-                    part_index: 0,
-                    value: None,
-                }
-            }
-        }
-        impl EventEffectT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<EventEffect<'b>> {
-                let part_index = self.part_index;
-                let value = self.value.as_ref().map(|x| x.pack(_fbb));
-                EventEffect::create(_fbb, &EventEffectArgs { part_index, value })
-            }
-        }
         pub enum EventsPerFrameOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -6266,29 +5152,6 @@ pub mod ss {
                 }
                 builder.add_frame_index(args.frame_index);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> EventsPerFrameT {
-                let frame_index = self.frame_index();
-                let user = self.user().map(|x| x.iter().map(|t| t.unpack()).collect());
-                let signal = self
-                    .signal()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let audio = self.audio().map(|x| x.iter().map(|t| t.unpack()).collect());
-                let instance = self
-                    .instance()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let effect = self
-                    .effect()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                EventsPerFrameT {
-                    frame_index,
-                    user,
-                    signal,
-                    audio,
-                    instance,
-                    effect,
-                }
             }
 
             #[inline]
@@ -6549,67 +5412,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct EventsPerFrameT {
-            pub frame_index: u16,
-            pub user: Option<Vec<EventUserDataT>>,
-            pub signal: Option<Vec<EventSignalT>>,
-            pub audio: Option<Vec<EventAudioT>>,
-            pub instance: Option<Vec<EventInstanceT>>,
-            pub effect: Option<Vec<EventEffectT>>,
-        }
-        impl Default for EventsPerFrameT {
-            fn default() -> Self {
-                Self {
-                    frame_index: 0,
-                    user: None,
-                    signal: None,
-                    audio: None,
-                    instance: None,
-                    effect: None,
-                }
-            }
-        }
-        impl EventsPerFrameT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<EventsPerFrame<'b>> {
-                let frame_index = self.frame_index;
-                let user = self.user.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let signal = self.signal.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let audio = self.audio.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let instance = self.instance.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let effect = self.effect.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                EventsPerFrame::create(
-                    _fbb,
-                    &EventsPerFrameArgs {
-                        frame_index,
-                        user,
-                        signal,
-                        audio,
-                        instance,
-                        effect,
-                    },
-                )
-            }
-        }
         pub enum LabelOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -6651,15 +5453,6 @@ pub mod ss {
                     builder.add_name(x);
                 }
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> LabelT {
-                let name = {
-                    let x = self.name();
-                    x.to_string()
-                };
-                let time = self.time();
-                LabelT { name, time }
             }
 
             #[inline]
@@ -6760,33 +5553,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct LabelT {
-            pub name: String,
-            pub time: i32,
-        }
-        impl Default for LabelT {
-            fn default() -> Self {
-                Self {
-                    name: "".to_string(),
-                    time: 0,
-                }
-            }
-        }
-        impl LabelT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<Label<'b>> {
-                let name = Some({
-                    let x = &self.name;
-                    _fbb.create_string(x)
-                });
-                let time = self.time;
-                Label::create(_fbb, &LabelArgs { name, time })
-            }
-        }
         pub enum AnimPrepDataOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -6850,37 +5616,6 @@ pub mod ss {
                 builder.add_end_frames(args.end_frames);
                 builder.add_start_frames(args.start_frames);
                 builder.finish()
-            }
-
-            pub fn unpack(&self) -> AnimPrepDataT {
-                let initial_data = self
-                    .initial_data()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let part_mesh_data = self
-                    .part_mesh_data()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let events = self
-                    .events()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let label_data = self
-                    .label_data()
-                    .map(|x| x.iter().map(|t| t.unpack()).collect());
-                let start_frames = self.start_frames();
-                let end_frames = self.end_frames();
-                let total_frames = self.total_frames();
-                let fps = self.fps();
-                let canvas = self.canvas().map(|x| x.unpack());
-                AnimPrepDataT {
-                    initial_data,
-                    part_mesh_data,
-                    events,
-                    label_data,
-                    start_frames,
-                    end_frames,
-                    total_frames,
-                    fps,
-                    canvas,
-                }
             }
 
             #[inline]
@@ -7166,77 +5901,6 @@ pub mod ss {
                 ds.field("fps", &self.fps());
                 ds.field("canvas", &self.canvas());
                 ds.finish()
-            }
-        }
-        #[non_exhaustive]
-        #[derive(Debug, Clone, PartialEq)]
-        pub struct AnimPrepDataT {
-            pub initial_data: Option<Vec<PartAttributesT>>,
-            pub part_mesh_data: Option<Vec<PartMeshDataT>>,
-            pub events: Option<Vec<EventsPerFrameT>>,
-            pub label_data: Option<Vec<LabelT>>,
-            pub start_frames: i16,
-            pub end_frames: i16,
-            pub total_frames: i16,
-            pub fps: i16,
-            pub canvas: Option<RectT>,
-        }
-        impl Default for AnimPrepDataT {
-            fn default() -> Self {
-                Self {
-                    initial_data: None,
-                    part_mesh_data: None,
-                    events: None,
-                    label_data: None,
-                    start_frames: 0,
-                    end_frames: 0,
-                    total_frames: 0,
-                    fps: 0,
-                    canvas: None,
-                }
-            }
-        }
-        impl AnimPrepDataT {
-            pub fn pack<'b, A: flatbuffers::Allocator + 'b>(
-                &self,
-                _fbb: &mut flatbuffers::FlatBufferBuilder<'b, A>,
-            ) -> flatbuffers::WIPOffset<AnimPrepData<'b>> {
-                let initial_data = self.initial_data.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let part_mesh_data = self.part_mesh_data.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let events = self.events.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let label_data = self.label_data.as_ref().map(|x| {
-                    let w: Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-                    _fbb.create_vector(&w)
-                });
-                let start_frames = self.start_frames;
-                let end_frames = self.end_frames;
-                let total_frames = self.total_frames;
-                let fps = self.fps;
-                let canvas_tmp = self.canvas.as_ref().map(|x| x.pack());
-                let canvas = canvas_tmp.as_ref();
-                AnimPrepData::create(
-                    _fbb,
-                    &AnimPrepDataArgs {
-                        initial_data,
-                        part_mesh_data,
-                        events,
-                        label_data,
-                        start_frames,
-                        end_frames,
-                        total_frames,
-                        fps,
-                        canvas,
-                    },
-                )
             }
         }
         #[inline]
