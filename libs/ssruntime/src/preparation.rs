@@ -5081,13 +5081,13 @@ pub mod ss {
                 }
             }
             #[inline]
-            pub fn indices(&self) -> Option<flatbuffers::Vector<'a, f32>> {
+            pub fn indices(&self) -> Option<flatbuffers::Vector<'a, i32>> {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, f32>>>(
+                        .get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, i32>>>(
                             PartMeshData::VT_INDICES,
                             None,
                         )
@@ -5133,7 +5133,7 @@ pub mod ss {
                         Self::VT_UV,
                         false,
                     )?
-                    .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, f32>>>(
+                    .visit_field::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'_, i32>>>(
                         "indices",
                         Self::VT_INDICES,
                         false,
@@ -5155,7 +5155,7 @@ pub mod ss {
         pub struct PartMeshDataArgs<'a> {
             pub part_index: u16,
             pub uv: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
-            pub indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, f32>>>,
+            pub indices: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i32>>>,
             pub count_coordinate_mesh: i32,
             pub index_coordinate_deform:
                 Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, i32>>>,
@@ -5191,7 +5191,7 @@ pub mod ss {
             #[inline]
             pub fn add_indices(
                 &mut self,
-                indices: flatbuffers::WIPOffset<flatbuffers::Vector<'b, f32>>,
+                indices: flatbuffers::WIPOffset<flatbuffers::Vector<'b, i32>>,
             ) {
                 self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(
                     PartMeshData::VT_INDICES,
@@ -5249,7 +5249,7 @@ pub mod ss {
         pub struct PartMeshDataT {
             pub part_index: u16,
             pub uv: Option<Vec<f32>>,
-            pub indices: Option<Vec<f32>>,
+            pub indices: Option<Vec<i32>>,
             pub count_coordinate_mesh: i32,
             pub index_coordinate_deform: Option<Vec<i32>>,
         }
@@ -5891,13 +5891,13 @@ pub mod ss {
             }
 
             #[inline]
-            pub fn part_index(&self) -> i16 {
+            pub fn part_index(&self) -> u16 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<i16>(EventInstance::VT_PART_INDEX, Some(0))
+                        .get::<u16>(EventInstance::VT_PART_INDEX, Some(0))
                         .unwrap()
                 }
             }
@@ -5907,7 +5907,7 @@ pub mod ss {
             }
 
             #[inline]
-            pub fn key_compare_with_value(&self, val: i16) -> ::core::cmp::Ordering {
+            pub fn key_compare_with_value(&self, val: u16) -> ::core::cmp::Ordering {
                 let key = self.part_index();
                 key.cmp(&val)
             }
@@ -5934,7 +5934,7 @@ pub mod ss {
             ) -> Result<(), flatbuffers::InvalidFlatbuffer> {
                 use self::flatbuffers::Verifiable;
                 v.visit_table(pos)?
-                    .visit_field::<i16>("part_index", Self::VT_PART_INDEX, false)?
+                    .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
                     .visit_field::<flatbuffers::ForwardsUOffset<PartAttributeInstance>>(
                         "value",
                         Self::VT_VALUE,
@@ -5945,7 +5945,7 @@ pub mod ss {
             }
         }
         pub struct EventInstanceArgs<'a> {
-            pub part_index: i16,
+            pub part_index: u16,
             pub value: Option<flatbuffers::WIPOffset<PartAttributeInstance<'a>>>,
         }
         impl<'a> Default for EventInstanceArgs<'a> {
@@ -5964,9 +5964,9 @@ pub mod ss {
         }
         impl<'a: 'b, 'b, A: flatbuffers::Allocator + 'a> EventInstanceBuilder<'a, 'b, A> {
             #[inline]
-            pub fn add_part_index(&mut self, part_index: i16) {
+            pub fn add_part_index(&mut self, part_index: u16) {
                 self.fbb_
-                    .push_slot::<i16>(EventInstance::VT_PART_INDEX, part_index, 0);
+                    .push_slot::<u16>(EventInstance::VT_PART_INDEX, part_index, 0);
             }
             #[inline]
             pub fn add_value(&mut self, value: flatbuffers::WIPOffset<PartAttributeInstance<'b>>) {
@@ -6004,7 +6004,7 @@ pub mod ss {
         #[non_exhaustive]
         #[derive(Debug, Clone, PartialEq)]
         pub struct EventInstanceT {
-            pub part_index: i16,
+            pub part_index: u16,
             pub value: Option<Box<PartAttributeInstanceT>>,
         }
         impl Default for EventInstanceT {

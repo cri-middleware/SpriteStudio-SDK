@@ -139,7 +139,7 @@ table EventAudio {
 }
 
 table EventInstance {
-  part_index: short (key);
+  part_index: ushort (key);
 
   value: PartAttributeInstance;
 }
@@ -652,7 +652,7 @@ table PartMeshData {
   part_index: ushort (key);
 
   uv: [float];
-  indices: [float];
+  indices: [int];
   count_coordinate_mesh: int;
   index_coordinate_deform: [int];
 }
