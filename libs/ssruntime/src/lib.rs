@@ -1,4 +1,4 @@
-use flatbuffers::FlatBufferBuilder;
+use flatbuffers;
 use ssab::ssab::*;
 
 mod framedata;
