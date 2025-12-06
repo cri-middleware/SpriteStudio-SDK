@@ -135,7 +135,7 @@ table EventSignal {
 table EventAudio {
   part_index: ushort (key);
 
-  value: PartAsttributeAudio;
+  value: PartAttributeAudio;
 }
 
 table EventInstance {
@@ -386,26 +386,26 @@ table PartAttributeUserData {
   str: string;
 }
 
-enum SignalComamndParamType: ubyte {
+enum SignalCommandParamType: ubyte {
   Index,
   Integer,
   Floating,
   None,
 }
 
-table SignalComamndParam {
+table SignalCommandParam {
   param_id: string;
-  type: SignalComamndParamType;
+  type: SignalCommandParamType;
   value: float;
 }
 
 table PartAttributeSignal {
   active: bool;
   command_id: string;
-  params: [SignalComamndParam];
+  params: [SignalCommandParam];
 }
 
-table PartAsttributeAudio {
+table PartAttributeAudio {
   sound_list_id: int;
   sound_name: string;
   loop_num: int;
@@ -645,7 +645,6 @@ table PartAnimationData {
   mask_array: [PartAnimationDataFloatValue];
   skew_array: [PartAnimationDataVec2];
   deform_array: [PartAnimationDataDeform];
-
   texture_array: [PartAnimationDataIntValue];
 }
 

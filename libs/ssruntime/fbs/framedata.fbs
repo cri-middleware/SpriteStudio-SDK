@@ -1,0 +1,163 @@
+namespace ss.runtime;
+
+table PartAttributeCell {
+ map_id: int; // hash or name
+ name: string;
+}
+
+struct Vec2 {
+  x: float;
+  y: float;
+}
+
+struct U8Rect {
+  a: ubyte;
+  r: ubyte;
+  g: ubyte;
+  b: ubyte;
+}
+
+struct  SsAttributePartsColorKeyValueColor {
+  rgba: U8Rect;
+  rate: float;
+}
+
+enum BlendType : ubyte {
+  Mix,
+  Mul,
+  Add,
+  Sub,
+  Mulalpha,
+  Screen,
+  Exclusion,
+  Invert,
+}
+
+table PartAttributePartsColor {
+  blend_type: BlendType;
+
+  lt: SsAttributePartsColorKeyValueColor;
+  rt: SsAttributePartsColorKeyValueColor;
+  lb: SsAttributePartsColorKeyValueColor;
+  rb: SsAttributePartsColorKeyValueColor;
+}
+
+struct PartAttributeVertex {
+  lt: Vec2;
+  rt: Vec2;
+  lb: Vec2;
+  rb: Vec2;
+}
+
+table PartAttributeDeform {
+  coordinate: [Vec2];
+  index: [short];
+}
+
+table PartAttributeShader {
+  id: string;
+  param0: float;
+  param1: float;
+  param2: float;
+  param3: float;
+  param4: float;
+  param5: float;
+  param6: float;
+  param7: float;
+  map0_id: int;
+  map0_name: string;
+  map1_id: int;
+  map1_name: string;
+}
+
+enum UpdateAttributeFlags : ulong (bit_flags) {
+  AttributeCell,
+  AttributePosX,
+  AttributePosY,
+  AttributePosZ,
+  AttributeRotX,
+  AttributeRotY,
+  AttributeRotZ,
+  AttributeSclX,
+  AttributeSclY,
+  AttributeLosclX,
+  AttributeLosclY,
+  AttributeAlpha,
+  AttributeLoAlpha,
+  AttributePrio,
+  AttributeFlipH,
+  AttributeFlipV,
+  AttributeHide,
+  AttributePartsColor,
+  AttributeShader,
+  AttributeVertex,
+  AttributePivotX,
+  AttributePivotY,
+  AttributeAnchorX,
+  AttributeAnchorY,
+  AttributeSizeX,
+  AttributeSizeY,
+  AttributeImgFlipH,
+  AttributeImgFlipV,
+  AttributeUvtX,
+  AttributeUvtY,
+  AttributeUvrZ,
+  AttributeUvsX,
+  AttributeUvsY,
+  AttributeBoundr,
+  AttributeMask,
+  AttributeSkew,
+  AttributeDeform,
+  AttributeTexture,
+}
+
+table PartState {
+  part_index: ushort;
+
+  update_flag: UpdateAttributeFlags;
+
+  cell: PartAttributeCell;
+  pos_x: float;
+  pos_y: float;
+  pos_z: float;
+  rot_x: float;
+  rot_y: float;
+  rot_z: float;
+  scl_x: float = 1.0;
+  scl_y: float = 1.0;
+  loscl_x: float = 1.0;
+  loscl_y: float = 1.0;
+  alpha: float;
+  lo_alpha: float;
+  prio: int;
+  flip_h: bool;
+  flip_v: bool;
+  hide: bool;
+  parts_color: PartAttributePartsColor;
+  shader: PartAttributeShader;
+  vertex: PartAttributeVertex;
+  pivot_x: float;
+  pivot_y: float;
+  anchor_x: float;
+  anchor_y: float;
+  size_x: float;
+  size_y: float;
+  img_flip_h: bool;
+  img_flip_v: bool;
+  uvt_x: float;
+  uvt_y: float;
+  uvr_z: float;
+  uvs_x: float;
+  uvs_y: float;
+  boundr: float;
+  mask: float;
+  skew: Vec2;
+  deform:PartAttributeDeform;
+  texture: int = -1;
+}
+
+table FrameData {
+  parts: [PartState];
+}
+
+root_type FrameData;

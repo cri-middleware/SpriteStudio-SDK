@@ -1,10 +1,10 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{
-    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectT,
-    FloatValueEntry, FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs,
-    IntValueEntryT, RectValueEntry, RectValueEntryArgs, RectValueEntryT, SsAnimeBinary,
-    SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2ValueEntry, Vec2ValueEntryArgs, Vec2ValueEntryT,
+    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectT, FloatValueEntry,
+    FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs, IntValueEntryT,
+    RectValueEntry, RectValueEntryArgs, RectValueEntryT, SsAnimeBinary, SsAnimeBinaryArgs,
+    SsAnimeBinaryT, Vec2ValueEntry, Vec2ValueEntryArgs, Vec2ValueEntryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
@@ -207,7 +207,11 @@ impl<'bldr> SsabCache<'bldr> {
     }
 
     #[allow(dead_code)]
-    fn create_shared_int_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_int_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         int_value_table_t: &IntValueEntryT,
@@ -223,7 +227,11 @@ impl<'bldr> SsabCache<'bldr> {
     }
 
     #[allow(dead_code)]
-    fn create_shared_float_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_float_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         float_value_table_t: &FloatValueEntryT,
@@ -239,7 +247,11 @@ impl<'bldr> SsabCache<'bldr> {
     }
 
     #[allow(dead_code)]
-    fn create_shared_vec2_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_vec2_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         vec2_value_table_t: &Vec2ValueEntryT,
@@ -256,7 +268,11 @@ impl<'bldr> SsabCache<'bldr> {
     }
 
     #[allow(dead_code)]
-    fn create_shared_rect_value_table<'args: 'mut_bldr, 'mut_bldr, A: flatbuffers::Allocator + 'bldr>(
+    fn create_shared_rect_value_table<
+        'args: 'mut_bldr,
+        'mut_bldr,
+        A: flatbuffers::Allocator + 'bldr,
+    >(
         &mut self,
         fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
         rect_value_table_t: &RectValueEntryT,
