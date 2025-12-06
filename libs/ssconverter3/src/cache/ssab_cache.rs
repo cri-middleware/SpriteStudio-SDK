@@ -1,11 +1,10 @@
 use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
 use ordered_float::OrderedFloat;
 use ssab::ssab::{
-    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectNodeT, EffectT,
-    FloatValueEntry, FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs,
-    IntValueEntryT, Label, MeshDataIndices, MeshDataUV, RectValueEntry, RectValueEntryArgs,
-    RectValueEntryT, SsAnimeBinary, SsAnimeBinaryArgs, SsAnimeBinaryT, Vec2ValueEntry,
-    Vec2ValueEntryArgs, Vec2ValueEntryT,
+    AnimationData, AnimationDataArgs, AnimationDataT, Effect, EffectArgs, EffectT, FloatValueEntry,
+    FloatValueEntryArgs, FloatValueEntryT, IntValueEntry, IntValueEntryArgs, IntValueEntryT,
+    RectValueEntry, RectValueEntryArgs, RectValueEntryT, SsAnimeBinary, SsAnimeBinaryArgs,
+    SsAnimeBinaryT, Vec2ValueEntry, Vec2ValueEntryArgs, Vec2ValueEntryT,
 };
 use ssab::ssab::{
     Cell, CellArgs, CellMap, CellMapArgs, CellMapT, CellT, FontBitmap, FontBitmapArgs, FontBitmapT,
@@ -207,6 +206,7 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
+    #[allow(dead_code)]
     fn create_shared_int_value_table<
         'args: 'mut_bldr,
         'mut_bldr,
@@ -226,6 +226,7 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
+    #[allow(dead_code)]
     fn create_shared_float_value_table<
         'args: 'mut_bldr,
         'mut_bldr,
@@ -245,6 +246,7 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
+    #[allow(dead_code)]
     fn create_shared_vec2_value_table<
         'args: 'mut_bldr,
         'mut_bldr,
@@ -265,6 +267,7 @@ impl<'bldr> SsabCache<'bldr> {
         offset
     }
 
+    #[allow(dead_code)]
     fn create_shared_rect_value_table<
         'args: 'mut_bldr,
         'mut_bldr,

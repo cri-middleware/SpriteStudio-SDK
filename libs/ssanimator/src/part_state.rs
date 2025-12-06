@@ -82,7 +82,7 @@ pub struct SsPartState {
 }
 
 impl SsPartState {
-    pub fn default(index: i32) -> Self {
+    pub fn default(_index: i32) -> Self {
         Self {
             index: 0,
 

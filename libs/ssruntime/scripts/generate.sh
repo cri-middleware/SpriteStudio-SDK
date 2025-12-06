@@ -4,12 +4,17 @@ BASE_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 pushd $BASE_DIR > /dev/null
 
-for f in ./fbs/*.fbs;
-do
-    name=$(basename "$f" .fbs)
-    flatc --rust --gen-compare --gen-object-api --gen-mutable $f
-    mv "${name}_generated.rs" "./src/$name.rs"
-done
+FLATC=flatc
+
+${FLATC} --rust fbs/initialize.fbs
+/bin/mv initialize_generated.rs src/initialize.rs
+
+${FLATC} --rust --gen-compare --gen-object-api --gen-mutable fbs/preparation.fbs
+/bin/mv preparation_generated.rs src/preparation.rs
+
+${FLATC} --rust fbs/framedata.fbs
+/bin/mv framedata_generated.rs src/framedata.rs
+
 
 cargo fmt --all
 popd > /dev/null

@@ -4,8 +4,6 @@ use sspj::ssae::{SsAnimation, SsModel, SsPart, SsPartAnime};
 use sspj::sspj::SsProject;
 use sspj::ssqe::SsSequence;
 use std::collections::HashMap;
-use std::rc::Weak;
-use std::sync::Arc;
 
 #[derive(Default)]
 pub struct SsAnimeDecoder<'a> {
@@ -49,7 +47,7 @@ impl<'a> SsAnimeDecoder<'a> {
         &mut self,
         model: &'a SsModel,
         anime: &'a SsAnimation,
-        cellmap: &SsCellMapList,
+        _cellmap: &SsCellMapList,
         sspj: &'a mut SsProject,
     ) {
         self.part_anime_dic.clear();
