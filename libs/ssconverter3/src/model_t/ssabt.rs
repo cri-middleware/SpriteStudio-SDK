@@ -273,6 +273,7 @@ pub fn convert_ss_anime_binary_t(
     sspj: &SsProject,
 ) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
+    anime_binary.name = Some(anime_pack.name.clone());
     anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack);
     let using_effect_file_names = anime_pack
         .model
@@ -311,7 +312,6 @@ pub fn convert_ss_anime_binary_t(
         convert_sound_list(&sspj, &sspj.sound_list)
     };
     anime_binary.font_bitmap = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
-    anime_binary.instances = None; // TODO: impl
 
     let mut cellmap_names = anime_pack
         .cellmap_names
@@ -341,17 +341,6 @@ pub fn convert_ss_anime_binary_t(
             })
         });
     };
-    anime_binary.instances.as_ref().map(|instances| {
-        instances.iter().for_each(|instance| {
-            let splt = instance.name.split("/").collect::<Vec<&str>>();
-            let _animepack = splt[0];
-            get_cellmap_names_of_instance(anime_pack, sspj)
-                .iter()
-                .for_each(|cellmap_name| {
-                    cellmap_names.insert(cellmap_name.clone());
-                })
-        })
-    });
     let cellmaps = cellmap_names
         .iter()
         .filter_map(|cellmap_name| {

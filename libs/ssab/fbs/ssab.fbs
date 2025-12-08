@@ -679,6 +679,8 @@ table AnimationData {
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
+  name: string;
+
   parts : [PartData];
   animations: [AnimationData];
 
@@ -686,7 +688,6 @@ table SsAnimeBinary {
   effect: [Effect];
   sound_list: [SoundList];
   font_bitmap: [FontBitmap];
-  instances: [AnimationData];
 }
 
 file_identifier "SSAB";

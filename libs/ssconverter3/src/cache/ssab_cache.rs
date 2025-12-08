@@ -524,6 +524,7 @@ impl<'bldr> SsabCache<'bldr> {
     ) -> WIPOffset<SsAnimeBinary<'bldr>> {
         let mut anime_binary_args = SsAnimeBinaryArgs::default();
 
+        anime_binary_args.name = ss_anime_binary_t.name.as_ref().map(|s| fb.create_shared_string(s));
         anime_binary_args.animations = ss_anime_binary_t
             .animations
             .as_ref()
@@ -544,8 +545,6 @@ impl<'bldr> SsabCache<'bldr> {
             .font_bitmap
             .as_ref()
             .map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
-
-        anime_binary_args.instances = None; // TODO: implement
 
         SsAnimeBinary::create(fb, &anime_binary_args)
     }

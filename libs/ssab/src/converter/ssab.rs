@@ -22178,13 +22178,13 @@ impl<'a> ::flatbuffers::Follow<'a> for SsAnimeBinary<'a> {
 
 impl<'a> SsAnimeBinary<'a> {
     pub const VT_VERSION: ::flatbuffers::VOffsetT = 4;
-    pub const VT_PARTS: ::flatbuffers::VOffsetT = 6;
-    pub const VT_ANIMATIONS: ::flatbuffers::VOffsetT = 8;
-    pub const VT_CELL_MAP: ::flatbuffers::VOffsetT = 10;
-    pub const VT_EFFECT: ::flatbuffers::VOffsetT = 12;
-    pub const VT_SOUND_LIST: ::flatbuffers::VOffsetT = 14;
-    pub const VT_FONT_BITMAP: ::flatbuffers::VOffsetT = 16;
-    pub const VT_INSTANCES: ::flatbuffers::VOffsetT = 18;
+    pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
+    pub const VT_PARTS: ::flatbuffers::VOffsetT = 8;
+    pub const VT_ANIMATIONS: ::flatbuffers::VOffsetT = 10;
+    pub const VT_CELL_MAP: ::flatbuffers::VOffsetT = 12;
+    pub const VT_EFFECT: ::flatbuffers::VOffsetT = 14;
+    pub const VT_SOUND_LIST: ::flatbuffers::VOffsetT = 16;
+    pub const VT_FONT_BITMAP: ::flatbuffers::VOffsetT = 18;
 
     #[inline]
     pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -22201,9 +22201,6 @@ impl<'a> SsAnimeBinary<'a> {
         args: &'args SsAnimeBinaryArgs<'args>,
     ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
         let mut builder = SsAnimeBinaryBuilder::new(_fbb);
-        if let Some(x) = args.instances {
-            builder.add_instances(x);
-        }
         if let Some(x) = args.font_bitmap {
             builder.add_font_bitmap(x);
         }
@@ -22222,12 +22219,16 @@ impl<'a> SsAnimeBinary<'a> {
         if let Some(x) = args.parts {
             builder.add_parts(x);
         }
+        if let Some(x) = args.name {
+            builder.add_name(x);
+        }
         builder.add_version(args.version);
         builder.finish()
     }
 
     pub fn unpack(&self) -> SsAnimeBinaryT {
         let version = self.version();
+        let name = self.name().map(|x| alloc::string::ToString::to_string(x));
         let parts = self.parts().map(|x| x.iter().map(|t| t.unpack()).collect());
         let animations = self
             .animations()
@@ -22244,18 +22245,15 @@ impl<'a> SsAnimeBinary<'a> {
         let font_bitmap = self
             .font_bitmap()
             .map(|x| x.iter().map(|t| t.unpack()).collect());
-        let instances = self
-            .instances()
-            .map(|x| x.iter().map(|t| t.unpack()).collect());
         SsAnimeBinaryT {
             version,
+            name,
             parts,
             animations,
             cell_map,
             effect,
             sound_list,
             font_bitmap,
-            instances,
         }
     }
 
@@ -22268,6 +22266,16 @@ impl<'a> SsAnimeBinary<'a> {
             self._tab
                 .get::<u32>(SsAnimeBinary::VT_VERSION, Some(1))
                 .unwrap()
+        }
+    }
+    #[inline]
+    pub fn name(&self) -> Option<&'a str> {
+        // Safety:
+        // Created from valid Table for this object
+        // which contains a valid value in this slot
+        unsafe {
+            self._tab
+                .get::<::flatbuffers::ForwardsUOffset<&str>>(SsAnimeBinary::VT_NAME, None)
         }
     }
     #[inline]
@@ -22348,19 +22356,6 @@ impl<'a> SsAnimeBinary<'a> {
             >>(SsAnimeBinary::VT_FONT_BITMAP, None)
         }
     }
-    #[inline]
-    pub fn instances(
-        &self,
-    ) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData<'a>>>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab.get::<::flatbuffers::ForwardsUOffset<
-                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData>>,
-            >>(SsAnimeBinary::VT_INSTANCES, None)
-        }
-    }
 }
 
 impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
@@ -22371,6 +22366,7 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
     ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
         v.visit_table(pos)?
             .visit_field::<u32>("version", Self::VT_VERSION, false)?
+            .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
             .visit_field::<::flatbuffers::ForwardsUOffset<
                 ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartData>>,
             >>("parts", Self::VT_PARTS, false)?
@@ -22389,15 +22385,13 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
             .visit_field::<::flatbuffers::ForwardsUOffset<
                 ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>,
             >>("font_bitmap", Self::VT_FONT_BITMAP, false)?
-            .visit_field::<::flatbuffers::ForwardsUOffset<
-                ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<AnimationData>>,
-            >>("instances", Self::VT_INSTANCES, false)?
             .finish();
         Ok(())
     }
 }
 pub struct SsAnimeBinaryArgs<'a> {
     pub version: u32,
+    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub parts: Option<
         ::flatbuffers::WIPOffset<
             ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>,
@@ -22428,24 +22422,19 @@ pub struct SsAnimeBinaryArgs<'a> {
             ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>,
         >,
     >,
-    pub instances: Option<
-        ::flatbuffers::WIPOffset<
-            ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData<'a>>>,
-        >,
-    >,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
     #[inline]
     fn default() -> Self {
         SsAnimeBinaryArgs {
             version: 1,
+            name: None,
             parts: None,
             animations: None,
             cell_map: None,
             effect: None,
             sound_list: None,
             font_bitmap: None,
-            instances: None,
         }
     }
 }
@@ -22459,6 +22448,11 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     pub fn add_version(&mut self, version: u32) {
         self.fbb_
             .push_slot::<u32>(SsAnimeBinary::VT_VERSION, version, 1);
+    }
+    #[inline]
+    pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b str>) {
+        self.fbb_
+            .push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_NAME, name);
     }
     #[inline]
     pub fn add_parts(
@@ -22527,18 +22521,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
         );
     }
     #[inline]
-    pub fn add_instances(
-        &mut self,
-        instances: ::flatbuffers::WIPOffset<
-            ::flatbuffers::Vector<'b, ::flatbuffers::ForwardsUOffset<AnimationData<'b>>>,
-        >,
-    ) {
-        self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
-            SsAnimeBinary::VT_INSTANCES,
-            instances,
-        );
-    }
-    #[inline]
     pub fn new(
         _fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
     ) -> SsAnimeBinaryBuilder<'a, 'b, A> {
@@ -22559,13 +22541,13 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         let mut ds = f.debug_struct("SsAnimeBinary");
         ds.field("version", &self.version());
+        ds.field("name", &self.name());
         ds.field("parts", &self.parts());
         ds.field("animations", &self.animations());
         ds.field("cell_map", &self.cell_map());
         ds.field("effect", &self.effect());
         ds.field("sound_list", &self.sound_list());
         ds.field("font_bitmap", &self.font_bitmap());
-        ds.field("instances", &self.instances());
         ds.finish()
     }
 }
@@ -22573,25 +22555,25 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SsAnimeBinaryT {
     pub version: u32,
+    pub name: Option<alloc::string::String>,
     pub parts: Option<alloc::vec::Vec<PartDataT>>,
     pub animations: Option<alloc::vec::Vec<AnimationDataT>>,
     pub cell_map: Option<alloc::vec::Vec<CellMapT>>,
     pub effect: Option<alloc::vec::Vec<EffectT>>,
     pub sound_list: Option<alloc::vec::Vec<SoundListT>>,
     pub font_bitmap: Option<alloc::vec::Vec<FontBitmapT>>,
-    pub instances: Option<alloc::vec::Vec<AnimationDataT>>,
 }
 impl Default for SsAnimeBinaryT {
     fn default() -> Self {
         Self {
             version: 1,
+            name: None,
             parts: None,
             animations: None,
             cell_map: None,
             effect: None,
             sound_list: None,
             font_bitmap: None,
-            instances: None,
         }
     }
 }
@@ -22601,6 +22583,7 @@ impl SsAnimeBinaryT {
         _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>,
     ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'b>> {
         let version = self.version;
+        let name = self.name.as_ref().map(|x| _fbb.create_string(x));
         let parts = self.parts.as_ref().map(|x| {
             let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
             _fbb.create_vector(&w)
@@ -22625,21 +22608,17 @@ impl SsAnimeBinaryT {
             let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
             _fbb.create_vector(&w)
         });
-        let instances = self.instances.as_ref().map(|x| {
-            let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();
-            _fbb.create_vector(&w)
-        });
         SsAnimeBinary::create(
             _fbb,
             &SsAnimeBinaryArgs {
                 version,
+                name,
                 parts,
                 animations,
                 cell_map,
                 effect,
                 sound_list,
                 font_bitmap,
-                instances,
             },
         )
     }
