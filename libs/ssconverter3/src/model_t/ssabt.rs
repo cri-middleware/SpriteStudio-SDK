@@ -352,5 +352,8 @@ pub fn convert_ss_anime_binary_t(
         .collect::<Vec<SsCellMap>>();
     anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
 
+    // TODO: impl
+    anime_binary.external_instances = None;
+
     anime_binary
 }

@@ -12752,6 +12752,7 @@ impl<'a> SsAnimeBinary<'a> {
   pub const VT_EFFECT: ::flatbuffers::VOffsetT = 14;
   pub const VT_SOUND_LIST: ::flatbuffers::VOffsetT = 16;
   pub const VT_FONT_BITMAP: ::flatbuffers::VOffsetT = 18;
+  pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12763,6 +12764,7 @@ impl<'a> SsAnimeBinary<'a> {
     args: &'args SsAnimeBinaryArgs<'args>
   ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
+    if let Some(x) = args.external_instances { builder.add_external_instances(x); }
     if let Some(x) = args.font_bitmap { builder.add_font_bitmap(x); }
     if let Some(x) = args.sound_list { builder.add_sound_list(x); }
     if let Some(x) = args.effect { builder.add_effect(x); }
@@ -12831,6 +12833,13 @@ impl<'a> SsAnimeBinary<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAP, None)}
   }
+  #[inline]
+  pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
@@ -12847,6 +12856,7 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effect", Self::VT_EFFECT, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_list", Self::VT_SOUND_LIST, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmap", Self::VT_FONT_BITMAP, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
      .finish();
     Ok(())
   }
@@ -12860,6 +12870,7 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub effect: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_list: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmap: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
+    pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
   #[inline]
@@ -12873,6 +12884,7 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
       effect: None,
       sound_list: None,
       font_bitmap: None,
+      external_instances: None,
     }
   }
 }
@@ -12915,6 +12927,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAP, font_bitmap);
   }
   #[inline]
+  pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, external_instances);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsAnimeBinaryBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     SsAnimeBinaryBuilder {
@@ -12940,6 +12956,7 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
       ds.field("effect", &self.effect());
       ds.field("sound_list", &self.sound_list());
       ds.field("font_bitmap", &self.font_bitmap());
+      ds.field("external_instances", &self.external_instances());
       ds.finish()
   }
 }

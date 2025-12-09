@@ -545,6 +545,10 @@ impl<'bldr> SsabCache<'bldr> {
             .font_bitmap
             .as_ref()
             .map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
+        anime_binary_args.external_instances = ss_anime_binary_t.external_instances.as_ref().map(|external_instances| {
+            let vec = external_instances.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<WIPOffset<&str>>>();
+            fb.create_vector(&vec)
+        });
 
         SsAnimeBinary::create(fb, &anime_binary_args)
     }

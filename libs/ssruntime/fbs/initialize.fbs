@@ -327,6 +327,8 @@ table InitData {
   effect: [Effect];
   sound_list: [SoundList];
   font_bitmap: [FontBitmap];
+
+  external_instances: [string];
 }
 
 root_type InitData;

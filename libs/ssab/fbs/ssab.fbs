@@ -688,6 +688,8 @@ table SsAnimeBinary {
   effect: [Effect];
   sound_list: [SoundList];
   font_bitmap: [FontBitmap];
+
+  external_instances: [string];
 }
 
 file_identifier "SSAB";
