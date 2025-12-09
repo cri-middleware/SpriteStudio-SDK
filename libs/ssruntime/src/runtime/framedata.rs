@@ -1732,21 +1732,21 @@ pub mod ss {
             pub const VT_PART_INDEX: ::flatbuffers::VOffsetT = 4;
             pub const VT_UPDATE_FLAG: ::flatbuffers::VOffsetT = 6;
             pub const VT_CELL: ::flatbuffers::VOffsetT = 8;
-            pub const VT_POS_X: ::flatbuffers::VOffsetT = 10;
-            pub const VT_POS_Y: ::flatbuffers::VOffsetT = 12;
-            pub const VT_POS_Z: ::flatbuffers::VOffsetT = 14;
-            pub const VT_ROT_X: ::flatbuffers::VOffsetT = 16;
-            pub const VT_ROT_Y: ::flatbuffers::VOffsetT = 18;
-            pub const VT_ROT_Z: ::flatbuffers::VOffsetT = 20;
-            pub const VT_SCL_X: ::flatbuffers::VOffsetT = 22;
-            pub const VT_SCL_Y: ::flatbuffers::VOffsetT = 24;
-            pub const VT_LOSCL_X: ::flatbuffers::VOffsetT = 26;
-            pub const VT_LOSCL_Y: ::flatbuffers::VOffsetT = 28;
-            pub const VT_ALPHA: ::flatbuffers::VOffsetT = 30;
-            pub const VT_LO_ALPHA: ::flatbuffers::VOffsetT = 32;
-            pub const VT_PRIO: ::flatbuffers::VOffsetT = 34;
-            pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 36;
-            pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 38;
+            pub const VT_POSITION_X: ::flatbuffers::VOffsetT = 10;
+            pub const VT_POSITION_Y: ::flatbuffers::VOffsetT = 12;
+            pub const VT_POSITION_Z: ::flatbuffers::VOffsetT = 14;
+            pub const VT_ROTATION_X: ::flatbuffers::VOffsetT = 16;
+            pub const VT_ROTATION_Y: ::flatbuffers::VOffsetT = 18;
+            pub const VT_ROTATION_Z: ::flatbuffers::VOffsetT = 20;
+            pub const VT_SCALE_X: ::flatbuffers::VOffsetT = 22;
+            pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 24;
+            pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 26;
+            pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 28;
+            pub const VT_OPACITY: ::flatbuffers::VOffsetT = 30;
+            pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 32;
+            pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 34;
+            pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 36;
+            pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 38;
             pub const VT_HIDE: ::flatbuffers::VOffsetT = 40;
             pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 42;
             pub const VT_SHADER: ::flatbuffers::VOffsetT = 44;
@@ -1759,16 +1759,17 @@ pub mod ss {
             pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 58;
             pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 60;
             pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 62;
-            pub const VT_UVT_X: ::flatbuffers::VOffsetT = 64;
-            pub const VT_UVT_Y: ::flatbuffers::VOffsetT = 66;
-            pub const VT_UVR_Z: ::flatbuffers::VOffsetT = 68;
-            pub const VT_UVS_X: ::flatbuffers::VOffsetT = 70;
-            pub const VT_UVS_Y: ::flatbuffers::VOffsetT = 72;
-            pub const VT_BOUNDR: ::flatbuffers::VOffsetT = 74;
+            pub const VT_UV_MOVE_X: ::flatbuffers::VOffsetT = 64;
+            pub const VT_UV_MOVE_Y: ::flatbuffers::VOffsetT = 66;
+            pub const VT_UV_MOVE_Z: ::flatbuffers::VOffsetT = 68;
+            pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 70;
+            pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 72;
+            pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 74;
             pub const VT_MASK: ::flatbuffers::VOffsetT = 76;
-            pub const VT_SKEW: ::flatbuffers::VOffsetT = 78;
-            pub const VT_DEFORM: ::flatbuffers::VOffsetT = 80;
-            pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 82;
+            pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 78;
+            pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 80;
+            pub const VT_DEFORM: ::flatbuffers::VOffsetT = 82;
+            pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 84;
 
             #[inline]
             pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -1790,16 +1791,15 @@ pub mod ss {
                 if let Some(x) = args.deform {
                     builder.add_deform(x);
                 }
-                if let Some(x) = args.skew {
-                    builder.add_skew(x);
-                }
+                builder.add_skew_y(args.skew_y);
+                builder.add_skew_x(args.skew_x);
                 builder.add_mask(args.mask);
-                builder.add_boundr(args.boundr);
-                builder.add_uvs_y(args.uvs_y);
-                builder.add_uvs_x(args.uvs_x);
-                builder.add_uvr_z(args.uvr_z);
-                builder.add_uvt_y(args.uvt_y);
-                builder.add_uvt_x(args.uvt_x);
+                builder.add_bounding_radius(args.bounding_radius);
+                builder.add_uv_scale_y(args.uv_scale_y);
+                builder.add_uv_scale_x(args.uv_scale_x);
+                builder.add_uv_move_z(args.uv_move_z);
+                builder.add_uv_move_y(args.uv_move_y);
+                builder.add_uv_move_x(args.uv_move_x);
                 builder.add_size_y(args.size_y);
                 builder.add_size_x(args.size_x);
                 builder.add_anchor_y(args.anchor_y);
@@ -1815,19 +1815,19 @@ pub mod ss {
                 if let Some(x) = args.parts_color {
                     builder.add_parts_color(x);
                 }
-                builder.add_prio(args.prio);
-                builder.add_lo_alpha(args.lo_alpha);
-                builder.add_alpha(args.alpha);
-                builder.add_loscl_y(args.loscl_y);
-                builder.add_loscl_x(args.loscl_x);
-                builder.add_scl_y(args.scl_y);
-                builder.add_scl_x(args.scl_x);
-                builder.add_rot_z(args.rot_z);
-                builder.add_rot_y(args.rot_y);
-                builder.add_rot_x(args.rot_x);
-                builder.add_pos_z(args.pos_z);
-                builder.add_pos_y(args.pos_y);
-                builder.add_pos_x(args.pos_x);
+                builder.add_priority(args.priority);
+                builder.add_localopacity(args.localopacity);
+                builder.add_opacity(args.opacity);
+                builder.add_local_scale_y(args.local_scale_y);
+                builder.add_local_scale_x(args.local_scale_x);
+                builder.add_scale_y(args.scale_y);
+                builder.add_scale_x(args.scale_x);
+                builder.add_rotation_z(args.rotation_z);
+                builder.add_rotation_y(args.rotation_y);
+                builder.add_rotation_x(args.rotation_x);
+                builder.add_position_z(args.position_z);
+                builder.add_position_y(args.position_y);
+                builder.add_position_x(args.position_x);
                 if let Some(x) = args.cell {
                     builder.add_cell(x);
                 }
@@ -1835,8 +1835,8 @@ pub mod ss {
                 builder.add_img_flip_v(args.img_flip_v);
                 builder.add_img_flip_h(args.img_flip_h);
                 builder.add_hide(args.hide);
-                builder.add_flip_v(args.flip_v);
                 builder.add_flip_h(args.flip_h);
+                builder.add_flip_v(args.flip_v);
                 builder.finish()
             }
 
@@ -1879,152 +1879,145 @@ pub mod ss {
                 }
             }
             #[inline]
-            pub fn pos_x(&self) -> f32 {
+            pub fn position_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_POS_X, Some(0.0))
+                        .get::<f32>(PartState::VT_POSITION_X, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn pos_y(&self) -> f32 {
+            pub fn position_y(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_POS_Y, Some(0.0))
+                        .get::<f32>(PartState::VT_POSITION_Y, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn pos_z(&self) -> f32 {
+            pub fn position_z(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_POS_Z, Some(0.0))
+                        .get::<f32>(PartState::VT_POSITION_Z, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn rot_x(&self) -> f32 {
+            pub fn rotation_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_ROT_X, Some(0.0))
+                        .get::<f32>(PartState::VT_ROTATION_X, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn rot_y(&self) -> f32 {
+            pub fn rotation_y(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_ROT_Y, Some(0.0))
+                        .get::<f32>(PartState::VT_ROTATION_Y, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn rot_z(&self) -> f32 {
+            pub fn rotation_z(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_ROT_Z, Some(0.0))
+                        .get::<f32>(PartState::VT_ROTATION_Z, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn scl_x(&self) -> f32 {
+            pub fn scale_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_SCL_X, Some(1.0))
+                        .get::<f32>(PartState::VT_SCALE_X, Some(1.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn scl_y(&self) -> f32 {
+            pub fn scale_y(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_SCL_Y, Some(1.0))
+                        .get::<f32>(PartState::VT_SCALE_Y, Some(1.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn loscl_x(&self) -> f32 {
+            pub fn local_scale_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_LOSCL_X, Some(1.0))
+                        .get::<f32>(PartState::VT_LOCAL_SCALE_X, Some(1.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn loscl_y(&self) -> f32 {
+            pub fn local_scale_y(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_LOSCL_Y, Some(1.0))
+                        .get::<f32>(PartState::VT_LOCAL_SCALE_Y, Some(1.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn alpha(&self) -> f32 {
+            pub fn opacity(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_ALPHA, Some(0.0))
+                        .get::<f32>(PartState::VT_OPACITY, Some(1.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn lo_alpha(&self) -> f32 {
+            pub fn localopacity(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_LO_ALPHA, Some(0.0))
+                        .get::<f32>(PartState::VT_LOCALOPACITY, Some(1.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn prio(&self) -> i32 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<i32>(PartState::VT_PRIO, Some(0)).unwrap() }
-            }
-            #[inline]
-            pub fn flip_h(&self) -> bool {
+            pub fn priority(&self) -> i32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<bool>(PartState::VT_FLIP_H, Some(false))
+                        .get::<i32>(PartState::VT_PRIORITY, Some(0))
                         .unwrap()
                 }
             }
@@ -2036,6 +2029,17 @@ pub mod ss {
                 unsafe {
                     self._tab
                         .get::<bool>(PartState::VT_FLIP_V, Some(false))
+                        .unwrap()
+                }
+            }
+            #[inline]
+            pub fn flip_h(&self) -> bool {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab
+                        .get::<bool>(PartState::VT_FLIP_H, Some(false))
                         .unwrap()
                 }
             }
@@ -2137,7 +2141,7 @@ pub mod ss {
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_SIZE_X, Some(0.0))
+                        .get::<f32>(PartState::VT_SIZE_X, Some(1.0))
                         .unwrap()
                 }
             }
@@ -2148,7 +2152,7 @@ pub mod ss {
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_SIZE_Y, Some(0.0))
+                        .get::<f32>(PartState::VT_SIZE_Y, Some(1.0))
                         .unwrap()
                 }
             }
@@ -2175,68 +2179,68 @@ pub mod ss {
                 }
             }
             #[inline]
-            pub fn uvt_x(&self) -> f32 {
+            pub fn uv_move_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_UVT_X, Some(0.0))
+                        .get::<f32>(PartState::VT_UV_MOVE_X, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn uvt_y(&self) -> f32 {
+            pub fn uv_move_y(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_UVT_Y, Some(0.0))
+                        .get::<f32>(PartState::VT_UV_MOVE_Y, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn uvr_z(&self) -> f32 {
+            pub fn uv_move_z(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_UVR_Z, Some(0.0))
+                        .get::<f32>(PartState::VT_UV_MOVE_Z, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn uvs_x(&self) -> f32 {
+            pub fn uv_scale_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_UVS_X, Some(0.0))
+                        .get::<f32>(PartState::VT_UV_SCALE_X, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn uvs_y(&self) -> f32 {
+            pub fn uv_scale_y(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_UVS_Y, Some(0.0))
+                        .get::<f32>(PartState::VT_UV_SCALE_Y, Some(0.0))
                         .unwrap()
                 }
             }
             #[inline]
-            pub fn boundr(&self) -> f32 {
+            pub fn bounding_radius(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab
-                        .get::<f32>(PartState::VT_BOUNDR, Some(0.0))
+                        .get::<f32>(PartState::VT_BOUNDING_RADIUS, Some(0.0))
                         .unwrap()
                 }
             }
@@ -2248,11 +2252,26 @@ pub mod ss {
                 unsafe { self._tab.get::<f32>(PartState::VT_MASK, Some(0.0)).unwrap() }
             }
             #[inline]
-            pub fn skew(&self) -> Option<&'a Vec2> {
+            pub fn skew_x(&self) -> f32 {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartState::VT_SKEW, None) }
+                unsafe {
+                    self._tab
+                        .get::<f32>(PartState::VT_SKEW_X, Some(0.0))
+                        .unwrap()
+                }
+            }
+            #[inline]
+            pub fn skew_y(&self) -> f32 {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab
+                        .get::<f32>(PartState::VT_SKEW_Y, Some(0.0))
+                        .unwrap()
+                }
             }
             #[inline]
             pub fn deform(&self) -> Option<PartAttributeDeform<'a>> {
@@ -2298,21 +2317,21 @@ pub mod ss {
                         Self::VT_CELL,
                         false,
                     )?
-                    .visit_field::<f32>("pos_x", Self::VT_POS_X, false)?
-                    .visit_field::<f32>("pos_y", Self::VT_POS_Y, false)?
-                    .visit_field::<f32>("pos_z", Self::VT_POS_Z, false)?
-                    .visit_field::<f32>("rot_x", Self::VT_ROT_X, false)?
-                    .visit_field::<f32>("rot_y", Self::VT_ROT_Y, false)?
-                    .visit_field::<f32>("rot_z", Self::VT_ROT_Z, false)?
-                    .visit_field::<f32>("scl_x", Self::VT_SCL_X, false)?
-                    .visit_field::<f32>("scl_y", Self::VT_SCL_Y, false)?
-                    .visit_field::<f32>("loscl_x", Self::VT_LOSCL_X, false)?
-                    .visit_field::<f32>("loscl_y", Self::VT_LOSCL_Y, false)?
-                    .visit_field::<f32>("alpha", Self::VT_ALPHA, false)?
-                    .visit_field::<f32>("lo_alpha", Self::VT_LO_ALPHA, false)?
-                    .visit_field::<i32>("prio", Self::VT_PRIO, false)?
-                    .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
+                    .visit_field::<f32>("position_x", Self::VT_POSITION_X, false)?
+                    .visit_field::<f32>("position_y", Self::VT_POSITION_Y, false)?
+                    .visit_field::<f32>("position_z", Self::VT_POSITION_Z, false)?
+                    .visit_field::<f32>("rotation_x", Self::VT_ROTATION_X, false)?
+                    .visit_field::<f32>("rotation_y", Self::VT_ROTATION_Y, false)?
+                    .visit_field::<f32>("rotation_z", Self::VT_ROTATION_Z, false)?
+                    .visit_field::<f32>("scale_x", Self::VT_SCALE_X, false)?
+                    .visit_field::<f32>("scale_y", Self::VT_SCALE_Y, false)?
+                    .visit_field::<f32>("local_scale_x", Self::VT_LOCAL_SCALE_X, false)?
+                    .visit_field::<f32>("local_scale_y", Self::VT_LOCAL_SCALE_Y, false)?
+                    .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
+                    .visit_field::<f32>("localopacity", Self::VT_LOCALOPACITY, false)?
+                    .visit_field::<i32>("priority", Self::VT_PRIORITY, false)?
                     .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
+                    .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
                     .visit_field::<bool>("hide", Self::VT_HIDE, false)?
                     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>(
                         "parts_color",
@@ -2333,14 +2352,15 @@ pub mod ss {
                     .visit_field::<f32>("size_y", Self::VT_SIZE_Y, false)?
                     .visit_field::<bool>("img_flip_h", Self::VT_IMG_FLIP_H, false)?
                     .visit_field::<bool>("img_flip_v", Self::VT_IMG_FLIP_V, false)?
-                    .visit_field::<f32>("uvt_x", Self::VT_UVT_X, false)?
-                    .visit_field::<f32>("uvt_y", Self::VT_UVT_Y, false)?
-                    .visit_field::<f32>("uvr_z", Self::VT_UVR_Z, false)?
-                    .visit_field::<f32>("uvs_x", Self::VT_UVS_X, false)?
-                    .visit_field::<f32>("uvs_y", Self::VT_UVS_Y, false)?
-                    .visit_field::<f32>("boundr", Self::VT_BOUNDR, false)?
+                    .visit_field::<f32>("uv_move_x", Self::VT_UV_MOVE_X, false)?
+                    .visit_field::<f32>("uv_move_y", Self::VT_UV_MOVE_Y, false)?
+                    .visit_field::<f32>("uv_move_z", Self::VT_UV_MOVE_Z, false)?
+                    .visit_field::<f32>("uv_scale_x", Self::VT_UV_SCALE_X, false)?
+                    .visit_field::<f32>("uv_scale_y", Self::VT_UV_SCALE_Y, false)?
+                    .visit_field::<f32>("bounding_radius", Self::VT_BOUNDING_RADIUS, false)?
                     .visit_field::<f32>("mask", Self::VT_MASK, false)?
-                    .visit_field::<Vec2>("skew", Self::VT_SKEW, false)?
+                    .visit_field::<f32>("skew_x", Self::VT_SKEW_X, false)?
+                    .visit_field::<f32>("skew_y", Self::VT_SKEW_Y, false)?
                     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>(
                         "deform",
                         Self::VT_DEFORM,
@@ -2355,21 +2375,21 @@ pub mod ss {
             pub part_index: u16,
             pub update_flag: UpdateAttributeFlags,
             pub cell: Option<::flatbuffers::WIPOffset<PartAttributeCell<'a>>>,
-            pub pos_x: f32,
-            pub pos_y: f32,
-            pub pos_z: f32,
-            pub rot_x: f32,
-            pub rot_y: f32,
-            pub rot_z: f32,
-            pub scl_x: f32,
-            pub scl_y: f32,
-            pub loscl_x: f32,
-            pub loscl_y: f32,
-            pub alpha: f32,
-            pub lo_alpha: f32,
-            pub prio: i32,
-            pub flip_h: bool,
+            pub position_x: f32,
+            pub position_y: f32,
+            pub position_z: f32,
+            pub rotation_x: f32,
+            pub rotation_y: f32,
+            pub rotation_z: f32,
+            pub scale_x: f32,
+            pub scale_y: f32,
+            pub local_scale_x: f32,
+            pub local_scale_y: f32,
+            pub opacity: f32,
+            pub localopacity: f32,
+            pub priority: i32,
             pub flip_v: bool,
+            pub flip_h: bool,
             pub hide: bool,
             pub parts_color: Option<::flatbuffers::WIPOffset<PartAttributePartsColor<'a>>>,
             pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
@@ -2382,14 +2402,15 @@ pub mod ss {
             pub size_y: f32,
             pub img_flip_h: bool,
             pub img_flip_v: bool,
-            pub uvt_x: f32,
-            pub uvt_y: f32,
-            pub uvr_z: f32,
-            pub uvs_x: f32,
-            pub uvs_y: f32,
-            pub boundr: f32,
+            pub uv_move_x: f32,
+            pub uv_move_y: f32,
+            pub uv_move_z: f32,
+            pub uv_scale_x: f32,
+            pub uv_scale_y: f32,
+            pub bounding_radius: f32,
             pub mask: f32,
-            pub skew: Option<&'a Vec2>,
+            pub skew_x: f32,
+            pub skew_y: f32,
             pub deform: Option<::flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
             pub texture: i32,
         }
@@ -2400,21 +2421,21 @@ pub mod ss {
                     part_index: 0,
                     update_flag: Default::default(),
                     cell: None,
-                    pos_x: 0.0,
-                    pos_y: 0.0,
-                    pos_z: 0.0,
-                    rot_x: 0.0,
-                    rot_y: 0.0,
-                    rot_z: 0.0,
-                    scl_x: 1.0,
-                    scl_y: 1.0,
-                    loscl_x: 1.0,
-                    loscl_y: 1.0,
-                    alpha: 0.0,
-                    lo_alpha: 0.0,
-                    prio: 0,
-                    flip_h: false,
+                    position_x: 0.0,
+                    position_y: 0.0,
+                    position_z: 0.0,
+                    rotation_x: 0.0,
+                    rotation_y: 0.0,
+                    rotation_z: 0.0,
+                    scale_x: 1.0,
+                    scale_y: 1.0,
+                    local_scale_x: 1.0,
+                    local_scale_y: 1.0,
+                    opacity: 1.0,
+                    localopacity: 1.0,
+                    priority: 0,
                     flip_v: false,
+                    flip_h: false,
                     hide: false,
                     parts_color: None,
                     shader: None,
@@ -2423,18 +2444,19 @@ pub mod ss {
                     pivot_y: 0.0,
                     anchor_x: 0.0,
                     anchor_y: 0.0,
-                    size_x: 0.0,
-                    size_y: 0.0,
+                    size_x: 1.0,
+                    size_y: 1.0,
                     img_flip_h: false,
                     img_flip_v: false,
-                    uvt_x: 0.0,
-                    uvt_y: 0.0,
-                    uvr_z: 0.0,
-                    uvs_x: 0.0,
-                    uvs_y: 0.0,
-                    boundr: 0.0,
+                    uv_move_x: 0.0,
+                    uv_move_y: 0.0,
+                    uv_move_z: 0.0,
+                    uv_scale_x: 0.0,
+                    uv_scale_y: 0.0,
+                    bounding_radius: 0.0,
                     mask: 0.0,
-                    skew: None,
+                    skew_x: 0.0,
+                    skew_y: 0.0,
                     deform: None,
                     texture: -1,
                 }
@@ -2468,69 +2490,79 @@ pub mod ss {
                     );
             }
             #[inline]
-            pub fn add_pos_x(&mut self, pos_x: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_POS_X, pos_x, 0.0);
-            }
-            #[inline]
-            pub fn add_pos_y(&mut self, pos_y: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_POS_Y, pos_y, 0.0);
-            }
-            #[inline]
-            pub fn add_pos_z(&mut self, pos_z: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_POS_Z, pos_z, 0.0);
-            }
-            #[inline]
-            pub fn add_rot_x(&mut self, rot_x: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_ROT_X, rot_x, 0.0);
-            }
-            #[inline]
-            pub fn add_rot_y(&mut self, rot_y: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_ROT_Y, rot_y, 0.0);
-            }
-            #[inline]
-            pub fn add_rot_z(&mut self, rot_z: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_ROT_Z, rot_z, 0.0);
-            }
-            #[inline]
-            pub fn add_scl_x(&mut self, scl_x: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_SCL_X, scl_x, 1.0);
-            }
-            #[inline]
-            pub fn add_scl_y(&mut self, scl_y: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_SCL_Y, scl_y, 1.0);
-            }
-            #[inline]
-            pub fn add_loscl_x(&mut self, loscl_x: f32) {
+            pub fn add_position_x(&mut self, position_x: f32) {
                 self.fbb_
-                    .push_slot::<f32>(PartState::VT_LOSCL_X, loscl_x, 1.0);
+                    .push_slot::<f32>(PartState::VT_POSITION_X, position_x, 0.0);
             }
             #[inline]
-            pub fn add_loscl_y(&mut self, loscl_y: f32) {
+            pub fn add_position_y(&mut self, position_y: f32) {
                 self.fbb_
-                    .push_slot::<f32>(PartState::VT_LOSCL_Y, loscl_y, 1.0);
+                    .push_slot::<f32>(PartState::VT_POSITION_Y, position_y, 0.0);
             }
             #[inline]
-            pub fn add_alpha(&mut self, alpha: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_ALPHA, alpha, 0.0);
-            }
-            #[inline]
-            pub fn add_lo_alpha(&mut self, lo_alpha: f32) {
+            pub fn add_position_z(&mut self, position_z: f32) {
                 self.fbb_
-                    .push_slot::<f32>(PartState::VT_LO_ALPHA, lo_alpha, 0.0);
+                    .push_slot::<f32>(PartState::VT_POSITION_Z, position_z, 0.0);
             }
             #[inline]
-            pub fn add_prio(&mut self, prio: i32) {
-                self.fbb_.push_slot::<i32>(PartState::VT_PRIO, prio, 0);
-            }
-            #[inline]
-            pub fn add_flip_h(&mut self, flip_h: bool) {
+            pub fn add_rotation_x(&mut self, rotation_x: f32) {
                 self.fbb_
-                    .push_slot::<bool>(PartState::VT_FLIP_H, flip_h, false);
+                    .push_slot::<f32>(PartState::VT_ROTATION_X, rotation_x, 0.0);
+            }
+            #[inline]
+            pub fn add_rotation_y(&mut self, rotation_y: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_ROTATION_Y, rotation_y, 0.0);
+            }
+            #[inline]
+            pub fn add_rotation_z(&mut self, rotation_z: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_ROTATION_Z, rotation_z, 0.0);
+            }
+            #[inline]
+            pub fn add_scale_x(&mut self, scale_x: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_SCALE_X, scale_x, 1.0);
+            }
+            #[inline]
+            pub fn add_scale_y(&mut self, scale_y: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_SCALE_Y, scale_y, 1.0);
+            }
+            #[inline]
+            pub fn add_local_scale_x(&mut self, local_scale_x: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_LOCAL_SCALE_X, local_scale_x, 1.0);
+            }
+            #[inline]
+            pub fn add_local_scale_y(&mut self, local_scale_y: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_LOCAL_SCALE_Y, local_scale_y, 1.0);
+            }
+            #[inline]
+            pub fn add_opacity(&mut self, opacity: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_OPACITY, opacity, 1.0);
+            }
+            #[inline]
+            pub fn add_localopacity(&mut self, localopacity: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_LOCALOPACITY, localopacity, 1.0);
+            }
+            #[inline]
+            pub fn add_priority(&mut self, priority: i32) {
+                self.fbb_
+                    .push_slot::<i32>(PartState::VT_PRIORITY, priority, 0);
             }
             #[inline]
             pub fn add_flip_v(&mut self, flip_v: bool) {
                 self.fbb_
                     .push_slot::<bool>(PartState::VT_FLIP_V, flip_v, false);
+            }
+            #[inline]
+            pub fn add_flip_h(&mut self, flip_h: bool) {
+                self.fbb_
+                    .push_slot::<bool>(PartState::VT_FLIP_H, flip_h, false);
             }
             #[inline]
             pub fn add_hide(&mut self, hide: bool) {
@@ -2586,12 +2618,12 @@ pub mod ss {
             #[inline]
             pub fn add_size_x(&mut self, size_x: f32) {
                 self.fbb_
-                    .push_slot::<f32>(PartState::VT_SIZE_X, size_x, 0.0);
+                    .push_slot::<f32>(PartState::VT_SIZE_X, size_x, 1.0);
             }
             #[inline]
             pub fn add_size_y(&mut self, size_y: f32) {
                 self.fbb_
-                    .push_slot::<f32>(PartState::VT_SIZE_Y, size_y, 0.0);
+                    .push_slot::<f32>(PartState::VT_SIZE_Y, size_y, 1.0);
             }
             #[inline]
             pub fn add_img_flip_h(&mut self, img_flip_h: bool) {
@@ -2604,38 +2636,48 @@ pub mod ss {
                     .push_slot::<bool>(PartState::VT_IMG_FLIP_V, img_flip_v, false);
             }
             #[inline]
-            pub fn add_uvt_x(&mut self, uvt_x: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_UVT_X, uvt_x, 0.0);
-            }
-            #[inline]
-            pub fn add_uvt_y(&mut self, uvt_y: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_UVT_Y, uvt_y, 0.0);
-            }
-            #[inline]
-            pub fn add_uvr_z(&mut self, uvr_z: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_UVR_Z, uvr_z, 0.0);
-            }
-            #[inline]
-            pub fn add_uvs_x(&mut self, uvs_x: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_UVS_X, uvs_x, 0.0);
-            }
-            #[inline]
-            pub fn add_uvs_y(&mut self, uvs_y: f32) {
-                self.fbb_.push_slot::<f32>(PartState::VT_UVS_Y, uvs_y, 0.0);
-            }
-            #[inline]
-            pub fn add_boundr(&mut self, boundr: f32) {
+            pub fn add_uv_move_x(&mut self, uv_move_x: f32) {
                 self.fbb_
-                    .push_slot::<f32>(PartState::VT_BOUNDR, boundr, 0.0);
+                    .push_slot::<f32>(PartState::VT_UV_MOVE_X, uv_move_x, 0.0);
+            }
+            #[inline]
+            pub fn add_uv_move_y(&mut self, uv_move_y: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_UV_MOVE_Y, uv_move_y, 0.0);
+            }
+            #[inline]
+            pub fn add_uv_move_z(&mut self, uv_move_z: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_UV_MOVE_Z, uv_move_z, 0.0);
+            }
+            #[inline]
+            pub fn add_uv_scale_x(&mut self, uv_scale_x: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_UV_SCALE_X, uv_scale_x, 0.0);
+            }
+            #[inline]
+            pub fn add_uv_scale_y(&mut self, uv_scale_y: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_UV_SCALE_Y, uv_scale_y, 0.0);
+            }
+            #[inline]
+            pub fn add_bounding_radius(&mut self, bounding_radius: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_BOUNDING_RADIUS, bounding_radius, 0.0);
             }
             #[inline]
             pub fn add_mask(&mut self, mask: f32) {
                 self.fbb_.push_slot::<f32>(PartState::VT_MASK, mask, 0.0);
             }
             #[inline]
-            pub fn add_skew(&mut self, skew: &Vec2) {
+            pub fn add_skew_x(&mut self, skew_x: f32) {
                 self.fbb_
-                    .push_slot_always::<&Vec2>(PartState::VT_SKEW, skew);
+                    .push_slot::<f32>(PartState::VT_SKEW_X, skew_x, 0.0);
+            }
+            #[inline]
+            pub fn add_skew_y(&mut self, skew_y: f32) {
+                self.fbb_
+                    .push_slot::<f32>(PartState::VT_SKEW_Y, skew_y, 0.0);
             }
             #[inline]
             pub fn add_deform(
@@ -2676,21 +2718,21 @@ pub mod ss {
                 ds.field("part_index", &self.part_index());
                 ds.field("update_flag", &self.update_flag());
                 ds.field("cell", &self.cell());
-                ds.field("pos_x", &self.pos_x());
-                ds.field("pos_y", &self.pos_y());
-                ds.field("pos_z", &self.pos_z());
-                ds.field("rot_x", &self.rot_x());
-                ds.field("rot_y", &self.rot_y());
-                ds.field("rot_z", &self.rot_z());
-                ds.field("scl_x", &self.scl_x());
-                ds.field("scl_y", &self.scl_y());
-                ds.field("loscl_x", &self.loscl_x());
-                ds.field("loscl_y", &self.loscl_y());
-                ds.field("alpha", &self.alpha());
-                ds.field("lo_alpha", &self.lo_alpha());
-                ds.field("prio", &self.prio());
-                ds.field("flip_h", &self.flip_h());
+                ds.field("position_x", &self.position_x());
+                ds.field("position_y", &self.position_y());
+                ds.field("position_z", &self.position_z());
+                ds.field("rotation_x", &self.rotation_x());
+                ds.field("rotation_y", &self.rotation_y());
+                ds.field("rotation_z", &self.rotation_z());
+                ds.field("scale_x", &self.scale_x());
+                ds.field("scale_y", &self.scale_y());
+                ds.field("local_scale_x", &self.local_scale_x());
+                ds.field("local_scale_y", &self.local_scale_y());
+                ds.field("opacity", &self.opacity());
+                ds.field("localopacity", &self.localopacity());
+                ds.field("priority", &self.priority());
                 ds.field("flip_v", &self.flip_v());
+                ds.field("flip_h", &self.flip_h());
                 ds.field("hide", &self.hide());
                 ds.field("parts_color", &self.parts_color());
                 ds.field("shader", &self.shader());
@@ -2703,14 +2745,15 @@ pub mod ss {
                 ds.field("size_y", &self.size_y());
                 ds.field("img_flip_h", &self.img_flip_h());
                 ds.field("img_flip_v", &self.img_flip_v());
-                ds.field("uvt_x", &self.uvt_x());
-                ds.field("uvt_y", &self.uvt_y());
-                ds.field("uvr_z", &self.uvr_z());
-                ds.field("uvs_x", &self.uvs_x());
-                ds.field("uvs_y", &self.uvs_y());
-                ds.field("boundr", &self.boundr());
+                ds.field("uv_move_x", &self.uv_move_x());
+                ds.field("uv_move_y", &self.uv_move_y());
+                ds.field("uv_move_z", &self.uv_move_z());
+                ds.field("uv_scale_x", &self.uv_scale_x());
+                ds.field("uv_scale_y", &self.uv_scale_y());
+                ds.field("bounding_radius", &self.bounding_radius());
                 ds.field("mask", &self.mask());
-                ds.field("skew", &self.skew());
+                ds.field("skew_x", &self.skew_x());
+                ds.field("skew_y", &self.skew_y());
                 ds.field("deform", &self.deform());
                 ds.field("texture", &self.texture());
                 ds.finish()

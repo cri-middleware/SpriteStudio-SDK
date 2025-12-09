@@ -5,12 +5,6 @@ struct Vec2 {
   y: float;
 }
 
-struct Vec3 {
-  x: float;
-  y: float;
-  z: float;
-}
-
 struct U8Rect {
   a: ubyte;
   r: ubyte;
@@ -139,30 +133,45 @@ table PartAttributeAudio {
   loop_num: int;
 }
 
-table PartAttributes {
-  cell: PartAttributeCell;
-  position: Vec3;
-  rotation: Vec3;
-  scale: Vec2;
-  local_scale: Vec2;
-  opacity: short;
-  localopacity: short;
-  priority: short;
+struct PartAttributes {
+  cell: int;
+  position_x: float;
+  position_y: float;
+  position_z: float;
+  rotation_x: float;
+  rotation_y: float;
+  rotation_z: float;
+  scale_x: float;
+  scale_y: float;
+  local_scale_x: float;
+  local_scale_y: float;
+  opacity: float;
+  localopacity: float;
+  priority: int;
   flip_v: bool;
   flip_h: bool;
   hide: bool;
-  parts_color: PartAttributePartsColor;
-  shader: PartAttributeShader;
-  vertex: PartAttributeVertex;
-  pivot: Vec2;
-  size: Vec2;
-  uv_move: Vec3;
-  uv_scale: Vec2;
+  parts_color: int;
+  shader: int;
+  vertex: int;
+  pivot_x: float;
+  pivot_y: float;
+  anchor_x: float;
+  anchor_y: float;
+  size_x: float;
+  size_y: float;
+  img_flip_h: bool;
+  img_flip_v: bool;
+  uv_move_x: float;
+  uv_move_y: float;
+  uv_move_z: float;
+  uv_scale_x: float;
+  uv_scale_y: float;
   bounding_radius: float;
   mask: float;
-  skew: Vec2;
-  deform: PartAttributeDeform;
-
+  skew_x: float;
+  skew_y: float;
+  deform: int;
   texture: int;
 }
 
@@ -228,6 +237,12 @@ table Label {
 
 table AnimPrepData {
   initial_data: [PartAttributes];
+  cell: [PartAttributeCell];
+  parts_color: [PartAttributePartsColor];
+  shader: [PartAttributeShader];
+  vertex: [PartAttributeVertex];
+  deform: [PartAttributeDeform];
+
   part_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];

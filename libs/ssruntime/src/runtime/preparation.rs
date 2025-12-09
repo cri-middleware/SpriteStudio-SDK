@@ -357,172 +357,6 @@ pub mod ss {
             }
         }
 
-        // struct Vec3, aligned to 4
-        #[repr(transparent)]
-        #[derive(Clone, Copy, PartialEq)]
-        pub struct Vec3(pub [u8; 12]);
-        impl Default for Vec3 {
-            fn default() -> Self {
-                Self([0; 12])
-            }
-        }
-        impl ::core::fmt::Debug for Vec3 {
-            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-                f.debug_struct("Vec3")
-                    .field("x", &self.x())
-                    .field("y", &self.y())
-                    .field("z", &self.z())
-                    .finish()
-            }
-        }
-
-        impl ::flatbuffers::SimpleToVerifyInSlice for Vec3 {}
-        impl<'a> ::flatbuffers::Follow<'a> for Vec3 {
-            type Inner = &'a Vec3;
-            #[inline]
-            unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-                unsafe { <&'a Vec3>::follow(buf, loc) }
-            }
-        }
-        impl<'a> ::flatbuffers::Follow<'a> for &'a Vec3 {
-            type Inner = &'a Vec3;
-            #[inline]
-            unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-                unsafe { ::flatbuffers::follow_cast_ref::<Vec3>(buf, loc) }
-            }
-        }
-        impl<'b> ::flatbuffers::Push for Vec3 {
-            type Output = Vec3;
-            #[inline]
-            unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-                let src = unsafe {
-                    ::core::slice::from_raw_parts(
-                        self as *const Vec3 as *const u8,
-                        <Self as ::flatbuffers::Push>::size(),
-                    )
-                };
-                dst.copy_from_slice(src);
-            }
-            #[inline]
-            fn alignment() -> ::flatbuffers::PushAlignment {
-                ::flatbuffers::PushAlignment::new(4)
-            }
-        }
-
-        impl<'a> ::flatbuffers::Verifiable for Vec3 {
-            #[inline]
-            fn run_verifier(
-                v: &mut ::flatbuffers::Verifier,
-                pos: usize,
-            ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-                v.in_buffer::<Self>(pos)
-            }
-        }
-
-        impl<'a> Vec3 {
-            #[allow(clippy::too_many_arguments)]
-            pub fn new(x: f32, y: f32, z: f32) -> Self {
-                let mut s = Self([0; 12]);
-                s.set_x(x);
-                s.set_y(y);
-                s.set_z(z);
-                s
-            }
-
-            pub fn x(&self) -> f32 {
-                let mut mem = ::core::mem::MaybeUninit::<
-                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
-                >::uninit();
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid value in this slot
-                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
-                    ::core::ptr::copy_nonoverlapping(
-                        self.0[0..].as_ptr(),
-                        mem.as_mut_ptr() as *mut u8,
-                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
-                    );
-                    mem.assume_init()
-                })
-            }
-
-            pub fn set_x(&mut self, x: f32) {
-                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid value in this slot
-                unsafe {
-                    ::core::ptr::copy_nonoverlapping(
-                        &x_le as *const _ as *const u8,
-                        self.0[0..].as_mut_ptr(),
-                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
-                    );
-                }
-            }
-
-            pub fn y(&self) -> f32 {
-                let mut mem = ::core::mem::MaybeUninit::<
-                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
-                >::uninit();
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid value in this slot
-                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
-                    ::core::ptr::copy_nonoverlapping(
-                        self.0[4..].as_ptr(),
-                        mem.as_mut_ptr() as *mut u8,
-                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
-                    );
-                    mem.assume_init()
-                })
-            }
-
-            pub fn set_y(&mut self, x: f32) {
-                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid value in this slot
-                unsafe {
-                    ::core::ptr::copy_nonoverlapping(
-                        &x_le as *const _ as *const u8,
-                        self.0[4..].as_mut_ptr(),
-                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
-                    );
-                }
-            }
-
-            pub fn z(&self) -> f32 {
-                let mut mem = ::core::mem::MaybeUninit::<
-                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
-                >::uninit();
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid value in this slot
-                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
-                    ::core::ptr::copy_nonoverlapping(
-                        self.0[8..].as_ptr(),
-                        mem.as_mut_ptr() as *mut u8,
-                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
-                    );
-                    mem.assume_init()
-                })
-            }
-
-            pub fn set_z(&mut self, x: f32) {
-                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
-                // Safety:
-                // Created from a valid Table for this object
-                // Which contains a valid value in this slot
-                unsafe {
-                    ::core::ptr::copy_nonoverlapping(
-                        &x_le as *const _ as *const u8,
-                        self.0[8..].as_mut_ptr(),
-                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
-                    );
-                }
-            }
-        }
-
         // struct U8Rect, aligned to 1
         #[repr(transparent)]
         #[derive(Clone, Copy, PartialEq)]
@@ -916,6 +750,1400 @@ pub mod ss {
                         &x_le as *const _ as *const u8,
                         self.0[12..].as_mut_ptr(),
                         ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+        }
+
+        // struct PartAttributes, aligned to 4
+        #[repr(transparent)]
+        #[derive(Clone, Copy, PartialEq)]
+        pub struct PartAttributes(pub [u8; 144]);
+        impl Default for PartAttributes {
+            fn default() -> Self {
+                Self([0; 144])
+            }
+        }
+        impl ::core::fmt::Debug for PartAttributes {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                f.debug_struct("PartAttributes")
+                    .field("cell", &self.cell())
+                    .field("position_x", &self.position_x())
+                    .field("position_y", &self.position_y())
+                    .field("position_z", &self.position_z())
+                    .field("rotation_x", &self.rotation_x())
+                    .field("rotation_y", &self.rotation_y())
+                    .field("rotation_z", &self.rotation_z())
+                    .field("scale_x", &self.scale_x())
+                    .field("scale_y", &self.scale_y())
+                    .field("local_scale_x", &self.local_scale_x())
+                    .field("local_scale_y", &self.local_scale_y())
+                    .field("opacity", &self.opacity())
+                    .field("localopacity", &self.localopacity())
+                    .field("priority", &self.priority())
+                    .field("flip_v", &self.flip_v())
+                    .field("flip_h", &self.flip_h())
+                    .field("hide", &self.hide())
+                    .field("parts_color", &self.parts_color())
+                    .field("shader", &self.shader())
+                    .field("vertex", &self.vertex())
+                    .field("pivot_x", &self.pivot_x())
+                    .field("pivot_y", &self.pivot_y())
+                    .field("anchor_x", &self.anchor_x())
+                    .field("anchor_y", &self.anchor_y())
+                    .field("size_x", &self.size_x())
+                    .field("size_y", &self.size_y())
+                    .field("img_flip_h", &self.img_flip_h())
+                    .field("img_flip_v", &self.img_flip_v())
+                    .field("uv_move_x", &self.uv_move_x())
+                    .field("uv_move_y", &self.uv_move_y())
+                    .field("uv_move_z", &self.uv_move_z())
+                    .field("uv_scale_x", &self.uv_scale_x())
+                    .field("uv_scale_y", &self.uv_scale_y())
+                    .field("bounding_radius", &self.bounding_radius())
+                    .field("mask", &self.mask())
+                    .field("skew_x", &self.skew_x())
+                    .field("skew_y", &self.skew_y())
+                    .field("deform", &self.deform())
+                    .field("texture", &self.texture())
+                    .finish()
+            }
+        }
+
+        impl ::flatbuffers::SimpleToVerifyInSlice for PartAttributes {}
+        impl<'a> ::flatbuffers::Follow<'a> for PartAttributes {
+            type Inner = &'a PartAttributes;
+            #[inline]
+            unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+                unsafe { <&'a PartAttributes>::follow(buf, loc) }
+            }
+        }
+        impl<'a> ::flatbuffers::Follow<'a> for &'a PartAttributes {
+            type Inner = &'a PartAttributes;
+            #[inline]
+            unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+                unsafe { ::flatbuffers::follow_cast_ref::<PartAttributes>(buf, loc) }
+            }
+        }
+        impl<'b> ::flatbuffers::Push for PartAttributes {
+            type Output = PartAttributes;
+            #[inline]
+            unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+                let src = unsafe {
+                    ::core::slice::from_raw_parts(
+                        self as *const PartAttributes as *const u8,
+                        <Self as ::flatbuffers::Push>::size(),
+                    )
+                };
+                dst.copy_from_slice(src);
+            }
+            #[inline]
+            fn alignment() -> ::flatbuffers::PushAlignment {
+                ::flatbuffers::PushAlignment::new(4)
+            }
+        }
+
+        impl<'a> ::flatbuffers::Verifiable for PartAttributes {
+            #[inline]
+            fn run_verifier(
+                v: &mut ::flatbuffers::Verifier,
+                pos: usize,
+            ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+                v.in_buffer::<Self>(pos)
+            }
+        }
+
+        impl<'a> PartAttributes {
+            #[allow(clippy::too_many_arguments)]
+            pub fn new(
+                cell: i32,
+                position_x: f32,
+                position_y: f32,
+                position_z: f32,
+                rotation_x: f32,
+                rotation_y: f32,
+                rotation_z: f32,
+                scale_x: f32,
+                scale_y: f32,
+                local_scale_x: f32,
+                local_scale_y: f32,
+                opacity: f32,
+                localopacity: f32,
+                priority: i32,
+                flip_v: bool,
+                flip_h: bool,
+                hide: bool,
+                parts_color: i32,
+                shader: i32,
+                vertex: i32,
+                pivot_x: f32,
+                pivot_y: f32,
+                anchor_x: f32,
+                anchor_y: f32,
+                size_x: f32,
+                size_y: f32,
+                img_flip_h: bool,
+                img_flip_v: bool,
+                uv_move_x: f32,
+                uv_move_y: f32,
+                uv_move_z: f32,
+                uv_scale_x: f32,
+                uv_scale_y: f32,
+                bounding_radius: f32,
+                mask: f32,
+                skew_x: f32,
+                skew_y: f32,
+                deform: i32,
+                texture: i32,
+            ) -> Self {
+                let mut s = Self([0; 144]);
+                s.set_cell(cell);
+                s.set_position_x(position_x);
+                s.set_position_y(position_y);
+                s.set_position_z(position_z);
+                s.set_rotation_x(rotation_x);
+                s.set_rotation_y(rotation_y);
+                s.set_rotation_z(rotation_z);
+                s.set_scale_x(scale_x);
+                s.set_scale_y(scale_y);
+                s.set_local_scale_x(local_scale_x);
+                s.set_local_scale_y(local_scale_y);
+                s.set_opacity(opacity);
+                s.set_localopacity(localopacity);
+                s.set_priority(priority);
+                s.set_flip_v(flip_v);
+                s.set_flip_h(flip_h);
+                s.set_hide(hide);
+                s.set_parts_color(parts_color);
+                s.set_shader(shader);
+                s.set_vertex(vertex);
+                s.set_pivot_x(pivot_x);
+                s.set_pivot_y(pivot_y);
+                s.set_anchor_x(anchor_x);
+                s.set_anchor_y(anchor_y);
+                s.set_size_x(size_x);
+                s.set_size_y(size_y);
+                s.set_img_flip_h(img_flip_h);
+                s.set_img_flip_v(img_flip_v);
+                s.set_uv_move_x(uv_move_x);
+                s.set_uv_move_y(uv_move_y);
+                s.set_uv_move_z(uv_move_z);
+                s.set_uv_scale_x(uv_scale_x);
+                s.set_uv_scale_y(uv_scale_y);
+                s.set_bounding_radius(bounding_radius);
+                s.set_mask(mask);
+                s.set_skew_x(skew_x);
+                s.set_skew_y(skew_y);
+                s.set_deform(deform);
+                s.set_texture(texture);
+                s
+            }
+
+            pub fn cell(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[0..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_cell(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[0..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn position_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[4..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_position_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[4..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn position_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[8..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_position_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[8..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn position_z(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[12..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_position_z(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[12..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn rotation_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[16..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_rotation_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[16..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn rotation_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[20..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_rotation_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[20..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn rotation_z(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[24..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_rotation_z(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[24..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn scale_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[28..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_scale_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[28..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn scale_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[32..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_scale_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[32..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn local_scale_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[36..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_local_scale_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[36..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn local_scale_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[40..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_local_scale_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[40..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn opacity(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[44..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_opacity(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[44..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn localopacity(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[48..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_localopacity(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[48..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn priority(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[52..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_priority(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[52..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn flip_v(&self) -> bool {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <bool as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[56..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_flip_v(&mut self, x: bool) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[56..].as_mut_ptr(),
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn flip_h(&self) -> bool {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <bool as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[57..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_flip_h(&mut self, x: bool) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[57..].as_mut_ptr(),
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn hide(&self) -> bool {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <bool as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[58..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_hide(&mut self, x: bool) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[58..].as_mut_ptr(),
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn parts_color(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[60..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_parts_color(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[60..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn shader(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[64..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_shader(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[64..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn vertex(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[68..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_vertex(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[68..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn pivot_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[72..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_pivot_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[72..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn pivot_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[76..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_pivot_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[76..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn anchor_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[80..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_anchor_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[80..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn anchor_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[84..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_anchor_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[84..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn size_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[88..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_size_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[88..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn size_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[92..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_size_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[92..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn img_flip_h(&self) -> bool {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <bool as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[96..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_img_flip_h(&mut self, x: bool) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[96..].as_mut_ptr(),
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn img_flip_v(&self) -> bool {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <bool as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[97..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_img_flip_v(&mut self, x: bool) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[97..].as_mut_ptr(),
+                        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn uv_move_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[100..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_uv_move_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[100..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn uv_move_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[104..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_uv_move_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[104..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn uv_move_z(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[108..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_uv_move_z(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[108..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn uv_scale_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[112..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_uv_scale_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[112..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn uv_scale_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[116..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_uv_scale_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[116..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn bounding_radius(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[120..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_bounding_radius(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[120..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn mask(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[124..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_mask(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[124..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn skew_x(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[128..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_skew_x(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[128..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn skew_y(&self) -> f32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <f32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[132..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_skew_y(&mut self, x: f32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[132..].as_mut_ptr(),
+                        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn deform(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[136..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_deform(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[136..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                }
+            }
+
+            pub fn texture(&self) -> i32 {
+                let mut mem = ::core::mem::MaybeUninit::<
+                    <i32 as ::flatbuffers::EndianScalar>::Scalar,
+                >::uninit();
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        self.0[140..].as_ptr(),
+                        mem.as_mut_ptr() as *mut u8,
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+                    );
+                    mem.assume_init()
+                })
+            }
+
+            pub fn set_texture(&mut self, x: i32) {
+                let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+                // Safety:
+                // Created from a valid Table for this object
+                // Which contains a valid value in this slot
+                unsafe {
+                    ::core::ptr::copy_nonoverlapping(
+                        &x_le as *const _ as *const u8,
+                        self.0[140..].as_mut_ptr(),
+                        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
                     );
                 }
             }
@@ -3441,652 +4669,6 @@ pub mod ss {
                 ds.finish()
             }
         }
-        pub enum PartAttributesOffset {}
-        #[derive(Copy, Clone, PartialEq)]
-
-        pub struct PartAttributes<'a> {
-            pub _tab: ::flatbuffers::Table<'a>,
-        }
-
-        impl<'a> ::flatbuffers::Follow<'a> for PartAttributes<'a> {
-            type Inner = PartAttributes<'a>;
-            #[inline]
-            unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-                Self {
-                    _tab: unsafe { ::flatbuffers::Table::new(buf, loc) },
-                }
-            }
-        }
-
-        impl<'a> PartAttributes<'a> {
-            pub const VT_CELL: ::flatbuffers::VOffsetT = 4;
-            pub const VT_POSITION: ::flatbuffers::VOffsetT = 6;
-            pub const VT_ROTATION: ::flatbuffers::VOffsetT = 8;
-            pub const VT_SCALE: ::flatbuffers::VOffsetT = 10;
-            pub const VT_LOCAL_SCALE: ::flatbuffers::VOffsetT = 12;
-            pub const VT_OPACITY: ::flatbuffers::VOffsetT = 14;
-            pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 16;
-            pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 18;
-            pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 20;
-            pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 22;
-            pub const VT_HIDE: ::flatbuffers::VOffsetT = 24;
-            pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 26;
-            pub const VT_SHADER: ::flatbuffers::VOffsetT = 28;
-            pub const VT_VERTEX: ::flatbuffers::VOffsetT = 30;
-            pub const VT_PIVOT: ::flatbuffers::VOffsetT = 32;
-            pub const VT_SIZE: ::flatbuffers::VOffsetT = 34;
-            pub const VT_UV_MOVE: ::flatbuffers::VOffsetT = 36;
-            pub const VT_UV_SCALE: ::flatbuffers::VOffsetT = 38;
-            pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 40;
-            pub const VT_MASK: ::flatbuffers::VOffsetT = 42;
-            pub const VT_SKEW: ::flatbuffers::VOffsetT = 44;
-            pub const VT_DEFORM: ::flatbuffers::VOffsetT = 46;
-            pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 48;
-
-            #[inline]
-            pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-                PartAttributes { _tab: table }
-            }
-            #[allow(unused_mut)]
-            pub fn create<
-                'bldr: 'args,
-                'args: 'mut_bldr,
-                'mut_bldr,
-                A: ::flatbuffers::Allocator + 'bldr,
-            >(
-                _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-                args: &'args PartAttributesArgs<'args>,
-            ) -> ::flatbuffers::WIPOffset<PartAttributes<'bldr>> {
-                let mut builder = PartAttributesBuilder::new(_fbb);
-                builder.add_texture(args.texture);
-                if let Some(x) = args.deform {
-                    builder.add_deform(x);
-                }
-                if let Some(x) = args.skew {
-                    builder.add_skew(x);
-                }
-                builder.add_mask(args.mask);
-                builder.add_bounding_radius(args.bounding_radius);
-                if let Some(x) = args.uv_scale {
-                    builder.add_uv_scale(x);
-                }
-                if let Some(x) = args.uv_move {
-                    builder.add_uv_move(x);
-                }
-                if let Some(x) = args.size {
-                    builder.add_size(x);
-                }
-                if let Some(x) = args.pivot {
-                    builder.add_pivot(x);
-                }
-                if let Some(x) = args.vertex {
-                    builder.add_vertex(x);
-                }
-                if let Some(x) = args.shader {
-                    builder.add_shader(x);
-                }
-                if let Some(x) = args.parts_color {
-                    builder.add_parts_color(x);
-                }
-                if let Some(x) = args.local_scale {
-                    builder.add_local_scale(x);
-                }
-                if let Some(x) = args.scale {
-                    builder.add_scale(x);
-                }
-                if let Some(x) = args.rotation {
-                    builder.add_rotation(x);
-                }
-                if let Some(x) = args.position {
-                    builder.add_position(x);
-                }
-                if let Some(x) = args.cell {
-                    builder.add_cell(x);
-                }
-                builder.add_priority(args.priority);
-                builder.add_localopacity(args.localopacity);
-                builder.add_opacity(args.opacity);
-                builder.add_hide(args.hide);
-                builder.add_flip_h(args.flip_h);
-                builder.add_flip_v(args.flip_v);
-                builder.finish()
-            }
-
-            #[inline]
-            pub fn cell(&self) -> Option<PartAttributeCell<'a>> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<::flatbuffers::ForwardsUOffset<PartAttributeCell>>(
-                            PartAttributes::VT_CELL,
-                            None,
-                        )
-                }
-            }
-            #[inline]
-            pub fn position(&self) -> Option<&'a Vec3> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec3>(PartAttributes::VT_POSITION, None) }
-            }
-            #[inline]
-            pub fn rotation(&self) -> Option<&'a Vec3> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec3>(PartAttributes::VT_ROTATION, None) }
-            }
-            #[inline]
-            pub fn scale(&self) -> Option<&'a Vec2> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartAttributes::VT_SCALE, None) }
-            }
-            #[inline]
-            pub fn local_scale(&self) -> Option<&'a Vec2> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartAttributes::VT_LOCAL_SCALE, None) }
-            }
-            #[inline]
-            pub fn opacity(&self) -> i16 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<i16>(PartAttributes::VT_OPACITY, Some(0))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn localopacity(&self) -> i16 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<i16>(PartAttributes::VT_LOCALOPACITY, Some(0))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn priority(&self) -> i16 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<i16>(PartAttributes::VT_PRIORITY, Some(0))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn flip_v(&self) -> bool {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<bool>(PartAttributes::VT_FLIP_V, Some(false))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn flip_h(&self) -> bool {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<bool>(PartAttributes::VT_FLIP_H, Some(false))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn hide(&self) -> bool {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<bool>(PartAttributes::VT_HIDE, Some(false))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn parts_color(&self) -> Option<PartAttributePartsColor<'a>> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>(
-                            PartAttributes::VT_PARTS_COLOR,
-                            None,
-                        )
-                }
-            }
-            #[inline]
-            pub fn shader(&self) -> Option<PartAttributeShader<'a>> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>(
-                            PartAttributes::VT_SHADER,
-                            None,
-                        )
-                }
-            }
-            #[inline]
-            pub fn vertex(&self) -> Option<PartAttributeVertex<'a>> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>(
-                            PartAttributes::VT_VERTEX,
-                            None,
-                        )
-                }
-            }
-            #[inline]
-            pub fn pivot(&self) -> Option<&'a Vec2> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartAttributes::VT_PIVOT, None) }
-            }
-            #[inline]
-            pub fn size(&self) -> Option<&'a Vec2> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartAttributes::VT_SIZE, None) }
-            }
-            #[inline]
-            pub fn uv_move(&self) -> Option<&'a Vec3> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec3>(PartAttributes::VT_UV_MOVE, None) }
-            }
-            #[inline]
-            pub fn uv_scale(&self) -> Option<&'a Vec2> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartAttributes::VT_UV_SCALE, None) }
-            }
-            #[inline]
-            pub fn bounding_radius(&self) -> f32 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<f32>(PartAttributes::VT_BOUNDING_RADIUS, Some(0.0))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn mask(&self) -> f32 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<f32>(PartAttributes::VT_MASK, Some(0.0))
-                        .unwrap()
-                }
-            }
-            #[inline]
-            pub fn skew(&self) -> Option<&'a Vec2> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe { self._tab.get::<Vec2>(PartAttributes::VT_SKEW, None) }
-            }
-            #[inline]
-            pub fn deform(&self) -> Option<PartAttributeDeform<'a>> {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>(
-                            PartAttributes::VT_DEFORM,
-                            None,
-                        )
-                }
-            }
-            #[inline]
-            pub fn texture(&self) -> i32 {
-                // Safety:
-                // Created from valid Table for this object
-                // which contains a valid value in this slot
-                unsafe {
-                    self._tab
-                        .get::<i32>(PartAttributes::VT_TEXTURE, Some(0))
-                        .unwrap()
-                }
-            }
-        }
-
-        impl ::flatbuffers::Verifiable for PartAttributes<'_> {
-            #[inline]
-            fn run_verifier(
-                v: &mut ::flatbuffers::Verifier,
-                pos: usize,
-            ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-                v.visit_table(pos)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeCell>>(
-                        "cell",
-                        Self::VT_CELL,
-                        false,
-                    )?
-                    .visit_field::<Vec3>("position", Self::VT_POSITION, false)?
-                    .visit_field::<Vec3>("rotation", Self::VT_ROTATION, false)?
-                    .visit_field::<Vec2>("scale", Self::VT_SCALE, false)?
-                    .visit_field::<Vec2>("local_scale", Self::VT_LOCAL_SCALE, false)?
-                    .visit_field::<i16>("opacity", Self::VT_OPACITY, false)?
-                    .visit_field::<i16>("localopacity", Self::VT_LOCALOPACITY, false)?
-                    .visit_field::<i16>("priority", Self::VT_PRIORITY, false)?
-                    .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
-                    .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
-                    .visit_field::<bool>("hide", Self::VT_HIDE, false)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>(
-                        "parts_color",
-                        Self::VT_PARTS_COLOR,
-                        false,
-                    )?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>(
-                        "shader",
-                        Self::VT_SHADER,
-                        false,
-                    )?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>(
-                        "vertex",
-                        Self::VT_VERTEX,
-                        false,
-                    )?
-                    .visit_field::<Vec2>("pivot", Self::VT_PIVOT, false)?
-                    .visit_field::<Vec2>("size", Self::VT_SIZE, false)?
-                    .visit_field::<Vec3>("uv_move", Self::VT_UV_MOVE, false)?
-                    .visit_field::<Vec2>("uv_scale", Self::VT_UV_SCALE, false)?
-                    .visit_field::<f32>("bounding_radius", Self::VT_BOUNDING_RADIUS, false)?
-                    .visit_field::<f32>("mask", Self::VT_MASK, false)?
-                    .visit_field::<Vec2>("skew", Self::VT_SKEW, false)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>(
-                        "deform",
-                        Self::VT_DEFORM,
-                        false,
-                    )?
-                    .visit_field::<i32>("texture", Self::VT_TEXTURE, false)?
-                    .finish();
-                Ok(())
-            }
-        }
-        pub struct PartAttributesArgs<'a> {
-            pub cell: Option<::flatbuffers::WIPOffset<PartAttributeCell<'a>>>,
-            pub position: Option<&'a Vec3>,
-            pub rotation: Option<&'a Vec3>,
-            pub scale: Option<&'a Vec2>,
-            pub local_scale: Option<&'a Vec2>,
-            pub opacity: i16,
-            pub localopacity: i16,
-            pub priority: i16,
-            pub flip_v: bool,
-            pub flip_h: bool,
-            pub hide: bool,
-            pub parts_color: Option<::flatbuffers::WIPOffset<PartAttributePartsColor<'a>>>,
-            pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
-            pub vertex: Option<::flatbuffers::WIPOffset<PartAttributeVertex<'a>>>,
-            pub pivot: Option<&'a Vec2>,
-            pub size: Option<&'a Vec2>,
-            pub uv_move: Option<&'a Vec3>,
-            pub uv_scale: Option<&'a Vec2>,
-            pub bounding_radius: f32,
-            pub mask: f32,
-            pub skew: Option<&'a Vec2>,
-            pub deform: Option<::flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
-            pub texture: i32,
-        }
-        impl<'a> Default for PartAttributesArgs<'a> {
-            #[inline]
-            fn default() -> Self {
-                PartAttributesArgs {
-                    cell: None,
-                    position: None,
-                    rotation: None,
-                    scale: None,
-                    local_scale: None,
-                    opacity: 0,
-                    localopacity: 0,
-                    priority: 0,
-                    flip_v: false,
-                    flip_h: false,
-                    hide: false,
-                    parts_color: None,
-                    shader: None,
-                    vertex: None,
-                    pivot: None,
-                    size: None,
-                    uv_move: None,
-                    uv_scale: None,
-                    bounding_radius: 0.0,
-                    mask: 0.0,
-                    skew: None,
-                    deform: None,
-                    texture: 0,
-                }
-            }
-        }
-
-        pub struct PartAttributesBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-            fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-            start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-        }
-        impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b, A> {
-            #[inline]
-            pub fn add_cell(&mut self, cell: ::flatbuffers::WIPOffset<PartAttributeCell<'b>>) {
-                self.fbb_
-                    .push_slot_always::<::flatbuffers::WIPOffset<PartAttributeCell>>(
-                        PartAttributes::VT_CELL,
-                        cell,
-                    );
-            }
-            #[inline]
-            pub fn add_position(&mut self, position: &Vec3) {
-                self.fbb_
-                    .push_slot_always::<&Vec3>(PartAttributes::VT_POSITION, position);
-            }
-            #[inline]
-            pub fn add_rotation(&mut self, rotation: &Vec3) {
-                self.fbb_
-                    .push_slot_always::<&Vec3>(PartAttributes::VT_ROTATION, rotation);
-            }
-            #[inline]
-            pub fn add_scale(&mut self, scale: &Vec2) {
-                self.fbb_
-                    .push_slot_always::<&Vec2>(PartAttributes::VT_SCALE, scale);
-            }
-            #[inline]
-            pub fn add_local_scale(&mut self, local_scale: &Vec2) {
-                self.fbb_
-                    .push_slot_always::<&Vec2>(PartAttributes::VT_LOCAL_SCALE, local_scale);
-            }
-            #[inline]
-            pub fn add_opacity(&mut self, opacity: i16) {
-                self.fbb_
-                    .push_slot::<i16>(PartAttributes::VT_OPACITY, opacity, 0);
-            }
-            #[inline]
-            pub fn add_localopacity(&mut self, localopacity: i16) {
-                self.fbb_
-                    .push_slot::<i16>(PartAttributes::VT_LOCALOPACITY, localopacity, 0);
-            }
-            #[inline]
-            pub fn add_priority(&mut self, priority: i16) {
-                self.fbb_
-                    .push_slot::<i16>(PartAttributes::VT_PRIORITY, priority, 0);
-            }
-            #[inline]
-            pub fn add_flip_v(&mut self, flip_v: bool) {
-                self.fbb_
-                    .push_slot::<bool>(PartAttributes::VT_FLIP_V, flip_v, false);
-            }
-            #[inline]
-            pub fn add_flip_h(&mut self, flip_h: bool) {
-                self.fbb_
-                    .push_slot::<bool>(PartAttributes::VT_FLIP_H, flip_h, false);
-            }
-            #[inline]
-            pub fn add_hide(&mut self, hide: bool) {
-                self.fbb_
-                    .push_slot::<bool>(PartAttributes::VT_HIDE, hide, false);
-            }
-            #[inline]
-            pub fn add_parts_color(
-                &mut self,
-                parts_color: ::flatbuffers::WIPOffset<PartAttributePartsColor<'b>>,
-            ) {
-                self.fbb_
-                    .push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartsColor>>(
-                        PartAttributes::VT_PARTS_COLOR,
-                        parts_color,
-                    );
-            }
-            #[inline]
-            pub fn add_shader(
-                &mut self,
-                shader: ::flatbuffers::WIPOffset<PartAttributeShader<'b>>,
-            ) {
-                self.fbb_
-                    .push_slot_always::<::flatbuffers::WIPOffset<PartAttributeShader>>(
-                        PartAttributes::VT_SHADER,
-                        shader,
-                    );
-            }
-            #[inline]
-            pub fn add_vertex(
-                &mut self,
-                vertex: ::flatbuffers::WIPOffset<PartAttributeVertex<'b>>,
-            ) {
-                self.fbb_
-                    .push_slot_always::<::flatbuffers::WIPOffset<PartAttributeVertex>>(
-                        PartAttributes::VT_VERTEX,
-                        vertex,
-                    );
-            }
-            #[inline]
-            pub fn add_pivot(&mut self, pivot: &Vec2) {
-                self.fbb_
-                    .push_slot_always::<&Vec2>(PartAttributes::VT_PIVOT, pivot);
-            }
-            #[inline]
-            pub fn add_size(&mut self, size: &Vec2) {
-                self.fbb_
-                    .push_slot_always::<&Vec2>(PartAttributes::VT_SIZE, size);
-            }
-            #[inline]
-            pub fn add_uv_move(&mut self, uv_move: &Vec3) {
-                self.fbb_
-                    .push_slot_always::<&Vec3>(PartAttributes::VT_UV_MOVE, uv_move);
-            }
-            #[inline]
-            pub fn add_uv_scale(&mut self, uv_scale: &Vec2) {
-                self.fbb_
-                    .push_slot_always::<&Vec2>(PartAttributes::VT_UV_SCALE, uv_scale);
-            }
-            #[inline]
-            pub fn add_bounding_radius(&mut self, bounding_radius: f32) {
-                self.fbb_.push_slot::<f32>(
-                    PartAttributes::VT_BOUNDING_RADIUS,
-                    bounding_radius,
-                    0.0,
-                );
-            }
-            #[inline]
-            pub fn add_mask(&mut self, mask: f32) {
-                self.fbb_
-                    .push_slot::<f32>(PartAttributes::VT_MASK, mask, 0.0);
-            }
-            #[inline]
-            pub fn add_skew(&mut self, skew: &Vec2) {
-                self.fbb_
-                    .push_slot_always::<&Vec2>(PartAttributes::VT_SKEW, skew);
-            }
-            #[inline]
-            pub fn add_deform(
-                &mut self,
-                deform: ::flatbuffers::WIPOffset<PartAttributeDeform<'b>>,
-            ) {
-                self.fbb_
-                    .push_slot_always::<::flatbuffers::WIPOffset<PartAttributeDeform>>(
-                        PartAttributes::VT_DEFORM,
-                        deform,
-                    );
-            }
-            #[inline]
-            pub fn add_texture(&mut self, texture: i32) {
-                self.fbb_
-                    .push_slot::<i32>(PartAttributes::VT_TEXTURE, texture, 0);
-            }
-            #[inline]
-            pub fn new(
-                _fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-            ) -> PartAttributesBuilder<'a, 'b, A> {
-                let start = _fbb.start_table();
-                PartAttributesBuilder {
-                    fbb_: _fbb,
-                    start_: start,
-                }
-            }
-            #[inline]
-            pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAttributes<'a>> {
-                let o = self.fbb_.end_table(self.start_);
-                ::flatbuffers::WIPOffset::new(o.value())
-            }
-        }
-
-        impl ::core::fmt::Debug for PartAttributes<'_> {
-            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                let mut ds = f.debug_struct("PartAttributes");
-                ds.field("cell", &self.cell());
-                ds.field("position", &self.position());
-                ds.field("rotation", &self.rotation());
-                ds.field("scale", &self.scale());
-                ds.field("local_scale", &self.local_scale());
-                ds.field("opacity", &self.opacity());
-                ds.field("localopacity", &self.localopacity());
-                ds.field("priority", &self.priority());
-                ds.field("flip_v", &self.flip_v());
-                ds.field("flip_h", &self.flip_h());
-                ds.field("hide", &self.hide());
-                ds.field("parts_color", &self.parts_color());
-                ds.field("shader", &self.shader());
-                ds.field("vertex", &self.vertex());
-                ds.field("pivot", &self.pivot());
-                ds.field("size", &self.size());
-                ds.field("uv_move", &self.uv_move());
-                ds.field("uv_scale", &self.uv_scale());
-                ds.field("bounding_radius", &self.bounding_radius());
-                ds.field("mask", &self.mask());
-                ds.field("skew", &self.skew());
-                ds.field("deform", &self.deform());
-                ds.field("texture", &self.texture());
-                ds.finish()
-            }
-        }
         pub enum PartMeshDataOffset {}
         #[derive(Copy, Clone, PartialEq)]
 
@@ -5579,14 +6161,19 @@ pub mod ss {
 
         impl<'a> AnimPrepData<'a> {
             pub const VT_INITIAL_DATA: ::flatbuffers::VOffsetT = 4;
-            pub const VT_PART_MESH_DATA: ::flatbuffers::VOffsetT = 6;
-            pub const VT_EVENTS: ::flatbuffers::VOffsetT = 8;
-            pub const VT_LABEL_DATA: ::flatbuffers::VOffsetT = 10;
-            pub const VT_START_FRAMES: ::flatbuffers::VOffsetT = 12;
-            pub const VT_END_FRAMES: ::flatbuffers::VOffsetT = 14;
-            pub const VT_TOTAL_FRAMES: ::flatbuffers::VOffsetT = 16;
-            pub const VT_FPS: ::flatbuffers::VOffsetT = 18;
-            pub const VT_CANVAS: ::flatbuffers::VOffsetT = 20;
+            pub const VT_CELL: ::flatbuffers::VOffsetT = 6;
+            pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 8;
+            pub const VT_SHADER: ::flatbuffers::VOffsetT = 10;
+            pub const VT_VERTEX: ::flatbuffers::VOffsetT = 12;
+            pub const VT_DEFORM: ::flatbuffers::VOffsetT = 14;
+            pub const VT_PART_MESH_DATA: ::flatbuffers::VOffsetT = 16;
+            pub const VT_EVENTS: ::flatbuffers::VOffsetT = 18;
+            pub const VT_LABEL_DATA: ::flatbuffers::VOffsetT = 20;
+            pub const VT_START_FRAMES: ::flatbuffers::VOffsetT = 22;
+            pub const VT_END_FRAMES: ::flatbuffers::VOffsetT = 24;
+            pub const VT_TOTAL_FRAMES: ::flatbuffers::VOffsetT = 26;
+            pub const VT_FPS: ::flatbuffers::VOffsetT = 28;
+            pub const VT_CANVAS: ::flatbuffers::VOffsetT = 30;
 
             #[inline]
             pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -5615,6 +6202,21 @@ pub mod ss {
                 if let Some(x) = args.part_mesh_data {
                     builder.add_part_mesh_data(x);
                 }
+                if let Some(x) = args.deform {
+                    builder.add_deform(x);
+                }
+                if let Some(x) = args.vertex {
+                    builder.add_vertex(x);
+                }
+                if let Some(x) = args.shader {
+                    builder.add_shader(x);
+                }
+                if let Some(x) = args.parts_color {
+                    builder.add_parts_color(x);
+                }
+                if let Some(x) = args.cell {
+                    builder.add_cell(x);
+                }
                 if let Some(x) = args.initial_data {
                     builder.add_initial_data(x);
                 }
@@ -5626,17 +6228,107 @@ pub mod ss {
             }
 
             #[inline]
-            pub fn initial_data(
-                &self,
-            ) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>
-            {
+            pub fn initial_data(&self) -> Option<::flatbuffers::Vector<'a, PartAttributes>> {
                 // Safety:
                 // Created from valid Table for this object
                 // which contains a valid value in this slot
                 unsafe {
                     self._tab.get::<::flatbuffers::ForwardsUOffset<
-                        ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes>>,
+                        ::flatbuffers::Vector<'a, PartAttributes>,
                     >>(AnimPrepData::VT_INITIAL_DATA, None)
+                }
+            }
+            #[inline]
+            pub fn cell(
+                &self,
+            ) -> Option<
+                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeCell<'a>>>,
+            > {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab.get::<::flatbuffers::ForwardsUOffset<
+                        ::flatbuffers::Vector<
+                            'a,
+                            ::flatbuffers::ForwardsUOffset<PartAttributeCell>,
+                        >,
+                    >>(AnimPrepData::VT_CELL, None)
+                }
+            }
+            #[inline]
+            pub fn parts_color(
+                &self,
+            ) -> Option<
+                ::flatbuffers::Vector<
+                    'a,
+                    ::flatbuffers::ForwardsUOffset<PartAttributePartsColor<'a>>,
+                >,
+            > {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab.get::<::flatbuffers::ForwardsUOffset<
+                        ::flatbuffers::Vector<
+                            'a,
+                            ::flatbuffers::ForwardsUOffset<PartAttributePartsColor>,
+                        >,
+                    >>(AnimPrepData::VT_PARTS_COLOR, None)
+                }
+            }
+            #[inline]
+            pub fn shader(
+                &self,
+            ) -> Option<
+                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeShader<'a>>>,
+            > {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab.get::<::flatbuffers::ForwardsUOffset<
+                        ::flatbuffers::Vector<
+                            'a,
+                            ::flatbuffers::ForwardsUOffset<PartAttributeShader>,
+                        >,
+                    >>(AnimPrepData::VT_SHADER, None)
+                }
+            }
+            #[inline]
+            pub fn vertex(
+                &self,
+            ) -> Option<
+                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeVertex<'a>>>,
+            > {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab.get::<::flatbuffers::ForwardsUOffset<
+                        ::flatbuffers::Vector<
+                            'a,
+                            ::flatbuffers::ForwardsUOffset<PartAttributeVertex>,
+                        >,
+                    >>(AnimPrepData::VT_VERTEX, None)
+                }
+            }
+            #[inline]
+            pub fn deform(
+                &self,
+            ) -> Option<
+                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'a>>>,
+            > {
+                // Safety:
+                // Created from valid Table for this object
+                // which contains a valid value in this slot
+                unsafe {
+                    self._tab.get::<::flatbuffers::ForwardsUOffset<
+                        ::flatbuffers::Vector<
+                            'a,
+                            ::flatbuffers::ForwardsUOffset<PartAttributeDeform>,
+                        >,
+                    >>(AnimPrepData::VT_DEFORM, None)
                 }
             }
             #[inline]
@@ -5737,31 +6429,65 @@ pub mod ss {
                 pos: usize,
             ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
                 v.visit_table(pos)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<
-                        ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributes>>,
-                    >>("initial_data", Self::VT_INITIAL_DATA, false)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<
-                        ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>,
-                    >>("part_mesh_data", Self::VT_PART_MESH_DATA, false)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<
-                        ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>,
-                    >>("events", Self::VT_EVENTS, false)?
-                    .visit_field::<::flatbuffers::ForwardsUOffset<
-                        ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>,
-                    >>("label_data", Self::VT_LABEL_DATA, false)?
-                    .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
-                    .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
-                    .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
-                    .visit_field::<i16>("fps", Self::VT_FPS, false)?
-                    .visit_field::<Rect>("canvas", Self::VT_CANVAS, false)?
-                    .finish();
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartAttributes>>>("initial_data", Self::VT_INITIAL_DATA, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeCell>>>>("cell", Self::VT_CELL, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>>>("parts_color", Self::VT_PARTS_COLOR, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeShader>>>>("shader", Self::VT_SHADER, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeVertex>>>>("vertex", Self::VT_VERTEX, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeDeform>>>>("deform", Self::VT_DEFORM, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>("part_mesh_data", Self::VT_PART_MESH_DATA, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>>>("events", Self::VT_EVENTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("label_data", Self::VT_LABEL_DATA, false)?
+     .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
+     .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
+     .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
+     .visit_field::<i16>("fps", Self::VT_FPS, false)?
+     .visit_field::<Rect>("canvas", Self::VT_CANVAS, false)?
+     .finish();
                 Ok(())
             }
         }
         pub struct AnimPrepDataArgs<'a> {
-            pub initial_data: Option<
+            pub initial_data:
+                Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, PartAttributes>>>,
+            pub cell: Option<
                 ::flatbuffers::WIPOffset<
-                    ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>,
+                    ::flatbuffers::Vector<
+                        'a,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeCell<'a>>,
+                    >,
+                >,
+            >,
+            pub parts_color: Option<
+                ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'a,
+                        ::flatbuffers::ForwardsUOffset<PartAttributePartsColor<'a>>,
+                    >,
+                >,
+            >,
+            pub shader: Option<
+                ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'a,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeShader<'a>>,
+                    >,
+                >,
+            >,
+            pub vertex: Option<
+                ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'a,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeVertex<'a>>,
+                    >,
+                >,
+            >,
+            pub deform: Option<
+                ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'a,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'a>>,
+                    >,
                 >,
             >,
             pub part_mesh_data: Option<
@@ -5790,6 +6516,11 @@ pub mod ss {
             fn default() -> Self {
                 AnimPrepDataArgs {
                     initial_data: None,
+                    cell: None,
+                    parts_color: None,
+                    shader: None,
+                    vertex: None,
+                    deform: None,
                     part_mesh_data: None,
                     events: None,
                     label_data: None,
@@ -5810,13 +6541,84 @@ pub mod ss {
             #[inline]
             pub fn add_initial_data(
                 &mut self,
-                initial_data: ::flatbuffers::WIPOffset<
-                    ::flatbuffers::Vector<'b, ::flatbuffers::ForwardsUOffset<PartAttributes<'b>>>,
-                >,
+                initial_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b, PartAttributes>>,
             ) {
                 self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
                     AnimPrepData::VT_INITIAL_DATA,
                     initial_data,
+                );
+            }
+            #[inline]
+            pub fn add_cell(
+                &mut self,
+                cell: ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'b,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeCell<'b>>,
+                    >,
+                >,
+            ) {
+                self.fbb_
+                    .push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_CELL, cell);
+            }
+            #[inline]
+            pub fn add_parts_color(
+                &mut self,
+                parts_color: ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'b,
+                        ::flatbuffers::ForwardsUOffset<PartAttributePartsColor<'b>>,
+                    >,
+                >,
+            ) {
+                self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
+                    AnimPrepData::VT_PARTS_COLOR,
+                    parts_color,
+                );
+            }
+            #[inline]
+            pub fn add_shader(
+                &mut self,
+                shader: ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'b,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeShader<'b>>,
+                    >,
+                >,
+            ) {
+                self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
+                    AnimPrepData::VT_SHADER,
+                    shader,
+                );
+            }
+            #[inline]
+            pub fn add_vertex(
+                &mut self,
+                vertex: ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'b,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeVertex<'b>>,
+                    >,
+                >,
+            ) {
+                self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
+                    AnimPrepData::VT_VERTEX,
+                    vertex,
+                );
+            }
+            #[inline]
+            pub fn add_deform(
+                &mut self,
+                deform: ::flatbuffers::WIPOffset<
+                    ::flatbuffers::Vector<
+                        'b,
+                        ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'b>>,
+                    >,
+                >,
+            ) {
+                self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
+                    AnimPrepData::VT_DEFORM,
+                    deform,
                 );
             }
             #[inline]
@@ -5900,6 +6702,11 @@ pub mod ss {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 let mut ds = f.debug_struct("AnimPrepData");
                 ds.field("initial_data", &self.initial_data());
+                ds.field("cell", &self.cell());
+                ds.field("parts_color", &self.parts_color());
+                ds.field("shader", &self.shader());
+                ds.field("vertex", &self.vertex());
+                ds.field("deform", &self.deform());
                 ds.field("part_mesh_data", &self.part_mesh_data());
                 ds.field("events", &self.events());
                 ds.field("label_data", &self.label_data());
