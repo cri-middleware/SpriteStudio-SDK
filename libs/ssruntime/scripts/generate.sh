@@ -17,6 +17,4 @@ ${FLATC} --rust fbs/preparation.fbs
 ${FLATC} --rust fbs/framedata.fbs
 /bin/mv framedata_generated.rs src/runtime/framedata.rs
 
-
-cargo fmt --all
 popd > /dev/null

@@ -133,46 +133,46 @@ table PartAttributeAudio {
   loop_num: int;
 }
 
-struct PartAttributes {
-  cell: int;
-  position_x: float;
-  position_y: float;
-  position_z: float;
-  rotation_x: float;
-  rotation_y: float;
-  rotation_z: float;
-  scale_x: float;
-  scale_y: float;
-  local_scale_x: float;
-  local_scale_y: float;
-  opacity: float;
-  localopacity: float;
-  priority: int;
-  flip_v: bool;
-  flip_h: bool;
-  hide: bool;
-  parts_color: int;
-  shader: int;
-  vertex: int;
-  pivot_x: float;
-  pivot_y: float;
-  anchor_x: float;
-  anchor_y: float;
-  size_x: float;
-  size_y: float;
-  img_flip_h: bool;
-  img_flip_v: bool;
-  uv_move_x: float;
-  uv_move_y: float;
-  uv_move_z: float;
-  uv_scale_x: float;
-  uv_scale_y: float;
-  bounding_radius: float;
-  mask: float;
-  skew_x: float;
-  skew_y: float;
-  deform: int;
-  texture: int;
+table PartAttributes {
+  cell: PartAttributeCell;
+  position_x: float = 0.0;
+  position_y: float = 0.0;
+  position_z: float = 0.0;
+  rotation_x: float = 0.0;
+  rotation_y: float = 0.0;
+  rotation_z: float = 0.0;
+  scale_x: float = 1.0;
+  scale_y: float = 1.0;
+  local_scale_x: float = 1.0;
+  local_scale_y: float = 1.0;
+  opacity: float = 1.0;
+  localopacity: float = 1.0;
+  priority: int = 0;
+  flip_v: bool = false;
+  flip_h: bool = false;
+  hide: bool = false;
+  parts_color: PartAttributePartsColor;
+  shader: PartAttributeShader;
+  vertex: PartAttributeVertex;
+  pivot_x: float = 0.0;
+  pivot_y: float = 0.0;
+  anchor_x: float = 0.0;
+  anchor_y: float = 0.0;
+  size_x: float = 1.0;
+  size_y: float = 1.0;
+  img_flip_h: bool = false;
+  img_flip_v: bool = false;
+  uv_move_x: float = 0.0;
+  uv_move_y: float = 0.0;
+  uv_move_z: float = 0.0;
+  uv_scale_x: float = 0.0;
+  uv_scale_y: float = 0.0;
+  bounding_radius: float = 0.0;
+  mask: float = 0.0;
+  skew_x: float = 0.0;
+  skew_y: float = 0.0;
+  deform: PartAttributeDeform;
+  texture: int = -1;
 }
 
 // part_mesh_data
@@ -237,12 +237,6 @@ table Label {
 
 table AnimPrepData {
   initial_data: [PartAttributes];
-  cell: [PartAttributeCell];
-  parts_color: [PartAttributePartsColor];
-  shader: [PartAttributeShader];
-  vertex: [PartAttributeVertex];
-  deform: [PartAttributeDeform];
-
   part_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
