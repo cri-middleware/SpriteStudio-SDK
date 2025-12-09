@@ -4,8 +4,9 @@ BASE_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 pushd $BASE_DIR > /dev/null
 
-# runtime
-FLATC="flatc --rust"
+# for runtime
+FLATC_CMD=flatc
+FLATC="${FLATC_CMD} --rust"
 FEATURE="runtime"
 /bin/mkdir -p ./src/${FEATURE}
 for f in ./fbs/*.fbs;
@@ -15,8 +16,8 @@ do
   mv "${name}_generated.rs" "./src/${FEATURE}/$name.rs"
 done
 
-# converter
-FLATC="flatc --rust --gen-compare --gen-object-api --gen-mutable"
+# for converter
+FLATC="${FLATC_CMD} --rust --gen-compare --gen-object-api --gen-mutable"
 FEATURE="converter"
 /bin/mkdir -p ./src/${FEATURE}
 for f in ./fbs/*.fbs;
@@ -26,5 +27,4 @@ do
   mv "${name}_generated.rs" "./src/${FEATURE}/$name.rs"
 done
 
-cargo fmt --all
 popd > /dev/null
