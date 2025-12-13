@@ -38,33 +38,21 @@ impl SspjLoader {
 
 pub fn convert_sspj_to_ssab_data(
     path: &Path,
-    _config: &ConvertConfig,
+    config: &ConvertConfig,
 ) -> Result<HashMap<String, Vec<u8>>, SspjError> {
     let sspj_loader = SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
         Err(error) => {
-            println!(
-                "{:?} error: {:?}",
-                path.as_os_str().to_string_lossy(),
-                error
-            );
+            println!("{:?} error: {:?}", path.as_os_str().to_string_lossy(), error);
             return Err(error);
         }
     };
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let mut ssab_model_list = sspj
-        .anime_list
-        .iter()
-        .map(|anime_pack| ssabt::convert_ss_anime_binary_t(anime_pack, &sspj))
-        .collect::<Vec<SsAnimeBinaryT>>();
+    let mut ssab_model_list = sspj.anime_list.iter().map(|anime_pack| ssabt::convert_ss_anime_binary_t(anime_pack, &sspj)).collect::<Vec<SsAnimeBinaryT>>();
 
-    let ssqb_model_list = sspj
-        .sequence_list
-        .iter()
-        .map(|sequence| ssqbt::convert_ss_sequence_binary_t(sequence))
-        .collect::<Vec<ssab::ssqb::SsSequenceBinaryT>>();
+    let ssqb_model_list = sspj.sequence_list.iter().map(|sequence| ssqbt::convert_ss_sequence_binary_t(sequence)).collect::<Vec<ssab::ssqb::SsSequenceBinaryT>>();
 
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list
