@@ -4516,12 +4516,12 @@ impl<'a> ::flatbuffers::Follow<'a> for AnimPrepData<'a> {
 }
 
 impl<'a> AnimPrepData<'a> {
-  pub const VT_INITIAL_DATA: ::flatbuffers::VOffsetT = 4;
-  pub const VT_PART_MESH_DATA: ::flatbuffers::VOffsetT = 6;
+  pub const VT_PARTS_INITIAL_ATTRIBUTES: ::flatbuffers::VOffsetT = 4;
+  pub const VT_PARTS_MESH_DATA: ::flatbuffers::VOffsetT = 6;
   pub const VT_EVENTS: ::flatbuffers::VOffsetT = 8;
-  pub const VT_LABEL_DATA: ::flatbuffers::VOffsetT = 10;
-  pub const VT_START_FRAMES: ::flatbuffers::VOffsetT = 12;
-  pub const VT_END_FRAMES: ::flatbuffers::VOffsetT = 14;
+  pub const VT_LABELS: ::flatbuffers::VOffsetT = 10;
+  pub const VT_START_FRAME: ::flatbuffers::VOffsetT = 12;
+  pub const VT_END_FRAME: ::flatbuffers::VOffsetT = 14;
   pub const VT_TOTAL_FRAMES: ::flatbuffers::VOffsetT = 16;
   pub const VT_FPS: ::flatbuffers::VOffsetT = 18;
   pub const VT_CANVAS: ::flatbuffers::VOffsetT = 20;
@@ -4537,31 +4537,31 @@ impl<'a> AnimPrepData<'a> {
   ) -> ::flatbuffers::WIPOffset<AnimPrepData<'bldr>> {
     let mut builder = AnimPrepDataBuilder::new(_fbb);
     if let Some(x) = args.canvas { builder.add_canvas(x); }
-    if let Some(x) = args.label_data { builder.add_label_data(x); }
+    if let Some(x) = args.labels { builder.add_labels(x); }
     if let Some(x) = args.events { builder.add_events(x); }
-    if let Some(x) = args.part_mesh_data { builder.add_part_mesh_data(x); }
-    if let Some(x) = args.initial_data { builder.add_initial_data(x); }
+    if let Some(x) = args.parts_mesh_data { builder.add_parts_mesh_data(x); }
+    if let Some(x) = args.parts_initial_attributes { builder.add_parts_initial_attributes(x); }
     builder.add_fps(args.fps);
     builder.add_total_frames(args.total_frames);
-    builder.add_end_frames(args.end_frames);
-    builder.add_start_frames(args.start_frames);
+    builder.add_end_frame(args.end_frame);
+    builder.add_start_frame(args.start_frame);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn initial_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>> {
+  pub fn parts_initial_attributes(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>(AnimPrepData::VT_INITIAL_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>(AnimPrepData::VT_PARTS_INITIAL_ATTRIBUTES, None)}
   }
   #[inline]
-  pub fn part_mesh_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>> {
+  pub fn parts_mesh_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>(AnimPrepData::VT_PART_MESH_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>(AnimPrepData::VT_PARTS_MESH_DATA, None)}
   }
   #[inline]
   pub fn events(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>> {
@@ -4571,25 +4571,25 @@ impl<'a> AnimPrepData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>>>(AnimPrepData::VT_EVENTS, None)}
   }
   #[inline]
-  pub fn label_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>> {
+  pub fn labels(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label>>>>(AnimPrepData::VT_LABEL_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label>>>>(AnimPrepData::VT_LABELS, None)}
   }
   #[inline]
-  pub fn start_frames(&self) -> i16 {
+  pub fn start_frame(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(AnimPrepData::VT_START_FRAMES, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(AnimPrepData::VT_START_FRAME, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn end_frames(&self) -> i16 {
+  pub fn end_frame(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(AnimPrepData::VT_END_FRAMES, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(AnimPrepData::VT_END_FRAME, Some(0)).unwrap()}
   }
   #[inline]
   pub fn total_frames(&self) -> i16 {
@@ -4620,12 +4620,12 @@ impl ::flatbuffers::Verifiable for AnimPrepData<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>("initial_data", Self::VT_INITIAL_DATA, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>("part_mesh_data", Self::VT_PART_MESH_DATA, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>("parts_initial_attributes", Self::VT_PARTS_INITIAL_ATTRIBUTES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>("parts_mesh_data", Self::VT_PARTS_MESH_DATA, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>>>("events", Self::VT_EVENTS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("label_data", Self::VT_LABEL_DATA, false)?
-     .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
-     .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("labels", Self::VT_LABELS, false)?
+     .visit_field::<i16>("start_frame", Self::VT_START_FRAME, false)?
+     .visit_field::<i16>("end_frame", Self::VT_END_FRAME, false)?
      .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
      .visit_field::<i16>("fps", Self::VT_FPS, false)?
      .visit_field::<Rect>("canvas", Self::VT_CANVAS, false)?
@@ -4634,12 +4634,12 @@ impl ::flatbuffers::Verifiable for AnimPrepData<'_> {
   }
 }
 pub struct AnimPrepDataArgs<'a> {
-    pub initial_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>>,
-    pub part_mesh_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>>>,
+    pub parts_initial_attributes: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>>,
+    pub parts_mesh_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>>>,
     pub events: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>>>,
-    pub label_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>>>,
-    pub start_frames: i16,
-    pub end_frames: i16,
+    pub labels: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>>>,
+    pub start_frame: i16,
+    pub end_frame: i16,
     pub total_frames: i16,
     pub fps: i16,
     pub canvas: Option<&'a Rect>,
@@ -4648,12 +4648,12 @@ impl<'a> Default for AnimPrepDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     AnimPrepDataArgs {
-      initial_data: None,
-      part_mesh_data: None,
+      parts_initial_attributes: None,
+      parts_mesh_data: None,
       events: None,
-      label_data: None,
-      start_frames: 0,
-      end_frames: 0,
+      labels: None,
+      start_frame: 0,
+      end_frame: 0,
       total_frames: 0,
       fps: 0,
       canvas: None,
@@ -4667,28 +4667,28 @@ pub struct AnimPrepDataBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimPrepDataBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_initial_data(&mut self, initial_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAttributes<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_INITIAL_DATA, initial_data);
+  pub fn add_parts_initial_attributes(&mut self, parts_initial_attributes: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAttributes<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_PARTS_INITIAL_ATTRIBUTES, parts_initial_attributes);
   }
   #[inline]
-  pub fn add_part_mesh_data(&mut self, part_mesh_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartMeshData<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_PART_MESH_DATA, part_mesh_data);
+  pub fn add_parts_mesh_data(&mut self, parts_mesh_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartMeshData<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_PARTS_MESH_DATA, parts_mesh_data);
   }
   #[inline]
   pub fn add_events(&mut self, events: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventsPerFrame<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_EVENTS, events);
   }
   #[inline]
-  pub fn add_label_data(&mut self, label_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Label<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_LABEL_DATA, label_data);
+  pub fn add_labels(&mut self, labels: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Label<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimPrepData::VT_LABELS, labels);
   }
   #[inline]
-  pub fn add_start_frames(&mut self, start_frames: i16) {
-    self.fbb_.push_slot::<i16>(AnimPrepData::VT_START_FRAMES, start_frames, 0);
+  pub fn add_start_frame(&mut self, start_frame: i16) {
+    self.fbb_.push_slot::<i16>(AnimPrepData::VT_START_FRAME, start_frame, 0);
   }
   #[inline]
-  pub fn add_end_frames(&mut self, end_frames: i16) {
-    self.fbb_.push_slot::<i16>(AnimPrepData::VT_END_FRAMES, end_frames, 0);
+  pub fn add_end_frame(&mut self, end_frame: i16) {
+    self.fbb_.push_slot::<i16>(AnimPrepData::VT_END_FRAME, end_frame, 0);
   }
   #[inline]
   pub fn add_total_frames(&mut self, total_frames: i16) {
@@ -4720,12 +4720,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimPrepDataBuilder<'a, 'b, A
 impl ::core::fmt::Debug for AnimPrepData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("AnimPrepData");
-      ds.field("initial_data", &self.initial_data());
-      ds.field("part_mesh_data", &self.part_mesh_data());
+      ds.field("parts_initial_attributes", &self.parts_initial_attributes());
+      ds.field("parts_mesh_data", &self.parts_mesh_data());
       ds.field("events", &self.events());
-      ds.field("label_data", &self.label_data());
-      ds.field("start_frames", &self.start_frames());
-      ds.field("end_frames", &self.end_frames());
+      ds.field("labels", &self.labels());
+      ds.field("start_frame", &self.start_frame());
+      ds.field("end_frame", &self.end_frame());
       ds.field("total_frames", &self.total_frames());
       ds.field("fps", &self.fps());
       ds.field("canvas", &self.canvas());

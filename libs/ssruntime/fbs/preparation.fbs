@@ -236,15 +236,15 @@ table Label {
 }
 
 table AnimPrepData {
-  initial_data: [PartAttributes];
-  part_mesh_data: [PartMeshData];
+  parts_initial_attributes: [PartAttributes];
+  parts_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
 
-  label_data: [Label];
+  labels: [Label];
 
-  start_frames: short;
-  end_frames: short;
+  start_frame: short;
+  end_frame: short;
   total_frames: short;
   fps: short;
 

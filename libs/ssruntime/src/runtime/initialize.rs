@@ -6124,10 +6124,10 @@ impl<'a> ::flatbuffers::Follow<'a> for InitData<'a> {
 
 impl<'a> InitData<'a> {
   pub const VT_PARTS: ::flatbuffers::VOffsetT = 4;
-  pub const VT_CELL_MAP: ::flatbuffers::VOffsetT = 6;
-  pub const VT_EFFECT: ::flatbuffers::VOffsetT = 8;
-  pub const VT_SOUND_LIST: ::flatbuffers::VOffsetT = 10;
-  pub const VT_FONT_BITMAP: ::flatbuffers::VOffsetT = 12;
+  pub const VT_CELL_MAPS: ::flatbuffers::VOffsetT = 6;
+  pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 8;
+  pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 10;
+  pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 12;
   pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 14;
 
   #[inline]
@@ -6141,10 +6141,10 @@ impl<'a> InitData<'a> {
   ) -> ::flatbuffers::WIPOffset<InitData<'bldr>> {
     let mut builder = InitDataBuilder::new(_fbb);
     if let Some(x) = args.external_instances { builder.add_external_instances(x); }
-    if let Some(x) = args.font_bitmap { builder.add_font_bitmap(x); }
-    if let Some(x) = args.sound_list { builder.add_sound_list(x); }
-    if let Some(x) = args.effect { builder.add_effect(x); }
-    if let Some(x) = args.cell_map { builder.add_cell_map(x); }
+    if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
+    if let Some(x) = args.sound_lists { builder.add_sound_lists(x); }
+    if let Some(x) = args.effects { builder.add_effects(x); }
+    if let Some(x) = args.cell_maps { builder.add_cell_maps(x); }
     if let Some(x) = args.parts { builder.add_parts(x); }
     builder.finish()
   }
@@ -6158,32 +6158,32 @@ impl<'a> InitData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData>>>>(InitData::VT_PARTS, None)}
   }
   #[inline]
-  pub fn cell_map(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
+  pub fn cell_maps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(InitData::VT_CELL_MAP, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(InitData::VT_CELL_MAPS, None)}
   }
   #[inline]
-  pub fn effect(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>> {
+  pub fn effects(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect>>>>(InitData::VT_EFFECT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect>>>>(InitData::VT_EFFECTS, None)}
   }
   #[inline]
-  pub fn sound_list(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>> {
+  pub fn sound_lists(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList>>>>(InitData::VT_SOUND_LIST, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList>>>>(InitData::VT_SOUND_LISTS, None)}
   }
   #[inline]
-  pub fn font_bitmap(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>> {
+  pub fn font_bitmaps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(InitData::VT_FONT_BITMAP, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(InitData::VT_FONT_BITMAPS, None)}
   }
   #[inline]
   pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
@@ -6201,10 +6201,10 @@ impl ::flatbuffers::Verifiable for InitData<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartData>>>>("parts", Self::VT_PARTS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cell_map", Self::VT_CELL_MAP, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effect", Self::VT_EFFECT, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_list", Self::VT_SOUND_LIST, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmap", Self::VT_FONT_BITMAP, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cell_maps", Self::VT_CELL_MAPS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
      .finish();
     Ok(())
@@ -6212,10 +6212,10 @@ impl ::flatbuffers::Verifiable for InitData<'_> {
 }
 pub struct InitDataArgs<'a> {
     pub parts: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>>>,
-    pub cell_map: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
-    pub effect: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
-    pub sound_list: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
-    pub font_bitmap: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
+    pub cell_maps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
+    pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
+    pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
+    pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
     pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
 }
 impl<'a> Default for InitDataArgs<'a> {
@@ -6223,10 +6223,10 @@ impl<'a> Default for InitDataArgs<'a> {
   fn default() -> Self {
     InitDataArgs {
       parts: None,
-      cell_map: None,
-      effect: None,
-      sound_list: None,
-      font_bitmap: None,
+      cell_maps: None,
+      effects: None,
+      sound_lists: None,
+      font_bitmaps: None,
       external_instances: None,
     }
   }
@@ -6242,20 +6242,20 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> InitDataBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_PARTS, parts);
   }
   #[inline]
-  pub fn add_cell_map(&mut self, cell_map: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_CELL_MAP, cell_map);
+  pub fn add_cell_maps(&mut self, cell_maps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_CELL_MAPS, cell_maps);
   }
   #[inline]
-  pub fn add_effect(&mut self, effect: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_EFFECT, effect);
+  pub fn add_effects(&mut self, effects: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_EFFECTS, effects);
   }
   #[inline]
-  pub fn add_sound_list(&mut self, sound_list: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<SoundList<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_SOUND_LIST, sound_list);
+  pub fn add_sound_lists(&mut self, sound_lists: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<SoundList<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_SOUND_LISTS, sound_lists);
   }
   #[inline]
-  pub fn add_font_bitmap(&mut self, font_bitmap: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<FontBitmap<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_FONT_BITMAP, font_bitmap);
+  pub fn add_font_bitmaps(&mut self, font_bitmaps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<FontBitmap<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_FONT_BITMAPS, font_bitmaps);
   }
   #[inline]
   pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
@@ -6280,10 +6280,10 @@ impl ::core::fmt::Debug for InitData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("InitData");
       ds.field("parts", &self.parts());
-      ds.field("cell_map", &self.cell_map());
-      ds.field("effect", &self.effect());
-      ds.field("sound_list", &self.sound_list());
-      ds.field("font_bitmap", &self.font_bitmap());
+      ds.field("cell_maps", &self.cell_maps());
+      ds.field("effects", &self.effects());
+      ds.field("sound_lists", &self.sound_lists());
+      ds.field("font_bitmaps", &self.font_bitmaps());
       ds.field("external_instances", &self.external_instances());
       ds.finish()
   }

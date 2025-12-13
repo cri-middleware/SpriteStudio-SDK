@@ -17240,13 +17240,13 @@ impl<'a> ::flatbuffers::Follow<'a> for AnimationData<'a> {
 
 impl<'a> AnimationData<'a> {
   pub const VT_NAME: ::flatbuffers::VOffsetT = 4;
-  pub const VT_INITIAL_DATA: ::flatbuffers::VOffsetT = 6;
-  pub const VT_PART_ANIMATION_DATA: ::flatbuffers::VOffsetT = 8;
-  pub const VT_PART_MESH_DATA: ::flatbuffers::VOffsetT = 10;
+  pub const VT_PARTS_INITIAL_ATTRIBUTES: ::flatbuffers::VOffsetT = 6;
+  pub const VT_PARTS_ANIMATION_DATA: ::flatbuffers::VOffsetT = 8;
+  pub const VT_PARTS_MESH_DATA: ::flatbuffers::VOffsetT = 10;
   pub const VT_EVENTS: ::flatbuffers::VOffsetT = 12;
-  pub const VT_LABEL_DATA: ::flatbuffers::VOffsetT = 14;
-  pub const VT_START_FRAMES: ::flatbuffers::VOffsetT = 16;
-  pub const VT_END_FRAMES: ::flatbuffers::VOffsetT = 18;
+  pub const VT_LABELS: ::flatbuffers::VOffsetT = 14;
+  pub const VT_START_FRAME: ::flatbuffers::VOffsetT = 16;
+  pub const VT_END_FRAME: ::flatbuffers::VOffsetT = 18;
   pub const VT_TOTAL_FRAMES: ::flatbuffers::VOffsetT = 20;
   pub const VT_FPS: ::flatbuffers::VOffsetT = 22;
   pub const VT_CANVAS: ::flatbuffers::VOffsetT = 24;
@@ -17262,16 +17262,16 @@ impl<'a> AnimationData<'a> {
   ) -> ::flatbuffers::WIPOffset<AnimationData<'bldr>> {
     let mut builder = AnimationDataBuilder::new(_fbb);
     if let Some(x) = args.canvas { builder.add_canvas(x); }
-    if let Some(x) = args.label_data { builder.add_label_data(x); }
+    if let Some(x) = args.labels { builder.add_labels(x); }
     if let Some(x) = args.events { builder.add_events(x); }
-    if let Some(x) = args.part_mesh_data { builder.add_part_mesh_data(x); }
-    if let Some(x) = args.part_animation_data { builder.add_part_animation_data(x); }
-    if let Some(x) = args.initial_data { builder.add_initial_data(x); }
+    if let Some(x) = args.parts_mesh_data { builder.add_parts_mesh_data(x); }
+    if let Some(x) = args.parts_animation_data { builder.add_parts_animation_data(x); }
+    if let Some(x) = args.parts_initial_attributes { builder.add_parts_initial_attributes(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_fps(args.fps);
     builder.add_total_frames(args.total_frames);
-    builder.add_end_frames(args.end_frames);
-    builder.add_start_frames(args.start_frames);
+    builder.add_end_frame(args.end_frame);
+    builder.add_start_frame(args.start_frame);
     builder.finish()
   }
 
@@ -17280,23 +17280,23 @@ impl<'a> AnimationData<'a> {
       let x = self.name();
       alloc::string::ToString::to_string(x)
     };
-    let initial_data = self.initial_data().map(|x| {
+    let parts_initial_attributes = self.parts_initial_attributes().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let part_animation_data = self.part_animation_data().map(|x| {
+    let parts_animation_data = self.parts_animation_data().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let part_mesh_data = self.part_mesh_data().map(|x| {
+    let parts_mesh_data = self.parts_mesh_data().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let events = self.events().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let label_data = self.label_data().map(|x| {
+    let labels = self.labels().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let start_frames = self.start_frames();
-    let end_frames = self.end_frames();
+    let start_frame = self.start_frame();
+    let end_frame = self.end_frame();
     let total_frames = self.total_frames();
     let fps = self.fps();
     let canvas = self.canvas().map(|x| {
@@ -17304,13 +17304,13 @@ impl<'a> AnimationData<'a> {
     });
     AnimationDataT {
       name,
-      initial_data,
-      part_animation_data,
-      part_mesh_data,
+      parts_initial_attributes,
+      parts_animation_data,
+      parts_mesh_data,
       events,
-      label_data,
-      start_frames,
-      end_frames,
+      labels,
+      start_frame,
+      end_frame,
       total_frames,
       fps,
       canvas,
@@ -17335,25 +17335,25 @@ impl<'a> AnimationData<'a> {
     key.cmp(val)
   }
   #[inline]
-  pub fn initial_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>> {
+  pub fn parts_initial_attributes(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>(AnimationData::VT_INITIAL_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>(AnimationData::VT_PARTS_INITIAL_ATTRIBUTES, None)}
   }
   #[inline]
-  pub fn part_animation_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData<'a>>>> {
+  pub fn parts_animation_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData>>>>(AnimationData::VT_PART_ANIMATION_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData>>>>(AnimationData::VT_PARTS_ANIMATION_DATA, None)}
   }
   #[inline]
-  pub fn part_mesh_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>> {
+  pub fn parts_mesh_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>(AnimationData::VT_PART_MESH_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>(AnimationData::VT_PARTS_MESH_DATA, None)}
   }
   #[inline]
   pub fn events(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>> {
@@ -17363,25 +17363,25 @@ impl<'a> AnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>>>(AnimationData::VT_EVENTS, None)}
   }
   #[inline]
-  pub fn label_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>> {
+  pub fn labels(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label>>>>(AnimationData::VT_LABEL_DATA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label>>>>(AnimationData::VT_LABELS, None)}
   }
   #[inline]
-  pub fn start_frames(&self) -> i16 {
+  pub fn start_frame(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(AnimationData::VT_START_FRAMES, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(AnimationData::VT_START_FRAME, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn end_frames(&self) -> i16 {
+  pub fn end_frame(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(AnimationData::VT_END_FRAMES, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(AnimationData::VT_END_FRAME, Some(0)).unwrap()}
   }
   #[inline]
   pub fn total_frames(&self) -> i16 {
@@ -17413,13 +17413,13 @@ impl ::flatbuffers::Verifiable for AnimationData<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>("initial_data", Self::VT_INITIAL_DATA, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationData>>>>("part_animation_data", Self::VT_PART_ANIMATION_DATA, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>("part_mesh_data", Self::VT_PART_MESH_DATA, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributes>>>>("parts_initial_attributes", Self::VT_PARTS_INITIAL_ATTRIBUTES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationData>>>>("parts_animation_data", Self::VT_PARTS_ANIMATION_DATA, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>("parts_mesh_data", Self::VT_PARTS_MESH_DATA, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>>>("events", Self::VT_EVENTS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("label_data", Self::VT_LABEL_DATA, false)?
-     .visit_field::<i16>("start_frames", Self::VT_START_FRAMES, false)?
-     .visit_field::<i16>("end_frames", Self::VT_END_FRAMES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("labels", Self::VT_LABELS, false)?
+     .visit_field::<i16>("start_frame", Self::VT_START_FRAME, false)?
+     .visit_field::<i16>("end_frame", Self::VT_END_FRAME, false)?
      .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
      .visit_field::<i16>("fps", Self::VT_FPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("canvas", Self::VT_CANVAS, false)?
@@ -17429,13 +17429,13 @@ impl ::flatbuffers::Verifiable for AnimationData<'_> {
 }
 pub struct AnimationDataArgs<'a> {
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
-    pub initial_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>>,
-    pub part_animation_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData<'a>>>>>,
-    pub part_mesh_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>>>,
+    pub parts_initial_attributes: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>>>,
+    pub parts_animation_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData<'a>>>>>,
+    pub parts_mesh_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>>>,
     pub events: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>>>,
-    pub label_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>>>,
-    pub start_frames: i16,
-    pub end_frames: i16,
+    pub labels: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>>>,
+    pub start_frame: i16,
+    pub end_frame: i16,
     pub total_frames: i16,
     pub fps: i16,
     pub canvas: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
@@ -17445,13 +17445,13 @@ impl<'a> Default for AnimationDataArgs<'a> {
   fn default() -> Self {
     AnimationDataArgs {
       name: None, // required field
-      initial_data: None,
-      part_animation_data: None,
-      part_mesh_data: None,
+      parts_initial_attributes: None,
+      parts_animation_data: None,
+      parts_mesh_data: None,
       events: None,
-      label_data: None,
-      start_frames: 0,
-      end_frames: 0,
+      labels: None,
+      start_frame: 0,
+      end_frame: 0,
       total_frames: 0,
       fps: 0,
       canvas: None,
@@ -17469,32 +17469,32 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_NAME, name);
   }
   #[inline]
-  pub fn add_initial_data(&mut self, initial_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAttributes<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_INITIAL_DATA, initial_data);
+  pub fn add_parts_initial_attributes(&mut self, parts_initial_attributes: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAttributes<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PARTS_INITIAL_ATTRIBUTES, parts_initial_attributes);
   }
   #[inline]
-  pub fn add_part_animation_data(&mut self, part_animation_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationData<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PART_ANIMATION_DATA, part_animation_data);
+  pub fn add_parts_animation_data(&mut self, parts_animation_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationData<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PARTS_ANIMATION_DATA, parts_animation_data);
   }
   #[inline]
-  pub fn add_part_mesh_data(&mut self, part_mesh_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartMeshData<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PART_MESH_DATA, part_mesh_data);
+  pub fn add_parts_mesh_data(&mut self, parts_mesh_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartMeshData<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PARTS_MESH_DATA, parts_mesh_data);
   }
   #[inline]
   pub fn add_events(&mut self, events: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventsPerFrame<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_EVENTS, events);
   }
   #[inline]
-  pub fn add_label_data(&mut self, label_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Label<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_LABEL_DATA, label_data);
+  pub fn add_labels(&mut self, labels: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Label<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_LABELS, labels);
   }
   #[inline]
-  pub fn add_start_frames(&mut self, start_frames: i16) {
-    self.fbb_.push_slot::<i16>(AnimationData::VT_START_FRAMES, start_frames, 0);
+  pub fn add_start_frame(&mut self, start_frame: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_START_FRAME, start_frame, 0);
   }
   #[inline]
-  pub fn add_end_frames(&mut self, end_frames: i16) {
-    self.fbb_.push_slot::<i16>(AnimationData::VT_END_FRAMES, end_frames, 0);
+  pub fn add_end_frame(&mut self, end_frame: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_END_FRAME, end_frame, 0);
   }
   #[inline]
   pub fn add_total_frames(&mut self, total_frames: i16) {
@@ -17528,13 +17528,13 @@ impl ::core::fmt::Debug for AnimationData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("AnimationData");
       ds.field("name", &self.name());
-      ds.field("initial_data", &self.initial_data());
-      ds.field("part_animation_data", &self.part_animation_data());
-      ds.field("part_mesh_data", &self.part_mesh_data());
+      ds.field("parts_initial_attributes", &self.parts_initial_attributes());
+      ds.field("parts_animation_data", &self.parts_animation_data());
+      ds.field("parts_mesh_data", &self.parts_mesh_data());
       ds.field("events", &self.events());
-      ds.field("label_data", &self.label_data());
-      ds.field("start_frames", &self.start_frames());
-      ds.field("end_frames", &self.end_frames());
+      ds.field("labels", &self.labels());
+      ds.field("start_frame", &self.start_frame());
+      ds.field("end_frame", &self.end_frame());
       ds.field("total_frames", &self.total_frames());
       ds.field("fps", &self.fps());
       ds.field("canvas", &self.canvas());
@@ -17545,13 +17545,13 @@ impl ::core::fmt::Debug for AnimationData<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnimationDataT {
   pub name: alloc::string::String,
-  pub initial_data: Option<alloc::vec::Vec<PartAttributesT>>,
-  pub part_animation_data: Option<alloc::vec::Vec<PartAnimationDataT>>,
-  pub part_mesh_data: Option<alloc::vec::Vec<PartMeshDataT>>,
+  pub parts_initial_attributes: Option<alloc::vec::Vec<PartAttributesT>>,
+  pub parts_animation_data: Option<alloc::vec::Vec<PartAnimationDataT>>,
+  pub parts_mesh_data: Option<alloc::vec::Vec<PartMeshDataT>>,
   pub events: Option<alloc::vec::Vec<EventsPerFrameT>>,
-  pub label_data: Option<alloc::vec::Vec<LabelT>>,
-  pub start_frames: i16,
-  pub end_frames: i16,
+  pub labels: Option<alloc::vec::Vec<LabelT>>,
+  pub start_frame: i16,
+  pub end_frame: i16,
   pub total_frames: i16,
   pub fps: i16,
   pub canvas: Option<alloc::boxed::Box<RectT>>,
@@ -17560,13 +17560,13 @@ impl Default for AnimationDataT {
   fn default() -> Self {
     Self {
       name: alloc::string::ToString::to_string(""),
-      initial_data: None,
-      part_animation_data: None,
-      part_mesh_data: None,
+      parts_initial_attributes: None,
+      parts_animation_data: None,
+      parts_mesh_data: None,
       events: None,
-      label_data: None,
-      start_frames: 0,
-      end_frames: 0,
+      labels: None,
+      start_frame: 0,
+      end_frame: 0,
       total_frames: 0,
       fps: 0,
       canvas: None,
@@ -17582,23 +17582,23 @@ impl AnimationDataT {
       let x = &self.name;
       _fbb.create_string(x)
     });
-    let initial_data = self.initial_data.as_ref().map(|x|{
+    let parts_initial_attributes = self.parts_initial_attributes.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let part_animation_data = self.part_animation_data.as_ref().map(|x|{
+    let parts_animation_data = self.parts_animation_data.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let part_mesh_data = self.part_mesh_data.as_ref().map(|x|{
+    let parts_mesh_data = self.parts_mesh_data.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let events = self.events.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let label_data = self.label_data.as_ref().map(|x|{
+    let labels = self.labels.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let start_frames = self.start_frames;
-    let end_frames = self.end_frames;
+    let start_frame = self.start_frame;
+    let end_frame = self.end_frame;
     let total_frames = self.total_frames;
     let fps = self.fps;
     let canvas = self.canvas.as_ref().map(|x|{
@@ -17606,13 +17606,13 @@ impl AnimationDataT {
     });
     AnimationData::create(_fbb, &AnimationDataArgs{
       name,
-      initial_data,
-      part_animation_data,
-      part_mesh_data,
+      parts_initial_attributes,
+      parts_animation_data,
+      parts_mesh_data,
       events,
-      label_data,
-      start_frames,
-      end_frames,
+      labels,
+      start_frame,
+      end_frame,
       total_frames,
       fps,
       canvas,
@@ -17639,10 +17639,10 @@ impl<'a> SsAnimeBinary<'a> {
   pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
   pub const VT_PARTS: ::flatbuffers::VOffsetT = 8;
   pub const VT_ANIMATIONS: ::flatbuffers::VOffsetT = 10;
-  pub const VT_CELL_MAP: ::flatbuffers::VOffsetT = 12;
-  pub const VT_EFFECT: ::flatbuffers::VOffsetT = 14;
-  pub const VT_SOUND_LIST: ::flatbuffers::VOffsetT = 16;
-  pub const VT_FONT_BITMAP: ::flatbuffers::VOffsetT = 18;
+  pub const VT_CELL_MAPS: ::flatbuffers::VOffsetT = 12;
+  pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 14;
+  pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 16;
+  pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 18;
   pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 20;
 
   #[inline]
@@ -17656,10 +17656,10 @@ impl<'a> SsAnimeBinary<'a> {
   ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
     if let Some(x) = args.external_instances { builder.add_external_instances(x); }
-    if let Some(x) = args.font_bitmap { builder.add_font_bitmap(x); }
-    if let Some(x) = args.sound_list { builder.add_sound_list(x); }
-    if let Some(x) = args.effect { builder.add_effect(x); }
-    if let Some(x) = args.cell_map { builder.add_cell_map(x); }
+    if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
+    if let Some(x) = args.sound_lists { builder.add_sound_lists(x); }
+    if let Some(x) = args.effects { builder.add_effects(x); }
+    if let Some(x) = args.cell_maps { builder.add_cell_maps(x); }
     if let Some(x) = args.animations { builder.add_animations(x); }
     if let Some(x) = args.parts { builder.add_parts(x); }
     if let Some(x) = args.name { builder.add_name(x); }
@@ -17678,16 +17678,16 @@ impl<'a> SsAnimeBinary<'a> {
     let animations = self.animations().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let cell_map = self.cell_map().map(|x| {
+    let cell_maps = self.cell_maps().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let effect = self.effect().map(|x| {
+    let effects = self.effects().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let sound_list = self.sound_list().map(|x| {
+    let sound_lists = self.sound_lists().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let font_bitmap = self.font_bitmap().map(|x| {
+    let font_bitmaps = self.font_bitmaps().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let external_instances = self.external_instances().map(|x| {
@@ -17698,10 +17698,10 @@ impl<'a> SsAnimeBinary<'a> {
       name,
       parts,
       animations,
-      cell_map,
-      effect,
-      sound_list,
-      font_bitmap,
+      cell_maps,
+      effects,
+      sound_lists,
+      font_bitmaps,
       external_instances,
     }
   }
@@ -17735,32 +17735,32 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData>>>>(SsAnimeBinary::VT_ANIMATIONS, None)}
   }
   #[inline]
-  pub fn cell_map(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
+  pub fn cell_maps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(SsAnimeBinary::VT_CELL_MAP, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(SsAnimeBinary::VT_CELL_MAPS, None)}
   }
   #[inline]
-  pub fn effect(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>> {
+  pub fn effects(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect>>>>(SsAnimeBinary::VT_EFFECT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect>>>>(SsAnimeBinary::VT_EFFECTS, None)}
   }
   #[inline]
-  pub fn sound_list(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>> {
+  pub fn sound_lists(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList>>>>(SsAnimeBinary::VT_SOUND_LIST, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList>>>>(SsAnimeBinary::VT_SOUND_LISTS, None)}
   }
   #[inline]
-  pub fn font_bitmap(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>> {
+  pub fn font_bitmaps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAP, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAPS, None)}
   }
   #[inline]
   pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
@@ -17781,10 +17781,10 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartData>>>>("parts", Self::VT_PARTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<AnimationData>>>>("animations", Self::VT_ANIMATIONS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cell_map", Self::VT_CELL_MAP, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effect", Self::VT_EFFECT, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_list", Self::VT_SOUND_LIST, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmap", Self::VT_FONT_BITMAP, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cell_maps", Self::VT_CELL_MAPS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
      .finish();
     Ok(())
@@ -17795,10 +17795,10 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub parts: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>>>,
     pub animations: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData<'a>>>>>,
-    pub cell_map: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
-    pub effect: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
-    pub sound_list: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
-    pub font_bitmap: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
+    pub cell_maps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
+    pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
+    pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
+    pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
     pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
@@ -17809,10 +17809,10 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
       name: None,
       parts: None,
       animations: None,
-      cell_map: None,
-      effect: None,
-      sound_list: None,
-      font_bitmap: None,
+      cell_maps: None,
+      effects: None,
+      sound_lists: None,
+      font_bitmaps: None,
       external_instances: None,
     }
   }
@@ -17840,20 +17840,20 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_ANIMATIONS, animations);
   }
   #[inline]
-  pub fn add_cell_map(&mut self, cell_map: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_CELL_MAP, cell_map);
+  pub fn add_cell_maps(&mut self, cell_maps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_CELL_MAPS, cell_maps);
   }
   #[inline]
-  pub fn add_effect(&mut self, effect: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EFFECT, effect);
+  pub fn add_effects(&mut self, effects: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EFFECTS, effects);
   }
   #[inline]
-  pub fn add_sound_list(&mut self, sound_list: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<SoundList<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_SOUND_LIST, sound_list);
+  pub fn add_sound_lists(&mut self, sound_lists: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<SoundList<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_SOUND_LISTS, sound_lists);
   }
   #[inline]
-  pub fn add_font_bitmap(&mut self, font_bitmap: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<FontBitmap<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAP, font_bitmap);
+  pub fn add_font_bitmaps(&mut self, font_bitmaps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<FontBitmap<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAPS, font_bitmaps);
   }
   #[inline]
   pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
@@ -17881,10 +17881,10 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
       ds.field("name", &self.name());
       ds.field("parts", &self.parts());
       ds.field("animations", &self.animations());
-      ds.field("cell_map", &self.cell_map());
-      ds.field("effect", &self.effect());
-      ds.field("sound_list", &self.sound_list());
-      ds.field("font_bitmap", &self.font_bitmap());
+      ds.field("cell_maps", &self.cell_maps());
+      ds.field("effects", &self.effects());
+      ds.field("sound_lists", &self.sound_lists());
+      ds.field("font_bitmaps", &self.font_bitmaps());
       ds.field("external_instances", &self.external_instances());
       ds.finish()
   }
@@ -17896,10 +17896,10 @@ pub struct SsAnimeBinaryT {
   pub name: Option<alloc::string::String>,
   pub parts: Option<alloc::vec::Vec<PartDataT>>,
   pub animations: Option<alloc::vec::Vec<AnimationDataT>>,
-  pub cell_map: Option<alloc::vec::Vec<CellMapT>>,
-  pub effect: Option<alloc::vec::Vec<EffectT>>,
-  pub sound_list: Option<alloc::vec::Vec<SoundListT>>,
-  pub font_bitmap: Option<alloc::vec::Vec<FontBitmapT>>,
+  pub cell_maps: Option<alloc::vec::Vec<CellMapT>>,
+  pub effects: Option<alloc::vec::Vec<EffectT>>,
+  pub sound_lists: Option<alloc::vec::Vec<SoundListT>>,
+  pub font_bitmaps: Option<alloc::vec::Vec<FontBitmapT>>,
   pub external_instances: Option<alloc::vec::Vec<alloc::string::String>>,
 }
 impl Default for SsAnimeBinaryT {
@@ -17909,10 +17909,10 @@ impl Default for SsAnimeBinaryT {
       name: None,
       parts: None,
       animations: None,
-      cell_map: None,
-      effect: None,
-      sound_list: None,
-      font_bitmap: None,
+      cell_maps: None,
+      effects: None,
+      sound_lists: None,
+      font_bitmaps: None,
       external_instances: None,
     }
   }
@@ -17932,16 +17932,16 @@ impl SsAnimeBinaryT {
     let animations = self.animations.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let cell_map = self.cell_map.as_ref().map(|x|{
+    let cell_maps = self.cell_maps.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let effect = self.effect.as_ref().map(|x|{
+    let effects = self.effects.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let sound_list = self.sound_list.as_ref().map(|x|{
+    let sound_lists = self.sound_lists.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let font_bitmap = self.font_bitmap.as_ref().map(|x|{
+    let font_bitmaps = self.font_bitmaps.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let external_instances = self.external_instances.as_ref().map(|x|{
@@ -17952,10 +17952,10 @@ impl SsAnimeBinaryT {
       name,
       parts,
       animations,
-      cell_map,
-      effect,
-      sound_list,
-      font_bitmap,
+      cell_maps,
+      effects,
+      sound_lists,
+      font_bitmaps,
       external_instances,
     })
   }
