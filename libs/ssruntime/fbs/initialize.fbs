@@ -323,10 +323,12 @@ table FontBitmap {
 table InitData {
   parts : [PartData];
 
-  cell_map: [CellMap];
-  effect: [Effect];
-  sound_list: [SoundList];
-  font_bitmap: [FontBitmap];
+  cell_maps: [CellMap];
+  effects: [Effect];
+  sound_lists: [SoundList];
+  font_bitmaps: [FontBitmap];
+
+  external_instances: [string];
 }
 
 root_type InitData;

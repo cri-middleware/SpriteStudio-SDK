@@ -5,12 +5,6 @@ struct Vec2 {
   y: float;
 }
 
-struct Vec3 {
-  x: float;
-  y: float;
-  z: float;
-}
-
 struct U8Rect {
   a: ubyte;
   r: ubyte;
@@ -141,29 +135,44 @@ table PartAttributeAudio {
 
 table PartAttributes {
   cell: PartAttributeCell;
-  position: Vec3;
-  rotation: Vec3;
-  scale: Vec2;
-  local_scale: Vec2;
-  opacity: short;
-  localopacity: short;
-  priority: short;
-  flip_v: bool;
-  flip_h: bool;
-  hide: bool;
+  position_x: float = 0.0;
+  position_y: float = 0.0;
+  position_z: float = 0.0;
+  rotation_x: float = 0.0;
+  rotation_y: float = 0.0;
+  rotation_z: float = 0.0;
+  scale_x: float = 1.0;
+  scale_y: float = 1.0;
+  local_scale_x: float = 1.0;
+  local_scale_y: float = 1.0;
+  opacity: float = 1.0;
+  localopacity: float = 1.0;
+  priority: int = 0;
+  flip_v: bool = false;
+  flip_h: bool = false;
+  hide: bool = false;
   parts_color: PartAttributePartsColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
-  pivot: Vec2;
-  size: Vec2;
-  uv_move: Vec3;
-  uv_scale: Vec2;
-  bounding_radius: float;
-  mask: float;
-  skew: Vec2;
+  pivot_x: float = 0.0;
+  pivot_y: float = 0.0;
+  anchor_x: float = 0.0;
+  anchor_y: float = 0.0;
+  size_x: float = 1.0;
+  size_y: float = 1.0;
+  img_flip_h: bool = false;
+  img_flip_v: bool = false;
+  uv_move_x: float = 0.0;
+  uv_move_y: float = 0.0;
+  uv_move_z: float = 0.0;
+  uv_scale_x: float = 0.0;
+  uv_scale_y: float = 0.0;
+  bounding_radius: float = 0.0;
+  mask: float = 0.0;
+  skew_x: float = 0.0;
+  skew_y: float = 0.0;
   deform: PartAttributeDeform;
-
-  texture: int;
+  texture: int = -1;
 }
 
 // part_mesh_data
@@ -227,15 +236,15 @@ table Label {
 }
 
 table AnimPrepData {
-  initial_data: [PartAttributes];
-  part_mesh_data: [PartMeshData];
+  parts_initial_attributes: [PartAttributes];
+  parts_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
 
-  label_data: [Label];
+  labels: [Label];
 
-  start_frames: short;
-  end_frames: short;
+  start_frame: short;
+  end_frame: short;
   total_frames: short;
   fps: short;
 

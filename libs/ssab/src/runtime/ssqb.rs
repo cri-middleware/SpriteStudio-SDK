@@ -2,62 +2,61 @@
 // @generated
 extern crate alloc;
 
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
+
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_SEQUENCE_TYPE: u8 = 0;
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MAX_SEQUENCE_TYPE: u8 = 2;
-#[deprecated(
-    since = "2.0.0",
-    note = "Use associated constants instead. This will no longer be generated in 2021."
-)]
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_SEQUENCE_TYPE: [SequenceType; 3] =
-    [SequenceType::Last, SequenceType::Keep, SequenceType::Top];
+pub const ENUM_VALUES_SEQUENCE_TYPE: [SequenceType; 3] = [
+  SequenceType::Last,
+  SequenceType::Keep,
+  SequenceType::Top,
+];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
 pub struct SequenceType(pub u8);
 #[allow(non_upper_case_globals)]
 impl SequenceType {
-    pub const Last: Self = Self(0);
-    pub const Keep: Self = Self(1);
-    pub const Top: Self = Self(2);
+  pub const Last: Self = Self(0);
+  pub const Keep: Self = Self(1);
+  pub const Top: Self = Self(2);
 
-    pub const ENUM_MIN: u8 = 0;
-    pub const ENUM_MAX: u8 = 2;
-    pub const ENUM_VALUES: &'static [Self] = &[Self::Last, Self::Keep, Self::Top];
-    /// Returns the variant's name or "" if unknown.
-    pub fn variant_name(self) -> Option<&'static str> {
-        match self {
-            Self::Last => Some("Last"),
-            Self::Keep => Some("Keep"),
-            Self::Top => Some("Top"),
-            _ => None,
-        }
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 2;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Last,
+    Self::Keep,
+    Self::Top,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::Last => Some("Last"),
+      Self::Keep => Some("Keep"),
+      Self::Top => Some("Top"),
+      _ => None,
     }
+  }
 }
 impl ::core::fmt::Debug for SequenceType {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        if let Some(name) = self.variant_name() {
-            f.write_str(name)
-        } else {
-            f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
-        }
+  fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
     }
+  }
 }
 impl<'a> ::flatbuffers::Follow<'a> for SequenceType {
-    type Inner = Self;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        let b = unsafe { ::flatbuffers::read_scalar_at::<u8>(buf, loc) };
-        Self(b)
-    }
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { ::flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    Self(b)
+  }
 }
 
 impl ::flatbuffers::Push for SequenceType {
@@ -69,27 +68,26 @@ impl ::flatbuffers::Push for SequenceType {
 }
 
 impl ::flatbuffers::EndianScalar for SequenceType {
-    type Scalar = u8;
-    #[inline]
-    fn to_little_endian(self) -> u8 {
-        self.0.to_le()
-    }
-    #[inline]
-    #[allow(clippy::wrong_self_convention)]
-    fn from_little_endian(v: u8) -> Self {
-        let b = u8::from_le(v);
-        Self(b)
-    }
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
 }
 
 impl<'a> ::flatbuffers::Verifiable for SequenceType {
-    #[inline]
-    fn run_verifier(
-        v: &mut ::flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-        u8::run_verifier(v, pos)
-    }
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    u8::run_verifier(v, pos)
+  }
 }
 
 impl ::flatbuffers::SimpleToVerifyInSlice for SequenceType {}
@@ -97,103 +95,74 @@ pub enum SequenceItemOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
 pub struct SequenceItem<'a> {
-    pub _tab: ::flatbuffers::Table<'a>,
+  pub _tab: ::flatbuffers::Table<'a>,
 }
 
 impl<'a> ::flatbuffers::Follow<'a> for SequenceItem<'a> {
-    type Inner = SequenceItem<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { ::flatbuffers::Table::new(buf, loc) },
-        }
-    }
+  type Inner = SequenceItem<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
 }
 
 impl<'a> SequenceItem<'a> {
-    pub const VT_REF_ANIME_PACK: ::flatbuffers::VOffsetT = 4;
-    pub const VT_REF_ANIME: ::flatbuffers::VOffsetT = 6;
-    pub const VT_REPEAT_COUNT: ::flatbuffers::VOffsetT = 8;
+  pub const VT_REF_ANIME_PACK: ::flatbuffers::VOffsetT = 4;
+  pub const VT_REF_ANIME: ::flatbuffers::VOffsetT = 6;
+  pub const VT_REPEAT_COUNT: ::flatbuffers::VOffsetT = 8;
 
-    #[inline]
-    pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-        SequenceItem { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<
-        'bldr: 'args,
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: ::flatbuffers::Allocator + 'bldr,
-    >(
-        _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args SequenceItemArgs<'args>,
-    ) -> ::flatbuffers::WIPOffset<SequenceItem<'bldr>> {
-        let mut builder = SequenceItemBuilder::new(_fbb);
-        builder.add_repeat_count(args.repeat_count);
-        if let Some(x) = args.ref_anime {
-            builder.add_ref_anime(x);
-        }
-        if let Some(x) = args.ref_anime_pack {
-            builder.add_ref_anime_pack(x);
-        }
-        builder.finish()
-    }
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    SequenceItem { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args SequenceItemArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<SequenceItem<'bldr>> {
+    let mut builder = SequenceItemBuilder::new(_fbb);
+    builder.add_repeat_count(args.repeat_count);
+    if let Some(x) = args.ref_anime { builder.add_ref_anime(x); }
+    if let Some(x) = args.ref_anime_pack { builder.add_ref_anime_pack(x); }
+    builder.finish()
+  }
 
-    #[inline]
-    pub fn ref_anime_pack(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None)
-        }
-    }
-    #[inline]
-    pub fn ref_anime(&self) -> Option<&'a str> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME, None)
-        }
-    }
-    #[inline]
-    pub fn repeat_count(&self) -> i32 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<i32>(SequenceItem::VT_REPEAT_COUNT, Some(0))
-                .unwrap()
-        }
-    }
+
+  #[inline]
+  pub fn ref_anime_pack(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None)}
+  }
+  #[inline]
+  pub fn ref_anime(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME, None)}
+  }
+  #[inline]
+  pub fn repeat_count(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(SequenceItem::VT_REPEAT_COUNT, Some(0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for SequenceItem<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut ::flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-        v.visit_table(pos)?
-            .visit_field::<::flatbuffers::ForwardsUOffset<&str>>(
-                "ref_anime_pack",
-                Self::VT_REF_ANIME_PACK,
-                false,
-            )?
-            .visit_field::<::flatbuffers::ForwardsUOffset<&str>>(
-                "ref_anime",
-                Self::VT_REF_ANIME,
-                false,
-            )?
-            .visit_field::<i32>("repeat_count", Self::VT_REPEAT_COUNT, false)?
-            .finish();
-        Ok(())
-    }
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime", Self::VT_REF_ANIME, false)?
+     .visit_field::<i32>("repeat_count", Self::VT_REPEAT_COUNT, false)?
+     .finish();
+    Ok(())
+  }
 }
 pub struct SequenceItemArgs<'a> {
     pub ref_anime_pack: Option<::flatbuffers::WIPOffset<&'a str>>,
@@ -201,411 +170,327 @@ pub struct SequenceItemArgs<'a> {
     pub repeat_count: i32,
 }
 impl<'a> Default for SequenceItemArgs<'a> {
-    #[inline]
-    fn default() -> Self {
-        SequenceItemArgs {
-            ref_anime_pack: None,
-            ref_anime: None,
-            repeat_count: 0,
-        }
+  #[inline]
+  fn default() -> Self {
+    SequenceItemArgs {
+      ref_anime_pack: None,
+      ref_anime: None,
+      repeat_count: 0,
     }
+  }
 }
 
 pub struct SequenceItemBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SequenceItemBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_ref_anime_pack(&mut self, ref_anime_pack: ::flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
-            SequenceItem::VT_REF_ANIME_PACK,
-            ref_anime_pack,
-        );
+  #[inline]
+  pub fn add_ref_anime_pack(&mut self, ref_anime_pack: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME_PACK, ref_anime_pack);
+  }
+  #[inline]
+  pub fn add_ref_anime(&mut self, ref_anime: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME, ref_anime);
+  }
+  #[inline]
+  pub fn add_repeat_count(&mut self, repeat_count: i32) {
+    self.fbb_.push_slot::<i32>(SequenceItem::VT_REPEAT_COUNT, repeat_count, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SequenceItemBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    SequenceItemBuilder {
+      fbb_: _fbb,
+      start_: start,
     }
-    #[inline]
-    pub fn add_ref_anime(&mut self, ref_anime: ::flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_
-            .push_slot_always::<::flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME, ref_anime);
-    }
-    #[inline]
-    pub fn add_repeat_count(&mut self, repeat_count: i32) {
-        self.fbb_
-            .push_slot::<i32>(SequenceItem::VT_REPEAT_COUNT, repeat_count, 0);
-    }
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> SequenceItemBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        SequenceItemBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> ::flatbuffers::WIPOffset<SequenceItem<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        ::flatbuffers::WIPOffset::new(o.value())
-    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<SequenceItem<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
 }
 
 impl ::core::fmt::Debug for SequenceItem<'_> {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        let mut ds = f.debug_struct("SequenceItem");
-        ds.field("ref_anime_pack", &self.ref_anime_pack());
-        ds.field("ref_anime", &self.ref_anime());
-        ds.field("repeat_count", &self.repeat_count());
-        ds.finish()
-    }
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("SequenceItem");
+      ds.field("ref_anime_pack", &self.ref_anime_pack());
+      ds.field("ref_anime", &self.ref_anime());
+      ds.field("repeat_count", &self.repeat_count());
+      ds.finish()
+  }
 }
 pub enum SequenceOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
 pub struct Sequence<'a> {
-    pub _tab: ::flatbuffers::Table<'a>,
+  pub _tab: ::flatbuffers::Table<'a>,
 }
 
 impl<'a> ::flatbuffers::Follow<'a> for Sequence<'a> {
-    type Inner = Sequence<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { ::flatbuffers::Table::new(buf, loc) },
-        }
-    }
+  type Inner = Sequence<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
 }
 
 impl<'a> Sequence<'a> {
-    pub const VT_NAME: ::flatbuffers::VOffsetT = 4;
-    pub const VT_INDEX: ::flatbuffers::VOffsetT = 6;
-    pub const VT_TYPE_: ::flatbuffers::VOffsetT = 8;
-    pub const VT_LIST: ::flatbuffers::VOffsetT = 10;
+  pub const VT_NAME: ::flatbuffers::VOffsetT = 4;
+  pub const VT_INDEX: ::flatbuffers::VOffsetT = 6;
+  pub const VT_TYPE_: ::flatbuffers::VOffsetT = 8;
+  pub const VT_LIST: ::flatbuffers::VOffsetT = 10;
 
-    #[inline]
-    pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-        Sequence { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<
-        'bldr: 'args,
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: ::flatbuffers::Allocator + 'bldr,
-    >(
-        _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args SequenceArgs<'args>,
-    ) -> ::flatbuffers::WIPOffset<Sequence<'bldr>> {
-        let mut builder = SequenceBuilder::new(_fbb);
-        if let Some(x) = args.list {
-            builder.add_list(x);
-        }
-        builder.add_index(args.index);
-        if let Some(x) = args.name {
-            builder.add_name(x);
-        }
-        builder.add_type_(args.type_);
-        builder.finish()
-    }
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    Sequence { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args SequenceArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<Sequence<'bldr>> {
+    let mut builder = SequenceBuilder::new(_fbb);
+    if let Some(x) = args.list { builder.add_list(x); }
+    builder.add_index(args.index);
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_type_(args.type_);
+    builder.finish()
+  }
 
-    #[inline]
-    pub fn name(&self) -> &'a str {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<::flatbuffers::ForwardsUOffset<&str>>(Sequence::VT_NAME, None)
-                .unwrap()
-        }
-    }
-    #[inline]
-    pub fn key_compare_less_than(&self, o: &Sequence) -> bool {
-        self.name() < o.name()
-    }
 
-    #[inline]
-    pub fn key_compare_with_value(&self, val: &str) -> ::core::cmp::Ordering {
-        let key = self.name();
-        key.cmp(val)
-    }
-    #[inline]
-    pub fn index(&self) -> i32 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe { self._tab.get::<i32>(Sequence::VT_INDEX, Some(0)).unwrap() }
-    }
-    #[inline]
-    pub fn type_(&self) -> SequenceType {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<SequenceType>(Sequence::VT_TYPE_, Some(SequenceType::Last))
-                .unwrap()
-        }
-    }
-    #[inline]
-    pub fn list(
-        &self,
-    ) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SequenceItem<'a>>>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab.get::<::flatbuffers::ForwardsUOffset<
-                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SequenceItem>>,
-            >>(Sequence::VT_LIST, None)
-        }
-    }
+  #[inline]
+  pub fn name(&self) -> &'a str {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(Sequence::VT_NAME, None).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &Sequence) -> bool {
+    self.name() < o.name()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
+    let key = self.name();
+    key.cmp(val)
+  }
+  #[inline]
+  pub fn index(&self) -> i32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<i32>(Sequence::VT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn type_(&self) -> SequenceType {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<SequenceType>(Sequence::VT_TYPE_, Some(SequenceType::Last)).unwrap()}
+  }
+  #[inline]
+  pub fn list(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SequenceItem<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SequenceItem>>>>(Sequence::VT_LIST, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for Sequence<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut ::flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-        v.visit_table(pos)?
-            .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
-            .visit_field::<i32>("index", Self::VT_INDEX, false)?
-            .visit_field::<SequenceType>("type_", Self::VT_TYPE_, false)?
-            .visit_field::<::flatbuffers::ForwardsUOffset<
-                ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SequenceItem>>,
-            >>("list", Self::VT_LIST, false)?
-            .finish();
-        Ok(())
-    }
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
+     .visit_field::<i32>("index", Self::VT_INDEX, false)?
+     .visit_field::<SequenceType>("type_", Self::VT_TYPE_, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SequenceItem>>>>("list", Self::VT_LIST, false)?
+     .finish();
+    Ok(())
+  }
 }
 pub struct SequenceArgs<'a> {
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub index: i32,
     pub type_: SequenceType,
-    pub list: Option<
-        ::flatbuffers::WIPOffset<
-            ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SequenceItem<'a>>>,
-        >,
-    >,
+    pub list: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SequenceItem<'a>>>>>,
 }
 impl<'a> Default for SequenceArgs<'a> {
-    #[inline]
-    fn default() -> Self {
-        SequenceArgs {
-            name: None, // required field
-            index: 0,
-            type_: SequenceType::Last,
-            list: None,
-        }
+  #[inline]
+  fn default() -> Self {
+    SequenceArgs {
+      name: None, // required field
+      index: 0,
+      type_: SequenceType::Last,
+      list: None,
     }
+  }
 }
 
 pub struct SequenceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SequenceBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b str>) {
-        self.fbb_
-            .push_slot_always::<::flatbuffers::WIPOffset<_>>(Sequence::VT_NAME, name);
+  #[inline]
+  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(Sequence::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_index(&mut self, index: i32) {
+    self.fbb_.push_slot::<i32>(Sequence::VT_INDEX, index, 0);
+  }
+  #[inline]
+  pub fn add_type_(&mut self, type_: SequenceType) {
+    self.fbb_.push_slot::<SequenceType>(Sequence::VT_TYPE_, type_, SequenceType::Last);
+  }
+  #[inline]
+  pub fn add_list(&mut self, list: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<SequenceItem<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(Sequence::VT_LIST, list);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SequenceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    SequenceBuilder {
+      fbb_: _fbb,
+      start_: start,
     }
-    #[inline]
-    pub fn add_index(&mut self, index: i32) {
-        self.fbb_.push_slot::<i32>(Sequence::VT_INDEX, index, 0);
-    }
-    #[inline]
-    pub fn add_type_(&mut self, type_: SequenceType) {
-        self.fbb_
-            .push_slot::<SequenceType>(Sequence::VT_TYPE_, type_, SequenceType::Last);
-    }
-    #[inline]
-    pub fn add_list(
-        &mut self,
-        list: ::flatbuffers::WIPOffset<
-            ::flatbuffers::Vector<'b, ::flatbuffers::ForwardsUOffset<SequenceItem<'b>>>,
-        >,
-    ) {
-        self.fbb_
-            .push_slot_always::<::flatbuffers::WIPOffset<_>>(Sequence::VT_LIST, list);
-    }
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> SequenceBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        SequenceBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> ::flatbuffers::WIPOffset<Sequence<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        self.fbb_.required(o, Sequence::VT_NAME, "name");
-        ::flatbuffers::WIPOffset::new(o.value())
-    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<Sequence<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, Sequence::VT_NAME,"name");
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
 }
 
 impl ::core::fmt::Debug for Sequence<'_> {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        let mut ds = f.debug_struct("Sequence");
-        ds.field("name", &self.name());
-        ds.field("index", &self.index());
-        ds.field("type_", &self.type_());
-        ds.field("list", &self.list());
-        ds.finish()
-    }
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("Sequence");
+      ds.field("name", &self.name());
+      ds.field("index", &self.index());
+      ds.field("type_", &self.type_());
+      ds.field("list", &self.list());
+      ds.finish()
+  }
 }
 pub enum SsSequenceBinaryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
 pub struct SsSequenceBinary<'a> {
-    pub _tab: ::flatbuffers::Table<'a>,
+  pub _tab: ::flatbuffers::Table<'a>,
 }
 
 impl<'a> ::flatbuffers::Follow<'a> for SsSequenceBinary<'a> {
-    type Inner = SsSequenceBinary<'a>;
-    #[inline]
-    unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-        Self {
-            _tab: unsafe { ::flatbuffers::Table::new(buf, loc) },
-        }
-    }
+  type Inner = SsSequenceBinary<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
 }
 
 impl<'a> SsSequenceBinary<'a> {
-    pub const VT_VERSION: ::flatbuffers::VOffsetT = 4;
-    pub const VT_SEQUENCE_LIST: ::flatbuffers::VOffsetT = 6;
+  pub const VT_VERSION: ::flatbuffers::VOffsetT = 4;
+  pub const VT_SEQUENCE_LIST: ::flatbuffers::VOffsetT = 6;
 
-    #[inline]
-    pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-        SsSequenceBinary { _tab: table }
-    }
-    #[allow(unused_mut)]
-    pub fn create<
-        'bldr: 'args,
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: ::flatbuffers::Allocator + 'bldr,
-    >(
-        _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-        args: &'args SsSequenceBinaryArgs<'args>,
-    ) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'bldr>> {
-        let mut builder = SsSequenceBinaryBuilder::new(_fbb);
-        if let Some(x) = args.sequence_list {
-            builder.add_sequence_list(x);
-        }
-        builder.add_version(args.version);
-        builder.finish()
-    }
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    SsSequenceBinary { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args SsSequenceBinaryArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'bldr>> {
+    let mut builder = SsSequenceBinaryBuilder::new(_fbb);
+    if let Some(x) = args.sequence_list { builder.add_sequence_list(x); }
+    builder.add_version(args.version);
+    builder.finish()
+  }
 
-    #[inline]
-    pub fn version(&self) -> u32 {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab
-                .get::<u32>(SsSequenceBinary::VT_VERSION, Some(1))
-                .unwrap()
-        }
-    }
-    #[inline]
-    pub fn sequence_list(
-        &self,
-    ) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>>> {
-        // Safety:
-        // Created from valid Table for this object
-        // which contains a valid value in this slot
-        unsafe {
-            self._tab.get::<::flatbuffers::ForwardsUOffset<
-                ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence>>,
-            >>(SsSequenceBinary::VT_SEQUENCE_LIST, None)
-        }
-    }
+
+  #[inline]
+  pub fn version(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(SsSequenceBinary::VT_VERSION, Some(1)).unwrap()}
+  }
+  #[inline]
+  pub fn sequence_list(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for SsSequenceBinary<'_> {
-    #[inline]
-    fn run_verifier(
-        v: &mut ::flatbuffers::Verifier,
-        pos: usize,
-    ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-        v.visit_table(pos)?
-            .visit_field::<u32>("version", Self::VT_VERSION, false)?
-            .visit_field::<::flatbuffers::ForwardsUOffset<
-                ::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Sequence>>,
-            >>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
-            .finish();
-        Ok(())
-    }
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<u32>("version", Self::VT_VERSION, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
+     .finish();
+    Ok(())
+  }
 }
 pub struct SsSequenceBinaryArgs<'a> {
     pub version: u32,
-    pub sequence_list: Option<
-        ::flatbuffers::WIPOffset<
-            ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>>,
-        >,
-    >,
+    pub sequence_list: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>>>>,
 }
 impl<'a> Default for SsSequenceBinaryArgs<'a> {
-    #[inline]
-    fn default() -> Self {
-        SsSequenceBinaryArgs {
-            version: 1,
-            sequence_list: None,
-        }
+  #[inline]
+  fn default() -> Self {
+    SsSequenceBinaryArgs {
+      version: 1,
+      sequence_list: None,
     }
+  }
 }
 
 pub struct SsSequenceBinaryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-    fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsSequenceBinaryBuilder<'a, 'b, A> {
-    #[inline]
-    pub fn add_version(&mut self, version: u32) {
-        self.fbb_
-            .push_slot::<u32>(SsSequenceBinary::VT_VERSION, version, 1);
+  #[inline]
+  pub fn add_version(&mut self, version: u32) {
+    self.fbb_.push_slot::<u32>(SsSequenceBinary::VT_VERSION, version, 1);
+  }
+  #[inline]
+  pub fn add_sequence_list(&mut self, sequence_list: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Sequence<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsSequenceBinary::VT_SEQUENCE_LIST, sequence_list);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsSequenceBinaryBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    SsSequenceBinaryBuilder {
+      fbb_: _fbb,
+      start_: start,
     }
-    #[inline]
-    pub fn add_sequence_list(
-        &mut self,
-        sequence_list: ::flatbuffers::WIPOffset<
-            ::flatbuffers::Vector<'b, ::flatbuffers::ForwardsUOffset<Sequence<'b>>>,
-        >,
-    ) {
-        self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(
-            SsSequenceBinary::VT_SEQUENCE_LIST,
-            sequence_list,
-        );
-    }
-    #[inline]
-    pub fn new(
-        _fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    ) -> SsSequenceBinaryBuilder<'a, 'b, A> {
-        let start = _fbb.start_table();
-        SsSequenceBinaryBuilder {
-            fbb_: _fbb,
-            start_: start,
-        }
-    }
-    #[inline]
-    pub fn finish(self) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'a>> {
-        let o = self.fbb_.end_table(self.start_);
-        ::flatbuffers::WIPOffset::new(o.value())
-    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
 }
 
 impl ::core::fmt::Debug for SsSequenceBinary<'_> {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        let mut ds = f.debug_struct("SsSequenceBinary");
-        ds.field("version", &self.version());
-        ds.field("sequence_list", &self.sequence_list());
-        ds.finish()
-    }
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("SsSequenceBinary");
+      ds.field("version", &self.version());
+      ds.field("sequence_list", &self.sequence_list());
+      ds.finish()
+  }
 }
 #[inline]
 /// Verifies that a buffer of bytes contains a `SsSequenceBinary`
@@ -614,10 +499,8 @@ impl ::core::fmt::Debug for SsSequenceBinary<'_> {
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
 /// `root_as_ss_sequence_binary_unchecked`.
-pub fn root_as_ss_sequence_binary(
-    buf: &[u8],
-) -> Result<SsSequenceBinary<'_>, ::flatbuffers::InvalidFlatbuffer> {
-    ::flatbuffers::root::<SsSequenceBinary>(buf)
+pub fn root_as_ss_sequence_binary(buf: &[u8]) -> Result<SsSequenceBinary<'_>, ::flatbuffers::InvalidFlatbuffer> {
+  ::flatbuffers::root::<SsSequenceBinary>(buf)
 }
 #[inline]
 /// Verifies that a buffer of bytes contains a size prefixed
@@ -626,10 +509,8 @@ pub fn root_as_ss_sequence_binary(
 /// catch every error, or be maximally performant. For the
 /// previous, unchecked, behavior use
 /// `size_prefixed_root_as_ss_sequence_binary_unchecked`.
-pub fn size_prefixed_root_as_ss_sequence_binary(
-    buf: &[u8],
-) -> Result<SsSequenceBinary<'_>, ::flatbuffers::InvalidFlatbuffer> {
-    ::flatbuffers::size_prefixed_root::<SsSequenceBinary>(buf)
+pub fn size_prefixed_root_as_ss_sequence_binary(buf: &[u8]) -> Result<SsSequenceBinary<'_>, ::flatbuffers::InvalidFlatbuffer> {
+  ::flatbuffers::size_prefixed_root::<SsSequenceBinary>(buf)
 }
 #[inline]
 /// Verifies, with the given options, that a buffer of bytes
@@ -639,10 +520,10 @@ pub fn size_prefixed_root_as_ss_sequence_binary(
 /// previous, unchecked, behavior use
 /// `root_as_ss_sequence_binary_unchecked`.
 pub fn root_as_ss_sequence_binary_with_opts<'b, 'o>(
-    opts: &'o ::flatbuffers::VerifierOptions,
-    buf: &'b [u8],
+  opts: &'o ::flatbuffers::VerifierOptions,
+  buf: &'b [u8],
 ) -> Result<SsSequenceBinary<'b>, ::flatbuffers::InvalidFlatbuffer> {
-    ::flatbuffers::root_with_opts::<SsSequenceBinary<'b>>(opts, buf)
+  ::flatbuffers::root_with_opts::<SsSequenceBinary<'b>>(opts, buf)
 }
 #[inline]
 /// Verifies, with the given verifier options, that a buffer of
@@ -652,37 +533,35 @@ pub fn root_as_ss_sequence_binary_with_opts<'b, 'o>(
 /// previous, unchecked, behavior use
 /// `root_as_ss_sequence_binary_unchecked`.
 pub fn size_prefixed_root_as_ss_sequence_binary_with_opts<'b, 'o>(
-    opts: &'o ::flatbuffers::VerifierOptions,
-    buf: &'b [u8],
+  opts: &'o ::flatbuffers::VerifierOptions,
+  buf: &'b [u8],
 ) -> Result<SsSequenceBinary<'b>, ::flatbuffers::InvalidFlatbuffer> {
-    ::flatbuffers::size_prefixed_root_with_opts::<SsSequenceBinary<'b>>(opts, buf)
+  ::flatbuffers::size_prefixed_root_with_opts::<SsSequenceBinary<'b>>(opts, buf)
 }
 #[inline]
 /// Assumes, without verification, that a buffer of bytes contains a SsSequenceBinary and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid `SsSequenceBinary`.
 pub unsafe fn root_as_ss_sequence_binary_unchecked(buf: &[u8]) -> SsSequenceBinary<'_> {
-    unsafe { ::flatbuffers::root_unchecked::<SsSequenceBinary>(buf) }
+  unsafe { ::flatbuffers::root_unchecked::<SsSequenceBinary>(buf) }
 }
 #[inline]
 /// Assumes, without verification, that a buffer of bytes contains a size prefixed SsSequenceBinary and returns it.
 /// # Safety
 /// Callers must trust the given bytes do indeed contain a valid size prefixed `SsSequenceBinary`.
-pub unsafe fn size_prefixed_root_as_ss_sequence_binary_unchecked(
-    buf: &[u8],
-) -> SsSequenceBinary<'_> {
-    unsafe { ::flatbuffers::size_prefixed_root_unchecked::<SsSequenceBinary>(buf) }
+pub unsafe fn size_prefixed_root_as_ss_sequence_binary_unchecked(buf: &[u8]) -> SsSequenceBinary<'_> {
+  unsafe { ::flatbuffers::size_prefixed_root_unchecked::<SsSequenceBinary>(buf) }
 }
 pub const SS_SEQUENCE_BINARY_IDENTIFIER: &str = "SSQB";
 
 #[inline]
 pub fn ss_sequence_binary_buffer_has_identifier(buf: &[u8]) -> bool {
-    ::flatbuffers::buffer_has_identifier(buf, SS_SEQUENCE_BINARY_IDENTIFIER, false)
+  ::flatbuffers::buffer_has_identifier(buf, SS_SEQUENCE_BINARY_IDENTIFIER, false)
 }
 
 #[inline]
 pub fn ss_sequence_binary_size_prefixed_buffer_has_identifier(buf: &[u8]) -> bool {
-    ::flatbuffers::buffer_has_identifier(buf, SS_SEQUENCE_BINARY_IDENTIFIER, true)
+  ::flatbuffers::buffer_has_identifier(buf, SS_SEQUENCE_BINARY_IDENTIFIER, true)
 }
 
 pub const SS_SEQUENCE_BINARY_EXTENSION: &str = "ssqb";
@@ -690,15 +569,11 @@ pub const SS_SEQUENCE_BINARY_EXTENSION: &str = "ssqb";
 #[inline]
 pub fn finish_ss_sequence_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a>(
     fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    root: ::flatbuffers::WIPOffset<SsSequenceBinary<'a>>,
-) {
-    fbb.finish(root, Some(SS_SEQUENCE_BINARY_IDENTIFIER));
+    root: ::flatbuffers::WIPOffset<SsSequenceBinary<'a>>) {
+  fbb.finish(root, Some(SS_SEQUENCE_BINARY_IDENTIFIER));
 }
 
 #[inline]
-pub fn finish_size_prefixed_ss_sequence_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a>(
-    fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-    root: ::flatbuffers::WIPOffset<SsSequenceBinary<'a>>,
-) {
-    fbb.finish_size_prefixed(root, Some(SS_SEQUENCE_BINARY_IDENTIFIER));
+pub fn finish_size_prefixed_ss_sequence_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a>(fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>, root: ::flatbuffers::WIPOffset<SsSequenceBinary<'a>>) {
+  fbb.finish_size_prefixed(root, Some(SS_SEQUENCE_BINARY_IDENTIFIER));
 }

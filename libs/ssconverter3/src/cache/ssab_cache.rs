@@ -339,13 +339,13 @@ impl<'bldr> SsabCache<'bldr> {
             .map(|animation_data_t| {
                 let mut args = AnimationDataArgs::default();
                 args.name = Some(fb.create_shared_string(&animation_data_t.name));
-                args.initial_data = None; // TODO; impl
-                args.part_animation_data = None; // TODO; impl
-                args.part_mesh_data = None; // TODO: impl
+                args.parts_initial_attributes = None; // TODO; impl
+                args.parts_animation_data = None; // TODO; impl
+                args.parts_mesh_data = None; // TODO: impl
                 args.events = None; // TODO; impl
-                args.label_data = None; // TODO; impl
-                args.start_frames = animation_data_t.start_frames;
-                args.end_frames = animation_data_t.end_frames;
+                args.labels = None; // TODO; impl
+                args.start_frame = animation_data_t.start_frame;
+                args.end_frame = animation_data_t.end_frame;
                 args.total_frames = animation_data_t.total_frames;
                 args.fps = animation_data_t.fps;
                 args.canvas = animation_data_t
@@ -474,10 +474,7 @@ impl<'bldr> SsabCache<'bldr> {
             .map(|font_bitmap_t| {
                 let mut font_bitmap_args = FontBitmapArgs::default();
                 font_bitmap_args.name = Some(fb.create_shared_string(&font_bitmap_t.name));
-                font_bitmap_args.name_face = font_bitmap_t
-                    .name_face
-                    .as_ref()
-                    .map(|s| fb.create_shared_string(s));
+                font_bitmap_args.name_face = font_bitmap_t.name_face.as_ref().map(|s| fb.create_shared_string(s));
                 font_bitmap_args.size = font_bitmap_t.size;
                 font_bitmap_args.padding_l = font_bitmap_t.padding_l;
                 font_bitmap_args.padding_r = font_bitmap_t.padding_r;
@@ -485,23 +482,11 @@ impl<'bldr> SsabCache<'bldr> {
                 font_bitmap_args.padding_d = font_bitmap_t.padding_d;
                 font_bitmap_args.base = font_bitmap_t.base;
                 font_bitmap_args.height_line = font_bitmap_t.height_line;
-                font_bitmap_args.scale = font_bitmap_t
-                    .scale
-                    .as_ref()
-                    .map(|s| self.create_shared_vec2(fb, s));
-                font_bitmap_args.spacing = font_bitmap_t
-                    .spacing
-                    .as_ref()
-                    .map(|s| self.create_shared_vec2(fb, s));
-                font_bitmap_args.size_texture_original = font_bitmap_t
-                    .size_texture_original
-                    .as_ref()
-                    .map(|s| self.create_shared_vec2(fb, s));
+                font_bitmap_args.scale = font_bitmap_t.scale.as_ref().map(|s| self.create_shared_vec2(fb, s));
+                font_bitmap_args.spacing = font_bitmap_t.spacing.as_ref().map(|s| self.create_shared_vec2(fb, s));
+                font_bitmap_args.size_texture_original = font_bitmap_t.size_texture_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
                 font_bitmap_args.name_texture = font_bitmap_t.name_texture.as_ref().map(|s| {
-                    let a = s
-                        .iter()
-                        .map(|s| fb.create_shared_string(s))
-                        .collect::<Vec<_>>();
+                    let a = s.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
                     fb.create_vector(&a)
                 });
                 font_bitmap_args.table_data = None;
@@ -524,28 +509,16 @@ impl<'bldr> SsabCache<'bldr> {
     ) -> WIPOffset<SsAnimeBinary<'bldr>> {
         let mut anime_binary_args = SsAnimeBinaryArgs::default();
 
-        anime_binary_args.animations = ss_anime_binary_t
-            .animations
-            .as_ref()
-            .map(|animations| self.create_animation_data_list(fb, animations));
-        anime_binary_args.cell_map = ss_anime_binary_t
-            .cell_map
-            .as_ref()
-            .map(|cell_map| self.create_shared_cell_map(fb, cell_map));
-        anime_binary_args.effect = ss_anime_binary_t
-            .effect
-            .as_ref()
-            .map(|effect| self.create_shared_effect_list(fb, effect));
-        anime_binary_args.sound_list = ss_anime_binary_t
-            .sound_list
-            .as_ref()
-            .map(|sound_list| self.create_shared_sound_list(fb, sound_list));
-        anime_binary_args.font_bitmap = ss_anime_binary_t
-            .font_bitmap
-            .as_ref()
-            .map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
-
-        anime_binary_args.instances = None; // TODO: implement
+        anime_binary_args.name = ss_anime_binary_t.name.as_ref().map(|s| fb.create_shared_string(s));
+        anime_binary_args.animations = ss_anime_binary_t.animations.as_ref().map(|animations| self.create_animation_data_list(fb, animations));
+        anime_binary_args.cell_maps = ss_anime_binary_t.cell_maps.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
+        anime_binary_args.effects = ss_anime_binary_t.effects.as_ref().map(|effect| self.create_shared_effect_list(fb, effect));
+        anime_binary_args.sound_lists = ss_anime_binary_t.sound_lists.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
+        anime_binary_args.font_bitmaps = ss_anime_binary_t.font_bitmaps.as_ref().map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
+        anime_binary_args.external_instances = ss_anime_binary_t.external_instances.as_ref().map(|external_instances| {
+            let vec = external_instances.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<WIPOffset<&str>>>();
+            fb.create_vector(&vec)
+        });
 
         SsAnimeBinary::create(fb, &anime_binary_args)
     }

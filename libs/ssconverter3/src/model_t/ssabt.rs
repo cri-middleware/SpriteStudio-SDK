@@ -55,8 +55,8 @@ fn convert_animedatat(anime_data: &SsAnimation, _setup_animation: &SsAnimation) 
     canvas.x2 = anime_data.settings.canvas_size.x;
     canvas.y2 = anime_data.settings.canvas_size.y;
     anime_data_t.canvas = Some(Box::new(canvas));
-    anime_data_t.start_frames = anime_data.settings.start_frame as i16;
-    anime_data_t.end_frames = anime_data.settings.end_frame as i16;
+    anime_data_t.start_frame = anime_data.settings.start_frame as i16;
+    anime_data_t.end_frame = anime_data.settings.end_frame as i16;
     anime_data_t.total_frames = anime_data.settings.frame_count as i16;
 
     // anime_data_t.setup_animation = setup_animation;
@@ -71,42 +71,26 @@ fn convert_animedatat(anime_data: &SsAnimation, _setup_animation: &SsAnimation) 
 
     anime_data_t
 }
-fn convert_animation_data_list(
-    _sspj: &&SsProject,
-    anime_pack: &SsAnimePack,
-) -> Option<Vec<AnimationDataT>> {
-    let Some(setup_animation) = anime_pack
-        .anime_list
-        .iter()
-        .find(|anime_data| anime_data.is_setup)
-    else {
+fn convert_animation_data_list(sspj: &SsProject, anime_pack: &SsAnimePack, ) -> Option<Vec<AnimationDataT>> {
+    let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
         return None;
     };
 
     Some(
-        anime_pack
-            .anime_list
-            .iter()
-            .filter_map(|anime_data| {
-                if anime_data == setup_animation {
-                    return None;
-                }
-                Some(convert_animedatat(anime_data, setup_animation))
-            })
-            .collect::<Vec<AnimationDataT>>(),
+        anime_pack.anime_list.iter().filter_map(|anime_data| {
+            if anime_data == setup_animation {
+                return None;
+            }
+            Some(convert_animedatat(anime_data, setup_animation))
+        }).collect::<Vec<AnimationDataT>>(),
     )
 }
 
 pub fn convert_cellt(sscell: &SsCell) -> CellT {
     let mut cell_t = CellT::default();
     cell_t.name = sscell.name.clone();
-    cell_t.rectangle = Some(Box::new(convert_rectt(
-        sscell.pos.x,
-        sscell.pos.y,
-        sscell.size.x,
-        sscell.size.y,
-    )));
+    cell_t.rectangle = Some(Box::new(convert_rectt(sscell.pos.x, sscell.pos.y, sscell.size.x, sscell.size.y, )));
     cell_t.pivot = Some(Box::new(convert_vec2t(&sscell.pivot)));
     cell_t.rotated = sscell.rotated;
     cell_t.table_coordinate = convert_vec2t_list(&sscell.mesh_point_list);
@@ -116,10 +100,7 @@ pub fn convert_cellt(sscell: &SsCell) -> CellT {
 }
 pub fn convert_cellt_list(cells: &[SsCell]) -> Option<Vec<CellT>> {
     Some(
-        cells
-            .iter()
-            .map(|cell| convert_cellt(cell))
-            .collect::<Vec<CellT>>(),
+        cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<CellT>>(),
     )
 }
 
@@ -149,10 +130,7 @@ pub fn convert_cellmapt_list(
         return None;
     }
     Some(
-        cellmap_names
-            .iter()
-            .map(|cellmap| convert_cellmapt(cellmap))
-            .collect::<Vec<CellMapT>>(),
+        cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap)).collect::<Vec<CellMapT>>(),
     )
 }
 
@@ -164,174 +142,107 @@ fn convert_effect_list(
         return None;
     }
     Some(
-        effect_file_vec
-            .iter()
-            .map(|effect_file| {
-                let mut effect_t = EffectT::default();
-                effect_t.name = effect_file.name.clone();
-                // effect_t.fps = effect_file.effect_data.fps as i16;
-                // effect_t.is_lock_rand_seed;
-                // effect_t.lock_rand_seed;
-                // effect_t.layout_scale;
-                // effect_t.effect_node;
+        effect_file_vec.iter().map(|effect_file| {
+            let mut effect_t = EffectT::default();
+            effect_t.name = effect_file.name.clone();
+            // effect_t.fps = effect_file.effect_data.fps as i16;
+            // effect_t.is_lock_rand_seed;
+            // effect_t.lock_rand_seed;
+            // effect_t.layout_scale;
+            // effect_t.effect_node;
 
-                effect_t
-            })
-            .collect::<Vec<EffectT>>(),
+            effect_t
+        }).collect::<Vec<EffectT>>(),
     )
 }
 
-pub fn convert_sound_file_list(
-    _sspj: &SsProject,
-    sssound_list: &SsSoundFileList,
-) -> Option<Vec<ssab::ssab::SoundFileT>> {
+pub fn convert_sound_file_list(_sspj: &SsProject, sssound_list: &SsSoundFileList, ) -> Option<Vec<ssab::ssab::SoundFileT>> {
     Some(
-        sssound_list
-            .sounds
-            .iter()
-            .map(|sssound| {
-                let mut sound_file_t = ssab::ssab::SoundFileT::default();
+        sssound_list.sounds.iter().map(|sssound| {
+            let mut sound_file_t = ssab::ssab::SoundFileT::default();
 
-                sound_file_t.name = sssound.alias.clone();
-                sound_file_t.time_total = sssound.msec;
+            sound_file_t.name = sssound.alias.clone();
+            sound_file_t.time_total = sssound.msec;
 
-                sound_file_t
-            })
-            .collect::<Vec<ssab::ssab::SoundFileT>>(),
+            sound_file_t
+        }).collect::<Vec<ssab::ssab::SoundFileT>>(),
     )
 }
 
-pub fn convert_sound_list(
-    sspj: &SsProject,
-    sound_list: &[SsAudioPack],
-) -> Option<Vec<ssab::ssab::SoundListT>> {
+pub fn convert_sound_list(sspj: &SsProject, sound_list: &[SsAudioPack], ) -> Option<Vec<ssab::ssab::SoundListT>> {
     if sound_list.is_empty() {
         return None;
     }
     Some(
-        sound_list
-            .iter()
-            .map(|sssound_pack| {
-                let mut sound_list_t = ssab::ssab::SoundListT::default();
+        sound_list.iter().map(|sssound_pack| {
+            let mut sound_list_t = ssab::ssab::SoundListT::default();
 
-                sound_list_t.name = sssound_pack.name.clone();
-                sound_list_t.table_data = convert_sound_file_list(sspj, &sssound_pack.table);
+            sound_list_t.name = sssound_pack.name.clone();
+            sound_list_t.table_data = convert_sound_file_list(sspj, &sssound_pack.table);
 
-                sound_list_t
-            })
-            .collect::<Vec<ssab::ssab::SoundListT>>(),
+            sound_list_t
+        }).collect::<Vec<ssab::ssab::SoundListT>>(),
     )
 }
 
-pub fn convert_font_bitmap(
-    _sspj: &SsProject,
-    charmap_dic: &HashMap<String, SsCharMap>,
+pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCharMap>,
 ) -> Option<Vec<FontBitmapT>> {
     if charmap_dic.is_empty() {
         return None;
     }
     Some(
-        charmap_dic
-            .into_iter()
-            .map(|(_key, _value)| {
-                // let mut font_bitmap_t = FontBitmapT::default();
-                // font_bitmap_t.name = value.info.face;
+        charmap_dic.into_iter().map(|(_key, _value)| {
+            // let mut font_bitmap_t = FontBitmapT::default();
+            // font_bitmap_t.name = value.info.face;
 
-                FontBitmapT::default()
-            })
-            .collect::<Vec<FontBitmapT>>(),
+            FontBitmapT::default()
+        }).collect::<Vec<FontBitmapT>>(),
     )
 }
 
 fn get_cellmap_names_of_instance(anime_pack: &SsAnimePack, sspj: &SsProject) -> Vec<String> {
-    anime_pack
-        .model
-        .part_list
-        .iter()
-        .filter(|part| part.part_type == SsPartType::Instance)
-        .filter_map(|part| {
-            let Some(a) = sspj
-                .anime_list
-                .iter()
-                .find(|anime| anime.name == part.ref_anime_pack)
-            else {
-                return None;
-            };
-            Some(
-                a.cellmap_names
-                    .iter()
-                    .map(|cellmap_name| cellmap_name.clone())
-                    .collect::<Vec<String>>(),
-            )
-        })
-        .flatten()
-        .collect::<Vec<String>>()
+    anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Instance).filter_map(|part| {
+        let Some(a) = sspj
+            .anime_list
+            .iter()
+            .find(|anime| anime.name == part.ref_anime_pack)
+        else {
+            return None;
+        };
+        Some(
+            a.cellmap_names.iter().map(|cellmap_name| cellmap_name.clone()).collect::<Vec<String>>(),
+        )
+    }).flatten().collect::<Vec<String>>()
 }
 
-pub fn convert_ss_anime_binary_t(
-    anime_pack: &SsAnimePack,
-    sspj: &SsProject,
-) -> ssab::ssab::SsAnimeBinaryT {
+pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject, ) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
+    anime_binary.name = Some(anime_pack.name.clone());
     anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack);
-    let using_effect_file_names = anime_pack
-        .model
-        .part_list
-        .iter()
-        .filter_map(|part| {
-            if part.part_type == SsPartType::Effect {
-                Some(part.ref_effect_name.clone())
-            } else {
-                None
-            }
-        })
-        .collect::<HashSet<String>>();
-    let effect_file_list = using_effect_file_names
-        .iter()
-        .filter_map(|using_effect_file_name| {
-            sspj.effect_file_list
-                .iter()
-                .find(|effect_file| effect_file.name == *using_effect_file_name)
-                .cloned()
-        })
-        .collect::<Vec<SsEffectFile>>();
-    anime_binary.effect = ssabt::convert_effect_list(&sspj, &effect_file_list);
+    let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
+        if part.part_type == SsPartType::Effect {
+            Some(part.ref_effect_name.clone())
+        } else {
+            None
+        }
+    }).collect::<HashSet<String>>();
+    let effect_file_list = using_effect_file_names.iter().filter_map(|using_effect_file_name| {
+        sspj.effect_file_list.iter().find(|effect_file| effect_file.name == *using_effect_file_name).cloned()
+    }).collect::<Vec<SsEffectFile>>();
+    anime_binary.effects = ssabt::convert_effect_list(&sspj, &effect_file_list);
 
-    anime_binary.sound_list = if anime_pack
-        .model
-        .part_list
-        .iter()
-        .filter(|part| part.part_type == SsPartType::Audio)
-        .collect::<Vec<&SsPart>>()
-        .is_empty()
-    {
-        // don't use sound
+    anime_binary.sound_lists = if anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Audio).collect::<Vec<&SsPart>>().is_empty() { // don't use sound
         None
     } else {
         convert_sound_list(&sspj, &sspj.sound_list)
     };
-    anime_binary.font_bitmap = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
-    anime_binary.instances = None; // TODO: impl
+    anime_binary.font_bitmaps = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
 
-    let mut cellmap_names = anime_pack
-        .cellmap_names
-        .iter()
-        .map(|cellmap_file| cellmap_file.clone())
-        .collect::<HashSet<String>>();
-    get_cellmap_names_of_instance(&anime_pack, &sspj)
-        .iter()
-        .for_each(|cellmap_name| {
-            cellmap_names.insert(cellmap_name.clone());
-        });
-    if anime_pack
-        .model
-        .part_list
-        .iter()
-        .filter(|part| part.part_type == SsPartType::Effect)
-        .collect::<Vec<&SsPart>>()
-        .is_empty()
-        != true
-    {
+    let mut cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| cellmap_file.clone()).collect::<HashSet<String>>();
+    get_cellmap_names_of_instance(&anime_pack, &sspj).iter().for_each(|cellmap_name| {
+        cellmap_names.insert(cellmap_name.clone());
+    });
+    if anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Effect).collect::<Vec<&SsPart>>().is_empty() != true {
         sspj.effect_file_list.iter().for_each(|effect_file| {
             effect_file.effect_data.node_list.iter().for_each(|node| {
                 if node.behavior.cell_map_name.is_empty() {
@@ -341,27 +252,13 @@ pub fn convert_ss_anime_binary_t(
             })
         });
     };
-    anime_binary.instances.as_ref().map(|instances| {
-        instances.iter().for_each(|instance| {
-            let splt = instance.name.split("/").collect::<Vec<&str>>();
-            let _animepack = splt[0];
-            get_cellmap_names_of_instance(anime_pack, sspj)
-                .iter()
-                .for_each(|cellmap_name| {
-                    cellmap_names.insert(cellmap_name.clone());
-                })
-        })
-    });
-    let cellmaps = cellmap_names
-        .iter()
-        .filter_map(|cellmap_name| {
-            sspj.cellmap_list
-                .iter()
-                .find(|cellmap| cellmap.load_file_path == *cellmap_name)
-                .cloned()
-        })
-        .collect::<Vec<SsCellMap>>();
-    anime_binary.cell_map = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
+    let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| {
+        sspj.cellmap_list.iter().find(|cellmap| cellmap.load_file_path == *cellmap_name).cloned()
+    }).collect::<Vec<SsCellMap>>();
+    anime_binary.cell_maps = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
+
+    // TODO: impl
+    anime_binary.external_instances = None;
 
     anime_binary
 }

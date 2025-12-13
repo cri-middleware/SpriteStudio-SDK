@@ -14,13 +14,7 @@ impl SsCellValue {
     pub fn default() -> Self {
         Self {
             cell: None,
-            uvs: [
-                SsPoint2::default(),
-                SsPoint2::default(),
-                SsPoint2::default(),
-                SsPoint2::default(),
-                SsPoint2::default(),
-            ],
+            uvs: [SsPoint2::default(), SsPoint2::default(), SsPoint2::default(), SsPoint2::default(), SsPoint2::default(), ],
             wrap_mode: SsTexWrapMode::Clamp,
             filter_mode: SsTexFilterMode::Nearest,
         }

@@ -6,7 +6,7 @@ pushd $BASE_DIR > /dev/null
 
 /bin/mkdir -p src/runtime
 
-FLATC=../../../../google/flatbuffers/build/flatc
+FLATC=flatc
 
 ${FLATC} --rust fbs/initialize.fbs
 /bin/mv initialize_generated.rs src/runtime/initialize.rs
@@ -17,6 +17,4 @@ ${FLATC} --rust fbs/preparation.fbs
 ${FLATC} --rust fbs/framedata.fbs
 /bin/mv framedata_generated.rs src/runtime/framedata.rs
 
-
-cargo fmt --all
 popd > /dev/null

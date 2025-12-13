@@ -660,16 +660,16 @@ table PartMeshData {
 table AnimationData {
   name: string (key);
 
-  initial_data: [PartAttributes];
-  part_animation_data: [PartAnimationData];
-  part_mesh_data: [PartMeshData];
+  parts_initial_attributes: [PartAttributes];
+  parts_animation_data: [PartAnimationData];
+  parts_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
 
-  label_data: [Label];
+  labels: [Label];
 
-  start_frames: short;
-  end_frames: short;
+  start_frame: short;
+  end_frame: short;
   total_frames: short;
   fps: short;
 
@@ -679,14 +679,17 @@ table AnimationData {
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
+  name: string;
+
   parts : [PartData];
   animations: [AnimationData];
 
-  cell_map: [CellMap];
-  effect: [Effect];
-  sound_list: [SoundList];
-  font_bitmap: [FontBitmap];
-  instances: [AnimationData];
+  cell_maps: [CellMap];
+  effects: [Effect];
+  sound_lists: [SoundList];
+  font_bitmaps: [FontBitmap];
+
+  external_instances: [string];
 }
 
 file_identifier "SSAB";
