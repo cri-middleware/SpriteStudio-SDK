@@ -8841,46 +8841,46 @@ impl PartAttributeCellT {
     })
   }
 }
-pub enum SsAttributePartsColorKeyValueColorOffset {}
+pub enum SsAttributePartColorKeyValueColorOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct SsAttributePartsColorKeyValueColor<'a> {
+pub struct SsAttributePartColorKeyValueColor<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for SsAttributePartsColorKeyValueColor<'a> {
-  type Inner = SsAttributePartsColorKeyValueColor<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for SsAttributePartColorKeyValueColor<'a> {
+  type Inner = SsAttributePartColorKeyValueColor<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> SsAttributePartsColorKeyValueColor<'a> {
+impl<'a> SsAttributePartColorKeyValueColor<'a> {
   pub const VT_RGBA: ::flatbuffers::VOffsetT = 4;
   pub const VT_RATE: ::flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    SsAttributePartsColorKeyValueColor { _tab: table }
+    SsAttributePartColorKeyValueColor { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args SsAttributePartsColorKeyValueColorArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'bldr>> {
-    let mut builder = SsAttributePartsColorKeyValueColorBuilder::new(_fbb);
+    args: &'args SsAttributePartColorKeyValueColorArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'bldr>> {
+    let mut builder = SsAttributePartColorKeyValueColorBuilder::new(_fbb);
     builder.add_rate(args.rate);
     if let Some(x) = args.rgba { builder.add_rgba(x); }
     builder.finish()
   }
 
-  pub fn unpack(&self) -> SsAttributePartsColorKeyValueColorT {
+  pub fn unpack(&self) -> SsAttributePartColorKeyValueColorT {
     let rgba = self.rgba().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
     let rate = self.rate();
-    SsAttributePartsColorKeyValueColorT {
+    SsAttributePartColorKeyValueColorT {
       rgba,
       rate,
     }
@@ -8891,18 +8891,18 @@ impl<'a> SsAttributePartsColorKeyValueColor<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<U8Rect>>(SsAttributePartsColorKeyValueColor::VT_RGBA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<U8Rect>>(SsAttributePartColorKeyValueColor::VT_RGBA, None)}
   }
   #[inline]
   pub fn rate(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(SsAttributePartsColorKeyValueColor::VT_RATE, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(SsAttributePartColorKeyValueColor::VT_RATE, Some(0.0)).unwrap()}
   }
 }
 
-impl ::flatbuffers::Verifiable for SsAttributePartsColorKeyValueColor<'_> {
+impl ::flatbuffers::Verifiable for SsAttributePartColorKeyValueColor<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
@@ -8914,51 +8914,51 @@ impl ::flatbuffers::Verifiable for SsAttributePartsColorKeyValueColor<'_> {
     Ok(())
   }
 }
-pub struct SsAttributePartsColorKeyValueColorArgs<'a> {
+pub struct SsAttributePartColorKeyValueColorArgs<'a> {
     pub rgba: Option<::flatbuffers::WIPOffset<U8Rect<'a>>>,
     pub rate: f32,
 }
-impl<'a> Default for SsAttributePartsColorKeyValueColorArgs<'a> {
+impl<'a> Default for SsAttributePartColorKeyValueColorArgs<'a> {
   #[inline]
   fn default() -> Self {
-    SsAttributePartsColorKeyValueColorArgs {
+    SsAttributePartColorKeyValueColorArgs {
       rgba: None,
       rate: 0.0,
     }
   }
 }
 
-pub struct SsAttributePartsColorKeyValueColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct SsAttributePartColorKeyValueColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAttributePartsColorKeyValueColorBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAttributePartColorKeyValueColorBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_rgba(&mut self, rgba: ::flatbuffers::WIPOffset<U8Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<U8Rect>>(SsAttributePartsColorKeyValueColor::VT_RGBA, rgba);
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<U8Rect>>(SsAttributePartColorKeyValueColor::VT_RGBA, rgba);
   }
   #[inline]
   pub fn add_rate(&mut self, rate: f32) {
-    self.fbb_.push_slot::<f32>(SsAttributePartsColorKeyValueColor::VT_RATE, rate, 0.0);
+    self.fbb_.push_slot::<f32>(SsAttributePartColorKeyValueColor::VT_RATE, rate, 0.0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsAttributePartsColorKeyValueColorBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsAttributePartColorKeyValueColorBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    SsAttributePartsColorKeyValueColorBuilder {
+    SsAttributePartColorKeyValueColorBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'a>> {
     let o = self.fbb_.end_table(self.start_);
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for SsAttributePartsColorKeyValueColor<'_> {
+impl ::core::fmt::Debug for SsAttributePartColorKeyValueColor<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("SsAttributePartsColorKeyValueColor");
+    let mut ds = f.debug_struct("SsAttributePartColorKeyValueColor");
       ds.field("rgba", &self.rgba());
       ds.field("rate", &self.rate());
       ds.finish()
@@ -8966,11 +8966,11 @@ impl ::core::fmt::Debug for SsAttributePartsColorKeyValueColor<'_> {
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct SsAttributePartsColorKeyValueColorT {
+pub struct SsAttributePartColorKeyValueColorT {
   pub rgba: Option<alloc::boxed::Box<U8RectT>>,
   pub rate: f32,
 }
-impl Default for SsAttributePartsColorKeyValueColorT {
+impl Default for SsAttributePartColorKeyValueColorT {
   fn default() -> Self {
     Self {
       rgba: None,
@@ -8978,37 +8978,37 @@ impl Default for SsAttributePartsColorKeyValueColorT {
     }
   }
 }
-impl SsAttributePartsColorKeyValueColorT {
+impl SsAttributePartColorKeyValueColorT {
   pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b>> {
+  ) -> ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'b>> {
     let rgba = self.rgba.as_ref().map(|x|{
       x.pack(_fbb)
     });
     let rate = self.rate;
-    SsAttributePartsColorKeyValueColor::create(_fbb, &SsAttributePartsColorKeyValueColorArgs{
+    SsAttributePartColorKeyValueColor::create(_fbb, &SsAttributePartColorKeyValueColorArgs{
       rgba,
       rate,
     })
   }
 }
-pub enum PartAttributePartsColorOffset {}
+pub enum PartAttributePartColorOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct PartAttributePartsColor<'a> {
+pub struct PartAttributePartColor<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for PartAttributePartsColor<'a> {
-  type Inner = PartAttributePartsColor<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for PartAttributePartColor<'a> {
+  type Inner = PartAttributePartColor<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> PartAttributePartsColor<'a> {
+impl<'a> PartAttributePartColor<'a> {
   pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 4;
   pub const VT_LT: ::flatbuffers::VOffsetT = 6;
   pub const VT_RT: ::flatbuffers::VOffsetT = 8;
@@ -9017,14 +9017,14 @@ impl<'a> PartAttributePartsColor<'a> {
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartAttributePartsColor { _tab: table }
+    PartAttributePartColor { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAttributePartsColorArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<PartAttributePartsColor<'bldr>> {
-    let mut builder = PartAttributePartsColorBuilder::new(_fbb);
+    args: &'args PartAttributePartColorArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<PartAttributePartColor<'bldr>> {
+    let mut builder = PartAttributePartColorBuilder::new(_fbb);
     if let Some(x) = args.rb { builder.add_rb(x); }
     if let Some(x) = args.lb { builder.add_lb(x); }
     if let Some(x) = args.rt { builder.add_rt(x); }
@@ -9033,7 +9033,7 @@ impl<'a> PartAttributePartsColor<'a> {
     builder.finish()
   }
 
-  pub fn unpack(&self) -> PartAttributePartsColorT {
+  pub fn unpack(&self) -> PartAttributePartColorT {
     let blend_type = self.blend_type();
     let lt = self.lt().map(|x| {
       alloc::boxed::Box::new(x.unpack())
@@ -9047,7 +9047,7 @@ impl<'a> PartAttributePartsColor<'a> {
     let rb = self.rb().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
-    PartAttributePartsColorT {
+    PartAttributePartColorT {
       blend_type,
       lt,
       rt,
@@ -9061,64 +9061,64 @@ impl<'a> PartAttributePartsColor<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<BlendType>(PartAttributePartsColor::VT_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
+    unsafe { self._tab.get::<BlendType>(PartAttributePartColor::VT_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
   }
   #[inline]
-  pub fn lt(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+  pub fn lt(&self) -> Option<SsAttributePartColorKeyValueColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_LT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_LT, None)}
   }
   #[inline]
-  pub fn rt(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+  pub fn rt(&self) -> Option<SsAttributePartColorKeyValueColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_RT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_RT, None)}
   }
   #[inline]
-  pub fn lb(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+  pub fn lb(&self) -> Option<SsAttributePartColorKeyValueColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_LB, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_LB, None)}
   }
   #[inline]
-  pub fn rb(&self) -> Option<SsAttributePartsColorKeyValueColor<'a>> {
+  pub fn rb(&self) -> Option<SsAttributePartColorKeyValueColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_RB, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_RB, None)}
   }
 }
 
-impl ::flatbuffers::Verifiable for PartAttributePartsColor<'_> {
+impl ::flatbuffers::Verifiable for PartAttributePartColor<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>("lt", Self::VT_LT, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>("rt", Self::VT_RT, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>("lb", Self::VT_LB, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartsColorKeyValueColor>>("rb", Self::VT_RB, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>("lt", Self::VT_LT, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>("rt", Self::VT_RT, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>("lb", Self::VT_LB, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsAttributePartColorKeyValueColor>>("rb", Self::VT_RB, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartAttributePartsColorArgs<'a> {
+pub struct PartAttributePartColorArgs<'a> {
     pub blend_type: BlendType,
-    pub lt: Option<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
-    pub rt: Option<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
-    pub lb: Option<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
-    pub rb: Option<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'a>>>,
+    pub lt: Option<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'a>>>,
+    pub rt: Option<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'a>>>,
+    pub lb: Option<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'a>>>,
+    pub rb: Option<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'a>>>,
 }
-impl<'a> Default for PartAttributePartsColorArgs<'a> {
+impl<'a> Default for PartAttributePartColorArgs<'a> {
   #[inline]
   fn default() -> Self {
-    PartAttributePartsColorArgs {
+    PartAttributePartColorArgs {
       blend_type: BlendType::Mix,
       lt: None,
       rt: None,
@@ -9128,49 +9128,49 @@ impl<'a> Default for PartAttributePartsColorArgs<'a> {
   }
 }
 
-pub struct PartAttributePartsColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct PartAttributePartColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributePartsColorBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributePartColorBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_blend_type(&mut self, blend_type: BlendType) {
-    self.fbb_.push_slot::<BlendType>(PartAttributePartsColor::VT_BLEND_TYPE, blend_type, BlendType::Mix);
+    self.fbb_.push_slot::<BlendType>(PartAttributePartColor::VT_BLEND_TYPE, blend_type, BlendType::Mix);
   }
   #[inline]
-  pub fn add_lt(&mut self, lt: ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_LT, lt);
+  pub fn add_lt(&mut self, lt: ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_LT, lt);
   }
   #[inline]
-  pub fn add_rt(&mut self, rt: ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_RT, rt);
+  pub fn add_rt(&mut self, rt: ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_RT, rt);
   }
   #[inline]
-  pub fn add_lb(&mut self, lb: ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_LB, lb);
+  pub fn add_lb(&mut self, lb: ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_LB, lb);
   }
   #[inline]
-  pub fn add_rb(&mut self, rb: ::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartsColorKeyValueColor>>(PartAttributePartsColor::VT_RB, rb);
+  pub fn add_rb(&mut self, rb: ::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsAttributePartColorKeyValueColor>>(PartAttributePartColor::VT_RB, rb);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributePartsColorBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributePartColorBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    PartAttributePartsColorBuilder {
+    PartAttributePartColorBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAttributePartsColor<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAttributePartColor<'a>> {
     let o = self.fbb_.end_table(self.start_);
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for PartAttributePartsColor<'_> {
+impl ::core::fmt::Debug for PartAttributePartColor<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartAttributePartsColor");
+    let mut ds = f.debug_struct("PartAttributePartColor");
       ds.field("blend_type", &self.blend_type());
       ds.field("lt", &self.lt());
       ds.field("rt", &self.rt());
@@ -9181,14 +9181,14 @@ impl ::core::fmt::Debug for PartAttributePartsColor<'_> {
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct PartAttributePartsColorT {
+pub struct PartAttributePartColorT {
   pub blend_type: BlendType,
-  pub lt: Option<alloc::boxed::Box<SsAttributePartsColorKeyValueColorT>>,
-  pub rt: Option<alloc::boxed::Box<SsAttributePartsColorKeyValueColorT>>,
-  pub lb: Option<alloc::boxed::Box<SsAttributePartsColorKeyValueColorT>>,
-  pub rb: Option<alloc::boxed::Box<SsAttributePartsColorKeyValueColorT>>,
+  pub lt: Option<alloc::boxed::Box<SsAttributePartColorKeyValueColorT>>,
+  pub rt: Option<alloc::boxed::Box<SsAttributePartColorKeyValueColorT>>,
+  pub lb: Option<alloc::boxed::Box<SsAttributePartColorKeyValueColorT>>,
+  pub rb: Option<alloc::boxed::Box<SsAttributePartColorKeyValueColorT>>,
 }
-impl Default for PartAttributePartsColorT {
+impl Default for PartAttributePartColorT {
   fn default() -> Self {
     Self {
       blend_type: BlendType::Mix,
@@ -9199,11 +9199,11 @@ impl Default for PartAttributePartsColorT {
     }
   }
 }
-impl PartAttributePartsColorT {
+impl PartAttributePartColorT {
   pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> ::flatbuffers::WIPOffset<PartAttributePartsColor<'b>> {
+  ) -> ::flatbuffers::WIPOffset<PartAttributePartColor<'b>> {
     let blend_type = self.blend_type;
     let lt = self.lt.as_ref().map(|x|{
       x.pack(_fbb)
@@ -9217,7 +9217,7 @@ impl PartAttributePartsColorT {
     let rb = self.rb.as_ref().map(|x|{
       x.pack(_fbb)
     });
-    PartAttributePartsColor::create(_fbb, &PartAttributePartsColorArgs{
+    PartAttributePartColor::create(_fbb, &PartAttributePartColorArgs{
       blend_type,
       lt,
       rt,
@@ -11465,11 +11465,11 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<bool>(PartAttributes::VT_HIDE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn parts_color(&self) -> Option<PartAttributePartsColor<'a>> {
+  pub fn parts_color(&self) -> Option<PartAttributePartColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>(PartAttributes::VT_PARTS_COLOR, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>(PartAttributes::VT_PARTS_COLOR, None)}
   }
   #[inline]
   pub fn shader(&self) -> Option<PartAttributeShader<'a>> {
@@ -11567,7 +11567,7 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>("parts_color", Self::VT_PARTS_COLOR, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("parts_color", Self::VT_PARTS_COLOR, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>("shader", Self::VT_SHADER, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>("vertex", Self::VT_VERTEX, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("pivot", Self::VT_PIVOT, false)?
@@ -11595,7 +11595,7 @@ pub struct PartAttributesArgs<'a> {
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
-    pub parts_color: Option<::flatbuffers::WIPOffset<PartAttributePartsColor<'a>>>,
+    pub parts_color: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
     pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
     pub vertex: Option<::flatbuffers::WIPOffset<PartAttributeVertex<'a>>>,
     pub pivot: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
@@ -11689,8 +11689,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<bool>(PartAttributes::VT_HIDE, hide, false);
   }
   #[inline]
-  pub fn add_parts_color(&mut self, parts_color: ::flatbuffers::WIPOffset<PartAttributePartsColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartsColor>>(PartAttributes::VT_PARTS_COLOR, parts_color);
+  pub fn add_parts_color(&mut self, parts_color: ::flatbuffers::WIPOffset<PartAttributePartColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartColor>>(PartAttributes::VT_PARTS_COLOR, parts_color);
   }
   #[inline]
   pub fn add_shader(&mut self, shader: ::flatbuffers::WIPOffset<PartAttributeShader<'b >>) {
@@ -11794,7 +11794,7 @@ pub struct PartAttributesT {
   pub flip_v: bool,
   pub flip_h: bool,
   pub hide: bool,
-  pub parts_color: Option<alloc::boxed::Box<PartAttributePartsColorT>>,
+  pub parts_color: Option<alloc::boxed::Box<PartAttributePartColorT>>,
   pub shader: Option<alloc::boxed::Box<PartAttributeShaderT>>,
   pub vertex: Option<alloc::boxed::Box<PartAttributeVertexT>>,
   pub pivot: Option<alloc::boxed::Box<Vec2T>>,
@@ -14607,49 +14607,49 @@ impl PartAnimationDataBoolValueT {
     })
   }
 }
-pub enum PartAnimationDataPartsColorOffset {}
+pub enum PartAnimationDataPartColorOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct PartAnimationDataPartsColor<'a> {
+pub struct PartAnimationDataPartColor<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for PartAnimationDataPartsColor<'a> {
-  type Inner = PartAnimationDataPartsColor<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for PartAnimationDataPartColor<'a> {
+  type Inner = PartAnimationDataPartColor<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> PartAnimationDataPartsColor<'a> {
+impl<'a> PartAnimationDataPartColor<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartAnimationDataPartsColor { _tab: table }
+    PartAnimationDataPartColor { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAnimationDataPartsColorArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<PartAnimationDataPartsColor<'bldr>> {
-    let mut builder = PartAnimationDataPartsColorBuilder::new(_fbb);
+    args: &'args PartAnimationDataPartColorArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<PartAnimationDataPartColor<'bldr>> {
+    let mut builder = PartAnimationDataPartColorBuilder::new(_fbb);
     if let Some(x) = args.value { builder.add_value(x); }
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> PartAnimationDataPartsColorT {
+  pub fn unpack(&self) -> PartAnimationDataPartColorT {
     let index = self.index();
     let interpolation = self.interpolation();
     let value = self.value().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
-    PartAnimationDataPartsColorT {
+    PartAnimationDataPartColorT {
       index,
       interpolation,
       value,
@@ -14661,10 +14661,10 @@ impl<'a> PartAnimationDataPartsColor<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u16>(PartAnimationDataPartsColor::VT_INDEX, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u16>(PartAnimationDataPartColor::VT_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn key_compare_less_than(&self, o: &PartAnimationDataPartsColor) -> bool {
+  pub fn key_compare_less_than(&self, o: &PartAnimationDataPartColor) -> bool {
     self.index() < o.index()
   }
 
@@ -14678,18 +14678,18 @@ impl<'a> PartAnimationDataPartsColor<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<InterpolationType>(PartAnimationDataPartsColor::VT_INTERPOLATION, Some(InterpolationType::None)).unwrap()}
+    unsafe { self._tab.get::<InterpolationType>(PartAnimationDataPartColor::VT_INTERPOLATION, Some(InterpolationType::None)).unwrap()}
   }
   #[inline]
-  pub fn value(&self) -> Option<PartAttributePartsColor<'a>> {
+  pub fn value(&self) -> Option<PartAttributePartColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>(PartAnimationDataPartsColor::VT_VALUE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>(PartAnimationDataPartColor::VT_VALUE, None)}
   }
 }
 
-impl ::flatbuffers::Verifiable for PartAnimationDataPartsColor<'_> {
+impl ::flatbuffers::Verifiable for PartAnimationDataPartColor<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
@@ -14697,20 +14697,20 @@ impl ::flatbuffers::Verifiable for PartAnimationDataPartsColor<'_> {
     v.visit_table(pos)?
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartsColor>>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("value", Self::VT_VALUE, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartAnimationDataPartsColorArgs<'a> {
+pub struct PartAnimationDataPartColorArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
-    pub value: Option<::flatbuffers::WIPOffset<PartAttributePartsColor<'a>>>,
+    pub value: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
 }
-impl<'a> Default for PartAnimationDataPartsColorArgs<'a> {
+impl<'a> Default for PartAnimationDataPartColorArgs<'a> {
   #[inline]
   fn default() -> Self {
-    PartAnimationDataPartsColorArgs {
+    PartAnimationDataPartColorArgs {
       index: 0,
       interpolation: InterpolationType::None,
       value: None,
@@ -14718,41 +14718,41 @@ impl<'a> Default for PartAnimationDataPartsColorArgs<'a> {
   }
 }
 
-pub struct PartAnimationDataPartsColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct PartAnimationDataPartColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataPartsColorBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataPartColorBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_index(&mut self, index: u16) {
-    self.fbb_.push_slot::<u16>(PartAnimationDataPartsColor::VT_INDEX, index, 0);
+    self.fbb_.push_slot::<u16>(PartAnimationDataPartColor::VT_INDEX, index, 0);
   }
   #[inline]
   pub fn add_interpolation(&mut self, interpolation: InterpolationType) {
-    self.fbb_.push_slot::<InterpolationType>(PartAnimationDataPartsColor::VT_INTERPOLATION, interpolation, InterpolationType::None);
+    self.fbb_.push_slot::<InterpolationType>(PartAnimationDataPartColor::VT_INTERPOLATION, interpolation, InterpolationType::None);
   }
   #[inline]
-  pub fn add_value(&mut self, value: ::flatbuffers::WIPOffset<PartAttributePartsColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartsColor>>(PartAnimationDataPartsColor::VT_VALUE, value);
+  pub fn add_value(&mut self, value: ::flatbuffers::WIPOffset<PartAttributePartColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartColor>>(PartAnimationDataPartColor::VT_VALUE, value);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataPartsColorBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataPartColorBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    PartAnimationDataPartsColorBuilder {
+    PartAnimationDataPartColorBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAnimationDataPartsColor<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAnimationDataPartColor<'a>> {
     let o = self.fbb_.end_table(self.start_);
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for PartAnimationDataPartsColor<'_> {
+impl ::core::fmt::Debug for PartAnimationDataPartColor<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartAnimationDataPartsColor");
+    let mut ds = f.debug_struct("PartAnimationDataPartColor");
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
@@ -14761,12 +14761,12 @@ impl ::core::fmt::Debug for PartAnimationDataPartsColor<'_> {
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct PartAnimationDataPartsColorT {
+pub struct PartAnimationDataPartColorT {
   pub index: u16,
   pub interpolation: InterpolationType,
-  pub value: Option<alloc::boxed::Box<PartAttributePartsColorT>>,
+  pub value: Option<alloc::boxed::Box<PartAttributePartColorT>>,
 }
-impl Default for PartAnimationDataPartsColorT {
+impl Default for PartAnimationDataPartColorT {
   fn default() -> Self {
     Self {
       index: 0,
@@ -14775,17 +14775,17 @@ impl Default for PartAnimationDataPartsColorT {
     }
   }
 }
-impl PartAnimationDataPartsColorT {
+impl PartAnimationDataPartColorT {
   pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> ::flatbuffers::WIPOffset<PartAnimationDataPartsColor<'b>> {
+  ) -> ::flatbuffers::WIPOffset<PartAnimationDataPartColor<'b>> {
     let index = self.index;
     let interpolation = self.interpolation;
     let value = self.value.as_ref().map(|x|{
       x.pack(_fbb)
     });
-    PartAnimationDataPartsColor::create(_fbb, &PartAnimationDataPartsColorArgs{
+    PartAnimationDataPartColor::create(_fbb, &PartAnimationDataPartColorArgs{
       index,
       interpolation,
       value,
@@ -16239,11 +16239,11 @@ impl<'a> PartAnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>(PartAnimationData::VT_HIDE_ARRAY, None)}
   }
   #[inline]
-  pub fn parts_color_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartsColor<'a>>>> {
+  pub fn parts_color_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartsColor>>>>(PartAnimationData::VT_PARTS_COLOR_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor>>>>(PartAnimationData::VT_PARTS_COLOR_ARRAY, None)}
   }
   #[inline]
   pub fn shader_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataShader<'a>>>> {
@@ -16410,7 +16410,7 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("flip_h_array", Self::VT_FLIP_H_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("flip_v_array", Self::VT_FLIP_V_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("hide_array", Self::VT_HIDE_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartsColor>>>>("parts_color_array", Self::VT_PARTS_COLOR_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor>>>>("parts_color_array", Self::VT_PARTS_COLOR_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataShader>>>>("shader_array", Self::VT_SHADER_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataVertex>>>>("vertex_array", Self::VT_VERTEX_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("pivot_x_array", Self::VT_PIVOT_X_ARRAY, false)?
@@ -16453,7 +16453,7 @@ pub struct PartAnimationDataArgs<'a> {
     pub flip_h_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
     pub flip_v_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
     pub hide_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
-    pub parts_color_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartsColor<'a>>>>>,
+    pub parts_color_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'a>>>>>,
     pub shader_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataShader<'a>>>>>,
     pub vertex_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataVertex<'a>>>>>,
     pub pivot_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
@@ -16595,7 +16595,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_HIDE_ARRAY, hide_array);
   }
   #[inline]
-  pub fn add_parts_color_array(&mut self, parts_color_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataPartsColor<'b >>>>) {
+  pub fn add_parts_color_array(&mut self, parts_color_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_PARTS_COLOR_ARRAY, parts_color_array);
   }
   #[inline]
@@ -16757,7 +16757,7 @@ pub struct PartAnimationDataT {
   pub flip_h_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
   pub flip_v_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
   pub hide_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
-  pub parts_color_array: Option<alloc::vec::Vec<PartAnimationDataPartsColorT>>,
+  pub parts_color_array: Option<alloc::vec::Vec<PartAnimationDataPartColorT>>,
   pub shader_array: Option<alloc::vec::Vec<PartAnimationDataShaderT>>,
   pub vertex_array: Option<alloc::vec::Vec<PartAnimationDataVertexT>>,
   pub pivot_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
@@ -17247,7 +17247,7 @@ impl<'a> AnimationData<'a> {
   pub const VT_LABELS: ::flatbuffers::VOffsetT = 14;
   pub const VT_START_FRAME: ::flatbuffers::VOffsetT = 16;
   pub const VT_END_FRAME: ::flatbuffers::VOffsetT = 18;
-  pub const VT_TOTAL_FRAMES: ::flatbuffers::VOffsetT = 20;
+  pub const VT_TOTAL_FRAME: ::flatbuffers::VOffsetT = 20;
   pub const VT_FPS: ::flatbuffers::VOffsetT = 22;
   pub const VT_CANVAS: ::flatbuffers::VOffsetT = 24;
 
@@ -17269,7 +17269,7 @@ impl<'a> AnimationData<'a> {
     if let Some(x) = args.parts_initial_attributes { builder.add_parts_initial_attributes(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_fps(args.fps);
-    builder.add_total_frames(args.total_frames);
+    builder.add_total_frame(args.total_frame);
     builder.add_end_frame(args.end_frame);
     builder.add_start_frame(args.start_frame);
     builder.finish()
@@ -17297,7 +17297,7 @@ impl<'a> AnimationData<'a> {
     });
     let start_frame = self.start_frame();
     let end_frame = self.end_frame();
-    let total_frames = self.total_frames();
+    let total_frame = self.total_frame();
     let fps = self.fps();
     let canvas = self.canvas().map(|x| {
       alloc::boxed::Box::new(x.unpack())
@@ -17311,7 +17311,7 @@ impl<'a> AnimationData<'a> {
       labels,
       start_frame,
       end_frame,
-      total_frames,
+      total_frame,
       fps,
       canvas,
     }
@@ -17384,11 +17384,11 @@ impl<'a> AnimationData<'a> {
     unsafe { self._tab.get::<i16>(AnimationData::VT_END_FRAME, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn total_frames(&self) -> i16 {
+  pub fn total_frame(&self) -> i16 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(AnimationData::VT_TOTAL_FRAMES, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i16>(AnimationData::VT_TOTAL_FRAME, Some(0)).unwrap()}
   }
   #[inline]
   pub fn fps(&self) -> i16 {
@@ -17420,7 +17420,7 @@ impl ::flatbuffers::Verifiable for AnimationData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("labels", Self::VT_LABELS, false)?
      .visit_field::<i16>("start_frame", Self::VT_START_FRAME, false)?
      .visit_field::<i16>("end_frame", Self::VT_END_FRAME, false)?
-     .visit_field::<i16>("total_frames", Self::VT_TOTAL_FRAMES, false)?
+     .visit_field::<i16>("total_frame", Self::VT_TOTAL_FRAME, false)?
      .visit_field::<i16>("fps", Self::VT_FPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("canvas", Self::VT_CANVAS, false)?
      .finish();
@@ -17436,7 +17436,7 @@ pub struct AnimationDataArgs<'a> {
     pub labels: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>>>,
     pub start_frame: i16,
     pub end_frame: i16,
-    pub total_frames: i16,
+    pub total_frame: i16,
     pub fps: i16,
     pub canvas: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
 }
@@ -17452,7 +17452,7 @@ impl<'a> Default for AnimationDataArgs<'a> {
       labels: None,
       start_frame: 0,
       end_frame: 0,
-      total_frames: 0,
+      total_frame: 0,
       fps: 0,
       canvas: None,
     }
@@ -17497,8 +17497,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, 
     self.fbb_.push_slot::<i16>(AnimationData::VT_END_FRAME, end_frame, 0);
   }
   #[inline]
-  pub fn add_total_frames(&mut self, total_frames: i16) {
-    self.fbb_.push_slot::<i16>(AnimationData::VT_TOTAL_FRAMES, total_frames, 0);
+  pub fn add_total_frame(&mut self, total_frame: i16) {
+    self.fbb_.push_slot::<i16>(AnimationData::VT_TOTAL_FRAME, total_frame, 0);
   }
   #[inline]
   pub fn add_fps(&mut self, fps: i16) {
@@ -17535,7 +17535,7 @@ impl ::core::fmt::Debug for AnimationData<'_> {
       ds.field("labels", &self.labels());
       ds.field("start_frame", &self.start_frame());
       ds.field("end_frame", &self.end_frame());
-      ds.field("total_frames", &self.total_frames());
+      ds.field("total_frame", &self.total_frame());
       ds.field("fps", &self.fps());
       ds.field("canvas", &self.canvas());
       ds.finish()
@@ -17552,7 +17552,7 @@ pub struct AnimationDataT {
   pub labels: Option<alloc::vec::Vec<LabelT>>,
   pub start_frame: i16,
   pub end_frame: i16,
-  pub total_frames: i16,
+  pub total_frame: i16,
   pub fps: i16,
   pub canvas: Option<alloc::boxed::Box<RectT>>,
 }
@@ -17567,7 +17567,7 @@ impl Default for AnimationDataT {
       labels: None,
       start_frame: 0,
       end_frame: 0,
-      total_frames: 0,
+      total_frame: 0,
       fps: 0,
       canvas: None,
     }
@@ -17599,7 +17599,7 @@ impl AnimationDataT {
     });
     let start_frame = self.start_frame;
     let end_frame = self.end_frame;
-    let total_frames = self.total_frames;
+    let total_frame = self.total_frame;
     let fps = self.fps;
     let canvas = self.canvas.as_ref().map(|x|{
       x.pack(_fbb)
@@ -17613,7 +17613,7 @@ impl AnimationDataT {
       labels,
       start_frame,
       end_frame,
-      total_frames,
+      total_frame,
       fps,
       canvas,
     })
@@ -17639,7 +17639,7 @@ impl<'a> SsAnimeBinary<'a> {
   pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
   pub const VT_PARTS: ::flatbuffers::VOffsetT = 8;
   pub const VT_ANIMATIONS: ::flatbuffers::VOffsetT = 10;
-  pub const VT_CELL_MAPS: ::flatbuffers::VOffsetT = 12;
+  pub const VT_CELLMAPS: ::flatbuffers::VOffsetT = 12;
   pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 14;
   pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 16;
   pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 18;
@@ -17659,7 +17659,7 @@ impl<'a> SsAnimeBinary<'a> {
     if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
     if let Some(x) = args.sound_lists { builder.add_sound_lists(x); }
     if let Some(x) = args.effects { builder.add_effects(x); }
-    if let Some(x) = args.cell_maps { builder.add_cell_maps(x); }
+    if let Some(x) = args.cellmaps { builder.add_cellmaps(x); }
     if let Some(x) = args.animations { builder.add_animations(x); }
     if let Some(x) = args.parts { builder.add_parts(x); }
     if let Some(x) = args.name { builder.add_name(x); }
@@ -17678,7 +17678,7 @@ impl<'a> SsAnimeBinary<'a> {
     let animations = self.animations().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let cell_maps = self.cell_maps().map(|x| {
+    let cellmaps = self.cellmaps().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let effects = self.effects().map(|x| {
@@ -17698,7 +17698,7 @@ impl<'a> SsAnimeBinary<'a> {
       name,
       parts,
       animations,
-      cell_maps,
+      cellmaps,
       effects,
       sound_lists,
       font_bitmaps,
@@ -17735,11 +17735,11 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData>>>>(SsAnimeBinary::VT_ANIMATIONS, None)}
   }
   #[inline]
-  pub fn cell_maps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
+  pub fn cellmaps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(SsAnimeBinary::VT_CELL_MAPS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(SsAnimeBinary::VT_CELLMAPS, None)}
   }
   #[inline]
   pub fn effects(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>> {
@@ -17781,7 +17781,7 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartData>>>>("parts", Self::VT_PARTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<AnimationData>>>>("animations", Self::VT_ANIMATIONS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cell_maps", Self::VT_CELL_MAPS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cellmaps", Self::VT_CELLMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
@@ -17795,7 +17795,7 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub parts: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>>>,
     pub animations: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<AnimationData<'a>>>>>,
-    pub cell_maps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
+    pub cellmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
     pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
@@ -17809,7 +17809,7 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
       name: None,
       parts: None,
       animations: None,
-      cell_maps: None,
+      cellmaps: None,
       effects: None,
       sound_lists: None,
       font_bitmaps: None,
@@ -17840,8 +17840,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_ANIMATIONS, animations);
   }
   #[inline]
-  pub fn add_cell_maps(&mut self, cell_maps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_CELL_MAPS, cell_maps);
+  pub fn add_cellmaps(&mut self, cellmaps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_CELLMAPS, cellmaps);
   }
   #[inline]
   pub fn add_effects(&mut self, effects: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
@@ -17881,7 +17881,7 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
       ds.field("name", &self.name());
       ds.field("parts", &self.parts());
       ds.field("animations", &self.animations());
-      ds.field("cell_maps", &self.cell_maps());
+      ds.field("cellmaps", &self.cellmaps());
       ds.field("effects", &self.effects());
       ds.field("sound_lists", &self.sound_lists());
       ds.field("font_bitmaps", &self.font_bitmaps());
@@ -17896,7 +17896,7 @@ pub struct SsAnimeBinaryT {
   pub name: Option<alloc::string::String>,
   pub parts: Option<alloc::vec::Vec<PartDataT>>,
   pub animations: Option<alloc::vec::Vec<AnimationDataT>>,
-  pub cell_maps: Option<alloc::vec::Vec<CellMapT>>,
+  pub cellmaps: Option<alloc::vec::Vec<CellMapT>>,
   pub effects: Option<alloc::vec::Vec<EffectT>>,
   pub sound_lists: Option<alloc::vec::Vec<SoundListT>>,
   pub font_bitmaps: Option<alloc::vec::Vec<FontBitmapT>>,
@@ -17909,7 +17909,7 @@ impl Default for SsAnimeBinaryT {
       name: None,
       parts: None,
       animations: None,
-      cell_maps: None,
+      cellmaps: None,
       effects: None,
       sound_lists: None,
       font_bitmaps: None,
@@ -17932,7 +17932,7 @@ impl SsAnimeBinaryT {
     let animations = self.animations.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let cell_maps = self.cell_maps.as_ref().map(|x|{
+    let cellmaps = self.cellmaps.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let effects = self.effects.as_ref().map(|x|{
@@ -17952,7 +17952,7 @@ impl SsAnimeBinaryT {
       name,
       parts,
       animations,
-      cell_maps,
+      cellmaps,
       effects,
       sound_lists,
       font_bitmaps,

@@ -323,7 +323,7 @@ table FontBitmap {
 table InitData {
   parts : [PartData];
 
-  cell_maps: [CellMap];
+  cellmaps: [CellMap];
   effects: [Effect];
   sound_lists: [SoundList];
   font_bitmaps: [FontBitmap];

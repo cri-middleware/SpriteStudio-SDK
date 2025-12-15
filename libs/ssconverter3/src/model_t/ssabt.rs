@@ -57,7 +57,7 @@ fn convert_animedatat(anime_data: &SsAnimation, _setup_animation: &SsAnimation) 
     anime_data_t.canvas = Some(Box::new(canvas));
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
-    anime_data_t.total_frames = anime_data.settings.frame_count as i16;
+    anime_data_t.total_frame = anime_data.settings.frame_count as i16;
 
     // anime_data_t.setup_animation = setup_animation;
 
@@ -255,7 +255,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject, ) -
     let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| {
         sspj.cellmap_list.iter().find(|cellmap| cellmap.load_file_path == *cellmap_name).cloned()
     }).collect::<Vec<SsCellMap>>();
-    anime_binary.cell_maps = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
+    anime_binary.cellmaps = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
 
     // TODO: impl
     anime_binary.external_instances = None;

@@ -30,7 +30,7 @@ table PartAttributeCell {
  name: string;
 }
 
-table  SsAttributePartsColorKeyValueColor {
+table  SsAttributePartColorKeyValueColor {
   rgba: U8Rect;
   rate: float;
 }
@@ -46,13 +46,13 @@ enum BlendType : ubyte {
   Invert,
 }
 
-table PartAttributePartsColor {
+table PartAttributePartColor {
   blend_type: BlendType;
 
-  lt: SsAttributePartsColorKeyValueColor;
-  rt: SsAttributePartsColorKeyValueColor;
-  lb: SsAttributePartsColorKeyValueColor;
-  rb: SsAttributePartsColorKeyValueColor;
+  lt: SsAttributePartColorKeyValueColor;
+  rt: SsAttributePartColorKeyValueColor;
+  lb: SsAttributePartColorKeyValueColor;
+  rb: SsAttributePartColorKeyValueColor;
 }
 
 table PartAttributeVertex {
@@ -151,7 +151,7 @@ table PartAttributes {
   flip_v: bool = false;
   flip_h: bool = false;
   hide: bool = false;
-  parts_color: PartAttributePartsColor;
+  parts_color: PartAttributePartColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
   pivot_x: float = 0.0;
@@ -165,8 +165,8 @@ table PartAttributes {
   uv_move_x: float = 0.0;
   uv_move_y: float = 0.0;
   uv_move_z: float = 0.0;
-  uv_scale_x: float = 0.0;
-  uv_scale_y: float = 0.0;
+  uv_scale_x: float = 1.0;
+  uv_scale_y: float = 1.0;
   bounding_radius: float = 0.0;
   mask: float = 0.0;
   skew_x: float = 0.0;
@@ -245,7 +245,7 @@ table AnimPrepData {
 
   start_frame: short;
   end_frame: short;
-  total_frames: short;
+  total_frame: short;
   fps: short;
 
   canvas: Rect;
