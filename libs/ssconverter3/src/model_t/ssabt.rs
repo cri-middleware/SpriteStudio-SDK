@@ -200,25 +200,11 @@ pub fn convert_font_bitmap(_sspj: &SsProject, charmap_dic: &HashMap<String, SsCh
     )
 }
 
-fn get_cellmap_names_of_instance(anime_pack: &SsAnimePack, sspj: &SsProject) -> Vec<String> {
-    anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Instance).filter_map(|part| {
-        let Some(a) = sspj
-            .anime_list
-            .iter()
-            .find(|anime| anime.name == part.ref_anime_pack)
-        else {
-            return None;
-        };
-        Some(
-            a.cellmap_names.iter().map(|cellmap_name| cellmap_name.clone()).collect::<Vec<String>>(),
-        )
-    }).flatten().collect::<Vec<String>>()
-}
-
 pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject, ) -> ssab::ssab::SsAnimeBinaryT {
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
     anime_binary.name = Some(anime_pack.name.clone());
     anime_binary.animations = ssabt::convert_animation_data_list(&sspj, &anime_pack);
+
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == SsPartType::Effect {
             Some(part.ref_effect_name.clone())
@@ -231,34 +217,35 @@ pub fn convert_ss_anime_binary_t(anime_pack: &SsAnimePack, sspj: &SsProject, ) -
     }).collect::<Vec<SsEffectFile>>();
     anime_binary.effects = ssabt::convert_effect_list(&sspj, &effect_file_list);
 
+    let effect_cellmap_names = effect_file_list.iter().flat_map(|f| &f.effect_data.node_list)
+        .map(|n| &n.behavior.cell_map_name)
+        .filter(|name| !name.is_empty()).cloned().collect::<Vec<String>>();
+
     anime_binary.sound_lists = if anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Audio).collect::<Vec<&SsPart>>().is_empty() { // don't use sound
         None
     } else {
         convert_sound_list(&sspj, &sspj.sound_list)
     };
+
+    /*
+    anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Text)
+        .filter_map(|part| {
+            // TODO: ?
+            Some(part.array_index)
+        });
+     */
     anime_binary.font_bitmaps = ssabt::convert_font_bitmap(&sspj, &sspj.charmap_dic);
 
-    let mut cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| cellmap_file.clone()).collect::<HashSet<String>>();
-    get_cellmap_names_of_instance(&anime_pack, &sspj).iter().for_each(|cellmap_name| {
-        cellmap_names.insert(cellmap_name.clone());
-    });
-    if anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Effect).collect::<Vec<&SsPart>>().is_empty() != true {
-        sspj.effect_file_list.iter().for_each(|effect_file| {
-            effect_file.effect_data.node_list.iter().for_each(|node| {
-                if node.behavior.cell_map_name.is_empty() {
-                    return;
-                }
-                cellmap_names.insert(node.behavior.cell_map_name.clone());
-            })
-        });
-    };
+    let cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| cellmap_file.clone()).chain(effect_cellmap_names).collect::<HashSet<String>>();
     let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| {
         sspj.cellmap_list.iter().find(|cellmap| cellmap.load_file_path == *cellmap_name).cloned()
     }).collect::<Vec<SsCellMap>>();
     anime_binary.cellmaps = ssabt::convert_cellmapt_list(&sspj, &cellmaps);
 
-    // TODO: impl
-    anime_binary.external_instances = None;
+    let external_instances = anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Instance)
+        .filter(|part| part.ref_anime_pack != anime_pack.name)
+        .map(|part| format!("{}/{}", anime_pack.name, part.ref_anime_pack)).collect::<Vec<String>>();
+    anime_binary.external_instances = if external_instances.is_empty() { None } else { Some(external_instances) };
 
     anime_binary
 }

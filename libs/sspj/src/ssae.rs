@@ -73,6 +73,23 @@ pub struct SsPart {
     #[serde(rename = "IKRotationArrow", default)]
     pub ik_rotation_arrow: SsIkRotationArrow,
     // m_pPartValueInfo // TODO:
+
+    /*
+    #[serde(default)]
+    pub text: String,
+    #[serde(default)]
+    pub text_bitmap: bool,
+    #[serde(default)]
+    pub text_family: String,
+    </textCharMap>
+    16</textSize>
+    0</textSpace>
+    1</textSmooth>
+    0</textMask>
+    0</textWidth>
+    0</textHeight>
+    0</eAnchor>
+    */
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
