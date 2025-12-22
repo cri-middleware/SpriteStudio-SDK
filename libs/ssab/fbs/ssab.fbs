@@ -319,18 +319,18 @@ table PartAttributeCell {
  name: string;
 }
 
-table  SsAttributePartsColorKeyValueColor {
+table  SsAttributePartColorKeyValueColor {
   rgba: U8Rect;
   rate: float;
 }
 
-table PartAttributePartsColor {
+table PartAttributePartColor {
   blend_type: BlendType;
 
-  lt: SsAttributePartsColorKeyValueColor;
-  rt: SsAttributePartsColorKeyValueColor;
-  lb: SsAttributePartsColorKeyValueColor;
-  rb: SsAttributePartsColorKeyValueColor;
+  lt: SsAttributePartColorKeyValueColor;
+  rt: SsAttributePartColorKeyValueColor;
+  lb: SsAttributePartColorKeyValueColor;
+  rb: SsAttributePartColorKeyValueColor;
 }
 
 table PartAttributeVertex {
@@ -423,7 +423,7 @@ table PartAttributes {
   flip_v: bool;
   flip_h: bool;
   hide: bool;
-  parts_color: PartAttributePartsColor;
+  parts_color: PartAttributePartColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
   pivot: Vec2;
@@ -560,11 +560,11 @@ table PartAnimationDataBoolValue {
   value: bool;
 }
 
-table PartAnimationDataPartsColor {
+table PartAnimationDataPartColor {
   index: ushort (key);
   interpolation: InterpolationType = None;
 
-  value: PartAttributePartsColor;
+  value: PartAttributePartColor;
 }
 
 table PartAnimationDataShader {
@@ -625,7 +625,7 @@ table PartAnimationData {
   flip_h_array: [PartAnimationDataBoolValue];
   flip_v_array: [PartAnimationDataBoolValue];
   hide_array: [PartAnimationDataBoolValue];
-  parts_color_array: [PartAnimationDataPartsColor];
+  parts_color_array: [PartAnimationDataPartColor];
   shader_array: [PartAnimationDataShader];
   vertex_array: [PartAnimationDataVertex];
   pivot_x_array: [PartAnimationDataFloatValue];
@@ -670,7 +670,7 @@ table AnimationData {
 
   start_frame: short;
   end_frame: short;
-  total_frames: short;
+  total_frame: short;
   fps: short;
 
   canvas: Rect;
@@ -684,7 +684,7 @@ table SsAnimeBinary {
   parts : [PartData];
   animations: [AnimationData];
 
-  cell_maps: [CellMap];
+  cellmaps: [CellMap];
   effects: [Effect];
   sound_lists: [SoundList];
   font_bitmaps: [FontBitmap];

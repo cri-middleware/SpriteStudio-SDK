@@ -6124,7 +6124,7 @@ impl<'a> ::flatbuffers::Follow<'a> for InitData<'a> {
 
 impl<'a> InitData<'a> {
   pub const VT_PARTS: ::flatbuffers::VOffsetT = 4;
-  pub const VT_CELL_MAPS: ::flatbuffers::VOffsetT = 6;
+  pub const VT_CELLMAPS: ::flatbuffers::VOffsetT = 6;
   pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 8;
   pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 10;
   pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 12;
@@ -6144,7 +6144,7 @@ impl<'a> InitData<'a> {
     if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
     if let Some(x) = args.sound_lists { builder.add_sound_lists(x); }
     if let Some(x) = args.effects { builder.add_effects(x); }
-    if let Some(x) = args.cell_maps { builder.add_cell_maps(x); }
+    if let Some(x) = args.cellmaps { builder.add_cellmaps(x); }
     if let Some(x) = args.parts { builder.add_parts(x); }
     builder.finish()
   }
@@ -6158,11 +6158,11 @@ impl<'a> InitData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData>>>>(InitData::VT_PARTS, None)}
   }
   #[inline]
-  pub fn cell_maps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
+  pub fn cellmaps(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(InitData::VT_CELL_MAPS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap>>>>(InitData::VT_CELLMAPS, None)}
   }
   #[inline]
   pub fn effects(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>> {
@@ -6201,7 +6201,7 @@ impl ::flatbuffers::Verifiable for InitData<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartData>>>>("parts", Self::VT_PARTS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cell_maps", Self::VT_CELL_MAPS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cellmaps", Self::VT_CELLMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
@@ -6212,7 +6212,7 @@ impl ::flatbuffers::Verifiable for InitData<'_> {
 }
 pub struct InitDataArgs<'a> {
     pub parts: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>>>,
-    pub cell_maps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
+    pub cellmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
     pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
@@ -6223,7 +6223,7 @@ impl<'a> Default for InitDataArgs<'a> {
   fn default() -> Self {
     InitDataArgs {
       parts: None,
-      cell_maps: None,
+      cellmaps: None,
       effects: None,
       sound_lists: None,
       font_bitmaps: None,
@@ -6242,8 +6242,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> InitDataBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_PARTS, parts);
   }
   #[inline]
-  pub fn add_cell_maps(&mut self, cell_maps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_CELL_MAPS, cell_maps);
+  pub fn add_cellmaps(&mut self, cellmaps: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<CellMap<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_CELLMAPS, cellmaps);
   }
   #[inline]
   pub fn add_effects(&mut self, effects: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Effect<'b >>>>) {
@@ -6280,7 +6280,7 @@ impl ::core::fmt::Debug for InitData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("InitData");
       ds.field("parts", &self.parts());
-      ds.field("cell_maps", &self.cell_maps());
+      ds.field("cellmaps", &self.cellmaps());
       ds.field("effects", &self.effects());
       ds.field("sound_lists", &self.sound_lists());
       ds.field("font_bitmaps", &self.font_bitmaps());
