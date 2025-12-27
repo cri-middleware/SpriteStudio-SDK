@@ -1,4 +1,3 @@
-use std::error::Error;
 use ssab::ssab::*;
 use crate::track_manager::track::{PlaybackDirection, PlaybackStyle};
 
@@ -7,12 +6,12 @@ pub mod runtime;
 pub mod track_manager;
 
 pub struct Context<'a> {
-    pub track: track_manager::track::Track,
     pub ssab: SsAnimeBinary<'a>,
+    pub track: track_manager::track::Track,
 }
 
 impl Context<'_> {
-    pub fn new(buf: &[u8]) -> Result<Context, std::io::Error> {
+    pub fn new(buf: &[u8]) -> Result<Context<'_>, std::io::Error> {
         let r = ssab::ssab::root_as_ss_anime_binary(buf);
         let ssab_buf = match r {
             Ok(ssab_buf) => ssab_buf,
@@ -45,7 +44,7 @@ impl Context<'_> {
         self.track.get_end_frame_reached()
     }
 
-    pub fn setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
+    pub fn track_setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
         self.track.setup(start_frame, end_frame, fps);
     }
 
@@ -73,7 +72,7 @@ impl Context<'_> {
         self.track.set_animation_section(start_frame, end_frame, loops);
     }
 
-    pub fn update(&mut self, delta: f32) -> i32 {
+    pub fn update(&mut self, delta: f32) -> (i32, f32) {
         self.track.update(delta)
     }
 

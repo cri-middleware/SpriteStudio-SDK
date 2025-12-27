@@ -20,6 +20,7 @@ pub struct Track {
     start_frame: i32,
     end_frame: i32,
     fps: i32,
+    fps_rate: f32,
 
     update_interval: f32,
     playback_style: PlaybackStyle,
@@ -61,6 +62,7 @@ impl Track {
             start_frame: 0,
             end_frame: 0,
             fps: 0,
+            fps_rate: 1.0,
 
             update_interval: 0.0,
             playback_style: PlaybackStyle::Normal,
@@ -93,6 +95,7 @@ impl Track {
         self.start_frame = self.anime_data_start_frame;
         self.end_frame = self.anime_data_end_frame;
         self.fps = self.anime_data_fps;
+        self.fps_rate = 1.0;
 
         self.current_frame = start_frame as f32;
         self.loops = -1;
@@ -101,7 +104,7 @@ impl Track {
         self.playback_style = PlaybackStyle::Normal;
         self.playback_direction = PlaybackDirection::Forward;
         self.playback_forward = 1;
-        self.update_interval = 1000.0 / self.anime_data_fps as f32;
+        self.update_interval = 1000.0 / (self.anime_data_fps as f32 * self.fps_rate);
     }
 
     pub fn set_skip_frames(&mut self, skip: bool) {
@@ -120,7 +123,7 @@ impl Track {
 
     pub fn set_frame_rate(&mut self, fps: i32) {
         self.fps = if fps > 0 {fps} else {self.anime_data_fps};
-        self.update_interval = 1000.0 / self.fps as f32;
+        self.update_interval = 1000.0 / (self.fps as f32 * self.fps_rate);
     }
 
     /**
@@ -135,21 +138,19 @@ impl Track {
     }
 
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        if speed_rate <= 0.0 { // illegal parameter
-            return;
-        }
-        self.update_interval = 1000.0 / (self.fps as f32 * speed_rate);
+        self.fps_rate = if speed_rate > 0.0 {speed_rate} else {1.0};
+        self.update_interval = 1000.0 / (self.fps as f32 * self.fps_rate);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32, loops: i32) {
         self.start_frame = if start_frame >= 0 && start_frame < self.anime_data_end_frame {start_frame} else {self.anime_data_start_frame};
-        self.end_frame = if (end_frame >= 0 && end_frame < self.anime_data_end_frame) {end_frame} else {self.anime_data_end_frame};
+        self.end_frame = if end_frame >= 0 && end_frame < self.anime_data_end_frame {end_frame} else {self.anime_data_end_frame};
         self.set_loop(loops);
 
         self.current_frame = if self.playback_direction == PlaybackDirection::Forward {self.start_frame as f32} else {self.end_frame as f32}
     }
 
-    pub fn update(&mut self, delta: f32) -> i32 {
+    pub fn update(&mut self, delta: f32) -> (i32, f32) {
         let to_next_frame = self.is_playing && !self.is_pausing;
         if to_next_frame && self.update_interval != 0.0 {
             self.next_frame_time += delta;
@@ -231,9 +232,9 @@ impl Track {
                 self.current_frame = current_frame_no as f32 + next_frame_decimal;
             }
 
-            self.current_frame.floor() as i32
+            (self.current_frame.floor() as i32, self.current_frame - self.current_frame.floor())
         } else {
-            self.current_frame.floor() as i32
+            (self.current_frame.floor() as i32, self.current_frame - self.current_frame.floor())
         }
     }
 }
@@ -302,8 +303,8 @@ mod tests {
     fn play(t: &mut Track, delta: f32, loop_num: i32) {
         println!("frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_end_frame_reached());
         for _ in 0..loop_num {
-            t.update(delta);
-            println!("frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_end_frame_reached());
+            let (frame_no, decimal) = t.update(delta);
+            println!("frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", frame_no, decimal, t.get_end_frame_reached());
         }
     }
 
@@ -361,4 +362,26 @@ mod tests {
         t.play();
         play(t, 16.7, 700);
     }
+
+    #[test]
+    fn loops_pingpong() {
+        let t = &mut Track::new();
+        t.setup(0, 99, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_loop(3);
+        t.play();
+        play(t, 16.7, 700);
+    }
+
+
+    #[test]
+    fn loops_pingpong_reverse() {
+        let t = &mut Track::new();
+        t.setup(0, 99, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+        t.set_loop(3);
+        t.play();
+        play(t, 16.7, 700);
+    }
+
 }
