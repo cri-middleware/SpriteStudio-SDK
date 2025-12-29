@@ -5088,7 +5088,7 @@ impl<'a> ::flatbuffers::Follow<'a> for EffectNode<'a> {
 impl<'a> EffectNode<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_PARENT_INDEX: ::flatbuffers::VOffsetT = 6;
-  pub const VT_TYPE_: ::flatbuffers::VOffsetT = 8;
+  pub const VT_EFFECT_NODE_TYPE: ::flatbuffers::VOffsetT = 8;
   pub const VT_CELL_INDEX: ::flatbuffers::VOffsetT = 10;
   pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 12;
   pub const VT_BEHAVIOR: ::flatbuffers::VOffsetT = 14;
@@ -5108,7 +5108,7 @@ impl<'a> EffectNode<'a> {
     builder.add_parent_index(args.parent_index);
     builder.add_index(args.index);
     builder.add_blend_type(args.blend_type);
-    builder.add_type_(args.type_);
+    builder.add_effect_node_type(args.effect_node_type);
     builder.finish()
   }
 
@@ -5128,11 +5128,11 @@ impl<'a> EffectNode<'a> {
     unsafe { self._tab.get::<i16>(EffectNode::VT_PARENT_INDEX, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn type_(&self) -> EffectNodeType {
+  pub fn effect_node_type(&self) -> EffectNodeType {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<EffectNodeType>(EffectNode::VT_TYPE_, Some(EffectNodeType::Root)).unwrap()}
+    unsafe { self._tab.get::<EffectNodeType>(EffectNode::VT_EFFECT_NODE_TYPE, Some(EffectNodeType::Root)).unwrap()}
   }
   #[inline]
   pub fn cell_index(&self) -> i16 {
@@ -5165,7 +5165,7 @@ impl ::flatbuffers::Verifiable for EffectNode<'_> {
     v.visit_table(pos)?
      .visit_field::<i16>("index", Self::VT_INDEX, false)?
      .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
-     .visit_field::<EffectNodeType>("type_", Self::VT_TYPE_, false)?
+     .visit_field::<EffectNodeType>("effect_node_type", Self::VT_EFFECT_NODE_TYPE, false)?
      .visit_field::<i16>("cell_index", Self::VT_CELL_INDEX, false)?
      .visit_field::<RenderBlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EffectNodeBehaviorWrapper>>>>("behavior", Self::VT_BEHAVIOR, false)?
@@ -5176,7 +5176,7 @@ impl ::flatbuffers::Verifiable for EffectNode<'_> {
 pub struct EffectNodeArgs<'a> {
     pub index: i16,
     pub parent_index: i16,
-    pub type_: EffectNodeType,
+    pub effect_node_type: EffectNodeType,
     pub cell_index: i16,
     pub blend_type: RenderBlendType,
     pub behavior: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EffectNodeBehaviorWrapper<'a>>>>>,
@@ -5187,7 +5187,7 @@ impl<'a> Default for EffectNodeArgs<'a> {
     EffectNodeArgs {
       index: 0,
       parent_index: 0,
-      type_: EffectNodeType::Root,
+      effect_node_type: EffectNodeType::Root,
       cell_index: 0,
       blend_type: RenderBlendType::Mix,
       behavior: None,
@@ -5209,8 +5209,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EffectNodeBuilder<'a, 'b, A> 
     self.fbb_.push_slot::<i16>(EffectNode::VT_PARENT_INDEX, parent_index, 0);
   }
   #[inline]
-  pub fn add_type_(&mut self, type_: EffectNodeType) {
-    self.fbb_.push_slot::<EffectNodeType>(EffectNode::VT_TYPE_, type_, EffectNodeType::Root);
+  pub fn add_effect_node_type(&mut self, effect_node_type: EffectNodeType) {
+    self.fbb_.push_slot::<EffectNodeType>(EffectNode::VT_EFFECT_NODE_TYPE, effect_node_type, EffectNodeType::Root);
   }
   #[inline]
   pub fn add_cell_index(&mut self, cell_index: i16) {
@@ -5244,7 +5244,7 @@ impl ::core::fmt::Debug for EffectNode<'_> {
     let mut ds = f.debug_struct("EffectNode");
       ds.field("index", &self.index());
       ds.field("parent_index", &self.parent_index());
-      ds.field("type_", &self.type_());
+      ds.field("effect_node_type", &self.effect_node_type());
       ds.field("cell_index", &self.cell_index());
       ds.field("blend_type", &self.blend_type());
       ds.field("behavior", &self.behavior());
@@ -9396,8 +9396,8 @@ impl<'a> PartData<'a> {
   pub const VT_PARENT_INDEX: ::flatbuffers::VOffsetT = 6;
   pub const VT_BOUNDS_TYPE: ::flatbuffers::VOffsetT = 8;
   pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 10;
-  pub const VT_TYPE_TYPE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_TYPE_: ::flatbuffers::VOffsetT = 14;
+  pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 12;
+  pub const VT_PART_TYPE: ::flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -9409,10 +9409,10 @@ impl<'a> PartData<'a> {
     args: &'args PartDataArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartData<'bldr>> {
     let mut builder = PartDataBuilder::new(_fbb);
-    if let Some(x) = args.type_ { builder.add_type_(x); }
+    if let Some(x) = args.part_type { builder.add_part_type(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_parent_index(args.parent_index);
-    builder.add_type_type(args.type_type);
+    builder.add_part_type_type(args.part_type_type);
     builder.add_blend_type(args.blend_type);
     builder.add_bounds_type(args.bounds_type);
     builder.finish()
@@ -9448,24 +9448,24 @@ impl<'a> PartData<'a> {
     unsafe { self._tab.get::<BlendType>(PartData::VT_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
   }
   #[inline]
-  pub fn type_type(&self) -> PartType {
+  pub fn part_type_type(&self) -> PartType {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<PartType>(PartData::VT_TYPE_TYPE, Some(PartType::NONE)).unwrap()}
+    unsafe { self._tab.get::<PartType>(PartData::VT_PART_TYPE_TYPE, Some(PartType::NONE)).unwrap()}
   }
   #[inline]
-  pub fn type_(&self) -> Option<::flatbuffers::Table<'a>> {
+  pub fn part_type(&self) -> Option<::flatbuffers::Table<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Table<'a>>>(PartData::VT_TYPE_, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Table<'a>>>(PartData::VT_PART_TYPE, None)}
   }
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_null(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeNull {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_null(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeNull {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9478,9 +9478,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_normal(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeNormal {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_normal(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeNormal {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9493,9 +9493,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_shape(&self) -> Option<PartTypeShape<'a>> {
-    if self.type_type() == PartType::PartTypeShape {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_shape(&self) -> Option<PartTypeShape<'a>> {
+    if self.part_type_type() == PartType::PartTypeShape {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9508,9 +9508,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_text(&self) -> Option<PartTypeText<'a>> {
-    if self.type_type() == PartType::PartTypeText {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_text(&self) -> Option<PartTypeText<'a>> {
+    if self.part_type_type() == PartType::PartTypeText {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9523,9 +9523,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_nines(&self) -> Option<PartTypeNines<'a>> {
-    if self.type_type() == PartType::PartTypeNines {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_nines(&self) -> Option<PartTypeNines<'a>> {
+    if self.part_type_type() == PartType::PartTypeNines {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9538,9 +9538,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_instance(&self) -> Option<PartTypeInstance<'a>> {
-    if self.type_type() == PartType::PartTypeInstance {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_instance(&self) -> Option<PartTypeInstance<'a>> {
+    if self.part_type_type() == PartType::PartTypeInstance {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9553,9 +9553,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_armature(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeArmature {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_armature(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeArmature {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9568,9 +9568,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_effect(&self) -> Option<PartTypeEffect<'a>> {
-    if self.type_type() == PartType::PartTypeEffect {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_effect(&self) -> Option<PartTypeEffect<'a>> {
+    if self.part_type_type() == PartType::PartTypeEffect {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9583,9 +9583,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_mesh(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeMesh {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_mesh(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeMesh {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9598,9 +9598,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_movenode(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeMovenode {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_movenode(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeMovenode {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9613,9 +9613,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_constraint(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeConstraint {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_constraint(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeConstraint {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9628,9 +9628,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_mask(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeMask {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_mask(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeMask {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9643,9 +9643,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_joint(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeJoint {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_joint(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeJoint {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9658,9 +9658,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_bonepoint(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeBonepoint {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_bonepoint(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeBonepoint {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9673,9 +9673,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_transform_constraint(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeTransformConstraint {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_transform_constraint(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeTransformConstraint {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9688,9 +9688,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_camera(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeCamera {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_camera(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeCamera {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9703,9 +9703,9 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn type__as_part_type_audio(&self) -> Option<PartTypeNone<'a>> {
-    if self.type_type() == PartType::PartTypeAudio {
-      self.type_().map(|t| {
+  pub fn part_type_as_part_type_audio(&self) -> Option<PartTypeNone<'a>> {
+    if self.part_type_type() == PartType::PartTypeAudio {
+      self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
@@ -9728,7 +9728,7 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
      .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
      .visit_field::<BoundsType>("bounds_type", Self::VT_BOUNDS_TYPE, false)?
      .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
-     .visit_union::<PartType, _>("type_type", Self::VT_TYPE_TYPE, "type_", Self::VT_TYPE_, false, |key, v, pos| {
+     .visit_union::<PartType, _>("part_type_type", Self::VT_PART_TYPE_TYPE, "part_type", Self::VT_PART_TYPE, false, |key, v, pos| {
         match key {
           PartType::PartTypeNull => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeNull", pos),
           PartType::PartTypeNormal => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeNormal", pos),
@@ -9759,8 +9759,8 @@ pub struct PartDataArgs<'a> {
     pub parent_index: i16,
     pub bounds_type: BoundsType,
     pub blend_type: BlendType,
-    pub type_type: PartType,
-    pub type_: Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>>,
+    pub part_type_type: PartType,
+    pub part_type: Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>>,
 }
 impl<'a> Default for PartDataArgs<'a> {
   #[inline]
@@ -9770,8 +9770,8 @@ impl<'a> Default for PartDataArgs<'a> {
       parent_index: 0,
       bounds_type: BoundsType::None,
       blend_type: BlendType::Mix,
-      type_type: PartType::NONE,
-      type_: None,
+      part_type_type: PartType::NONE,
+      part_type: None,
     }
   }
 }
@@ -9798,12 +9798,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<BlendType>(PartData::VT_BLEND_TYPE, blend_type, BlendType::Mix);
   }
   #[inline]
-  pub fn add_type_type(&mut self, type_type: PartType) {
-    self.fbb_.push_slot::<PartType>(PartData::VT_TYPE_TYPE, type_type, PartType::NONE);
+  pub fn add_part_type_type(&mut self, part_type_type: PartType) {
+    self.fbb_.push_slot::<PartType>(PartData::VT_PART_TYPE_TYPE, part_type_type, PartType::NONE);
   }
   #[inline]
-  pub fn add_type_(&mut self, type_: ::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartData::VT_TYPE_, type_);
+  pub fn add_part_type(&mut self, part_type: ::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartData::VT_PART_TYPE, part_type);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartDataBuilder<'a, 'b, A> {
@@ -9827,130 +9827,130 @@ impl ::core::fmt::Debug for PartData<'_> {
       ds.field("parent_index", &self.parent_index());
       ds.field("bounds_type", &self.bounds_type());
       ds.field("blend_type", &self.blend_type());
-      ds.field("type_type", &self.type_type());
-      match self.type_type() {
+      ds.field("part_type_type", &self.part_type_type());
+      match self.part_type_type() {
         PartType::PartTypeNull => {
-          if let Some(x) = self.type__as_part_type_null() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_null() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeNormal => {
-          if let Some(x) = self.type__as_part_type_normal() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_normal() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeShape => {
-          if let Some(x) = self.type__as_part_type_shape() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_shape() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeText => {
-          if let Some(x) = self.type__as_part_type_text() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_text() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeNines => {
-          if let Some(x) = self.type__as_part_type_nines() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_nines() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeInstance => {
-          if let Some(x) = self.type__as_part_type_instance() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_instance() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeArmature => {
-          if let Some(x) = self.type__as_part_type_armature() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_armature() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeEffect => {
-          if let Some(x) = self.type__as_part_type_effect() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_effect() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeMesh => {
-          if let Some(x) = self.type__as_part_type_mesh() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_mesh() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeMovenode => {
-          if let Some(x) = self.type__as_part_type_movenode() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_movenode() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeConstraint => {
-          if let Some(x) = self.type__as_part_type_constraint() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_constraint() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeMask => {
-          if let Some(x) = self.type__as_part_type_mask() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_mask() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeJoint => {
-          if let Some(x) = self.type__as_part_type_joint() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_joint() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeBonepoint => {
-          if let Some(x) = self.type__as_part_type_bonepoint() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_bonepoint() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeTransformConstraint => {
-          if let Some(x) = self.type__as_part_type_transform_constraint() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_transform_constraint() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeCamera => {
-          if let Some(x) = self.type__as_part_type_camera() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_camera() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         PartType::PartTypeAudio => {
-          if let Some(x) = self.type__as_part_type_audio() {
-            ds.field("type_", &x)
+          if let Some(x) = self.part_type_as_part_type_audio() {
+            ds.field("part_type", &x)
           } else {
-            ds.field("type_", &"InvalidFlatbuffer: Union discriminant does not match value.")
+            ds.field("part_type", &"InvalidFlatbuffer: Union discriminant does not match value.")
           }
         },
         _ => {
           let x: Option<()> = None;
-          ds.field("type_", &x)
+          ds.field("part_type", &x)
         },
       };
       ds.finish()

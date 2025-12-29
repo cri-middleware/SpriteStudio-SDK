@@ -161,7 +161,7 @@ table PartData {
   bounds_type: BoundsType;
   blend_type: BlendType;
 
-  type: PartType;
+  part_type: PartType;
 }
 
 // cell_map
@@ -262,7 +262,7 @@ table EffectNodeBehaviorWrapper {
 table EffectNode {
   index : short;
   parent_index : short;
-  type : EffectNodeType;
+  effect_node_type_type : EffectNodeType;
   cell_index : short;
   blend_type : RenderBlendType;
   behavior : [EffectNodeBehaviorWrapper];

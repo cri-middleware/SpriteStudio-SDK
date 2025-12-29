@@ -45,7 +45,7 @@ enum MeshDivType: ubyte {
   Boxdiv,
 }
 
-enum BoundsType : ubyte {
+enum BoundsType: ubyte {
   None,
   Quad,
   Aabb,
@@ -54,12 +54,12 @@ enum BoundsType : ubyte {
   CircleSmax,
 }
 
-enum InheritType : ubyte {
+enum InheritType: ubyte {
   Parent,
   Self,
 }
 
-enum BlendType : ubyte {
+enum BlendType: ubyte {
   Mix,
   Mul,
   Add,
@@ -70,7 +70,7 @@ enum BlendType : ubyte {
   Invert,
 }
 
-enum InterpolationType : ubyte {
+enum InterpolationType: ubyte {
   None,
 
   Linear,
@@ -191,7 +191,7 @@ enum EffectNodeType: ubyte {
 
 table EffectParticlePointGravity {
   position: Vec2;
-  power : float;
+  power: float;
 }
 
 table RectAndVec2ValueTable {
@@ -200,18 +200,18 @@ table RectAndVec2ValueTable {
 }
 
 table EffectParticleElementTransColor {
-  color_min_value : uint;
-  color_max_value : uint;
+  color_min_value: uint;
+  color_max_value: uint;
 }
 
 table EffectParticleElementInitColor {
-  color_min_value : uint;
-  color_max_value : uint;
+  color_min_value: uint;
+  color_max_value: uint;
 }
 
 table EffectParticleElementRotationTrans {
-  rotation_factor : float;
-  end_life_time_per : float;
+  rotation_factor: float;
+  end_life_time_per: float;
 }
 
 table EffectParticleElementRotation {
@@ -225,12 +225,12 @@ table EffectParticleElementBasic {
   attime_create: int;
   interval: int;
   lifetime: int;
-  speed_min_value : float;
-  speed_max_value : float;
-  lifespan_min_value : int;
-  lifespan_max_value : int;
-  angle : float;
-  angle_variance : float;
+  speed_min_value: float;
+  speed_max_value: float;
+  lifespan_min_value: int;
+  lifespan_max_value: int;
+  angle: float;
+  angle_variance: float;
 }
 
 union EffectNodeBehavior {
@@ -258,12 +258,12 @@ table EffectNodeBehaviorWrapper {
 }
 
 table EffectNode {
-  index : short;
-  parent_index : short;
-  type : EffectNodeType;
-  cell_index : short;
-  blend_type : RenderBlendType;
-  behavior : [EffectNodeBehaviorWrapper];
+  index: short;
+  parent_index: short;
+  effect_node_type: EffectNodeType;
+  cell_index: short;
+  blend_type: RenderBlendType;
+  behavior: [EffectNodeBehaviorWrapper];
 }
 
 table Effect {
@@ -272,7 +272,7 @@ table Effect {
   is_lock_rand_seed: short;
   lock_rand_seed: short;
   layout_scale: Vec2;
-  effect_node : [EffectNode];
+  effect_node: [EffectNode];
 }
 
 table SoundFile {
@@ -442,7 +442,7 @@ table PartTypeNone {
   // nothing
 }
 
-enum ShapeType : ubyte {
+enum ShapeType: ubyte {
   Unknown,
   Triangle,
   Rectangle,
@@ -455,7 +455,7 @@ table PartTypeShape {
   shape_mask: bool;
 }
 
-enum TextAnchor : ubyte {
+enum TextAnchor: ubyte {
   NO = 0xFF,
 
   LT = 0x00,
@@ -526,7 +526,7 @@ table PartData {
   bounds_type: BoundsType;
   blend_type: BlendType;
 
-  type: PartType;
+  part_type: PartType;
 }
 
 table Label {
@@ -681,7 +681,7 @@ table SsAnimeBinary {
 
   name: string;
 
-  parts : [PartData];
+  parts: [PartData];
   animations: [AnimationData];
 
   cellmaps: [CellMap];
