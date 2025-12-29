@@ -321,7 +321,8 @@ table FontBitmap {
 }
 
 table InitData {
-  parts : [PartData];
+  name: string;
+  parts: [PartData];
 
   cellmaps: [CellMap];
   effects: [Effect];

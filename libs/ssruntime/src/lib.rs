@@ -36,6 +36,10 @@ impl Context<'_> {
         })
     }
 
+    pub fn get_initialize_data(&mut self) -> Option<Vec<u8>> {
+        core::initialize::get_initialize_data(&mut self.fb, &self.ssab)
+    }
+
     pub fn setup_animation(&mut self, name: &str) -> Option<AnimationData> {
         self.animation = None;
         let Some(animations) = self.ssab.animations() else {
@@ -50,10 +54,6 @@ impl Context<'_> {
 
 
         self.animation
-    }
-
-    pub fn get_initialize_data(&mut self) -> Option<Vec<u8>> {
-        core::initialize::get_initialize_data(&mut self.fb, &self.ssab)
     }
 
     // Track control

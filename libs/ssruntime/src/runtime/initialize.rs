@@ -6123,12 +6123,13 @@ impl<'a> ::flatbuffers::Follow<'a> for InitData<'a> {
 }
 
 impl<'a> InitData<'a> {
-  pub const VT_PARTS: ::flatbuffers::VOffsetT = 4;
-  pub const VT_CELLMAPS: ::flatbuffers::VOffsetT = 6;
-  pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 8;
-  pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 10;
-  pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 12;
-  pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 14;
+  pub const VT_NAME: ::flatbuffers::VOffsetT = 4;
+  pub const VT_PARTS: ::flatbuffers::VOffsetT = 6;
+  pub const VT_CELLMAPS: ::flatbuffers::VOffsetT = 8;
+  pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 10;
+  pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 12;
+  pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 14;
+  pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -6146,10 +6147,18 @@ impl<'a> InitData<'a> {
     if let Some(x) = args.effects { builder.add_effects(x); }
     if let Some(x) = args.cellmaps { builder.add_cellmaps(x); }
     if let Some(x) = args.parts { builder.add_parts(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
     builder.finish()
   }
 
 
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(InitData::VT_NAME, None)}
+  }
   #[inline]
   pub fn parts(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>> {
     // Safety:
@@ -6200,6 +6209,7 @@ impl ::flatbuffers::Verifiable for InitData<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartData>>>>("parts", Self::VT_PARTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<CellMap>>>>("cellmaps", Self::VT_CELLMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
@@ -6211,6 +6221,7 @@ impl ::flatbuffers::Verifiable for InitData<'_> {
   }
 }
 pub struct InitDataArgs<'a> {
+    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub parts: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartData<'a>>>>>,
     pub cellmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<CellMap<'a>>>>>,
     pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
@@ -6222,6 +6233,7 @@ impl<'a> Default for InitDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     InitDataArgs {
+      name: None,
       parts: None,
       cellmaps: None,
       effects: None,
@@ -6237,6 +6249,10 @@ pub struct InitDataBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> InitDataBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_NAME, name);
+  }
   #[inline]
   pub fn add_parts(&mut self, parts: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartData<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(InitData::VT_PARTS, parts);
@@ -6279,6 +6295,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> InitDataBuilder<'a, 'b, A> {
 impl ::core::fmt::Debug for InitData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("InitData");
+      ds.field("name", &self.name());
       ds.field("parts", &self.parts());
       ds.field("cellmaps", &self.cellmaps());
       ds.field("effects", &self.effects());

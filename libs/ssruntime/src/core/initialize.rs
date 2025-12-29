@@ -470,6 +470,7 @@ pub fn get_initialize_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, ssab
     fb.reset();
 
     let mut args = runtime::initialize::ss::runtime::InitDataArgs::default();
+    args.name = ssab.name().map(|name| fb.create_string(name));
     args.parts = ssab.parts().map(|p| get_parts(fb, &p));
     args.cellmaps = ssab.cellmaps().map(|c| get_cellmaps(fb, &c));
     args.effects = ssab.effects().map(|e| get_effects(fb, &e));
