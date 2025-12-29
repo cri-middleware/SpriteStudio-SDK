@@ -40,20 +40,24 @@ impl Context<'_> {
         core::initialize::get_initialize_data(&mut self.fb, &self.ssab)
     }
 
-    pub fn setup_animation(&mut self, name: &str) -> Option<AnimationData> {
+    pub fn get_animation_names(&mut self) -> Option<Vec<String>> {
+        self.ssab.animations().map(|animations| {
+            animations.iter().map(|animation| animation.name().to_string()).collect::<Vec<String>>()
+        })
+    }
+
+    pub fn setup_animation(&mut self, name: &str) -> Option<Vec<u8>> {
         self.animation = None;
         let Some(animations) = self.ssab.animations() else {
-            return self.animation;
+            return None;
         };
         let Some(animation) = animations.lookup_by_key(name, |en, key| en.key_compare_with_value(key)) else {
-            return self.animation;
+            return None;
         };
         self.track.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation = Some(animation);
 
-
-
-        self.animation
+        Some(core::preparation::get_animation_preparation_data(&mut self.fb, &animation))
     }
 
     // Track control
