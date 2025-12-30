@@ -1,16 +1,12 @@
-use ssab::ssab::*;
-use crate::track_manager::track::{PlaybackDirection, PlaybackStyle};
-
 mod runtime;
 
-mod track_manager;
 mod core;
 
 pub struct Context<'a> {
-    pub ssab: SsAnimeBinary<'a>,
-    pub track: track_manager::track::Track,
+    pub ssab: ssab::ssab::SsAnimeBinary<'a>,
+    pub track: core::track_manager::TrackManager,
     pub fb: flatbuffers::FlatBufferBuilder<'a>,
-    pub animation: Option<AnimationData<'a>>,
+    pub animation: Option<ssab::ssab::AnimationData<'a>>,
 }
 
 impl Context<'_> {
@@ -22,13 +18,13 @@ impl Context<'_> {
         };
 
         // validate version
-        if ssab_buf.version() != SsAnimeBinaryArgs::default().version {
+        if ssab_buf.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("invalid ssab version expected: {}, got: {}", SsAnimeBinaryArgs::default().version, ssab_buf.version())))
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("invalid ssab version expected: {}, got: {}", ssab::ssab::SsAnimeBinaryArgs::default().version, ssab_buf.version())))
         }
 
         Ok(Context {
-            track: track_manager::track::Track::new(),
+            track: core::track_manager::TrackManager::new(),
             ssab: ssab_buf,
             fb: flatbuffers::FlatBufferBuilder::new(),
             animation: None,
@@ -105,7 +101,7 @@ impl Context<'_> {
         self.track.set_frame_rate(fps);
     }
 
-    pub fn set_playback_direction(&mut self, direction: PlaybackDirection, style: PlaybackStyle) {
+    pub fn set_playback_direction(&mut self, direction: core::track_manager::PlaybackDirection, style: core::track_manager::PlaybackStyle) {
         self.track.set_playback_direction(direction, style);
     }
 
