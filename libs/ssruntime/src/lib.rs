@@ -6,10 +6,11 @@ pub struct Context<'a> {
     pub ssab: ssab::ssab::SsAnimeBinary<'a>,
     pub track: core::track_manager::TrackManager,
     pub fb: flatbuffers::FlatBufferBuilder<'a>,
+    // AnimationData<'a> はそれ自体が参照のようなものなので、& をつける必要はありません
     pub animation: Option<ssab::ssab::AnimationData<'a>>,
 }
 
-impl Context<'_> {
+impl<'a> Context<'a> {
     pub fn new(buf: &[u8]) -> Result<Context<'_>, std::io::Error> {
         let r = ssab::ssab::root_as_ss_anime_binary(buf);
         let ssab_buf = match r {
@@ -45,13 +46,7 @@ impl Context<'_> {
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Option<Vec<u8>> {
-        self.animation = None;
-        let Some(animations) = self.ssab.animations() else {
-            return None;
-        };
-        let Some(animation) = animations.lookup_by_key(name, |en, key| en.key_compare_with_value(key)) else {
-            return None;
-        };
+        let animation = self.ssab.animations()?.lookup_by_key(name, |en, key| en.key_compare_with_value(key))?;
         self.track.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation = Some(animation);
 
