@@ -267,7 +267,7 @@ impl Track {
         self.is_playing = false;
     }
 
-    pub fn set_frame(&mut self, frame: i32) {
+    pub fn set_frame_no(&mut self, frame: i32) {
         self.current_frame = frame as f32;
     }
 
@@ -280,7 +280,7 @@ impl Track {
         if current_frame == self.end_frame {
             return;
         }
-        self.set_frame(current_frame + 1);
+        self.set_frame_no(current_frame + 1);
     }
 
     /**
@@ -292,7 +292,7 @@ impl Track {
         if current_frame == self.start_frame {
             return;
         }
-        self.set_frame(current_frame - 1);
+        self.set_frame_no(current_frame - 1);
     }
 }
 

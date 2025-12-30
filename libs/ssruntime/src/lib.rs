@@ -80,10 +80,6 @@ impl Context<'_> {
         self.track.get_end_frame_reached()
     }
 
-    pub fn track_setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
-        self.track.setup(start_frame, end_frame, fps);
-    }
-
     pub fn set_skip_frames(&mut self, skip: bool) {
         self.track.set_skip_frames(skip);
     }
@@ -128,8 +124,8 @@ impl Context<'_> {
         self.track.stop();
     }
 
-    pub fn set_frame(&mut self, frame: i32) {
-        self.track.set_frame(frame);
+    pub fn set_frame_no(&mut self, frame: i32) {
+        self.track.set_frame_no(frame);
     }
 
     pub fn next_frame(&mut self) {
