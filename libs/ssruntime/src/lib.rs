@@ -109,8 +109,8 @@ impl Context<'_> {
         self.track.set_animation_speed(speed_rate);
     }
 
-    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32, loops: i32) {
-        self.track.set_animation_section(start_frame, end_frame, loops);
+    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
+        self.track.set_animation_section(start_frame, end_frame);
     }
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {

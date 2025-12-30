@@ -142,10 +142,9 @@ impl TrackManager {
         self.update_interval = 1000.0 / (self.fps as f32 * self.fps_rate);
     }
 
-    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32, loops: i32) {
+    pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
         self.start_frame = if start_frame >= 0 && start_frame < self.anime_data_end_frame {start_frame} else {self.anime_data_start_frame};
         self.end_frame = if end_frame >= 0 && end_frame < self.anime_data_end_frame {end_frame} else {self.anime_data_end_frame};
-        self.set_loop(loops);
 
         self.current_frame = if self.playback_direction == PlaybackDirection::Forward {self.start_frame as f32} else {self.end_frame as f32}
     }
