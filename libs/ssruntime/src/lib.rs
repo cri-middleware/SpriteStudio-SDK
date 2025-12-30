@@ -65,6 +65,19 @@ impl Context<'_> {
         Some(self.fb.finished_data().to_vec())
     }
 
+    pub fn get_frame_data(&mut self, frame_no: i32) -> Option<Vec<u8>> {
+        let Some(animation) = self.animation else {
+            return None;
+        };
+        if !(animation.start_frame() as i32 <= frame_no && frame_no <= animation.end_frame() as i32) {
+            // invalid frame_no
+            return None;
+        }
+        self.fb.reset();
+        let offset = core::framedata::get_frame_data(&mut self.fb, &animation, frame_no);
+        self.fb.finish(offset, None);
+        Some(self.fb.finished_data().to_vec())
+    }
 
     // Track control
 
