@@ -75,7 +75,7 @@ impl Context<'_> {
         Some(self.fb.finished_data().to_vec())
     }
 
-    // Track control
+    // Frame Number getter functions
 
     pub fn get_frame_no(&self) -> i32 {
         self.track.get_frame_no()
@@ -88,6 +88,8 @@ impl Context<'_> {
     pub fn get_end_frame_reached(&self) -> bool {
         self.track.get_end_frame_reached()
     }
+
+    // Playback setup
 
     pub fn set_skip_frames(&mut self, skip: bool) {
         self.track.set_skip_frames(skip);
@@ -112,6 +114,8 @@ impl Context<'_> {
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
         self.track.set_animation_section(start_frame, end_frame);
     }
+
+    // Playback control
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
         self.track.update(delta)
