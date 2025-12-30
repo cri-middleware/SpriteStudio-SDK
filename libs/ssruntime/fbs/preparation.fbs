@@ -35,7 +35,7 @@ table  SsAttributePartColorKeyValueColor {
   rate: float;
 }
 
-enum BlendType : ubyte {
+enum BlendType: ubyte {
   Mix,
   Mul,
   Add,
