@@ -4202,11 +4202,11 @@ impl<'a> ::flatbuffers::Follow<'a> for EventsPerFrame<'a> {
 
 impl<'a> EventsPerFrame<'a> {
   pub const VT_FRAME_INDEX: ::flatbuffers::VOffsetT = 4;
-  pub const VT_USER: ::flatbuffers::VOffsetT = 6;
-  pub const VT_SIGNAL: ::flatbuffers::VOffsetT = 8;
-  pub const VT_AUDIO: ::flatbuffers::VOffsetT = 10;
-  pub const VT_INSTANCE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_EFFECT: ::flatbuffers::VOffsetT = 14;
+  pub const VT_USERS: ::flatbuffers::VOffsetT = 6;
+  pub const VT_SIGNALS: ::flatbuffers::VOffsetT = 8;
+  pub const VT_AUDIOS: ::flatbuffers::VOffsetT = 10;
+  pub const VT_INSTANCES: ::flatbuffers::VOffsetT = 12;
+  pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -4218,11 +4218,11 @@ impl<'a> EventsPerFrame<'a> {
     args: &'args EventsPerFrameArgs<'args>
   ) -> ::flatbuffers::WIPOffset<EventsPerFrame<'bldr>> {
     let mut builder = EventsPerFrameBuilder::new(_fbb);
-    if let Some(x) = args.effect { builder.add_effect(x); }
-    if let Some(x) = args.instance { builder.add_instance(x); }
-    if let Some(x) = args.audio { builder.add_audio(x); }
-    if let Some(x) = args.signal { builder.add_signal(x); }
-    if let Some(x) = args.user { builder.add_user(x); }
+    if let Some(x) = args.effects { builder.add_effects(x); }
+    if let Some(x) = args.instances { builder.add_instances(x); }
+    if let Some(x) = args.audios { builder.add_audios(x); }
+    if let Some(x) = args.signals { builder.add_signals(x); }
+    if let Some(x) = args.users { builder.add_users(x); }
     builder.add_frame_index(args.frame_index);
     builder.finish()
   }
@@ -4246,39 +4246,39 @@ impl<'a> EventsPerFrame<'a> {
     key.cmp(&val)
   }
   #[inline]
-  pub fn user(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventUserData<'a>>>> {
+  pub fn users(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventUserData<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventUserData>>>>(EventsPerFrame::VT_USER, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventUserData>>>>(EventsPerFrame::VT_USERS, None)}
   }
   #[inline]
-  pub fn signal(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventSignal<'a>>>> {
+  pub fn signals(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventSignal<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventSignal>>>>(EventsPerFrame::VT_SIGNAL, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventSignal>>>>(EventsPerFrame::VT_SIGNALS, None)}
   }
   #[inline]
-  pub fn audio(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventAudio<'a>>>> {
+  pub fn audios(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventAudio<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventAudio>>>>(EventsPerFrame::VT_AUDIO, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventAudio>>>>(EventsPerFrame::VT_AUDIOS, None)}
   }
   #[inline]
-  pub fn instance(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventInstance<'a>>>> {
+  pub fn instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventInstance<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventInstance>>>>(EventsPerFrame::VT_INSTANCE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventInstance>>>>(EventsPerFrame::VT_INSTANCES, None)}
   }
   #[inline]
-  pub fn effect(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventEffect<'a>>>> {
+  pub fn effects(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventEffect<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventEffect>>>>(EventsPerFrame::VT_EFFECT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventEffect>>>>(EventsPerFrame::VT_EFFECTS, None)}
   }
 }
 
@@ -4289,33 +4289,33 @@ impl ::flatbuffers::Verifiable for EventsPerFrame<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<u16>("frame_index", Self::VT_FRAME_INDEX, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventUserData>>>>("user", Self::VT_USER, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventSignal>>>>("signal", Self::VT_SIGNAL, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventAudio>>>>("audio", Self::VT_AUDIO, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventInstance>>>>("instance", Self::VT_INSTANCE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventEffect>>>>("effect", Self::VT_EFFECT, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventUserData>>>>("users", Self::VT_USERS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventSignal>>>>("signals", Self::VT_SIGNALS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventAudio>>>>("audios", Self::VT_AUDIOS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventInstance>>>>("instances", Self::VT_INSTANCES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventEffect>>>>("effects", Self::VT_EFFECTS, false)?
      .finish();
     Ok(())
   }
 }
 pub struct EventsPerFrameArgs<'a> {
     pub frame_index: u16,
-    pub user: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventUserData<'a>>>>>,
-    pub signal: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventSignal<'a>>>>>,
-    pub audio: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventAudio<'a>>>>>,
-    pub instance: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventInstance<'a>>>>>,
-    pub effect: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventEffect<'a>>>>>,
+    pub users: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventUserData<'a>>>>>,
+    pub signals: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventSignal<'a>>>>>,
+    pub audios: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventAudio<'a>>>>>,
+    pub instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventInstance<'a>>>>>,
+    pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventEffect<'a>>>>>,
 }
 impl<'a> Default for EventsPerFrameArgs<'a> {
   #[inline]
   fn default() -> Self {
     EventsPerFrameArgs {
       frame_index: 0,
-      user: None,
-      signal: None,
-      audio: None,
-      instance: None,
-      effect: None,
+      users: None,
+      signals: None,
+      audios: None,
+      instances: None,
+      effects: None,
     }
   }
 }
@@ -4330,24 +4330,24 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EventsPerFrameBuilder<'a, 'b,
     self.fbb_.push_slot::<u16>(EventsPerFrame::VT_FRAME_INDEX, frame_index, 0);
   }
   #[inline]
-  pub fn add_user(&mut self, user: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventUserData<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_USER, user);
+  pub fn add_users(&mut self, users: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventUserData<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_USERS, users);
   }
   #[inline]
-  pub fn add_signal(&mut self, signal: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventSignal<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_SIGNAL, signal);
+  pub fn add_signals(&mut self, signals: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventSignal<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_SIGNALS, signals);
   }
   #[inline]
-  pub fn add_audio(&mut self, audio: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventAudio<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_AUDIO, audio);
+  pub fn add_audios(&mut self, audios: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventAudio<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_AUDIOS, audios);
   }
   #[inline]
-  pub fn add_instance(&mut self, instance: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventInstance<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_INSTANCE, instance);
+  pub fn add_instances(&mut self, instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventInstance<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_INSTANCES, instances);
   }
   #[inline]
-  pub fn add_effect(&mut self, effect: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventEffect<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_EFFECT, effect);
+  pub fn add_effects(&mut self, effects: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventEffect<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EventsPerFrame::VT_EFFECTS, effects);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> EventsPerFrameBuilder<'a, 'b, A> {
@@ -4368,11 +4368,11 @@ impl ::core::fmt::Debug for EventsPerFrame<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("EventsPerFrame");
       ds.field("frame_index", &self.frame_index());
-      ds.field("user", &self.user());
-      ds.field("signal", &self.signal());
-      ds.field("audio", &self.audio());
-      ds.field("instance", &self.instance());
-      ds.field("effect", &self.effect());
+      ds.field("users", &self.users());
+      ds.field("signals", &self.signals());
+      ds.field("audios", &self.audios());
+      ds.field("instances", &self.instances());
+      ds.field("effects", &self.effects());
       ds.finish()
   }
 }

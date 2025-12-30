@@ -1,3 +1,3 @@
 mod framedata;
 pub mod initialize;
-mod preparation;
+pub mod preparation;

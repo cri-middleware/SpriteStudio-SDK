@@ -1,4 +1,3 @@
-use flatbuffers::{FlatBufferBuilder, ForwardsUOffset, Vector};
 use ssab::ssab::*;
 use crate::track_manager::track::{PlaybackDirection, PlaybackStyle};
 
@@ -25,7 +24,7 @@ impl Context<'_> {
         // validate version
         if ssab_buf.version() != SsAnimeBinaryArgs::default().version {
             // invalid ssab version
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid ssab version"))
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("invalid ssab version expected: {}, got: {}", SsAnimeBinaryArgs::default().version, ssab_buf.version())))
         }
 
         Ok(Context {
@@ -37,7 +36,10 @@ impl Context<'_> {
     }
 
     pub fn get_initialize_data(&mut self) -> Option<Vec<u8>> {
-        core::initialize::get_initialize_data(&mut self.fb, &self.ssab)
+        self.fb.reset();
+        let offset = core::initialize::get_initialize_data(&mut self.fb, &self.ssab);
+        self.fb.finish(offset, None);
+        Some(self.fb.finished_data().to_vec())
     }
 
     pub fn get_animation_names(&mut self) -> Option<Vec<String>> {
@@ -57,8 +59,12 @@ impl Context<'_> {
         self.track.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation = Some(animation);
 
-        Some(core::preparation::get_animation_preparation_data(&mut self.fb, &animation))
+        self.fb.reset();
+        let offset = core::preparation::get_animation_preparation_data(&mut self.fb, &animation);
+        self.fb.finish(offset, None);
+        Some(self.fb.finished_data().to_vec())
     }
+
 
     // Track control
 

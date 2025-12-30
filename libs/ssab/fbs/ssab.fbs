@@ -153,11 +153,11 @@ table EventEffect {
 table EventsPerFrame {
   frame_index: ushort (key);
 
-  user: [EventUserData];
-  signal: [EventSignal];
-  audio: [EventAudio];
-  instance: [EventInstance];
-  effect: [EventEffect];
+  users: [EventUserData];
+  signals: [EventSignal];
+  audios: [EventAudio];
+  instances: [EventInstance];
+  effects: [EventEffect];
 }
 
 table Cell {

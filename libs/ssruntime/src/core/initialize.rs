@@ -1,5 +1,4 @@
 use crate::runtime;
-use flatbuffers::{FlatBufferBuilder, ForwardsUOffset, Vector};
 
 fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, p: &flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartData>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::PartData<'a>>>> {
     let parts = p.iter().map(|part| {
@@ -131,7 +130,7 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, p: &flatbuffers::V
     fb.create_vector(&parts)
 }
 
-fn get_cells<'a>(fb: &mut FlatBufferBuilder<'a>, c: &Vector<'a, ForwardsUOffset<ssab::ssab::Cell>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::Cell<'a>>>> {
+fn get_cells<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, c: &flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::Cell>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::Cell<'a>>>> {
     let cells = c.iter().map(|cell| {
         let mut c_args = runtime::initialize::ss::runtime::CellArgs::default();
         c_args.name = Some(fb.create_string(cell.name()));
@@ -181,7 +180,7 @@ fn get_cellmaps<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, c: &flatbuffers
     fb.create_vector(&cellmaps)
 }
 
-fn get_effect_node_behavior<'a>(fb: &mut FlatBufferBuilder<'a>, b: &Vector<'a, ForwardsUOffset<ssab::ssab::EffectNodeBehaviorWrapper>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::EffectNodeBehaviorWrapper<'a>>>> {
+fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: &flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::EffectNodeBehaviorWrapper>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::EffectNodeBehaviorWrapper<'a>>>> {
     let behaviors = b.iter().map(|behavior| {
         let mut b_args = runtime::initialize::ss::runtime::EffectNodeBehaviorWrapperArgs::default();
         b_args.value_type = match behavior.value_type() {
@@ -385,7 +384,7 @@ fn get_effect_node<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, c: &flatbuff
     fb.create_vector(&effect_nodes)
 }
 
-fn get_effects<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, e: &Vector<'a, ForwardsUOffset<ssab::ssab::Effect>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::Effect<'a>>>> {
+fn get_effects<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, e: &flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::Effect>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::Effect<'a>>>> {
     let effects = e.iter().map(|effect| {
         let mut e_args = runtime::initialize::ss::runtime::EffectArgs::default();
         e_args.name = Some(fb.create_string(effect.name()));
@@ -401,7 +400,7 @@ fn get_effects<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, e: &Vector<'a, F
     fb.create_vector(&effects)
 }
 
-fn get_sound_lists<'a>(fb: &mut FlatBufferBuilder<'a>, s: &Vector<ForwardsUOffset<ssab::ssab::SoundList>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::SoundList<'a>>>> {
+fn get_sound_lists<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, s: &flatbuffers::Vector<flatbuffers::ForwardsUOffset<ssab::ssab::SoundList>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::SoundList<'a>>>> {
     let sound_lists = s.iter().map(|sound_list| {
         let mut s_args = runtime::initialize::ss::runtime::SoundListArgs::default();
         s_args.name = Some(fb.create_string(sound_list.name()));
@@ -421,7 +420,7 @@ fn get_sound_lists<'a>(fb: &mut FlatBufferBuilder<'a>, s: &Vector<ForwardsUOffse
     fb.create_vector(&sound_lists)
 }
 
-fn get_font_bitmaps<'a>(fb: &mut FlatBufferBuilder<'a>, f: &Vector<ForwardsUOffset<ssab::ssab::FontBitmap>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::FontBitmap<'a>>>> {
+fn get_font_bitmaps<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, f: &flatbuffers::Vector<flatbuffers::ForwardsUOffset<ssab::ssab::FontBitmap>>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<crate::runtime::initialize::ss::runtime::FontBitmap<'a>>>> {
     let font_bitmaps = f.iter().map(|font_bitmap| {
         let mut f_args = runtime::initialize::ss::runtime::FontBitmapArgs::default();
         f_args.name = Some(fb.create_string(font_bitmap.name()));
@@ -466,9 +465,7 @@ fn get_font_bitmaps<'a>(fb: &mut FlatBufferBuilder<'a>, f: &Vector<ForwardsUOffs
     fb.create_vector(&font_bitmaps)
 }
 
-pub fn get_initialize_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, ssab: &ssab::ssab::SsAnimeBinary<'a>) -> Option<Vec<u8>> {
-    fb.reset();
-
+pub fn get_initialize_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, ssab: &ssab::ssab::SsAnimeBinary<'a>) -> flatbuffers::WIPOffset<runtime::initialize::ss::runtime::InitData<'a>> {
     let mut args = runtime::initialize::ss::runtime::InitDataArgs::default();
     args.name = ssab.name().map(|name| fb.create_string(name));
     args.parts = ssab.parts().map(|p| get_parts(fb, &p));
@@ -483,9 +480,5 @@ pub fn get_initialize_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, ssab
         fb.create_vector(&v)
     });
 
-    let offset = runtime::initialize::ss::runtime::InitData::create(fb, &args);
-    fb.finish(offset, None);
-    let buf = fb.finished_data();
-
-    Some(buf.to_vec())
+    runtime::initialize::ss::runtime::InitData::create(fb, &args)
 }
