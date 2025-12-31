@@ -22,7 +22,7 @@ struct  SsAttributePartColorKeyValueColor {
   rate: float;
 }
 
-enum BlendType : ubyte {
+enum BlendType: ubyte {
   Mix,
   Mul,
   Add,
@@ -70,7 +70,7 @@ table PartAttributeShader {
   map1_name: string;
 }
 
-enum UpdateAttributeFlags : ulong (bit_flags) {
+enum UpdateAttributeFlags: ulong (bit_flags) {
   AttributeCell,
   AttributePosX,
   AttributePosY,
