@@ -271,7 +271,7 @@ table EffectNode {
 table Effect {
   name: string;
   fps: short;
-  is_lock_rand_seed: short;
+  is_lock_rand_seed: bool;
   lock_rand_seed: short;
   layout_scale: Vec2;
   effect_node: [EffectNode];

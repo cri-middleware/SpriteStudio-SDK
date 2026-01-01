@@ -5222,8 +5222,8 @@ impl<'a> Effect<'a> {
     if let Some(x) = args.layout_scale { builder.add_layout_scale(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_lock_rand_seed(args.lock_rand_seed);
-    builder.add_is_lock_rand_seed(args.is_lock_rand_seed);
     builder.add_fps(args.fps);
+    builder.add_is_lock_rand_seed(args.is_lock_rand_seed);
     builder.finish()
   }
 
@@ -5243,11 +5243,11 @@ impl<'a> Effect<'a> {
     unsafe { self._tab.get::<i16>(Effect::VT_FPS, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn is_lock_rand_seed(&self) -> i16 {
+  pub fn is_lock_rand_seed(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(Effect::VT_IS_LOCK_RAND_SEED, Some(0)).unwrap()}
+    unsafe { self._tab.get::<bool>(Effect::VT_IS_LOCK_RAND_SEED, Some(false)).unwrap()}
   }
   #[inline]
   pub fn lock_rand_seed(&self) -> i16 {
@@ -5280,7 +5280,7 @@ impl ::flatbuffers::Verifiable for Effect<'_> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<i16>("fps", Self::VT_FPS, false)?
-     .visit_field::<i16>("is_lock_rand_seed", Self::VT_IS_LOCK_RAND_SEED, false)?
+     .visit_field::<bool>("is_lock_rand_seed", Self::VT_IS_LOCK_RAND_SEED, false)?
      .visit_field::<i16>("lock_rand_seed", Self::VT_LOCK_RAND_SEED, false)?
      .visit_field::<Vec2>("layout_scale", Self::VT_LAYOUT_SCALE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EffectNode>>>>("effect_node", Self::VT_EFFECT_NODE, false)?
@@ -5291,7 +5291,7 @@ impl ::flatbuffers::Verifiable for Effect<'_> {
 pub struct EffectArgs<'a> {
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub fps: i16,
-    pub is_lock_rand_seed: i16,
+    pub is_lock_rand_seed: bool,
     pub lock_rand_seed: i16,
     pub layout_scale: Option<&'a Vec2>,
     pub effect_node: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EffectNode<'a>>>>>,
@@ -5302,7 +5302,7 @@ impl<'a> Default for EffectArgs<'a> {
     EffectArgs {
       name: None,
       fps: 0,
-      is_lock_rand_seed: 0,
+      is_lock_rand_seed: false,
       lock_rand_seed: 0,
       layout_scale: None,
       effect_node: None,
@@ -5324,8 +5324,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EffectBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<i16>(Effect::VT_FPS, fps, 0);
   }
   #[inline]
-  pub fn add_is_lock_rand_seed(&mut self, is_lock_rand_seed: i16) {
-    self.fbb_.push_slot::<i16>(Effect::VT_IS_LOCK_RAND_SEED, is_lock_rand_seed, 0);
+  pub fn add_is_lock_rand_seed(&mut self, is_lock_rand_seed: bool) {
+    self.fbb_.push_slot::<bool>(Effect::VT_IS_LOCK_RAND_SEED, is_lock_rand_seed, false);
   }
   #[inline]
   pub fn add_lock_rand_seed(&mut self, lock_rand_seed: i16) {
