@@ -1,0 +1,37 @@
+use crate::model_t;
+fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::CellT {
+    let mut cell_t = ssab::ssab::CellT::default();
+    cell_t.name = sscell.name.to_string();
+    cell_t.rectangle = Some(Box::new(model_t::common::convert_rectt(sscell.pos.x, sscell.pos.y, sscell.size.x, sscell.size.y, )));
+    cell_t.pivot = Some(Box::new(model_t::common::convert_vec2t(&sscell.pivot)));
+    cell_t.rotated = sscell.rotated;
+    cell_t.table_coordinate = if sscell.mesh_point_list.is_empty() { None } else { Some(model_t::common::convert_vec2t_list(&sscell.mesh_point_list)) };
+    cell_t.table_index_vertex = if sscell.mesh_tri_list.is_empty() { None } else { Some(model_t::common::convert_flat_list_from_vec3t_list(&sscell.mesh_tri_list)) };
+
+    cell_t
+}
+fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::CellT> {
+    cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<ssab::ssab::CellT>>()
+}
+
+fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap) -> ssab::ssab::CellMapT {
+    let mut cell_map_t = ssab::ssab::CellMapT::default();
+    cell_map_t.name = cellmap.name.to_string();
+    cell_map_t.image_path = if cellmap.image_path.is_empty() { None } else { Some(cellmap.image_path.to_string()) };
+    cell_map_t.size_original = Some(Box::new(model_t::common::convert_vec2t(&cellmap.pixel_size)));
+    cell_map_t.wrap_mode = match cellmap.wrap_mode {
+        sspj::sstypes::SsTexWrapMode::Clamp => ssab::ssab::TexWrapMode::Clamp,
+        sspj::sstypes::SsTexWrapMode::Repeat => ssab::ssab::TexWrapMode::Repeat,
+        sspj::sstypes::SsTexWrapMode::Mirror => ssab::ssab::TexWrapMode::Mirror,
+    };
+    cell_map_t.filter_mode = match cellmap.filter_mode {
+        sspj::sstypes::SsTexFilterMode::Nearest => ssab::ssab::TexFilterMode::Nearest,
+        sspj::sstypes::SsTexFilterMode::Linear => ssab::ssab::TexFilterMode::Linear,
+    };
+    cell_map_t.cells = if cellmap.cells.is_empty() { None } else { Some(convert_cellt_list(&cellmap.cells)) };
+
+    cell_map_t
+}
+pub fn convert_cellmapt_list(_sspj: &sspj::sspj::SsProject, cellmap_names: &[sspj::ssce::SsCellMap]) -> Vec<ssab::ssab::CellMapT> {
+    cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap)).collect::<Vec<ssab::ssab::CellMapT>>()
+}

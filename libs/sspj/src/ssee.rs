@@ -536,7 +536,7 @@ impl SsLoader for SsEffectFile {
             ssee.effect_data.layout_scale_y = 100;
         }
 
-        // TODO: create a tree
+        // TODO: impl create a tree
 
         Ok(ssee)
     }

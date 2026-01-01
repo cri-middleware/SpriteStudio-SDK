@@ -35,7 +35,7 @@ impl<'a> Context<'a> {
     pub fn get_initialize_data(&mut self) -> Option<Vec<u8>> {
         self.fb.reset();
         let offset = core::initialize::get_initialize_data(&mut self.fb, &self.ssab);
-        self.fb.finish(offset, None);
+        self.fb.finish_minimal(offset);
         Some(self.fb.finished_data().to_vec())
     }
 
@@ -52,7 +52,7 @@ impl<'a> Context<'a> {
 
         self.fb.reset();
         let offset = core::preparation::get_animation_preparation_data(&mut self.fb, &animation);
-        self.fb.finish(offset, None);
+        self.fb.finish_minimal(offset);
         Some(self.fb.finished_data().to_vec())
     }
 
@@ -66,7 +66,7 @@ impl<'a> Context<'a> {
         }
         self.fb.reset();
         let offset = core::framedata::get_frame_data(&mut self.fb, &animation, frame_no);
-        self.fb.finish(offset, None);
+        self.fb.finish_minimal(offset);
         Some(self.fb.finished_data().to_vec())
     }
 
