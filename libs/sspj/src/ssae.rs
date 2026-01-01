@@ -74,22 +74,28 @@ pub struct SsPart {
     pub ik_rotation_arrow: SsIkRotationArrow,
     // m_pPartValueInfo // TODO:
 
-    /*
     #[serde(default)]
     pub text: String,
     #[serde(default)]
     pub text_bitmap: bool,
     #[serde(default)]
     pub text_family: String,
-    </textCharMap>
-    16</textSize>
-    0</textSpace>
-    1</textSmooth>
-    0</textMask>
-    0</textWidth>
-    0</textHeight>
-    0</eAnchor>
-    */
+    #[serde(default)]
+    pub text_char_map: String,
+    #[serde(default)]
+    pub text_size: i32,
+    #[serde(default)]
+    pub text_space: f32,
+    #[serde(default)]
+    pub text_smooth: bool,
+    #[serde(default)]
+    pub text_mask: bool,
+    #[serde(default)]
+    pub text_width: i32,
+    #[serde(default)]
+    pub text_height: i32,
+    #[serde(default)]
+    pub e_anchor: i32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
