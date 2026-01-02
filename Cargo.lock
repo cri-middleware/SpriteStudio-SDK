@@ -440,6 +440,7 @@ name = "ssconverter3"
 version = "0.1.0"
 dependencies = [
  "flatbuffers",
+ "libc",
  "ordered-float",
  "rayon",
  "ssab",

@@ -5,25 +5,8 @@ mod model_t;
 pub mod utility;
 pub use converter::converter::*;
 
-/*
-use std::ffi::c_char;
-#[repr(C)]
-pub struct CConvertConfig {
-    pub debug: bool,
-    pub split: bool,
-}
-#[repr(C)]
-pub struct CConverterConfig {
-    convert_config: CConvertConfig,
-    out_dir: Option<OsString>,
-}
-#[repr(C)]
-pub struct CResultConvert {
-    pub name: *mut c_char,
-    pub data: *mut u8,
-    pub data_len: usize,
-}
- */
+#[cfg(not(target_arch = "wasm32"))]
+pub mod ffi;
 
 #[cfg(test)]
 mod tests {
