@@ -9,18 +9,13 @@ fn convert_sound_file_list(_sspj: &sspj::sspj::SsProject, sssound_list: &sspj::s
     }).collect::<Vec<ssab::ssab::SoundFileT>>()
 }
 
-pub fn convert_sound_list(sspj: &sspj::sspj::SsProject, sound_list: &[sspj::ssse::SsAudioPack], ) -> Option<Vec<ssab::ssab::SoundListT>> {
-    if sound_list.is_empty() {
-        return None;
-    }
-    Some(
-        sound_list.iter().map(|sssound_pack| {
-            let mut sound_list_t = ssab::ssab::SoundListT::default();
+pub fn convert_sound_list(sspj: &sspj::sspj::SsProject, sound_list: &[&sspj::ssse::SsAudioPack], ) -> Vec<ssab::ssab::SoundListT> {
+    sound_list.iter().map(|sssound_pack| {
+        let mut sound_list_t = ssab::ssab::SoundListT::default();
 
-            sound_list_t.name = sssound_pack.name.to_string();
-            sound_list_t.table_data = Some(convert_sound_file_list(sspj, &sssound_pack.table));
+        sound_list_t.name = sssound_pack.name.to_string();
+        sound_list_t.table_data = Some(convert_sound_file_list(sspj, &sssound_pack.table));
 
-            sound_list_t
-        }).collect::<Vec<ssab::ssab::SoundListT>>(),
-    )
+        sound_list_t
+    }).collect::<Vec<ssab::ssab::SoundListT>>()
 }

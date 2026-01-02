@@ -75,6 +75,11 @@ pub struct SsPart {
     // m_pPartValueInfo // TODO:
 
     #[serde(default)]
+    pub shape_type: SsShapeType,
+    #[serde(default)]
+    pub shape_mask: bool,
+
+    #[serde(default)]
     pub text: String,
     #[serde(default)]
     pub text_bitmap: bool,
@@ -96,6 +101,20 @@ pub struct SsPart {
     pub text_height: i32,
     #[serde(default)]
     pub e_anchor: i32,
+
+    #[serde(default)]
+    pub nines_margin_l: i32,
+    #[serde(default)]
+    pub nines_margin_r: i32,
+    #[serde(default)]
+    pub nines_margin_t: i32,
+    #[serde(default)]
+    pub nines_margin_b: i32,
+    #[serde(default)]
+    pub nines_fill_mode: i32,
+    #[serde(default)]
+    pub nines_mask: bool,
+
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
