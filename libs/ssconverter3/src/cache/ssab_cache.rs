@@ -331,7 +331,7 @@ impl<'a> SsabCache<'a> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.parts_initial_attributes = None;
+            args.parts_initial_attributes = None; // TODO; impl
             args.parts_animation_data = None; // TODO; impl
             args.parts_mesh_data = None; // TODO: impl
             args.events = animation_data_t.events.as_ref().map(|events| {
@@ -558,7 +558,7 @@ impl<'a> SsabCache<'a> {
                 let a = s.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
                 fb.create_vector(&a)
             });
-            args.table_data = None;
+            args.table_data = None; // TODO: implement
 
             ssab::ssab::FontBitmap::create(fb, &args)
         }).collect::<Vec<_>>();
