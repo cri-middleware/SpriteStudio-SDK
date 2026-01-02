@@ -1,6 +1,5 @@
-use std::ffi::{c_char, c_uchar, c_void, CStr, OsString};
-use std::path::{Path, PathBuf};
-use crate::{ConvertConfig, SspjLoader};
+use std::ffi::{c_char, CStr, OsString};
+use crate::{ConvertConfig};
 
 #[repr(C)]
 pub struct CConvertConfig {
