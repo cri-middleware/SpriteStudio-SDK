@@ -214,7 +214,7 @@ fn convert_effect_node_list(nodes: &Vec<sspj::ssee::SsEffectNode>) -> Vec<ssab::
     }).collect::<Vec<ssab::ssab::EffectNodeT>>()
 }
 
-pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[sspj::ssee::SsEffectFile], ) -> Vec<ssab::ssab::EffectT> {
+pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&sspj::ssee::SsEffectFile], ) -> Vec<ssab::ssab::EffectT> {
     effect_file_vec.iter().map(|effect_file| {
         let mut effect_t = ssab::ssab::EffectT::default();
         effect_t.name = effect_file.name.to_string();

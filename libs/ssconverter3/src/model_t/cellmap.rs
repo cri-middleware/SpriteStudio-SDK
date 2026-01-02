@@ -32,6 +32,6 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap) -> ssab::ssab::CellMapT {
 
     cell_map_t
 }
-pub fn convert_cellmapt_list(_sspj: &sspj::sspj::SsProject, cellmap_names: &[sspj::ssce::SsCellMap]) -> Vec<ssab::ssab::CellMapT> {
+pub fn convert_cellmapt_list(_sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap]) -> Vec<ssab::ssab::CellMapT> {
     cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap)).collect::<Vec<ssab::ssab::CellMapT>>()
 }

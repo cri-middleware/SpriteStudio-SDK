@@ -253,6 +253,13 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
+    fn create_shared_part_list(&self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, ps: &Vec<ssab::ssab::PartDataT>) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartData<'a>>>> {
+        let parts = ps.iter().map(|part| {
+            part.pack(fb) // TODO: implement shared cache
+        }).collect::<Vec<_>>();
+        fb.create_vector(&parts)
+    }
+
     fn create_animation_data_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation_data_t_vec: &[ssab::ssab::AnimationDataT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::AnimationData<'a>>>> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
@@ -401,6 +408,7 @@ impl<'a> SsabCache<'a> {
         let mut anime_binary_args = ssab::ssab::SsAnimeBinaryArgs::default();
 
         anime_binary_args.name = ss_anime_binary_t.name.as_ref().map(|s| fb.create_shared_string(s));
+        anime_binary_args.parts = ss_anime_binary_t.parts.as_ref().map(|parts| self.create_shared_part_list(fb, parts));
         anime_binary_args.animations = ss_anime_binary_t.animations.as_ref().map(|animations| self.create_animation_data_list(fb, animations));
         anime_binary_args.cellmaps = ss_anime_binary_t.cellmaps.as_ref().map(|cell_map| self.create_shared_cell_map(fb, cell_map));
         anime_binary_args.effects = ss_anime_binary_t.effects.as_ref().map(|effect| self.create_shared_effect_list(fb, effect));
