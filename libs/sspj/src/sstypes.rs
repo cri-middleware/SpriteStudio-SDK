@@ -270,6 +270,18 @@ pub enum SsRenderBlendType {
     Add,
 }
 
+#[derive(Deserialize, PartialEq, Default, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum SsShapeType {
+    #[default]
+    Unknown,
+    Triangle,
+    Rectangle,
+    Arrow,
+    Star,
+}
+
+
 #[derive(PartialEq, Default, Debug)]
 pub struct SsCurve {
     pub start_time: f32,
