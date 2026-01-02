@@ -16,7 +16,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     }).collect::<HashSet<String>>();
     let effect_file_list = using_effect_file_names.iter().filter_map(|using_effect_file_name| {
         sspj.effect_file_list.iter().find(|effect_file| effect_file.name == *using_effect_file_name).cloned()
-    }).collect::<Vec<sspj::ssee::SsEffectFile>>();
+    }).collect::<Vec<_>>();
     anime_binary.effects = if effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &effect_file_list)) };
 
     let effect_cellmap_names = effect_file_list.iter().flat_map(|f| &f.effect_data.node_list)
@@ -29,12 +29,10 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         model_t::sound::convert_sound_list(&sspj, &sspj.sound_list)
     };
 
-    /*
-    anime_pack.model.part_list.iter().filter(|part| part.part_type == SsPartType::Text)
-        .filter_map(|part| {
-            // TODO: ?
-            Some(part.array_index)
-        });
+
+    /* TODO: impl
+    anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Text).filter_map(|part| {
+    });
      */
     anime_binary.font_bitmaps = if sspj.charmap_dic.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &sspj.charmap_dic)) };
 

@@ -1,9 +1,8 @@
+mod animedata;
 mod cellmap;
 mod common;
 mod effect;
-
+mod font;
+mod sound;
 pub mod ssqbt;
 pub mod ssabt;
-mod sound;
-mod animedata;
-mod font;

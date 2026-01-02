@@ -198,7 +198,7 @@ fn convert_effect_node_list(nodes: &Vec<sspj::ssee::SsEffectNode>) -> Vec<ssab::
                     wrap.value = ssab::ssab::EffectNodeBehaviorT::EffectParticleTurnToDirectionEnabled(Box::new(behavior_t));
                     Some(wrap)
                 },
-                sspj::ssee::SsEffectFunctionType::InfiniteEmitEnabled(p) => {
+                sspj::ssee::SsEffectFunctionType::InfiniteEmitEnabled(_p) => {
                     let mut behavior_t = ssab::ssab::IntValueEntryT::default();
                     behavior_t.value = 1;
 
@@ -206,7 +206,6 @@ fn convert_effect_node_list(nodes: &Vec<sspj::ssee::SsEffectNode>) -> Vec<ssab::
                     wrap.value = ssab::ssab::EffectNodeBehaviorT::EffectParticleInfiniteEmitEnabled(Box::new(behavior_t));
                     Some(wrap)
                 },
-                _ => { None },
             }
         }).collect::<Vec<_>>();
         effect_node_t.behavior = if behavior_list.is_empty() { None } else { Some(behavior_list) };

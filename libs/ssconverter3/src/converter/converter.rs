@@ -36,10 +36,7 @@ impl SspjLoader {
     }
 }
 
-pub fn convert_sspj_to_ssab_data(
-    path: &Path,
-    config: &ConvertConfig,
-) -> Result<HashMap<String, Vec<u8>>, SspjError> {
+pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, SspjError> {
     let sspj_loader = SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,

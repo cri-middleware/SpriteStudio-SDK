@@ -13,7 +13,6 @@ walkdir = "2.5.0"
 ordered-float = "5.1.0"
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab", features = ["converter"] }
-ssanimator = { path = "../ssanimator" }
 
 [profile.release]
 lto = true
