@@ -1,4 +1,5 @@
 [workspace]
+resolver = "3"
 members = [
     "cli",
     "libs/ssconverter3",
@@ -13,3 +14,9 @@ ssconverter3 = { path = "libs/ssconverter3" }
 ssab = { path = "libs/ssab" }
 ssruntime = { path = "libs/ssruntime" }
 
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
