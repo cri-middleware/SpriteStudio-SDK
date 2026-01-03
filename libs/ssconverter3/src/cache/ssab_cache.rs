@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use flatbuffers::FlatBufferBuilder;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -139,6 +140,10 @@ pub struct SsabCache<'a> {
     pub cell_cache: HashMap<CellKey, flatbuffers::WIPOffset<ssab::ssab::Cell<'a>>>,
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::PartTypeNone<'a>>>,
+
+    pub part_animation_data_float_value_cache: HashMap<ssab::ssab::PartAnimationDataFloatValueT, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataFloatValue<'a>>>,
+    pub part_animation_data_int_value_cache: HashMap<ssab::ssab::PartAnimationDataIntValueT, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataIntValue<'a>>>,
+    pub part_animation_data_bool_value_cache: HashMap<ssab::ssab::PartAnimationDataBoolValueT, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataBoolValue<'a>>>,
 }
 impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
@@ -153,6 +158,10 @@ impl<'a> SsabCache<'a> {
             cell_cache: HashMap::new(),
 
             part_type_none_cache: HashMap::new(),
+
+            part_animation_data_float_value_cache: HashMap::new(),
+            part_animation_data_int_value_cache: HashMap::new(),
+            part_animation_data_bool_value_cache: HashMap::new(),
         }
     }
     fn create_shared_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec2t: &ssab::ssab::Vec2T) -> flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>> {
@@ -312,7 +321,7 @@ impl<'a> SsabCache<'a> {
         }
     }
 
-    fn create_shared_part_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, ps: &Vec<ssab::ssab::PartDataT>) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartData<'a>>>> {
+    fn create_shared_part_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, ps: &[ssab::ssab::PartDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartData<'a>>>> {
         let parts = ps.iter().map(|part| {
             let mut args = ssab::ssab::PartDataArgs::default();
             args.name = part.name.as_ref().map(|s| fb.create_shared_string(s));
@@ -325,6 +334,92 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::PartData::create(fb, &args)
         }).collect::<Vec<_>>();
         fb.create_vector(&parts)
+    }
+
+    fn create_shared_parts_animation_data(&mut self, fb: &mut FlatBufferBuilder<'a>, pa: &[ssab::ssab::PartAnimationDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData<'a>>>> {
+        let part_animation_data = pa.iter().map(|part_animation_data| {
+            let mut p_args = ssab::ssab::PartAnimationDataArgs::default();
+            p_args.cell_array = part_animation_data.cell_array.as_ref().map(|cell_array| {
+                let v = cell_array.iter().map(|cell| {
+                    let mut c_args = ssab::ssab::PartAnimationDataCellValueArgs::default();
+                    c_args.index = cell.index;
+                    c_args.value = cell.value.as_ref().map(|value| {
+                        let mut pc_args = ssab::ssab::PartAttributeCellArgs::default();
+                        pc_args.map_id = value.map_id;
+                        pc_args.name = value.name.as_ref().map(|name| fb.create_shared_string(name));
+
+                        ssab::ssab::PartAttributeCell::create(fb, &pc_args)
+                    });
+                    ssab::ssab::PartAnimationDataCellValue::create(fb, &c_args)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+
+            // TODO: implement
+            p_args.pos_x_array = part_animation_data.pos_x_array.as_ref().map(|pos_x_array| {
+                let v = pos_x_array.iter().map(|pos_x| {
+                    let mut p_args = ssab::ssab::PartAnimationDataFloatValueArgs::default();
+
+                    ssab::ssab::PartAnimationDataFloatValue::create(fb, &p_args)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            /*
+            p_args.pos_y_array = part_animation_data.pos;
+            p_args.pos_z_array = part_animation_data.;
+            p_args.rot_x_array = part_animation_data.;
+            p_args.rot_y_array = part_animation_data.;
+            p_args.rot_z_array = part_animation_data.;
+            p_args.scl_x_array = part_animation_data.;
+            p_args.scl_y_array = part_animation_data.;
+            p_args.loscl_x_array = part_animation_data.;
+            p_args.loscl_y_array = part_animation_data.;
+            p_args.alpha_array = part_animation_data.;
+            p_args.lo_alpha_array = part_animation_data.;
+            p_args.prio_array = part_animation_data.;
+            p_args.flip_h_array = part_animation_data.;
+            p_args.flip_v_array = part_animation_data.;
+            p_args.hide_array = part_animation_data.;
+            p_args.parts_color_array = part_animation_data.;
+            p_args.shader_array = part_animation_data.;
+            p_args.vertex_array = part_animation_data.;
+            p_args.pivot_x_array = part_animation_data.;
+            p_args.pivot_y_array = part_animation_data.;
+            p_args.anchor_x_array = part_animation_data.;
+            p_args.anchor_y_array = part_animation_data.;
+            p_args.size_x_array = part_animation_data.;
+            p_args.size_y_array = part_animation_data.;
+            p_args.img_flip_h_array = part_animation_data.;
+            p_args.img_flip_v_array = part_animation_data.;
+            p_args.uvt_x_array = part_animation_data.;
+            p_args.uvt_y_array = part_animation_data.;
+            p_args.uvr_z_array = part_animation_data.;
+            p_args.uvs_x_array = part_animation_data.;
+            p_args.uvs_y_array = part_animation_data.;
+            p_args.boundr_array = part_animation_data.;
+            p_args.mask_array = part_animation_data.;
+            p_args.skew_array = part_animation_data.;
+            p_args.deform_array = part_animation_data.;
+            p_args.texture_array = part_animation_data.;
+             */
+
+            ssab::ssab::PartAnimationData::create(fb, &p_args)
+        }).collect::<Vec<_>>();
+        fb.create_vector(&part_animation_data)
+    }
+
+    fn create_shared_parts_mesh_data(&mut self, fb: &mut FlatBufferBuilder<'a>, pm: &[ssab::ssab::PartMeshDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartMeshData<'a>>>> {
+        let part_mesh_data = pm.iter().map(|part| {
+            let mut p_args = ssab::ssab::PartMeshDataArgs::default();
+            p_args.part_index = part.part_index;
+            p_args.uv = part.uv.as_ref().map(|uv| fb.create_vector(uv));
+            p_args.indices = part.indices.as_ref().map(|indices| fb.create_vector(indices));
+            p_args.count_coordinate_mesh = part.count_coordinate_mesh;
+            p_args.index_coordinate_deform = part.index_coordinate_deform.as_ref().map(|index_coordinate_deform| fb.create_vector(index_coordinate_deform));
+
+            ssab::ssab::PartMeshData::create(fb, &p_args)
+        }).collect::<Vec<_>>();
+        fb.create_vector(&part_mesh_data)
     }
 
     fn create_shared_events_per_frame(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, es: &[ssab::ssab::EventsPerFrameT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::EventsPerFrame<'a>>>> {
@@ -440,9 +535,14 @@ impl<'a> SsabCache<'a> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.parts_initial_attributes = None; // TODO; impl
-            args.parts_animation_data = None; // TODO; impl
-            args.parts_mesh_data = None; // TODO: impl
+            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| {
+                let v = parts_initial_attributes.iter().map(|attribute| {
+                    attribute.pack(fb) // TODO: improve
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
+            args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
             args.events = animation_data_t.events.as_ref().map(|events| { self.create_shared_events_per_frame(fb, events) });
             args.labels = animation_data_t.labels.as_ref().map(|labels| {
                 let v = labels.iter().map(|label| {
@@ -661,7 +761,12 @@ impl<'a> SsabCache<'a> {
                 let a = s.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
                 fb.create_vector(&a)
             });
-            args.table_data = None; // TODO: implement
+            args.table_data = font_bitmap_t.table_data.as_ref().map(|table_data| {
+                let v = table_data.iter().map(|font| {
+                    font.pack(fb) // TODO: improve
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
 
             ssab::ssab::FontBitmap::create(fb, &args)
         }).collect::<Vec<_>>();
