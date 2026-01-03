@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use sspj::ssae::SsPart;
 use crate::model_t;
 
 
@@ -47,7 +48,8 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
     anime_binary.name = if anime_pack.name.is_empty() { None } else { Some(anime_pack.name.to_string()) };
     anime_binary.parts = if anime_pack.model.part_list.is_empty() { None } else { Some(model_t::animedata::convert_part_list(&anime_pack)) };
-    anime_binary.animations = if anime_pack.anime_list.is_empty() { None } else { Some(model_t::animedata::convert_animation_data_list(&anime_pack, &sspj)) };
+    let parts_map: HashMap<String, &sspj::ssae::SsPart> = anime_pack.model.part_list.iter().map(|part| (part.name.to_string(), part)).collect();
+    anime_binary.animations = if anime_pack.anime_list.is_empty() { None } else { Some(model_t::animedata::convert_animation_data_list(&anime_pack, &parts_map)) };
     anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps)) };
     anime_binary.effects = if using_effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &using_effect_file_list)) };
     anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list)) };

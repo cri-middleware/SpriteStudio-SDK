@@ -10,10 +10,15 @@ fn convert_animedata_labels(labels: &Vec<sspj::ssae::SsLabel>) -> Vec<ssab::ssab
     }).collect::<Vec<ssab::ssab::LabelT>>()
 }
 
-fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation) -> Option<Vec<ssab::ssab::EventsPerFrameT>> {
+fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Option<Vec<ssab::ssab::EventsPerFrameT>> {
     let mut events_per_frames = HashMap::<i32, ssab::ssab::EventsPerFrameT>::new();
+    for part_anime in &anime_data.part_animes {
+        let Some(p) = parts_map.get(&part_anime.part_name) else {
+            // not found part (an illegal case)
+            continue;
+        };
+        let part_index = p.array_index as i16;
 
-    anime_data.part_animes.iter().enumerate().for_each(|(part_index, part_anime)| {
         part_anime.attributes.iter().for_each(|attribute| {
             match attribute {
                 sspj::ssattribute::SsAttributeKind::User(v) => {
@@ -136,8 +141,8 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation) -> Option<Vec
                     // skip
                 },
             }
-        })
-    });
+        });
+    }
 
     if events_per_frames.is_empty() {
         None
@@ -148,14 +153,14 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation) -> Option<Vec
     }
 }
 
-fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation, sspj: &sspj::sspj::SsProject) -> ssab::ssab::AnimationDataT {
+fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> ssab::ssab::AnimationDataT {
     let mut anime_data_t = ssab::ssab::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
     // anime_data_t.parts_initial_attributes // TODO: impl
     // anime_data_t.parts_animation_data: Option<alloc::vec::Vec<PartAnimationDataT>> // TODO: impl
     // anime_data_t.parts_mesh_data: Option<alloc::vec::Vec<PartMeshDataT>> // TODO: impl
-    anime_data_t.events = convert_events_per_frames(&anime_data);
+    anime_data_t.events = convert_events_per_frames(&anime_data, parts_map);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
@@ -171,7 +176,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &s
     anime_data_t
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject) -> Vec<ssab::ssab::AnimationDataT> {
+pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::AnimationDataT> {
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
         return vec![];
@@ -181,7 +186,7 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, sspj: &
         if anime_data == setup_animation {
             return None;
         }
-        Some(convert_animedatat(anime_data, setup_animation, sspj))
+        Some(convert_animedatat(anime_data, setup_animation, parts_map))
     }).collect::<Vec<ssab::ssab::AnimationDataT>>()
 }
 
