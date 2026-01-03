@@ -324,14 +324,11 @@ pub struct SsAttributeMask {
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeUserKeyValue {
-    #[serde(default)]
-    integer: i32,
-    #[serde(default)]
-    point: SsPoint2,
-    #[serde(default)]
-    rect: SsIRect,
-    #[serde(rename = "string", default)]
-    user_string: String,
+    pub integer: Option<i32>,
+    pub point: Option<SsPoint2>,
+    pub rect: Option<SsIRect>,
+    #[serde(rename = "string")]
+    pub user_string: Option<String>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -422,17 +419,17 @@ pub struct SsAttributeSignal {
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeInstanceKeyValue {
     #[serde(default)]
-    infinity: bool,
+    pub infinity: bool,
     #[serde(default)]
-    pingpong: bool,
+    pub pingpong: bool,
     #[serde(default)]
-    independent: bool,
-    loop_num: i32,
-    start_label: String,
-    start_offset: i32,
-    end_label: String,
-    end_offset: i32,
-    speed: f32,
+    pub independent: bool,
+    pub loop_num: i32,
+    pub start_label: String,
+    pub start_offset: i32,
+    pub end_label: String,
+    pub end_offset: i32,
+    pub speed: f32,
 }
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -450,9 +447,9 @@ pub struct SsAttributeInstance {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeEffectKeyValue {
-    start_time: i32,
-    speed: f32,
-    independent: bool,
+    pub start_time: i32,
+    pub speed: f32,
+    pub independent: bool,
 }
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeEffectKey {

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use ssab::ssab::SignalCommandParamT;
 
 fn convert_animedata_labels(labels: &Vec<sspj::ssae::SsLabel>) -> Vec<ssab::ssab::LabelT> {
     labels.iter().map(|label| {
@@ -8,6 +10,144 @@ fn convert_animedata_labels(labels: &Vec<sspj::ssae::SsLabel>) -> Vec<ssab::ssab
     }).collect::<Vec<ssab::ssab::LabelT>>()
 }
 
+fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation) -> Option<Vec<ssab::ssab::EventsPerFrameT>> {
+    let mut events_per_frames = HashMap::<i32, ssab::ssab::EventsPerFrameT>::new();
+
+    anime_data.part_animes.iter().enumerate().for_each(|(part_index, part_anime)| {
+        part_anime.attributes.iter().for_each(|attribute| {
+            match attribute {
+                sspj::ssattribute::SsAttributeKind::User(v) => {
+                    v.keys.iter().for_each(|key|{
+                        let mut u_args = ssab::ssab::EventUserDataT::default();
+                        u_args.part_index = part_index as u16;
+                        let mut userdata = ssab::ssab::PartAttributeUserDataT::default();
+                        userdata.integer = key.value.integer.as_ref().map(|v| {
+                            let mut i = ssab::ssab::IntValueEntryT::default(); i.value = *v;
+                            Box::new(i)
+                        });
+                        userdata.rect = key.value.rect.as_ref().map(|v| {
+                            let mut r = ssab::ssab::RectT::default();
+                            r.x1 = v.x1 as f32;
+                            r.x2 = v.x2 as f32;
+                            r.y1 = v.y1 as f32;
+                            r.y2 = v.y2 as f32;
+                            Box::new(r)
+                        });
+                        userdata.point = key.value.point.as_ref().map(|v| {
+                            let mut p = ssab::ssab::Vec2T::default();
+                            p.v1 = v.x;
+                            p.v2 = v.y;
+                            Box::new(p)
+                        });
+                        userdata.str = key.value.user_string.as_ref().map(|v| v.to_string());
+                        u_args.value = Some(Box::new(userdata));
+
+                        let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
+                            let mut e = ssab::ssab::EventsPerFrameT::default();
+                            e.frame_index = key.time as u16;
+                            e
+                        });
+                        events_per_frame.users.get_or_insert_with(Vec::new).push(u_args);
+                    });
+                },
+                sspj::ssattribute::SsAttributeKind::Signal(v) => {
+                    // TODO: implement
+                    /*
+                    v.keys.iter().for_each(|key| {
+                        let mut s_args = ssab::ssab::EventSignalT::default();
+                        s_args.part_index = part_index as u16;
+                        let mut s = ssab::ssab::PartAttributeSignalT::default();
+                        s.active = key.value.commands.is_empty();
+                        s.command_id;
+                        s.params;
+                        s_args.value = Some(Box::new(s));
+
+                        let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
+                            let mut e = ssab::ssab::EventsPerFrameT::default();
+                            e.frame_index = key.time as u16;
+                            e
+                        });
+                        events_per_frame.signals.get_or_insert_with(Vec::new).push(s_args);
+                    });
+                     */
+                },
+                sspj::ssattribute::SsAttributeKind::Instance(v) => {
+                    v.keys.iter().for_each(|key| {
+                        let mut i_args = ssab::ssab::EventInstanceT::default();
+                        i_args.part_index = part_index as u16;
+                        let mut instance_t = ssab::ssab::PartAttributeInstanceT::default();
+                        instance_t.pingpong = key.value.pingpong;
+                        instance_t.independent = key.value.independent;
+                        instance_t.loop_num = key.value.loop_num;
+                        instance_t.start_label = Some(key.value.start_label.to_string());
+                        instance_t.start_offset = key.value.start_offset;
+                        instance_t.end_label = Some(key.value.end_label.to_string());
+                        instance_t.end_offset = key.value.end_offset;
+                        instance_t.speed = key.value.speed;
+                        i_args.value = Some(Box::new(instance_t));
+
+                        let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
+                            let mut e = ssab::ssab::EventsPerFrameT::default();
+                            e.frame_index = key.time as u16;
+                            e
+                        });
+                        events_per_frame.instances.get_or_insert_with(Vec::new).push(i_args);
+
+                    });
+                },
+                sspj::ssattribute::SsAttributeKind::Effect(v) => {
+                    v.keys.iter().for_each(|key| {
+                        let mut e_args = ssab::ssab::EventEffectT::default();
+                        e_args.part_index = part_index as u16;
+                        let mut effect_t = ssab::ssab::PartAttributeEffectT::default();
+                        effect_t.cur_keyframe; // TODO: implement
+                        effect_t.start_time = key.value.start_time;
+                        effect_t.speed = key.value.speed;
+                        effect_t.loopflag; // TODO: implement
+                        e_args.value = Some(Box::new(effect_t));
+
+                        let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
+                            let mut e = ssab::ssab::EventsPerFrameT::default();
+                            e.frame_index = key.time as u16;
+                            e
+                        });
+                        events_per_frame.effects.get_or_insert_with(Vec::new).push(e_args);
+                    });
+                },
+                sspj::ssattribute::SsAttributeKind::Audio(v) => {
+                    v.keys.iter().for_each(|key| {
+                        let mut a_args = ssab::ssab::EventAudioT::default();
+                        a_args.part_index = part_index as u16;
+                        let mut audio_t = ssab::ssab::PartAttributeAudioT::default();
+                        audio_t.sound_list_id = key.value.sound_list_id;
+                        audio_t.sound_name = Some(key.value.sound_name.to_string());
+                        audio_t.loop_num = key.value.loop_num;
+                        a_args.value = Some(Box::new(audio_t));
+
+                        let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
+                            let mut e = ssab::ssab::EventsPerFrameT::default();
+                            e.frame_index = key.time as u16;
+                            e
+                        });
+                        events_per_frame.audios.get_or_insert_with(Vec::new).push(a_args);
+                    });
+                },
+                _ => {
+                    // skip
+                },
+            }
+        })
+    });
+
+    if events_per_frames.is_empty() {
+        None
+    } else {
+        let mut vec_map: Vec<(i32, ssab::ssab::EventsPerFrameT)> = events_per_frames.into_iter().collect();
+        vec_map.sort_by(|a, b| a.0.cmp(&b.0));
+        Some(vec_map.into_iter().map(|(_, v)| v).collect::<Vec<ssab::ssab::EventsPerFrameT>>())
+    }
+}
+
 fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation, sspj: &sspj::sspj::SsProject) -> ssab::ssab::AnimationDataT {
     let mut anime_data_t = ssab::ssab::AnimationDataT::default();
 
@@ -15,7 +155,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &s
     // anime_data_t.parts_initial_attributes // TODO: impl
     // anime_data_t.parts_animation_data: Option<alloc::vec::Vec<PartAnimationDataT>> // TODO: impl
     // anime_data_t.parts_mesh_data: Option<alloc::vec::Vec<PartMeshDataT>> // TODO: impl
-    // anime_data_t.events: Option<alloc::vec::Vec<EventsPerFrameT>> // TODO: impl
+    anime_data_t.events = convert_events_per_frames(&anime_data);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;

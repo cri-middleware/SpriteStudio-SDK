@@ -10,9 +10,3 @@ flatbuffers = { version = "25.12.19", features = ["default"] }
 default = []
 converter = []
 
-[profile.release]
-lto = true
-opt-level = 3
-codegen-units = 1
-panic = "abort"
-strip = "symbols"

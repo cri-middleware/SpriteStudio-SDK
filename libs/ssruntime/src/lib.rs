@@ -1,12 +1,16 @@
 mod runtime;
+pub mod core;
 
-mod core;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod ffi;
+
+// #[cfg(target_arch = "wasm32")]
+// pub mod wasm;
 
 pub struct Context<'a> {
     pub ssab: ssab::ssab::SsAnimeBinary<'a>,
     pub track: core::track_manager::TrackManager,
     pub fb: flatbuffers::FlatBufferBuilder<'a>,
-    // AnimationData<'a> はそれ自体が参照のようなものなので、& をつける必要はありません
     pub animation: Option<ssab::ssab::AnimationData<'a>>,
 }
 

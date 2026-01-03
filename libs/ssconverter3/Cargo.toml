@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["rlib", "staticlib"]
+crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
 flatbuffers = "25.12.19"
@@ -14,9 +14,7 @@ ordered-float = "5.1.0"
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab", features = ["converter"] }
 
-[profile.release]
-lto = true
-opt-level = 3
-codegen-units = 1
-panic = "abort"
-strip = "symbols"
+
+# ffi
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libc = "0.2.178"

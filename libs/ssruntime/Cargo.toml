@@ -10,9 +10,14 @@ ssab = { path = "../ssab", features = ["default"] }
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 
-[profile.release]
-lto = true
-opt-level = 3
-codegen-units = 1
-panic = "abort"
-strip = "symbols"
+
+# wasm32
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# wasm-bindgen = "0.2.106"
+
+# ffi
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libc = "0.2.178"
+
+[build-dependencies]
+cbindgen = "0.29.2"
