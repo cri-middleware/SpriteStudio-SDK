@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use ssab::ssab::SignalCommandParamT;
 
 fn convert_animedata_labels(labels: &Vec<sspj::ssae::SsLabel>) -> Vec<ssab::ssab::LabelT> {
     labels.iter().map(|label| {
@@ -17,14 +16,14 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
             // not found part (an illegal case)
             continue;
         };
-        let part_index = p.array_index as i16;
+        let part_index = p.array_index as u16;
 
         part_anime.attributes.iter().for_each(|attribute| {
             match attribute {
                 sspj::ssattribute::SsAttributeKind::User(v) => {
                     v.keys.iter().for_each(|key|{
                         let mut u_args = ssab::ssab::EventUserDataT::default();
-                        u_args.part_index = part_index as u16;
+                        u_args.part_index = part_index;
                         let mut userdata = ssab::ssab::PartAttributeUserDataT::default();
                         userdata.integer = key.value.integer.as_ref().map(|v| {
                             let mut i = ssab::ssab::IntValueEntryT::default(); i.value = *v;
@@ -56,30 +55,44 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Signal(v) => {
-                    // TODO: implement
-                    /*
                     v.keys.iter().for_each(|key| {
-                        let mut s_args = ssab::ssab::EventSignalT::default();
-                        s_args.part_index = part_index as u16;
-                        let mut s = ssab::ssab::PartAttributeSignalT::default();
-                        s.active = key.value.commands.is_empty();
-                        s.command_id;
-                        s.params;
-                        s_args.value = Some(Box::new(s));
+                        key.value.commands.iter().for_each(|command| {
+                            let mut s_args = ssab::ssab::EventSignalT::default();
+                            s_args.part_index = part_index;
+                            let mut s = ssab::ssab::PartAttributeSignalT::default();
+                            s.active = command.active;
+                            s.command_id = Some(command.command_id.to_string());
+                            s.params = if command.params.is_empty() { None } else {
+                                let v = command.params.iter().map(|v| {
+                                    let mut command_param_t = ssab::ssab::SignalCommandParamT::default();
+                                    command_param_t.param_id = Some(v.param_id.to_string());
+                                    command_param_t.type_ = match v.param_type {
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::SignalCommandParamType::Index,
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::SignalCommandParamType::Integer,
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::SignalCommandParamType::Floating,
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::None => ssab::ssab::SignalCommandParamType::None,
+                                    };
+                                    command_param_t.value = v.value;
 
-                        let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
-                            let mut e = ssab::ssab::EventsPerFrameT::default();
-                            e.frame_index = key.time as u16;
-                            e
+                                    command_param_t
+                                }).collect::<Vec<_>>();
+                                Some(v)
+                            };
+                            s_args.value = Some(Box::new(s));
+
+                            let events_per_frame = events_per_frames.entry(key.time).or_insert_with(|| {
+                                let mut e = ssab::ssab::EventsPerFrameT::default();
+                                e.frame_index = key.time as u16;
+                                e
+                            });
+                            events_per_frame.signals.get_or_insert_with(Vec::new).push(s_args);
                         });
-                        events_per_frame.signals.get_or_insert_with(Vec::new).push(s_args);
                     });
-                     */
                 },
                 sspj::ssattribute::SsAttributeKind::Instance(v) => {
                     v.keys.iter().for_each(|key| {
                         let mut i_args = ssab::ssab::EventInstanceT::default();
-                        i_args.part_index = part_index as u16;
+                        i_args.part_index = part_index;
                         let mut instance_t = ssab::ssab::PartAttributeInstanceT::default();
                         instance_t.pingpong = key.value.pingpong;
                         instance_t.independent = key.value.independent;
@@ -103,7 +116,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                 sspj::ssattribute::SsAttributeKind::Effect(v) => {
                     v.keys.iter().for_each(|key| {
                         let mut e_args = ssab::ssab::EventEffectT::default();
-                        e_args.part_index = part_index as u16;
+                        e_args.part_index = part_index;
                         let mut effect_t = ssab::ssab::PartAttributeEffectT::default();
                         effect_t.cur_keyframe; // TODO: implement
                         effect_t.start_time = key.value.start_time;
@@ -122,7 +135,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                 sspj::ssattribute::SsAttributeKind::Audio(v) => {
                     v.keys.iter().for_each(|key| {
                         let mut a_args = ssab::ssab::EventAudioT::default();
-                        a_args.part_index = part_index as u16;
+                        a_args.part_index = part_index;
                         let mut audio_t = ssab::ssab::PartAttributeAudioT::default();
                         audio_t.sound_list_id = key.value.sound_list_id;
                         audio_t.sound_name = Some(key.value.sound_name.to_string());
