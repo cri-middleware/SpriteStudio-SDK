@@ -203,8 +203,8 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
             ssab::ssab::EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleInfiniteEmitEnabled,
             _ => runtime::initialize::ss::runtime::EffectNodeBehavior::NONE,
         };
-        b_args.value = match b_args.value_type.clone() {
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementBasic => {
+        b_args.value = match behavior.value_type() {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementBasic => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticleElementBasicArgs::default();
                 let value = behavior.value_as_effect_particle_element_basic().unwrap();
                 e_args.priority = value.priority();
@@ -221,21 +221,21 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::EffectParticleElementBasic::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementRndSeedChange => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementRndSeedChange => {
                 let mut e_args = runtime::initialize::ss::runtime::IntValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_rnd_seed_change().unwrap();
                 e_args.value = value.value();
                 let e = runtime::initialize::ss::runtime::IntValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementDelay => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementDelay => {
                 let mut e_args = runtime::initialize::ss::runtime::IntValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_delay().unwrap();
                 e_args.value = value.value();
                 let e = runtime::initialize::ss::runtime::IntValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementGravity => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementGravity => {
                 let mut e_args = runtime::initialize::ss::runtime::Vec2ValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_gravity().unwrap();
                 let v = value.value().map(|v| runtime::initialize::ss::runtime::Vec2::new(v.v1(), v.v2()));
@@ -243,7 +243,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::Vec2ValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementPosition => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementPosition => {
                 let mut e_args = runtime::initialize::ss::runtime::RectValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_position().unwrap();
                 let v = value.value().map(|r| runtime::initialize::ss::runtime::Rect::new(r.x1(), r.y1(), r.x2(), r.y2()));
@@ -251,7 +251,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::RectValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementRotation => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementRotation => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticleElementRotationArgs::default();
                 let value = behavior.value_as_effect_particle_element_rotation().unwrap();
                 let rotation_value = value.rotation_value().map(|v| runtime::initialize::ss::runtime::Vec2::new(v.v1(), v.v2()));
@@ -261,7 +261,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::EffectParticleElementRotation::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementRotationTrans => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementRotationTrans => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticleElementRotationTransArgs::default();
                 let value = behavior.value_as_effect_particle_element_rotation_trans().unwrap();
                 e_args.rotation_factor = value.rotation_factor();
@@ -269,7 +269,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::EffectParticleElementRotationTrans::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementTransSpeed => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementTransSpeed => {
                 let mut e_args = runtime::initialize::ss::runtime::Vec2ValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_trans_speed().unwrap();
                 let v = value.value().map(|v| runtime::initialize::ss::runtime::Vec2::new(v.v1(), v.v2()));
@@ -277,7 +277,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::Vec2ValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementTangentialAcceleration => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementTangentialAcceleration => {
                 let mut e_args = runtime::initialize::ss::runtime::Vec2ValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_tangential_acceleration().unwrap();
                 let v = value.value().map(|v| runtime::initialize::ss::runtime::Vec2::new(v.v1(), v.v2()));
@@ -285,7 +285,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::Vec2ValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementInitColor => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementInitColor => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticleElementInitColorArgs::default();
                 let value = behavior.value_as_effect_particle_element_init_color().unwrap();
                 e_args.color_min_value = value.color_min_value();
@@ -293,7 +293,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::EffectParticleElementInitColor::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementTransColor => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementTransColor => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticleElementTransColorArgs::default();
                 let value = behavior.value_as_effect_particle_element_trans_color().unwrap();
                 e_args.color_min_value = value.color_min_value();
@@ -301,7 +301,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::EffectParticleElementTransColor::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementAlphaFade => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementAlphaFade => {
                 let mut e_args = runtime::initialize::ss::runtime::Vec2ValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_element_alpha_fade().unwrap();
                 let v = value.value().map(|v| runtime::initialize::ss::runtime::Vec2::new(v.v1(), v.v2()));
@@ -309,7 +309,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::Vec2ValueEntry::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementSize => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementSize => {
                 let mut e_args = runtime::initialize::ss::runtime::RectAndVec2ValueTableArgs::default();
                 let value = behavior.value_as_effect_particle_element_size().unwrap();
                 let size = value.size().map(|r| runtime::initialize::ss::runtime::Rect::new(r.x1(), r.y1(), r.x2(), r.y2()));
@@ -319,7 +319,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::RectAndVec2ValueTable::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementTransSize => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleElementTransSize => {
                 let mut e_args = runtime::initialize::ss::runtime::RectAndVec2ValueTableArgs::default();
                 let value = behavior.value_as_effect_particle_element_trans_size().unwrap();
                 let size = value.size().map(|r| runtime::initialize::ss::runtime::Rect::new(r.x1(), r.y1(), r.x2(), r.y2()));
@@ -329,7 +329,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::RectAndVec2ValueTable::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticlePointGravity => {
+            ssab::ssab::EffectNodeBehavior::EffectParticlePointGravity => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticlePointGravityArgs::default();
                 let value = behavior.value_as_effect_particle_point_gravity().unwrap();
                 let position = value.position().map(|p| runtime::initialize::ss::runtime::Vec2::new(p.v1(), p.v2()));
@@ -338,14 +338,14 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
                 let e = runtime::initialize::ss::runtime::EffectParticlePointGravity::create(fb, &e_args);
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleTurnToDirectionEnabled => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleTurnToDirectionEnabled => {
                 let mut e_args = runtime::initialize::ss::runtime::FloatValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_turn_to_direction_enabled().unwrap();
                 e_args.value = value.value();
                 let e = runtime::initialize::ss::runtime::FloatValueEntry::create(fb, &e_args).as_union_value();
                 Some(e.as_union_value())
             },
-            runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => {
+            ssab::ssab::EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => {
                 let mut e_args = runtime::initialize::ss::runtime::IntValueEntryArgs::default();
                 let value = behavior.value_as_effect_particle_infinite_emit_enabled().unwrap();
                 e_args.value = value.value();
