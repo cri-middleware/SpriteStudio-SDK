@@ -201,7 +201,7 @@ fn split_ignoring_quotes(delimiter: char, s: &str) -> Vec<String> {
     let mut in_quote = false;
 
     for c in s.chars() {
-        match c {
+        match &c {
             '"' => {
                 in_quote = !in_quote;
                 current_part.push(c); // Include the quote in the part
@@ -235,7 +235,7 @@ mod tests {
 
     fn load_ssfnt(path: &Path) {
         let r = SsCharMap::load_from_file(path);
-        match r {
+        match &r {
             Ok(ss_char_map) => {
                 println!("{:?}", ss_char_map);
                 assert!(true);

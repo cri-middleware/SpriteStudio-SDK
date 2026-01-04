@@ -1,12 +1,12 @@
 pub enum PlaybackStyle {
-    Normal,
-    PingPong,
+    Normal = 0,
+    PingPong = 1,
 }
 
 #[derive(PartialEq, Eq)]
 pub enum PlaybackDirection {
-    Forward,
-    Backward,
+    Forward = 1,
+    Backward = -1,
 }
 
 pub struct TrackManager {
@@ -182,7 +182,7 @@ impl TrackManager {
                     };
 
                     if is_reached {
-                        match self.playback_style {
+                        match &self.playback_style {
                             PlaybackStyle::Normal => {
                                 if self.loops == -1 {
                                     // infinite loop
@@ -206,7 +206,7 @@ impl TrackManager {
                                 self.playback_forward *= -1;
                                 frame_no = current_frame_no + self.playback_forward;
 
-                                let is_back_to_origin = match self.playback_direction {
+                                let is_back_to_origin = match &self.playback_direction {
                                     PlaybackDirection::Forward => self.playback_forward == 1,
                                     PlaybackDirection::Backward => self.playback_forward == -1,
                                 };

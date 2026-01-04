@@ -9,7 +9,7 @@ fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssq
                 let mut sequence_t = ssab::ssqb::SequenceT::default();
                 sequence_t.name = sequence.name.clone();
                 sequence_t.index = sequence.index;
-                sequence_t.type_ = match sequence.sequence_type {
+                sequence_t.type_ = match &sequence.sequence_type {
                     sspj::sstypes::SsSequenceType::Last => ssab::ssqb::SequenceType::Last,
                     sspj::sstypes::SsSequenceType::Keep => ssab::ssqb::SequenceType::Keep,
                     sspj::sstypes::SsSequenceType::Top => ssab::ssqb::SequenceType::Top,

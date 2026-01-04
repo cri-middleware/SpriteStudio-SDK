@@ -66,7 +66,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                                 let v = command.params.iter().map(|v| {
                                     let mut command_param_t = ssab::ssab::SignalCommandParamT::default();
                                     command_param_t.param_id = Some(v.param_id.to_string());
-                                    command_param_t.type_ = match v.param_type {
+                                    command_param_t.type_ = match &v.param_type {
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::SignalCommandParamType::Index,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::SignalCommandParamType::Integer,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::SignalCommandParamType::Floating,
@@ -599,7 +599,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         let mut part_data_t = ssab::ssab::PartDataT::default();
         part_data_t.name = Some(part.name.to_string());
         part_data_t.parent_index = part.parent_index as i16;
-        part_data_t.bounds_type = match part.bounds_type {
+        part_data_t.bounds_type = match &part.bounds_type {
             sspj::sstypes::SsBoundsType::None => ssab::ssab::BoundsType::None,
             sspj::sstypes::SsBoundsType::Quad => ssab::ssab::BoundsType::Quad,
             sspj::sstypes::SsBoundsType::Aabb => ssab::ssab::BoundsType::Aabb,
@@ -607,7 +607,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::BoundsType::Circle,
             sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::BoundsType::Circle,
         };
-        part_data_t.blend_type = match part.alpha_blend_type {
+        part_data_t.blend_type = match &part.alpha_blend_type {
             sspj::sstypes::SsBlendType::Mix => ssab::ssab::BlendType::Mix,
             sspj::sstypes::SsBlendType::Mul => ssab::ssab::BlendType::Mul,
             sspj::sstypes::SsBlendType::Add => ssab::ssab::BlendType::Add,
@@ -617,12 +617,12 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             sspj::sstypes::SsBlendType::Exclusion => ssab::ssab::BlendType::Exclusion,
             sspj::sstypes::SsBlendType::Invert => ssab::ssab::BlendType::Invert,
         };
-        part_data_t.part_type = match part.part_type {
+        part_data_t.part_type = match &part.part_type {
             sspj::sstypes::SsPartType::Null => ssab::ssab::PartTypeT::PartTypeNull(Box::new(ssab::ssab::PartTypeNoneT::default())),
             sspj::sstypes::SsPartType::Normal => ssab::ssab::PartTypeT::PartTypeNormal(Box::new(ssab::ssab::PartTypeNoneT::default())),
             sspj::sstypes::SsPartType::Shape => {
                 let mut part_type = ssab::ssab::PartTypeShapeT::default();
-                part_type.shape_type = match part.shape_type {
+                part_type.shape_type = match &part.shape_type {
                     sspj::sstypes::SsShapeType::Unknown => ssab::ssab::ShapeType::Unknown,
                     sspj::sstypes::SsShapeType::Triangle => ssab::ssab::ShapeType::Triangle,
                     sspj::sstypes::SsShapeType::Rectangle => ssab::ssab::ShapeType::Rectangle,
@@ -645,7 +645,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 part_type.text_mask = part.text_mask;
                 part_type.text_width = part.text_width;
                 part_type.text_height = part.text_height;
-                part_type.e_anchor = match part.e_anchor {
+                part_type.e_anchor = match &part.e_anchor {
                     0  => ssab::ssab::TextAnchor::LT,
                     1  => ssab::ssab::TextAnchor::LC,
                     2  => ssab::ssab::TextAnchor::LB,
