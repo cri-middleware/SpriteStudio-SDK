@@ -24,6 +24,15 @@ pub struct SsAttributeCell {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
+pub struct SsAttributeBoolKey {
+    #[serde(rename = "@time")]
+    pub time: i32,
+    #[serde(rename = "value")]
+    pub value: bool,
+}
+
+
+#[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeFloatKey {
     #[serde(rename = "@time")]
     pub time: i32,
@@ -105,19 +114,19 @@ pub struct SsAttributePrio {
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeFlipH {
     #[serde(rename = "key")]
-    pub keys: Vec<SsAttributeFloatKey>,
+    pub keys: Vec<SsAttributeBoolKey>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeFlipV {
     #[serde(rename = "key")]
-    pub keys: Vec<SsAttributeFloatKey>,
+    pub keys: Vec<SsAttributeBoolKey>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeHide {
     #[serde(rename = "key")]
-    pub keys: Vec<SsAttributeFloatKey>,
+    pub keys: Vec<SsAttributeBoolKey>,
 }
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
@@ -271,13 +280,13 @@ pub struct SsAttributeSizeY {
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeImgFlipH {
     #[serde(rename = "key")]
-    pub keys: Vec<SsAttributeFloatKey>,
+    pub keys: Vec<SsAttributeBoolKey>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeImgFlipV {
     #[serde(rename = "key")]
-    pub keys: Vec<SsAttributeFloatKey>,
+    pub keys: Vec<SsAttributeBoolKey>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -464,17 +473,17 @@ pub struct SsAttributeEffect {
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
-struct SsDeformValue {
-    x_index: f32,
-    x: f32,
-    y: f32,
+pub struct SsDeformValue {
+    pub x_index: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeDeformKeyValue {
-    vsize: i32,
+    pub vsize: i32,
     #[serde(deserialize_with = "parse_ss_point3_list")]
-    vchg: Vec<SsDeformValue>, // TODO: fix changing from String to SsMeshBindInfo
+    pub vchg: Vec<SsDeformValue>, // TODO: fix changing from String to SsMeshBindInfo
 }
 fn parse_ss_point3_list<'de, D>(deserializer: D) -> Result<Vec<SsDeformValue>, D::Error>
 where
