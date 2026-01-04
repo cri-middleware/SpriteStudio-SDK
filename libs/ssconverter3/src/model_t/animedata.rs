@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use ssab::ssab::{InterpolationType, PartAnimationDataFloatValueT, PartAttributeDeformT, Vec2T};
-use sspj::ssattribute::{SsAttributeAlpha, SsAttributeAnchorX, SsAttributeAnchorY, SsAttributeAudio, SsAttributeBoundr, SsAttributeCell, SsAttributeDeform, SsAttributeEffect, SsAttributeFlipH, SsAttributeFlipV, SsAttributeHide, SsAttributeImgFlipH, SsAttributeImgFlipV, SsAttributeInstance, SsAttributeLocalAlpha, SsAttributeMask, SsAttributePartsColor, SsAttributePivotX, SsAttributePivotY, SsAttributePosX, SsAttributePosY, SsAttributePosZ, SsAttributePrio, SsAttributeRotX, SsAttributeRotY, SsAttributeRotZ, SsAttributeSclX, SsAttributeSclY, SsAttributeShader, SsAttributeSignal, SsAttributeSizeX, SsAttributeSizeY, SsAttributeTexchange, SsAttributeUser, SsAttributeUvrZ, SsAttributeUvsX, SsAttributeUvsY, SsAttributeUvtX, SsAttributeUvtY, SsAttributeVertex};
 
 fn convert_animedata_labels(labels: &Vec<sspj::ssae::SsLabel>) -> Vec<ssab::ssab::LabelT> {
     labels.iter().map(|label| {
@@ -191,7 +189,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t
 }
 
-fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::PartAnimationDataT> {
+fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::PartAnimationDataT> {
     anime_data.part_animes.iter().map(|part_anime| {
         let mut part_animation_data_t = ssab::ssab::PartAnimationDataT::default();
         part_anime.attributes.iter().for_each(|attribute| {
@@ -516,7 +514,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
                         let mut m_args = ssab::ssab::PartAnimationDataDeformT::default();
                         m_args.index = key.time as u16;
                         m_args.interpolation; // TODO: impl
-                        if (key.value.vchg.is_empty()) {
+                        if key.value.vchg.is_empty() {
                             m_args.value = None;
                         } else {
                             let mut coordinate = Vec::new();
