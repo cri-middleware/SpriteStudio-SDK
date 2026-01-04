@@ -170,7 +170,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     let mut anime_data_t = ssab::ssab::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
-    anime_data_t.parts_initial_attributes = None; // TODO: impl
+    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(anime_data, setup_animation));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation));
     anime_data_t.parts_mesh_data = None; // TODO: impl
     anime_data_t.events = convert_events_per_frames(&anime_data, parts_map);
@@ -217,6 +217,237 @@ fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType
         sspj::sstypes::SsInterpolationType::EaseBackInOut => ssab::ssab::InterpolationType::EaseBackInOut,
         _ => ssab::ssab::InterpolationType::None,
     }
+}
+
+fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+    setup_attributes.iter().for_each(|attribute| {
+        match attribute {
+            sspj::ssattribute::SsAttributeKind::Cell(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PosX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PosY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PosZ(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::RotX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::RotY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::RotZ(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SclX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SclY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::LosclX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::LosclY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Alpha(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Prio(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::FlipH(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::FlipV(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Hide(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Color => {
+                // TODO: impl
+            },
+            sspj::ssattribute::SsAttributeKind::Shader(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Vertex(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PivotX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PivotY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SizeX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SizeY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvtX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvtY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvsX(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvsY(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Boundr(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Mask(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::User(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Signal(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Instance(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Effect(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Deform(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Audio(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Texchange(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                    // TODO: impl
+                });
+            },
+        }
+    });
+}
+
+fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::PartAttributesT>{
+    anime_data.part_animes.iter().zip(setup_animation.part_animes.iter()).map(|(part_anime, setup_part_anime)| {
+        let mut part_attribute_t = ssab::ssab::PartAttributesT::default();
+        // TODO: impl
+        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &setup_part_anime.attributes);
+        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);
+
+        part_attribute_t
+    }).collect::<Vec<_>>()
 }
 
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::PartAnimationDataT> {
@@ -580,20 +811,6 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
     }).collect::<Vec<_>>()
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::AnimationDataT> {
-    let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
-        // not found setup animation
-        return vec![];
-    };
-
-    anime_pack.anime_list.iter().filter_map(|anime_data| {
-        if anime_data == setup_animation {
-            return None;
-        }
-        Some(convert_animedatat(anime_data, setup_animation, parts_map))
-    }).collect::<Vec<ssab::ssab::AnimationDataT>>()
-}
-
 pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab::PartDataT> {
     anime_pack.model.part_list.iter().map(|part| {
         let mut part_data_t = ssab::ssab::PartDataT::default();
@@ -696,4 +913,18 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
 
         part_data_t
     }).collect::<Vec<_>>()
+}
+
+pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::AnimationDataT> {
+    let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
+        // not found setup animation
+        return vec![];
+    };
+
+    anime_pack.anime_list.iter().filter_map(|anime_data| {
+        if anime_data == setup_animation {
+            return None;
+        }
+        Some(convert_animedatat(anime_data, setup_animation, parts_map))
+    }).collect::<Vec<ssab::ssab::AnimationDataT>>()
 }
