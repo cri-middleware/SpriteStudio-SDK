@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use flatbuffers::FlatBufferBuilder;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -90,19 +89,57 @@ impl From<&ssab::ssab::Vec2ValueEntryT> for Vec2ValueEntryKey {
     }
 }
 
-#[derive(Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq)]
 pub struct RectValueEntryKey {
     pub value: RectKey,
 }
 impl From<&ssab::ssab::RectValueEntryT> for RectValueEntryKey {
     fn from(rect_value_table_t: &ssab::ssab::RectValueEntryT) -> Self {
-        let value = rect_value_table_t.value.clone().unwrap();
-        let x1 = value.x1;
-        let y1 = value.y1;
-        let x2 = value.x2;
-        let y2 = value.y2;
+        let value = rect_value_table_t.value.as_ref().unwrap();
         Self {
-            value: RectKey::new(x1, y1, x2, y2),
+            value: RectKey::new(value.x1, value.y1, value.x2, value.y2),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataFloatValueKey {
+    pub index: u16,
+    pub value: ordered_float::OrderedFloat<f32>,
+}
+impl From<&ssab::ssab::PartAnimationDataFloatValueT> for PartAnimationDataFloatValueKey {
+    fn from(value: &ssab::ssab::PartAnimationDataFloatValueT) -> Self {
+        Self {
+            index: value.index,
+            value: ordered_float::OrderedFloat(value.value),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataIntValueKey {
+    pub index: u16,
+    pub value: i32,
+}
+impl From<&ssab::ssab::PartAnimationDataIntValueT> for PartAnimationDataIntValueKey {
+    fn from(value: &ssab::ssab::PartAnimationDataIntValueT) -> Self {
+        Self {
+            index: value.index,
+            value: value.value,
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataBoolValueKey {
+    pub index: u16,
+    pub value: bool,
+}
+impl From<&ssab::ssab::PartAnimationDataBoolValueT> for PartAnimationDataBoolValueKey {
+    fn from(value: &ssab::ssab::PartAnimationDataBoolValueT) -> Self {
+        Self {
+            index: value.index,
+            value: value.value,
         }
     }
 }
@@ -141,9 +178,9 @@ pub struct SsabCache<'a> {
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::PartTypeNone<'a>>>,
 
-    pub part_animation_data_float_value_cache: HashMap<ssab::ssab::PartAnimationDataFloatValueT, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataFloatValue<'a>>>,
-    pub part_animation_data_int_value_cache: HashMap<ssab::ssab::PartAnimationDataIntValueT, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataIntValue<'a>>>,
-    pub part_animation_data_bool_value_cache: HashMap<ssab::ssab::PartAnimationDataBoolValueT, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataBoolValue<'a>>>,
+    pub part_animation_data_float_value_cache: HashMap<PartAnimationDataFloatValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataFloatValue<'a>>>,
+    pub part_animation_data_int_value_cache: HashMap<PartAnimationDataIntValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataIntValue<'a>>>,
+    pub part_animation_data_bool_value_cache: HashMap<PartAnimationDataBoolValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataBoolValue<'a>>>,
 }
 impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
@@ -192,7 +229,6 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    #[allow(dead_code)]
     fn create_shared_int_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, int_value_table_t: &ssab::ssab::IntValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::IntValueEntry<'a>> {
         let key = IntValueEntryKey::from(int_value_table_t);
         if let Some(&offset) = self.int_value_table_cache.get(&key) {
@@ -201,10 +237,10 @@ impl<'a> SsabCache<'a> {
         let mut args = ssab::ssab::IntValueEntryArgs::default();
         args.value = int_value_table_t.value;
         let offset = ssab::ssab::IntValueEntry::create(fb, &args);
+        self.int_value_table_cache.insert(key, offset);
         offset
     }
 
-    #[allow(dead_code)]
     fn create_shared_float_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, float_value_table_t: &ssab::ssab::FloatValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::FloatValueEntry<'a>> {
         let key = FloatValueEntryKey::from(float_value_table_t);
         if let Some(&offset) = self.float_value_table_cache.get(&key) {
@@ -213,10 +249,10 @@ impl<'a> SsabCache<'a> {
         let mut args = ssab::ssab::FloatValueEntryArgs::default();
         args.value = float_value_table_t.value;
         let offset = ssab::ssab::FloatValueEntry::create(fb, &args);
+        self.float_value_table_cache.insert(key, offset);
         offset
     }
 
-    #[allow(dead_code)]
     fn create_shared_vec2_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec2_value_table_t: &ssab::ssab::Vec2ValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::Vec2ValueEntry<'a>> {
         let key = Vec2ValueEntryKey::from(vec2_value_table_t);
         if let Some(&offset) = self.vec2_value_table_cache.get(&key) {
@@ -226,10 +262,10 @@ impl<'a> SsabCache<'a> {
         let v = vec2_value_table_t.value.as_ref().unwrap();
         args.value = Some(self.create_shared_vec2(fb, &v));
         let offset = ssab::ssab::Vec2ValueEntry::create(fb, &args);
+        self.vec2_value_table_cache.insert(key, offset);
         offset
     }
 
-    #[allow(dead_code)]
     fn create_shared_rect_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, rect_value_table_t: &ssab::ssab::RectValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::RectValueEntry<'a>> {
         let key = RectValueEntryKey::from(rect_value_table_t);
         if let Some(&offset) = self.rect_value_table_cache.get(&key) {
@@ -239,6 +275,47 @@ impl<'a> SsabCache<'a> {
         let v = rect_value_table_t.value.as_ref().unwrap();
         args.value = Some(self.create_shared_rect(fb, &v));
         let offset = ssab::ssab::RectValueEntry::create(fb, &args);
+        self.rect_value_table_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_float_value(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_float_value_t: &ssab::ssab::PartAnimationDataFloatValueT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataFloatValue<'a>> {
+        let key = PartAnimationDataFloatValueKey::from(part_animation_data_float_value_t);
+        if let Some(&offset) = self.part_animation_data_float_value_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataFloatValueArgs::default();
+        args.index = part_animation_data_float_value_t.index;
+        args.value = part_animation_data_float_value_t.value;
+        let offset = ssab::ssab::PartAnimationDataFloatValue::create(fb, &args);
+        self.part_animation_data_float_value_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_int_value(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_int_value_t: &ssab::ssab::PartAnimationDataIntValueT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataIntValue<'a>> {
+        let key = PartAnimationDataIntValueKey::from(part_animation_data_int_value_t);
+        if let Some(&offset) = self.part_animation_data_int_value_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataIntValueArgs::default();
+        args.index = part_animation_data_int_value_t.index;
+        args.value = part_animation_data_int_value_t.value;
+        let offset = ssab::ssab::PartAnimationDataIntValue::create(fb, &args);
+        self.part_animation_data_int_value_cache.insert(key, offset);
+        offset
+    }
+
+
+    fn create_shared_part_animation_data_bool_value(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_bool_value_t: &ssab::ssab::PartAnimationDataBoolValueT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataBoolValue<'a>> {
+        let key = PartAnimationDataBoolValueKey::from(part_animation_data_bool_value_t);
+        if let Some(&offset) = self.part_animation_data_bool_value_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataBoolValueArgs::default();
+        args.index = part_animation_data_bool_value_t.index;
+        args.value = part_animation_data_bool_value_t.value;
+        let offset = ssab::ssab::PartAnimationDataBoolValue::create(fb, &args);
+        self.part_animation_data_bool_value_cache.insert(key, offset);
         offset
     }
 }
@@ -336,9 +413,8 @@ impl<'a> SsabCache<'a> {
         fb.create_vector(&parts)
     }
 
-    fn create_shared_parts_animation_data(&mut self, fb: &mut FlatBufferBuilder<'a>, pa: &[ssab::ssab::PartAnimationDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData<'a>>>> {
+    fn create_shared_parts_animation_data(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, pa: &[ssab::ssab::PartAnimationDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData<'a>>>> {
         let part_animation_data = pa.iter().map(|part_animation_data| {
-            /*
             let mut p_args = ssab::ssab::PartAnimationDataArgs::default();
             p_args.cell_array = part_animation_data.cell_array.as_ref().map(|cell_array| {
                 let v = cell_array.iter().map(|cell| {
@@ -356,61 +432,206 @@ impl<'a> SsabCache<'a> {
                 fb.create_vector(&v)
             });
 
-            // TODO: implement
             p_args.pos_x_array = part_animation_data.pos_x_array.as_ref().map(|pos_x_array| {
                 let v = pos_x_array.iter().map(|pos_x| {
-                    let mut p_args = ssab::ssab::PartAnimationDataFloatValueArgs::default();
-
-                    ssab::ssab::PartAnimationDataFloatValue::create(fb, &p_args)
+                    self.create_shared_part_animation_data_float_value(fb, &pos_x)
                 }).collect::<Vec<_>>();
                 fb.create_vector(&v)
             });
 
-            p_args.pos_y_array = part_animation_data.pos;
-            p_args.pos_z_array = part_animation_data.;
-            p_args.rot_x_array = part_animation_data.;
-            p_args.rot_y_array = part_animation_data.;
-            p_args.rot_z_array = part_animation_data.;
-            p_args.scl_x_array = part_animation_data.;
-            p_args.scl_y_array = part_animation_data.;
-            p_args.loscl_x_array = part_animation_data.;
-            p_args.loscl_y_array = part_animation_data.;
-            p_args.alpha_array = part_animation_data.;
-            p_args.lo_alpha_array = part_animation_data.;
-            p_args.prio_array = part_animation_data.;
-            p_args.flip_h_array = part_animation_data.;
-            p_args.flip_v_array = part_animation_data.;
-            p_args.hide_array = part_animation_data.;
-            p_args.parts_color_array = part_animation_data.;
-            p_args.shader_array = part_animation_data.;
-            p_args.vertex_array = part_animation_data.;
-            p_args.pivot_x_array = part_animation_data.;
-            p_args.pivot_y_array = part_animation_data.;
-            p_args.anchor_x_array = part_animation_data.;
-            p_args.anchor_y_array = part_animation_data.;
-            p_args.size_x_array = part_animation_data.;
-            p_args.size_y_array = part_animation_data.;
-            p_args.img_flip_h_array = part_animation_data.;
-            p_args.img_flip_v_array = part_animation_data.;
-            p_args.uvt_x_array = part_animation_data.;
-            p_args.uvt_y_array = part_animation_data.;
-            p_args.uvr_z_array = part_animation_data.;
-            p_args.uvs_x_array = part_animation_data.;
-            p_args.uvs_y_array = part_animation_data.;
-            p_args.boundr_array = part_animation_data.;
-            p_args.mask_array = part_animation_data.;
-            p_args.skew_array = part_animation_data.;
-            p_args.deform_array = part_animation_data.;
-            p_args.texture_array = part_animation_data.;
+            p_args.pos_y_array = part_animation_data.pos_y_array.as_ref().map(|pos_y_array| {
+                let v = pos_y_array.iter().map(|pos_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &pos_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.pos_z_array = part_animation_data.pos_z_array.as_ref().map(|pos_z_array| {
+                let v = pos_z_array.iter().map(|pos_z| {
+                    self.create_shared_part_animation_data_float_value(fb, &pos_z)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.rot_x_array = part_animation_data.rot_x_array.as_ref().map(|rot_x_array| {
+                let v = rot_x_array.iter().map(|rot_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &rot_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.rot_y_array = part_animation_data.rot_y_array.as_ref().map(|rot_y_array| {
+                let v = rot_y_array.iter().map(|rot_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &rot_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.rot_z_array = part_animation_data.rot_z_array.as_ref().map(|rot_z_array| {
+                let v = rot_z_array.iter().map(|rot_z| {
+                    self.create_shared_part_animation_data_float_value(fb, &rot_z)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.scl_x_array = part_animation_data.scl_x_array.as_ref().map(|scl_x_array| {
+                let v = scl_x_array.iter().map(|scl_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &scl_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.scl_y_array = part_animation_data.scl_y_array.as_ref().map(|scl_y_array| {
+                let v = scl_y_array.iter().map(|scl_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &scl_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.loscl_x_array = part_animation_data.loscl_x_array.as_ref().map(|loscl_x_array| {
+                let v = loscl_x_array.iter().map(|loscl_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &loscl_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.loscl_y_array = part_animation_data.loscl_y_array.as_ref().map(|loscl_y_array| {
+                let v = loscl_y_array.iter().map(|loscl_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &loscl_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.alpha_array = part_animation_data.alpha_array.as_ref().map(|alpha_array| {
+                let v = alpha_array.iter().map(|alpha| {
+                    self.create_shared_part_animation_data_float_value(fb, &alpha)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.lo_alpha_array = part_animation_data.lo_alpha_array.as_ref().map(|lo_alpha_array| {
+                let v = lo_alpha_array.iter().map(|lo_alpha| {
+                    self.create_shared_part_animation_data_float_value(fb, &lo_alpha)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.prio_array = part_animation_data.prio_array.as_ref().map(|prio_array| {
+                let v = prio_array.iter().map(|prio| {
+                    self.create_shared_part_animation_data_int_value(fb, &prio)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.flip_h_array = part_animation_data.flip_h_array.as_ref().map(|flip_h_array| {
+                let v = flip_h_array.iter().map(|flip_h| {
+                    self.create_shared_part_animation_data_bool_value(fb, &flip_h)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.flip_v_array = part_animation_data.flip_v_array.as_ref().map(|flip_v_array| {
+                let v = flip_v_array.iter().map(|flip_v| {
+                    self.create_shared_part_animation_data_bool_value(fb, &flip_v)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.hide_array = part_animation_data.hide_array.as_ref().map(|hide_array| {
+                let v = hide_array.iter().map(|hide| {
+                    self.create_shared_part_animation_data_bool_value(fb, &hide)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.parts_color_array = None; // TODO: impl
+            p_args.shader_array = None; // TODO: impl
+            p_args.vertex_array = None; // TODO: impl
+            p_args.pivot_x_array = part_animation_data.pivot_x_array.as_ref().map(|pivot_x_array| {
+                let v = pivot_x_array.iter().map(|pivot_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &pivot_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.pivot_y_array = part_animation_data.pivot_y_array.as_ref().map(|pivot_y_array| {
+                let v = pivot_y_array.iter().map(|pivot_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &pivot_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.anchor_x_array = part_animation_data.anchor_x_array.as_ref().map(|anchor_x_array| {
+                let v = anchor_x_array.iter().map(|anchor_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &anchor_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.anchor_y_array = part_animation_data.anchor_y_array.as_ref().map(|anchor_y_array| {
+                let v = anchor_y_array.iter().map(|anchor_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &anchor_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.size_x_array = part_animation_data.size_x_array.as_ref().map(|size_x_array| {
+                let v = size_x_array.iter().map(|size_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &size_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.size_y_array = part_animation_data.size_y_array.as_ref().map(|size_y_array| {
+                let v = size_y_array.iter().map(|size_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &size_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.img_flip_h_array = part_animation_data.img_flip_h_array.as_ref().map(|img_flip_h_array| {
+                let v = img_flip_h_array.iter().map(|img_flip_h| {
+                    self.create_shared_part_animation_data_bool_value(fb, &img_flip_h)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.img_flip_v_array = part_animation_data.img_flip_v_array.as_ref().map(|img_flip_v_array| {
+                let v = img_flip_v_array.iter().map(|img_flip_v| {
+                    self.create_shared_part_animation_data_bool_value(fb, &img_flip_v)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.uvt_x_array = part_animation_data.uvt_x_array.as_ref().map(|uvt_x_array| {
+                let v = uvt_x_array.iter().map(|uvt_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &uvt_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.uvt_y_array = part_animation_data.uvt_y_array.as_ref().map(|uvt_y_array| {
+                let v = uvt_y_array.iter().map(|uvt_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &uvt_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.uvr_z_array = part_animation_data.uvr_z_array.as_ref().map(|uvr_z_array| {
+                let v = uvr_z_array.iter().map(|uvr_z| {
+                    self.create_shared_part_animation_data_float_value(fb, &uvr_z)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.uvs_x_array = part_animation_data.uvs_x_array.as_ref().map(|uvs_x_array| {
+                let v = uvs_x_array.iter().map(|uvs_x| {
+                    self.create_shared_part_animation_data_float_value(fb, &uvs_x)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.uvs_y_array = part_animation_data.uvs_y_array.as_ref().map(|uvs_y_array| {
+                let v = uvs_y_array.iter().map(|uvs_y| {
+                    self.create_shared_part_animation_data_float_value(fb, &uvs_y)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.boundr_array = part_animation_data.boundr_array.as_ref().map(|boundr_array| {
+                let v = boundr_array.iter().map(|boundr| {
+                    self.create_shared_part_animation_data_float_value(fb, &boundr)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.mask_array = part_animation_data.mask_array.as_ref().map(|mask_array| {
+                let v = mask_array.iter().map(|mask| {
+                    self.create_shared_part_animation_data_float_value(fb, &mask)
+                }).collect::<Vec<_>>();
+                fb.create_vector(&v)
+            });
+            p_args.skew_array = None; // TODO: impl
+            p_args.deform_array = None; // TODO: impl
+            p_args.texture_array = None; // TODO: impl
 
             ssab::ssab::PartAnimationData::create(fb, &p_args)
-             */
-            part_animation_data.pack(fb) // TODO: improve
         }).collect::<Vec<_>>();
         fb.create_vector(&part_animation_data)
     }
 
-    fn create_shared_parts_mesh_data(&mut self, fb: &mut FlatBufferBuilder<'a>, pm: &[ssab::ssab::PartMeshDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartMeshData<'a>>>> {
+    fn create_shared_parts_mesh_data(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, pm: &[ssab::ssab::PartMeshDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartMeshData<'a>>>> {
         let part_mesh_data = pm.iter().map(|part| {
             let mut p_args = ssab::ssab::PartMeshDataArgs::default();
             p_args.part_index = part.part_index;
@@ -621,25 +842,11 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementTransSpeed(v) |
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementTangentialAcceleration(v) |
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementAlphaFade(v) => {
-                let a = Vec2ValueEntryKey::from(v.as_ref());
-                if let Some(offset) = self.vec2_value_table_cache.get(&a) {
-                    return Some(offset.as_union_value());
-                };
-                let mut w_args = ssab::ssab::Vec2ValueEntryArgs::default();
-                w_args.value = v.value.as_ref().map(|value| self.create_shared_vec2(fb, value));
-                let offset = ssab::ssab::Vec2ValueEntry::create(fb, &w_args);
-                self.vec2_value_table_cache.insert(a, offset);
+                let offset = self.create_shared_vec2_value_table(fb, v.as_ref());
                 Some(offset.as_union_value())
             },
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementPosition(v) => {
-                let a = RectValueEntryKey::from(v.as_ref());
-                if let Some(offset) = self.rect_value_table_cache.get(&a) {
-                    return Some(offset.as_union_value());
-                };
-                let mut w_args = ssab::ssab::RectValueEntryArgs::default();
-                w_args.value = v.value.as_ref().map(|value| self.create_shared_rect(fb, value));
-                let offset = ssab::ssab::RectValueEntry::create(fb, &w_args);
-                self.rect_value_table_cache.insert(a, offset);
+                let offset = self.create_shared_rect_value_table(fb, v.as_ref());
                 Some(offset.as_union_value())
             },
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementRotation(v) => {
@@ -680,14 +887,7 @@ impl<'a> SsabCache<'a> {
                 Some(offset.as_union_value())
             },
             ssab::ssab::EffectNodeBehaviorT::EffectParticleTurnToDirectionEnabled(v) => {
-                let a = FloatValueEntryKey::from(v.as_ref());
-                if let Some(offset) = self.float_value_table_cache.get(&a) {
-                    return Some(offset.as_union_value());
-                };
-                let mut w_args = ssab::ssab::FloatValueEntryArgs::default();
-                w_args.value = v.value;
-                let offset = ssab::ssab::FloatValueEntry::create(fb, &w_args);
-                self.float_value_table_cache.insert(a, offset);
+                let offset = self.create_shared_float_value_table(fb, v.as_ref());
                 Some(offset.as_union_value())
             },
             _ => None,
