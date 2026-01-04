@@ -645,7 +645,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 part_type.text_mask = part.text_mask;
                 part_type.text_width = part.text_width;
                 part_type.text_height = part.text_height;
-                part_type.e_anchor = match &part.e_anchor {
+                part_type.e_anchor = match part.e_anchor {
                     0  => ssab::ssab::TextAnchor::LT,
                     1  => ssab::ssab::TextAnchor::LC,
                     2  => ssab::ssab::TextAnchor::LB,
