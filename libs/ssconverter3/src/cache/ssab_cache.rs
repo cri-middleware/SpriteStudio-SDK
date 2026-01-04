@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use ssab::ssab::InterpolationType;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -18,6 +19,22 @@ impl Vec2Key {
         Self {
             v1: ordered_float::OrderedFloat(x),
             v2: ordered_float::OrderedFloat(y),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+pub struct Vec3Key {
+    pub v1: ordered_float::OrderedFloat<f32>,
+    pub v2: ordered_float::OrderedFloat<f32>,
+    pub v3: ordered_float::OrderedFloat<f32>,
+}
+impl From<&ssab::ssab::Vec3T> for Vec3Key {
+    fn from(v: &ssab::ssab::Vec3T) -> Self {
+        Self {
+            v1: ordered_float::OrderedFloat(v.v1),
+            v2: ordered_float::OrderedFloat(v.v2),
+            v3: ordered_float::OrderedFloat(v.v3),
         }
     }
 }
@@ -105,12 +122,14 @@ impl From<&ssab::ssab::RectValueEntryT> for RectValueEntryKey {
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataFloatValueKey {
     pub index: u16,
+    pub interpolation: InterpolationType,
     pub value: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::PartAnimationDataFloatValueT> for PartAnimationDataFloatValueKey {
     fn from(value: &ssab::ssab::PartAnimationDataFloatValueT) -> Self {
         Self {
             index: value.index,
+            interpolation: value.interpolation,
             value: ordered_float::OrderedFloat(value.value),
         }
     }
@@ -119,12 +138,14 @@ impl From<&ssab::ssab::PartAnimationDataFloatValueT> for PartAnimationDataFloatV
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataIntValueKey {
     pub index: u16,
+    pub interpolation: InterpolationType,
     pub value: i32,
 }
 impl From<&ssab::ssab::PartAnimationDataIntValueT> for PartAnimationDataIntValueKey {
     fn from(value: &ssab::ssab::PartAnimationDataIntValueT) -> Self {
         Self {
             index: value.index,
+            interpolation: InterpolationType::from(value.interpolation),
             value: value.value,
         }
     }
@@ -166,8 +187,24 @@ impl From<&ssab::ssab::CellT> for CellKey {
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct LabelKey {
+    pub name: String,
+    pub time: i32,
+}
+impl From<&ssab::ssab::LabelT> for LabelKey {
+    fn from(value: &ssab::ssab::LabelT) -> Self {
+        Self {
+            name: value.name.clone(),
+            time: value.time,
+        }
+    }
+}
+
+
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>>>,
+    pub vec3_cache: HashMap<Vec3Key, flatbuffers::WIPOffset<ssab::ssab::Vec3<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::Rect<'a>>>,
     pub int_value_table_cache: HashMap<IntValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::IntValueEntry<'a>>>,
     pub float_value_table_cache: HashMap<FloatValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::FloatValueEntry<'a>>>,
@@ -175,6 +212,7 @@ pub struct SsabCache<'a> {
     pub rect_value_table_cache: HashMap<RectValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::RectValueEntry<'a>>>,
 
     pub cell_cache: HashMap<CellKey, flatbuffers::WIPOffset<ssab::ssab::Cell<'a>>>,
+    pub label_cache: HashMap<LabelKey, flatbuffers::WIPOffset<ssab::ssab::Label<'a>>>,
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::PartTypeNone<'a>>>,
 
@@ -186,6 +224,7 @@ impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
         Self {
             vec2_cache: HashMap::new(),
+            vec3_cache: HashMap::new(),
             rect_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
@@ -193,6 +232,7 @@ impl<'a> SsabCache<'a> {
             rect_value_table_cache: HashMap::new(),
 
             cell_cache: HashMap::new(),
+            label_cache: HashMap::new(),
 
             part_type_none_cache: HashMap::new(),
 
@@ -211,6 +251,20 @@ impl<'a> SsabCache<'a> {
         args.v2 = vec2t.v2;
         let offset = ssab::ssab::Vec2::create(fb, &args);
         self.vec2_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_vec3(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec3t: &ssab::ssab::Vec3T) -> flatbuffers::WIPOffset<ssab::ssab::Vec3<'a>> {
+        let key = Vec3Key::from(vec3t);
+        if let Some(&offset) = self.vec3_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::Vec3Args::default();
+        args.v1 = vec3t.v1;
+        args.v2 = vec3t.v2;
+        args.v3 = vec3t.v3;
+        let offset = ssab::ssab::Vec3::create(fb, &args);
+        self.vec3_cache.insert(key, offset);
         offset
     }
 
@@ -342,6 +396,22 @@ impl<'a> SsabCache<'a> {
         self.cell_cache.insert(key, offset);
         offset
     }
+
+    fn create_shared_label(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, label_t: &ssab::ssab::LabelT) -> flatbuffers::WIPOffset<ssab::ssab::Label<'a>> {
+        let key = LabelKey::from(label_t);
+        if let Some(&offset) = self.label_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::LabelArgs::default();
+        args.name = Some(fb.create_shared_string(&label_t.name));
+        args.time = label_t.time;
+
+        let offset = ssab::ssab::Label::create(fb, &args);
+        self.label_cache.insert(key, offset);
+        offset
+    }
+
 
     fn create_shared_part_type(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_type: &ssab::ssab::PartTypeT) -> flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset> {
         match part_type {
@@ -754,26 +824,49 @@ impl<'a> SsabCache<'a> {
         fb.create_vector(&v)
     }
 
+    fn create_parts_initial_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, parts_initial_attributes: &[ssab::ssab::PartAttributesT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAttributes<'a>>>> {
+        let v = parts_initial_attributes.iter().map(|attribute| {
+            let mut p_args = ssab::ssab::PartAttributesArgs::default();
+            p_args.cell = None; // TODO: impl
+            p_args.position = attribute.position.as_ref().map(|position| self.create_shared_vec3(fb, &position));
+            p_args.rotation = attribute.rotation.as_ref().map(|rotation| self.create_shared_vec3(fb, &rotation));
+            p_args.scale = attribute.scale.as_ref().map(|scale| self.create_shared_vec2(fb, &scale));
+            p_args.local_scale = attribute.local_scale.as_ref().map(|local_scale|self.create_shared_vec2(fb, &local_scale));
+            p_args.opacity = attribute.opacity;
+            p_args.localopacity = attribute.localopacity;
+            p_args.priority = attribute.priority;
+            p_args.flip_v = attribute.flip_v;
+            p_args.flip_h = attribute.flip_h;
+            p_args.hide = attribute.hide;
+            p_args.parts_color = None; // TODO: impl
+            p_args.shader = None; // TODO: impl
+            p_args.vertex = None; // TODO: impl
+            p_args.pivot = attribute.pivot.as_ref().map(|pivot| self.create_shared_vec2(fb, &pivot));
+            p_args.size = attribute.size.as_ref().map(|size| self.create_shared_vec2(fb, &size));
+            p_args.uv_move = attribute.uv_move.as_ref().map(|uv_move| self.create_shared_vec3(fb, &uv_move));
+            p_args.uv_scale = attribute.uv_scale.as_ref().map(|uv_scale| self.create_shared_vec2(fb, &uv_scale));
+            p_args.bounding_radius = attribute.bounding_radius;
+            p_args.mask = attribute.mask;
+            p_args.skew = attribute.skew.as_ref().map(|skew| self.create_shared_vec2(fb, &skew));
+            p_args.deform = None; // TODO: impl
+            p_args.texture = 0; // TODO: impl
+
+            ssab::ssab::PartAttributes::create(fb, &p_args)
+        }).collect::<Vec<_>>();
+        fb.create_vector(&v)
+    }
+
     fn create_animation_data_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation_data_t_vec: &[ssab::ssab::AnimationDataT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::AnimationData<'a>>>> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| {
-                let v = parts_initial_attributes.iter().map(|attribute| {
-                    attribute.pack(fb) // TODO: improve
-                }).collect::<Vec<_>>();
-                fb.create_vector(&v)
-            });
+            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_parts_initial_attributes(fb, parts_initial_attributes));
             args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
             args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
             args.events = animation_data_t.events.as_ref().map(|events| { self.create_shared_events_per_frame(fb, events) });
             args.labels = animation_data_t.labels.as_ref().map(|labels| {
                 let v = labels.iter().map(|label| {
-                    let mut l_args = ssab::ssab::LabelArgs::default();
-                    l_args.name = Some(fb.create_shared_string(&label.name));
-                    l_args.time = label.time;
-
-                    ssab::ssab::Label::create(fb, &l_args)
+                    self.create_shared_label(fb, label)
                 }).collect::<Vec<_>>();
                 fb.create_vector(&v)
             });
@@ -828,14 +921,7 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementRndSeedChange(v) |
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementDelay(v) |
             ssab::ssab::EffectNodeBehaviorT::EffectParticleInfiniteEmitEnabled(v) => {
-                let a = IntValueEntryKey::from(v.as_ref());
-                if let Some(offset) = self.int_value_table_cache.get(&a) {
-                    return Some(offset.as_union_value());
-                };
-                let mut w_args = ssab::ssab::IntValueEntryArgs::default();
-                w_args.value = v.value;
-                let offset = ssab::ssab::IntValueEntry::create(fb, &w_args);
-                self.int_value_table_cache.insert(a, offset);
+                let offset = self.create_shared_int_value_table(fb, v.as_ref());
                 Some(offset.as_union_value())
             },
             ssab::ssab::EffectNodeBehaviorT::EffectParticleElementGravity(v) |
