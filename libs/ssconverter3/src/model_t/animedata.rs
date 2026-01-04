@@ -66,7 +66,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                                 let v = command.params.iter().map(|v| {
                                     let mut command_param_t = ssab::ssab::SignalCommandParamT::default();
                                     command_param_t.param_id = Some(v.param_id.to_string());
-                                    command_param_t.type_ = match v.param_type {
+                                    command_param_t.type_ = match &v.param_type {
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::SignalCommandParamType::Index,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::SignalCommandParamType::Integer,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::SignalCommandParamType::Floating,
@@ -189,6 +189,36 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t
 }
 
+fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType) -> ssab::ssab::InterpolationType {
+    match interpolation {
+        sspj::sstypes::SsInterpolationType::None => ssab::ssab::InterpolationType::None,
+        sspj::sstypes::SsInterpolationType::Linear => ssab::ssab::InterpolationType::Linear,
+        sspj::sstypes::SsInterpolationType::Hermite => ssab::ssab::InterpolationType::Hermite,
+        sspj::sstypes::SsInterpolationType::Bezier => ssab::ssab::InterpolationType::Bezier,
+        sspj::sstypes::SsInterpolationType::Acceleration => ssab::ssab::InterpolationType::Acceleration,
+        sspj::sstypes::SsInterpolationType::Deceleration => ssab::ssab::InterpolationType::Deceleration,
+        sspj::sstypes::SsInterpolationType::EaseIn => ssab::ssab::InterpolationType::EaseIn,
+        sspj::sstypes::SsInterpolationType::EaseOut => ssab::ssab::InterpolationType::EaseOut,
+        sspj::sstypes::SsInterpolationType::EaseInOut => ssab::ssab::InterpolationType::EaseInOut,
+        sspj::sstypes::SsInterpolationType::EaseExponentialIn => ssab::ssab::InterpolationType::EaseExponentialIn,
+        sspj::sstypes::SsInterpolationType::EaseExponentialOut => ssab::ssab::InterpolationType::EaseExponentialOut,
+        sspj::sstypes::SsInterpolationType::EaseExponentialInOut => ssab::ssab::InterpolationType::EaseExponentialInOut,
+        sspj::sstypes::SsInterpolationType::EaseSineIn => ssab::ssab::InterpolationType::EaseSineIn,
+        sspj::sstypes::SsInterpolationType::EaseSineOut => ssab::ssab::InterpolationType::EaseSineOut,
+        sspj::sstypes::SsInterpolationType::EaseSineInOut => ssab::ssab::InterpolationType::EaseSineInOut,
+        sspj::sstypes::SsInterpolationType::EaseElasticIn => ssab::ssab::InterpolationType::EaseElasticIn,
+        sspj::sstypes::SsInterpolationType::EaseElasticOut => ssab::ssab::InterpolationType::EaseElasticOut,
+        sspj::sstypes::SsInterpolationType::EaseElasticInOut => ssab::ssab::InterpolationType::EaseElasticInOut,
+        sspj::sstypes::SsInterpolationType::EaseBounceIn => ssab::ssab::InterpolationType::EaseBounceIn,
+        sspj::sstypes::SsInterpolationType::EaseBounceOut => ssab::ssab::InterpolationType::EaseBounceOut,
+        sspj::sstypes::SsInterpolationType::EaseBounceInOut => ssab::ssab::InterpolationType::EaseBounceInOut,
+        sspj::sstypes::SsInterpolationType::EaseBackIn => ssab::ssab::InterpolationType::EaseBackIn,
+        sspj::sstypes::SsInterpolationType::EaseBackOut => ssab::ssab::InterpolationType::EaseBackOut,
+        sspj::sstypes::SsInterpolationType::EaseBackInOut => ssab::ssab::InterpolationType::EaseBackInOut,
+        _ => ssab::ssab::InterpolationType::None,
+    }
+}
+
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::PartAnimationDataT> {
     anime_data.part_animes.iter().map(|part_anime| {
         let mut part_animation_data_t = ssab::ssab::PartAnimationDataT::default();
@@ -206,7 +236,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.pos_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -215,7 +245,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.pos_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -224,7 +254,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut z_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         z_args.index = key.time as u16;
-                        z_args.interpolation; // TODO: impl
+                        z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
                         part_animation_data_t.pos_z_array.get_or_insert_with(Vec::new).push(z_args);
                     });
@@ -233,7 +263,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.rot_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -242,7 +272,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.rot_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -251,7 +281,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut z_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         z_args.index = key.time as u16;
-                        z_args.interpolation; // TODO: impl
+                        z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
                         part_animation_data_t.rot_y_array.get_or_insert_with(Vec::new).push(z_args);
                     });
@@ -260,7 +290,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.scl_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -269,7 +299,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.scl_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -278,7 +308,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.loscl_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -287,7 +317,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.loscl_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -296,7 +326,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut a_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         a_args.index = key.time as u16;
-                        a_args.interpolation; // TODO: impl
+                        a_args.interpolation = convert_interpolation_type(&key.ip_type);
                         a_args.value = key.value;
                         part_animation_data_t.alpha_array.get_or_insert_with(Vec::new).push(a_args);
                     });
@@ -305,7 +335,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut a_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         a_args.index = key.time as u16;
-                        a_args.interpolation; // TODO: impl
+                        a_args.interpolation = convert_interpolation_type(&key.ip_type);
                         a_args.value = key.value;
                         part_animation_data_t.lo_alpha_array.get_or_insert_with(Vec::new).push(a_args);
                     });
@@ -314,7 +344,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut p_args = ssab::ssab::PartAnimationDataIntValueT::default();
                         p_args.index = key.time as u16;
-                        p_args.interpolation; // TODO: impl
+                        p_args.interpolation = convert_interpolation_type(&key.ip_type);
                         p_args.value = key.value as i32; // TODO: check i32 as correct type?
                         part_animation_data_t.prio_array.get_or_insert_with(Vec::new).push(p_args);
                     });
@@ -360,7 +390,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut s_args = ssab::ssab::PartAnimationDataShaderT::default();
                         s_args.index = key.time as u16;
-                        s_args.interpolation; // TODO: impl
+                        s_args.interpolation = convert_interpolation_type(&key.ip_type);
                         // s_args.value = key.value; // TODO: impl
                         part_animation_data_t.shader_array.get_or_insert_with(Vec::new).push(s_args);
                     });
@@ -370,7 +400,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut s_args = ssab::ssab::PartAnimationDataVertexT::default();
                         s_args.index = key.time as u16;
-                        s_args.interpolation; // TODO: impl
+                        s_args.interpolation = convert_interpolation_type(&key.ip_type);
                         // s_args.value = key.value; // TODO: impl
                         part_animation_data_t.vertex_array.get_or_insert_with(Vec::new).push(s_args);
                     });
@@ -379,7 +409,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.pivot_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -388,7 +418,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.pivot_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -397,7 +427,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.anchor_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -406,7 +436,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.anchor_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -415,7 +445,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.size_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -424,7 +454,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.size_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -449,7 +479,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut x_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         x_args.index = key.time as u16;
-                        x_args.interpolation; // TODO: impl
+                        x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
                         part_animation_data_t.uvt_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
@@ -458,7 +488,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut y_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         y_args.index = key.time as u16;
-                        y_args.interpolation; // TODO: impl
+                        y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
                         part_animation_data_t.uvt_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
@@ -467,7 +497,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut z_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         z_args.index = key.time as u16;
-                        z_args.interpolation; // TODO: impl
+                        z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
                         part_animation_data_t.uvr_z_array.get_or_insert_with(Vec::new).push(z_args);
                     });
@@ -476,7 +506,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut z_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         z_args.index = key.time as u16;
-                        z_args.interpolation; // TODO: impl
+                        z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
                         part_animation_data_t.uvs_x_array.get_or_insert_with(Vec::new).push(z_args);
                     });
@@ -485,7 +515,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut z_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         z_args.index = key.time as u16;
-                        z_args.interpolation; // TODO: impl
+                        z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
                         part_animation_data_t.uvs_y_array.get_or_insert_with(Vec::new).push(z_args);
                     });
@@ -494,7 +524,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut z_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         z_args.index = key.time as u16;
-                        z_args.interpolation; // TODO: impl
+                        z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
                         part_animation_data_t.boundr_array.get_or_insert_with(Vec::new).push(z_args);
                     });
@@ -503,7 +533,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut m_args = ssab::ssab::PartAnimationDataFloatValueT::default();
                         m_args.index = key.time as u16;
-                        m_args.interpolation; // TODO: impl
+                        m_args.interpolation = convert_interpolation_type(&key.ip_type);
                         m_args.value = key.value;
                         part_animation_data_t.mask_array.get_or_insert_with(Vec::new).push(m_args);
                     });
@@ -513,7 +543,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut m_args = ssab::ssab::PartAnimationDataDeformT::default();
                         m_args.index = key.time as u16;
-                        m_args.interpolation; // TODO: impl
+                        m_args.interpolation = convert_interpolation_type(&key.ip_type);
                         if key.value.vchg.is_empty() {
                             m_args.value = None;
                         } else {
@@ -538,7 +568,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut m_args = ssab::ssab::PartAnimationDataIntValueT::default();
                         m_args.index = key.time as u16;
-                        m_args.interpolation; // TODO: impl
+                        m_args.interpolation = ssab::ssab::InterpolationType::None;
                         // m_args.value = key.value; // TODO: impl get index from texture name
                         part_animation_data_t.texture_array.get_or_insert_with(Vec::new).push(m_args);
                     });
@@ -569,7 +599,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         let mut part_data_t = ssab::ssab::PartDataT::default();
         part_data_t.name = Some(part.name.to_string());
         part_data_t.parent_index = part.parent_index as i16;
-        part_data_t.bounds_type = match part.bounds_type {
+        part_data_t.bounds_type = match &part.bounds_type {
             sspj::sstypes::SsBoundsType::None => ssab::ssab::BoundsType::None,
             sspj::sstypes::SsBoundsType::Quad => ssab::ssab::BoundsType::Quad,
             sspj::sstypes::SsBoundsType::Aabb => ssab::ssab::BoundsType::Aabb,
@@ -577,7 +607,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::BoundsType::Circle,
             sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::BoundsType::Circle,
         };
-        part_data_t.blend_type = match part.alpha_blend_type {
+        part_data_t.blend_type = match &part.alpha_blend_type {
             sspj::sstypes::SsBlendType::Mix => ssab::ssab::BlendType::Mix,
             sspj::sstypes::SsBlendType::Mul => ssab::ssab::BlendType::Mul,
             sspj::sstypes::SsBlendType::Add => ssab::ssab::BlendType::Add,
@@ -587,12 +617,12 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             sspj::sstypes::SsBlendType::Exclusion => ssab::ssab::BlendType::Exclusion,
             sspj::sstypes::SsBlendType::Invert => ssab::ssab::BlendType::Invert,
         };
-        part_data_t.part_type = match part.part_type {
+        part_data_t.part_type = match &part.part_type {
             sspj::sstypes::SsPartType::Null => ssab::ssab::PartTypeT::PartTypeNull(Box::new(ssab::ssab::PartTypeNoneT::default())),
             sspj::sstypes::SsPartType::Normal => ssab::ssab::PartTypeT::PartTypeNormal(Box::new(ssab::ssab::PartTypeNoneT::default())),
             sspj::sstypes::SsPartType::Shape => {
                 let mut part_type = ssab::ssab::PartTypeShapeT::default();
-                part_type.shape_type = match part.shape_type {
+                part_type.shape_type = match &part.shape_type {
                     sspj::sstypes::SsShapeType::Unknown => ssab::ssab::ShapeType::Unknown,
                     sspj::sstypes::SsShapeType::Triangle => ssab::ssab::ShapeType::Triangle,
                     sspj::sstypes::SsShapeType::Rectangle => ssab::ssab::ShapeType::Rectangle,
@@ -615,7 +645,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 part_type.text_mask = part.text_mask;
                 part_type.text_width = part.text_width;
                 part_type.text_height = part.text_height;
-                part_type.e_anchor = match part.e_anchor {
+                part_type.e_anchor = match &part.e_anchor {
                     0  => ssab::ssab::TextAnchor::LT,
                     1  => ssab::ssab::TextAnchor::LC,
                     2  => ssab::ssab::TextAnchor::LB,

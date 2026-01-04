@@ -203,7 +203,7 @@ fn get_effect_node_behavior<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, b: 
             ssab::ssab::EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleInfiniteEmitEnabled,
             _ => runtime::initialize::ss::runtime::EffectNodeBehavior::NONE,
         };
-        b_args.value = match b_args.value_type {
+        b_args.value = match b_args.value_type.clone() {
             runtime::initialize::ss::runtime::EffectNodeBehavior::EffectParticleElementBasic => {
                 let mut e_args = runtime::initialize::ss::runtime::EffectParticleElementBasicArgs::default();
                 let value = behavior.value_as_effect_particle_element_basic().unwrap();
