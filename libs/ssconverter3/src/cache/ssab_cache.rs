@@ -338,6 +338,7 @@ impl<'a> SsabCache<'a> {
 
     fn create_shared_parts_animation_data(&mut self, fb: &mut FlatBufferBuilder<'a>, pa: &[ssab::ssab::PartAnimationDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData<'a>>>> {
         let part_animation_data = pa.iter().map(|part_animation_data| {
+            /*
             let mut p_args = ssab::ssab::PartAnimationDataArgs::default();
             p_args.cell_array = part_animation_data.cell_array.as_ref().map(|cell_array| {
                 let v = cell_array.iter().map(|cell| {
@@ -364,7 +365,7 @@ impl<'a> SsabCache<'a> {
                 }).collect::<Vec<_>>();
                 fb.create_vector(&v)
             });
-            /*
+
             p_args.pos_y_array = part_animation_data.pos;
             p_args.pos_z_array = part_animation_data.;
             p_args.rot_x_array = part_animation_data.;
@@ -401,9 +402,10 @@ impl<'a> SsabCache<'a> {
             p_args.skew_array = part_animation_data.;
             p_args.deform_array = part_animation_data.;
             p_args.texture_array = part_animation_data.;
-             */
 
             ssab::ssab::PartAnimationData::create(fb, &p_args)
+             */
+            part_animation_data.pack(fb) // TODO: improve
         }).collect::<Vec<_>>();
         fb.create_vector(&part_animation_data)
     }
