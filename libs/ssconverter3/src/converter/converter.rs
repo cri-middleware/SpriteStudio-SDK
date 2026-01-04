@@ -59,7 +59,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Resu
         let offset = ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t);
         ssab::ssab::finish_ss_anime_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
-        let output_file = format!("{}.{}", PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::SS_ANIME_BINARY_EXTENSION);
+        let output_file = [PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::SS_ANIME_BINARY_EXTENSION].join(".");
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
@@ -71,7 +71,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Resu
         ssab::ssqb::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
-        let output_file = format!("{}.{}", PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::SS_SEQUENCE_BINARY_EXTENSION);
+        let output_file = [PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::SS_SEQUENCE_BINARY_EXTENSION].join(".");
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
@@ -105,7 +105,7 @@ pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Resu
             let Some(stem) = path.file_stem() else {
                 return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "{}", )));
             };
-            let dir = parent.join(format!("{}_ssab", stem.to_string_lossy()));
+            let dir = parent.join([stem.to_string_lossy().into_owned().as_str(), "_ssab"].join("") );
             if !dir.exists() {
                 std::fs::create_dir(dir.as_path()).expect("TODO: panic message"); // TODO: FIXME Error handling
             }

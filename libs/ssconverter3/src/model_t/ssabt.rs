@@ -41,7 +41,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     
     let external_instances = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Instance)
         .filter(|part| part.ref_anime_pack != anime_pack.name)
-        .map(|part| format!("{}/{}", anime_pack.name, part.ref_anime_pack)).collect::<Vec<String>>();
+        .map(|part| [anime_pack.name.as_str(), part.ref_anime_pack.as_str()].join("/")).collect::<Vec<String>>();
 
 
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();

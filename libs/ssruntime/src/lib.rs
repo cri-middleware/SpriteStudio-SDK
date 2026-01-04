@@ -21,7 +21,11 @@ impl<'a> Context<'a> {
         // validate version
         if ssab_buf.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, format!("invalid ssab version expected: {}, got: {}", ssab::ssab::SsAnimeBinaryArgs::default().version, ssab_buf.version())))
+            let msg = "invalid ssab version expected: ".to_string()
+                + &ssab::ssab::SsAnimeBinaryArgs::default().version.to_string()
+                + ", got: "
+                + &ssab_buf.version().to_string();
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
         }
 
         Ok(Context {
