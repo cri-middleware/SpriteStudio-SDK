@@ -16,11 +16,7 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new(buf: &[u8]) -> Result<Context<'_>, std::io::Error> {
-        let r = ssab::ssab::root_as_ss_anime_binary(buf);
-        let ssab_buf = match r {
-            Ok(ssab_buf) => ssab_buf,
-            Err(e) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))
-        };
+        let ssab_buf = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
 
         // validate version
         if ssab_buf.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
