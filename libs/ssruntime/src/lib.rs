@@ -16,21 +16,21 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new(buf: &[u8]) -> Result<Context<'_>, std::io::Error> {
-        let ssab_buf = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
+        let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
 
         // validate version
-        if ssab_buf.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
+        if ssab.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
             let msg = "invalid ssab version expected: ".to_string()
                 + &ssab::ssab::SsAnimeBinaryArgs::default().version.to_string()
                 + ", got: "
-                + &ssab_buf.version().to_string();
+                + &ssab.version().to_string();
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
         }
 
         Ok(Context {
             track: core::track_manager::TrackManager::new(),
-            ssab: ssab_buf,
+            ssab,
             fb: flatbuffers::FlatBufferBuilder::new(),
             animation: None,
         })

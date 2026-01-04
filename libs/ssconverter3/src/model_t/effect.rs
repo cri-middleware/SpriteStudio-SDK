@@ -1,6 +1,6 @@
 use crate::model_t;
 
-fn convert_effect_node_list(nodes: &Vec<sspj::ssee::SsEffectNode>) -> Vec<ssab::ssab::EffectNodeT> {
+fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssab::EffectNodeT> {
     nodes.iter().map(|node| {
         let mut effect_node_t = ssab::ssab::EffectNodeT::default();
         effect_node_t.index = node.array_index as i16;

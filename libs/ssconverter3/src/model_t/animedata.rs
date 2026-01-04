@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-fn convert_animedata_labels(labels: &Vec<sspj::ssae::SsLabel>) -> Vec<ssab::ssab::LabelT> {
+fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::LabelT> {
     labels.iter().map(|label| {
         let mut l = ssab::ssab::LabelT::default();
         l.name = label.name.to_string();
