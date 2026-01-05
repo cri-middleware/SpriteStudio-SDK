@@ -27,9 +27,9 @@ fn get_parts_initial_attributes<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
             p_args.local_scale_x = s.v1();
             p_args.local_scale_y = s.v2();
         });
-        // p_args.opacity = part_attributes.opacity(); // TODO: implement
-        // p_args.localopacity = part_attributes.localopacity(); // TODO: implement
-        // p_args.priority = part_attributes.priority(); // TODO: implement
+        p_args.opacity = part_attributes.opacity();
+        p_args.localopacity = part_attributes.localopacity();
+        p_args.priority = part_attributes.priority() as f32;
         p_args.flip_v = part_attributes.flip_v();
         p_args.flip_h = part_attributes.flip_h();
         p_args.hide = part_attributes.hide();
