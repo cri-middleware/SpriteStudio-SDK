@@ -1,8 +1,4 @@
-use flatbuffers::{ForwardsUOffset, Vector, WIPOffset};
-use ssab::ssqb::{
-    Sequence, SequenceArgs, SequenceItem, SequenceItemArgs, SequenceItemT, SsSequenceBinary,
-    SsSequenceBinaryArgs, SsSequenceBinaryT,
-};
+use ssab::ssqb::{SequenceItem, SequenceType};
 
 pub struct SsqbCache {}
 impl SsqbCache {
@@ -10,73 +6,32 @@ impl SsqbCache {
         Self {}
     }
 
-    pub fn create_shared_sequence_item_list<
-        'bldr: 'args,
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: flatbuffers::Allocator + 'bldr,
-    >(
-        &mut self,
-        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        sequence_item_t_list: &[SequenceItemT],
-    ) -> WIPOffset<Vector<'bldr, ForwardsUOffset<SequenceItem<'bldr>>>> {
-        let mut sequence_item_offset_vec = Vec::with_capacity(sequence_item_t_list.len());
-        for sequence_item_t in sequence_item_t_list {
-            let ref_anime_pack = sequence_item_t
-                .ref_anime_pack
-                .as_ref()
-                .map(|s| fb.create_shared_string(s.as_ref()));
-            let ref_anime = sequence_item_t
-                .ref_anime
-                .as_ref()
-                .map(|s| fb.create_shared_string(s.as_ref()));
+    fn create_shared_sequence_item_list<'a>(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, sequence_item_t_list: &[ssab::ssqb::SequenceItemT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssqb::SequenceItem<'a>>>> {
+        let v = sequence_item_t_list.iter().map(|sequence_item_t| {
+            let ref_anime_pack = sequence_item_t.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
+            let ref_anime = sequence_item_t.ref_anime.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
 
-            let sequence_item_arg = SequenceItemArgs {
-                ref_anime_pack,
-                ref_anime,
-                repeat_count: sequence_item_t.repeat_count,
-            };
-            let offset = SequenceItem::create(fb, &sequence_item_arg);
-            sequence_item_offset_vec.push(offset);
-        }
+            let sequence_item_arg = ssab::ssqb::SequenceItemArgs { ref_anime_pack, ref_anime, repeat_count: sequence_item_t.repeat_count};
+            ssab::ssqb::SequenceItem::create(fb, &sequence_item_arg)
+        }).collect::<Vec<_>>();
 
-        fb.create_vector(&sequence_item_offset_vec)
+        fb.create_vector(&v)
     }
-    pub fn create_shared_sequence_binary<
-        'bldr: 'args,
-        'args: 'mut_bldr,
-        'mut_bldr,
-        A: flatbuffers::Allocator + 'bldr,
-    >(
-        &mut self,
-        fb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr, A>,
-        sequence_binary_t: &SsSequenceBinaryT,
-    ) -> WIPOffset<SsSequenceBinary<'bldr>> {
-        let mut sequence_offset_vec = vec![];
-        if let Some(sequences) = sequence_binary_t.sequence_list.as_ref() {
-            sequence_offset_vec.reserve(sequences.len());
+    pub fn create_shared_sequence_binary<'a>(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, sequence_binary_t: &ssab::ssqb::SsSequenceBinaryT) -> flatbuffers::WIPOffset<ssab::ssqb::SsSequenceBinary<'a>> {
+        let mut args = ssab::ssqb::SsSequenceBinaryArgs::default();
+        args.sequence_list = sequence_binary_t.sequence_list.as_ref().map(|sequence_list| {
+            let v = sequence_list.iter().map(|sequence| {
+                let mut s_args = ssab::ssqb::SequenceArgs::default();
+                s_args.name = Some(fb.create_shared_string(&sequence.name));
+                s_args.index = sequence.index;
+                s_args.type_ = sequence.type_;
+                s_args.list = sequence.list.as_ref().map(|list| self.create_shared_sequence_item_list(fb, &list));
 
-            for sequence in sequences {
-                let name = fb.create_shared_string(&sequence.name);
-                let list =
-                    self.create_shared_sequence_item_list(fb, sequence.list.as_ref().unwrap());
-                let sequence_arg = SequenceArgs {
-                    name: Some(name),
-                    index: sequence.index,
-                    type_: sequence.type_,
-                    list: Some(list),
-                };
-                let offset = Sequence::create(fb, &sequence_arg);
-                sequence_offset_vec.push(offset);
-            }
-        }
+                ssab::ssqb::Sequence::create(fb, &s_args)
+            }).collect::<Vec<_>>();
+            fb.create_vector(&v)
+        });
 
-        let sequence_list = fb.create_vector(&sequence_offset_vec);
-        let arg = SsSequenceBinaryArgs {
-            sequence_list: Some(sequence_list),
-            ..Default::default()
-        };
-
-        SsSequenceBinary::create(fb, &arg)
+        ssab::ssqb::SsSequenceBinary::create(fb, &args)
     }
 }
