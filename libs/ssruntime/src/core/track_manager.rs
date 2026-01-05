@@ -162,7 +162,7 @@ impl TrackManager {
                 let s = if self.is_skip_frames { step * self.playback_forward as f32 } else { self.playback_forward as f32 };
                 let next: f32 = self.current_frame + s;
                 let next_frame_no = next.floor() as i32;
-                let next_frame_decimal = next - next_frame_no as f32;
+                let mut next_frame_decimal = next - next_frame_no as f32;
                 let mut current_frame_no = self.current_frame.floor() as i32;
 
                 let v = (next_frame_no - current_frame_no).abs();
@@ -174,6 +174,25 @@ impl TrackManager {
                     } else {
                         (self.end_frame, self.start_frame)
                     };
+
+                    if frame_no == end_limit {
+                        if self.loops != -1 {
+                            match &self.playback_style {
+                                PlaybackStyle::Normal => {
+                                    self.end_frame_reached = true;
+                                },
+                                PlaybackStyle::PingPong => {
+                                    let is_back_to_origin = match &self.playback_direction {
+                                        PlaybackDirection::Forward => self.playback_forward == -1,
+                                        PlaybackDirection::Backward => self.playback_forward == 1,
+                                    };
+                                    if is_back_to_origin {
+                                        self.end_frame_reached = true;
+                                    }
+                                },
+                            }
+                        }
+                    }
 
                     let is_reached = if self.playback_forward > 0 {
                         frame_no > end_limit
@@ -189,12 +208,13 @@ impl TrackManager {
                                     frame_no = start_limit;
                                 } else {
                                     self.loops -= 1;
-                                    self.end_frame_reached = true;
                                     if self.loops == 0 {
                                         self.is_playing = false;
+                                        self.end_frame_reached = true;
                                         // stop playing the animation
                                         frame_no = end_limit;
                                         current_frame_no = frame_no;
+                                        next_frame_decimal = 0.0;
                                         break;
                                     } else {
                                         // continue to play the animation
@@ -213,12 +233,13 @@ impl TrackManager {
                                 if is_back_to_origin {
                                     if self.loops != -1 {
                                         self.loops -= 1;
-                                        self.end_frame_reached = true;
                                         if self.loops == 0 {
                                             self.is_playing = false;
+                                            self.end_frame_reached = true;
                                             // stop playing the animation
                                             frame_no = if self.playback_direction == PlaybackDirection::Forward { self.start_frame } else { self.end_frame };
                                             current_frame_no = frame_no;
+                                            next_frame_decimal = 0.0;
                                             break;
                                         }
                                     }
@@ -300,7 +321,7 @@ mod tests {
     use super::*;
 
     fn play(t: &mut TrackManager, delta: f32, loop_num: i32) {
-        println!("frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_end_frame_reached());
+        println!("INIT frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_end_frame_reached());
         for _ in 0..loop_num {
             let (frame_no, decimal) = t.update(delta);
             println!("frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", frame_no, decimal, t.get_end_frame_reached());
@@ -320,6 +341,25 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        t.play();
+        play(t, 16.7, 500);
+    }
+
+    #[test]
+    fn no_loops() {
+        let t = &mut TrackManager::new();
+        t.setup(0, 99, 30);
+        t.set_loop(1);
+        t.play();
+        play(t, 16.7, 500);
+    }
+
+    #[test]
+    fn no_loops_reverse() {
+        let t = &mut TrackManager::new();
+        t.setup(0, 99, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        t.set_loop(1);
         t.play();
         play(t, 16.7, 500);
     }
@@ -372,7 +412,6 @@ mod tests {
         play(t, 16.7, 700);
     }
 
-
     #[test]
     fn loops_pingpong_reverse() {
         let t = &mut TrackManager::new();
@@ -383,4 +422,23 @@ mod tests {
         play(t, 16.7, 700);
     }
 
+    #[test]
+    fn no_loops_pingpong() {
+        let t = &mut TrackManager::new();
+        t.setup(0, 99, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_loop(1);
+        t.play();
+        play(t, 16.7, 700);
+    }
+
+    #[test]
+    fn no_loops_pingpong_reverse() {
+        let t = &mut TrackManager::new();
+        t.setup(0, 99, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+        t.set_loop(1);
+        t.play();
+        play(t, 16.7, 700);
+    }
 }
