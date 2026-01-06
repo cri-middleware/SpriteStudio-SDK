@@ -236,8 +236,11 @@ mod tests {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
-            ssab_dir.read_dir().unwrap().for_each(|entry| {
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
                 let f = entry.unwrap().path();
+                if f.extension().unwrap() != "ssab" { continue; }
+
                 let buf =  std::fs::read(f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
@@ -261,7 +264,7 @@ mod tests {
                 println!("  parts:");
                 init.parts().map(|parts| parts.iter().for_each(|part| { println!("    part name: {}", part.name().unwrap()); }));
                 println!();
-            })
+            }
         })
     }
 
@@ -270,8 +273,11 @@ mod tests {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
-            ssab_dir.read_dir().unwrap().for_each(|entry| {
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
                 let f = entry.unwrap().path();
+                if f.extension().unwrap() != "ssab" { continue; }
+
                 let buf =  std::fs::read(f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
@@ -292,11 +298,10 @@ mod tests {
                     println!("    total_frame: {}", prepare.total_frame());
                     println!("    fps: {}", prepare.fps());
                     prepare.canvas().map(|canvas| println!("    canvas x1: {}, y1: {}, x2: {}, y2: {}", canvas.x1(), canvas.y1(), canvas.x2(), canvas.y2()));
-
                     println!();
                 }));
                 println!();
-            })
+            }
         })
     }
 
