@@ -1,3 +1,5 @@
+use crate::core::track_manager::{PlaybackDirection, PlaybackStyle};
+
 mod runtime;
 pub mod core;
 
@@ -88,6 +90,43 @@ impl<'a> Context<'a> {
         self.track.get_end_frame_reached()
     }
 
+    // setting getter functions
+    pub fn is_playing(&self) -> bool {
+        self.track.is_playing()
+    }
+
+    pub fn get_skip_frames(&mut self) -> bool {
+        self.track.get_skip_frames()
+    }
+
+    pub fn get_playback_direction(&self) -> PlaybackDirection {
+        self.track.get_playback_direction()
+    }
+
+    pub fn get_playback_style(&self) -> PlaybackStyle {
+        self.track.get_playback_style()
+    }
+
+    pub fn get_loops(&mut self) -> i32 {
+        self.track.get_loops()
+    }
+
+    pub fn get_remain_loops(&mut self) -> i32 {
+        self.track.get_remain_loops()
+    }
+
+    pub fn get_start_frame(&self) -> i32 {
+        self.track.get_start_frame()
+    }
+
+    pub fn get_end_frame(&self) -> i32 {
+        self.track.get_end_frame()
+    }
+
+    pub fn get_fps(&self) -> i32 {
+        self.track.get_fps()
+    }
+
     // Playback setup
 
     pub fn set_skip_frames(&mut self, skip: bool) {
@@ -95,7 +134,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn set_loop(&mut self, loops: i32) {
-        self.track.set_loop(loops);
+        self.track.set_loops(loops);
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {

@@ -1,4 +1,5 @@
 use std::ffi::{c_char, c_float, c_int, c_uchar, c_void, CStr};
+use crate::core::track_manager::{PlaybackDirection, PlaybackStyle};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_create(ptr: *mut c_uchar, len: usize) -> *mut c_void {
@@ -63,6 +64,61 @@ pub extern "C" fn ss_runtime_get_end_frame_reached(ptr: *mut c_void) -> bool {
     let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
     context.get_end_frame_reached()
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_playing(ptr: *mut c_void) -> bool {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.is_playing()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_skip_frames(ptr: *mut c_void) -> bool {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_skip_frames()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_playback_direction(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_playback_direction() as i32
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_playback_style(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_playback_style() as i32
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_loops(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_loops()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_remain_loops(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_remain_loops()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_start_frame(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.track.get_start_frame()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_end_frame(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_end_frame()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_fps(ptr: *mut c_void) -> i32 {
+    let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
+    context.get_fps()
+}
+
 
 // Playback setup
 #[unsafe(no_mangle)]
