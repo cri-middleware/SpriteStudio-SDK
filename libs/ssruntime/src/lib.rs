@@ -86,8 +86,8 @@ impl<'a> Context<'a> {
         self.track.get_frame_no_decimal()
     }
 
-    pub fn get_end_frame_reached(&self) -> bool {
-        self.track.get_end_frame_reached()
+    pub fn is_end_frame_reached(&self) -> bool {
+        self.track.is_end_frame_reached()
     }
 
     // setting getter functions

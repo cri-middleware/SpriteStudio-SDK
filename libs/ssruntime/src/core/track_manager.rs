@@ -45,7 +45,7 @@ impl TrackManager {
         self.current_frame - self.current_frame.floor()
     }
 
-    pub fn get_end_frame_reached(&self) -> bool {
+    pub fn is_end_frame_reached(&self) -> bool {
         self.end_frame_reached
     }
 
@@ -362,10 +362,10 @@ mod tests {
     use super::*;
 
     fn play(t: &mut TrackManager, delta: f32, loop_num: i32) {
-        println!("INIT frame_no: {}, frame_no_decimal: {:}, end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_end_frame_reached());
+        println!("INIT frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
         for _ in 0..loop_num {
             let (frame_no, decimal) = t.update(delta);
-            println!("frame_no: {}, frame_no_decimal: {:}, is_playing: {}, end_frame_reached: {}", frame_no, decimal, t.is_playing(), t.get_end_frame_reached());
+            println!("frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", frame_no, decimal, t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
         }
     }
 

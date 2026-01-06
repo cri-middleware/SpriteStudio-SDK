@@ -60,9 +60,9 @@ pub extern "C" fn ss_runtime_get_frame_no_decimal(ptr: *mut c_void) -> c_float {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_end_frame_reached(ptr: *mut c_void) -> bool {
+pub extern "C" fn ss_runtime_is_end_frame_reached(ptr: *mut c_void) -> bool {
     let context = unsafe { &mut *(ptr as *mut crate::Context<'_>) };
-    context.get_end_frame_reached()
+    context.is_end_frame_reached()
 }
 
 #[unsafe(no_mangle)]
