@@ -8,10 +8,10 @@ pub mod ffi;
 // pub mod wasm;
 
 pub struct Context<'a> {
-    pub ssab: ssab::ssab::SsAnimeBinary<'a>,
-    pub track: core::track_manager::TrackManager,
-    pub fb: flatbuffers::FlatBufferBuilder<'a>,
-    pub animation: Option<ssab::ssab::AnimationData<'a>>,
+    ssab: ssab::ssab::SsAnimeBinary<'a>,
+    track: core::track_manager::TrackManager,
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+    animation: Option<ssab::ssab::AnimationData<'a>>,
 }
 
 impl<'a> Context<'a> {
@@ -219,8 +219,46 @@ mod tests {
                 init.font_bitmaps().map(|font_bitmaps| font_bitmaps.iter().for_each(|font_bitmap| { println!("    font_bitmap name: {}", font_bitmap.name().unwrap()); }));
                 println!("  external_instances:");
                 init.external_instances().map(|external_instances| external_instances.iter().for_each(|external_instance| { println!("    external_instance name: {}", external_instance); }));
-                println!("");
+                println!("  parts:");
+                init.parts().map(|parts| parts.iter().for_each(|part| { println!("    part name: {}", part.name().unwrap()); }));
+                println!();
             })
         })
     }
+
+    #[test]
+    fn test_animation_names() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            ssab_dir.read_dir().unwrap().for_each(|entry| {
+                let f = entry.unwrap().path();
+                let buf =  std::fs::read(f).unwrap();
+                let mut context = Context::new(&buf).unwrap();
+                let Some(init_buf) = context.get_initialize_data() else {
+                    // TODO: error handling
+                    return;
+                };
+                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
+                println!("animations name: {}", init.name().unwrap());
+                context.get_animation_names().map(|names| names.iter().for_each(|name| {
+                    println!("  animation name: {}", name);
+                    let Some(prepare_buf) = context.setup_animation(name) else {
+                        // TODO: error handling
+                        return;
+                    };
+                    let prepare = unsafe { runtime::preparation::ss::runtime::root_as_anim_prep_data(&prepare_buf) }.unwrap();
+                    println!("    start_frame: {}", prepare.start_frame());
+                    println!("    end_frame: {}", prepare.end_frame());
+                    println!("    total_frame: {}", prepare.total_frame());
+                    println!("    fps: {}", prepare.fps());
+                    prepare.canvas().map(|canvas| println!("    canvas x1: {}, y1: {}, x2: {}, y2: {}", canvas.x1(), canvas.y1(), canvas.x2(), canvas.y2()));
+
+                    println!();
+                }));
+                println!();
+            })
+        })
+    }
+
 }
