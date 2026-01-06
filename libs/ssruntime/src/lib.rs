@@ -193,7 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn test_context_new() {
+    fn test_initialize_data() {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
@@ -202,31 +202,24 @@ mod tests {
                 let buf =  std::fs::read(f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
+                    // TODO: error handling
                     return;
                 };
+
+                // show .ss*e(.ssce, .ssee, .ssse, .charmap and external instance(animation)) names
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
-                print!("name: {}\n", init.name().unwrap());
-                init.cellmaps().map_or_else(
-                    || println!("  cellmap name: _"),
-                    |cellmaps| cellmaps.iter().for_each(|c| println!("  cellmap name: {}", c.name().unwrap()))
-                );
-                init.effects().map_or_else(
-                    || print!("  effect name: _\n"),
-                    |effects| effects.iter().for_each(|effect| { print!("  effect name: {}\n", effect.name().unwrap()); })
-                );
-                init.sound_lists().map_or_else(
-                    || print!("  sound_list name: _\n"),
-                    |sound_lists| sound_lists.iter().for_each(|sound_list| { print!("  sound_list name: {}\n", sound_list.name().unwrap()); })
-                );
-                init.font_bitmaps().map_or_else(
-                    || print!("  font_bitmap name: _\n"),
-                    |font_bitmaps| font_bitmaps.iter().for_each(|font_bitmap| { print!("  font_bitmap name: {}\n", font_bitmap.name().unwrap()); })
-                );
-                init.external_instances().map_or_else(
-                    || print!("  external_instance name: _\n"),
-                    |external_instance| external_instance.iter().for_each(|external_instance| { print!("  external_instance name: {}\n", external_instance); })
-                );
-                print!("\n");
+                println!("name: {}", init.name().unwrap());
+                println!("  cellmaps:");
+                init.cellmaps().map(|cellmaps| cellmaps.iter().for_each(|c| println!("    cellmap name: {}", c.name().unwrap())));
+                println!("  effects:");
+                init.effects().map(|effects| effects.iter().for_each(|effect| println!("    effect name: {}", effect.name().unwrap())));
+                println!("  sound_lists:");
+                init.sound_lists().map(|sound_lists| sound_lists.iter().for_each(|sound_list| println!("    sound_list name: {}", sound_list.name().unwrap())));
+                println!("  font_bitmaps:");
+                init.font_bitmaps().map(|font_bitmaps| font_bitmaps.iter().for_each(|font_bitmap| { println!("    font_bitmap name: {}", font_bitmap.name().unwrap()); }));
+                println!("  external_instances:");
+                init.external_instances().map(|external_instances| external_instances.iter().for_each(|external_instance| { println!("    external_instance name: {}", external_instance); }));
+                println!("");
             })
         })
     }
