@@ -2865,11 +2865,11 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALOPACITY, Some(1.0)).unwrap()}
   }
   #[inline]
-  pub fn priority(&self) -> i32 {
+  pub fn priority(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributes::VT_PRIORITY, Some(0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_PRIORITY, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn flip_v(&self) -> bool {
@@ -3067,7 +3067,7 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<f32>("local_scale_y", Self::VT_LOCAL_SCALE_Y, false)?
      .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
      .visit_field::<f32>("localopacity", Self::VT_LOCALOPACITY, false)?
-     .visit_field::<i32>("priority", Self::VT_PRIORITY, false)?
+     .visit_field::<f32>("priority", Self::VT_PRIORITY, false)?
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
@@ -3111,7 +3111,7 @@ pub struct PartAttributesArgs<'a> {
     pub local_scale_y: f32,
     pub opacity: f32,
     pub localopacity: f32,
-    pub priority: i32,
+    pub priority: f32,
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
@@ -3155,7 +3155,7 @@ impl<'a> Default for PartAttributesArgs<'a> {
       local_scale_y: 1.0,
       opacity: 1.0,
       localopacity: 1.0,
-      priority: 0,
+      priority: 0.0,
       flip_v: false,
       flip_h: false,
       hide: false,
@@ -3243,8 +3243,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALOPACITY, localopacity, 1.0);
   }
   #[inline]
-  pub fn add_priority(&mut self, priority: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributes::VT_PRIORITY, priority, 0);
+  pub fn add_priority(&mut self, priority: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_PRIORITY, priority, 0.0);
   }
   #[inline]
   pub fn add_flip_v(&mut self, flip_v: bool) {

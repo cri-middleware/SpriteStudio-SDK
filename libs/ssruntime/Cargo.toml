@@ -7,6 +7,9 @@ edition = "2024"
 flatbuffers = { version = "25.12.19", features = ["default"] }
 ssab = { path = "../ssab", features = ["default"] }
 
+[dev-dependencies]
+ssconverter3 = { path = "../ssconverter3" }
+
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 

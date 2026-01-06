@@ -8,10 +8,10 @@ pub mod ffi;
 // pub mod wasm;
 
 pub struct Context<'a> {
-    pub ssab: ssab::ssab::SsAnimeBinary<'a>,
-    pub track: core::track_manager::TrackManager,
-    pub fb: flatbuffers::FlatBufferBuilder<'a>,
-    pub animation: Option<ssab::ssab::AnimationData<'a>>,
+    ssab: ssab::ssab::SsAnimeBinary<'a>,
+    track: core::track_manager::TrackManager,
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+    animation: Option<ssab::ssab::AnimationData<'a>>,
 }
 
 impl<'a> Context<'a> {
@@ -146,6 +146,119 @@ impl<'a> Context<'a> {
 
     pub fn prev_frame(&mut self) {
         self.track.prev_frame();
+    }
+
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use ssconverter3;
+    use super::*;
+    use super::runtime;
+
+    static TARGET_SSPJ_FILES: [&str; 4] = [
+        "tests/overall/overall.sspj",
+        "tests/ParticleEffect/ParticleEffect.sspj",
+        "tests/allAttributeV7/allAttributeV7.sspj",
+        "tests/allPartsV7/allPartsV7.sspj",
+    ];
+
+    static TARGET_SSPAB_DIRS: [&str; 4] = [
+        "tests/overall/overall_ssab",
+        "tests/ParticleEffect/ParticleEffect_ssab",
+        "tests/allAttributeV7/allAttributeV7_ssab",
+        "tests/allPartsV7/allPartsV7_ssab",
+    ];
+
+
+    fn get_test_base_path() -> PathBuf {
+        std::env::current_dir()
+            .expect("Failed to get the current directory")
+            .ancestors()
+            .nth(2)
+            .expect("Failed to get the base directory")
+            .to_path_buf()
+    }
+
+    fn prepare() {
+        TARGET_SSPAB_DIRS.iter().enumerate().for_each(|(i, &dir)| {
+            let ssab_dir = get_test_base_path().join(dir);
+            if !ssab_dir.exists() {
+                let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
+                let config = ssconverter3::ConverterConfig::default();
+                let _ = ssconverter3::convert_sspj_to_ssab_files(sspj.as_path(), &config);
+            }
+        });
+    }
+
+    #[test]
+    fn test_initialize_data() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            ssab_dir.read_dir().unwrap().for_each(|entry| {
+                let f = entry.unwrap().path();
+                let buf =  std::fs::read(f).unwrap();
+                let mut context = Context::new(&buf).unwrap();
+                let Some(init_buf) = context.get_initialize_data() else {
+                    // TODO: error handling
+                    return;
+                };
+
+                // show .ss*e(.ssce, .ssee, .ssse, .charmap and external instance(animation)) names
+                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
+                println!("name: {}", init.name().unwrap());
+                println!("  cellmaps:");
+                init.cellmaps().map(|cellmaps| cellmaps.iter().for_each(|c| println!("    cellmap name: {}", c.name().unwrap())));
+                println!("  effects:");
+                init.effects().map(|effects| effects.iter().for_each(|effect| println!("    effect name: {}", effect.name().unwrap())));
+                println!("  sound_lists:");
+                init.sound_lists().map(|sound_lists| sound_lists.iter().for_each(|sound_list| println!("    sound_list name: {}", sound_list.name().unwrap())));
+                println!("  font_bitmaps:");
+                init.font_bitmaps().map(|font_bitmaps| font_bitmaps.iter().for_each(|font_bitmap| { println!("    font_bitmap name: {}", font_bitmap.name().unwrap()); }));
+                println!("  external_instances:");
+                init.external_instances().map(|external_instances| external_instances.iter().for_each(|external_instance| { println!("    external_instance name: {}", external_instance); }));
+                println!("  parts:");
+                init.parts().map(|parts| parts.iter().for_each(|part| { println!("    part name: {}", part.name().unwrap()); }));
+                println!();
+            })
+        })
+    }
+
+    #[test]
+    fn test_animation_names() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            ssab_dir.read_dir().unwrap().for_each(|entry| {
+                let f = entry.unwrap().path();
+                let buf =  std::fs::read(f).unwrap();
+                let mut context = Context::new(&buf).unwrap();
+                let Some(init_buf) = context.get_initialize_data() else {
+                    // TODO: error handling
+                    return;
+                };
+                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
+                println!("animations name: {}", init.name().unwrap());
+                context.get_animation_names().map(|names| names.iter().for_each(|name| {
+                    println!("  animation name: {}", name);
+                    let Some(prepare_buf) = context.setup_animation(name) else {
+                        // TODO: error handling
+                        return;
+                    };
+                    let prepare = unsafe { runtime::preparation::ss::runtime::root_as_anim_prep_data(&prepare_buf) }.unwrap();
+                    println!("    start_frame: {}", prepare.start_frame());
+                    println!("    end_frame: {}", prepare.end_frame());
+                    println!("    total_frame: {}", prepare.total_frame());
+                    println!("    fps: {}", prepare.fps());
+                    prepare.canvas().map(|canvas| println!("    canvas x1: {}, y1: {}, x2: {}, y2: {}", canvas.x1(), canvas.y1(), canvas.x2(), canvas.y2()));
+
+                    println!();
+                }));
+                println!();
+            })
+        })
     }
 
 }

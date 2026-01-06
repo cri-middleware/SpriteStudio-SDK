@@ -8138,14 +8138,14 @@ impl<'a> PartAttributes<'a> {
     if let Some(x) = args.vertex { builder.add_vertex(x); }
     if let Some(x) = args.shader { builder.add_shader(x); }
     if let Some(x) = args.parts_color { builder.add_parts_color(x); }
+    builder.add_localopacity(args.localopacity);
+    builder.add_opacity(args.opacity);
     if let Some(x) = args.local_scale { builder.add_local_scale(x); }
     if let Some(x) = args.scale { builder.add_scale(x); }
     if let Some(x) = args.rotation { builder.add_rotation(x); }
     if let Some(x) = args.position { builder.add_position(x); }
     if let Some(x) = args.cell { builder.add_cell(x); }
     builder.add_priority(args.priority);
-    builder.add_localopacity(args.localopacity);
-    builder.add_opacity(args.opacity);
     builder.add_hide(args.hide);
     builder.add_flip_h(args.flip_h);
     builder.add_flip_v(args.flip_v);
@@ -8189,18 +8189,18 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_LOCAL_SCALE, None)}
   }
   #[inline]
-  pub fn opacity(&self) -> i16 {
+  pub fn opacity(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(PartAttributes::VT_OPACITY, Some(0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_OPACITY, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn localopacity(&self) -> i16 {
+  pub fn localopacity(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(PartAttributes::VT_LOCALOPACITY, Some(0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALOPACITY, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn priority(&self) -> i16 {
@@ -8327,8 +8327,8 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec3>>("rotation", Self::VT_ROTATION, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("scale", Self::VT_SCALE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("local_scale", Self::VT_LOCAL_SCALE, false)?
-     .visit_field::<i16>("opacity", Self::VT_OPACITY, false)?
-     .visit_field::<i16>("localopacity", Self::VT_LOCALOPACITY, false)?
+     .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
+     .visit_field::<f32>("localopacity", Self::VT_LOCALOPACITY, false)?
      .visit_field::<i16>("priority", Self::VT_PRIORITY, false)?
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
@@ -8355,8 +8355,8 @@ pub struct PartAttributesArgs<'a> {
     pub rotation: Option<::flatbuffers::WIPOffset<Vec3<'a>>>,
     pub scale: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub local_scale: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub opacity: i16,
-    pub localopacity: i16,
+    pub opacity: f32,
+    pub localopacity: f32,
     pub priority: i16,
     pub flip_v: bool,
     pub flip_h: bool,
@@ -8383,8 +8383,8 @@ impl<'a> Default for PartAttributesArgs<'a> {
       rotation: None,
       scale: None,
       local_scale: None,
-      opacity: 0,
-      localopacity: 0,
+      opacity: 0.0,
+      localopacity: 0.0,
       priority: 0,
       flip_v: false,
       flip_h: false,
@@ -8431,12 +8431,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_LOCAL_SCALE, local_scale);
   }
   #[inline]
-  pub fn add_opacity(&mut self, opacity: i16) {
-    self.fbb_.push_slot::<i16>(PartAttributes::VT_OPACITY, opacity, 0);
+  pub fn add_opacity(&mut self, opacity: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_OPACITY, opacity, 0.0);
   }
   #[inline]
-  pub fn add_localopacity(&mut self, localopacity: i16) {
-    self.fbb_.push_slot::<i16>(PartAttributes::VT_LOCALOPACITY, localopacity, 0);
+  pub fn add_localopacity(&mut self, localopacity: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALOPACITY, localopacity, 0.0);
   }
   #[inline]
   pub fn add_priority(&mut self, priority: i16) {

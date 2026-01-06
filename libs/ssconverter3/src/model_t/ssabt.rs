@@ -41,7 +41,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     
     let external_instances = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Instance)
         .filter(|part| part.ref_anime_pack != anime_pack.name)
-        .map(|part| [anime_pack.name.as_str(), part.ref_anime_pack.as_str()].join("/")).collect::<Vec<String>>();
+        .map(|part| [part.ref_anime_pack.as_str(), part.ref_anime.as_str()].join("/")).collect::<HashSet<String>>();
 
 
     let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
@@ -56,7 +56,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.effects = if using_effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &using_effect_file_list)) };
     anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list)) };
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
-    anime_binary.external_instances = if external_instances.is_empty() { None } else { Some(external_instances) };
+    anime_binary.external_instances = if external_instances.is_empty() { None } else { Some( external_instances.iter().map(|external_instance| external_instance.clone()).collect::<Vec<_>>()) };
 
     anime_binary
 }

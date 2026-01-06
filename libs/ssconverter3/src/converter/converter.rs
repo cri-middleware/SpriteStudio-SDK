@@ -81,8 +81,8 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Resu
 
 #[derive(Debug, Clone)]
 pub struct ConverterConfig {
-    convert_config: ConvertConfig,
-    out_dir: Option<OsString>,
+    pub convert_config: ConvertConfig,
+    pub out_dir: Option<OsString>,
 }
 impl Default for ConverterConfig {
     fn default() -> Self {

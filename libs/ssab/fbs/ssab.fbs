@@ -417,8 +417,8 @@ table PartAttributes {
   rotation: Vec3;
   scale: Vec2;
   local_scale: Vec2;
-  opacity: short;
-  localopacity: short;
+  opacity: float;
+  localopacity: float;
   priority: short;
   flip_v: bool;
   flip_h: bool;
