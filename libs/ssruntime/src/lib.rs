@@ -149,3 +149,85 @@ impl<'a> Context<'a> {
     }
 
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+    use ssconverter3;
+    use super::*;
+    use super::runtime;
+
+    static TARGET_SSPJ_FILES: [&str; 4] = [
+        "tests/overall/overall.sspj",
+        "tests/ParticleEffect/ParticleEffect.sspj",
+        "tests/allAttributeV7/allAttributeV7.sspj",
+        "tests/allPartsV7/allPartsV7.sspj",
+    ];
+
+    static TARGET_SSPAB_DIRS: [&str; 4] = [
+        "tests/overall/overall_ssab",
+        "tests/ParticleEffect/ParticleEffect_ssab",
+        "tests/allAttributeV7/allAttributeV7_ssab",
+        "tests/allPartsV7/allPartsV7_ssab",
+    ];
+
+
+    fn get_test_base_path() -> PathBuf {
+        std::env::current_dir()
+            .expect("Failed to get the current directory")
+            .ancestors()
+            .nth(2)
+            .expect("Failed to get the base directory")
+            .to_path_buf()
+    }
+
+    fn prepare() {
+        TARGET_SSPAB_DIRS.iter().enumerate().for_each(|(i, &dir)| {
+            let ssab_dir = get_test_base_path().join(dir);
+            if !ssab_dir.exists() {
+                let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
+                let config = ssconverter3::ConverterConfig::default();
+                let _ = ssconverter3::convert_sspj_to_ssab_files(sspj.as_path(), &config);
+            }
+        });
+    }
+
+    #[test]
+    fn test_context_new() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            ssab_dir.read_dir().unwrap().for_each(|entry| {
+                let f = entry.unwrap().path();
+                let buf =  std::fs::read(f).unwrap();
+                let mut context = Context::new(&buf).unwrap();
+                let Some(init_buf) = context.get_initialize_data() else {
+                    return;
+                };
+                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
+                print!("name: {}\n", init.name().unwrap());
+                init.cellmaps().map_or_else(
+                    || println!("  cellmap name: _"),
+                    |cellmaps| cellmaps.iter().for_each(|c| println!("  cellmap name: {}", c.name().unwrap()))
+                );
+                init.effects().map_or_else(
+                    || print!("  effect name: _\n"),
+                    |effects| effects.iter().for_each(|effect| { print!("  effect name: {}\n", effect.name().unwrap()); })
+                );
+                init.sound_lists().map_or_else(
+                    || print!("  sound_list name: _\n"),
+                    |sound_lists| sound_lists.iter().for_each(|sound_list| { print!("  sound_list name: {}\n", sound_list.name().unwrap()); })
+                );
+                init.font_bitmaps().map_or_else(
+                    || print!("  font_bitmap name: _\n"),
+                    |font_bitmaps| font_bitmaps.iter().for_each(|font_bitmap| { print!("  font_bitmap name: {}\n", font_bitmap.name().unwrap()); })
+                );
+                init.external_instances().map_or_else(
+                    || print!("  external_instance name: _\n"),
+                    |external_instance| external_instance.iter().for_each(|external_instance| { print!("  external_instance name: {}\n", external_instance); })
+                );
+                print!("\n");
+            })
+        })
+    }
+}

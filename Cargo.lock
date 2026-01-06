@@ -473,6 +473,7 @@ dependencies = [
  "flatbuffers",
  "libc",
  "ssab",
+ "ssconverter3",
 ]
 
 [[package]]
