@@ -245,7 +245,7 @@ mod tests {
                 let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
-                    // TODO: error handling
+                    assert!(false, "failed get_initialize_data", );
                     return;
                 };
 
@@ -282,7 +282,7 @@ mod tests {
                 let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
-                    // TODO: error handling
+                    assert!(false, "failed get_initialize_data", );
                     return;
                 };
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
@@ -290,7 +290,7 @@ mod tests {
                 context.get_animation_names().map(|names| names.iter().for_each(|name| {
                     println!("  animation name: {}", name);
                     let Some(prepare_buf) = context.setup_animation(name) else {
-                        // TODO: error handling
+                        assert!(false, "failed setup_animation. name: {}", name);
                         return;
                     };
                     let prepare = unsafe { runtime::preparation::ss::runtime::root_as_anim_prep_data(&prepare_buf) }.unwrap();
@@ -319,7 +319,7 @@ mod tests {
                 let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
-                    // TODO: error handling
+                    assert!(false, "failed get_initialize_data", );
                     return;
                 };
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
