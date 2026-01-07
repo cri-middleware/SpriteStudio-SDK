@@ -1,9 +1,10 @@
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum PlaybackStyle {
     Normal = 0,
     PingPong = 1,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Clone)]
 pub enum PlaybackDirection {
     Forward = 1,
     Backward = -1,
@@ -12,7 +13,7 @@ pub enum PlaybackDirection {
 pub struct TrackManager {
     is_pausing: bool,
     is_playing: bool,
-
+    
     anime_data_start_frame: i32,
     anime_data_end_frame: i32,
     anime_data_fps: i32,
@@ -21,6 +22,7 @@ pub struct TrackManager {
     end_frame: i32,
     fps: i32,
     fps_rate: f32,
+    loops: i32,
 
     update_interval: f32,
     playback_style: PlaybackStyle,
@@ -30,7 +32,7 @@ pub struct TrackManager {
     playback_forward: i32,
     current_frame: f32,
     next_frame_time: f32,
-    loops: i32,
+    remain_loops: i32,
     end_frame_reached: bool,
 }
 
@@ -43,10 +45,45 @@ impl TrackManager {
         self.current_frame - self.current_frame.floor()
     }
 
-    pub fn get_end_frame_reached(&self) -> bool {
+    pub fn is_end_frame_reached(&self) -> bool {
         self.end_frame_reached
     }
 
+    pub fn is_playing(&self) -> bool {
+        self.is_playing
+    }
+
+    pub fn get_skip_frames(&mut self) -> bool {
+        self.is_skip_frames
+    }
+
+    pub fn get_playback_direction(&self) -> PlaybackDirection {
+        self.playback_direction
+    }
+
+    pub fn get_playback_style(&self) -> PlaybackStyle {
+        self.playback_style
+    }
+
+    pub fn get_loops(&mut self) -> i32 {
+        self.loops
+    }
+
+    pub fn get_remain_loops(&mut self) -> i32 {
+        self.remain_loops
+    }
+
+    pub fn get_start_frame(&self) -> i32 {
+        self.start_frame
+    }
+
+    pub fn get_end_frame(&self) -> i32 {
+        self.end_frame
+    }
+
+    pub fn get_fps(&self) -> i32 {
+        self.fps
+    }
 }
 
 impl TrackManager {
@@ -73,6 +110,7 @@ impl TrackManager {
             current_frame: 0.0,
             next_frame_time: 0.0,
             loops: -1,
+            remain_loops: -1,
             end_frame_reached: false,
         }
     }
@@ -117,8 +155,9 @@ impl TrackManager {
      * 0: no loop
      * n: loop n times
      */
-    pub fn set_loop(&mut self, loops: i32) {
+    pub fn set_loops(&mut self, loops: i32) {
         self.loops = if loops > 0 {loops} else {-1};
+        self.remain_loops = loops;
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {
@@ -176,7 +215,7 @@ impl TrackManager {
                     };
 
                     if frame_no == end_limit {
-                        if self.loops != -1 {
+                        if self.remain_loops != -1 {
                             match &self.playback_style {
                                 PlaybackStyle::Normal => {
                                     self.end_frame_reached = true;
@@ -203,12 +242,12 @@ impl TrackManager {
                     if is_reached {
                         match &self.playback_style {
                             PlaybackStyle::Normal => {
-                                if self.loops == -1 {
+                                if self.remain_loops == -1 {
                                     // infinite loop
                                     frame_no = start_limit;
                                 } else {
-                                    self.loops -= 1;
-                                    if self.loops == 0 {
+                                    self.remain_loops -= 1;
+                                    if self.remain_loops == 0 {
                                         self.is_playing = false;
                                         self.end_frame_reached = true;
                                         // stop playing the animation
@@ -231,9 +270,9 @@ impl TrackManager {
                                     PlaybackDirection::Backward => self.playback_forward == -1,
                                 };
                                 if is_back_to_origin {
-                                    if self.loops != -1 {
-                                        self.loops -= 1;
-                                        if self.loops == 0 {
+                                    if self.remain_loops != -1 {
+                                        self.remain_loops -= 1;
+                                        if self.remain_loops == 0 {
                                             self.is_playing = false;
                                             self.end_frame_reached = true;
                                             // stop playing the animation
@@ -243,6 +282,8 @@ impl TrackManager {
                                             break;
                                         }
                                     }
+                                } else {
+                                    next_frame_decimal = 1.0 - next_frame_decimal;
                                 }
                             }
                         }
@@ -321,10 +362,10 @@ mod tests {
     use super::*;
 
     fn play(t: &mut TrackManager, delta: f32, loop_num: i32) {
-        println!("INIT frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_end_frame_reached());
+        println!("INIT frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
         for _ in 0..loop_num {
             let (frame_no, decimal) = t.update(delta);
-            println!("frame_no: {} frame_no_decimal: {:} end_frame_reached: {}", frame_no, decimal, t.get_end_frame_reached());
+            println!("frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", frame_no, decimal, t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
         }
     }
 
@@ -349,7 +390,7 @@ mod tests {
     fn no_loops() {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
-        t.set_loop(1);
+        t.set_loops(1);
         t.play();
         play(t, 16.7, 500);
     }
@@ -359,7 +400,7 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.set_loop(1);
+        t.set_loops(1);
         t.play();
         play(t, 16.7, 500);
     }
@@ -368,7 +409,7 @@ mod tests {
     fn loops() {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
-        t.set_loop(3);
+        t.set_loops(3);
         t.play();
         play(t, 16.7, 500);
     }
@@ -378,7 +419,7 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.set_loop(3);
+        t.set_loops(3);
         t.play();
         play(t, 16.7, 500);
     }
@@ -407,7 +448,7 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.set_loop(3);
+        t.set_loops(3);
         t.play();
         play(t, 16.7, 700);
     }
@@ -417,7 +458,7 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
-        t.set_loop(3);
+        t.set_loops(3);
         t.play();
         play(t, 16.7, 700);
     }
@@ -427,7 +468,7 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.set_loop(1);
+        t.set_loops(1);
         t.play();
         play(t, 16.7, 700);
     }
@@ -437,7 +478,7 @@ mod tests {
         let t = &mut TrackManager::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
-        t.set_loop(1);
+        t.set_loops(1);
         t.play();
         play(t, 16.7, 700);
     }

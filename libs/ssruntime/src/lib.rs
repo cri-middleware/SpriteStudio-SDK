@@ -1,3 +1,5 @@
+use crate::core::track_manager::{PlaybackDirection, PlaybackStyle};
+
 mod runtime;
 pub mod core;
 
@@ -84,8 +86,45 @@ impl<'a> Context<'a> {
         self.track.get_frame_no_decimal()
     }
 
-    pub fn get_end_frame_reached(&self) -> bool {
-        self.track.get_end_frame_reached()
+    pub fn is_end_frame_reached(&self) -> bool {
+        self.track.is_end_frame_reached()
+    }
+
+    // setting getter functions
+    pub fn is_playing(&self) -> bool {
+        self.track.is_playing()
+    }
+
+    pub fn get_skip_frames(&mut self) -> bool {
+        self.track.get_skip_frames()
+    }
+
+    pub fn get_playback_direction(&self) -> PlaybackDirection {
+        self.track.get_playback_direction()
+    }
+
+    pub fn get_playback_style(&self) -> PlaybackStyle {
+        self.track.get_playback_style()
+    }
+
+    pub fn get_loops(&mut self) -> i32 {
+        self.track.get_loops()
+    }
+
+    pub fn get_remain_loops(&mut self) -> i32 {
+        self.track.get_remain_loops()
+    }
+
+    pub fn get_start_frame(&self) -> i32 {
+        self.track.get_start_frame()
+    }
+
+    pub fn get_end_frame(&self) -> i32 {
+        self.track.get_end_frame()
+    }
+
+    pub fn get_fps(&self) -> i32 {
+        self.track.get_fps()
     }
 
     // Playback setup
@@ -95,7 +134,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn set_loop(&mut self, loops: i32) {
-        self.track.set_loop(loops);
+        self.track.set_loops(loops);
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {
@@ -152,6 +191,7 @@ impl<'a> Context<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::any::Any;
     use std::path::PathBuf;
     use ssconverter3;
     use super::*;
@@ -197,9 +237,12 @@ mod tests {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
-            ssab_dir.read_dir().unwrap().for_each(|entry| {
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
                 let f = entry.unwrap().path();
-                let buf =  std::fs::read(f).unwrap();
+                if f.extension().unwrap() != "ssab" { continue; }
+
+                let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
                     // TODO: error handling
@@ -222,7 +265,7 @@ mod tests {
                 println!("  parts:");
                 init.parts().map(|parts| parts.iter().for_each(|part| { println!("    part name: {}", part.name().unwrap()); }));
                 println!();
-            })
+            }
         })
     }
 
@@ -231,9 +274,12 @@ mod tests {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
-            ssab_dir.read_dir().unwrap().for_each(|entry| {
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
                 let f = entry.unwrap().path();
-                let buf =  std::fs::read(f).unwrap();
+                if f.extension().unwrap() != "ssab" { continue; }
+
+                let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
                     // TODO: error handling
@@ -253,12 +299,38 @@ mod tests {
                     println!("    total_frame: {}", prepare.total_frame());
                     println!("    fps: {}", prepare.fps());
                     prepare.canvas().map(|canvas| println!("    canvas x1: {}, y1: {}, x2: {}, y2: {}", canvas.x1(), canvas.y1(), canvas.x2(), canvas.y2()));
-
                     println!();
                 }));
                 println!();
-            })
+            }
         })
     }
 
+    #[test]
+    fn test_part_names() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
+                let f = entry.unwrap().path();
+                if f.extension().unwrap() != "ssab" { continue; }
+
+                let buf =  std::fs::read(&f).unwrap();
+                let mut context = Context::new(&buf).unwrap();
+                let Some(init_buf) = context.get_initialize_data() else {
+                    // TODO: error handling
+                    return;
+                };
+                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
+                println!("ssab: {}", f.file_name().unwrap().to_str().unwrap());
+                println!("parts");
+                init.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {
+                    println!("id: {}, parent_id: {}, part type: {}, part name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
+                }));
+
+                println!();
+            }
+        })
+    }
 }
