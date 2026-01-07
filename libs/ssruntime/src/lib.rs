@@ -191,6 +191,7 @@ impl<'a> Context<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::any::Any;
     use std::path::PathBuf;
     use ssconverter3;
     use super::*;
@@ -241,7 +242,7 @@ mod tests {
                 let f = entry.unwrap().path();
                 if f.extension().unwrap() != "ssab" { continue; }
 
-                let buf =  std::fs::read(f).unwrap();
+                let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
                     // TODO: error handling
@@ -278,7 +279,7 @@ mod tests {
                 let f = entry.unwrap().path();
                 if f.extension().unwrap() != "ssab" { continue; }
 
-                let buf =  std::fs::read(f).unwrap();
+                let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
                 let Some(init_buf) = context.get_initialize_data() else {
                     // TODO: error handling
@@ -305,4 +306,31 @@ mod tests {
         })
     }
 
+    #[test]
+    fn test_part_names() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
+                let f = entry.unwrap().path();
+                if f.extension().unwrap() != "ssab" { continue; }
+
+                let buf =  std::fs::read(&f).unwrap();
+                let mut context = Context::new(&buf).unwrap();
+                let Some(init_buf) = context.get_initialize_data() else {
+                    // TODO: error handling
+                    return;
+                };
+                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
+                println!("ssab: {}", f.file_name().unwrap().to_str().unwrap());
+                println!("parts");
+                init.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {
+                    println!("id: {}, parent_id: {}, part type: {}, part name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
+                }));
+
+                println!();
+            }
+        })
+    }
 }
