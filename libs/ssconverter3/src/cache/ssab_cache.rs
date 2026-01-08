@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use ssab::ssab::PartAttributes;
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2Key {
@@ -390,6 +391,45 @@ impl From<&ssab::ssab::PartAttributesT> for PartAttributesKey {
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributesVecKey {
+    v: Vec<PartAttributesKey>,
+}
+impl From<&Vec<ssab::ssab::PartAttributesT>> for PartAttributesVecKey {
+    fn from(value: &Vec<ssab::ssab::PartAttributesT>) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAttributesKey::from(v)).collect(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeInstanceKey {
+    pub pingpong: bool,
+    pub independent: bool,
+    pub loop_num: i32,
+    pub start_label: Option<String>,
+    pub start_offset: i32,
+    pub end_label: Option<String>,
+    pub end_offset: i32,
+    pub speed: ordered_float::OrderedFloat<f32>,
+}
+impl From<&ssab::ssab::PartAttributeInstanceT> for PartAttributeInstanceKey {
+    fn from(value: &ssab::ssab::PartAttributeInstanceT) -> Self {
+        Self {
+            pingpong: value.pingpong,
+            independent: value.independent,
+            loop_num: value.loop_num,
+            start_label: value.start_label.clone(),
+            start_offset: value.start_offset,
+            end_label: value.end_label.clone(),
+            end_offset: value.end_offset,
+            speed: ordered_float::OrderedFloat(value.speed),
+        }
+    }
+}
+
+
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>>>,
     pub vec3_cache: HashMap<Vec3Key, flatbuffers::WIPOffset<ssab::ssab::Vec3<'a>>>,
@@ -409,6 +449,8 @@ pub struct SsabCache<'a> {
     pub part_attribute_vertex_cache: HashMap<PartAttributeVertexKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeVertex<'a>>>,
     pub part_attribute_deform_cache: HashMap<PartAttributeDeformKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeDeform<'a>>>,
     pub part_attributes_cache: HashMap<PartAttributesKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributes<'a>>>,
+    pub part_attributes_vec_cache: HashMap<PartAttributesVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAttributes<'a>>>>>,
+    pub part_attribute_instance_cache: HashMap<PartAttributeInstanceKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeInstance<'a>>>,
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::PartTypeNone<'a>>>,
 
@@ -437,6 +479,8 @@ impl<'a> SsabCache<'a> {
             part_attribute_vertex_cache: HashMap::new(),
             part_attribute_deform_cache: HashMap::new(),
             part_attributes_cache: HashMap::new(),
+            part_attributes_vec_cache: HashMap::new(),
+            part_attribute_instance_cache: HashMap::new(),
 
             part_type_none_cache: HashMap::new(),
 
@@ -773,6 +817,39 @@ impl<'a> SsabCache<'a> {
         let offset = ssab::ssab::PartAttributes::create(fb, &args);
 
         self.part_attributes_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_attributes_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attributes_vec: &Vec<ssab::ssab::PartAttributesT>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributes<'a>>>> {
+        let key = PartAttributesVecKey::from(part_attributes_vec);
+        if let Some(&offset) = self.part_attributes_vec_cache.get(&key) {
+            return offset;
+        }
+
+        let v = part_attributes_vec.iter().map(|part_attributes| self.create_shared_part_attributes(fb, part_attributes)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_attributes_vec_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_instance(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_instance: &ssab::ssab::PartAttributeInstanceT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributeInstance<'a>> {
+        let key =  PartAttributeInstanceKey::from(part_attribute_instance);
+        if let Some(&offset) = self.part_attribute_instance_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributeInstanceArgs::default();
+        args.pingpong = part_attribute_instance.pingpong;
+        args.independent = part_attribute_instance.independent;
+        args.loop_num = part_attribute_instance.loop_num;
+        args.start_label = part_attribute_instance.start_label.as_ref().map(|start_label| fb.create_shared_string(&start_label));
+        args.start_offset = part_attribute_instance.start_offset;
+        args.end_label = part_attribute_instance.end_label.as_ref().map(|end_label| fb.create_shared_string(&end_label));
+        args.end_offset = part_attribute_instance.end_offset;
+        args.speed = part_attribute_instance.speed;
+        let offset = ssab::ssab::PartAttributeInstance::create(fb, &args);
+
+        self.part_attribute_instance_cache.insert(key, offset);
         offset
     }
 
@@ -1197,16 +1274,7 @@ impl<'a> SsabCache<'a> {
                     let mut i_args = ssab::ssab::EventInstanceArgs::default();
                     i_args.part_index = instance.part_index;
                     i_args.value = instance.value.as_ref().map(|value| {
-                        let mut pi_args = ssab::ssab::PartAttributeInstanceArgs::default();
-                        pi_args.pingpong = value.pingpong;
-                        pi_args.independent = value.independent;
-                        pi_args.loop_num = value.loop_num;
-                        pi_args.start_label = value.start_label.as_ref().map(|start_label| fb.create_shared_string(start_label));
-                        pi_args.start_offset = value.start_offset;
-                        pi_args.end_label = value.end_label.as_ref().map(|end_label| fb.create_shared_string(end_label));
-                        pi_args.end_offset = value.end_offset;
-                        pi_args.speed = value.speed;
-                        ssab::ssab::PartAttributeInstance::create(fb, &pi_args)
+                        self.create_shared_part_instance(fb, value)
                     });
 
                     ssab::ssab::EventInstance::create(fb, &i_args)
@@ -1236,18 +1304,11 @@ impl<'a> SsabCache<'a> {
         fb.create_vector(&v)
     }
 
-    fn create_part_initial_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_initial_attributes: &[ssab::ssab::PartAttributesT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAttributes<'a>>>> {
-        let v = part_initial_attributes.iter().map(|attribute| {
-            self.create_shared_part_attributes(fb, attribute)
-        }).collect::<Vec<_>>();
-        fb.create_vector(&v)
-    }
-
     fn create_animation_data_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation_data_t_vec: &[ssab::ssab::AnimationDataT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::AnimationData<'a>>>> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_part_initial_attributes(fb, parts_initial_attributes));
+            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_shared_part_attributes_list(fb, parts_initial_attributes));
             args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
             args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
             args.events = animation_data_t.events.as_ref().map(|events| { self.create_shared_events_per_frame(fb, events) });
