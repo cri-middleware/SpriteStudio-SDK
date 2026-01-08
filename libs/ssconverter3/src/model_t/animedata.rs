@@ -172,7 +172,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t.name = anime_data.name.to_string();
     anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(anime_data, setup_animation));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation));
-    anime_data_t.parts_mesh_data = None; // TODO: impl
+    anime_data_t.parts_mesh_data = None;
     anime_data_t.events = convert_events_per_frames(&anime_data, parts_map);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
@@ -459,7 +459,10 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     v.keys.iter().for_each(|key| {
                         let mut c_args = ssab::ssab::PartAnimationDataCellValueT::default();
                         c_args.index = key.time as u16;
-                        c_args.value = None; // TODO: impl
+                        let mut value = ssab::ssab::PartAttributeCellT::default();
+                        value.map_id = key.value.map_id;
+                        value.name = Some(key.value.name.clone());
+                        c_args.value = Some(Box::new(value));
                         part_animation_data_t.cell_array.get_or_insert_with(Vec::new).push(c_args);
                     });
                 },
@@ -576,7 +579,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         let mut p_args = ssab::ssab::PartAnimationDataIntValueT::default();
                         p_args.index = key.time as u16;
                         p_args.interpolation = convert_interpolation_type(&key.ip_type);
-                        p_args.value = key.value as i32; // TODO: check i32 as correct type?
+                        p_args.value = key.value;
                         part_animation_data_t.prio_array.get_or_insert_with(Vec::new).push(p_args);
                     });
                 },
@@ -605,11 +608,55 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-                    // TODO: impl
                     v.keys.iter().for_each(|key| {
                         let mut c_args = ssab::ssab::PartAnimationDataPartColorT::default();
                         c_args.index = key.time as u16;
-                        // c_args.value = key.value; // TODO: impl
+                        let mut value = ssab::ssab::PartAttributePartColorT::default();
+                        value.blend_type = convert_alpha_blend_type(&key.value.blend_type);
+                        let mut key_value;
+                        let mut rgba;
+                        key_value = ssab::ssab::SsAttributePartColorKeyValueColorT::default();
+                        rgba = ssab::ssab::U8RectT::default();
+                        rgba.a = key.value.lt.rgba.a;
+                        rgba.r = key.value.lt.rgba.r;
+                        rgba.g = key.value.lt.rgba.g;
+                        rgba.b = key.value.lt.rgba.b;
+                        key_value.rgba = Some(Box::new(rgba));
+                        key_value.rate = key.value.lt.rate;
+                        value.lt = Some(Box::new(key_value));
+
+                        key_value = ssab::ssab::SsAttributePartColorKeyValueColorT::default();
+                        rgba = ssab::ssab::U8RectT::default();
+                        rgba.a = key.value.rt.rgba.a;
+                        rgba.r = key.value.rt.rgba.r;
+                        rgba.g = key.value.rt.rgba.g;
+                        rgba.b = key.value.rt.rgba.b;
+                        key_value.rgba = Some(Box::new(rgba));
+                        key_value.rate = key.value.rt.rate;
+                        value.rt = Some(Box::new(key_value));
+
+                        key_value = ssab::ssab::SsAttributePartColorKeyValueColorT::default();
+                        rgba = ssab::ssab::U8RectT::default();
+                        rgba.a = key.value.lb.rgba.a;
+                        rgba.r = key.value.lb.rgba.r;
+                        rgba.g = key.value.lb.rgba.g;
+                        rgba.b = key.value.lb.rgba.b;
+                        key_value.rgba = Some(Box::new(rgba));
+                        key_value.rate = key.value.lb.rate;
+                        value.lb = Some(Box::new(key_value));
+
+                        key_value = ssab::ssab::SsAttributePartColorKeyValueColorT::default();
+                        rgba = ssab::ssab::U8RectT::default();
+                        rgba.a = key.value.rb.rgba.a;
+                        rgba.r = key.value.rb.rgba.r;
+                        rgba.g = key.value.rb.rgba.g;
+                        rgba.b = key.value.rb.rgba.b;
+                        key_value.rgba = Some(Box::new(rgba));
+                        key_value.rate = key.value.rb.rate;
+                        value.rb = Some(Box::new(key_value));
+
+                        c_args.value = Some(Box::new(value));
+
                         part_animation_data_t.parts_color_array.get_or_insert_with(Vec::new).push(c_args);
                     });
                 },
@@ -617,22 +664,56 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                     // TODO: impl
                 },
                 sspj::ssattribute::SsAttributeKind::Shader(v) => {
-                    // TODO: impl
                     v.keys.iter().for_each(|key| {
                         let mut s_args = ssab::ssab::PartAnimationDataShaderT::default();
                         s_args.index = key.time as u16;
                         s_args.interpolation = convert_interpolation_type(&key.ip_type);
-                        // s_args.value = key.value; // TODO: impl
+                        let mut value = ssab::ssab::PartAttributeShaderT::default();
+                        value.id = Some(key.value.id.clone());
+                        value.param0 = key.value.param0;
+                        value.param1 = key.value.param1;
+                        value.param2 = key.value.param2;
+                        value.param3 = key.value.param3;
+                        value.param4 = key.value.param4;
+                        value.param5 = key.value.param5;
+                        value.param6 = key.value.param6;
+                        value.param7 = key.value.param7;
+                        value.map0_id = key.value.map0.map_id;
+                        value.map0_name = Some(key.value.map0.name.clone());
+                        value.map1_id = key.value.map1.map_id;
+                        value.map1_name = Some(key.value.map1.name.clone());
+                        s_args.value = Some(Box::new(value));
                         part_animation_data_t.shader_array.get_or_insert_with(Vec::new).push(s_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Vertex(v) => {
-                    // TODO: impl
                     v.keys.iter().for_each(|key| {
                         let mut s_args = ssab::ssab::PartAnimationDataVertexT::default();
                         s_args.index = key.time as u16;
                         s_args.interpolation = convert_interpolation_type(&key.ip_type);
-                        // s_args.value = key.value; // TODO: impl
+                        let mut value = ssab::ssab::PartAttributeVertexT::default();
+                        let mut v: ssab::ssab::Vec2T;
+                        v = ssab::ssab::Vec2T::default();
+                        v.v1 = key.value.lt.x;
+                        v.v2 = key.value.lt.y;
+                        value.lt = Some(Box::new(v));
+
+                        v = ssab::ssab::Vec2T::default();
+                        v.v1 = key.value.rt.x;
+                        v.v2 = key.value.rt.y;
+                        value.rt = Some(Box::new(v));
+
+                        v = ssab::ssab::Vec2T::default();
+                        v.v1 = key.value.lb.x;
+                        v.v2 = key.value.lb.y;
+                        value.lb = Some(Box::new(v));
+
+                        v = ssab::ssab::Vec2T::default();
+                        v.v1 = key.value.rb.x;
+                        v.v2 = key.value.rb.y;
+                        value.rb = Some(Box::new(v));
+
+                        s_args.value = Some(Box::new(value));
                         part_animation_data_t.vertex_array.get_or_insert_with(Vec::new).push(s_args);
                     });
                 },
@@ -811,6 +892,19 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
     }).collect::<Vec<_>>()
 }
 
+fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ssab::BlendType {
+    match blend_type {
+        sspj::sstypes::SsBlendType::Mix => ssab::ssab::BlendType::Mix,
+        sspj::sstypes::SsBlendType::Mul => ssab::ssab::BlendType::Mul,
+        sspj::sstypes::SsBlendType::Add => ssab::ssab::BlendType::Add,
+        sspj::sstypes::SsBlendType::Sub => ssab::ssab::BlendType::Sub,
+        sspj::sstypes::SsBlendType::Mulalpha => ssab::ssab::BlendType::Mulalpha,
+        sspj::sstypes::SsBlendType::Screen => ssab::ssab::BlendType::Screen,
+        sspj::sstypes::SsBlendType::Exclusion => ssab::ssab::BlendType::Exclusion,
+        sspj::sstypes::SsBlendType::Invert => ssab::ssab::BlendType::Invert,
+    }
+}
+
 pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab::PartDataT> {
     anime_pack.model.part_list.iter().map(|part| {
         let mut part_data_t = ssab::ssab::PartDataT::default();
@@ -824,16 +918,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::BoundsType::Circle,
             sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::BoundsType::Circle,
         };
-        part_data_t.blend_type = match &part.alpha_blend_type {
-            sspj::sstypes::SsBlendType::Mix => ssab::ssab::BlendType::Mix,
-            sspj::sstypes::SsBlendType::Mul => ssab::ssab::BlendType::Mul,
-            sspj::sstypes::SsBlendType::Add => ssab::ssab::BlendType::Add,
-            sspj::sstypes::SsBlendType::Sub => ssab::ssab::BlendType::Sub,
-            sspj::sstypes::SsBlendType::Mulalpha => ssab::ssab::BlendType::Mulalpha,
-            sspj::sstypes::SsBlendType::Screen => ssab::ssab::BlendType::Screen,
-            sspj::sstypes::SsBlendType::Exclusion => ssab::ssab::BlendType::Exclusion,
-            sspj::sstypes::SsBlendType::Invert => ssab::ssab::BlendType::Invert,
-        };
+        part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
         part_data_t.part_type = match &part.part_type {
             sspj::sstypes::SsPartType::Null => ssab::ssab::PartTypeT::PartTypeNull(Box::new(ssab::ssab::PartTypeNoneT::default())),
             sspj::sstypes::SsPartType::Normal => ssab::ssab::PartTypeT::PartTypeNormal(Box::new(ssab::ssab::PartTypeNoneT::default())),
