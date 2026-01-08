@@ -218,6 +218,177 @@ impl From<&ssab::ssab::LabelT> for LabelKey {
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeCellKey {
+    pub map_id: i32,
+    pub name: Option<String>,
+}
+impl From<&ssab::ssab::PartAttributeCellT> for PartAttributeCellKey {
+    fn from(value: &ssab::ssab::PartAttributeCellT) -> Self {
+        Self {
+            map_id: value.map_id,
+            name: value.name.clone(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct SsAttributePartColorKeyValueColorKey {
+    pub rgba: Option<U8RectKey>,
+    pub rate: ordered_float::OrderedFloat<f32>,
+}
+impl From<&ssab::ssab::SsAttributePartColorKeyValueColorT> for SsAttributePartColorKeyValueColorKey {
+    fn from(value: &ssab::ssab::SsAttributePartColorKeyValueColorT) -> Self {
+        Self {
+            rgba: value.rgba.as_ref().map(|r| U8RectKey::from(r.as_ref())),
+            rate: ordered_float::OrderedFloat(value.rate),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributePartColorKey {
+    pub blend_type: ssab::ssab::BlendType,
+    pub lt: Option<SsAttributePartColorKeyValueColorKey>,
+    pub rt: Option<SsAttributePartColorKeyValueColorKey>,
+    pub lb: Option<SsAttributePartColorKeyValueColorKey>,
+    pub rb: Option<SsAttributePartColorKeyValueColorKey>,
+}
+impl From<&ssab::ssab::PartAttributePartColorT> for PartAttributePartColorKey {
+    fn from(value: &ssab::ssab::PartAttributePartColorT) -> Self {
+        Self {
+            blend_type: value.blend_type,
+            lt: value.lt.as_ref().map(|l| SsAttributePartColorKeyValueColorKey::from(l.as_ref())),
+            rt: value.rt.as_ref().map(|r| SsAttributePartColorKeyValueColorKey::from(r.as_ref())),
+            lb: value.lb.as_ref().map(|l| SsAttributePartColorKeyValueColorKey::from(l.as_ref())),
+            rb: value.rb.as_ref().map(|r| SsAttributePartColorKeyValueColorKey::from(r.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeShaderKey {
+    pub id: Option<String>,
+    pub param0: ordered_float::OrderedFloat<f32>,
+    pub param1: ordered_float::OrderedFloat<f32>,
+    pub param2: ordered_float::OrderedFloat<f32>,
+    pub param3: ordered_float::OrderedFloat<f32>,
+    pub param4: ordered_float::OrderedFloat<f32>,
+    pub param5: ordered_float::OrderedFloat<f32>,
+    pub param6: ordered_float::OrderedFloat<f32>,
+    pub param7: ordered_float::OrderedFloat<f32>,
+    pub map0_id: i32,
+    pub map0_name: Option<String>,
+    pub map1_id: i32,
+    pub map1_name: Option<String>,
+}
+impl From<&ssab::ssab::PartAttributeShaderT> for PartAttributeShaderKey {
+    fn from(value: &ssab::ssab::PartAttributeShaderT) -> Self {
+        Self {
+            id: value.id.clone(),
+            param0: ordered_float::OrderedFloat(value.param0),
+            param1: ordered_float::OrderedFloat(value.param1),
+            param2: ordered_float::OrderedFloat(value.param2),
+            param3: ordered_float::OrderedFloat(value.param3),
+            param4: ordered_float::OrderedFloat(value.param4),
+            param5: ordered_float::OrderedFloat(value.param5),
+            param6: ordered_float::OrderedFloat(value.param6),
+            param7: ordered_float::OrderedFloat(value.param7),
+            map0_id: value.map0_id,
+            map0_name: value.map0_name.clone(),
+            map1_id: value.map1_id,
+            map1_name: value.map1_name.clone(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeVertexKey {
+    pub lt: Option<Vec2Key>,
+    pub rt: Option<Vec2Key>,
+    pub lb: Option<Vec2Key>,
+    pub rb: Option<Vec2Key>,
+}
+impl From<&ssab::ssab::PartAttributeVertexT> for PartAttributeVertexKey {
+    fn from(value: &ssab::ssab::PartAttributeVertexT) -> Self {
+        Self {
+            lt: value.lt.as_ref().map(|v| Vec2Key::from(v.as_ref())),
+            rt: value.rt.as_ref().map(|v| Vec2Key::from(v.as_ref())),
+            lb: value.lb.as_ref().map(|v| Vec2Key::from(v.as_ref())),
+            rb: value.rb.as_ref().map(|v| Vec2Key::from(v.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeDeformKey {
+    pub coordinate: Option<Vec<Vec2Key>>,
+    pub index: Option<Vec<i16>>,
+}
+impl From<&ssab::ssab::PartAttributeDeformT> for PartAttributeDeformKey {
+    fn from(value: &ssab::ssab::PartAttributeDeformT) -> Self {
+        Self {
+            coordinate: value.coordinate.as_ref().map(|c| c.iter().map(|v| Vec2Key::from(v)).collect()),
+            index: value.index.as_ref().map(|i| i.iter().map(|v| *v as i16).collect()),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributesKey {
+    pub cell: Option<PartAttributeCellKey>,
+    pub position: Option<Vec3Key>,
+    pub rotation: Option<Vec3Key>,
+    pub scale: Option<Vec2Key>,
+    pub local_scale: Option<Vec2Key>,
+    pub opacity: ordered_float::OrderedFloat<f32>,
+    pub localopacity: ordered_float::OrderedFloat<f32>,
+    pub priority: i16,
+    pub flip_v: bool,
+    pub flip_h: bool,
+    pub hide: bool,
+    pub parts_color: Option<PartAttributePartColorKey>,
+    pub shader: Option<PartAttributeShaderKey>,
+    pub vertex: Option<PartAttributeVertexKey>,
+    pub pivot: Option<Vec2Key>,
+    pub size: Option<Vec2Key>,
+    pub uv_move: Option<Vec3Key>,
+    pub uv_scale: Option<Vec2Key>,
+    pub bounding_radius: ordered_float::OrderedFloat<f32>,
+    pub mask: ordered_float::OrderedFloat<f32>,
+    pub skew: Option<Vec2Key>,
+    pub deform: Option<PartAttributeDeformKey>,
+    pub texture: i32,
+}
+impl From<&ssab::ssab::PartAttributesT> for PartAttributesKey {
+    fn from(value: &ssab::ssab::PartAttributesT) -> Self {
+        Self {
+            cell: value.cell.as_ref().map(|c| PartAttributeCellKey::from(c.as_ref())),
+            position: value.position.as_ref().map(|p| Vec3Key::from(p.as_ref())),
+            rotation: value.rotation.as_ref().map(|r| Vec3Key::from(r.as_ref())),
+            scale: value.scale.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            local_scale: value.local_scale.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            opacity: ordered_float::OrderedFloat(value.opacity),
+            localopacity: ordered_float::OrderedFloat(value.localopacity),
+            priority: value.priority,
+            flip_v: value.flip_v,
+            flip_h: value.flip_h,
+            hide: value.hide,
+            parts_color: value.parts_color.as_ref().map(|c| PartAttributePartColorKey::from(c.as_ref())),
+            shader: value.shader.as_ref().map(|s| PartAttributeShaderKey::from(s.as_ref())),
+            vertex: value.vertex.as_ref().map(|v| PartAttributeVertexKey::from(v.as_ref())),
+            pivot: value.pivot.as_ref().map(|p| Vec2Key::from(p.as_ref())),
+            size: value.size.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            uv_move: value.uv_move.as_ref().map(|u| Vec3Key::from(u.as_ref())),
+            uv_scale: value.uv_scale.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            bounding_radius: ordered_float::OrderedFloat(value.bounding_radius),
+            mask: ordered_float::OrderedFloat(value.mask),
+            skew: value.skew.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            deform: value.deform.as_ref().map(|d| PartAttributeDeformKey::from(d.as_ref())),
+            texture: value.texture,
+        }
+    }
+}
 
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>>>,
@@ -231,6 +402,13 @@ pub struct SsabCache<'a> {
 
     pub cell_cache: HashMap<CellKey, flatbuffers::WIPOffset<ssab::ssab::Cell<'a>>>,
     pub label_cache: HashMap<LabelKey, flatbuffers::WIPOffset<ssab::ssab::Label<'a>>>,
+    pub part_attribute_cell_cache: HashMap<PartAttributeCellKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeCell<'a>>>,
+    pub attribute_part_color_key_value_color_cache: HashMap<SsAttributePartColorKeyValueColorKey, flatbuffers::WIPOffset<ssab::ssab::SsAttributePartColorKeyValueColor<'a>>>,
+    pub part_attribute_part_color_cache: HashMap<PartAttributePartColorKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributePartColor<'a>>>,
+    pub part_attribute_shader_cache: HashMap<PartAttributeShaderKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeShader<'a>>>,
+    pub part_attribute_vertex_cache: HashMap<PartAttributeVertexKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeVertex<'a>>>,
+    pub part_attribute_deform_cache: HashMap<PartAttributeDeformKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributeDeform<'a>>>,
+    pub part_attributes_cache: HashMap<PartAttributesKey, flatbuffers::WIPOffset<ssab::ssab::PartAttributes<'a>>>,
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::PartTypeNone<'a>>>,
 
@@ -252,6 +430,13 @@ impl<'a> SsabCache<'a> {
 
             cell_cache: HashMap::new(),
             label_cache: HashMap::new(),
+            part_attribute_cell_cache: HashMap::new(),
+            attribute_part_color_key_value_color_cache: HashMap::new(),
+            part_attribute_part_color_cache: HashMap::new(),
+            part_attribute_shader_cache: HashMap::new(),
+            part_attribute_vertex_cache: HashMap::new(),
+            part_attribute_deform_cache: HashMap::new(),
+            part_attributes_cache: HashMap::new(),
 
             part_type_none_cache: HashMap::new(),
 
@@ -446,6 +631,150 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
+    fn create_shared_part_attribute_cell(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_cell: &ssab::ssab::PartAttributeCellT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributeCell<'a>> {
+        let key =  PartAttributeCellKey::from(part_attribute_cell);
+        if let Some(&offset) = self.part_attribute_cell_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributeCellArgs::default();
+        args.map_id = part_attribute_cell.map_id;
+        args.name = part_attribute_cell.name.as_ref().map(|s| fb.create_shared_string(s));
+
+        let offset = ssab::ssab::PartAttributeCell::create(fb, &args);
+        self.part_attribute_cell_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_attribute_part_color_key_value_color(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_cell: &ssab::ssab::SsAttributePartColorKeyValueColorT) -> flatbuffers::WIPOffset<ssab::ssab::SsAttributePartColorKeyValueColor<'a>> {
+        let key =  SsAttributePartColorKeyValueColorKey::from(part_attribute_cell);
+        if let Some(&offset) = self.attribute_part_color_key_value_color_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
+        args.rgba = part_attribute_cell.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
+        args.rate = part_attribute_cell.rate;
+
+        let offset = ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args);
+        self.attribute_part_color_key_value_color_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_attribute_part_color(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_part_color: &ssab::ssab::PartAttributePartColorT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributePartColor<'a>> {
+        let key =  PartAttributePartColorKey::from(part_attribute_part_color);
+        if let Some(&offset) = self.part_attribute_part_color_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributePartColorArgs::default();
+        args.blend_type = part_attribute_part_color.blend_type;
+        args.lt = part_attribute_part_color.lt.as_ref().map(|lt| self.create_shared_attribute_part_color_key_value_color(fb, lt));
+        args.rt = part_attribute_part_color.rt.as_ref().map(|rt| self.create_shared_attribute_part_color_key_value_color(fb, rt));
+        args.lb = part_attribute_part_color.lb.as_ref().map(|lb| self.create_shared_attribute_part_color_key_value_color(fb, lb));
+        args.rb = part_attribute_part_color.rb.as_ref().map(|rb| self.create_shared_attribute_part_color_key_value_color(fb, rb));
+
+        let offset = ssab::ssab::PartAttributePartColor::create(fb, &args);
+        self.part_attribute_part_color_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_attribute_shader(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_shader: &ssab::ssab::PartAttributeShaderT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributeShader<'a>> {
+        let key =  PartAttributeShaderKey::from(part_attribute_shader);
+        if let Some(&offset) = self.part_attribute_shader_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributeShaderArgs::default();
+        args.id = part_attribute_shader.id.as_ref().map(|id| fb.create_shared_string(&id));
+        args.param0 = part_attribute_shader.param0;
+        args.param1 = part_attribute_shader.param1;
+        args.param2 = part_attribute_shader.param2;
+        args.param3 = part_attribute_shader.param3;
+        args.param4 = part_attribute_shader.param4;
+        args.param5 = part_attribute_shader.param5;
+        args.param6 = part_attribute_shader.param6;
+        args.param7 = part_attribute_shader.param7;
+        args.map0_id = part_attribute_shader.map0_id;
+        args.map0_name = part_attribute_shader.map0_name.as_ref().map(|s| fb.create_shared_string(s));
+        args.map1_id = part_attribute_shader.map1_id;
+        args.map1_name = part_attribute_shader.map1_name.as_ref().map(|s| fb.create_shared_string(s));
+
+        let offset = ssab::ssab::PartAttributeShader::create(fb, &args);
+        self.part_attribute_shader_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_attribute_vertex(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_vertex: &ssab::ssab::PartAttributeVertexT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributeVertex<'a>> {
+        let key =  PartAttributeVertexKey::from(part_attribute_vertex);
+        if let Some(&offset) = self.part_attribute_vertex_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributeVertexArgs::default();
+        args.lt = part_attribute_vertex.lt.as_ref().map(|lt| self.create_shared_vec2(fb, lt));
+        args.rt = part_attribute_vertex.rt.as_ref().map(|rt| self.create_shared_vec2(fb, rt));
+        args.lb = part_attribute_vertex.lb.as_ref().map(|lb| self.create_shared_vec2(fb, lb));
+        args.rb = part_attribute_vertex.rb.as_ref().map(|rb| self.create_shared_vec2(fb, rb));
+
+        let offset = ssab::ssab::PartAttributeVertex::create(fb, &args);
+        self.part_attribute_vertex_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_attribute_deform(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_deform: &ssab::ssab::PartAttributeDeformT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributeDeform<'a>> {
+        let key =  PartAttributeDeformKey::from(part_attribute_deform);
+        if let Some(&offset) = self.part_attribute_deform_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributeDeformArgs::default();
+        args.coordinate = part_attribute_deform.coordinate.as_ref().map(|p| {
+            let v = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<_>>();
+            fb.create_vector(&v)
+        });
+        args.index = part_attribute_deform.index.as_ref().map(|p| fb.create_vector(&p));
+
+        let offset = ssab::ssab::PartAttributeDeform::create(fb, &args);
+        self.part_attribute_deform_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attributes: &ssab::ssab::PartAttributesT) -> flatbuffers::WIPOffset<ssab::ssab::PartAttributes<'a>> {
+        let key =  PartAttributesKey::from(part_attributes);
+        if let Some(&offset) = self.part_attributes_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::PartAttributesArgs::default();
+        args.cell = part_attributes.cell.as_ref().map(|cell| { self.create_shared_part_attribute_cell(fb, cell) });
+        args.position = part_attributes.position.as_ref().map(|position| self.create_shared_vec3(fb, &position));
+        args.rotation = part_attributes.rotation.as_ref().map(|rotation| self.create_shared_vec3(fb, &rotation));
+        args.scale = part_attributes.scale.as_ref().map(|scale| self.create_shared_vec2(fb, &scale));
+        args.local_scale = part_attributes.local_scale.as_ref().map(|local_scale|self.create_shared_vec2(fb, &local_scale));
+        args.opacity = part_attributes.opacity;
+        args.localopacity = part_attributes.localopacity;
+        args.priority = part_attributes.priority;
+        args.flip_v = part_attributes.flip_v;
+        args.flip_h = part_attributes.flip_h;
+        args.hide = part_attributes.hide;
+        args.parts_color = part_attributes.parts_color.as_ref().map(|parts_color| { self.create_shared_part_attribute_part_color(fb, parts_color) });
+        args.shader = part_attributes.shader.as_ref().map(|shader| { self.create_shared_part_attribute_shader(fb, shader) });
+        args.vertex = part_attributes.vertex.as_ref().map(|vertex| { self.create_shared_part_attribute_vertex(fb, vertex) });
+        args.pivot = part_attributes.pivot.as_ref().map(|pivot| self.create_shared_vec2(fb, &pivot));
+        args.size = part_attributes.size.as_ref().map(|size| self.create_shared_vec2(fb, &size));
+        args.uv_move = part_attributes.uv_move.as_ref().map(|uv_move| self.create_shared_vec3(fb, &uv_move));
+        args.uv_scale = part_attributes.uv_scale.as_ref().map(|uv_scale| self.create_shared_vec2(fb, &uv_scale));
+        args.bounding_radius = part_attributes.bounding_radius;
+        args.mask = part_attributes.mask;
+        args.skew = part_attributes.skew.as_ref().map(|skew| self.create_shared_vec2(fb, &skew));
+        args.deform = part_attributes.deform.as_ref().map(|deform| { self.create_shared_part_attribute_deform(fb, deform) });
+        args.texture = part_attributes.texture;
+        let offset = ssab::ssab::PartAttributes::create(fb, &args);
+
+        self.part_attributes_cache.insert(key, offset);
+        offset
+    }
 
     fn create_shared_part_type(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_type: &ssab::ssab::PartTypeT) -> flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset> {
         match part_type {
@@ -524,13 +853,7 @@ impl<'a> SsabCache<'a> {
                 let v = cell_array.iter().map(|cell| {
                     let mut c_args = ssab::ssab::PartAnimationDataCellValueArgs::default();
                     c_args.index = cell.index;
-                    c_args.value = cell.value.as_ref().map(|value| {
-                        let mut pc_args = ssab::ssab::PartAttributeCellArgs::default();
-                        pc_args.map_id = value.map_id;
-                        pc_args.name = value.name.as_ref().map(|name| fb.create_shared_string(name));
-
-                        ssab::ssab::PartAttributeCell::create(fb, &pc_args)
-                    });
+                    c_args.value = cell.value.as_ref().map(|value| self.create_shared_part_attribute_cell(fb, value));
                     ssab::ssab::PartAnimationDataCellValue::create(fb, &c_args)
                 }).collect::<Vec<_>>();
                 fb.create_vector(&v)
@@ -638,39 +961,7 @@ impl<'a> SsabCache<'a> {
                     let mut p_args = ssab::ssab::PartAnimationDataPartColorArgs::default();
                     p_args.index = parts_color.index;
                     p_args.interpolation = parts_color.interpolation;
-                    p_args.value = parts_color.value.as_ref().map(|value| {
-                        let mut v_args = ssab::ssab::PartAttributePartColorArgs::default();
-                        v_args.blend_type = value.blend_type;
-                        v_args.lt = value.lt.as_ref().map(|lt| {
-                            let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                            args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                            args.rate = lt.rate;
-
-                            ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                        });
-                        v_args.rt = value.rt.as_ref().map(|lt| {
-                            let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                            args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                            args.rate = lt.rate;
-
-                            ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                        });
-                        v_args.lb = value.lb.as_ref().map(|lt| {
-                            let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                            args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                            args.rate = lt.rate;
-
-                            ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                        });
-                        v_args.rb = value.rb.as_ref().map(|lt| {
-                            let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                            args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                            args.rate = lt.rate;
-
-                            ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                        });
-                        ssab::ssab::PartAttributePartColor::create(fb, &v_args)
-                    });
+                    p_args.value = parts_color.value.as_ref().map(|value| { self.create_shared_part_attribute_part_color(fb, value) });
 
                     ssab::ssab::PartAnimationDataPartColor::create(fb, &p_args)
                 }).collect::<Vec<_>>();
@@ -680,24 +971,7 @@ impl<'a> SsabCache<'a> {
                 let v = shader_array.iter().map(|shader| {
                     let mut s_srgs = ssab::ssab::PartAnimationDataShaderArgs::default();
                     s_srgs.index = shader.index;
-                    s_srgs.value = shader.value.as_ref().map(|value| {
-                        let mut v_args = ssab::ssab::PartAttributeShaderArgs::default();
-                        v_args.id = value.id.as_ref().map(|id| fb.create_shared_string(&id));
-                        v_args.param0 = value.param0;
-                        v_args.param1 = value.param1;
-                        v_args.param2 = value.param2;
-                        v_args.param3 = value.param3;
-                        v_args.param4 = value.param4;
-                        v_args.param5 = value.param5;
-                        v_args.param6 = value.param6;
-                        v_args.param7 = value.param7;
-                        v_args.map0_id = value.map0_id;
-                        v_args.map0_name = value.map0_name.as_ref().map(|map0_name| fb.create_shared_string(&map0_name));
-                        v_args.map1_id = value.map1_id;
-                        v_args.map1_name = value.map1_name.as_ref().map(|map1_name| fb.create_shared_string(&map1_name));
-
-                        ssab::ssab::PartAttributeShader::create(fb, &v_args)
-                    });
+                    s_srgs.value = shader.value.as_ref().map(|value| { self.create_shared_part_attribute_shader(fb, value) });
 
                     ssab::ssab::PartAnimationDataShader::create(fb, &s_srgs)
                 }).collect::<Vec<_>>();
@@ -708,14 +982,7 @@ impl<'a> SsabCache<'a> {
                     let mut v_args = ssab::ssab::PartAnimationDataVertexArgs::default();
                     v_args.index = vertex.index;
                     v_args.interpolation = vertex.interpolation;
-                    v_args.value = vertex.value.as_ref().map(|value| {
-                        let mut args = ssab::ssab::PartAttributeVertexArgs::default();
-                        args.lt = value.lt.as_ref().map(|lt| self.create_shared_vec2(fb, lt));
-                        args.rt = value.rt.as_ref().map(|rt| self.create_shared_vec2(fb, rt));
-                        args.lb = value.lb.as_ref().map(|lb| self.create_shared_vec2(fb, lb));
-                        args.rb = value.rb.as_ref().map(|rb| self.create_shared_vec2(fb, rb));
-                        ssab::ssab::PartAttributeVertex::create(fb, &args)
-                    });
+                    v_args.value = vertex.value.as_ref().map(|value| { self.create_shared_part_attribute_vertex(fb, value) });
                     ssab::ssab::PartAnimationDataVertex::create(fb, &v_args)
                 }).collect::<Vec<_>>();
                 fb.create_vector(&v)
@@ -827,13 +1094,7 @@ impl<'a> SsabCache<'a> {
                     d_args.index = deform.index;
                     d_args.interpolation = deform.interpolation;
                     d_args.value = deform.value.as_ref().map(|value| {
-                        let mut v_args = ssab::ssab::PartAttributeDeformArgs::default();
-                        v_args.coordinate = value.coordinate.as_ref().map(|coordinate| {
-                            let cv = coordinate.iter().map(|cv| self.create_shared_vec2(fb, cv)).collect::<Vec<_>>();
-                            fb.create_vector(&cv)
-                        });
-                        v_args.index = value.index.as_ref().map(|index| fb.create_vector(&index));
-                        ssab::ssab::PartAttributeDeform::create(fb, &v_args)
+                        self.create_shared_part_attribute_deform(fb, value)
                     });
 
                     ssab::ssab::PartAnimationDataDeform::create(fb, &d_args)
@@ -975,103 +1236,9 @@ impl<'a> SsabCache<'a> {
         fb.create_vector(&v)
     }
 
-    fn create_parts_initial_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, parts_initial_attributes: &[ssab::ssab::PartAttributesT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAttributes<'a>>>> {
-        let v = parts_initial_attributes.iter().map(|attribute| {
-            let mut p_args = ssab::ssab::PartAttributesArgs::default();
-            p_args.cell = attribute.cell.as_ref().map(|cell| {
-                let mut c_args = ssab::ssab::PartAttributeCellArgs::default();
-                c_args.map_id = cell.map_id;
-                c_args.name = cell.name.as_ref().map(|name| fb.create_shared_string(name));
-                ssab::ssab::PartAttributeCell::create(fb, &c_args)
-            });
-            p_args.position = attribute.position.as_ref().map(|position| self.create_shared_vec3(fb, &position));
-            p_args.rotation = attribute.rotation.as_ref().map(|rotation| self.create_shared_vec3(fb, &rotation));
-            p_args.scale = attribute.scale.as_ref().map(|scale| self.create_shared_vec2(fb, &scale));
-            p_args.local_scale = attribute.local_scale.as_ref().map(|local_scale|self.create_shared_vec2(fb, &local_scale));
-            p_args.opacity = attribute.opacity;
-            p_args.localopacity = attribute.localopacity;
-            p_args.priority = attribute.priority;
-            p_args.flip_v = attribute.flip_v;
-            p_args.flip_h = attribute.flip_h;
-            p_args.hide = attribute.hide;
-            p_args.parts_color = attribute.parts_color.as_ref().map(|parts_color| {
-                let mut pc_args = ssab::ssab::PartAttributePartColorArgs::default();
-                pc_args.blend_type = parts_color.blend_type;
-                pc_args.lt = parts_color.lt.as_ref().map(|lt| {
-                    let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                    args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                    args.rate = lt.rate;
-
-                    ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                });
-                pc_args.rt = parts_color.rt.as_ref().map(|lt| {
-                    let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                    args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                    args.rate = lt.rate;
-
-                    ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                });
-                pc_args.lb = parts_color.lb.as_ref().map(|lt| {
-                    let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                    args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                    args.rate = lt.rate;
-
-                    ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                });
-                pc_args.rb = parts_color.rb.as_ref().map(|lt| {
-                    let mut args = ssab::ssab::SsAttributePartColorKeyValueColorArgs::default();
-                    args.rgba = lt.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
-                    args.rate = lt.rate;
-
-                    ssab::ssab::SsAttributePartColorKeyValueColor::create(fb, &args)
-                });
-                ssab::ssab::PartAttributePartColor::create(fb, &pc_args)
-            });
-            p_args.shader = attribute.shader.as_ref().map(|shader| {
-                let mut v_args = ssab::ssab::PartAttributeShaderArgs::default();
-                v_args.id = shader.id.as_ref().map(|id| fb.create_shared_string(&id));
-                v_args.param0 = shader.param0;
-                v_args.param1 = shader.param1;
-                v_args.param2 = shader.param2;
-                v_args.param3 = shader.param3;
-                v_args.param4 = shader.param4;
-                v_args.param5 = shader.param5;
-                v_args.param6 = shader.param6;
-                v_args.param7 = shader.param7;
-                v_args.map0_id = shader.map0_id;
-                v_args.map0_name = shader.map0_name.as_ref().map(|map0_name| fb.create_shared_string(&map0_name));
-                v_args.map1_id = shader.map1_id;
-                v_args.map1_name = shader.map1_name.as_ref().map(|map1_name| fb.create_shared_string(&map1_name));
-
-                ssab::ssab::PartAttributeShader::create(fb, &v_args)
-            });
-            p_args.vertex = attribute.vertex.as_ref().map(|vertex| {
-                let mut args = ssab::ssab::PartAttributeVertexArgs::default();
-                args.lt = vertex.lt.as_ref().map(|lt| self.create_shared_vec2(fb, lt));
-                args.rt = vertex.rt.as_ref().map(|rt| self.create_shared_vec2(fb, rt));
-                args.lb = vertex.lb.as_ref().map(|lb| self.create_shared_vec2(fb, lb));
-                args.rb = vertex.rb.as_ref().map(|rb| self.create_shared_vec2(fb, rb));
-                ssab::ssab::PartAttributeVertex::create(fb, &args)
-            });
-            p_args.pivot = attribute.pivot.as_ref().map(|pivot| self.create_shared_vec2(fb, &pivot));
-            p_args.size = attribute.size.as_ref().map(|size| self.create_shared_vec2(fb, &size));
-            p_args.uv_move = attribute.uv_move.as_ref().map(|uv_move| self.create_shared_vec3(fb, &uv_move));
-            p_args.uv_scale = attribute.uv_scale.as_ref().map(|uv_scale| self.create_shared_vec2(fb, &uv_scale));
-            p_args.bounding_radius = attribute.bounding_radius;
-            p_args.mask = attribute.mask;
-            p_args.skew = attribute.skew.as_ref().map(|skew| self.create_shared_vec2(fb, &skew));
-            p_args.deform = attribute.deform.as_ref().map(|deform| {
-                let mut v_args = ssab::ssab::PartAttributeDeformArgs::default();
-                v_args.coordinate = deform.coordinate.as_ref().map(|coordinate| {
-                    let cv = coordinate.iter().map(|cv| self.create_shared_vec2(fb, cv)).collect::<Vec<_>>();
-                    fb.create_vector(&cv)
-                });
-                v_args.index = deform.index.as_ref().map(|index| fb.create_vector(&index));
-                ssab::ssab::PartAttributeDeform::create(fb, &v_args)
-            });
-            p_args.texture = attribute.texture;
-
-            ssab::ssab::PartAttributes::create(fb, &p_args)
+    fn create_part_initial_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_initial_attributes: &[ssab::ssab::PartAttributesT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAttributes<'a>>>> {
+        let v = part_initial_attributes.iter().map(|attribute| {
+            self.create_shared_part_attributes(fb, attribute)
         }).collect::<Vec<_>>();
         fb.create_vector(&v)
     }
@@ -1080,7 +1247,7 @@ impl<'a> SsabCache<'a> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
-            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_parts_initial_attributes(fb, parts_initial_attributes));
+            args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_part_initial_attributes(fb, parts_initial_attributes));
             args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
             args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
             args.events = animation_data_t.events.as_ref().map(|events| { self.create_shared_events_per_frame(fb, events) });
