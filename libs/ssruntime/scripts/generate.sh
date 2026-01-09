@@ -1,20 +1,17 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BASE_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 pushd $BASE_DIR > /dev/null
 
-/bin/mkdir -p src/runtime
-
 FLATC=flatc
-
-${FLATC} --rust fbs/initialize.fbs
-/bin/mv initialize_generated.rs src/runtime/initialize.rs
-
-${FLATC} --rust fbs/preparation.fbs
-/bin/mv preparation_generated.rs src/runtime/preparation.rs
-
-${FLATC} --rust fbs/framedata.fbs
-/bin/mv framedata_generated.rs src/runtime/framedata.rs
+FEATURE="runtime"
+/bin/mkdir -p src/${FEATURE}
+for f in ./fbs/*.fbs;
+do
+  name=$(basename "$f" .fbs)
+  ${FLATC} --rust $f
+  mv "${name}_generated.rs" "./src/${FEATURE}/$name.rs"
+done
 
 popd > /dev/null
