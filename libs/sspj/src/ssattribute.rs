@@ -31,6 +31,15 @@ pub struct SsAttributeBoolKey {
     pub value: bool,
 }
 
+#[derive(Deserialize, PartialEq, Debug)]
+pub struct SsAttributeIntKey {
+    #[serde(rename = "@time")]
+    pub time: i32,
+    #[serde(rename = "@ipType", default)]
+    pub ip_type: SsInterpolationType,
+    #[serde(rename = "value")]
+    pub value: i32,
+}
 
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeFloatKey {
@@ -108,7 +117,7 @@ pub struct SsAttributeLocalAlpha {
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributePrio {
     #[serde(rename = "key")]
-    pub keys: Vec<SsAttributeFloatKey>,
+    pub keys: Vec<SsAttributeIntKey>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

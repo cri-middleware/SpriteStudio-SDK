@@ -107,7 +107,7 @@ pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Resu
             };
             let dir = parent.join([stem.to_string_lossy().into_owned().as_str(), "_ssab"].join("") );
             if !dir.exists() {
-                std::fs::create_dir(dir.as_path()).expect("TODO: panic message"); // TODO: FIXME Error handling
+                std::fs::create_dir(dir.as_path()).expect(format!("can't create a dir: {}", dir.as_path().to_str().unwrap()).as_str());
             }
 
             dir
@@ -116,7 +116,7 @@ pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Resu
 
     convert_result.par_iter().for_each(|(name, data)| {
         let output_path = outdir_path.join(name);
-        std::fs::write(output_path.as_path(), data).expect("TODO: panic message"); // TODO: FIXME Error handling
+        std::fs::write(output_path.as_path(), data).expect(format!("can't write a ssab file: {}", output_path.as_path().to_str().unwrap()).as_str());
     });
 
     Ok(())

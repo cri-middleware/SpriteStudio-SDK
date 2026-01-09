@@ -1,4 +1,3 @@
-use ssab::ssqb::{SequenceItem, SequenceType};
 
 pub struct SsqbCache {}
 impl SsqbCache {
