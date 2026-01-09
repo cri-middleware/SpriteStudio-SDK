@@ -2,6 +2,15 @@ use std::ffi::{c_char, CStr, OsString};
 use crate::{ConvertConfig};
 
 #[repr(C)]
+pub enum SSConverterResult {
+    Sussces = 0,
+    ErrorIo = -1,
+    ErrorSspj = -2,
+    ErrorConversion = -3,
+    ErrorUnknown = -99,
+}
+
+#[repr(C)]
 pub struct CConvertConfig {
     pub debug: bool,
     pub split: bool,

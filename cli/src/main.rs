@@ -17,34 +17,44 @@ $ {} <sspj_file OR directory> [sspj_file OR directory...]
     );
     println!("{}", formatted_output);
 }
-fn main() {
+fn main() -> Result<(), ssconverter3::ConverterError> {
     let args: Vec<OsString> = env::args_os().collect();
     if args.len() <= 1 {
         print_usage(args[0].as_os_str());
-        return;
+        return Ok(());
     }
     let sspj_paths = ssconverter3::utility::parse_args(&args);
     if sspj_paths.is_empty() {
         print_usage(&args[0]);
-        return;
+        return Ok(());
     }
     let config = ssconverter3::ConverterConfig::default();
 
-    let mut handlers: Vec<JoinHandle<()>> = vec![];
+    let mut handlers: Vec<JoinHandle<Result<(), ssconverter3::ConverterError>>> = vec![];
     sspj_paths.into_iter().for_each(|p| {
         println!("convert {:?}", p.display());
         handlers.push({
             let c = config.clone();
             std::thread::spawn(move || {
-                let r = ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &c);
-                match r {
-                    Ok(_) => (),
-                    Err(e) => println!("{:?}: {:?}", p.display(), e),
-                }
+                ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &c)
             })
         })
     });
-    handlers.into_iter().for_each(|h| h.join().unwrap());
+    for h in handlers {
+        match h.join() {
+            Ok(result) => {
+                if let Err(e) = result {
+                    return Err(e);
+                }
+            }
+            Err(_) => {
+                eprintln!("Thread panic occurred");
+                panic!("A thread has panicked during execution");
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

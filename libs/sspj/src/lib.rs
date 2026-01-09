@@ -1,3 +1,4 @@
+pub mod sspj_error;
 pub mod ssae;
 pub mod ssattribute;
 pub mod ssce;

@@ -1,13 +1,13 @@
 use rayon::prelude::*;
 use crate::cache::{ssab_cache, ssqb_cache};
 use ssab::ssab::SsAnimeBinaryT;
-use sspj::ssloader::{SsLoader, SspjError};
 use sspj::sspj::SsProject;
 use std::collections::HashMap;
 use std::ffi::OsString;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use crate::converter::{ssab_converter, ssqb_converter};
+use sspj::ssloader::SsLoader;
 
 #[derive(Debug, Clone)]
 pub struct ConvertConfig {
@@ -32,18 +32,17 @@ impl SspjLoader {
             path_buf: path.to_path_buf(),
         }
     }
-    pub fn load_ss_project(&self) -> Result<SsProject, SspjError> {
+    pub fn load_ss_project(&self) -> Result<SsProject, sspj::sspj_error::SspjError> {
         SsProject::load_from_file(self.path_buf.as_path())
     }
 }
 
-pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, SspjError> {
+pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, crate::converter::converter_error::ConverterError> {
     let sspj_loader = SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
         Err(error) => {
-            println!("{:?} error: {:?}", path.as_os_str().to_string_lossy(), error);
-            return Err(error);
+            return Err(crate::converter::converter_error::ConverterError::SspjError(error));
         }
     };
 
@@ -93,31 +92,36 @@ impl Default for ConverterConfig {
     }
 }
 
-pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Result<(), SspjError> {
+pub fn convert_sspj_to_ssab_files(path: &Path, config: &ConverterConfig) -> Result<(), crate::converter::converter_error::ConverterError> {
     let convert_result = convert_sspj_to_ssab_data(path, &config.convert_config)?;
 
     let outdir_path = match &config.out_dir {
         Some(out_dir) => PathBuf::from(&out_dir),
         None => {
             let Some(parent) = path.parent() else {
-                return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "not found: path parent: {}", )));
+                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::NotFound, format!("not found: path parent: {}", path.as_os_str().to_string_lossy()))))
             };
             let Some(stem) = path.file_stem() else {
-                return Err(SspjError::FileError(std::io::Error::new(ErrorKind::NotFound, "{}", )));
+                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::NotFound, format!("not found: path parent: {}", path.as_os_str().to_string_lossy()))))
             };
             let dir = parent.join([stem.to_string_lossy().into_owned().as_str(), "_ssab"].join("") );
             if !dir.exists() {
-                std::fs::create_dir(dir.as_path()).expect(format!("can't create a dir: {}", dir.as_path().to_str().unwrap()).as_str());
+                let Ok(_) = std::fs::create_dir(dir.as_path()) else {
+                    return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::PermissionDenied, format!("can't create a directory: {}", dir.as_path().to_str().unwrap()))))
+                };
             }
 
             dir
         }
     };
 
-    convert_result.par_iter().for_each(|(name, data)| {
+    convert_result.par_iter().try_for_each(|(name, data)| {
         let output_path = outdir_path.join(name);
-        std::fs::write(output_path.as_path(), data).expect(format!("can't write a ssab file: {}", output_path.as_path().to_str().unwrap()).as_str());
-    });
+        match std::fs::write(output_path.as_path(), data) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::Other, format!("can't write a ssab file: {}", output_path.as_path().to_str().unwrap()))))
+        }
+    })?;
 
     Ok(())
 }
