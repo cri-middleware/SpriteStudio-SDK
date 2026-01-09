@@ -4,6 +4,6 @@ $baseDirectory = Split-Path -Parent $PSCommandPath
 $rootDirectory = Split-Path -Parent $baseDirectory
 
 pushd $rootDirectory
-cargo build --target --release
+cargo build --release
 
 popd
