@@ -17,4 +17,4 @@ ssab = { path = "../ssab", features = ["converter"] }
 
 # ffi
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-libc = "0.2.179"
+libc = "0.2.180"
