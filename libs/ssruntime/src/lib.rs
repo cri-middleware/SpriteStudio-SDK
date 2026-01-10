@@ -5,19 +5,20 @@ pub mod core;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod ffi;
-
 // #[cfg(target_arch = "wasm32")]
 // pub mod wasm;
 
-pub struct Context<'a> {
-    ssab: ssab::ssab::SsAnimeBinary<'a>,
+pub struct Context {
+    ssab: ssab::ssab::SsAnimeBinary<'static>,
     track: core::track_manager::TrackManager,
-    fb: flatbuffers::FlatBufferBuilder<'a>,
-    animation: Option<ssab::ssab::AnimationData<'a>>,
+    fb: flatbuffers::FlatBufferBuilder<'static>,
+    animation: Option<ssab::ssab::AnimationData<'static>>,
 }
 
-impl<'a> Context<'a> {
-    pub fn new(buf: &[u8]) -> Result<Context<'_>, std::io::Error> {
+impl Context {
+    pub fn new(buf: &[u8]) -> Result<Context, std::io::Error> {
+        let buf: &'static [u8] = unsafe { std::mem::transmute(buf) };
+
         let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
 
         // validate version
