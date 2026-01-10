@@ -2,7 +2,7 @@ use std::ffi::{c_char, CStr, OsString};
 use std::thread::JoinHandle;
 use crate::{ConverterConfig, ConverterError};
 
-#[repr(C)]
+// #[repr(C)]
 pub struct Context {
     error: Option<String>,
 
