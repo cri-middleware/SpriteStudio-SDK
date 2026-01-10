@@ -5,19 +5,20 @@ pub mod core;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod ffi;
-
 // #[cfg(target_arch = "wasm32")]
 // pub mod wasm;
 
-pub struct Context<'a> {
-    ssab: ssab::ssab::SsAnimeBinary<'a>,
+pub struct Context {
+    ssab: ssab::ssab::SsAnimeBinary<'static>,
     track: core::track_manager::TrackManager,
-    fb: flatbuffers::FlatBufferBuilder<'a>,
-    animation: Option<ssab::ssab::AnimationData<'a>>,
+    fb: flatbuffers::FlatBufferBuilder<'static>,
+    animation: Option<ssab::ssab::AnimationData<'static>>,
 }
 
-impl<'a> Context<'a> {
-    pub fn new(buf: &[u8]) -> Result<Context<'_>, std::io::Error> {
+impl Context {
+    pub fn new(buf: &[u8]) -> Result<Context, std::io::Error> {
+        let buf: &'static [u8] = unsafe { std::mem::transmute(buf) };
+
         let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
 
         // validate version
@@ -38,11 +39,11 @@ impl<'a> Context<'a> {
         })
     }
 
-    pub fn get_initialize_data(&mut self) -> Option<Vec<u8>> {
+    pub fn get_initialize_data(&mut self) -> &[u8] {
         self.fb.reset();
         let offset = core::initialize::get_initialize_data(&mut self.fb, &self.ssab);
         self.fb.finish_minimal(offset);
-        Some(self.fb.finished_data().to_vec())
+        self.fb.finished_data()
     }
 
     pub fn get_animation_names(&mut self) -> Option<Vec<String>> {
@@ -51,7 +52,7 @@ impl<'a> Context<'a> {
         })
     }
 
-    pub fn setup_animation(&mut self, name: &str) -> Option<Vec<u8>> {
+    pub fn setup_animation(&mut self, name: &str) -> Option<&[u8]> {
         let animation = self.ssab.animations()?.lookup_by_key(name, |en, key| en.key_compare_with_value(key))?;
         self.track.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation = Some(animation);
@@ -59,10 +60,10 @@ impl<'a> Context<'a> {
         self.fb.reset();
         let offset = core::preparation::get_animation_preparation_data(&mut self.fb, &animation);
         self.fb.finish_minimal(offset);
-        Some(self.fb.finished_data().to_vec())
+        Some(self.fb.finished_data())
     }
 
-    pub fn get_frame_data(&mut self, frame_no: i32) -> Option<Vec<u8>> {
+    pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
         let Some(animation) = self.animation else {
             return None;
         };
@@ -73,7 +74,7 @@ impl<'a> Context<'a> {
         self.fb.reset();
         let offset = core::framedata::get_frame_data(&mut self.fb, &animation, frame_no);
         self.fb.finish_minimal(offset);
-        Some(self.fb.finished_data().to_vec())
+        Some(self.fb.finished_data())
     }
 
     // Frame Number getter functions
@@ -244,10 +245,7 @@ mod tests {
 
                 let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
-                let Some(init_buf) = context.get_initialize_data() else {
-                    assert!(false, "failed get_initialize_data", );
-                    return;
-                };
+                let init_buf = context.get_initialize_data();
 
                 // show .ss*e(.ssce, .ssee, .ssse, .charmap and external instance(animation)) names
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
@@ -281,10 +279,7 @@ mod tests {
 
                 let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
-                let Some(init_buf) = context.get_initialize_data() else {
-                    assert!(false, "failed get_initialize_data", );
-                    return;
-                };
+                let init_buf = context.get_initialize_data();
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
                 println!("animations name: {}", init.name().unwrap());
                 context.get_animation_names().map(|names| names.iter().for_each(|name| {
@@ -318,10 +313,7 @@ mod tests {
 
                 let buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new(&buf).unwrap();
-                let Some(init_buf) = context.get_initialize_data() else {
-                    assert!(false, "failed get_initialize_data", );
-                    return;
-                };
+                let init_buf = context.get_initialize_data();
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
                 println!("ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("parts");
