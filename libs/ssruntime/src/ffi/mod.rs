@@ -1,5 +1,11 @@
 use std::ffi::{c_char, c_float, c_int, c_uchar, CStr};
 
+#[repr(C)]
+pub struct BufferView {
+    data: *const u8,
+    len: usize,
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_create(ptr: *mut c_uchar, len: usize) -> *mut crate::Context {
     let buf = unsafe { std::slice::from_raw_parts(ptr as *const u8, len) };
@@ -17,33 +23,40 @@ pub extern "C" fn ss_runtime_destroy(context: *mut crate::Context) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_initialize_data(context: *mut crate::Context) -> *mut c_uchar {
+pub extern "C" fn ss_runtime_get_initialize_data(context: *mut crate::Context) -> BufferView {
     let context = unsafe { &mut *context };
-    let Some(ret) = context.get_initialize_data() else {
-        return std::ptr::null_mut()
-    };
-    Box::into_raw(Box::new(ret)) as *mut c_uchar
+    let ret = context.get_initialize_data();
+    BufferView {
+        data: ret.as_ptr() as *mut c_uchar,
+        len: ret.len(),
+    }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char) -> *mut c_uchar {
+pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char) -> BufferView {
     let context = unsafe { &mut *context };
 
     let c_buf = unsafe { CStr::from_ptr(name) };
     let a = c_buf.to_string_lossy().into_owned();
     let Some(ret) = context.setup_animation(&a) else {
-        return std::ptr::null_mut()
+        return BufferView { data: std::ptr::null_mut(), len: 0 };
     };
-    Box::into_raw(Box::new(ret)) as *mut c_uchar
+    BufferView {
+        data: ret.as_ptr() as *mut c_uchar,
+        len: ret.len(),
+    }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_data(context: *mut crate::Context, frame_no: c_int) -> *mut c_uchar {
+pub extern "C" fn ss_runtime_get_frame_data(context: *mut crate::Context, frame_no: c_int) -> BufferView {
     let context = unsafe { &mut *context };
     let Some(ret) = context.get_frame_data(frame_no) else {
-        return std::ptr::null_mut()
+        return BufferView { data: std::ptr::null_mut(), len: 0 };
     };
-    Box::into_raw(Box::new(ret)) as *mut c_uchar
+    BufferView {
+        data: ret.as_ptr() as *mut c_uchar,
+        len: ret.len(),
+    }
 }
 
 #[unsafe(no_mangle)]
