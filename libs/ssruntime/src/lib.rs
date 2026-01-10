@@ -1,4 +1,3 @@
-use crate::core::track_manager::{PlaybackDirection, PlaybackStyle};
 
 mod runtime;
 pub mod core;
@@ -46,9 +45,9 @@ impl Context {
         self.fb.finished_data()
     }
 
-    pub fn get_animation_names(&mut self) -> Option<Vec<String>> {
+    pub fn get_animation_names(&mut self) -> Option<Vec<&str>> {
         self.ssab.animations().map(|animations| {
-            animations.iter().map(|animation| animation.name().to_string()).collect::<Vec<String>>()
+            animations.iter().map(|animation| animation.name()).collect::<Vec<&str>>()
         })
     }
 
@@ -100,11 +99,11 @@ impl Context {
         self.track.get_skip_frames()
     }
 
-    pub fn get_playback_direction(&self) -> PlaybackDirection {
+    pub fn get_playback_direction(&self) -> core::track_manager::PlaybackDirection {
         self.track.get_playback_direction()
     }
 
-    pub fn get_playback_style(&self) -> PlaybackStyle {
+    pub fn get_playback_style(&self) -> core::track_manager::PlaybackStyle {
         self.track.get_playback_style()
     }
 
@@ -282,11 +281,18 @@ mod tests {
                 let init_buf = context.get_initialize_data();
                 let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
                 println!("animations name: {}", init.name().unwrap());
-                context.get_animation_names().map(|names| names.iter().for_each(|name| {
+
+                let animation_names: Vec<String> = context.get_animation_names()
+                    .unwrap_or_default()
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect();
+
+                for name in &animation_names {
                     println!("  animation name: {}", name);
                     let Some(prepare_buf) = context.setup_animation(name) else {
                         assert!(false, "failed setup_animation. name: {}", name);
-                        return;
+                        continue;
                     };
                     let prepare = unsafe { runtime::preparation::ss::runtime::root_as_anim_prep_data(&prepare_buf) }.unwrap();
                     println!("    start_frame: {}", prepare.start_frame());
@@ -295,7 +301,7 @@ mod tests {
                     println!("    fps: {}", prepare.fps());
                     prepare.canvas().map(|canvas| println!("    canvas x1: {}, y1: {}, x2: {}, y2: {}", canvas.x1(), canvas.y1(), canvas.x2(), canvas.y2()));
                     println!();
-                }));
+                }
                 println!();
             }
         })
