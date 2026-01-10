@@ -1,11 +1,5 @@
 use std::ffi::{c_char, c_float, c_int, c_uchar, CStr};
 
-#[repr(C)]
-pub struct BufferView {
-    data: *const u8,
-    len: usize,
-}
-
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_create(ptr: *mut c_uchar, len: usize) -> *mut crate::Context {
     let buf = unsafe { std::slice::from_raw_parts(ptr as *const u8, len) };
@@ -23,39 +17,39 @@ pub extern "C" fn ss_runtime_destroy(context: *mut crate::Context) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_initialize_data(context: *mut crate::Context) -> BufferView {
+pub extern "C" fn ss_runtime_get_initialize_data(context: *mut crate::Context, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     let context = unsafe { &mut *context };
     let ret = context.get_initialize_data();
-    BufferView {
-        data: ret.as_ptr() as *mut c_uchar,
-        len: ret.len(),
+    unsafe {
+        *out_data = ret.as_ptr() as *mut c_uchar;
+        *out_len = ret.len();
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char) -> BufferView {
+pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     let context = unsafe { &mut *context };
 
     let c_buf = unsafe { CStr::from_ptr(name) };
     let a = c_buf.to_string_lossy().into_owned();
     let Some(ret) = context.setup_animation(&a) else {
-        return BufferView { data: std::ptr::null_mut(), len: 0 };
+        return;
     };
-    BufferView {
-        data: ret.as_ptr() as *mut c_uchar,
-        len: ret.len(),
+    unsafe {
+        *out_data = ret.as_ptr() as *mut c_uchar;
+        *out_len = ret.len();
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_data(context: *mut crate::Context, frame_no: c_int) -> BufferView {
+pub extern "C" fn ss_runtime_get_frame_data(context: *mut crate::Context, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     let context = unsafe { &mut *context };
     let Some(ret) = context.get_frame_data(frame_no) else {
-        return BufferView { data: std::ptr::null_mut(), len: 0 };
+        return;
     };
-    BufferView {
-        data: ret.as_ptr() as *mut c_uchar,
-        len: ret.len(),
+    unsafe {
+        *out_data = ret.as_ptr() as *mut c_uchar;
+        *out_len = ret.len();
     }
 }
 
