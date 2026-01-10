@@ -6,6 +6,7 @@ pub mod utility;
 pub use converter::converter::*;
 pub use converter::converter_error::*;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "ffi")]
 pub mod ffi;
+
 mod delivery;

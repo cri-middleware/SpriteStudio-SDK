@@ -6,21 +6,18 @@ edition = "2024"
 [dependencies]
 flatbuffers = { version = "25.12.19", features = ["default"] }
 ssab = { path = "../ssab", features = ["default"] }
+wasm-bindgen = { version = "0.2.106", optional = true }
+
+[features]
+default = ["ffi"]
+ffi = []
+web = ["wasm-bindgen"]
 
 [dev-dependencies]
 ssconverter3 = { path = "../ssconverter3" }
 
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
-
-
-# wasm32
-# [target.'cfg(target_arch = "wasm32")'.dependencies]
-# wasm-bindgen = "0.2.106"
-
-# ffi
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-libc = "0.2.180"
 
 [build-dependencies]
 cbindgen = "0.29.2"
