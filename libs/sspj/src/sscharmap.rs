@@ -1,7 +1,8 @@
-use crate::ssloader::{SsLoader, SspjError};
+use crate::ssloader::SsLoader;
 use crate::sstypes::{SsIRect, SsPoint2};
 use serde::Deserialize;
 use std::collections::HashMap;
+use crate::sspj_error::SspjError;
 
 pub trait CharMapLoader {
     type Output;

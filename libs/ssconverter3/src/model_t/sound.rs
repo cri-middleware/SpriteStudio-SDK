@@ -2,7 +2,7 @@ fn convert_sound_file_list(_sspj: &sspj::sspj::SsProject, sssound_list: &sspj::s
     sssound_list.sounds.iter().map(|sssound| {
         let mut sound_file_t = ssab::ssab::SoundFileT::default();
 
-        sound_file_t.name = sssound.alias.to_string();
+        sound_file_t.name = sssound.filename.to_string();
         sound_file_t.time_total = sssound.msec;
 
         sound_file_t

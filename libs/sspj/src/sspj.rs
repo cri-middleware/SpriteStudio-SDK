@@ -2,7 +2,7 @@ use crate::ssae::{SsAnimation, SsAnimePack};
 use crate::ssce::SsCellMap;
 use crate::sscharmap::SsCharMap;
 use crate::ssee::SsEffectFile;
-use crate::ssloader::{SsLoader, SspjError};
+use crate::ssloader::SsLoader;
 use crate::ssqe::SsSequencePack;
 use crate::ssse::SsAudioPack;
 use crate::sstypes::{SsTexFilterMode, SsTexWrapMode};
@@ -131,25 +131,22 @@ impl SsProject {
 
 impl SsLoader for SsProject {
     type Output = SsProject;
-    fn load_from_file(path: &std::path::Path) -> Result<Self::Output, SspjError> {
-        let xml_data = std::fs::read_to_string(path).map_err(SspjError::FileError)?;
-        let parent = path.parent().expect("Failed to get a parent directory");
-        let mut sspj =
-            quick_xml::de::from_str::<SsProject>(&xml_data).map_err(SspjError::XmlParseError)?;
+    fn load_from_file(path: &std::path::Path) -> Result<Self::Output, crate::sspj_error::SspjError> {
+        let Ok(xml_data) = std::fs::read_to_string(path) else {
+            return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to read a file: {:?}", path.to_string_lossy()))))
+        };
+        let Some(parent) = path.parent() else {
+            return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to get a parent directory: {:?}", path.parent()))))
+        };
+        let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
 
         let sound_handle = {
             let parent_path = parent.to_path_buf();
             let audiopack_names = sspj.audiopack_names.clone();
             std::thread::spawn(move || {
                 audiopack_names.par_iter().map(|audiopack| {
-                    let r = SsAudioPack::load_from_file(&parent_path.join(audiopack));
-                    match r {
-                        Ok(audiopack_data) => audiopack_data,
-                        Err(e) => {
-                            panic!("Failed to load a audiopack: {:?}, {:?}", audiopack, e);
-                        }
-                    }
-                }).collect::<Vec<SsAudioPack>>()
+                    SsAudioPack::load_from_file(&parent_path.join(audiopack))
+                }).collect::<Result<Vec<SsAudioPack>, crate::sspj_error::SspjError>>()
             })
         };
 
@@ -158,17 +155,8 @@ impl SsLoader for SsProject {
             let sequencepack_names = sspj.sequencepack_names.clone();
             std::thread::spawn(move || {
                 sequencepack_names.par_iter().map(|sequencepack| {
-                    let r = SsSequencePack::load_from_file(&parent_path.join(sequencepack));
-                    match r {
-                        Ok(sequencepack_data) => sequencepack_data,
-                        Err(e) => {
-                            panic!(
-                                "Failed to load a sequencepack: {:?}, {:?}",
-                                sequencepack, e
-                            );
-                        }
-                    }
-                }).collect::<Vec<SsSequencePack>>()
+                    SsSequencePack::load_from_file(&parent_path.join(sequencepack))
+                }).collect::<Result<Vec<SsSequencePack>, crate::sspj_error::SspjError>>()
             })
         };
 
@@ -176,16 +164,11 @@ impl SsLoader for SsProject {
             let parent_path = parent.to_path_buf();
             let charmap_names = sspj.charmap_names.clone();
             std::thread::spawn(move || {
-                charmap_names.par_iter().filter_map(|charmap_name| {
-                    let r = SsCharMap::load_from_file(&parent_path.join(charmap_name));
-                    let charmap_data = match r {
-                        Ok(charmap_data) => charmap_data,
-                        Err(e) => {
-                            panic!("Failed to load a charmap: {:?}, {:?}", charmap_name, e);
-                        }
-                    };
-                    Some((charmap_name.to_string(), charmap_data))
-                }).collect::<HashMap<String, SsCharMap>>()
+                charmap_names.par_iter().map(|charmap_name| {
+                    let path = parent_path.join(charmap_name);
+                    let charmap_data = SsCharMap::load_from_file(&path).map_err(|e| e)?;
+                    Ok((charmap_name.to_string(), charmap_data))
+                }).collect::<Result<HashMap<String, SsCharMap>, crate::sspj_error::SspjError>>()
             })
         };
         
@@ -195,16 +178,10 @@ impl SsLoader for SsProject {
             std::thread::spawn(move || {
                 cellmap_names.par_iter().map(|cellmap| {
                     let ssce_path = parent_path.join(cellmap);
-                    let r = SsCellMap::load_from_file(&ssce_path);
-                    let mut ssce = match r {
-                        Ok(ssce) => ssce,
-                        Err(e) => {
-                            panic!("Failed to load a cellmap: {:?}, {:?}", ssce_path, e);
-                        }
-                    };
+                    let mut ssce = SsCellMap::load_from_file(&ssce_path)?;
                     ssce.load_file_path = ssce_path.file_name().unwrap().to_string_lossy().to_string();
-                    ssce
-                }).collect::<Vec<SsCellMap>>()
+                    Ok(ssce)
+                }).collect::<Result<Vec<SsCellMap>, crate::sspj_error::SspjError>>()
             })
         };
 
@@ -213,14 +190,8 @@ impl SsLoader for SsProject {
             let effect_file_names = sspj.effect_file_names.clone();
             std::thread::spawn(move || {
                 effect_file_names.par_iter().map(|effect_file| {
-                    let r = SsEffectFile::load_from_file(&parent_path.join(effect_file));
-                    match r {
-                        Ok(effect_file_data) => effect_file_data,
-                        Err(e) => {
-                            panic!("Failed to load a effect file: {:?}, {:?}", effect_file, e);
-                        }
-                    }
-                }).collect::<Vec<SsEffectFile>>()
+                    SsEffectFile::load_from_file(&parent_path.join(effect_file))
+                }).collect::<Result<Vec<SsEffectFile>, crate::sspj_error::SspjError>>()
             })
         };
 
@@ -229,29 +200,23 @@ impl SsLoader for SsProject {
             let animepack_names = sspj.animepack_names.clone();
             std::thread::spawn(move || {
                 animepack_names.par_iter().map(|animepack| {
-                    let r = SsAnimePack::load_from_file(&parent_path.join(animepack));
-                    match r {
-                        Ok(animepack_data) => animepack_data,
-                        Err(e) => {
-                            panic!("Failed to load a animepack: {:?}, {:?}", animepack, e);
-                        }
-                    }
-                }).collect::<Vec<SsAnimePack>>()
+                    SsAnimePack::load_from_file(&parent_path.join(animepack))
+                }).collect::<Result<Vec<SsAnimePack>, crate::sspj_error::SspjError>>()
             })
         };
 
-        sspj.sound_list = sound_handle.join().unwrap();
-        sspj.sequence_list = sequence_handle.join().unwrap();
-        sspj.charmap_dic = charmap_handle.join().unwrap();
-        sspj.cellmap_list = cellmap_handle.join().unwrap();
-        sspj.effect_file_list = effect_handle.join().unwrap();
-        sspj.anime_list = animepack_handle.join().unwrap();
+        sspj.sound_list = sound_handle.join().unwrap()?;
+        sspj.sequence_list = sequence_handle.join().unwrap()?;
+        sspj.charmap_dic = charmap_handle.join().unwrap()?;
+        sspj.cellmap_list = cellmap_handle.join().unwrap()?;
+        sspj.effect_file_list = effect_handle.join().unwrap()?;
+        sspj.anime_list = animepack_handle.join().unwrap()?;
 
         Ok(sspj)
     }
 
-    fn load(_: &str) -> Result<<Self as SsLoader>::Output, SspjError> {
-        panic!("Not support Sspj::load()");
+    fn load(_: &str) -> Result<<Self as SsLoader>::Output, crate::sspj_error::SspjError> {
+        Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, "Not support Sspj::load()")))
     }
 }
 

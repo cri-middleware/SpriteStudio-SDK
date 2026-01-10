@@ -1,5 +1,6 @@
-use crate::ssloader::{SsLoader, SspjError};
+use crate::ssloader::SsLoader;
 use serde::Deserialize;
+use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]

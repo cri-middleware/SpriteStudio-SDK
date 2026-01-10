@@ -1,9 +1,10 @@
-use crate::ssloader::{SsLoader, SspjError};
+use crate::ssloader::SsLoader;
 use crate::sstypes::*;
 use serde::Deserialize;
 use serde::de::value::MapAccessDeserializer;
 use serde::de::{MapAccess, Visitor};
 use std::fmt::Formatter;
+use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 pub struct VarianceValue<T> {

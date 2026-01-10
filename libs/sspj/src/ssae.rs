@@ -1,10 +1,11 @@
 use crate::ssattribute::SsAttributeKind;
-use crate::ssloader::{SsLoader, SspjError};
+use crate::ssloader::SsLoader;
 use crate::sstypes::*;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 use std::str::FromStr;
+use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "camelCase")]
