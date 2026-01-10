@@ -29,7 +29,8 @@ mod tests {
             let p = Path::new(f);
             let sspj_loader = SspjLoader::new(&get_test_base_path().join(p).as_path());
             let Ok(_sspj) = sspj_loader.load_ss_project() else {
-                panic!("not found: {}", p.as_os_str().to_string_lossy());
+                assert!(false, "not found: {}", p.as_os_str().to_string_lossy());
+                return;
             };
             // println!("{:?}", _sspj);
         });
