@@ -2,10 +2,11 @@
 mod runtime;
 pub mod core;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "ffi")]
 pub mod ffi;
-// #[cfg(target_arch = "wasm32")]
-// pub mod wasm;
+
+#[cfg(feature = "web")]
+pub mod web;
 
 pub struct Context {
     ssab: ssab::ssab::SsAnimeBinary<'static>,
