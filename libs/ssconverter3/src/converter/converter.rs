@@ -13,12 +13,14 @@ use sspj::ssloader::SsLoader;
 pub struct ConvertConfig {
     pub debug: bool,
     pub split: bool,
+    pub shared: bool,
 }
 impl Default for ConvertConfig {
     fn default() -> Self {
         Self {
             debug: false,
             split: false,
+            shared: true,
         }
     }
 }
@@ -37,7 +39,7 @@ impl SspjLoader {
     }
 }
 
-pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, crate::converter::converter_error::ConverterError> {
+pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, crate::converter::converter_error::ConverterError> {
     let sspj_loader = SspjLoader::new(path);
     let sspj = match sspj_loader.load_ss_project() {
         Ok(sspj) => sspj,
@@ -54,8 +56,12 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Resu
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let mut ssab_cache = ssab_cache::SsabCache::new();
-        let offset = ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t);
+        let offset = if(config.shared) {
+            let mut ssab_cache = ssab_cache::SsabCache::new();
+            ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t)
+        } else {
+            anime_binary_t.pack(&mut fb)
+        };
         ssab::ssab::finish_ss_anime_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
         let output_file = [PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::SS_ANIME_BINARY_EXTENSION].join(".");
@@ -65,8 +71,12 @@ pub fn convert_sspj_to_ssab_data(path: &Path, _config: &ConvertConfig, ) -> Resu
     // convert ssqb structures to binary data
     let ssqb_bin_map = ssqb_model_list.par_iter().zip(sspj.sequencepack_names.par_iter()).map(|(sequence_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let mut ssqb_cache = ssqb_cache::SsqbCache::new();
-        let offset = ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t);
+        let offset = if(config.shared) {
+            let mut ssqb_cache = ssqb_cache::SsqbCache::new();
+            ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t)
+        } else {
+            sequence_binary_t.pack(&mut fb)
+        };
         ssab::ssqb::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
