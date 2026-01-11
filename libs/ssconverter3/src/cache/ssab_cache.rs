@@ -146,7 +146,7 @@ impl From<&ssab::ssab::PartAnimationDataFloatValueT> for PartAnimationDataFloatV
     fn from(value: &ssab::ssab::PartAnimationDataFloatValueT) -> Self {
         Self {
             index: value.index,
-            interpolation: value.interpolation,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
             value: ordered_float::OrderedFloat(value.value),
         }
     }
@@ -244,6 +244,33 @@ impl From<&[ssab::ssab::PartAnimationDataCellValueT]> for PartAnimationDataCellV
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataPartColorKey {
+    pub index: u16,
+    pub interpolation: ssab::ssab::InterpolationType,
+    pub value: Option<PartAttributePartColorKey>,
+}
+impl From<&ssab::ssab::PartAnimationDataPartColorT> for PartAnimationDataPartColorKey {
+    fn from(value: &ssab::ssab::PartAnimationDataPartColorT) -> Self {
+        Self {
+            index: value.index,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
+            value: value.value.as_ref().map(|v| PartAttributePartColorKey::from(v.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataPartColorVecKey {
+    pub v: Vec<PartAnimationDataPartColorKey>,
+}
+impl From<&[ssab::ssab::PartAnimationDataPartColorT]> for PartAnimationDataPartColorVecKey {
+    fn from(value: &[ssab::ssab::PartAnimationDataPartColorT]) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAnimationDataPartColorKey::from(v)).collect(),
+        }
+    }
+}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct CellKey {
@@ -524,6 +551,8 @@ pub struct SsabCache<'a> {
     pub part_animation_data_bool_value_vec_cache: HashMap<PartAnimationDataBoolValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataBoolValue<'a>>>>>,
     pub part_animation_data_cell_value_cache: HashMap<PartAnimationDataCellValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataCellValue<'a>>>,
     pub part_animation_data_cell_value_vec_cache: HashMap<PartAnimationDataCellValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataCellValue<'a>>>>>,
+    pub part_animation_data_part_color_cache: HashMap<PartAnimationDataPartColorKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataPartColor<'a>>>,
+    pub part_animation_data_part_color_vec_cache: HashMap<PartAnimationDataPartColorVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataPartColor<'a>>>>>,
 }
 impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
@@ -559,6 +588,8 @@ impl<'a> SsabCache<'a> {
             part_animation_data_bool_value_vec_cache: HashMap::new(),
             part_animation_data_cell_value_cache: HashMap::new(),
             part_animation_data_cell_value_vec_cache: HashMap::new(),
+            part_animation_data_part_color_cache: HashMap::new(),
+            part_animation_data_part_color_vec_cache: HashMap::new(),
         }
     }
     fn create_shared_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec2t: &ssab::ssab::Vec2T) -> flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>> {
@@ -766,6 +797,30 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
+    fn create_shared_part_animation_data_part_color(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_part_color: &ssab::ssab::PartAnimationDataPartColorT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataPartColor<'a>> {
+        let key = PartAnimationDataPartColorKey::from(part_animation_data_part_color);
+        if let Some(&offset) = self.part_animation_data_part_color_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataPartColorArgs::default();
+        args.index = part_animation_data_part_color.index;
+        args.interpolation = part_animation_data_part_color.interpolation;
+        args.value = part_animation_data_part_color.value.as_ref().map(|v| self.create_shared_part_attribute_part_color(fb, v));
+        let offset = ssab::ssab::PartAnimationDataPartColor::create(fb, &args);
+        self.part_animation_data_part_color_cache.insert(key, offset);
+        offset
+    }
+    
+    fn create_shared_part_animation_data_part_color_vec(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_part_color_array: &[ssab::ssab::PartAnimationDataPartColorT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataPartColor<'a>>>> {
+        let key = PartAnimationDataPartColorVecKey::from(part_animation_data_part_color_array);
+        if let Some(&offset) = self.part_animation_data_part_color_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = part_animation_data_part_color_array.iter().map(|t| self.create_shared_part_animation_data_part_color(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_animation_data_part_color_vec_cache.insert(key, offset);
+        offset
+    }
 }
 
 impl<'a> SsabCache<'a> {
@@ -1111,15 +1166,7 @@ impl<'a> SsabCache<'a> {
                 self.create_shared_part_animation_data_bool_value_vec(fb, hide_array)
             });
             p_args.parts_color_array = part_animation_data.parts_color_array.as_ref().map(|parts_color_array| {
-                let v = parts_color_array.iter().map(|parts_color| {
-                    let mut p_args = ssab::ssab::PartAnimationDataPartColorArgs::default();
-                    p_args.index = parts_color.index;
-                    p_args.interpolation = parts_color.interpolation;
-                    p_args.value = parts_color.value.as_ref().map(|value| { self.create_shared_part_attribute_part_color(fb, value) });
-
-                    ssab::ssab::PartAnimationDataPartColor::create(fb, &p_args)
-                }).collect::<Vec<_>>();
-                fb.create_vector(&v)
+                self.create_shared_part_animation_data_part_color_vec(fb, parts_color_array)
             });
             p_args.shader_array = part_animation_data.shader_array.as_ref().map(|shader_array| {
                 let v = shader_array.iter().map(|shader| {
