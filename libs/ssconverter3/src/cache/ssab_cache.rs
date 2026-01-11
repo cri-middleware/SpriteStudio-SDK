@@ -272,6 +272,36 @@ impl From<&[ssab::ssab::PartAnimationDataPartColorT]> for PartAnimationDataPartC
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataShaderKey {
+    pub index: u16,
+    pub interpolation: ssab::ssab::InterpolationType,
+    pub value: Option<PartAttributeShaderKey>,
+}
+impl From<&ssab::ssab::PartAnimationDataShaderT> for PartAnimationDataShaderKey {
+    fn from(value: &ssab::ssab::PartAnimationDataShaderT) -> Self {
+        Self {
+            index: value.index,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
+            value: value.value.as_ref().map(|v| PartAttributeShaderKey::from(v.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataShaderVecKey {
+    pub v: Vec<PartAnimationDataShaderKey>,
+}
+impl From<&[ssab::ssab::PartAnimationDataShaderT]> for PartAnimationDataShaderVecKey {
+    fn from(value: &[ssab::ssab::PartAnimationDataShaderT]) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAnimationDataShaderKey::from(v)).collect(),
+        }
+    }
+}
+
+
+
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct CellKey {
     pub name: String,
@@ -553,6 +583,8 @@ pub struct SsabCache<'a> {
     pub part_animation_data_cell_value_vec_cache: HashMap<PartAnimationDataCellValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataCellValue<'a>>>>>,
     pub part_animation_data_part_color_cache: HashMap<PartAnimationDataPartColorKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataPartColor<'a>>>,
     pub part_animation_data_part_color_vec_cache: HashMap<PartAnimationDataPartColorVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataPartColor<'a>>>>>,
+    pub part_animation_data_shader_cache: HashMap<PartAnimationDataShaderKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataShader<'a>>>,
+    pub part_animation_data_shader_vec_cache: HashMap<PartAnimationDataShaderVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataShader<'a>>>>>,
 }
 impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
@@ -590,6 +622,8 @@ impl<'a> SsabCache<'a> {
             part_animation_data_cell_value_vec_cache: HashMap::new(),
             part_animation_data_part_color_cache: HashMap::new(),
             part_animation_data_part_color_vec_cache: HashMap::new(),
+            part_animation_data_shader_cache: HashMap::new(),
+            part_animation_data_shader_vec_cache: HashMap::new(),
         }
     }
     fn create_shared_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec2t: &ssab::ssab::Vec2T) -> flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>> {
@@ -821,6 +855,32 @@ impl<'a> SsabCache<'a> {
         self.part_animation_data_part_color_vec_cache.insert(key, offset);
         offset
     }
+
+    fn create_shared_part_animation_data_shader(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_shader: &ssab::ssab::PartAnimationDataShaderT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataShader<'a>> {
+        let key = PartAnimationDataShaderKey::from(part_animation_data_shader);
+        if let Some(&offset) = self.part_animation_data_shader_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataShaderArgs::default();
+        args.index = part_animation_data_shader.index;
+        args.interpolation = part_animation_data_shader.interpolation;
+        args.value = part_animation_data_shader.value.as_ref().map(|v| self.create_shared_part_attribute_shader(fb, v));
+        let offset = ssab::ssab::PartAnimationDataShader::create(fb, &args);
+        self.part_animation_data_shader_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_shader_cache_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_shader: &[ssab::ssab::PartAnimationDataShaderT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataShader<'a>>>> {
+        let key = PartAnimationDataShaderVecKey::from(part_animation_data_shader);
+        if let Some(&offset) = self.part_animation_data_shader_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = part_animation_data_shader.iter().map(|t| self.create_shared_part_animation_data_shader(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_animation_data_shader_vec_cache.insert(key, offset);
+        offset
+    }
+
 }
 
 impl<'a> SsabCache<'a> {
@@ -1169,14 +1229,7 @@ impl<'a> SsabCache<'a> {
                 self.create_shared_part_animation_data_part_color_list(fb, parts_color_array)
             });
             p_args.shader_array = part_animation_data.shader_array.as_ref().map(|shader_array| {
-                let v = shader_array.iter().map(|shader| {
-                    let mut s_srgs = ssab::ssab::PartAnimationDataShaderArgs::default();
-                    s_srgs.index = shader.index;
-                    s_srgs.value = shader.value.as_ref().map(|value| { self.create_shared_part_attribute_shader(fb, value) });
-
-                    ssab::ssab::PartAnimationDataShader::create(fb, &s_srgs)
-                }).collect::<Vec<_>>();
-                fb.create_vector(&v)
+                self.create_shared_part_animation_data_shader_cache_list(fb, shader_array)
             });
             p_args.vertex_array = part_animation_data.vertex_array.as_ref().map(|vertex_array| {
                 let v = vertex_array.iter().map(|vertex| {
