@@ -300,7 +300,177 @@ impl From<&[ssab::ssab::PartAnimationDataShaderT]> for PartAnimationDataShaderVe
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataVertexKey {
+    pub index: u16,
+    pub interpolation: ssab::ssab::InterpolationType,
+    pub value: Option<PartAttributeVertexKey>,
+}
+impl From<&ssab::ssab::PartAnimationDataVertexT> for PartAnimationDataVertexKey {
+    fn from(value: &ssab::ssab::PartAnimationDataVertexT) -> Self {
+        Self {
+            index: value.index,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
+            value: value.value.as_ref().map(|v| PartAttributeVertexKey::from(v.as_ref())),
+        }
+    }
+}
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataVertexVecKey {
+    pub v: Vec<PartAnimationDataVertexKey>,
+}
+impl From<&[ssab::ssab::PartAnimationDataVertexT]> for PartAnimationDataVertexVecKey {
+    fn from(value: &[ssab::ssab::PartAnimationDataVertexT]) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAnimationDataVertexKey::from(v)).collect(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataVec2Key {
+    pub index: u16,
+    pub interpolation: ssab::ssab::InterpolationType,
+    pub value: Option<Vec2Key>,
+}
+impl From<&ssab::ssab::PartAnimationDataVec2T> for PartAnimationDataVec2Key {
+    fn from(value: &ssab::ssab::PartAnimationDataVec2T) -> Self {
+        Self {
+            index: value.index,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
+            value: value.value.as_ref().map(|v| Vec2Key::from(v.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataVec2VecKey {
+    pub v: Vec<PartAnimationDataVec2Key>,
+}
+impl From<&[ssab::ssab::PartAnimationDataVec2T]> for PartAnimationDataVec2VecKey {
+    fn from(value: &[ssab::ssab::PartAnimationDataVec2T]) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAnimationDataVec2Key::from(v)).collect(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataDeformKey {
+    pub index: u16,
+    pub interpolation: ssab::ssab::InterpolationType,
+    pub value: Option<PartAttributeDeformKey>,
+}
+impl From<&ssab::ssab::PartAnimationDataDeformT> for PartAnimationDataDeformKey {
+    fn from(value: &ssab::ssab::PartAnimationDataDeformT) -> Self {
+        Self {
+            index: value.index,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
+            value: value.value.as_ref().map(|v| PartAttributeDeformKey::from(v.as_ref())),
+        }
+    }
+}
+
+// PartAnimationDataDeform
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataDeformVecKey {
+    pub v: Vec<PartAnimationDataDeformKey>,
+}
+impl From<&[ssab::ssab::PartAnimationDataDeformT]> for PartAnimationDataDeformVecKey {
+    fn from(value: &[ssab::ssab::PartAnimationDataDeformT]) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAnimationDataDeformKey::from(v)).collect(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataKey {
+    pub cell_array: Option<PartAnimationDataCellValueVecKey>,
+    pub pos_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub pos_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub pos_z_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub rot_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub rot_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub rot_z_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub scl_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub scl_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub loscl_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub loscl_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub alpha_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub lo_alpha_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub prio_array: Option<PartAnimationDataIntValueVecKey>,
+    pub flip_h_array: Option<PartAnimationDataBoolValueVecKey>,
+    pub flip_v_array: Option<PartAnimationDataBoolValueVecKey>,
+    pub hide_array: Option<PartAnimationDataBoolValueVecKey>,
+    pub parts_color_array: Option<PartAnimationDataPartColorVecKey>,
+    pub shader_array: Option<PartAnimationDataShaderVecKey>,
+    pub vertex_array: Option<PartAnimationDataVertexVecKey>,
+    pub pivot_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub pivot_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub anchor_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub anchor_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub size_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub size_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub img_flip_h_array: Option<PartAnimationDataBoolValueVecKey>,
+    pub img_flip_v_array: Option<PartAnimationDataBoolValueVecKey>,
+    pub uvt_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uvt_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uvr_z_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uvs_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uvs_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub boundr_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub mask_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub skew_array: Option<PartAnimationDataVec2VecKey>,
+    pub deform_array: Option<PartAnimationDataDeformVecKey>,
+    pub texture_array: Option<PartAnimationDataIntValueVecKey>,
+}
+impl From<&ssab::ssab::PartAnimationDataT> for PartAnimationDataKey {
+    fn from(value: &ssab::ssab::PartAnimationDataT) -> Self {
+        Self {
+            cell_array: value.cell_array.as_ref().map(|c| PartAnimationDataCellValueVecKey::from(c.as_ref())),
+            pos_x_array: value.pos_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            pos_y_array: value.pos_y_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            pos_z_array: value.pos_z_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            rot_x_array: value.rot_x_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
+            rot_y_array: value.rot_y_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
+            rot_z_array: value.rot_z_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
+            scl_x_array: value.scl_x_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
+            scl_y_array: value.scl_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
+            loscl_x_array: value.loscl_x_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
+            loscl_y_array: value.loscl_y_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
+            alpha_array: value.alpha_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
+            lo_alpha_array: value.lo_alpha_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
+            prio_array: value.prio_array.as_ref().map(|p| PartAnimationDataIntValueVecKey::from(p.as_ref())),
+            flip_h_array: value.flip_h_array.as_ref().map(|f| PartAnimationDataBoolValueVecKey::from(f.as_ref())),
+            flip_v_array: value.flip_v_array.as_ref().map(|f| PartAnimationDataBoolValueVecKey::from(f.as_ref())),
+            hide_array: value.hide_array.as_ref().map(|h| PartAnimationDataBoolValueVecKey::from(h.as_ref())),
+            parts_color_array: value.parts_color_array.as_ref().map(|c| PartAnimationDataPartColorVecKey::from(c.as_ref())),
+            shader_array: value.shader_array.as_ref().map(|s| PartAnimationDataShaderVecKey::from(s.as_ref())),
+            vertex_array: value.vertex_array.as_ref().map(|v| PartAnimationDataVertexVecKey::from(v.as_ref())),
+            pivot_x_array: value.pivot_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            pivot_y_array: value.pivot_y_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            anchor_x_array: value.anchor_x_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
+            anchor_y_array: value.anchor_y_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
+            size_x_array: value.size_x_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
+            size_y_array: value.size_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
+            img_flip_h_array: value.img_flip_h_array.as_ref().map(|i| PartAnimationDataBoolValueVecKey::from(i.as_ref())),
+            img_flip_v_array: value.img_flip_v_array.as_ref().map(|i| PartAnimationDataBoolValueVecKey::from(i.as_ref())),
+            uvt_x_array: value.uvt_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uvt_y_array: value.uvt_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uvr_z_array: value.uvr_z_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uvs_x_array: value.uvs_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uvs_y_array: value.uvs_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            boundr_array: value.boundr_array.as_ref().map(|b| PartAnimationDataFloatValueVecKey::from(b.as_ref())),
+            mask_array: value.mask_array.as_ref().map(|m| PartAnimationDataFloatValueVecKey::from(m.as_ref())),
+            skew_array: value.skew_array.as_ref().map(|s| PartAnimationDataVec2VecKey::from(s.as_ref())),
+            deform_array: value.deform_array.as_ref().map(|d| PartAnimationDataDeformVecKey::from(d.as_ref())),
+            texture_array: value.texture_array.as_ref().map(|t| PartAnimationDataIntValueVecKey::from(t.as_ref())),
+
+        }
+    }
+}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct CellKey {
@@ -585,6 +755,13 @@ pub struct SsabCache<'a> {
     pub part_animation_data_part_color_vec_cache: HashMap<PartAnimationDataPartColorVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataPartColor<'a>>>>>,
     pub part_animation_data_shader_cache: HashMap<PartAnimationDataShaderKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataShader<'a>>>,
     pub part_animation_data_shader_vec_cache: HashMap<PartAnimationDataShaderVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataShader<'a>>>>>,
+    pub part_animation_data_vertex_cache: HashMap<PartAnimationDataVertexKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataVertex<'a>>>,
+    pub part_animation_data_vertex_vec_cache: HashMap<PartAnimationDataVertexVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataVertex<'a>>>>>,
+    pub part_animation_data_vec2_cache: HashMap<PartAnimationDataVec2Key, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataVec2<'a>>>,
+    pub part_animation_data_vec2_vec_cache: HashMap<PartAnimationDataVec2VecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataVec2<'a>>>>>,
+    pub part_animation_data_deform_cache: HashMap<PartAnimationDataDeformKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataDeform<'a>>>,
+    pub part_animation_data_deform_vec_cache: HashMap<PartAnimationDataDeformVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataDeform<'a>>>>>,
+    pub part_animation_data_cache: HashMap<PartAnimationDataKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationData<'a>>>,
 }
 impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
@@ -624,6 +801,13 @@ impl<'a> SsabCache<'a> {
             part_animation_data_part_color_vec_cache: HashMap::new(),
             part_animation_data_shader_cache: HashMap::new(),
             part_animation_data_shader_vec_cache: HashMap::new(),
+            part_animation_data_vertex_cache: HashMap::new(),
+            part_animation_data_vertex_vec_cache: HashMap::new(),
+            part_animation_data_vec2_cache: HashMap::new(),
+            part_animation_data_vec2_vec_cache: HashMap::new(),
+            part_animation_data_deform_cache: HashMap::new(),
+            part_animation_data_deform_vec_cache: HashMap::new(),
+            part_animation_data_cache: HashMap::new(),
         }
     }
     fn create_shared_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec2t: &ssab::ssab::Vec2T) -> flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>> {
@@ -870,7 +1054,7 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    fn create_shared_part_animation_data_shader_cache_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_shader: &[ssab::ssab::PartAnimationDataShaderT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataShader<'a>>>> {
+    fn create_shared_part_animation_data_shader_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_shader: &[ssab::ssab::PartAnimationDataShaderT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataShader<'a>>>> {
         let key = PartAnimationDataShaderVecKey::from(part_animation_data_shader);
         if let Some(&offset) = self.part_animation_data_shader_vec_cache.get(&key) {
             return offset;
@@ -878,6 +1062,210 @@ impl<'a> SsabCache<'a> {
         let v = part_animation_data_shader.iter().map(|t| self.create_shared_part_animation_data_shader(fb, t)).collect::<Vec<_>>();
         let offset = fb.create_vector(&v);
         self.part_animation_data_shader_vec_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_vertex(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_vertex: &ssab::ssab::PartAnimationDataVertexT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataVertex<'a>> {
+        let key = PartAnimationDataVertexKey::from(part_animation_data_vertex);
+        if let Some(&offset) = self.part_animation_data_vertex_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataVertexArgs::default();
+        args.index = part_animation_data_vertex.index;
+        args.interpolation = part_animation_data_vertex.interpolation;
+        args.value = part_animation_data_vertex.value.as_ref().map(|v| self.create_shared_part_attribute_vertex(fb, v));
+        let offset = ssab::ssab::PartAnimationDataVertex::create(fb, &args);
+        self.part_animation_data_vertex_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_vertex_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_vertex_array: &[ssab::ssab::PartAnimationDataVertexT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataVertex<'a>>>> {
+        let key = PartAnimationDataVertexVecKey::from(part_animation_data_vertex_array);
+        if let Some(&offset) = self.part_animation_data_vertex_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = part_animation_data_vertex_array.iter().map(|t| self.create_shared_part_animation_data_vertex(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_animation_data_vertex_vec_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_vec2: &ssab::ssab::PartAnimationDataVec2T) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataVec2<'a>> {
+        let key = PartAnimationDataVec2Key::from(part_animation_data_vec2);
+        if let Some(&offset) = self.part_animation_data_vec2_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataVec2Args::default();
+        args.index = part_animation_data_vec2.index;
+        args.interpolation = part_animation_data_vec2.interpolation;
+        args.value = part_animation_data_vec2.value.as_ref().map(|v| self.create_shared_vec2(fb, v));
+        let offset = ssab::ssab::PartAnimationDataVec2::create(fb, &args);
+        self.part_animation_data_vec2_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_vec2_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_vec2_array: &[ssab::ssab::PartAnimationDataVec2T]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataVec2<'a>>>> {
+        let key = PartAnimationDataVec2VecKey::from(part_animation_data_vec2_array);
+        if let Some(&offset) = self.part_animation_data_vec2_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = part_animation_data_vec2_array.iter().map(|t| self.create_shared_part_animation_data_vec2(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_animation_data_vec2_vec_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_deform(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_deform: &ssab::ssab::PartAnimationDataDeformT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataDeform<'a>> {
+        let key = PartAnimationDataDeformKey::from(part_animation_data_deform);
+        if let Some(&offset) = self.part_animation_data_deform_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataDeformArgs::default();
+        args.index = part_animation_data_deform.index;
+        args.interpolation = part_animation_data_deform.interpolation;
+        args.value = part_animation_data_deform.value.as_ref().map(|v| self.create_shared_part_attribute_deform(fb, v));
+        let offset = ssab::ssab::PartAnimationDataDeform::create(fb, &args);
+        self.part_animation_data_deform_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_deform_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_deform_array: &[ssab::ssab::PartAnimationDataDeformT]) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataDeform<'a>>>> {
+        let key = PartAnimationDataDeformVecKey::from(part_animation_data_deform_array);
+        if let Some(&offset) = self.part_animation_data_deform_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = part_animation_data_deform_array.iter().map(|t| self.create_shared_part_animation_data_deform(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_animation_data_deform_vec_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data: &ssab::ssab::PartAnimationDataT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationData<'a>> {
+        let key = PartAnimationDataKey::from(part_animation_data);
+        if let Some(&offset) = self.part_animation_data_cache.get(&key) {
+            return offset;
+        }
+
+        let mut p_args = ssab::ssab::PartAnimationDataArgs::default();
+        p_args.cell_array = part_animation_data.cell_array.as_ref().map(|cell_array| {
+            self.create_shared_part_animation_data_cell_value_list(fb, cell_array)
+        });
+
+        p_args.pos_x_array = part_animation_data.pos_x_array.as_ref().map(|pos_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, pos_x_array)
+        });
+
+        p_args.pos_y_array = part_animation_data.pos_y_array.as_ref().map(|pos_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, pos_y_array)
+        });
+        p_args.pos_z_array = part_animation_data.pos_z_array.as_ref().map(|pos_z_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, pos_z_array)
+        });
+        p_args.rot_x_array = part_animation_data.rot_x_array.as_ref().map(|rot_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, rot_x_array)
+        });
+        p_args.rot_y_array = part_animation_data.rot_y_array.as_ref().map(|rot_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, rot_y_array)
+        });
+        p_args.rot_z_array = part_animation_data.rot_z_array.as_ref().map(|rot_z_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, rot_z_array)
+        });
+        p_args.scl_x_array = part_animation_data.scl_x_array.as_ref().map(|scl_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, scl_x_array)
+        });
+        p_args.scl_y_array = part_animation_data.scl_y_array.as_ref().map(|scl_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, scl_y_array)
+        });
+        p_args.loscl_x_array = part_animation_data.loscl_x_array.as_ref().map(|loscl_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, loscl_x_array)
+        });
+        p_args.loscl_y_array = part_animation_data.loscl_y_array.as_ref().map(|loscl_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, loscl_y_array)
+        });
+        p_args.alpha_array = part_animation_data.alpha_array.as_ref().map(|alpha_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, alpha_array)
+        });
+        p_args.lo_alpha_array = part_animation_data.lo_alpha_array.as_ref().map(|lo_alpha_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, lo_alpha_array)
+        });
+        p_args.prio_array = part_animation_data.prio_array.as_ref().map(|prio_array| {
+            self.create_shared_part_animation_data_int_value_list(fb, prio_array)
+        });
+        p_args.flip_h_array = part_animation_data.flip_h_array.as_ref().map(|flip_h_array| {
+            self.create_shared_part_animation_data_bool_value_list(fb, flip_h_array)
+        });
+        p_args.flip_v_array = part_animation_data.flip_v_array.as_ref().map(|flip_v_array| {
+            self.create_shared_part_animation_data_bool_value_list(fb, flip_v_array)
+        });
+        p_args.hide_array = part_animation_data.hide_array.as_ref().map(|hide_array| {
+            self.create_shared_part_animation_data_bool_value_list(fb, hide_array)
+        });
+        p_args.parts_color_array = part_animation_data.parts_color_array.as_ref().map(|parts_color_array| {
+            self.create_shared_part_animation_data_part_color_list(fb, parts_color_array)
+        });
+        p_args.shader_array = part_animation_data.shader_array.as_ref().map(|shader_array| {
+            self.create_shared_part_animation_data_shader_list(fb, shader_array)
+        });
+        p_args.vertex_array = part_animation_data.vertex_array.as_ref().map(|vertex_array| {
+            self.create_shared_part_animation_data_vertex_list(fb, vertex_array)
+        });
+        p_args.pivot_x_array = part_animation_data.pivot_x_array.as_ref().map(|pivot_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, pivot_x_array)
+        });
+        p_args.pivot_y_array = part_animation_data.pivot_y_array.as_ref().map(|pivot_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, pivot_y_array)
+        });
+        p_args.anchor_x_array = part_animation_data.anchor_x_array.as_ref().map(|anchor_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, anchor_x_array)
+        });
+        p_args.anchor_y_array = part_animation_data.anchor_y_array.as_ref().map(|anchor_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, anchor_y_array)
+        });
+        p_args.size_x_array = part_animation_data.size_x_array.as_ref().map(|size_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, size_x_array)
+        });
+        p_args.size_y_array = part_animation_data.size_y_array.as_ref().map(|size_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, size_y_array)
+        });
+        p_args.img_flip_h_array = part_animation_data.img_flip_h_array.as_ref().map(|img_flip_h_array| {
+            self.create_shared_part_animation_data_bool_value_list(fb, img_flip_h_array)
+        });
+        p_args.img_flip_v_array = part_animation_data.img_flip_v_array.as_ref().map(|img_flip_v_array| {
+            self.create_shared_part_animation_data_bool_value_list(fb, img_flip_v_array)
+        });
+        p_args.uvt_x_array = part_animation_data.uvt_x_array.as_ref().map(|uvt_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uvt_x_array)
+        });
+        p_args.uvt_y_array = part_animation_data.uvt_y_array.as_ref().map(|uvt_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uvt_y_array)
+        });
+        p_args.uvr_z_array = part_animation_data.uvr_z_array.as_ref().map(|uvr_z_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uvr_z_array)
+        });
+        p_args.uvs_x_array = part_animation_data.uvs_x_array.as_ref().map(|uvs_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uvs_x_array)
+        });
+        p_args.uvs_y_array = part_animation_data.uvs_y_array.as_ref().map(|uvs_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uvs_y_array)
+        });
+        p_args.boundr_array = part_animation_data.boundr_array.as_ref().map(|boundr_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, boundr_array)
+        });
+        p_args.mask_array = part_animation_data.mask_array.as_ref().map(|mask_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, mask_array)
+        });
+        p_args.skew_array = part_animation_data.skew_array.as_ref().map(|skew_array| {
+            self.create_shared_part_animation_data_vec2_list(fb, skew_array)
+        });
+        p_args.deform_array = part_animation_data.deform_array.as_ref().map(|deform_array| {
+            self.create_shared_part_animation_data_deform_list(fb, deform_array)
+        });
+        p_args.texture_array = part_animation_data.texture_array.as_ref().map(|texture_array| {
+            self.create_shared_part_animation_data_int_value_list(fb, texture_array)
+        });
+
+        let offset = ssab::ssab::PartAnimationData::create(fb, &p_args);
+        self.part_animation_data_cache.insert(key, offset);
         offset
     }
 
@@ -1171,150 +1559,7 @@ impl<'a> SsabCache<'a> {
 
     fn create_shared_parts_animation_data(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, pa: &[ssab::ssab::PartAnimationDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData<'a>>>> {
         let part_animation_data = pa.iter().map(|part_animation_data| {
-            let mut p_args = ssab::ssab::PartAnimationDataArgs::default();
-            p_args.cell_array = part_animation_data.cell_array.as_ref().map(|cell_array| {
-                self.create_shared_part_animation_data_cell_value_list(fb, cell_array)
-            });
-
-            p_args.pos_x_array = part_animation_data.pos_x_array.as_ref().map(|pos_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, pos_x_array)
-            });
-
-            p_args.pos_y_array = part_animation_data.pos_y_array.as_ref().map(|pos_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, pos_y_array)
-            });
-            p_args.pos_z_array = part_animation_data.pos_z_array.as_ref().map(|pos_z_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, pos_z_array)
-            });
-            p_args.rot_x_array = part_animation_data.rot_x_array.as_ref().map(|rot_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, rot_x_array)
-            });
-            p_args.rot_y_array = part_animation_data.rot_y_array.as_ref().map(|rot_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, rot_y_array)
-            });
-            p_args.rot_z_array = part_animation_data.rot_z_array.as_ref().map(|rot_z_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, rot_z_array)
-            });
-            p_args.scl_x_array = part_animation_data.scl_x_array.as_ref().map(|scl_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, scl_x_array)
-            });
-            p_args.scl_y_array = part_animation_data.scl_y_array.as_ref().map(|scl_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, scl_y_array)
-            });
-            p_args.loscl_x_array = part_animation_data.loscl_x_array.as_ref().map(|loscl_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, loscl_x_array)
-            });
-            p_args.loscl_y_array = part_animation_data.loscl_y_array.as_ref().map(|loscl_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, loscl_y_array)
-            });
-            p_args.alpha_array = part_animation_data.alpha_array.as_ref().map(|alpha_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, alpha_array)
-            });
-            p_args.lo_alpha_array = part_animation_data.lo_alpha_array.as_ref().map(|lo_alpha_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, lo_alpha_array)
-            });
-            p_args.prio_array = part_animation_data.prio_array.as_ref().map(|prio_array| {
-                self.create_shared_part_animation_data_int_value_list(fb, prio_array)
-            });
-            p_args.flip_h_array = part_animation_data.flip_h_array.as_ref().map(|flip_h_array| {
-                self.create_shared_part_animation_data_bool_value_list(fb, flip_h_array)
-            });
-            p_args.flip_v_array = part_animation_data.flip_v_array.as_ref().map(|flip_v_array| {
-                self.create_shared_part_animation_data_bool_value_list(fb, flip_v_array)
-            });
-            p_args.hide_array = part_animation_data.hide_array.as_ref().map(|hide_array| {
-                self.create_shared_part_animation_data_bool_value_list(fb, hide_array)
-            });
-            p_args.parts_color_array = part_animation_data.parts_color_array.as_ref().map(|parts_color_array| {
-                self.create_shared_part_animation_data_part_color_list(fb, parts_color_array)
-            });
-            p_args.shader_array = part_animation_data.shader_array.as_ref().map(|shader_array| {
-                self.create_shared_part_animation_data_shader_cache_list(fb, shader_array)
-            });
-            p_args.vertex_array = part_animation_data.vertex_array.as_ref().map(|vertex_array| {
-                let v = vertex_array.iter().map(|vertex| {
-                    let mut v_args = ssab::ssab::PartAnimationDataVertexArgs::default();
-                    v_args.index = vertex.index;
-                    v_args.interpolation = vertex.interpolation;
-                    v_args.value = vertex.value.as_ref().map(|value| { self.create_shared_part_attribute_vertex(fb, value) });
-                    ssab::ssab::PartAnimationDataVertex::create(fb, &v_args)
-                }).collect::<Vec<_>>();
-                fb.create_vector(&v)
-            });
-            p_args.pivot_x_array = part_animation_data.pivot_x_array.as_ref().map(|pivot_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, pivot_x_array)
-            });
-            p_args.pivot_y_array = part_animation_data.pivot_y_array.as_ref().map(|pivot_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, pivot_y_array)
-            });
-            p_args.anchor_x_array = part_animation_data.anchor_x_array.as_ref().map(|anchor_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, anchor_x_array)
-            });
-            p_args.anchor_y_array = part_animation_data.anchor_y_array.as_ref().map(|anchor_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, anchor_y_array)
-            });
-            p_args.size_x_array = part_animation_data.size_x_array.as_ref().map(|size_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, size_x_array)
-            });
-            p_args.size_y_array = part_animation_data.size_y_array.as_ref().map(|size_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, size_y_array)
-            });
-            p_args.img_flip_h_array = part_animation_data.img_flip_h_array.as_ref().map(|img_flip_h_array| {
-                self.create_shared_part_animation_data_bool_value_list(fb, img_flip_h_array)
-            });
-            p_args.img_flip_v_array = part_animation_data.img_flip_v_array.as_ref().map(|img_flip_v_array| {
-                self.create_shared_part_animation_data_bool_value_list(fb, img_flip_v_array)
-            });
-            p_args.uvt_x_array = part_animation_data.uvt_x_array.as_ref().map(|uvt_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, uvt_x_array)
-            });
-            p_args.uvt_y_array = part_animation_data.uvt_y_array.as_ref().map(|uvt_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, uvt_y_array)
-            });
-            p_args.uvr_z_array = part_animation_data.uvr_z_array.as_ref().map(|uvr_z_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, uvr_z_array)
-            });
-            p_args.uvs_x_array = part_animation_data.uvs_x_array.as_ref().map(|uvs_x_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, uvs_x_array)
-            });
-            p_args.uvs_y_array = part_animation_data.uvs_y_array.as_ref().map(|uvs_y_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, uvs_y_array)
-            });
-            p_args.boundr_array = part_animation_data.boundr_array.as_ref().map(|boundr_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, boundr_array)
-            });
-            p_args.mask_array = part_animation_data.mask_array.as_ref().map(|mask_array| {
-                self.create_shared_part_animation_data_float_value_list(fb, mask_array)
-            });
-            p_args.skew_array = part_animation_data.skew_array.as_ref().map(|skew_array| {
-                let v = skew_array.iter().map(|skew| {
-                    let mut s_args = ssab::ssab::PartAnimationDataVec2Args::default();
-                    s_args.index = skew.index;
-                    s_args.interpolation = skew.interpolation;
-                    s_args.value = skew.value.as_ref().map(|value| self.create_shared_vec2(fb, value));
-
-                    ssab::ssab::PartAnimationDataVec2::create(fb, &s_args)
-                }).collect::<Vec<_>>();
-                fb.create_vector(&v)
-            });
-            p_args.deform_array = part_animation_data.deform_array.as_ref().map(|deform_array| {
-                let v = deform_array.iter().map(|deform| {
-                    let mut d_args = ssab::ssab::PartAnimationDataDeformArgs::default();
-                    d_args.index = deform.index;
-                    d_args.interpolation = deform.interpolation;
-                    d_args.value = deform.value.as_ref().map(|value| {
-                        self.create_shared_part_attribute_deform(fb, value)
-                    });
-
-                    ssab::ssab::PartAnimationDataDeform::create(fb, &d_args)
-                }).collect::<Vec<_>>();
-                fb.create_vector(&v)
-            });
-            p_args.texture_array = part_animation_data.texture_array.as_ref().map(|texture_array| {
-                self.create_shared_part_animation_data_int_value_list(fb, texture_array)
-            });
-
-            ssab::ssab::PartAnimationData::create(fb, &p_args)
+            self.create_shared_part_animation_data(fb, part_animation_data)
         }).collect::<Vec<_>>();
         fb.create_vector(&part_animation_data)
     }
