@@ -148,8 +148,8 @@ pub extern "C" fn ss_runtime_set_frame_rate(context: *mut crate::Context, fps: c
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_set_playback_direction(context: *mut crate::Context, direction: c_int, style: c_int) {
     let context = unsafe { &mut *context };
-    let d = if direction == 0 { crate::core::track_manager::PlaybackDirection::Forward } else { crate::core::track_manager::PlaybackDirection::Backward };
-    let s = if style == 0 { crate::core::track_manager::PlaybackStyle::Normal } else { crate::core::track_manager::PlaybackStyle::PingPong };
+    let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
+    let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
     context.set_playback_direction(d, s);
 }
 

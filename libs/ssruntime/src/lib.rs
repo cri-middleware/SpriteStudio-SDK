@@ -10,7 +10,7 @@ pub mod web;
 
 pub struct Context {
     ssab: ssab::ssab::SsAnimeBinary<'static>,
-    track: core::track_manager::TrackManager,
+    track: core::playback_controller::PlaybackController,
     fb: flatbuffers::FlatBufferBuilder<'static>,
     animation: Option<ssab::ssab::AnimationData<'static>>,
 }
@@ -32,7 +32,7 @@ impl Context {
         }
 
         Ok(Context {
-            track: core::track_manager::TrackManager::new(),
+            track: core::playback_controller::PlaybackController::new(),
             ssab,
             fb: flatbuffers::FlatBufferBuilder::new(),
             animation: None,
@@ -100,11 +100,11 @@ impl Context {
         self.track.get_skip_frames()
     }
 
-    pub fn get_playback_direction(&self) -> core::track_manager::PlaybackDirection {
+    pub fn get_playback_direction(&self) -> core::playback_controller::PlaybackDirection {
         self.track.get_playback_direction()
     }
 
-    pub fn get_playback_style(&self) -> core::track_manager::PlaybackStyle {
+    pub fn get_playback_style(&self) -> core::playback_controller::PlaybackStyle {
         self.track.get_playback_style()
     }
 
@@ -142,7 +142,7 @@ impl Context {
         self.track.set_frame_rate(fps);
     }
 
-    pub fn set_playback_direction(&mut self, direction: core::track_manager::PlaybackDirection, style: core::track_manager::PlaybackStyle) {
+    pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
         self.track.set_playback_direction(direction, style);
     }
 
