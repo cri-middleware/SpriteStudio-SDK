@@ -110,7 +110,7 @@ pub extern "C" fn ss_runtime_get_remain_loops(context: *mut crate::Context) -> i
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_start_frame(context: *mut crate::Context) -> i32 {
     let context = unsafe { &mut *context };
-    context.track.get_start_frame()
+    context.controller.get_start_frame()
 }
 
 #[unsafe(no_mangle)]

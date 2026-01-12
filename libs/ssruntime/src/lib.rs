@@ -10,7 +10,7 @@ pub mod web;
 
 pub struct Context {
     ssab: ssab::ssab::SsAnimeBinary<'static>,
-    track: core::playback_controller::PlaybackController,
+    controller: core::playback_controller::PlaybackController,
     fb: flatbuffers::FlatBufferBuilder<'static>,
     animation: Option<ssab::ssab::AnimationData<'static>>,
 }
@@ -32,7 +32,7 @@ impl Context {
         }
 
         Ok(Context {
-            track: core::playback_controller::PlaybackController::new(),
+            controller: core::playback_controller::PlaybackController::new(),
             ssab,
             fb: flatbuffers::FlatBufferBuilder::new(),
             animation: None,
@@ -54,7 +54,7 @@ impl Context {
 
     pub fn setup_animation(&mut self, name: &str) -> Option<&[u8]> {
         let animation = self.ssab.animations()?.lookup_by_key(name, |en, key| en.key_compare_with_value(key))?;
-        self.track.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
+        self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation = Some(animation);
 
         self.fb.reset();
@@ -80,112 +80,112 @@ impl Context {
     // Frame Number getter functions
 
     pub fn get_frame_no(&self) -> i32 {
-        self.track.get_frame_no()
+        self.controller.get_frame_no()
     }
 
     pub fn get_frame_no_decimal(&self) -> f32 {
-        self.track.get_frame_no_decimal()
+        self.controller.get_frame_no_decimal()
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
-        self.track.is_end_frame_reached()
+        self.controller.is_end_frame_reached()
     }
 
     // setting getter functions
     pub fn is_playing(&self) -> bool {
-        self.track.is_playing()
+        self.controller.is_playing()
     }
 
     pub fn get_skip_frames(&mut self) -> bool {
-        self.track.get_skip_frames()
+        self.controller.get_skip_frames()
     }
 
     pub fn get_playback_direction(&self) -> core::playback_controller::PlaybackDirection {
-        self.track.get_playback_direction()
+        self.controller.get_playback_direction()
     }
 
     pub fn get_playback_style(&self) -> core::playback_controller::PlaybackStyle {
-        self.track.get_playback_style()
+        self.controller.get_playback_style()
     }
 
     pub fn get_loops(&mut self) -> i32 {
-        self.track.get_loops()
+        self.controller.get_loops()
     }
 
     pub fn get_remain_loops(&mut self) -> i32 {
-        self.track.get_remain_loops()
+        self.controller.get_remain_loops()
     }
 
     pub fn get_start_frame(&self) -> i32 {
-        self.track.get_start_frame()
+        self.controller.get_start_frame()
     }
 
     pub fn get_end_frame(&self) -> i32 {
-        self.track.get_end_frame()
+        self.controller.get_end_frame()
     }
 
     pub fn get_fps(&self) -> i32 {
-        self.track.get_fps()
+        self.controller.get_fps()
     }
 
     // Playback setup
 
     pub fn set_skip_frames(&mut self, skip: bool) {
-        self.track.set_skip_frames(skip);
+        self.controller.set_skip_frames(skip);
     }
 
     pub fn set_loop(&mut self, loops: i32) {
-        self.track.set_loops(loops);
+        self.controller.set_loops(loops);
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {
-        self.track.set_frame_rate(fps);
+        self.controller.set_frame_rate(fps);
     }
 
     pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
-        self.track.set_playback_direction(direction, style);
+        self.controller.set_playback_direction(direction, style);
     }
 
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.track.set_animation_speed(speed_rate);
+        self.controller.set_animation_speed(speed_rate);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.track.set_animation_section(start_frame, end_frame);
+        self.controller.set_animation_section(start_frame, end_frame);
     }
 
     // Playback control
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
-        self.track.update(delta)
+        self.controller.update(delta)
     }
 
     pub fn play(&mut self) {
-        self.track.play();
+        self.controller.play();
     }
 
     pub fn play_with_start_frame(&mut self, frame_no: i32) {
-        self.track.play_with_start_frame(frame_no);
+        self.controller.play_with_start_frame(frame_no);
     }
 
     pub fn pause(&mut self) {
-        self.track.pause();
+        self.controller.pause();
     }
 
     pub fn stop(&mut self) {
-        self.track.stop();
+        self.controller.stop();
     }
 
     pub fn set_frame_no(&mut self, frame: i32) {
-        self.track.set_frame_no(frame);
+        self.controller.set_frame_no(frame);
     }
 
     pub fn next_frame(&mut self) {
-        self.track.next_frame();
+        self.controller.next_frame();
     }
 
     pub fn prev_frame(&mut self) {
-        self.track.prev_frame();
+        self.controller.prev_frame();
     }
 
 }
