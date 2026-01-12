@@ -10,7 +10,7 @@ pub enum PlaybackDirection {
     Backward = -1,
 }
 
-pub struct TrackManager {
+pub struct PlaybackController {
     is_pausing: bool,
     is_playing: bool,
     
@@ -36,7 +36,7 @@ pub struct TrackManager {
     end_frame_reached: bool,
 }
 
-impl TrackManager {
+impl PlaybackController {
     pub fn get_frame_no(&self) -> i32 {
         self.current_frame.floor() as i32
     }
@@ -86,7 +86,7 @@ impl TrackManager {
     }
 }
 
-impl TrackManager {
+impl PlaybackController {
     pub fn new() -> Self {
         Self {
             is_pausing: true,
@@ -300,7 +300,7 @@ impl TrackManager {
     }
 }
 
-impl TrackManager {
+impl PlaybackController {
     // playback control
     pub fn play(&mut self) {
         self.play_with_start_frame(-1)
@@ -361,7 +361,7 @@ impl TrackManager {
 mod tests {
     use super::*;
 
-    fn play(t: &mut TrackManager, delta: f32, loop_num: i32) {
+    fn play(t: &mut PlaybackController, delta: f32, loop_num: i32) {
         println!("INIT frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
         for _ in 0..loop_num {
             let (frame_no, decimal) = t.update(delta);
@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn infinitive_loops() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.play();
         play(t, 16.7, 500);
@@ -379,7 +379,7 @@ mod tests {
 
     #[test]
     fn infinitive_loops_reverse() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
         t.play();
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn no_loops() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_loops(1);
         t.play();
@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn no_loops_reverse() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
         t.set_loops(1);
@@ -407,7 +407,7 @@ mod tests {
 
     #[test]
     fn loops() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_loops(3);
         t.play();
@@ -416,7 +416,7 @@ mod tests {
 
     #[test]
     fn loops_reverse() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
         t.set_loops(3);
@@ -427,7 +427,7 @@ mod tests {
 
     #[test]
     fn infinitive_loops_pingpong() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
         t.play();
@@ -436,7 +436,7 @@ mod tests {
 
     #[test]
     fn infinitive_loops_pingpong_reverse() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
         t.play();
@@ -445,7 +445,7 @@ mod tests {
 
     #[test]
     fn loops_pingpong() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
         t.set_loops(3);
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     fn loops_pingpong_reverse() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
         t.set_loops(3);
@@ -465,7 +465,7 @@ mod tests {
 
     #[test]
     fn no_loops_pingpong() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
         t.set_loops(1);
@@ -475,7 +475,7 @@ mod tests {
 
     #[test]
     fn no_loops_pingpong_reverse() {
-        let t = &mut TrackManager::new();
+        let t = &mut PlaybackController::new();
         t.setup(0, 99, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
         t.set_loops(1);
