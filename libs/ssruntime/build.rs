@@ -19,4 +19,10 @@ fn main() {
         .expect("Unable to generate bindings");
 
     config.write_to_file(output_file);
+
+    csbindgen::Builder::default()
+        .input_extern_file("src/ffi/mod.rs")
+        .csharp_dll_name("ssruntime")
+        .generate_csharp_file("target/SSRuntimeMethods.g.cs")
+        .unwrap();
 }
