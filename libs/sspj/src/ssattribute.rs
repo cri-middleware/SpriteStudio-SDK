@@ -226,13 +226,16 @@ pub struct SsAttributeShader {
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeVertexKeyValue {
     #[serde(rename = "LT")]
-    pub lt: SsPoint2,
+    pub lt: Option<SsPoint2>,
     #[serde(rename = "RT")]
-    pub rt: SsPoint2,
+    pub rt: Option<SsPoint2>,
     #[serde(rename = "LB")]
-    pub lb: SsPoint2,
+    pub lb: Option<SsPoint2>,
     #[serde(rename = "RB")]
-    pub rb: SsPoint2,
+    pub rb: Option<SsPoint2>,
+
+    pub use_skew: Option<bool>,
+    pub skew: Option<SsPoint2>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
