@@ -67,12 +67,44 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                                     let mut command_param_t = ssab::ssab::SignalCommandParamT::default();
                                     command_param_t.param_id = Some(v.param_id.to_string());
                                     command_param_t.type_ = match &v.param_type {
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::SignalCommandParamType::Bool,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::SignalCommandParamType::Index,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::SignalCommandParamType::Integer,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::SignalCommandParamType::Floating,
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Text => ssab::ssab::SignalCommandParamType::Text,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::None => ssab::ssab::SignalCommandParamType::None,
                                     };
-                                    command_param_t.value = v.value;
+                                    command_param_t.value = match &v.value {
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Bool(v) => {
+                                            let mut b = ssab::ssab::BoolValueEntryT::default();
+                                            b.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Bool(Box::new(b))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Index(v) => {
+                                            let mut i = ssab::ssab::IntValueEntryT::default();
+                                            i.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Index(Box::new(i))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Integer(v) => {
+                                            let mut i = ssab::ssab::IntValueEntryT::default();
+                                            i.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Integer(Box::new(i))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Floating(v) =>{
+                                            let mut f = ssab::ssab::FloatValueEntryT::default();
+                                            f.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Floating(Box::new(f))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
+                                            let mut s = ssab::ssab::StringValueEntryT::default();
+                                            s.value = Some(v.to_string());
+                                            ssab::ssab::SignalCommandParamValueT::Text(Box::new(s))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
+                                            let mut n = ssab::ssab::NoneValueEntryT::default();
+                                            ssab::ssab::SignalCommandParamValueT::None(Box::new(n))
+                                        },
+                                    };
 
                                     command_param_t
                                 }).collect::<Vec<_>>();

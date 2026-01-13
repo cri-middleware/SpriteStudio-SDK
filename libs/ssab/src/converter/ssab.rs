@@ -1483,13 +1483,15 @@ impl EffectNodeBehaviorT {
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_SIGNAL_COMMAND_PARAM_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_SIGNAL_COMMAND_PARAM_TYPE: u8 = 3;
+pub const ENUM_MAX_SIGNAL_COMMAND_PARAM_TYPE: u8 = 5;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_SIGNAL_COMMAND_PARAM_TYPE: [SignalCommandParamType; 4] = [
+pub const ENUM_VALUES_SIGNAL_COMMAND_PARAM_TYPE: [SignalCommandParamType; 6] = [
+  SignalCommandParamType::Bool,
   SignalCommandParamType::Index,
   SignalCommandParamType::Integer,
   SignalCommandParamType::Floating,
+  SignalCommandParamType::Text,
   SignalCommandParamType::None,
 ];
 
@@ -1498,25 +1500,31 @@ pub const ENUM_VALUES_SIGNAL_COMMAND_PARAM_TYPE: [SignalCommandParamType; 4] = [
 pub struct SignalCommandParamType(pub u8);
 #[allow(non_upper_case_globals)]
 impl SignalCommandParamType {
-  pub const Index: Self = Self(0);
-  pub const Integer: Self = Self(1);
-  pub const Floating: Self = Self(2);
-  pub const None: Self = Self(3);
+  pub const Bool: Self = Self(0);
+  pub const Index: Self = Self(1);
+  pub const Integer: Self = Self(2);
+  pub const Floating: Self = Self(3);
+  pub const Text: Self = Self(4);
+  pub const None: Self = Self(5);
 
   pub const ENUM_MIN: u8 = 0;
-  pub const ENUM_MAX: u8 = 3;
+  pub const ENUM_MAX: u8 = 5;
   pub const ENUM_VALUES: &'static [Self] = &[
+    Self::Bool,
     Self::Index,
     Self::Integer,
     Self::Floating,
+    Self::Text,
     Self::None,
   ];
   /// Returns the variant's name or "" if unknown.
   pub fn variant_name(self) -> Option<&'static str> {
     match self {
+      Self::Bool => Some("Bool"),
       Self::Index => Some("Index"),
       Self::Integer => Some("Integer"),
       Self::Floating => Some("Floating"),
+      Self::Text => Some("Text"),
       Self::None => Some("None"),
       _ => None,
     }
@@ -1572,6 +1580,279 @@ impl<'a> ::flatbuffers::Verifiable for SignalCommandParamType {
 }
 
 impl ::flatbuffers::SimpleToVerifyInSlice for SignalCommandParamType {}
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MIN_SIGNAL_COMMAND_PARAM_VALUE: u8 = 0;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+pub const ENUM_MAX_SIGNAL_COMMAND_PARAM_VALUE: u8 = 6;
+#[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SIGNAL_COMMAND_PARAM_VALUE: [SignalCommandParamValue; 7] = [
+  SignalCommandParamValue::NONE,
+  SignalCommandParamValue::Bool,
+  SignalCommandParamValue::Index,
+  SignalCommandParamValue::Integer,
+  SignalCommandParamValue::Floating,
+  SignalCommandParamValue::Text,
+  SignalCommandParamValue::None,
+];
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+pub struct SignalCommandParamValue(pub u8);
+#[allow(non_upper_case_globals)]
+impl SignalCommandParamValue {
+  pub const NONE: Self = Self(0);
+  pub const Bool: Self = Self(1);
+  pub const Index: Self = Self(2);
+  pub const Integer: Self = Self(3);
+  pub const Floating: Self = Self(4);
+  pub const Text: Self = Self(5);
+  pub const None: Self = Self(6);
+
+  pub const ENUM_MIN: u8 = 0;
+  pub const ENUM_MAX: u8 = 6;
+  pub const ENUM_VALUES: &'static [Self] = &[
+    Self::NONE,
+    Self::Bool,
+    Self::Index,
+    Self::Integer,
+    Self::Floating,
+    Self::Text,
+    Self::None,
+  ];
+  /// Returns the variant's name or "" if unknown.
+  pub fn variant_name(self) -> Option<&'static str> {
+    match self {
+      Self::NONE => Some("NONE"),
+      Self::Bool => Some("Bool"),
+      Self::Index => Some("Index"),
+      Self::Integer => Some("Integer"),
+      Self::Floating => Some("Floating"),
+      Self::Text => Some("Text"),
+      Self::None => Some("None"),
+      _ => None,
+    }
+  }
+}
+impl ::core::fmt::Debug for SignalCommandParamValue {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    if let Some(name) = self.variant_name() {
+      f.write_str(name)
+    } else {
+      f.write_fmt(format_args!("<UNKNOWN {:?}>", self.0))
+    }
+  }
+}
+impl<'a> ::flatbuffers::Follow<'a> for SignalCommandParamValue {
+  type Inner = Self;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    let b = unsafe { ::flatbuffers::read_scalar_at::<u8>(buf, loc) };
+    Self(b)
+  }
+}
+
+impl ::flatbuffers::Push for SignalCommandParamValue {
+    type Output = SignalCommandParamValue;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        unsafe { ::flatbuffers::emplace_scalar::<u8>(dst, self.0) };
+    }
+}
+
+impl ::flatbuffers::EndianScalar for SignalCommandParamValue {
+  type Scalar = u8;
+  #[inline]
+  fn to_little_endian(self) -> u8 {
+    self.0.to_le()
+  }
+  #[inline]
+  #[allow(clippy::wrong_self_convention)]
+  fn from_little_endian(v: u8) -> Self {
+    let b = u8::from_le(v);
+    Self(b)
+  }
+}
+
+impl<'a> ::flatbuffers::Verifiable for SignalCommandParamValue {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    u8::run_verifier(v, pos)
+  }
+}
+
+impl ::flatbuffers::SimpleToVerifyInSlice for SignalCommandParamValue {}
+pub struct SignalCommandParamValueUnionTableOffset {}
+
+#[allow(clippy::upper_case_acronyms)]
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub enum SignalCommandParamValueT {
+  NONE,
+  Bool(alloc::boxed::Box<BoolValueEntryT>),
+  Index(alloc::boxed::Box<IntValueEntryT>),
+  Integer(alloc::boxed::Box<IntValueEntryT>),
+  Floating(alloc::boxed::Box<FloatValueEntryT>),
+  Text(alloc::boxed::Box<StringValueEntryT>),
+  None(alloc::boxed::Box<NoneValueEntryT>),
+}
+impl Default for SignalCommandParamValueT {
+  fn default() -> Self {
+    Self::NONE
+  }
+}
+impl SignalCommandParamValueT {
+  pub fn signal_command_param_value_type(&self) -> SignalCommandParamValue {
+    match self {
+      Self::NONE => SignalCommandParamValue::NONE,
+      Self::Bool(_) => SignalCommandParamValue::Bool,
+      Self::Index(_) => SignalCommandParamValue::Index,
+      Self::Integer(_) => SignalCommandParamValue::Integer,
+      Self::Floating(_) => SignalCommandParamValue::Floating,
+      Self::Text(_) => SignalCommandParamValue::Text,
+      Self::None(_) => SignalCommandParamValue::None,
+    }
+  }
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(&self, fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>) -> Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>> {
+    match self {
+      Self::NONE => None,
+      Self::Bool(v) => Some(v.pack(fbb).as_union_value()),
+      Self::Index(v) => Some(v.pack(fbb).as_union_value()),
+      Self::Integer(v) => Some(v.pack(fbb).as_union_value()),
+      Self::Floating(v) => Some(v.pack(fbb).as_union_value()),
+      Self::Text(v) => Some(v.pack(fbb).as_union_value()),
+      Self::None(v) => Some(v.pack(fbb).as_union_value()),
+    }
+  }
+  /// If the union variant matches, return the owned BoolValueEntryT, setting the union to NONE.
+  pub fn take_bool(&mut self) -> Option<alloc::boxed::Box<BoolValueEntryT>> {
+    if let Self::Bool(_) = self {
+      let v = ::core::mem::replace(self, Self::NONE);
+      if let Self::Bool(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the BoolValueEntryT.
+  pub fn as_bool(&self) -> Option<&BoolValueEntryT> {
+    if let Self::Bool(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the BoolValueEntryT.
+  pub fn as_bool_mut(&mut self) -> Option<&mut BoolValueEntryT> {
+    if let Self::Bool(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned IntValueEntryT, setting the union to NONE.
+  pub fn take_index(&mut self) -> Option<alloc::boxed::Box<IntValueEntryT>> {
+    if let Self::Index(_) = self {
+      let v = ::core::mem::replace(self, Self::NONE);
+      if let Self::Index(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the IntValueEntryT.
+  pub fn as_index(&self) -> Option<&IntValueEntryT> {
+    if let Self::Index(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the IntValueEntryT.
+  pub fn as_index_mut(&mut self) -> Option<&mut IntValueEntryT> {
+    if let Self::Index(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned IntValueEntryT, setting the union to NONE.
+  pub fn take_integer(&mut self) -> Option<alloc::boxed::Box<IntValueEntryT>> {
+    if let Self::Integer(_) = self {
+      let v = ::core::mem::replace(self, Self::NONE);
+      if let Self::Integer(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the IntValueEntryT.
+  pub fn as_integer(&self) -> Option<&IntValueEntryT> {
+    if let Self::Integer(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the IntValueEntryT.
+  pub fn as_integer_mut(&mut self) -> Option<&mut IntValueEntryT> {
+    if let Self::Integer(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned FloatValueEntryT, setting the union to NONE.
+  pub fn take_floating(&mut self) -> Option<alloc::boxed::Box<FloatValueEntryT>> {
+    if let Self::Floating(_) = self {
+      let v = ::core::mem::replace(self, Self::NONE);
+      if let Self::Floating(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the FloatValueEntryT.
+  pub fn as_floating(&self) -> Option<&FloatValueEntryT> {
+    if let Self::Floating(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the FloatValueEntryT.
+  pub fn as_floating_mut(&mut self) -> Option<&mut FloatValueEntryT> {
+    if let Self::Floating(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned StringValueEntryT, setting the union to NONE.
+  pub fn take_text(&mut self) -> Option<alloc::boxed::Box<StringValueEntryT>> {
+    if let Self::Text(_) = self {
+      let v = ::core::mem::replace(self, Self::NONE);
+      if let Self::Text(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the StringValueEntryT.
+  pub fn as_text(&self) -> Option<&StringValueEntryT> {
+    if let Self::Text(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the StringValueEntryT.
+  pub fn as_text_mut(&mut self) -> Option<&mut StringValueEntryT> {
+    if let Self::Text(v) = self { Some(v.as_mut()) } else { None }
+  }
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_none(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
+    if let Self::None(_) = self {
+      let v = ::core::mem::replace(self, Self::NONE);
+      if let Self::None(w) = v {
+        Some(w)
+      } else {
+        unreachable!()
+      }
+    } else {
+      None
+    }
+  }
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_none(&self) -> Option<&NoneValueEntryT> {
+    if let Self::None(v) = self { Some(v.as_ref()) } else { None }
+  }
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_none_mut(&mut self) -> Option<&mut NoneValueEntryT> {
+    if let Self::None(v) = self { Some(v.as_mut()) } else { None }
+  }
+}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_SHAPE_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
@@ -3072,6 +3353,232 @@ impl U8RectT {
     })
   }
 }
+pub enum NoneValueEntryOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct NoneValueEntry<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for NoneValueEntry<'a> {
+  type Inner = NoneValueEntry<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> NoneValueEntry<'a> {
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    NoneValueEntry { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    _args: &'args NoneValueEntryArgs
+  ) -> ::flatbuffers::WIPOffset<NoneValueEntry<'bldr>> {
+    let mut builder = NoneValueEntryBuilder::new(_fbb);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> NoneValueEntryT {
+    NoneValueEntryT {
+    }
+  }
+}
+
+impl ::flatbuffers::Verifiable for NoneValueEntry<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct NoneValueEntryArgs {
+}
+impl<'a> Default for NoneValueEntryArgs {
+  #[inline]
+  fn default() -> Self {
+    NoneValueEntryArgs {
+    }
+  }
+}
+
+pub struct NoneValueEntryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> NoneValueEntryBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> NoneValueEntryBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    NoneValueEntryBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<NoneValueEntry<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for NoneValueEntry<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("NoneValueEntry");
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct NoneValueEntryT {
+}
+impl Default for NoneValueEntryT {
+  fn default() -> Self {
+    Self {
+    }
+  }
+}
+impl NoneValueEntryT {
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> ::flatbuffers::WIPOffset<NoneValueEntry<'b>> {
+    NoneValueEntry::create(_fbb, &NoneValueEntryArgs{
+    })
+  }
+}
+pub enum BoolValueEntryOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct BoolValueEntry<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for BoolValueEntry<'a> {
+  type Inner = BoolValueEntry<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> BoolValueEntry<'a> {
+  pub const VT_VALUE: ::flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    BoolValueEntry { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args BoolValueEntryArgs
+  ) -> ::flatbuffers::WIPOffset<BoolValueEntry<'bldr>> {
+    let mut builder = BoolValueEntryBuilder::new(_fbb);
+    builder.add_value(args.value);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> BoolValueEntryT {
+    let value = self.value();
+    BoolValueEntryT {
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn value(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(BoolValueEntry::VT_VALUE, Some(false)).unwrap()}
+  }
+}
+
+impl ::flatbuffers::Verifiable for BoolValueEntry<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<bool>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct BoolValueEntryArgs {
+    pub value: bool,
+}
+impl<'a> Default for BoolValueEntryArgs {
+  #[inline]
+  fn default() -> Self {
+    BoolValueEntryArgs {
+      value: false,
+    }
+  }
+}
+
+pub struct BoolValueEntryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> BoolValueEntryBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_value(&mut self, value: bool) {
+    self.fbb_.push_slot::<bool>(BoolValueEntry::VT_VALUE, value, false);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> BoolValueEntryBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    BoolValueEntryBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<BoolValueEntry<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for BoolValueEntry<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("BoolValueEntry");
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct BoolValueEntryT {
+  pub value: bool,
+}
+impl Default for BoolValueEntryT {
+  fn default() -> Self {
+    Self {
+      value: false,
+    }
+  }
+}
+impl BoolValueEntryT {
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> ::flatbuffers::WIPOffset<BoolValueEntry<'b>> {
+    let value = self.value;
+    BoolValueEntry::create(_fbb, &BoolValueEntryArgs{
+      value,
+    })
+  }
+}
 pub enum IntValueEntryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -3318,6 +3825,135 @@ impl FloatValueEntryT {
   ) -> ::flatbuffers::WIPOffset<FloatValueEntry<'b>> {
     let value = self.value;
     FloatValueEntry::create(_fbb, &FloatValueEntryArgs{
+      value,
+    })
+  }
+}
+pub enum StringValueEntryOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct StringValueEntry<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for StringValueEntry<'a> {
+  type Inner = StringValueEntry<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> StringValueEntry<'a> {
+  pub const VT_VALUE: ::flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    StringValueEntry { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args StringValueEntryArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<StringValueEntry<'bldr>> {
+    let mut builder = StringValueEntryBuilder::new(_fbb);
+    if let Some(x) = args.value { builder.add_value(x); }
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> StringValueEntryT {
+    let value = self.value().map(|x| {
+      alloc::string::ToString::to_string(x)
+    });
+    StringValueEntryT {
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn value(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(StringValueEntry::VT_VALUE, None)}
+  }
+}
+
+impl ::flatbuffers::Verifiable for StringValueEntry<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct StringValueEntryArgs<'a> {
+    pub value: Option<::flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for StringValueEntryArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    StringValueEntryArgs {
+      value: None,
+    }
+  }
+}
+
+pub struct StringValueEntryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> StringValueEntryBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_value(&mut self, value: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(StringValueEntry::VT_VALUE, value);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> StringValueEntryBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    StringValueEntryBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<StringValueEntry<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for StringValueEntry<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("StringValueEntry");
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct StringValueEntryT {
+  pub value: Option<alloc::string::String>,
+}
+impl Default for StringValueEntryT {
+  fn default() -> Self {
+    Self {
+      value: None,
+    }
+  }
+}
+impl StringValueEntryT {
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> ::flatbuffers::WIPOffset<StringValueEntry<'b>> {
+    let value = self.value.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    StringValueEntry::create(_fbb, &StringValueEntryArgs{
       value,
     })
   }
@@ -10721,7 +11357,8 @@ impl<'a> ::flatbuffers::Follow<'a> for SignalCommandParam<'a> {
 impl<'a> SignalCommandParam<'a> {
   pub const VT_PARAM_ID: ::flatbuffers::VOffsetT = 4;
   pub const VT_TYPE_: ::flatbuffers::VOffsetT = 6;
-  pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_VALUE_TYPE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_VALUE: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -10733,8 +11370,9 @@ impl<'a> SignalCommandParam<'a> {
     args: &'args SignalCommandParamArgs<'args>
   ) -> ::flatbuffers::WIPOffset<SignalCommandParam<'bldr>> {
     let mut builder = SignalCommandParamBuilder::new(_fbb);
-    builder.add_value(args.value);
+    if let Some(x) = args.value { builder.add_value(x); }
     if let Some(x) = args.param_id { builder.add_param_id(x); }
+    builder.add_value_type(args.value_type);
     builder.add_type_(args.type_);
     builder.finish()
   }
@@ -10744,7 +11382,40 @@ impl<'a> SignalCommandParam<'a> {
       alloc::string::ToString::to_string(x)
     });
     let type_ = self.type_();
-    let value = self.value();
+    let value = match self.value_type() {
+      SignalCommandParamValue::NONE => SignalCommandParamValueT::NONE,
+      SignalCommandParamValue::Bool => SignalCommandParamValueT::Bool(alloc::boxed::Box::new(
+        self.value_as_bool()
+            .expect("Invalid union table, expected `SignalCommandParamValue::Bool`.")
+            .unpack()
+      )),
+      SignalCommandParamValue::Index => SignalCommandParamValueT::Index(alloc::boxed::Box::new(
+        self.value_as_index()
+            .expect("Invalid union table, expected `SignalCommandParamValue::Index`.")
+            .unpack()
+      )),
+      SignalCommandParamValue::Integer => SignalCommandParamValueT::Integer(alloc::boxed::Box::new(
+        self.value_as_integer()
+            .expect("Invalid union table, expected `SignalCommandParamValue::Integer`.")
+            .unpack()
+      )),
+      SignalCommandParamValue::Floating => SignalCommandParamValueT::Floating(alloc::boxed::Box::new(
+        self.value_as_floating()
+            .expect("Invalid union table, expected `SignalCommandParamValue::Floating`.")
+            .unpack()
+      )),
+      SignalCommandParamValue::Text => SignalCommandParamValueT::Text(alloc::boxed::Box::new(
+        self.value_as_text()
+            .expect("Invalid union table, expected `SignalCommandParamValue::Text`.")
+            .unpack()
+      )),
+      SignalCommandParamValue::None => SignalCommandParamValueT::None(alloc::boxed::Box::new(
+        self.value_as_none()
+            .expect("Invalid union table, expected `SignalCommandParamValue::None`.")
+            .unpack()
+      )),
+      _ => SignalCommandParamValueT::NONE,
+    };
     SignalCommandParamT {
       param_id,
       type_,
@@ -10764,15 +11435,112 @@ impl<'a> SignalCommandParam<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<SignalCommandParamType>(SignalCommandParam::VT_TYPE_, Some(SignalCommandParamType::Index)).unwrap()}
+    unsafe { self._tab.get::<SignalCommandParamType>(SignalCommandParam::VT_TYPE_, Some(SignalCommandParamType::Bool)).unwrap()}
   }
   #[inline]
-  pub fn value(&self) -> f32 {
+  pub fn value_type(&self) -> SignalCommandParamValue {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(SignalCommandParam::VT_VALUE, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<SignalCommandParamValue>(SignalCommandParam::VT_VALUE_TYPE, Some(SignalCommandParamValue::NONE)).unwrap()}
   }
+  #[inline]
+  pub fn value(&self) -> Option<::flatbuffers::Table<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Table<'a>>>(SignalCommandParam::VT_VALUE, None)}
+  }
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn value_as_bool(&self) -> Option<BoolValueEntry<'a>> {
+    if self.value_type() == SignalCommandParamValue::Bool {
+      self.value().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { BoolValueEntry::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn value_as_index(&self) -> Option<IntValueEntry<'a>> {
+    if self.value_type() == SignalCommandParamValue::Index {
+      self.value().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { IntValueEntry::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn value_as_integer(&self) -> Option<IntValueEntry<'a>> {
+    if self.value_type() == SignalCommandParamValue::Integer {
+      self.value().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { IntValueEntry::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn value_as_floating(&self) -> Option<FloatValueEntry<'a>> {
+    if self.value_type() == SignalCommandParamValue::Floating {
+      self.value().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { FloatValueEntry::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn value_as_text(&self) -> Option<StringValueEntry<'a>> {
+    if self.value_type() == SignalCommandParamValue::Text {
+      self.value().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { StringValueEntry::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn value_as_none(&self) -> Option<NoneValueEntry<'a>> {
+    if self.value_type() == SignalCommandParamValue::None {
+      self.value().map(|t| {
+       // Safety:
+       // Created from a valid Table for this object
+       // Which contains a valid union in this slot
+       unsafe { NoneValueEntry::init_from_table(t) }
+     })
+    } else {
+      None
+    }
+  }
+
 }
 
 impl ::flatbuffers::Verifiable for SignalCommandParam<'_> {
@@ -10783,7 +11551,17 @@ impl ::flatbuffers::Verifiable for SignalCommandParam<'_> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("param_id", Self::VT_PARAM_ID, false)?
      .visit_field::<SignalCommandParamType>("type_", Self::VT_TYPE_, false)?
-     .visit_field::<f32>("value", Self::VT_VALUE, false)?
+     .visit_union::<SignalCommandParamValue, _>("value_type", Self::VT_VALUE_TYPE, "value", Self::VT_VALUE, false, |key, v, pos| {
+        match key {
+          SignalCommandParamValue::Bool => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<BoolValueEntry>>("SignalCommandParamValue::Bool", pos),
+          SignalCommandParamValue::Index => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<IntValueEntry>>("SignalCommandParamValue::Index", pos),
+          SignalCommandParamValue::Integer => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<IntValueEntry>>("SignalCommandParamValue::Integer", pos),
+          SignalCommandParamValue::Floating => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<FloatValueEntry>>("SignalCommandParamValue::Floating", pos),
+          SignalCommandParamValue::Text => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<StringValueEntry>>("SignalCommandParamValue::Text", pos),
+          SignalCommandParamValue::None => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("SignalCommandParamValue::None", pos),
+          _ => Ok(()),
+        }
+     })?
      .finish();
     Ok(())
   }
@@ -10791,15 +11569,17 @@ impl ::flatbuffers::Verifiable for SignalCommandParam<'_> {
 pub struct SignalCommandParamArgs<'a> {
     pub param_id: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub type_: SignalCommandParamType,
-    pub value: f32,
+    pub value_type: SignalCommandParamValue,
+    pub value: Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>>,
 }
 impl<'a> Default for SignalCommandParamArgs<'a> {
   #[inline]
   fn default() -> Self {
     SignalCommandParamArgs {
       param_id: None,
-      type_: SignalCommandParamType::Index,
-      value: 0.0,
+      type_: SignalCommandParamType::Bool,
+      value_type: SignalCommandParamValue::NONE,
+      value: None,
     }
   }
 }
@@ -10815,11 +11595,15 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SignalCommandParamBuilder<'a,
   }
   #[inline]
   pub fn add_type_(&mut self, type_: SignalCommandParamType) {
-    self.fbb_.push_slot::<SignalCommandParamType>(SignalCommandParam::VT_TYPE_, type_, SignalCommandParamType::Index);
+    self.fbb_.push_slot::<SignalCommandParamType>(SignalCommandParam::VT_TYPE_, type_, SignalCommandParamType::Bool);
   }
   #[inline]
-  pub fn add_value(&mut self, value: f32) {
-    self.fbb_.push_slot::<f32>(SignalCommandParam::VT_VALUE, value, 0.0);
+  pub fn add_value_type(&mut self, value_type: SignalCommandParamValue) {
+    self.fbb_.push_slot::<SignalCommandParamValue>(SignalCommandParam::VT_VALUE_TYPE, value_type, SignalCommandParamValue::NONE);
+  }
+  #[inline]
+  pub fn add_value(&mut self, value: ::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SignalCommandParam::VT_VALUE, value);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SignalCommandParamBuilder<'a, 'b, A> {
@@ -10841,7 +11625,55 @@ impl ::core::fmt::Debug for SignalCommandParam<'_> {
     let mut ds = f.debug_struct("SignalCommandParam");
       ds.field("param_id", &self.param_id());
       ds.field("type_", &self.type_());
-      ds.field("value", &self.value());
+      ds.field("value_type", &self.value_type());
+      match self.value_type() {
+        SignalCommandParamValue::Bool => {
+          if let Some(x) = self.value_as_bool() {
+            ds.field("value", &x)
+          } else {
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        SignalCommandParamValue::Index => {
+          if let Some(x) = self.value_as_index() {
+            ds.field("value", &x)
+          } else {
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        SignalCommandParamValue::Integer => {
+          if let Some(x) = self.value_as_integer() {
+            ds.field("value", &x)
+          } else {
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        SignalCommandParamValue::Floating => {
+          if let Some(x) = self.value_as_floating() {
+            ds.field("value", &x)
+          } else {
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        SignalCommandParamValue::Text => {
+          if let Some(x) = self.value_as_text() {
+            ds.field("value", &x)
+          } else {
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        SignalCommandParamValue::None => {
+          if let Some(x) = self.value_as_none() {
+            ds.field("value", &x)
+          } else {
+            ds.field("value", &"InvalidFlatbuffer: Union discriminant does not match value.")
+          }
+        },
+        _ => {
+          let x: Option<()> = None;
+          ds.field("value", &x)
+        },
+      };
       ds.finish()
   }
 }
@@ -10850,14 +11682,14 @@ impl ::core::fmt::Debug for SignalCommandParam<'_> {
 pub struct SignalCommandParamT {
   pub param_id: Option<alloc::string::String>,
   pub type_: SignalCommandParamType,
-  pub value: f32,
+  pub value: SignalCommandParamValueT,
 }
 impl Default for SignalCommandParamT {
   fn default() -> Self {
     Self {
       param_id: None,
-      type_: SignalCommandParamType::Index,
-      value: 0.0,
+      type_: SignalCommandParamType::Bool,
+      value: SignalCommandParamValueT::NONE,
     }
   }
 }
@@ -10870,10 +11702,12 @@ impl SignalCommandParamT {
       _fbb.create_string(x)
     });
     let type_ = self.type_;
-    let value = self.value;
+    let value_type = self.value.signal_command_param_value_type();
+    let value = self.value.pack(_fbb);
     SignalCommandParam::create(_fbb, &SignalCommandParamArgs{
       param_id,
       type_,
+      value_type,
       value,
     })
   }

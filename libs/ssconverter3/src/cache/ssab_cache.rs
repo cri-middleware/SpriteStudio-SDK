@@ -85,6 +85,18 @@ impl From<&ssab::ssab::U8RectT> for U8RectKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
+pub struct BoolValueEntryKey {
+    pub value: bool,
+}
+impl From<&ssab::ssab::BoolValueEntryT> for BoolValueEntryKey {
+    fn from(bool_value_table_t: &ssab::ssab::BoolValueEntryT) -> Self {
+        Self {
+            value: bool_value_table_t.value,
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct IntValueEntryKey {
     pub value: i32,
 }
@@ -104,6 +116,18 @@ impl From<&ssab::ssab::FloatValueEntryT> for FloatValueEntryKey {
     fn from(float_value_table_t: &ssab::ssab::FloatValueEntryT) -> Self {
         Self {
             value: ordered_float::OrderedFloat(float_value_table_t.value),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+pub struct StringValueEntryKey {
+    pub value: Option<String>,
+}
+impl From<&ssab::ssab::StringValueEntryT> for StringValueEntryKey {
+    fn from(string_value_table_t: &ssab::ssab::StringValueEntryT) -> Self {
+        Self {
+            value: string_value_table_t.value.clone(),
         }
     }
 }
@@ -724,8 +748,10 @@ pub struct SsabCache<'a> {
     pub vec3_cache: HashMap<Vec3Key, flatbuffers::WIPOffset<ssab::ssab::Vec3<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::Rect<'a>>>,
     pub u8rect_cache: HashMap<U8RectKey, flatbuffers::WIPOffset<ssab::ssab::U8Rect<'a>>>,
+    pub bool_value_table_cache: HashMap<BoolValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::BoolValueEntry<'a>>>,
     pub int_value_table_cache: HashMap<IntValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::IntValueEntry<'a>>>,
     pub float_value_table_cache: HashMap<FloatValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::FloatValueEntry<'a>>>,
+    pub string_value_table_cache: HashMap<StringValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::StringValueEntry<'a>>>,
     pub vec2_value_table_cache: HashMap<Vec2ValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::Vec2ValueEntry<'a>>>,
     pub rect_value_table_cache: HashMap<RectValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::RectValueEntry<'a>>>,
 
@@ -769,8 +795,10 @@ impl<'a> SsabCache<'a> {
             vec2_cache: HashMap::new(),
             vec3_cache: HashMap::new(),
             rect_cache: HashMap::new(),
+            bool_value_table_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
+            string_value_table_cache: HashMap::new(),
             vec2_value_table_cache: HashMap::new(),
             rect_value_table_cache: HashMap::new(),
             u8rect_cache: HashMap::new(),
@@ -867,6 +895,18 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
+    fn create_shared_bool_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, bool_value_tablet: &ssab::ssab::BoolValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::BoolValueEntry<'a>> {
+        let key = BoolValueEntryKey::from(bool_value_tablet);
+        if let Some(&offset) = self.bool_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::BoolValueEntryArgs::default();
+        args.value = bool_value_tablet.value;
+        let offset = ssab::ssab::BoolValueEntry::create(fb, &args);
+        self.bool_value_table_cache.insert(key, offset);
+        offset
+    }
+
     fn create_shared_int_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, int_value_table_t: &ssab::ssab::IntValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::IntValueEntry<'a>> {
         let key = IntValueEntryKey::from(int_value_table_t);
         if let Some(&offset) = self.int_value_table_cache.get(&key) {
@@ -888,6 +928,18 @@ impl<'a> SsabCache<'a> {
         args.value = float_value_table_t.value;
         let offset = ssab::ssab::FloatValueEntry::create(fb, &args);
         self.float_value_table_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_string_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, string_value_table_t: &ssab::ssab::StringValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::StringValueEntry<'a>> {
+        let key = StringValueEntryKey::from(string_value_table_t);
+        if let Some(&offset) = self.string_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::StringValueEntryArgs::default();
+        args.value = string_value_table_t.value.as_ref().map(|s| fb.create_shared_string(s));
+        let offset = ssab::ssab::StringValueEntry::create(fb, &args);
+        self.string_value_table_cache.insert(key, offset);
         offset
     }
 
@@ -1613,7 +1665,40 @@ impl<'a> SsabCache<'a> {
                                let mut p_args = ssab::ssab::SignalCommandParamArgs::default();
                                p_args.param_id = param.param_id.as_ref().map(|param_id| fb.create_shared_string(param_id));
                                p_args.type_ = param.type_;
-                               p_args.value = param.value;
+                               p_args.value = match &param.value {
+                                   ssab::ssab::SignalCommandParamValueT::Bool(v) => {
+                                       let offset = self.create_shared_bool_value_table(fb, &v);
+                                       p_args.value_type = ssab::ssab::SignalCommandParamValue::Bool;
+                                       Some(offset.as_union_value())
+                                   },
+                                   ssab::ssab::SignalCommandParamValueT::Index(v) => {
+                                       let offset = self.create_shared_int_value_table(fb, &v);
+                                       p_args.value_type = ssab::ssab::SignalCommandParamValue::Index;
+                                       Some(offset.as_union_value())
+                                   },
+                                   ssab::ssab::SignalCommandParamValueT::Integer(v) => {
+                                       let offset = self.create_shared_int_value_table(fb, &v);
+                                       p_args.value_type = ssab::ssab::SignalCommandParamValue::Integer;
+                                       Some(offset.as_union_value())
+                                   },
+                                   ssab::ssab::SignalCommandParamValueT::Floating(v) => {
+                                       let offset = self.create_shared_float_value_table(fb, &v);
+                                       p_args.value_type = ssab::ssab::SignalCommandParamValue::Floating;
+                                       Some(offset.as_union_value())
+                                   },
+                                   ssab::ssab::SignalCommandParamValueT::Text(v) => {
+                                       let offset = self.create_shared_string_value_table(fb, &v);
+                                       p_args.value_type = ssab::ssab::SignalCommandParamValue::Text;
+                                       Some(offset.as_union_value())
+                                   },
+                                   ssab::ssab::SignalCommandParamValueT::None(_) => {
+                                       let args = ssab::ssab::NoneValueEntryArgs::default();
+                                       let offset = ssab::ssab::NoneValueEntry::create(fb, &args);
+                                       p_args.value_type = ssab::ssab::SignalCommandParamValue::None;
+                                       Some(offset.as_union_value())
+                                   },
+                                   _ => None,
+                               };
 
                                ssab::ssab::SignalCommandParam::create(fb, &p_args)
                            }).collect::<Vec<_>>();
