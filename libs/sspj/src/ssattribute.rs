@@ -226,13 +226,16 @@ pub struct SsAttributeShader {
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeVertexKeyValue {
     #[serde(rename = "LT")]
-    pub lt: SsPoint2,
+    pub lt: Option<SsPoint2>,
     #[serde(rename = "RT")]
-    pub rt: SsPoint2,
+    pub rt: Option<SsPoint2>,
     #[serde(rename = "LB")]
-    pub lb: SsPoint2,
+    pub lb: Option<SsPoint2>,
     #[serde(rename = "RB")]
-    pub rb: SsPoint2,
+    pub rb: Option<SsPoint2>,
+
+    pub use_skew: Option<bool>,
+    pub skew: Option<SsPoint2>,
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -365,21 +368,83 @@ pub struct SsAttributeUser {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum SsAttributeSignalCommandParamType {
+    Bool,
     Index,
     Integer,
     Floating,
+    Text,
     None,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, PartialEq)]
+pub enum SsAttributeSignalCommandParamValue {
+    Bool(bool),
+    Index(i32),
+    Integer(i32),
+    Floating(f32),
+    Text(String),
+    None,
+}
+
+#[derive(Debug, PartialEq, Deserialize)]
+#[serde(try_from = "RawSsAttributeSignalCommandParam")]
 pub struct SsAttributeSignalCommandParam {
     pub param_id: String,
-    #[serde(rename = "type")]
     pub param_type: SsAttributeSignalCommandParamType,
-    #[serde(default)]
-    pub value: f32,
+    pub value: SsAttributeSignalCommandParamValue,
 }
+
+#[derive(Deserialize)]
+struct RawSsAttributeSignalCommandParam {
+    #[serde(rename = "paramId")]
+    param_id: String,
+    #[serde(rename = "type")]
+    param_type: SsAttributeSignalCommandParamType,
+    value: Option<String>,
+}
+impl TryFrom<RawSsAttributeSignalCommandParam> for SsAttributeSignalCommandParam {
+    type Error = String;
+
+    fn try_from(raw: RawSsAttributeSignalCommandParam) -> Result<Self, Self::Error> {
+        let val_str = raw.value.as_deref().unwrap_or("");
+
+        let typed_value = match raw.param_type {
+            SsAttributeSignalCommandParamType::Bool => {
+                // "1", "true" などの揺らぎがある場合はここで吸収できます
+                let b = val_str.parse::<bool>()
+                    .or_else(|_| match val_str {
+                        "1" => Ok(true),
+                        "0" => Ok(false),
+                        _ => Err(format!("Invalid bool value: {}", val_str))
+                    })?;
+                SsAttributeSignalCommandParamValue::Bool(b)
+            },
+            SsAttributeSignalCommandParamType::Index => {
+                SsAttributeSignalCommandParamValue::Index(val_str.parse().map_err(|_| "Invalid index value")?)
+            },
+            SsAttributeSignalCommandParamType::Integer => {
+                SsAttributeSignalCommandParamValue::Integer(val_str.parse().map_err(|_| "Invalid integer value")?)
+            },
+            SsAttributeSignalCommandParamType::Floating => {
+                SsAttributeSignalCommandParamValue::Floating(val_str.parse().map_err(|_| "Invalid float value")?)
+            },
+            SsAttributeSignalCommandParamType::Text => {
+                SsAttributeSignalCommandParamValue::Text(val_str.to_string())
+            },
+            SsAttributeSignalCommandParamType::None => {
+                SsAttributeSignalCommandParamValue::None
+            },
+        };
+
+        Ok(SsAttributeSignalCommandParam {
+            param_id: raw.param_id,
+            param_type: raw.param_type,
+            value: typed_value,
+        })
+    }
+}
+
+
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]

@@ -67,12 +67,44 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                                     let mut command_param_t = ssab::ssab::SignalCommandParamT::default();
                                     command_param_t.param_id = Some(v.param_id.to_string());
                                     command_param_t.type_ = match &v.param_type {
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::SignalCommandParamType::Bool,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::SignalCommandParamType::Index,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::SignalCommandParamType::Integer,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::SignalCommandParamType::Floating,
+                                        sspj::ssattribute::SsAttributeSignalCommandParamType::Text => ssab::ssab::SignalCommandParamType::Text,
                                         sspj::ssattribute::SsAttributeSignalCommandParamType::None => ssab::ssab::SignalCommandParamType::None,
                                     };
-                                    command_param_t.value = v.value;
+                                    command_param_t.value = match &v.value {
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Bool(v) => {
+                                            let mut b = ssab::ssab::BoolValueEntryT::default();
+                                            b.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Bool(Box::new(b))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Index(v) => {
+                                            let mut i = ssab::ssab::IntValueEntryT::default();
+                                            i.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Index(Box::new(i))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Integer(v) => {
+                                            let mut i = ssab::ssab::IntValueEntryT::default();
+                                            i.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Integer(Box::new(i))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Floating(v) =>{
+                                            let mut f = ssab::ssab::FloatValueEntryT::default();
+                                            f.value = *v;
+                                            ssab::ssab::SignalCommandParamValueT::Floating(Box::new(f))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
+                                            let mut s = ssab::ssab::StringValueEntryT::default();
+                                            s.value = Some(v.to_string());
+                                            ssab::ssab::SignalCommandParamValueT::Text(Box::new(s))
+                                        },
+                                        sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
+                                            let mut n = ssab::ssab::NoneValueEntryT::default();
+                                            ssab::ssab::SignalCommandParamValueT::None(Box::new(n))
+                                        },
+                                    };
 
                                     command_param_t
                                 }).collect::<Vec<_>>();
@@ -688,33 +720,56 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                 },
                 sspj::ssattribute::SsAttributeKind::Vertex(v) => {
                     v.keys.iter().for_each(|key| {
-                        let mut s_args = ssab::ssab::PartAnimationDataVertexT::default();
-                        s_args.index = key.time as u16;
-                        s_args.interpolation = convert_interpolation_type(&key.ip_type);
-                        let mut value = ssab::ssab::PartAttributeVertexT::default();
-                        let mut v: ssab::ssab::Vec2T;
-                        v = ssab::ssab::Vec2T::default();
-                        v.v1 = key.value.lt.x;
-                        v.v2 = key.value.lt.y;
-                        value.lt = Some(Box::new(v));
+                        if key.value.use_skew.is_some() && key.value.use_skew.unwrap() == true {
+                            // Skew
+                            let mut s_args = ssab::ssab::PartAnimationDataVec2T::default();
+                            s_args.index = key.time as u16;
+                            s_args.interpolation = convert_interpolation_type(&key.ip_type);
+                            s_args.value = key.value.skew.as_ref().map(|v| {
+                                let mut value = ssab::ssab::Vec2T::default();
+                                value.v1 = v.x;
+                                value.v2 = v.y;
+                                Box::new(value)
+                            });
 
-                        v = ssab::ssab::Vec2T::default();
-                        v.v1 = key.value.rt.x;
-                        v.v2 = key.value.rt.y;
-                        value.rt = Some(Box::new(v));
+                            part_animation_data_t.skew_array.get_or_insert_with(Vec::new).push(s_args);
+                        } else {
+                            // Vertex
+                            let mut s_args = ssab::ssab::PartAnimationDataVertexT::default();
+                            s_args.index = key.time as u16;
+                            s_args.interpolation = convert_interpolation_type(&key.ip_type);
+                            let mut value = ssab::ssab::PartAttributeVertexT::default();
+                            let mut v: ssab::ssab::Vec2T;
+                            v = ssab::ssab::Vec2T::default();
+                            key.value.lt.as_ref().map(|lt| {
+                                v.v1 = lt.x;
+                                v.v2 = lt.y;
+                            });
+                            value.lt = Some(Box::new(v));
+                            v = ssab::ssab::Vec2T::default();
+                            key.value.rt.as_ref().map(|rt| {
+                                v.v1 = rt.x;
+                                v.v2 = rt.y;
+                            });
+                            value.rt = Some(Box::new(v));
 
-                        v = ssab::ssab::Vec2T::default();
-                        v.v1 = key.value.lb.x;
-                        v.v2 = key.value.lb.y;
-                        value.lb = Some(Box::new(v));
+                            v = ssab::ssab::Vec2T::default();
+                            key.value.lb.as_ref().map(|lb| {
+                                v.v1 = lb.x;
+                                v.v2 = lb.y;
+                            });
+                            value.lb = Some(Box::new(v));
 
-                        v = ssab::ssab::Vec2T::default();
-                        v.v1 = key.value.rb.x;
-                        v.v2 = key.value.rb.y;
-                        value.rb = Some(Box::new(v));
+                            v = ssab::ssab::Vec2T::default();
+                            key.value.rb.as_ref().map(|rb| {
+                                v.v1 = rb.x;
+                                v.v2 = rb.y;
+                            });
+                            value.rb = Some(Box::new(v));
 
-                        s_args.value = Some(Box::new(value));
-                        part_animation_data_t.vertex_array.get_or_insert_with(Vec::new).push(s_args);
+                            s_args.value = Some(Box::new(value));
+                            part_animation_data_t.vertex_array.get_or_insert_with(Vec::new).push(s_args);
+                        }
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::PivotX(v) => {
@@ -850,7 +905,6 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         part_animation_data_t.mask_array.get_or_insert_with(Vec::new).push(m_args);
                     });
                 },
-                // Skew TODO: impl
                 sspj::ssattribute::SsAttributeKind::Deform(v) => {
                     v.keys.iter().for_each(|key| {
                         let mut m_args = ssab::ssab::PartAnimationDataDeformT::default();

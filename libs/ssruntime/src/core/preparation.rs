@@ -135,7 +135,60 @@ fn get_signals<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, s: &flatbuffers:
                         ssab::ssab::SignalCommandParamType::None => runtime::preparation::ss::runtime::SignalCommandParamType::None,
                         _ => runtime::preparation::ss::runtime::SignalCommandParamType::None,
                     };
-                    p_args.value = p.value();
+                    p_args.value_type = match p.value_type() {
+                        ssab::ssab::SignalCommandParamValue::NONE => runtime::preparation::ss::runtime::SignalCommandParamValue::NONE,
+                        ssab::ssab::SignalCommandParamValue::Bool => runtime::preparation::ss::runtime::SignalCommandParamValue::Bool,
+                        ssab::ssab::SignalCommandParamValue::Index => runtime::preparation::ss::runtime::SignalCommandParamValue::Index,
+                        ssab::ssab::SignalCommandParamValue::Integer => runtime::preparation::ss::runtime::SignalCommandParamValue::Integer,
+                        ssab::ssab::SignalCommandParamValue::Floating => runtime::preparation::ss::runtime::SignalCommandParamValue::Floating,
+                        ssab::ssab::SignalCommandParamValue::Text => runtime::preparation::ss::runtime::SignalCommandParamValue::Text,
+                        ssab::ssab::SignalCommandParamValue::None => runtime::preparation::ss::runtime::SignalCommandParamValue::None,
+                        _ => runtime::preparation::ss::runtime::SignalCommandParamValue::NONE,
+                    };
+                    p_args.value = match p.value_type() {
+                        ssab::ssab::SignalCommandParamValue::NONE => None,
+                        ssab::ssab::SignalCommandParamValue::Bool => {
+                            let b = p.value_as_bool().unwrap();
+                            let mut args = runtime::preparation::ss::runtime::BoolValueEntryArgs::default();
+                            args.value = b.value();
+                            let offset = runtime::preparation::ss::runtime::BoolValueEntry::create(fb, &args);
+                            Some(offset.as_union_value())
+                        },
+                        ssab::ssab::SignalCommandParamValue::Index => {
+                            let i = p.value_as_index().unwrap();
+                            let mut args = runtime::preparation::ss::runtime::IntValueEntryArgs::default();
+                            args.value = i.value();
+                            let offset = runtime::preparation::ss::runtime::IntValueEntry::create(fb, &args);
+                            Some(offset.as_union_value())
+                        },
+                        ssab::ssab::SignalCommandParamValue::Integer => {
+                            let i = p.value_as_integer().unwrap();
+                            let mut args = runtime::preparation::ss::runtime::IntValueEntryArgs::default();
+                            args.value = i.value();
+                            let offset = runtime::preparation::ss::runtime::IntValueEntry::create(fb, &args);
+                            Some(offset.as_union_value())
+                        },
+                        ssab::ssab::SignalCommandParamValue::Floating => {
+                            let f = p.value_as_floating().unwrap();
+                            let mut args = runtime::preparation::ss::runtime::FloatValueEntryArgs::default();
+                            args.value = f.value();
+                            let offset = runtime::preparation::ss::runtime::FloatValueEntry::create(fb, &args);
+                            Some(offset.as_union_value())
+                        },
+                        ssab::ssab::SignalCommandParamValue::Text => {
+                            let s = p.value_as_text().unwrap();
+                            let mut args = runtime::preparation::ss::runtime::StringValueEntryArgs::default();
+                            args.value = s.value().map(|s| fb.create_string(s));
+                            let offset = runtime::preparation::ss::runtime::StringValueEntry::create(fb, &args);
+                            Some(offset.as_union_value())
+                        },
+                        ssab::ssab::SignalCommandParamValue::None => {
+                            let mut args = runtime::preparation::ss::runtime::NoneValueEntryArgs::default();
+                            let offset = runtime::preparation::ss::runtime::NoneValueEntry::create(fb, &args);
+                            Some(offset.as_union_value())
+                        },
+                        _ => None,
+                    };
 
                     runtime::preparation::ss::runtime::SignalCommandParam::create(fb, &p_args)
                 }).collect::<Vec<_>>();

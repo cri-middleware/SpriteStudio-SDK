@@ -19,8 +19,23 @@ struct Rect {
   y2: float;
 }
 
+table NoneValueEntry {
+}
+
+table BoolValueEntry {
+  value: bool;
+}
+
 table IntValueEntry {
   value: int;
+}
+
+table FloatValueEntry {
+  value: float;
+}
+
+table StringValueEntry {
+  value: string;
 }
 
 // initial_data
@@ -109,16 +124,27 @@ table PartAttributeUserData {
 }
 
 enum SignalCommandParamType: ubyte {
+  Bool,
   Index,
   Integer,
   Floating,
+  Text,
   None,
+}
+
+union SignalCommandParamValue {
+  Bool: BoolValueEntry,
+  Index: IntValueEntry,
+  Integer: IntValueEntry,
+  Floating: FloatValueEntry,
+  Text: StringValueEntry,
+  None: NoneValueEntry,
 }
 
 table SignalCommandParam {
   param_id: string;
   type: SignalCommandParamType;
-  value: float;
+  value: SignalCommandParamValue;
 }
 
 table PartAttributeSignal {

@@ -104,12 +104,23 @@ enum InterpolationType: ubyte {
   EaseBackInOut,
 }
 
+table NoneValueEntry {
+}
+
+table BoolValueEntry {
+  value: bool;
+}
+
 table IntValueEntry {
   value: int;
 }
 
 table FloatValueEntry {
   value: float;
+}
+
+table StringValueEntry {
+  value: string;
 }
 
 table Vec2ValueEntry {
@@ -387,16 +398,27 @@ table PartAttributeUserData {
 }
 
 enum SignalCommandParamType: ubyte {
+  Bool,
   Index,
   Integer,
   Floating,
+  Text,
   None,
+}
+
+union SignalCommandParamValue {
+  Bool: BoolValueEntry,
+  Index: IntValueEntry,
+  Integer: IntValueEntry,
+  Floating: FloatValueEntry,
+  Text: StringValueEntry,
+  None: NoneValueEntry,
 }
 
 table SignalCommandParam {
   param_id: string;
   type: SignalCommandParamType;
-  value: float;
+  value: SignalCommandParamValue;
 }
 
 table PartAttributeSignal {
