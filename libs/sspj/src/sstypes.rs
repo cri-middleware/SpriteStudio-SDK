@@ -228,6 +228,10 @@ pub enum SsBlendType {
     Screen,
     Exclusion,
     Invert,
+    Mul2,
+    Div2,
+    Screen2,
+    Overlay2,
 }
 
 #[derive(Deserialize, PartialEq, Default, Debug)]

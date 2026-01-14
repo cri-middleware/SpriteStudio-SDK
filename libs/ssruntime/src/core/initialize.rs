@@ -23,6 +23,10 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, p: &flatbuffers::V
             ssab::ssab::BlendType::Screen => runtime::initialize::ss::runtime::BlendType::Screen,
             ssab::ssab::BlendType::Exclusion => runtime::initialize::ss::runtime::BlendType::Exclusion,
             ssab::ssab::BlendType::Invert => runtime::initialize::ss::runtime::BlendType::Invert,
+            ssab::ssab::BlendType::Mul2 => runtime::initialize::ss::runtime::BlendType::Mul2,
+            ssab::ssab::BlendType::Div2 => runtime::initialize::ss::runtime::BlendType::Div2,
+            ssab::ssab::BlendType::Screen2 => runtime::initialize::ss::runtime::BlendType::Screen2,
+            ssab::ssab::BlendType::Overlay2 => runtime::initialize::ss::runtime::BlendType::Overlay2,
             _ => runtime::initialize::ss::runtime::BlendType::Mix,
         };
         p_args.part_type_type = match part.part_type_type() {

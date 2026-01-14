@@ -956,6 +956,10 @@ fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ss
         sspj::sstypes::SsBlendType::Screen => ssab::ssab::BlendType::Screen,
         sspj::sstypes::SsBlendType::Exclusion => ssab::ssab::BlendType::Exclusion,
         sspj::sstypes::SsBlendType::Invert => ssab::ssab::BlendType::Invert,
+        sspj::sstypes::SsBlendType::Mul2 => ssab::ssab::BlendType::Mul2,
+        sspj::sstypes::SsBlendType::Div2 => ssab::ssab::BlendType::Div2,
+        sspj::sstypes::SsBlendType::Screen2 => ssab::ssab::BlendType::Screen2,
+        sspj::sstypes::SsBlendType::Overlay2 => ssab::ssab::BlendType::Overlay2,
     }
 }
 
