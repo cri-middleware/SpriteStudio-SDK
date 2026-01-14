@@ -1648,47 +1648,46 @@ impl<'a> ::flatbuffers::Follow<'a> for PartState<'a> {
 }
 
 impl<'a> PartState<'a> {
-  pub const VT_PART_INDEX: ::flatbuffers::VOffsetT = 4;
-  pub const VT_UPDATE_FLAG: ::flatbuffers::VOffsetT = 6;
-  pub const VT_CELL: ::flatbuffers::VOffsetT = 8;
-  pub const VT_POSITION_X: ::flatbuffers::VOffsetT = 10;
-  pub const VT_POSITION_Y: ::flatbuffers::VOffsetT = 12;
-  pub const VT_POSITION_Z: ::flatbuffers::VOffsetT = 14;
-  pub const VT_ROTATION_X: ::flatbuffers::VOffsetT = 16;
-  pub const VT_ROTATION_Y: ::flatbuffers::VOffsetT = 18;
-  pub const VT_ROTATION_Z: ::flatbuffers::VOffsetT = 20;
-  pub const VT_SCALE_X: ::flatbuffers::VOffsetT = 22;
-  pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 24;
-  pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 26;
-  pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 28;
-  pub const VT_OPACITY: ::flatbuffers::VOffsetT = 30;
-  pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 32;
-  pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 34;
-  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 36;
-  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 38;
-  pub const VT_HIDE: ::flatbuffers::VOffsetT = 40;
-  pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 42;
-  pub const VT_SHADER: ::flatbuffers::VOffsetT = 44;
-  pub const VT_VERTEX: ::flatbuffers::VOffsetT = 46;
-  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 48;
-  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 50;
-  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 52;
-  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 54;
-  pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 56;
-  pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 58;
-  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 60;
-  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 62;
-  pub const VT_UV_MOVE_X: ::flatbuffers::VOffsetT = 64;
-  pub const VT_UV_MOVE_Y: ::flatbuffers::VOffsetT = 66;
-  pub const VT_UV_MOVE_Z: ::flatbuffers::VOffsetT = 68;
-  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 70;
-  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 72;
-  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 74;
-  pub const VT_MASK: ::flatbuffers::VOffsetT = 76;
-  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 78;
-  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 80;
-  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 82;
-  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 84;
+  pub const VT_UPDATE_FLAG: ::flatbuffers::VOffsetT = 4;
+  pub const VT_CELL: ::flatbuffers::VOffsetT = 6;
+  pub const VT_POSITION_X: ::flatbuffers::VOffsetT = 8;
+  pub const VT_POSITION_Y: ::flatbuffers::VOffsetT = 10;
+  pub const VT_POSITION_Z: ::flatbuffers::VOffsetT = 12;
+  pub const VT_ROTATION_X: ::flatbuffers::VOffsetT = 14;
+  pub const VT_ROTATION_Y: ::flatbuffers::VOffsetT = 16;
+  pub const VT_ROTATION_Z: ::flatbuffers::VOffsetT = 18;
+  pub const VT_SCALE_X: ::flatbuffers::VOffsetT = 20;
+  pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 22;
+  pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 24;
+  pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 26;
+  pub const VT_OPACITY: ::flatbuffers::VOffsetT = 28;
+  pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 30;
+  pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 32;
+  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 34;
+  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 36;
+  pub const VT_HIDE: ::flatbuffers::VOffsetT = 38;
+  pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 40;
+  pub const VT_SHADER: ::flatbuffers::VOffsetT = 42;
+  pub const VT_VERTEX: ::flatbuffers::VOffsetT = 44;
+  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 46;
+  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 48;
+  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 50;
+  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 52;
+  pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 54;
+  pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 56;
+  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 58;
+  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 60;
+  pub const VT_UV_MOVE_X: ::flatbuffers::VOffsetT = 62;
+  pub const VT_UV_MOVE_Y: ::flatbuffers::VOffsetT = 64;
+  pub const VT_UV_MOVE_Z: ::flatbuffers::VOffsetT = 66;
+  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 68;
+  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 70;
+  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 72;
+  pub const VT_MASK: ::flatbuffers::VOffsetT = 74;
+  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 76;
+  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 78;
+  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 80;
+  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 82;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -1735,7 +1734,6 @@ impl<'a> PartState<'a> {
     builder.add_position_y(args.position_y);
     builder.add_position_x(args.position_x);
     if let Some(x) = args.cell { builder.add_cell(x); }
-    builder.add_part_index(args.part_index);
     builder.add_img_flip_v(args.img_flip_v);
     builder.add_img_flip_h(args.img_flip_h);
     builder.add_hide(args.hide);
@@ -1745,13 +1743,6 @@ impl<'a> PartState<'a> {
   }
 
 
-  #[inline]
-  pub fn part_index(&self) -> u16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<u16>(PartState::VT_PART_INDEX, Some(0)).unwrap()}
-  }
   #[inline]
   pub fn update_flag(&self) -> UpdateAttributeFlags {
     // Safety:
@@ -2023,7 +2014,7 @@ impl<'a> PartState<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartState::VT_DEFORM, Some(0)).unwrap()}
+    unsafe { self._tab.get::<i32>(PartState::VT_DEFORM, Some(-1)).unwrap()}
   }
   #[inline]
   pub fn texture(&self) -> i32 {
@@ -2040,7 +2031,6 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
      .visit_field::<UpdateAttributeFlags>("update_flag", Self::VT_UPDATE_FLAG, false)?
      .visit_field::<PartAttributeCell>("cell", Self::VT_CELL, false)?
      .visit_field::<f32>("position_x", Self::VT_POSITION_X, false)?
@@ -2086,7 +2076,6 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
   }
 }
 pub struct PartStateArgs<'a> {
-    pub part_index: u16,
     pub update_flag: UpdateAttributeFlags,
     pub cell: Option<&'a PartAttributeCell>,
     pub position_x: f32,
@@ -2132,7 +2121,6 @@ impl<'a> Default for PartStateArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartStateArgs {
-      part_index: 0,
       update_flag: Default::default(),
       cell: None,
       position_x: 0.0,
@@ -2171,7 +2159,7 @@ impl<'a> Default for PartStateArgs<'a> {
       mask: 0.0,
       skew_x: 0.0,
       skew_y: 0.0,
-      deform: 0,
+      deform: -1,
       texture: -1,
     }
   }
@@ -2182,10 +2170,6 @@ pub struct PartStateBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_part_index(&mut self, part_index: u16) {
-    self.fbb_.push_slot::<u16>(PartState::VT_PART_INDEX, part_index, 0);
-  }
   #[inline]
   pub fn add_update_flag(&mut self, update_flag: UpdateAttributeFlags) {
     self.fbb_.push_slot::<UpdateAttributeFlags>(PartState::VT_UPDATE_FLAG, update_flag, Default::default());
@@ -2340,7 +2324,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
   }
   #[inline]
   pub fn add_deform(&mut self, deform: i32) {
-    self.fbb_.push_slot::<i32>(PartState::VT_DEFORM, deform, 0);
+    self.fbb_.push_slot::<i32>(PartState::VT_DEFORM, deform, -1);
   }
   #[inline]
   pub fn add_texture(&mut self, texture: i32) {
@@ -2364,7 +2348,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
 impl ::core::fmt::Debug for PartState<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartState");
-      ds.field("part_index", &self.part_index());
       ds.field("update_flag", &self.update_flag());
       ds.field("cell", &self.cell());
       ds.field("position_x", &self.position_x());

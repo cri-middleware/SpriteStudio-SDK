@@ -1,11 +1,10 @@
 use crate::runtime;
 use crate::runtime::framedata::ss::runtime::{PartAttributeCell, PartAttributePartColor, PartAttributeShader};
 
-fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, index: u16, part: &ssab::ssab::PartAnimationData, frame_no: i32, deforms: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>) -> ::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartState<'a>> {
+fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::PartAnimationData, frame_no: i32, deforms: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>) -> ::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartState<'a>> {
     let mut p_args = runtime::framedata::ss::runtime::PartStateArgs::default();
 
     let mut cell_: Option<PartAttributeCell> = None;
-    p_args.part_index = index;
     p_args.update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
     part.cell_array().map(|cell_array| {
         cell_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|cell| {
@@ -339,8 +338,8 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
                  deforms: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
 ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartState<'a>>>> {
     let mut deform_vec: Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform>> = Vec::new();
-    let parts = p.iter().enumerate().map(|(index, part)| {
-        get_part(fb, index as u16, &part, frame_no, &mut deform_vec)
+    let parts = p.iter().map(|part| {
+        get_part(fb, &part, frame_no, &mut deform_vec)
     }).collect::<Vec<_>>();
     if !deform_vec.is_empty() {
         *deforms = Some(fb.create_vector(&deform_vec));

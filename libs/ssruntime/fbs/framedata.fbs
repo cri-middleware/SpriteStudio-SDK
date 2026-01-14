@@ -112,8 +112,6 @@ enum UpdateAttributeFlags: ulong (bit_flags) {
 }
 
 table PartState {
-  part_index: ushort;
-
   update_flag: UpdateAttributeFlags = 0;
 
   cell: PartAttributeCell;
@@ -153,9 +151,8 @@ table PartState {
   mask: float = 0.0;
   skew_x: float = 0.0;
   skew_y: float = 0.0;
-  deform: int;
+  deform: int = -1;
   texture: int = -1;
-
 }
 
 table FrameData {
