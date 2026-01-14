@@ -1,7 +1,8 @@
 use crate::model_t;
 fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::CellT {
     let mut cell_t = ssab::ssab::CellT::default();
-    cell_t.name = sscell.name.to_string();
+    cell_t.name_hash = crate::utils::fnv1a_hash_str(&sscell.name);
+    cell_t.name = if sscell.name.is_empty() { None } else { Some(sscell.name.to_string()) };
     cell_t.rectangle = Some(Box::new(model_t::common::convert_rectt(sscell.pos.x, sscell.pos.y, sscell.size.x, sscell.size.y, )));
     cell_t.pivot = Some(Box::new(model_t::common::convert_vec2t(&sscell.pivot)));
     cell_t.rotated = sscell.rotated;
@@ -11,12 +12,15 @@ fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::CellT {
     cell_t
 }
 fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::CellT> {
-    cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<ssab::ssab::CellT>>()
+    let mut v = cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<ssab::ssab::CellT>>();
+    v.sort_by_key(|cell| cell.name_hash);
+    v
 }
 
 fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap) -> ssab::ssab::CellMapT {
     let mut cell_map_t = ssab::ssab::CellMapT::default();
-    cell_map_t.name = cellmap.name.to_string();
+    cell_map_t.name_hash = crate::utils::fnv1a_hash_str(&cellmap.name);
+    cell_map_t.name = if cellmap.name.is_empty() { None } else { Some(cellmap.name.to_string()) } ;
     cell_map_t.image_path = if cellmap.image_path.is_empty() { None } else { Some(cellmap.image_path.to_string()) };
     cell_map_t.size_original = Some(Box::new(model_t::common::convert_vec2t(&cellmap.pixel_size)));
     cell_map_t.wrap_mode = match &cellmap.wrap_mode {
@@ -33,5 +37,7 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap) -> ssab::ssab::CellMapT {
     cell_map_t
 }
 pub fn convert_cellmapt_list(_sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap]) -> Vec<ssab::ssab::CellMapT> {
-    cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap)).collect::<Vec<ssab::ssab::CellMapT>>()
+    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap)).collect::<Vec<ssab::ssab::CellMapT>>();
+    v.sort_by_key(|cellmap| cellmap.name_hash);
+    v
 }

@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 pub fn convert_font_bitmaps(_sspj: &sspj::sspj::SsProject, charmap_dic: &HashMap<String, &sspj::sscharmap::SsCharMap>, ) -> Vec<ssab::ssab::FontBitmapT> {
-    charmap_dic.iter().map(|(key, _value)| {
+    let mut v = charmap_dic.iter().map(|(key, _value)| {
         let mut bitmap = ssab::ssab::FontBitmapT::default();
 
-        bitmap.name = key.to_string();
+        bitmap.name_hash = crate::utils::fnv1a_hash_str(key);
+        bitmap.name = if key.is_empty() { None} else { Some(key.to_string()) };
         // TODO: impl
         /*
         bitmap.name_face ;
@@ -22,5 +23,7 @@ pub fn convert_font_bitmaps(_sspj: &sspj::sspj::SsProject, charmap_dic: &HashMap
          */
 
         bitmap
-    }).collect::<Vec<_>>()
+    }).collect::<Vec<_>>();
+    v.sort_by_key(|e| e.name_hash);
+    v
 }

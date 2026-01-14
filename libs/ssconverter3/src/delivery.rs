@@ -6,15 +6,17 @@ pub fn delivery_ssab_suite(ssab_map: &HashMap<String, Vec<u8>>) -> HashSet<Strin
 
         let images = anime.cellmaps().into_iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| s.to_string()));
 
-        let sounds = anime.sound_lists().into_iter().flatten().flat_map(|soundlist| {
-            soundlist.table_data().into_iter().flatten().map(|item| item.name().to_string())
-        });
+        // TODO: impl
+        //let sounds = anime.sound_lists().into_iter().flatten().flat_map(|soundlist| {
+        //    soundlist.table_data().into_iter().flatten().map(|item| item.name().to_string())
+        //});
 
         // TODO: improve font bitmap path
         let fonts = anime.font_bitmaps().into_iter().flatten().flat_map(|font_bitmap| {
             font_bitmap.name_texture().into_iter().flatten().map(|name_texture| name_texture.to_string())
         });
 
-        images.chain(sounds).chain(fonts)
+        //images.chain(sounds).chain(fonts)
+        images.chain(fonts)
     }).collect()
 }

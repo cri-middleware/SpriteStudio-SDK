@@ -176,7 +176,8 @@ table EventsPerFrame {
 }
 
 table Cell {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
 
   rectangle: Rect;
   pivot: Vec2;
@@ -187,7 +188,8 @@ table Cell {
 }
 
 table CellMap {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
 
   image_path: string;
   size_original: Vec2;
@@ -282,7 +284,8 @@ table EffectNode {
 }
 
 table Effect {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   fps: short;
   is_lock_rand_seed: bool;
   lock_rand_seed: short;
@@ -291,12 +294,14 @@ table Effect {
 }
 
 table SoundFile {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   time_total: uint;
 }
 
 table SoundList {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   table_data:[SoundFile];
 }
 
@@ -311,7 +316,8 @@ table FontGlyphBitmap {
 }
 
 table FontBitmap {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
 
   name_face: string;
   size: ushort;
@@ -556,7 +562,8 @@ table PartData {
 }
 
 table Label {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   time: int;
 }
 
@@ -685,6 +692,7 @@ table PartMeshData {
 
 table AnimationData {
   name: string (key);
+  name_hash: uint32;
 
   parts_initial_attributes: [PartAttributes];
   parts_animation_data: [PartAnimationData];
@@ -706,6 +714,7 @@ table SsAnimeBinary {
   version: uint = 0x00000001;
 
   name: string;
+  name_hash: uint32;
 
   parts: [PartData];
   animations: [AnimationData];

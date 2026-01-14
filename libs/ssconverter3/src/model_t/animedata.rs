@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 
 fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::LabelT> {
-    labels.iter().map(|label| {
+    let mut v = labels.iter().map(|label| {
         let mut l = ssab::ssab::LabelT::default();
-        l.name = label.name.to_string();
+        l.name_hash = crate::utils::fnv1a_hash_str(&label.name);
+        l.name = if label.name.is_empty() { None } else { Some(label.name.to_string()) };
         l.time = label.time;
         l
-    }).collect::<Vec<ssab::ssab::LabelT>>()
+    }).collect::<Vec<ssab::ssab::LabelT>>();
+    v.sort_by_key(|l| l.name_hash);
+    v
 }
 
 fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Option<Vec<ssab::ssab::EventsPerFrameT>> {

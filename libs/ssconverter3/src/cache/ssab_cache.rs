@@ -498,7 +498,8 @@ impl From<&ssab::ssab::PartAnimationDataT> for PartAnimationDataKey {
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct CellKey {
-    pub name: String,
+    pub name_hash: u32,
+    pub name: Option<String>,
     pub rectangle: Option<RectKey>,
     pub pivot: Option<Vec2Key>,
     pub rotated: bool,
@@ -508,7 +509,8 @@ pub struct CellKey {
 impl From<&ssab::ssab::CellT> for CellKey {
     fn from(value: &ssab::ssab::CellT) -> Self {
         Self {
-            name: value.name.clone(),
+            name_hash: value.name_hash,
+            name: value.name.as_ref().map(|n| n.to_string()),
             rectangle: value.rectangle.as_ref().map(|r| RectKey::from(r.as_ref())),
             pivot: value.pivot.as_ref().map(|p| Vec2Key::from(p.as_ref())),
             rotated: value.rotated,
@@ -520,13 +522,15 @@ impl From<&ssab::ssab::CellT> for CellKey {
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct LabelKey {
-    pub name: String,
+    pub name_hash: u32,
+    pub name: Option<String>,
     pub time: i32,
 }
 impl From<&ssab::ssab::LabelT> for LabelKey {
     fn from(value: &ssab::ssab::LabelT) -> Self {
         Self {
-            name: value.name.clone(),
+            name_hash: value.name_hash,
+            name: value.name.as_ref().map(|n| n.to_string()),
             time: value.time,
         }
     }
@@ -1331,7 +1335,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::CellArgs::default();
-        args.name = Some(fb.create_shared_string(&cell.name));
+        args.name_hash = cell.name_hash;
+        args.name = cell.name.as_ref().map(|name| fb.create_shared_string(name));
         args.rectangle = cell.rectangle.as_ref().map(|r| self.create_shared_rect(fb, r));
         args.pivot = cell.pivot.as_ref().map(|p| self.create_shared_vec2(fb, p));
         args.rotated = cell.rotated;
@@ -1353,7 +1358,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::LabelArgs::default();
-        args.name = Some(fb.create_shared_string(&label_t.name));
+        args.name_hash = label_t.name_hash;
+        args.name = label_t.name.as_ref().map(|name|  fb.create_shared_string(name));
         args.time = label_t.time;
 
         let offset = ssab::ssab::Label::create(fb, &args);
@@ -1767,6 +1773,7 @@ impl<'a> SsabCache<'a> {
         let animation_data_vec = animation_data_t_vec.iter().map(|animation_data_t| {
             let mut args = ssab::ssab::AnimationDataArgs::default();
             args.name = Some(fb.create_shared_string(&animation_data_t.name));
+            args.name_hash = animation_data_t.name_hash;
             args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_shared_part_attributes_list(fb, parts_initial_attributes));
             args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
             args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
@@ -1792,7 +1799,8 @@ impl<'a> SsabCache<'a> {
     fn create_shared_cell_map(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, cell_map_t_vec: &[ssab::ssab::CellMapT], ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::CellMap<'a>>>> {
         let cell_map = cell_map_t_vec.iter().map(|cell_map_t| {
             let mut args = ssab::ssab::CellMapArgs::default();
-            args.name = Some(fb.create_shared_string(&cell_map_t.name));
+            args.name_hash = cell_map_t.name_hash;
+            args.name = cell_map_t.name.as_ref().map(|name| fb.create_shared_string(name));
             args.image_path = cell_map_t.image_path.as_ref().map(|s| fb.create_shared_string(s));
             args.size_original = cell_map_t.size_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
             args.wrap_mode = cell_map_t.wrap_mode;
@@ -1811,7 +1819,8 @@ impl<'a> SsabCache<'a> {
     fn create_shared_sound_files(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, table_data_t_vec: &[ssab::ssab::SoundFileT], ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::SoundFile<'a>>>> {
         let table_data = table_data_t_vec.iter().map(|table_data_t| {
             let mut sound_file_args = ssab::ssab::SoundFileArgs::default();
-            sound_file_args.name = Some(fb.create_shared_string(&table_data_t.name));
+            sound_file_args.name_hash = table_data_t.name_hash;
+            sound_file_args.name = table_data_t.name.as_ref().map(|name| fb.create_shared_string(name));
             sound_file_args.time_total = table_data_t.time_total;
 
             ssab::ssab::SoundFile::create(fb, &sound_file_args)
@@ -1912,7 +1921,8 @@ impl<'a> SsabCache<'a> {
     fn create_shared_effect_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, effet_list_t_vec: &[ssab::ssab::EffectT], ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::Effect<'a>>>> {
         let sound_list = effet_list_t_vec.iter().map(|effect_t| {
             let mut args = ssab::ssab::EffectArgs::default();
-            args.name = Some(fb.create_shared_string(&effect_t.name));
+            args.name_hash = effect_t.name_hash;
+            args.name = effect_t.name.as_ref().map(|name| fb.create_shared_string(name));
             args.fps = effect_t.fps;
             args.is_lock_rand_seed = effect_t.is_lock_rand_seed;
             args.lock_rand_seed = effect_t.lock_rand_seed;
@@ -1928,7 +1938,8 @@ impl<'a> SsabCache<'a> {
     fn create_shared_sound_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, sound_list_t_vec: &[ssab::ssab::SoundListT], ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::SoundList<'a>>>> {
         let sound_list = sound_list_t_vec.iter().map(|sound_list_t| {
             let mut args = ssab::ssab::SoundListArgs::default();
-            args.name = Some(fb.create_shared_string(&sound_list_t.name));
+            args.name_hash = sound_list_t.name_hash;
+            args.name = sound_list_t.name.as_ref().map(|name| fb.create_shared_string(name));
             args.table_data = sound_list_t.table_data.as_ref().map(|table_data| self.create_shared_sound_files(fb, table_data));
 
             ssab::ssab::SoundList::create(fb, &args)
@@ -1940,7 +1951,8 @@ impl<'a> SsabCache<'a> {
     fn create_shared_font_bitmap(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, font_bitmap_t_vec: &[ssab::ssab::FontBitmapT], ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::FontBitmap<'a>>>> {
         let font_bitmap = font_bitmap_t_vec.iter().map(|font_bitmap_t| {
             let mut args = ssab::ssab::FontBitmapArgs::default();
-            args.name = Some(fb.create_shared_string(&font_bitmap_t.name));
+            args.name_hash = font_bitmap_t.name_hash;
+            args.name = font_bitmap_t.name.as_ref().map(|name| fb.create_shared_string(name));
             args.name_face = font_bitmap_t.name_face.as_ref().map(|s| fb.create_shared_string(s));
             args.size = font_bitmap_t.size;
             args.padding_l = font_bitmap_t.padding_l;
@@ -1981,6 +1993,7 @@ impl<'a> SsabCache<'a> {
     pub fn create_shared_anime_binary(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, ss_anime_binary_t: &ssab::ssab::SsAnimeBinaryT, ) -> flatbuffers::WIPOffset<ssab::ssab::SsAnimeBinary<'a>> {
         let mut args = ssab::ssab::SsAnimeBinaryArgs::default();
 
+        args.name_hash = ss_anime_binary_t.name_hash;
         args.name = ss_anime_binary_t.name.as_ref().map(|s| fb.create_shared_string(s));
         args.parts = ss_anime_binary_t.parts.as_ref().map(|parts| self.create_shared_part_list(fb, parts));
         args.animations = ss_anime_binary_t.animations.as_ref().map(|animations| self.create_animation_data_list(fb, animations));
