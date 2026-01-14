@@ -207,6 +207,133 @@ impl<'a> ::flatbuffers::Verifiable for UpdateAttributeFlags {
 }
 
 impl ::flatbuffers::SimpleToVerifyInSlice for UpdateAttributeFlags {}
+// struct PartAttributeCell, aligned to 4
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq)]
+pub struct PartAttributeCell(pub [u8; 8]);
+impl Default for PartAttributeCell { 
+  fn default() -> Self { 
+    Self([0; 8])
+  }
+}
+impl ::core::fmt::Debug for PartAttributeCell {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    f.debug_struct("PartAttributeCell")
+      .field("map_id", &self.map_id())
+      .field("name_hash", &self.name_hash())
+      .finish()
+  }
+}
+
+impl ::flatbuffers::SimpleToVerifyInSlice for PartAttributeCell {}
+impl<'a> ::flatbuffers::Follow<'a> for PartAttributeCell {
+  type Inner = &'a PartAttributeCell;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe { <&'a PartAttributeCell>::follow(buf, loc) }
+  }
+}
+impl<'a> ::flatbuffers::Follow<'a> for &'a PartAttributeCell {
+  type Inner = &'a PartAttributeCell;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe { ::flatbuffers::follow_cast_ref::<PartAttributeCell>(buf, loc) }
+  }
+}
+impl<'b> ::flatbuffers::Push for PartAttributeCell {
+    type Output = PartAttributeCell;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        let src = unsafe { ::core::slice::from_raw_parts(self as *const PartAttributeCell as *const u8, <Self as ::flatbuffers::Push>::size()) };
+        dst.copy_from_slice(src);
+    }
+    #[inline]
+    fn alignment() -> ::flatbuffers::PushAlignment {
+        ::flatbuffers::PushAlignment::new(4)
+    }
+}
+
+impl<'a> ::flatbuffers::Verifiable for PartAttributeCell {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.in_buffer::<Self>(pos)
+  }
+}
+
+impl<'a> PartAttributeCell {
+  #[allow(clippy::too_many_arguments)]
+  pub fn new(
+    map_id: i32,
+    name_hash: u32,
+  ) -> Self {
+    let mut s = Self([0; 8]);
+    s.set_map_id(map_id);
+    s.set_name_hash(name_hash);
+    s
+  }
+
+  pub fn map_id(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[0..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_map_id(&mut self, x: i32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[0..].as_mut_ptr(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn name_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[4..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_name_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[4..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+}
+
 // struct Vec2, aligned to 4
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -635,6 +762,161 @@ impl<'a> SsAttributePartColorKeyValueColor {
 
 }
 
+// struct PartAttributePartColor, aligned to 4
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq)]
+pub struct PartAttributePartColor(pub [u8; 36]);
+impl Default for PartAttributePartColor { 
+  fn default() -> Self { 
+    Self([0; 36])
+  }
+}
+impl ::core::fmt::Debug for PartAttributePartColor {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    f.debug_struct("PartAttributePartColor")
+      .field("blend_type", &self.blend_type())
+      .field("lt", &self.lt())
+      .field("rt", &self.rt())
+      .field("lb", &self.lb())
+      .field("rb", &self.rb())
+      .finish()
+  }
+}
+
+impl ::flatbuffers::SimpleToVerifyInSlice for PartAttributePartColor {}
+impl<'a> ::flatbuffers::Follow<'a> for PartAttributePartColor {
+  type Inner = &'a PartAttributePartColor;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe { <&'a PartAttributePartColor>::follow(buf, loc) }
+  }
+}
+impl<'a> ::flatbuffers::Follow<'a> for &'a PartAttributePartColor {
+  type Inner = &'a PartAttributePartColor;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe { ::flatbuffers::follow_cast_ref::<PartAttributePartColor>(buf, loc) }
+  }
+}
+impl<'b> ::flatbuffers::Push for PartAttributePartColor {
+    type Output = PartAttributePartColor;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        let src = unsafe { ::core::slice::from_raw_parts(self as *const PartAttributePartColor as *const u8, <Self as ::flatbuffers::Push>::size()) };
+        dst.copy_from_slice(src);
+    }
+    #[inline]
+    fn alignment() -> ::flatbuffers::PushAlignment {
+        ::flatbuffers::PushAlignment::new(4)
+    }
+}
+
+impl<'a> ::flatbuffers::Verifiable for PartAttributePartColor {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.in_buffer::<Self>(pos)
+  }
+}
+
+impl<'a> PartAttributePartColor {
+  #[allow(clippy::too_many_arguments)]
+  pub fn new(
+    blend_type: BlendType,
+    lt: &SsAttributePartColorKeyValueColor,
+    rt: &SsAttributePartColorKeyValueColor,
+    lb: &SsAttributePartColorKeyValueColor,
+    rb: &SsAttributePartColorKeyValueColor,
+  ) -> Self {
+    let mut s = Self([0; 36]);
+    s.set_blend_type(blend_type);
+    s.set_lt(lt);
+    s.set_rt(rt);
+    s.set_lb(lb);
+    s.set_rb(rb);
+    s
+  }
+
+  pub fn blend_type(&self) -> BlendType {
+    let mut mem = ::core::mem::MaybeUninit::<<BlendType as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[0..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<BlendType as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_blend_type(&mut self, x: BlendType) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[0..].as_mut_ptr(),
+        ::core::mem::size_of::<<BlendType as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn lt(&self) -> &SsAttributePartColorKeyValueColor {
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid struct in this slot
+    unsafe { &*(self.0[4..].as_ptr() as *const SsAttributePartColorKeyValueColor) }
+  }
+
+  #[allow(clippy::identity_op)]
+  pub fn set_lt(&mut self, x: &SsAttributePartColorKeyValueColor) {
+    self.0[4..4 + 8].copy_from_slice(&x.0)
+  }
+
+  pub fn rt(&self) -> &SsAttributePartColorKeyValueColor {
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid struct in this slot
+    unsafe { &*(self.0[12..].as_ptr() as *const SsAttributePartColorKeyValueColor) }
+  }
+
+  #[allow(clippy::identity_op)]
+  pub fn set_rt(&mut self, x: &SsAttributePartColorKeyValueColor) {
+    self.0[12..12 + 8].copy_from_slice(&x.0)
+  }
+
+  pub fn lb(&self) -> &SsAttributePartColorKeyValueColor {
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid struct in this slot
+    unsafe { &*(self.0[20..].as_ptr() as *const SsAttributePartColorKeyValueColor) }
+  }
+
+  #[allow(clippy::identity_op)]
+  pub fn set_lb(&mut self, x: &SsAttributePartColorKeyValueColor) {
+    self.0[20..20 + 8].copy_from_slice(&x.0)
+  }
+
+  pub fn rb(&self) -> &SsAttributePartColorKeyValueColor {
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid struct in this slot
+    unsafe { &*(self.0[28..].as_ptr() as *const SsAttributePartColorKeyValueColor) }
+  }
+
+  #[allow(clippy::identity_op)]
+  pub fn set_rb(&mut self, x: &SsAttributePartColorKeyValueColor) {
+    self.0[28..28 + 8].copy_from_slice(&x.0)
+  }
+
+}
+
 // struct PartAttributeVertex, aligned to 4
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -758,283 +1040,485 @@ impl<'a> PartAttributeVertex {
 
 }
 
-pub enum PartAttributeCellOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartAttributeCell<'a> {
-  pub _tab: ::flatbuffers::Table<'a>,
+// struct PartAttributeShader, aligned to 4
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq)]
+pub struct PartAttributeShader(pub [u8; 52]);
+impl Default for PartAttributeShader { 
+  fn default() -> Self { 
+    Self([0; 52])
+  }
+}
+impl ::core::fmt::Debug for PartAttributeShader {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    f.debug_struct("PartAttributeShader")
+      .field("id_hash", &self.id_hash())
+      .field("param0", &self.param0())
+      .field("param1", &self.param1())
+      .field("param2", &self.param2())
+      .field("param3", &self.param3())
+      .field("param4", &self.param4())
+      .field("param5", &self.param5())
+      .field("param6", &self.param6())
+      .field("param7", &self.param7())
+      .field("map0_id", &self.map0_id())
+      .field("map0_name_hash", &self.map0_name_hash())
+      .field("map1_id", &self.map1_id())
+      .field("map1_name_hash", &self.map1_name_hash())
+      .finish()
+  }
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for PartAttributeCell<'a> {
-  type Inner = PartAttributeCell<'a>;
+impl ::flatbuffers::SimpleToVerifyInSlice for PartAttributeShader {}
+impl<'a> ::flatbuffers::Follow<'a> for PartAttributeShader {
+  type Inner = &'a PartAttributeShader;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+    unsafe { <&'a PartAttributeShader>::follow(buf, loc) }
   }
 }
-
-impl<'a> PartAttributeCell<'a> {
-  pub const VT_MAP_ID: ::flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
-
+impl<'a> ::flatbuffers::Follow<'a> for &'a PartAttributeShader {
+  type Inner = &'a PartAttributeShader;
   #[inline]
-  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartAttributeCell { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAttributeCellArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<PartAttributeCell<'bldr>> {
-    let mut builder = PartAttributeCellBuilder::new(_fbb);
-    if let Some(x) = args.name { builder.add_name(x); }
-    builder.add_map_id(args.map_id);
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn map_id(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeCell::VT_MAP_ID, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeCell::VT_NAME, None)}
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    unsafe { ::flatbuffers::follow_cast_ref::<PartAttributeShader>(buf, loc) }
   }
 }
+impl<'b> ::flatbuffers::Push for PartAttributeShader {
+    type Output = PartAttributeShader;
+    #[inline]
+    unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
+        let src = unsafe { ::core::slice::from_raw_parts(self as *const PartAttributeShader as *const u8, <Self as ::flatbuffers::Push>::size()) };
+        dst.copy_from_slice(src);
+    }
+    #[inline]
+    fn alignment() -> ::flatbuffers::PushAlignment {
+        ::flatbuffers::PushAlignment::new(4)
+    }
+}
 
-impl ::flatbuffers::Verifiable for PartAttributeCell<'_> {
+impl<'a> ::flatbuffers::Verifiable for PartAttributeShader {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-    v.visit_table(pos)?
-     .visit_field::<i32>("map_id", Self::VT_MAP_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
-     .finish();
-    Ok(())
+    v.in_buffer::<Self>(pos)
   }
 }
-pub struct PartAttributeCellArgs<'a> {
-    pub map_id: i32,
-    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
-}
-impl<'a> Default for PartAttributeCellArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    PartAttributeCellArgs {
-      map_id: 0,
-      name: None,
+
+impl<'a> PartAttributeShader {
+  #[allow(clippy::too_many_arguments)]
+  pub fn new(
+    id_hash: u32,
+    param0: f32,
+    param1: f32,
+    param2: f32,
+    param3: f32,
+    param4: f32,
+    param5: f32,
+    param6: f32,
+    param7: f32,
+    map0_id: i32,
+    map0_name_hash: u32,
+    map1_id: i32,
+    map1_name_hash: u32,
+  ) -> Self {
+    let mut s = Self([0; 52]);
+    s.set_id_hash(id_hash);
+    s.set_param0(param0);
+    s.set_param1(param1);
+    s.set_param2(param2);
+    s.set_param3(param3);
+    s.set_param4(param4);
+    s.set_param5(param5);
+    s.set_param6(param6);
+    s.set_param7(param7);
+    s.set_map0_id(map0_id);
+    s.set_map0_name_hash(map0_name_hash);
+    s.set_map1_id(map1_id);
+    s.set_map1_name_hash(map1_name_hash);
+    s
+  }
+
+  pub fn id_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[0..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_id_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[0..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
     }
   }
-}
 
-pub struct PartAttributeCellBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeCellBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_map_id(&mut self, map_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeCell::VT_MAP_ID, map_id, 0);
+  pub fn param0(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[4..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
   }
-  #[inline]
-  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeCell::VT_NAME, name);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributeCellBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartAttributeCellBuilder {
-      fbb_: _fbb,
-      start_: start,
+
+  pub fn set_param0(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[4..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
     }
   }
-  #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAttributeCell<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    ::flatbuffers::WIPOffset::new(o.value())
-  }
-}
 
-impl ::core::fmt::Debug for PartAttributeCell<'_> {
-  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartAttributeCell");
-      ds.field("map_id", &self.map_id());
-      ds.field("name", &self.name());
-      ds.finish()
-  }
-}
-pub enum PartAttributePartColorOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartAttributePartColor<'a> {
-  pub _tab: ::flatbuffers::Table<'a>,
-}
-
-impl<'a> ::flatbuffers::Follow<'a> for PartAttributePartColor<'a> {
-  type Inner = PartAttributePartColor<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> PartAttributePartColor<'a> {
-  pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 4;
-  pub const VT_LT: ::flatbuffers::VOffsetT = 6;
-  pub const VT_RT: ::flatbuffers::VOffsetT = 8;
-  pub const VT_LB: ::flatbuffers::VOffsetT = 10;
-  pub const VT_RB: ::flatbuffers::VOffsetT = 12;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartAttributePartColor { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAttributePartColorArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<PartAttributePartColor<'bldr>> {
-    let mut builder = PartAttributePartColorBuilder::new(_fbb);
-    if let Some(x) = args.rb { builder.add_rb(x); }
-    if let Some(x) = args.lb { builder.add_lb(x); }
-    if let Some(x) = args.rt { builder.add_rt(x); }
-    if let Some(x) = args.lt { builder.add_lt(x); }
-    builder.add_blend_type(args.blend_type);
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn blend_type(&self) -> BlendType {
+  pub fn param1(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
     // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<BlendType>(PartAttributePartColor::VT_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[8..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
   }
-  #[inline]
-  pub fn lt(&self) -> Option<&'a SsAttributePartColorKeyValueColor> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_LT, None)}
-  }
-  #[inline]
-  pub fn rt(&self) -> Option<&'a SsAttributePartColorKeyValueColor> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_RT, None)}
-  }
-  #[inline]
-  pub fn lb(&self) -> Option<&'a SsAttributePartColorKeyValueColor> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_LB, None)}
-  }
-  #[inline]
-  pub fn rb(&self) -> Option<&'a SsAttributePartColorKeyValueColor> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_RB, None)}
-  }
-}
 
-impl ::flatbuffers::Verifiable for PartAttributePartColor<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut ::flatbuffers::Verifier, pos: usize
-  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-    v.visit_table(pos)?
-     .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
-     .visit_field::<SsAttributePartColorKeyValueColor>("lt", Self::VT_LT, false)?
-     .visit_field::<SsAttributePartColorKeyValueColor>("rt", Self::VT_RT, false)?
-     .visit_field::<SsAttributePartColorKeyValueColor>("lb", Self::VT_LB, false)?
-     .visit_field::<SsAttributePartColorKeyValueColor>("rb", Self::VT_RB, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct PartAttributePartColorArgs<'a> {
-    pub blend_type: BlendType,
-    pub lt: Option<&'a SsAttributePartColorKeyValueColor>,
-    pub rt: Option<&'a SsAttributePartColorKeyValueColor>,
-    pub lb: Option<&'a SsAttributePartColorKeyValueColor>,
-    pub rb: Option<&'a SsAttributePartColorKeyValueColor>,
-}
-impl<'a> Default for PartAttributePartColorArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    PartAttributePartColorArgs {
-      blend_type: BlendType::Mix,
-      lt: None,
-      rt: None,
-      lb: None,
-      rb: None,
+  pub fn set_param1(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[8..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
     }
   }
-}
 
-pub struct PartAttributePartColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributePartColorBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_blend_type(&mut self, blend_type: BlendType) {
-    self.fbb_.push_slot::<BlendType>(PartAttributePartColor::VT_BLEND_TYPE, blend_type, BlendType::Mix);
+  pub fn param2(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[12..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
   }
-  #[inline]
-  pub fn add_lt(&mut self, lt: &SsAttributePartColorKeyValueColor) {
-    self.fbb_.push_slot_always::<&SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_LT, lt);
-  }
-  #[inline]
-  pub fn add_rt(&mut self, rt: &SsAttributePartColorKeyValueColor) {
-    self.fbb_.push_slot_always::<&SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_RT, rt);
-  }
-  #[inline]
-  pub fn add_lb(&mut self, lb: &SsAttributePartColorKeyValueColor) {
-    self.fbb_.push_slot_always::<&SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_LB, lb);
-  }
-  #[inline]
-  pub fn add_rb(&mut self, rb: &SsAttributePartColorKeyValueColor) {
-    self.fbb_.push_slot_always::<&SsAttributePartColorKeyValueColor>(PartAttributePartColor::VT_RB, rb);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributePartColorBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartAttributePartColorBuilder {
-      fbb_: _fbb,
-      start_: start,
+
+  pub fn set_param2(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[12..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
     }
   }
-  #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAttributePartColor<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    ::flatbuffers::WIPOffset::new(o.value())
+
+  pub fn param3(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[16..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
   }
+
+  pub fn set_param3(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[16..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn param4(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[20..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_param4(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[20..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn param5(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[24..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_param5(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[24..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn param6(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[28..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_param6(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[28..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn param7(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[32..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_param7(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[32..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn map0_id(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[36..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_map0_id(&mut self, x: i32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[36..].as_mut_ptr(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn map0_name_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[40..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_map0_name_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[40..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn map1_id(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[44..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_map1_id(&mut self, x: i32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[44..].as_mut_ptr(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn map1_name_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[48..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_map1_name_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[48..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
 }
 
-impl ::core::fmt::Debug for PartAttributePartColor<'_> {
-  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartAttributePartColor");
-      ds.field("blend_type", &self.blend_type());
-      ds.field("lt", &self.lt());
-      ds.field("rt", &self.rt());
-      ds.field("lb", &self.lb());
-      ds.field("rb", &self.rb());
-      ds.finish()
-  }
-}
 pub enum PartAttributeDeformOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1148,306 +1632,6 @@ impl ::core::fmt::Debug for PartAttributeDeform<'_> {
       ds.finish()
   }
 }
-pub enum PartAttributeShaderOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartAttributeShader<'a> {
-  pub _tab: ::flatbuffers::Table<'a>,
-}
-
-impl<'a> ::flatbuffers::Follow<'a> for PartAttributeShader<'a> {
-  type Inner = PartAttributeShader<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> PartAttributeShader<'a> {
-  pub const VT_ID: ::flatbuffers::VOffsetT = 4;
-  pub const VT_PARAM0: ::flatbuffers::VOffsetT = 6;
-  pub const VT_PARAM1: ::flatbuffers::VOffsetT = 8;
-  pub const VT_PARAM2: ::flatbuffers::VOffsetT = 10;
-  pub const VT_PARAM3: ::flatbuffers::VOffsetT = 12;
-  pub const VT_PARAM4: ::flatbuffers::VOffsetT = 14;
-  pub const VT_PARAM5: ::flatbuffers::VOffsetT = 16;
-  pub const VT_PARAM6: ::flatbuffers::VOffsetT = 18;
-  pub const VT_PARAM7: ::flatbuffers::VOffsetT = 20;
-  pub const VT_MAP0_ID: ::flatbuffers::VOffsetT = 22;
-  pub const VT_MAP0_NAME: ::flatbuffers::VOffsetT = 24;
-  pub const VT_MAP1_ID: ::flatbuffers::VOffsetT = 26;
-  pub const VT_MAP1_NAME: ::flatbuffers::VOffsetT = 28;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartAttributeShader { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAttributeShaderArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<PartAttributeShader<'bldr>> {
-    let mut builder = PartAttributeShaderBuilder::new(_fbb);
-    if let Some(x) = args.map1_name { builder.add_map1_name(x); }
-    builder.add_map1_id(args.map1_id);
-    if let Some(x) = args.map0_name { builder.add_map0_name(x); }
-    builder.add_map0_id(args.map0_id);
-    builder.add_param7(args.param7);
-    builder.add_param6(args.param6);
-    builder.add_param5(args.param5);
-    builder.add_param4(args.param4);
-    builder.add_param3(args.param3);
-    builder.add_param2(args.param2);
-    builder.add_param1(args.param1);
-    builder.add_param0(args.param0);
-    if let Some(x) = args.id { builder.add_id(x); }
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn id(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeShader::VT_ID, None)}
-  }
-  #[inline]
-  pub fn param0(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM0, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param1(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM1, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param2(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM2, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param3(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM3, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param4(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM4, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param5(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM5, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param6(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM6, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn param7(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM7, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn map0_id(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeShader::VT_MAP0_ID, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn map0_name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeShader::VT_MAP0_NAME, None)}
-  }
-  #[inline]
-  pub fn map1_id(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeShader::VT_MAP1_ID, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn map1_name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeShader::VT_MAP1_NAME, None)}
-  }
-}
-
-impl ::flatbuffers::Verifiable for PartAttributeShader<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut ::flatbuffers::Verifier, pos: usize
-  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-    v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
-     .visit_field::<f32>("param0", Self::VT_PARAM0, false)?
-     .visit_field::<f32>("param1", Self::VT_PARAM1, false)?
-     .visit_field::<f32>("param2", Self::VT_PARAM2, false)?
-     .visit_field::<f32>("param3", Self::VT_PARAM3, false)?
-     .visit_field::<f32>("param4", Self::VT_PARAM4, false)?
-     .visit_field::<f32>("param5", Self::VT_PARAM5, false)?
-     .visit_field::<f32>("param6", Self::VT_PARAM6, false)?
-     .visit_field::<f32>("param7", Self::VT_PARAM7, false)?
-     .visit_field::<i32>("map0_id", Self::VT_MAP0_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("map0_name", Self::VT_MAP0_NAME, false)?
-     .visit_field::<i32>("map1_id", Self::VT_MAP1_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("map1_name", Self::VT_MAP1_NAME, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct PartAttributeShaderArgs<'a> {
-    pub id: Option<::flatbuffers::WIPOffset<&'a str>>,
-    pub param0: f32,
-    pub param1: f32,
-    pub param2: f32,
-    pub param3: f32,
-    pub param4: f32,
-    pub param5: f32,
-    pub param6: f32,
-    pub param7: f32,
-    pub map0_id: i32,
-    pub map0_name: Option<::flatbuffers::WIPOffset<&'a str>>,
-    pub map1_id: i32,
-    pub map1_name: Option<::flatbuffers::WIPOffset<&'a str>>,
-}
-impl<'a> Default for PartAttributeShaderArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    PartAttributeShaderArgs {
-      id: None,
-      param0: 0.0,
-      param1: 0.0,
-      param2: 0.0,
-      param3: 0.0,
-      param4: 0.0,
-      param5: 0.0,
-      param6: 0.0,
-      param7: 0.0,
-      map0_id: 0,
-      map0_name: None,
-      map1_id: 0,
-      map1_name: None,
-    }
-  }
-}
-
-pub struct PartAttributeShaderBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeShaderBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_id(&mut self, id: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeShader::VT_ID, id);
-  }
-  #[inline]
-  pub fn add_param0(&mut self, param0: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM0, param0, 0.0);
-  }
-  #[inline]
-  pub fn add_param1(&mut self, param1: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM1, param1, 0.0);
-  }
-  #[inline]
-  pub fn add_param2(&mut self, param2: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM2, param2, 0.0);
-  }
-  #[inline]
-  pub fn add_param3(&mut self, param3: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM3, param3, 0.0);
-  }
-  #[inline]
-  pub fn add_param4(&mut self, param4: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM4, param4, 0.0);
-  }
-  #[inline]
-  pub fn add_param5(&mut self, param5: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM5, param5, 0.0);
-  }
-  #[inline]
-  pub fn add_param6(&mut self, param6: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM6, param6, 0.0);
-  }
-  #[inline]
-  pub fn add_param7(&mut self, param7: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM7, param7, 0.0);
-  }
-  #[inline]
-  pub fn add_map0_id(&mut self, map0_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeShader::VT_MAP0_ID, map0_id, 0);
-  }
-  #[inline]
-  pub fn add_map0_name(&mut self, map0_name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeShader::VT_MAP0_NAME, map0_name);
-  }
-  #[inline]
-  pub fn add_map1_id(&mut self, map1_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeShader::VT_MAP1_ID, map1_id, 0);
-  }
-  #[inline]
-  pub fn add_map1_name(&mut self, map1_name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeShader::VT_MAP1_NAME, map1_name);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributeShaderBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartAttributeShaderBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAttributeShader<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    ::flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl ::core::fmt::Debug for PartAttributeShader<'_> {
-  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartAttributeShader");
-      ds.field("id", &self.id());
-      ds.field("param0", &self.param0());
-      ds.field("param1", &self.param1());
-      ds.field("param2", &self.param2());
-      ds.field("param3", &self.param3());
-      ds.field("param4", &self.param4());
-      ds.field("param5", &self.param5());
-      ds.field("param6", &self.param6());
-      ds.field("param7", &self.param7());
-      ds.field("map0_id", &self.map0_id());
-      ds.field("map0_name", &self.map0_name());
-      ds.field("map1_id", &self.map1_id());
-      ds.field("map1_name", &self.map1_name());
-      ds.finish()
-  }
-}
 pub enum PartStateOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -1464,47 +1648,46 @@ impl<'a> ::flatbuffers::Follow<'a> for PartState<'a> {
 }
 
 impl<'a> PartState<'a> {
-  pub const VT_PART_INDEX: ::flatbuffers::VOffsetT = 4;
-  pub const VT_UPDATE_FLAG: ::flatbuffers::VOffsetT = 6;
-  pub const VT_CELL: ::flatbuffers::VOffsetT = 8;
-  pub const VT_POSITION_X: ::flatbuffers::VOffsetT = 10;
-  pub const VT_POSITION_Y: ::flatbuffers::VOffsetT = 12;
-  pub const VT_POSITION_Z: ::flatbuffers::VOffsetT = 14;
-  pub const VT_ROTATION_X: ::flatbuffers::VOffsetT = 16;
-  pub const VT_ROTATION_Y: ::flatbuffers::VOffsetT = 18;
-  pub const VT_ROTATION_Z: ::flatbuffers::VOffsetT = 20;
-  pub const VT_SCALE_X: ::flatbuffers::VOffsetT = 22;
-  pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 24;
-  pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 26;
-  pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 28;
-  pub const VT_OPACITY: ::flatbuffers::VOffsetT = 30;
-  pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 32;
-  pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 34;
-  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 36;
-  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 38;
-  pub const VT_HIDE: ::flatbuffers::VOffsetT = 40;
-  pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 42;
-  pub const VT_SHADER: ::flatbuffers::VOffsetT = 44;
-  pub const VT_VERTEX: ::flatbuffers::VOffsetT = 46;
-  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 48;
-  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 50;
-  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 52;
-  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 54;
-  pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 56;
-  pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 58;
-  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 60;
-  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 62;
-  pub const VT_UV_MOVE_X: ::flatbuffers::VOffsetT = 64;
-  pub const VT_UV_MOVE_Y: ::flatbuffers::VOffsetT = 66;
-  pub const VT_UV_MOVE_Z: ::flatbuffers::VOffsetT = 68;
-  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 70;
-  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 72;
-  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 74;
-  pub const VT_MASK: ::flatbuffers::VOffsetT = 76;
-  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 78;
-  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 80;
-  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 82;
-  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 84;
+  pub const VT_UPDATE_FLAG: ::flatbuffers::VOffsetT = 4;
+  pub const VT_CELL: ::flatbuffers::VOffsetT = 6;
+  pub const VT_POSITION_X: ::flatbuffers::VOffsetT = 8;
+  pub const VT_POSITION_Y: ::flatbuffers::VOffsetT = 10;
+  pub const VT_POSITION_Z: ::flatbuffers::VOffsetT = 12;
+  pub const VT_ROTATION_X: ::flatbuffers::VOffsetT = 14;
+  pub const VT_ROTATION_Y: ::flatbuffers::VOffsetT = 16;
+  pub const VT_ROTATION_Z: ::flatbuffers::VOffsetT = 18;
+  pub const VT_SCALE_X: ::flatbuffers::VOffsetT = 20;
+  pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 22;
+  pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 24;
+  pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 26;
+  pub const VT_OPACITY: ::flatbuffers::VOffsetT = 28;
+  pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 30;
+  pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 32;
+  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 34;
+  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 36;
+  pub const VT_HIDE: ::flatbuffers::VOffsetT = 38;
+  pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 40;
+  pub const VT_SHADER: ::flatbuffers::VOffsetT = 42;
+  pub const VT_VERTEX: ::flatbuffers::VOffsetT = 44;
+  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 46;
+  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 48;
+  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 50;
+  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 52;
+  pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 54;
+  pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 56;
+  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 58;
+  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 60;
+  pub const VT_UV_MOVE_X: ::flatbuffers::VOffsetT = 62;
+  pub const VT_UV_MOVE_Y: ::flatbuffers::VOffsetT = 64;
+  pub const VT_UV_MOVE_Z: ::flatbuffers::VOffsetT = 66;
+  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 68;
+  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 70;
+  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 72;
+  pub const VT_MASK: ::flatbuffers::VOffsetT = 74;
+  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 76;
+  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 78;
+  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 80;
+  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 82;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -1518,7 +1701,7 @@ impl<'a> PartState<'a> {
     let mut builder = PartStateBuilder::new(_fbb);
     builder.add_update_flag(args.update_flag);
     builder.add_texture(args.texture);
-    if let Some(x) = args.deform { builder.add_deform(x); }
+    builder.add_deform(args.deform);
     builder.add_skew_y(args.skew_y);
     builder.add_skew_x(args.skew_x);
     builder.add_mask(args.mask);
@@ -1551,7 +1734,6 @@ impl<'a> PartState<'a> {
     builder.add_position_y(args.position_y);
     builder.add_position_x(args.position_x);
     if let Some(x) = args.cell { builder.add_cell(x); }
-    builder.add_part_index(args.part_index);
     builder.add_img_flip_v(args.img_flip_v);
     builder.add_img_flip_h(args.img_flip_h);
     builder.add_hide(args.hide);
@@ -1562,13 +1744,6 @@ impl<'a> PartState<'a> {
 
 
   #[inline]
-  pub fn part_index(&self) -> u16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<u16>(PartState::VT_PART_INDEX, Some(0)).unwrap()}
-  }
-  #[inline]
   pub fn update_flag(&self) -> UpdateAttributeFlags {
     // Safety:
     // Created from valid Table for this object
@@ -1576,11 +1751,11 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<UpdateAttributeFlags>(PartState::VT_UPDATE_FLAG, Some(Default::default())).unwrap()}
   }
   #[inline]
-  pub fn cell(&self) -> Option<PartAttributeCell<'a>> {
+  pub fn cell(&self) -> Option<&'a PartAttributeCell> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeCell>>(PartState::VT_CELL, None)}
+    unsafe { self._tab.get::<PartAttributeCell>(PartState::VT_CELL, None)}
   }
   #[inline]
   pub fn position_x(&self) -> f32 {
@@ -1695,18 +1870,18 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<bool>(PartState::VT_HIDE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn parts_color(&self) -> Option<PartAttributePartColor<'a>> {
+  pub fn parts_color(&self) -> Option<&'a PartAttributePartColor> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>(PartState::VT_PARTS_COLOR, None)}
+    unsafe { self._tab.get::<PartAttributePartColor>(PartState::VT_PARTS_COLOR, None)}
   }
   #[inline]
-  pub fn shader(&self) -> Option<PartAttributeShader<'a>> {
+  pub fn shader(&self) -> Option<&'a PartAttributeShader> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>(PartState::VT_SHADER, None)}
+    unsafe { self._tab.get::<PartAttributeShader>(PartState::VT_SHADER, None)}
   }
   #[inline]
   pub fn vertex(&self) -> Option<&'a PartAttributeVertex> {
@@ -1835,11 +2010,11 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<f32>(PartState::VT_SKEW_Y, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn deform(&self) -> Option<PartAttributeDeform<'a>> {
+  pub fn deform(&self) -> i32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>(PartState::VT_DEFORM, None)}
+    unsafe { self._tab.get::<i32>(PartState::VT_DEFORM, Some(-1)).unwrap()}
   }
   #[inline]
   pub fn texture(&self) -> i32 {
@@ -1856,9 +2031,8 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
      .visit_field::<UpdateAttributeFlags>("update_flag", Self::VT_UPDATE_FLAG, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeCell>>("cell", Self::VT_CELL, false)?
+     .visit_field::<PartAttributeCell>("cell", Self::VT_CELL, false)?
      .visit_field::<f32>("position_x", Self::VT_POSITION_X, false)?
      .visit_field::<f32>("position_y", Self::VT_POSITION_Y, false)?
      .visit_field::<f32>("position_z", Self::VT_POSITION_Z, false)?
@@ -1875,8 +2049,8 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("parts_color", Self::VT_PARTS_COLOR, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>("shader", Self::VT_SHADER, false)?
+     .visit_field::<PartAttributePartColor>("parts_color", Self::VT_PARTS_COLOR, false)?
+     .visit_field::<PartAttributeShader>("shader", Self::VT_SHADER, false)?
      .visit_field::<PartAttributeVertex>("vertex", Self::VT_VERTEX, false)?
      .visit_field::<f32>("pivot_x", Self::VT_PIVOT_X, false)?
      .visit_field::<f32>("pivot_y", Self::VT_PIVOT_Y, false)?
@@ -1895,16 +2069,15 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<f32>("mask", Self::VT_MASK, false)?
      .visit_field::<f32>("skew_x", Self::VT_SKEW_X, false)?
      .visit_field::<f32>("skew_y", Self::VT_SKEW_Y, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>("deform", Self::VT_DEFORM, false)?
+     .visit_field::<i32>("deform", Self::VT_DEFORM, false)?
      .visit_field::<i32>("texture", Self::VT_TEXTURE, false)?
      .finish();
     Ok(())
   }
 }
 pub struct PartStateArgs<'a> {
-    pub part_index: u16,
     pub update_flag: UpdateAttributeFlags,
-    pub cell: Option<::flatbuffers::WIPOffset<PartAttributeCell<'a>>>,
+    pub cell: Option<&'a PartAttributeCell>,
     pub position_x: f32,
     pub position_y: f32,
     pub position_z: f32,
@@ -1921,8 +2094,8 @@ pub struct PartStateArgs<'a> {
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
-    pub parts_color: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
-    pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
+    pub parts_color: Option<&'a PartAttributePartColor>,
+    pub shader: Option<&'a PartAttributeShader>,
     pub vertex: Option<&'a PartAttributeVertex>,
     pub pivot_x: f32,
     pub pivot_y: f32,
@@ -1941,14 +2114,13 @@ pub struct PartStateArgs<'a> {
     pub mask: f32,
     pub skew_x: f32,
     pub skew_y: f32,
-    pub deform: Option<::flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
+    pub deform: i32,
     pub texture: i32,
 }
 impl<'a> Default for PartStateArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartStateArgs {
-      part_index: 0,
       update_flag: Default::default(),
       cell: None,
       position_x: 0.0,
@@ -1987,7 +2159,7 @@ impl<'a> Default for PartStateArgs<'a> {
       mask: 0.0,
       skew_x: 0.0,
       skew_y: 0.0,
-      deform: None,
+      deform: -1,
       texture: -1,
     }
   }
@@ -1999,16 +2171,12 @@ pub struct PartStateBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_part_index(&mut self, part_index: u16) {
-    self.fbb_.push_slot::<u16>(PartState::VT_PART_INDEX, part_index, 0);
-  }
-  #[inline]
   pub fn add_update_flag(&mut self, update_flag: UpdateAttributeFlags) {
     self.fbb_.push_slot::<UpdateAttributeFlags>(PartState::VT_UPDATE_FLAG, update_flag, Default::default());
   }
   #[inline]
-  pub fn add_cell(&mut self, cell: ::flatbuffers::WIPOffset<PartAttributeCell<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeCell>>(PartState::VT_CELL, cell);
+  pub fn add_cell(&mut self, cell: &PartAttributeCell) {
+    self.fbb_.push_slot_always::<&PartAttributeCell>(PartState::VT_CELL, cell);
   }
   #[inline]
   pub fn add_position_x(&mut self, position_x: f32) {
@@ -2075,12 +2243,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(PartState::VT_HIDE, hide, false);
   }
   #[inline]
-  pub fn add_parts_color(&mut self, parts_color: ::flatbuffers::WIPOffset<PartAttributePartColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartColor>>(PartState::VT_PARTS_COLOR, parts_color);
+  pub fn add_parts_color(&mut self, parts_color: &PartAttributePartColor) {
+    self.fbb_.push_slot_always::<&PartAttributePartColor>(PartState::VT_PARTS_COLOR, parts_color);
   }
   #[inline]
-  pub fn add_shader(&mut self, shader: ::flatbuffers::WIPOffset<PartAttributeShader<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeShader>>(PartState::VT_SHADER, shader);
+  pub fn add_shader(&mut self, shader: &PartAttributeShader) {
+    self.fbb_.push_slot_always::<&PartAttributeShader>(PartState::VT_SHADER, shader);
   }
   #[inline]
   pub fn add_vertex(&mut self, vertex: &PartAttributeVertex) {
@@ -2155,8 +2323,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<f32>(PartState::VT_SKEW_Y, skew_y, 0.0);
   }
   #[inline]
-  pub fn add_deform(&mut self, deform: ::flatbuffers::WIPOffset<PartAttributeDeform<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeDeform>>(PartState::VT_DEFORM, deform);
+  pub fn add_deform(&mut self, deform: i32) {
+    self.fbb_.push_slot::<i32>(PartState::VT_DEFORM, deform, -1);
   }
   #[inline]
   pub fn add_texture(&mut self, texture: i32) {
@@ -2180,7 +2348,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
 impl ::core::fmt::Debug for PartState<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartState");
-      ds.field("part_index", &self.part_index());
       ds.field("update_flag", &self.update_flag());
       ds.field("cell", &self.cell());
       ds.field("position_x", &self.position_x());
@@ -2241,6 +2408,7 @@ impl<'a> ::flatbuffers::Follow<'a> for FrameData<'a> {
 
 impl<'a> FrameData<'a> {
   pub const VT_PARTS: ::flatbuffers::VOffsetT = 4;
+  pub const VT_DEFORMS: ::flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -2252,6 +2420,7 @@ impl<'a> FrameData<'a> {
     args: &'args FrameDataArgs<'args>
   ) -> ::flatbuffers::WIPOffset<FrameData<'bldr>> {
     let mut builder = FrameDataBuilder::new(_fbb);
+    if let Some(x) = args.deforms { builder.add_deforms(x); }
     if let Some(x) = args.parts { builder.add_parts(x); }
     builder.finish()
   }
@@ -2264,6 +2433,13 @@ impl<'a> FrameData<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartState>>>>(FrameData::VT_PARTS, None)}
   }
+  #[inline]
+  pub fn deforms(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeDeform>>>>(FrameData::VT_DEFORMS, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for FrameData<'_> {
@@ -2273,18 +2449,21 @@ impl ::flatbuffers::Verifiable for FrameData<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartState>>>>("parts", Self::VT_PARTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeDeform>>>>("deforms", Self::VT_DEFORMS, false)?
      .finish();
     Ok(())
   }
 }
 pub struct FrameDataArgs<'a> {
     pub parts: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartState<'a>>>>>,
+    pub deforms: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'a>>>>>,
 }
 impl<'a> Default for FrameDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     FrameDataArgs {
       parts: None,
+      deforms: None,
     }
   }
 }
@@ -2297,6 +2476,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> FrameDataBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_parts(&mut self, parts: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartState<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FrameData::VT_PARTS, parts);
+  }
+  #[inline]
+  pub fn add_deforms(&mut self, deforms: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FrameData::VT_DEFORMS, deforms);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> FrameDataBuilder<'a, 'b, A> {
@@ -2317,6 +2500,7 @@ impl ::core::fmt::Debug for FrameData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("FrameData");
       ds.field("parts", &self.parts());
+      ds.field("deforms", &self.deforms());
       ds.finish()
   }
 }

@@ -39,28 +39,13 @@ impl Context {
         })
     }
 
-    pub fn get_initialize_data(&mut self) -> &[u8] {
-        self.fb.reset();
-        let offset = core::initialize::get_initialize_data(&mut self.fb, &self.ssab);
-        self.fb.finish_minimal(offset);
-        self.fb.finished_data()
-    }
-
-    pub fn get_animation_names(&mut self) -> Option<Vec<&str>> {
-        self.ssab.animations().map(|animations| {
-            animations.iter().map(|animation| animation.name()).collect::<Vec<&str>>()
-        })
-    }
-
-    pub fn setup_animation(&mut self, name: &str) -> Option<&[u8]> {
-        let animation = self.ssab.animations()?.lookup_by_key(name, |en, key| en.key_compare_with_value(key))?;
+    pub fn setup_animation(&mut self, name: &str) -> bool {
+        let Some(animation) = self.ssab.animations().map(|animations| {
+            animations.lookup_by_key(name, |en, key| en.key_compare_with_value(key))
+        }).flatten() else { return false; };
         self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation = Some(animation);
-
-        self.fb.reset();
-        let offset = core::preparation::get_animation_preparation_data(&mut self.fb, &animation);
-        self.fb.finish_minimal(offset);
-        Some(self.fb.finished_data())
+        true
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
@@ -231,105 +216,5 @@ mod tests {
                 let _ = ssconverter3::convert_sspj_to_ssab_files(sspj.as_path(), &config);
             }
         });
-    }
-
-    #[test]
-    fn test_initialize_data() {
-        prepare();
-        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
-            let ssab_dir = get_test_base_path().join(dir);
-            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
-            for entry in ssab_dir.read_dir().unwrap() {
-                let f = entry.unwrap().path();
-                if f.extension().unwrap() != "ssab" { continue; }
-
-                let buf =  std::fs::read(&f).unwrap();
-                let mut context = Context::new(&buf).unwrap();
-                let init_buf = context.get_initialize_data();
-
-                // show .ss*e(.ssce, .ssee, .ssse, .charmap and external instance(animation)) names
-                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
-                println!("name: {}", init.name().unwrap());
-                println!("  cellmaps:");
-                init.cellmaps().map(|cellmaps| cellmaps.iter().for_each(|c| println!("    cellmap name: {}", c.name().unwrap())));
-                println!("  effects:");
-                init.effects().map(|effects| effects.iter().for_each(|effect| println!("    effect name: {}", effect.name().unwrap())));
-                println!("  sound_lists:");
-                init.sound_lists().map(|sound_lists| sound_lists.iter().for_each(|sound_list| println!("    sound_list name: {}", sound_list.name().unwrap())));
-                println!("  font_bitmaps:");
-                init.font_bitmaps().map(|font_bitmaps| font_bitmaps.iter().for_each(|font_bitmap| { println!("    font_bitmap name: {}", font_bitmap.name().unwrap()); }));
-                println!("  external_instances:");
-                init.external_instances().map(|external_instances| external_instances.iter().for_each(|external_instance| { println!("    external_instance name: {}", external_instance); }));
-                println!("  parts:");
-                init.parts().map(|parts| parts.iter().for_each(|part| { println!("    part name: {}", part.name().unwrap()); }));
-                println!();
-            }
-        })
-    }
-
-    #[test]
-    fn test_animation_names() {
-        prepare();
-        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
-            let ssab_dir = get_test_base_path().join(dir);
-            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
-            for entry in ssab_dir.read_dir().unwrap() {
-                let f = entry.unwrap().path();
-                if f.extension().unwrap() != "ssab" { continue; }
-
-                let buf =  std::fs::read(&f).unwrap();
-                let mut context = Context::new(&buf).unwrap();
-                let init_buf = context.get_initialize_data();
-                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
-                println!("animations name: {}", init.name().unwrap());
-
-                let animation_names: Vec<String> = context.get_animation_names()
-                    .unwrap_or_default()
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect();
-
-                for name in &animation_names {
-                    println!("  animation name: {}", name);
-                    let Some(prepare_buf) = context.setup_animation(name) else {
-                        assert!(false, "failed setup_animation. name: {}", name);
-                        continue;
-                    };
-                    let prepare = unsafe { runtime::preparation::ss::runtime::root_as_anim_prep_data(&prepare_buf) }.unwrap();
-                    println!("    start_frame: {}", prepare.start_frame());
-                    println!("    end_frame: {}", prepare.end_frame());
-                    println!("    total_frame: {}", prepare.total_frame());
-                    println!("    fps: {}", prepare.fps());
-                    prepare.canvas().map(|canvas| println!("    canvas x1: {}, y1: {}, x2: {}, y2: {}", canvas.x1(), canvas.y1(), canvas.x2(), canvas.y2()));
-                    println!();
-                }
-                println!();
-            }
-        })
-    }
-
-    #[test]
-    fn test_part_names() {
-        prepare();
-        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
-            let ssab_dir = get_test_base_path().join(dir);
-            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
-            for entry in ssab_dir.read_dir().unwrap() {
-                let f = entry.unwrap().path();
-                if f.extension().unwrap() != "ssab" { continue; }
-
-                let buf =  std::fs::read(&f).unwrap();
-                let mut context = Context::new(&buf).unwrap();
-                let init_buf = context.get_initialize_data();
-                let init = unsafe { runtime::initialize::ss::runtime::root_as_init_data_unchecked(&init_buf) };
-                println!("ssab: {}", f.file_name().unwrap().to_str().unwrap());
-                println!("parts");
-                init.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {
-                    println!("id: {}, parent_id: {}, part type: {}, part name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
-                }));
-
-                println!();
-            }
-        })
     }
 }

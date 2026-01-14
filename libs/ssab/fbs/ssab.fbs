@@ -176,7 +176,8 @@ table EventsPerFrame {
 }
 
 table Cell {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
 
   rectangle: Rect;
   pivot: Vec2;
@@ -187,7 +188,8 @@ table Cell {
 }
 
 table CellMap {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
 
   image_path: string;
   size_original: Vec2;
@@ -282,7 +284,8 @@ table EffectNode {
 }
 
 table Effect {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   fps: short;
   is_lock_rand_seed: bool;
   lock_rand_seed: short;
@@ -291,12 +294,14 @@ table Effect {
 }
 
 table SoundFile {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   time_total: uint;
 }
 
 table SoundList {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   table_data:[SoundFile];
 }
 
@@ -311,7 +316,8 @@ table FontGlyphBitmap {
 }
 
 table FontBitmap {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
 
   name_face: string;
   size: ushort;
@@ -331,7 +337,7 @@ table FontBitmap {
 
 table PartAttributeCell {
  map_id: int; // hash or name
- name: string;
+ name_hash: uint32; // instead of name: string;
 }
 
 table  SsAttributePartColorKeyValueColor {
@@ -359,9 +365,9 @@ table PartAttributeInstance {
   pingpong: bool;
   independent: bool;
   loop_num: int;
-  start_label: string;
+  start_label_hash: uint32; // instead of start_label: string;
   start_offset: int;
-  end_label: string;
+  end_label_hash: uint32; // instead of end_label: string;
   end_offset: int;
   speed: float;
 }
@@ -380,6 +386,7 @@ table PartAttributeDeform {
 
 table PartAttributeShader {
   id: string;
+  id_hash: uint32;
   param0: float;
   param1: float;
   param2: float;
@@ -389,9 +396,9 @@ table PartAttributeShader {
   param6: float;
   param7: float;
   map0_id: int;
-  map0_name: string;
+  map0_name_hash: uint32; // instead of map0_name: string;
   map1_id: int;
-  map1_name: string;
+  map1_name_hash: uint32; // instead of map1_name: string;
 }
 
 table PartAttributeUserData {
@@ -519,11 +526,11 @@ table PartTypeNines {
 }
 
 table PartTypeInstance {
-  ref_anime: string;
+  ref_anime_hash: uint32; // instead of ref_anime: string;
 }
 
 table PartTypeEffect {
-  ref_effect_name: string;
+  ref_effect_name_hash: uint32; // instead of ref_effect_name: string;
 }
 
 union PartType {
@@ -556,7 +563,8 @@ table PartData {
 }
 
 table Label {
-  name: string (key);
+  name_hash: uint32 (key);
+  name: string;
   time: int;
 }
 
@@ -685,6 +693,7 @@ table PartMeshData {
 
 table AnimationData {
   name: string (key);
+  name_hash: uint32;
 
   parts_initial_attributes: [PartAttributes];
   parts_animation_data: [PartAnimationData];
@@ -706,6 +715,7 @@ table SsAnimeBinary {
   version: uint = 0x00000001;
 
   name: string;
+  name_hash: uint32;
 
   parts: [PartData];
   animations: [AnimationData];

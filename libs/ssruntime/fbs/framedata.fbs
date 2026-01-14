@@ -1,8 +1,8 @@
 namespace ss.runtime;
 
-table PartAttributeCell {
+struct PartAttributeCell {
  map_id: int; // hash or name
- name: string;
+ name_hash: uint32; // instead of name: string;
 }
 
 struct Vec2 {
@@ -33,7 +33,7 @@ enum BlendType: ubyte {
   Invert,
 }
 
-table PartAttributePartColor {
+struct PartAttributePartColor {
   blend_type: BlendType;
 
   lt: SsAttributePartColorKeyValueColor;
@@ -54,8 +54,8 @@ table PartAttributeDeform {
   index: [short];
 }
 
-table PartAttributeShader {
-  id: string;
+struct PartAttributeShader {
+  id_hash: uint32; // instead of id: string;
   param0: float;
   param1: float;
   param2: float;
@@ -65,9 +65,9 @@ table PartAttributeShader {
   param6: float;
   param7: float;
   map0_id: int;
-  map0_name: string;
+  map0_name_hash: uint32; // instead of map0_name: string;
   map1_id: int;
-  map1_name: string;
+  map1_name_hash: uint32; // instead of map1_name: string;
 }
 
 enum UpdateAttributeFlags: ulong (bit_flags) {
@@ -112,8 +112,6 @@ enum UpdateAttributeFlags: ulong (bit_flags) {
 }
 
 table PartState {
-  part_index: ushort;
-
   update_flag: UpdateAttributeFlags = 0;
 
   cell: PartAttributeCell;
@@ -153,12 +151,13 @@ table PartState {
   mask: float = 0.0;
   skew_x: float = 0.0;
   skew_y: float = 0.0;
-  deform: PartAttributeDeform;
+  deform: int = -1;
   texture: int = -1;
 }
 
 table FrameData {
   parts: [PartState];
+  deforms: [PartAttributeDeform];
 }
 
 root_type FrameData;

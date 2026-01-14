@@ -215,9 +215,10 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
 }
 
 pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&sspj::ssee::SsEffectFile], ) -> Vec<ssab::ssab::EffectT> {
-    effect_file_vec.iter().map(|effect_file| {
+    let mut v = effect_file_vec.iter().map(|effect_file| {
         let mut effect_t = ssab::ssab::EffectT::default();
-        effect_t.name = effect_file.name.to_string();
+        effect_t.name_hash = crate::utils::fnv1a_hash_str(&effect_file.name);
+        effect_t.name = if effect_file.name.is_empty() { None } else { Some(effect_file.name.to_string()) };
         effect_t.fps = effect_file.effect_data.fps as i16;
         effect_t.is_lock_rand_seed = effect_file.effect_data.is_lock_rand_seed;
         effect_t.lock_rand_seed = effect_file.effect_data.lock_rand_seed as i16;
@@ -228,5 +229,7 @@ pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&ss
         effect_t.effect_node = if effect_file.effect_data.node_list.is_empty() { None } else { Some(convert_effect_node_list(&effect_file.effect_data.node_list)) };
 
         effect_t
-    }).collect::<Vec<_>>()
+    }).collect::<Vec<_>>();
+    v.sort_by_key(|e| e.name_hash);
+    v
 }

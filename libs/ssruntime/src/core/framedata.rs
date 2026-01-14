@@ -1,22 +1,23 @@
 use crate::runtime;
+use crate::runtime::framedata::ss::runtime::{PartAttributeCell, PartAttributePartColor, PartAttributeShader};
 
-fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, index: u16, part: &ssab::ssab::PartAnimationData, frame_no: i32) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartState<'a>> {
+fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::PartAnimationData, frame_no: i32, deforms: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>) -> ::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartState<'a>> {
     let mut p_args = runtime::framedata::ss::runtime::PartStateArgs::default();
 
-    p_args.part_index = index;
+    let mut cell_: Option<PartAttributeCell> = None;
     p_args.update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
     part.cell_array().map(|cell_array| {
         cell_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|cell| {
             cell.value().map(|value| {
-                let mut c_args = runtime::framedata::ss::runtime::PartAttributeCellArgs::default();
-                c_args.map_id = value.map_id();
-                c_args.name = value.name().map(|name| fb.create_string(&name));
+                cell_ = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
 
-                p_args.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::create(fb, &c_args));
-                p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
             });
         });
     });
+    if cell_.is_some() {
+        p_args.cell = cell_.as_ref();
+        p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
+    }
     part.pos_x_array().map(|pos_x_array| {
         pos_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_x| {
             p_args.position_x = pos_x.value();
@@ -113,11 +114,12 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, index: u16, part: &
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeHide;
         });
     });
-    part.parts_color_array().map(|parts_color_array| {
-        parts_color_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|parts_color| {
-            p_args.parts_color = parts_color.value().map(|color| {
-                let mut c_args = runtime::framedata::ss::runtime::PartAttributePartColorArgs::default();
-                c_args.blend_type = match color.blend_type() {
+
+    let mut parts_color_: Option<PartAttributePartColor> = None;
+    part.parts_color_array().and_then(|parts_color_array| {
+        parts_color_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).and_then(|parts_color| {
+            parts_color.value().map(|color| {
+                let blend_type = match color.blend_type() {
                     ssab::ssab::BlendType::Mix => runtime::framedata::ss::runtime::BlendType::Mix,
                     ssab::ssab::BlendType::Mul => runtime::framedata::ss::runtime::BlendType::Mul,
                     ssab::ssab::BlendType::Add => runtime::framedata::ss::runtime::BlendType::Add,
@@ -126,59 +128,67 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, index: u16, part: &
                     ssab::ssab::BlendType::Screen => runtime::framedata::ss::runtime::BlendType::Screen,
                     ssab::ssab::BlendType::Exclusion => runtime::framedata::ss::runtime::BlendType::Exclusion,
                     ssab::ssab::BlendType::Invert => runtime::framedata::ss::runtime::BlendType::Invert,
+                    // TODO: blend mode
                     _ => runtime::framedata::ss::runtime::BlendType::Mix,
                 };
                 fn convert_u8rect(rgba: &ssab::ssab::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {
                     runtime::framedata::ss::runtime::U8Rect::new(rgba.a(), rgba.r(), rgba.g(), rgba.b())
                 }
-                let lt = color.lt().map(|lt|
+                let lt = color.lt().and_then(|lt|
                     lt.rgba().map(|rgba| runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lt.rate()))
-                ).flatten();
-                c_args.lt = lt.as_ref();
-                let rt = color.rt().map(|rt|
+                ).unwrap(); // TODO: improve
+                let rt = color.rt().and_then(|rt|
                     rt.rgba().map(|rgba| runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rt.rate()))
-                ).flatten();
-                c_args.rt = rt.as_ref();
-                let lb = color.lb().map(|lb|
+                ).unwrap(); // TODO: improve
+                let lb = color.lb().and_then(|lb|
                     lb.rgba().map(|rgba| runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lb.rate()))
-                ).flatten();
-                c_args.lb = lb.as_ref();
-                let rb = color.rb().map(|rb|
+                ).unwrap(); // TODO: improve
+                let rb = color.rb().and_then(|rb|
                     rb.rgba().map(|rgba| runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rb.rate()))
-                ).flatten();
-                c_args.rb = rb.as_ref();
-
-                p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor;
-
-                runtime::framedata::ss::runtime::PartAttributePartColor::create(fb, &c_args)
-            });
-
+                ).unwrap(); // TODO: improve
+                let a = runtime::framedata::ss::runtime::PartAttributePartColor::new(
+                    blend_type,
+                    &lt,
+                    &rt,
+                    &lb,
+                    &rb
+                );
+                parts_color_ = Some(a);
+            })
         })
     });
-    part.shader_array().map(|shader_array| {
-        shader_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|shader| {
-            p_args.shader = shader.value().map(|shader| {
-                let mut s_args = runtime::framedata::ss::runtime::PartAttributeShaderArgs::default();
-                s_args.id = shader.id().map(|id| fb.create_string(&id));
-                s_args.param0 = shader.param0();
-                s_args.param1 = shader.param1();
-                s_args.param2 = shader.param2();
-                s_args.param3 = shader.param3();
-                s_args.param4 = shader.param4();
-                s_args.param5 = shader.param5();
-                s_args.param6 = shader.param6();
-                s_args.param7 = shader.param7();
-                s_args.map0_id = shader.map0_id();
-                s_args.map0_name = shader.map0_name().map(|name| fb.create_string(&name));
-                s_args.map1_id = shader.map1_id();
-                s_args.map1_name = shader.map1_name().map(|name| fb.create_string(&name));
+    if parts_color_.is_some() {
+        p_args.parts_color = parts_color_.as_ref();
+        p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor;
+    }
 
-                p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader;
-
-                runtime::framedata::ss::runtime::PartAttributeShader::create(fb, &s_args)
-            });
-        });
+    let mut shader_: Option<PartAttributeShader> = None;
+    part.shader_array().and_then(|shader_array| {
+        shader_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).and_then(|shader| {
+            shader.value().map(|shader| {
+                let s = runtime::framedata::ss::runtime::PartAttributeShader::new(
+                    shader.id_hash(),
+                    shader.param0(),
+                    shader.param1(),
+                    shader.param2(),
+                    shader.param3(),
+                    shader.param4(),
+                    shader.param5(),
+                    shader.param6(),
+                    shader.param7(),
+                    shader.map0_id(),
+                    shader.map0_name_hash(),
+                    shader.map1_id(),
+                    shader.map1_name_hash()
+                );
+                shader_ = Some(s);
+            })
+        })
     });
+    if shader_.is_some() {
+        p_args.shader = shader_.as_ref();
+        p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader;
+    }
     part.vertex_array().map(|vertex_array| {
         // TODO: implement
         /*
@@ -306,7 +316,8 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, index: u16, part: &
                     let v = index.iter().map(|v| v).collect::<Vec<_>>();
                     fb.create_vector(&v)
                 });
-                p_args.deform = Some(runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &d_args));
+                deforms.push(runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &d_args));
+                p_args.deform = deforms.len() as i32 - 1;
                 p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform;
             });
         });
@@ -321,16 +332,27 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, index: u16, part: &
     runtime::framedata::ss::runtime::PartState::create(fb, &p_args)
 }
 
-fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, p: &flatbuffers::Vector<::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData>>, frame_no: i32) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartState<'a>>>> {
-    let parts = p.iter().enumerate().map(|(index, part)| {
-        get_part(fb, index as u16, &part, frame_no)
+fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+                 p: &flatbuffers::Vector<::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData>>,
+                 frame_no: i32,
+                 deforms: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
+) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartState<'a>>>> {
+    let mut deform_vec: Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform>> = Vec::new();
+    let parts = p.iter().map(|part| {
+        get_part(fb, &part, frame_no, &mut deform_vec)
     }).collect::<Vec<_>>();
+    if !deform_vec.is_empty() {
+        *deforms = Some(fb.create_vector(&deform_vec));
+    }
+
     fb.create_vector(&parts)
 }
 
 pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation: &ssab::ssab::AnimationData, frame_no: i32) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
-    args.parts = animation.parts_animation_data().map( |parts_animation_data| get_parts(fb, &parts_animation_data, frame_no));
+    let mut deforms: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
+    args.parts = animation.parts_animation_data().map( |parts_animation_data| get_parts(fb, &parts_animation_data, frame_no, &mut deforms));
+    args.deforms = deforms;
     runtime::framedata::ss::runtime::FrameData::create(fb, &args)
 }
