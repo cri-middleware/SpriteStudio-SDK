@@ -113,10 +113,10 @@ impl ::flatbuffers::SimpleToVerifyInSlice for BoundsType {}
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_BLEND_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
-pub const ENUM_MAX_BLEND_TYPE: u8 = 7;
+pub const ENUM_MAX_BLEND_TYPE: u8 = 11;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_BLEND_TYPE: [BlendType; 8] = [
+pub const ENUM_VALUES_BLEND_TYPE: [BlendType; 12] = [
   BlendType::Mix,
   BlendType::Mul,
   BlendType::Add,
@@ -125,6 +125,10 @@ pub const ENUM_VALUES_BLEND_TYPE: [BlendType; 8] = [
   BlendType::Screen,
   BlendType::Exclusion,
   BlendType::Invert,
+  BlendType::Mul2,
+  BlendType::Div2,
+  BlendType::Screen2,
+  BlendType::Overlay2,
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -140,9 +144,13 @@ impl BlendType {
   pub const Screen: Self = Self(5);
   pub const Exclusion: Self = Self(6);
   pub const Invert: Self = Self(7);
+  pub const Mul2: Self = Self(8);
+  pub const Div2: Self = Self(9);
+  pub const Screen2: Self = Self(10);
+  pub const Overlay2: Self = Self(11);
 
   pub const ENUM_MIN: u8 = 0;
-  pub const ENUM_MAX: u8 = 7;
+  pub const ENUM_MAX: u8 = 11;
   pub const ENUM_VALUES: &'static [Self] = &[
     Self::Mix,
     Self::Mul,
@@ -152,6 +160,10 @@ impl BlendType {
     Self::Screen,
     Self::Exclusion,
     Self::Invert,
+    Self::Mul2,
+    Self::Div2,
+    Self::Screen2,
+    Self::Overlay2,
   ];
   /// Returns the variant's name or "" if unknown.
   pub fn variant_name(self) -> Option<&'static str> {
@@ -164,6 +176,10 @@ impl BlendType {
       Self::Screen => Some("Screen"),
       Self::Exclusion => Some("Exclusion"),
       Self::Invert => Some("Invert"),
+      Self::Mul2 => Some("Mul2"),
+      Self::Div2 => Some("Div2"),
+      Self::Screen2 => Some("Screen2"),
+      Self::Overlay2 => Some("Overlay2"),
       _ => None,
     }
   }
