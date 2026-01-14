@@ -17,28 +17,12 @@ pub extern "C" fn ss_runtime_destroy(context: *mut crate::Context) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_initialize_data(context: *mut crate::Context, out_data: *mut *mut c_uchar, out_len: *mut usize) {
-    let context = unsafe { &mut *context };
-    let ret = context.get_initialize_data();
-    unsafe {
-        *out_data = ret.as_ptr() as *mut c_uchar;
-        *out_len = ret.len();
-    }
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char) -> bool {
     let context = unsafe { &mut *context };
 
     let c_buf = unsafe { CStr::from_ptr(name) };
     let a = c_buf.to_string_lossy().into_owned();
-    let Some(ret) = context.setup_animation(&a) else {
-        return;
-    };
-    unsafe {
-        *out_data = ret.as_ptr() as *mut c_uchar;
-        *out_len = ret.len();
-    }
+    context.setup_animation(&a)
 }
 
 #[unsafe(no_mangle)]
