@@ -6740,7 +6740,7 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeCell<'a> {
 
 impl<'a> PartAttributeCell<'a> {
   pub const VT_MAP_ID: ::flatbuffers::VOffsetT = 4;
-  pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
+  pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -6749,10 +6749,10 @@ impl<'a> PartAttributeCell<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAttributeCellArgs<'args>
+    args: &'args PartAttributeCellArgs
   ) -> ::flatbuffers::WIPOffset<PartAttributeCell<'bldr>> {
     let mut builder = PartAttributeCellBuilder::new(_fbb);
-    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_name_hash(args.name_hash);
     builder.add_map_id(args.map_id);
     builder.finish()
   }
@@ -6766,11 +6766,11 @@ impl<'a> PartAttributeCell<'a> {
     unsafe { self._tab.get::<i32>(PartAttributeCell::VT_MAP_ID, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn name(&self) -> Option<&'a str> {
+  pub fn name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeCell::VT_NAME, None)}
+    unsafe { self._tab.get::<u32>(PartAttributeCell::VT_NAME_HASH, Some(0)).unwrap()}
   }
 }
 
@@ -6781,21 +6781,21 @@ impl ::flatbuffers::Verifiable for PartAttributeCell<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<i32>("map_id", Self::VT_MAP_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartAttributeCellArgs<'a> {
+pub struct PartAttributeCellArgs {
     pub map_id: i32,
-    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub name_hash: u32,
 }
-impl<'a> Default for PartAttributeCellArgs<'a> {
+impl<'a> Default for PartAttributeCellArgs {
   #[inline]
   fn default() -> Self {
     PartAttributeCellArgs {
       map_id: 0,
-      name: None,
+      name_hash: 0,
     }
   }
 }
@@ -6810,8 +6810,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeCellBuilder<'a, 
     self.fbb_.push_slot::<i32>(PartAttributeCell::VT_MAP_ID, map_id, 0);
   }
   #[inline]
-  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeCell::VT_NAME, name);
+  pub fn add_name_hash(&mut self, name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeCell::VT_NAME_HASH, name_hash, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributeCellBuilder<'a, 'b, A> {
@@ -6832,7 +6832,7 @@ impl ::core::fmt::Debug for PartAttributeCell<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeCell");
       ds.field("map_id", &self.map_id());
-      ds.field("name", &self.name());
+      ds.field("name_hash", &self.name_hash());
       ds.finish()
   }
 }
@@ -7279,9 +7279,9 @@ impl<'a> PartAttributeInstance<'a> {
   pub const VT_PINGPONG: ::flatbuffers::VOffsetT = 4;
   pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 6;
   pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 8;
-  pub const VT_START_LABEL: ::flatbuffers::VOffsetT = 10;
+  pub const VT_START_LABEL_HASH: ::flatbuffers::VOffsetT = 10;
   pub const VT_START_OFFSET: ::flatbuffers::VOffsetT = 12;
-  pub const VT_END_LABEL: ::flatbuffers::VOffsetT = 14;
+  pub const VT_END_LABEL_HASH: ::flatbuffers::VOffsetT = 14;
   pub const VT_END_OFFSET: ::flatbuffers::VOffsetT = 16;
   pub const VT_SPEED: ::flatbuffers::VOffsetT = 18;
 
@@ -7292,14 +7292,14 @@ impl<'a> PartAttributeInstance<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAttributeInstanceArgs<'args>
+    args: &'args PartAttributeInstanceArgs
   ) -> ::flatbuffers::WIPOffset<PartAttributeInstance<'bldr>> {
     let mut builder = PartAttributeInstanceBuilder::new(_fbb);
     builder.add_speed(args.speed);
     builder.add_end_offset(args.end_offset);
-    if let Some(x) = args.end_label { builder.add_end_label(x); }
+    builder.add_end_label_hash(args.end_label_hash);
     builder.add_start_offset(args.start_offset);
-    if let Some(x) = args.start_label { builder.add_start_label(x); }
+    builder.add_start_label_hash(args.start_label_hash);
     builder.add_loop_num(args.loop_num);
     builder.add_independent(args.independent);
     builder.add_pingpong(args.pingpong);
@@ -7329,11 +7329,11 @@ impl<'a> PartAttributeInstance<'a> {
     unsafe { self._tab.get::<i32>(PartAttributeInstance::VT_LOOP_NUM, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn start_label(&self) -> Option<&'a str> {
+  pub fn start_label_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeInstance::VT_START_LABEL, None)}
+    unsafe { self._tab.get::<u32>(PartAttributeInstance::VT_START_LABEL_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn start_offset(&self) -> i32 {
@@ -7343,11 +7343,11 @@ impl<'a> PartAttributeInstance<'a> {
     unsafe { self._tab.get::<i32>(PartAttributeInstance::VT_START_OFFSET, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn end_label(&self) -> Option<&'a str> {
+  pub fn end_label_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeInstance::VT_END_LABEL, None)}
+    unsafe { self._tab.get::<u32>(PartAttributeInstance::VT_END_LABEL_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn end_offset(&self) -> i32 {
@@ -7374,35 +7374,35 @@ impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
      .visit_field::<bool>("pingpong", Self::VT_PINGPONG, false)?
      .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
      .visit_field::<i32>("loop_num", Self::VT_LOOP_NUM, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("start_label", Self::VT_START_LABEL, false)?
+     .visit_field::<u32>("start_label_hash", Self::VT_START_LABEL_HASH, false)?
      .visit_field::<i32>("start_offset", Self::VT_START_OFFSET, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("end_label", Self::VT_END_LABEL, false)?
+     .visit_field::<u32>("end_label_hash", Self::VT_END_LABEL_HASH, false)?
      .visit_field::<i32>("end_offset", Self::VT_END_OFFSET, false)?
      .visit_field::<f32>("speed", Self::VT_SPEED, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartAttributeInstanceArgs<'a> {
+pub struct PartAttributeInstanceArgs {
     pub pingpong: bool,
     pub independent: bool,
     pub loop_num: i32,
-    pub start_label: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub start_label_hash: u32,
     pub start_offset: i32,
-    pub end_label: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub end_label_hash: u32,
     pub end_offset: i32,
     pub speed: f32,
 }
-impl<'a> Default for PartAttributeInstanceArgs<'a> {
+impl<'a> Default for PartAttributeInstanceArgs {
   #[inline]
   fn default() -> Self {
     PartAttributeInstanceArgs {
       pingpong: false,
       independent: false,
       loop_num: 0,
-      start_label: None,
+      start_label_hash: 0,
       start_offset: 0,
-      end_label: None,
+      end_label_hash: 0,
       end_offset: 0,
       speed: 0.0,
     }
@@ -7427,16 +7427,16 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeInstanceBuilder<
     self.fbb_.push_slot::<i32>(PartAttributeInstance::VT_LOOP_NUM, loop_num, 0);
   }
   #[inline]
-  pub fn add_start_label(&mut self, start_label: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeInstance::VT_START_LABEL, start_label);
+  pub fn add_start_label_hash(&mut self, start_label_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeInstance::VT_START_LABEL_HASH, start_label_hash, 0);
   }
   #[inline]
   pub fn add_start_offset(&mut self, start_offset: i32) {
     self.fbb_.push_slot::<i32>(PartAttributeInstance::VT_START_OFFSET, start_offset, 0);
   }
   #[inline]
-  pub fn add_end_label(&mut self, end_label: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeInstance::VT_END_LABEL, end_label);
+  pub fn add_end_label_hash(&mut self, end_label_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeInstance::VT_END_LABEL_HASH, end_label_hash, 0);
   }
   #[inline]
   pub fn add_end_offset(&mut self, end_offset: i32) {
@@ -7467,9 +7467,9 @@ impl ::core::fmt::Debug for PartAttributeInstance<'_> {
       ds.field("pingpong", &self.pingpong());
       ds.field("independent", &self.independent());
       ds.field("loop_num", &self.loop_num());
-      ds.field("start_label", &self.start_label());
+      ds.field("start_label_hash", &self.start_label_hash());
       ds.field("start_offset", &self.start_offset());
-      ds.field("end_label", &self.end_label());
+      ds.field("end_label_hash", &self.end_label_hash());
       ds.field("end_offset", &self.end_offset());
       ds.field("speed", &self.speed());
       ds.finish()
@@ -7752,18 +7752,19 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeShader<'a> {
 
 impl<'a> PartAttributeShader<'a> {
   pub const VT_ID: ::flatbuffers::VOffsetT = 4;
-  pub const VT_PARAM0: ::flatbuffers::VOffsetT = 6;
-  pub const VT_PARAM1: ::flatbuffers::VOffsetT = 8;
-  pub const VT_PARAM2: ::flatbuffers::VOffsetT = 10;
-  pub const VT_PARAM3: ::flatbuffers::VOffsetT = 12;
-  pub const VT_PARAM4: ::flatbuffers::VOffsetT = 14;
-  pub const VT_PARAM5: ::flatbuffers::VOffsetT = 16;
-  pub const VT_PARAM6: ::flatbuffers::VOffsetT = 18;
-  pub const VT_PARAM7: ::flatbuffers::VOffsetT = 20;
-  pub const VT_MAP0_ID: ::flatbuffers::VOffsetT = 22;
-  pub const VT_MAP0_NAME: ::flatbuffers::VOffsetT = 24;
-  pub const VT_MAP1_ID: ::flatbuffers::VOffsetT = 26;
-  pub const VT_MAP1_NAME: ::flatbuffers::VOffsetT = 28;
+  pub const VT_ID_HASH: ::flatbuffers::VOffsetT = 6;
+  pub const VT_PARAM0: ::flatbuffers::VOffsetT = 8;
+  pub const VT_PARAM1: ::flatbuffers::VOffsetT = 10;
+  pub const VT_PARAM2: ::flatbuffers::VOffsetT = 12;
+  pub const VT_PARAM3: ::flatbuffers::VOffsetT = 14;
+  pub const VT_PARAM4: ::flatbuffers::VOffsetT = 16;
+  pub const VT_PARAM5: ::flatbuffers::VOffsetT = 18;
+  pub const VT_PARAM6: ::flatbuffers::VOffsetT = 20;
+  pub const VT_PARAM7: ::flatbuffers::VOffsetT = 22;
+  pub const VT_MAP0_ID: ::flatbuffers::VOffsetT = 24;
+  pub const VT_MAP0_NAME_HASH: ::flatbuffers::VOffsetT = 26;
+  pub const VT_MAP1_ID: ::flatbuffers::VOffsetT = 28;
+  pub const VT_MAP1_NAME_HASH: ::flatbuffers::VOffsetT = 30;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -7775,9 +7776,9 @@ impl<'a> PartAttributeShader<'a> {
     args: &'args PartAttributeShaderArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAttributeShader<'bldr>> {
     let mut builder = PartAttributeShaderBuilder::new(_fbb);
-    if let Some(x) = args.map1_name { builder.add_map1_name(x); }
+    builder.add_map1_name_hash(args.map1_name_hash);
     builder.add_map1_id(args.map1_id);
-    if let Some(x) = args.map0_name { builder.add_map0_name(x); }
+    builder.add_map0_name_hash(args.map0_name_hash);
     builder.add_map0_id(args.map0_id);
     builder.add_param7(args.param7);
     builder.add_param6(args.param6);
@@ -7787,6 +7788,7 @@ impl<'a> PartAttributeShader<'a> {
     builder.add_param2(args.param2);
     builder.add_param1(args.param1);
     builder.add_param0(args.param0);
+    builder.add_id_hash(args.id_hash);
     if let Some(x) = args.id { builder.add_id(x); }
     builder.finish()
   }
@@ -7798,6 +7800,13 @@ impl<'a> PartAttributeShader<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeShader::VT_ID, None)}
+  }
+  #[inline]
+  pub fn id_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(PartAttributeShader::VT_ID_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn param0(&self) -> f32 {
@@ -7863,11 +7872,11 @@ impl<'a> PartAttributeShader<'a> {
     unsafe { self._tab.get::<i32>(PartAttributeShader::VT_MAP0_ID, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn map0_name(&self) -> Option<&'a str> {
+  pub fn map0_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeShader::VT_MAP0_NAME, None)}
+    unsafe { self._tab.get::<u32>(PartAttributeShader::VT_MAP0_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn map1_id(&self) -> i32 {
@@ -7877,11 +7886,11 @@ impl<'a> PartAttributeShader<'a> {
     unsafe { self._tab.get::<i32>(PartAttributeShader::VT_MAP1_ID, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn map1_name(&self) -> Option<&'a str> {
+  pub fn map1_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartAttributeShader::VT_MAP1_NAME, None)}
+    unsafe { self._tab.get::<u32>(PartAttributeShader::VT_MAP1_NAME_HASH, Some(0)).unwrap()}
   }
 }
 
@@ -7892,6 +7901,7 @@ impl ::flatbuffers::Verifiable for PartAttributeShader<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("id", Self::VT_ID, false)?
+     .visit_field::<u32>("id_hash", Self::VT_ID_HASH, false)?
      .visit_field::<f32>("param0", Self::VT_PARAM0, false)?
      .visit_field::<f32>("param1", Self::VT_PARAM1, false)?
      .visit_field::<f32>("param2", Self::VT_PARAM2, false)?
@@ -7901,15 +7911,16 @@ impl ::flatbuffers::Verifiable for PartAttributeShader<'_> {
      .visit_field::<f32>("param6", Self::VT_PARAM6, false)?
      .visit_field::<f32>("param7", Self::VT_PARAM7, false)?
      .visit_field::<i32>("map0_id", Self::VT_MAP0_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("map0_name", Self::VT_MAP0_NAME, false)?
+     .visit_field::<u32>("map0_name_hash", Self::VT_MAP0_NAME_HASH, false)?
      .visit_field::<i32>("map1_id", Self::VT_MAP1_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("map1_name", Self::VT_MAP1_NAME, false)?
+     .visit_field::<u32>("map1_name_hash", Self::VT_MAP1_NAME_HASH, false)?
      .finish();
     Ok(())
   }
 }
 pub struct PartAttributeShaderArgs<'a> {
     pub id: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub id_hash: u32,
     pub param0: f32,
     pub param1: f32,
     pub param2: f32,
@@ -7919,15 +7930,16 @@ pub struct PartAttributeShaderArgs<'a> {
     pub param6: f32,
     pub param7: f32,
     pub map0_id: i32,
-    pub map0_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub map0_name_hash: u32,
     pub map1_id: i32,
-    pub map1_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub map1_name_hash: u32,
 }
 impl<'a> Default for PartAttributeShaderArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartAttributeShaderArgs {
       id: None,
+      id_hash: 0,
       param0: 0.0,
       param1: 0.0,
       param2: 0.0,
@@ -7937,9 +7949,9 @@ impl<'a> Default for PartAttributeShaderArgs<'a> {
       param6: 0.0,
       param7: 0.0,
       map0_id: 0,
-      map0_name: None,
+      map0_name_hash: 0,
       map1_id: 0,
-      map1_name: None,
+      map1_name_hash: 0,
     }
   }
 }
@@ -7952,6 +7964,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeShaderBuilder<'a
   #[inline]
   pub fn add_id(&mut self, id: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeShader::VT_ID, id);
+  }
+  #[inline]
+  pub fn add_id_hash(&mut self, id_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeShader::VT_ID_HASH, id_hash, 0);
   }
   #[inline]
   pub fn add_param0(&mut self, param0: f32) {
@@ -7990,16 +8006,16 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeShaderBuilder<'a
     self.fbb_.push_slot::<i32>(PartAttributeShader::VT_MAP0_ID, map0_id, 0);
   }
   #[inline]
-  pub fn add_map0_name(&mut self, map0_name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeShader::VT_MAP0_NAME, map0_name);
+  pub fn add_map0_name_hash(&mut self, map0_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeShader::VT_MAP0_NAME_HASH, map0_name_hash, 0);
   }
   #[inline]
   pub fn add_map1_id(&mut self, map1_id: i32) {
     self.fbb_.push_slot::<i32>(PartAttributeShader::VT_MAP1_ID, map1_id, 0);
   }
   #[inline]
-  pub fn add_map1_name(&mut self, map1_name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeShader::VT_MAP1_NAME, map1_name);
+  pub fn add_map1_name_hash(&mut self, map1_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeShader::VT_MAP1_NAME_HASH, map1_name_hash, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributeShaderBuilder<'a, 'b, A> {
@@ -8020,6 +8036,7 @@ impl ::core::fmt::Debug for PartAttributeShader<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeShader");
       ds.field("id", &self.id());
+      ds.field("id_hash", &self.id_hash());
       ds.field("param0", &self.param0());
       ds.field("param1", &self.param1());
       ds.field("param2", &self.param2());
@@ -8029,9 +8046,9 @@ impl ::core::fmt::Debug for PartAttributeShader<'_> {
       ds.field("param6", &self.param6());
       ds.field("param7", &self.param7());
       ds.field("map0_id", &self.map0_id());
-      ds.field("map0_name", &self.map0_name());
+      ds.field("map0_name_hash", &self.map0_name_hash());
       ds.field("map1_id", &self.map1_id());
-      ds.field("map1_name", &self.map1_name());
+      ds.field("map1_name_hash", &self.map1_name_hash());
       ds.finish()
   }
 }
@@ -9859,7 +9876,7 @@ impl<'a> ::flatbuffers::Follow<'a> for PartTypeInstance<'a> {
 }
 
 impl<'a> PartTypeInstance<'a> {
-  pub const VT_REF_ANIME: ::flatbuffers::VOffsetT = 4;
+  pub const VT_REF_ANIME_HASH: ::flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -9868,20 +9885,20 @@ impl<'a> PartTypeInstance<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartTypeInstanceArgs<'args>
+    args: &'args PartTypeInstanceArgs
   ) -> ::flatbuffers::WIPOffset<PartTypeInstance<'bldr>> {
     let mut builder = PartTypeInstanceBuilder::new(_fbb);
-    if let Some(x) = args.ref_anime { builder.add_ref_anime(x); }
+    builder.add_ref_anime_hash(args.ref_anime_hash);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn ref_anime(&self) -> Option<&'a str> {
+  pub fn ref_anime_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartTypeInstance::VT_REF_ANIME, None)}
+    unsafe { self._tab.get::<u32>(PartTypeInstance::VT_REF_ANIME_HASH, Some(0)).unwrap()}
   }
 }
 
@@ -9891,19 +9908,19 @@ impl ::flatbuffers::Verifiable for PartTypeInstance<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime", Self::VT_REF_ANIME, false)?
+     .visit_field::<u32>("ref_anime_hash", Self::VT_REF_ANIME_HASH, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartTypeInstanceArgs<'a> {
-    pub ref_anime: Option<::flatbuffers::WIPOffset<&'a str>>,
+pub struct PartTypeInstanceArgs {
+    pub ref_anime_hash: u32,
 }
-impl<'a> Default for PartTypeInstanceArgs<'a> {
+impl<'a> Default for PartTypeInstanceArgs {
   #[inline]
   fn default() -> Self {
     PartTypeInstanceArgs {
-      ref_anime: None,
+      ref_anime_hash: 0,
     }
   }
 }
@@ -9914,8 +9931,8 @@ pub struct PartTypeInstanceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a>
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_ref_anime(&mut self, ref_anime: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartTypeInstance::VT_REF_ANIME, ref_anime);
+  pub fn add_ref_anime_hash(&mut self, ref_anime_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartTypeInstance::VT_REF_ANIME_HASH, ref_anime_hash, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartTypeInstanceBuilder<'a, 'b, A> {
@@ -9935,7 +9952,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, '
 impl ::core::fmt::Debug for PartTypeInstance<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartTypeInstance");
-      ds.field("ref_anime", &self.ref_anime());
+      ds.field("ref_anime_hash", &self.ref_anime_hash());
       ds.finish()
   }
 }
@@ -9955,7 +9972,7 @@ impl<'a> ::flatbuffers::Follow<'a> for PartTypeEffect<'a> {
 }
 
 impl<'a> PartTypeEffect<'a> {
-  pub const VT_REF_EFFECT_NAME: ::flatbuffers::VOffsetT = 4;
+  pub const VT_REF_EFFECT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -9964,20 +9981,20 @@ impl<'a> PartTypeEffect<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartTypeEffectArgs<'args>
+    args: &'args PartTypeEffectArgs
   ) -> ::flatbuffers::WIPOffset<PartTypeEffect<'bldr>> {
     let mut builder = PartTypeEffectBuilder::new(_fbb);
-    if let Some(x) = args.ref_effect_name { builder.add_ref_effect_name(x); }
+    builder.add_ref_effect_name_hash(args.ref_effect_name_hash);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn ref_effect_name(&self) -> Option<&'a str> {
+  pub fn ref_effect_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartTypeEffect::VT_REF_EFFECT_NAME, None)}
+    unsafe { self._tab.get::<u32>(PartTypeEffect::VT_REF_EFFECT_NAME_HASH, Some(0)).unwrap()}
   }
 }
 
@@ -9987,19 +10004,19 @@ impl ::flatbuffers::Verifiable for PartTypeEffect<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_effect_name", Self::VT_REF_EFFECT_NAME, false)?
+     .visit_field::<u32>("ref_effect_name_hash", Self::VT_REF_EFFECT_NAME_HASH, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartTypeEffectArgs<'a> {
-    pub ref_effect_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+pub struct PartTypeEffectArgs {
+    pub ref_effect_name_hash: u32,
 }
-impl<'a> Default for PartTypeEffectArgs<'a> {
+impl<'a> Default for PartTypeEffectArgs {
   #[inline]
   fn default() -> Self {
     PartTypeEffectArgs {
-      ref_effect_name: None,
+      ref_effect_name_hash: 0,
     }
   }
 }
@@ -10010,8 +10027,8 @@ pub struct PartTypeEffectBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeEffectBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_ref_effect_name(&mut self, ref_effect_name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartTypeEffect::VT_REF_EFFECT_NAME, ref_effect_name);
+  pub fn add_ref_effect_name_hash(&mut self, ref_effect_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartTypeEffect::VT_REF_EFFECT_NAME_HASH, ref_effect_name_hash, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartTypeEffectBuilder<'a, 'b, A> {
@@ -10031,7 +10048,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeEffectBuilder<'a, 'b,
 impl ::core::fmt::Debug for PartTypeEffect<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartTypeEffect");
-      ds.field("ref_effect_name", &self.ref_effect_name());
+      ds.field("ref_effect_name_hash", &self.ref_effect_name_hash());
       ds.finish()
   }
 }

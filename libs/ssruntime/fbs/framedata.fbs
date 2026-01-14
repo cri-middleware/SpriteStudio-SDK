@@ -1,8 +1,8 @@
 namespace ss.runtime;
 
-table PartAttributeCell {
+struct PartAttributeCell {
  map_id: int; // hash or name
- name: string;
+ name_hash: uint32; // instead of name: string;
 }
 
 struct Vec2 {
@@ -33,7 +33,7 @@ enum BlendType: ubyte {
   Invert,
 }
 
-table PartAttributePartColor {
+struct PartAttributePartColor {
   blend_type: BlendType;
 
   lt: SsAttributePartColorKeyValueColor;
@@ -54,8 +54,8 @@ table PartAttributeDeform {
   index: [short];
 }
 
-table PartAttributeShader {
-  id: string;
+struct PartAttributeShader {
+  id_hash: uint32; // instead of id: string;
   param0: float;
   param1: float;
   param2: float;
@@ -65,9 +65,9 @@ table PartAttributeShader {
   param6: float;
   param7: float;
   map0_id: int;
-  map0_name: string;
+  map0_name_hash: uint32; // instead of map0_name: string;
   map1_id: int;
-  map1_name: string;
+  map1_name_hash: uint32; // instead of map1_name: string;
 }
 
 enum UpdateAttributeFlags: ulong (bit_flags) {
@@ -111,54 +111,55 @@ enum UpdateAttributeFlags: ulong (bit_flags) {
   AttributeTexture,
 }
 
-table PartState {
+struct PartState {
   part_index: ushort;
 
-  update_flag: UpdateAttributeFlags = 0;
+  update_flag: UpdateAttributeFlags;
 
   cell: PartAttributeCell;
-  position_x: float = 0.0;
-  position_y: float = 0.0;
-  position_z: float = 0.0;
-  rotation_x: float = 0.0;
-  rotation_y: float = 0.0;
-  rotation_z: float = 0.0;
-  scale_x: float = 1.0;
-  scale_y: float = 1.0;
-  local_scale_x: float = 1.0;
-  local_scale_y: float = 1.0;
-  opacity: float = 1.0;
-  localopacity: float = 1.0;
-  priority: int = 0;
-  flip_v: bool = false;
-  flip_h: bool = false;
-  hide: bool = false;
+  position_x: float;
+  position_y: float;
+  position_z: float;
+  rotation_x: float;
+  rotation_y: float;
+  rotation_z: float;
+  scale_x: float;
+  scale_y: float;
+  local_scale_x: float;
+  local_scale_y: float;
+  opacity: float;
+  localopacity: float;
+  priority: int;
+  flip_v: bool;
+  flip_h: bool;
+  hide: bool;
   parts_color: PartAttributePartColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
-  pivot_x: float = 0.0;
-  pivot_y: float = 0.0;
-  anchor_x: float = 0.0;
-  anchor_y: float = 0.0;
-  size_x: float = 1.0;
-  size_y: float = 1.0;
-  img_flip_h: bool = false;
-  img_flip_v: bool = false;
-  uv_move_x: float = 0.0;
-  uv_move_y: float = 0.0;
-  uv_move_z: float = 0.0;
-  uv_scale_x: float = 1.0;
-  uv_scale_y: float = 1.0;
-  bounding_radius: float = 0.0;
-  mask: float = 0.0;
-  skew_x: float = 0.0;
-  skew_y: float = 0.0;
-  deform: PartAttributeDeform;
-  texture: int = -1;
+  pivot_x: float;
+  pivot_y: float;
+  anchor_x: float;
+  anchor_y: float;
+  size_x: float;
+  size_y: float;
+  img_flip_h: bool;
+  img_flip_v: bool;
+  uv_move_x: float;
+  uv_move_y: float;
+  uv_move_z: float;
+  uv_scale_x: float;
+  uv_scale_y: float;
+  bounding_radius: float;
+  mask: float;
+  skew_x: float;
+  skew_y: float;
+  deform: int; // index of FrameData.deforms
+  texture: int;
 }
 
 table FrameData {
   parts: [PartState];
+  deforms: [PartAttributeDeform];
 }
 
 root_type FrameData;

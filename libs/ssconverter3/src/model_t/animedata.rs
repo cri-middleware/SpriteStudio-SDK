@@ -132,9 +132,9 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                         instance_t.pingpong = key.value.pingpong;
                         instance_t.independent = key.value.independent;
                         instance_t.loop_num = key.value.loop_num;
-                        instance_t.start_label = Some(key.value.start_label.to_string());
+                        instance_t.start_label_hash = crate::utils::fnv1a_hash_str(&key.value.start_label);
                         instance_t.start_offset = key.value.start_offset;
-                        instance_t.end_label = Some(key.value.end_label.to_string());
+                        instance_t.end_label_hash = crate::utils::fnv1a_hash_str(&key.value.end_label);
                         instance_t.end_offset = key.value.end_offset;
                         instance_t.speed = key.value.speed;
                         i_args.value = Some(Box::new(instance_t));
@@ -496,7 +496,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         c_args.index = key.time as u16;
                         let mut value = ssab::ssab::PartAttributeCellT::default();
                         value.map_id = key.value.map_id;
-                        value.name = Some(key.value.name.clone());
+                        value.name_hash = crate::utils::fnv1a_hash_str(&key.value.name);
                         c_args.value = Some(Box::new(value));
                         part_animation_data_t.cell_array.get_or_insert_with(Vec::new).push(c_args);
                     });
@@ -705,6 +705,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         s_args.interpolation = convert_interpolation_type(&key.ip_type);
                         let mut value = ssab::ssab::PartAttributeShaderT::default();
                         value.id = Some(key.value.id.clone());
+                        value.id_hash = crate::utils::fnv1a_hash_str(&key.value.id);
                         value.param0 = key.value.param0;
                         value.param1 = key.value.param1;
                         value.param2 = key.value.param2;
@@ -714,9 +715,9 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         value.param6 = key.value.param6;
                         value.param7 = key.value.param7;
                         value.map0_id = key.value.map0.map_id;
-                        value.map0_name = Some(key.value.map0.name.clone());
+                        value.map0_name_hash = crate::utils::fnv1a_hash_str(&key.value.map0.name);
                         value.map1_id = key.value.map1.map_id;
-                        value.map1_name = Some(key.value.map1.name.clone());
+                        value.map1_name_hash = crate::utils::fnv1a_hash_str(&key.value.map1.name);
                         s_args.value = Some(Box::new(value));
                         part_animation_data_t.shader_array.get_or_insert_with(Vec::new).push(s_args);
                     });
@@ -1037,13 +1038,13 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             },
             sspj::sstypes::SsPartType::Instance => {
                 let mut part_type = ssab::ssab::PartTypeInstanceT::default();
-                part_type.ref_anime = Some(part.ref_anime.to_string());
+                part_type.ref_anime_hash = crate::utils::fnv1a_hash_str(&part.ref_anime);
                 ssab::ssab::PartTypeT::PartTypeInstance(Box::new(part_type))
             },
             sspj::sstypes::SsPartType::Armature => ssab::ssab::PartTypeT::PartTypeArmature(Box::new(ssab::ssab::PartTypeNoneT::default())),
             sspj::sstypes::SsPartType::Effect => {
                 let mut part_type = ssab::ssab::PartTypeEffectT::default();
-                part_type.ref_effect_name = Some(part.ref_effect_name.to_string());
+                part_type.ref_effect_name_hash = crate::utils::fnv1a_hash_str(&part.ref_effect_name);
                 ssab::ssab::PartTypeT::PartTypeEffect(Box::new(part_type))
             },
             sspj::sstypes::SsPartType::Mesh => ssab::ssab::PartTypeT::PartTypeMesh(Box::new(ssab::ssab::PartTypeNoneT::default())),

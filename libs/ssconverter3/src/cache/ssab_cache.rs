@@ -539,13 +539,13 @@ impl From<&ssab::ssab::LabelT> for LabelKey {
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeCellKey {
     pub map_id: i32,
-    pub name: Option<String>,
+    pub name_hash: u32,
 }
 impl From<&ssab::ssab::PartAttributeCellT> for PartAttributeCellKey {
     fn from(value: &ssab::ssab::PartAttributeCellT) -> Self {
         Self {
             map_id: value.map_id,
-            name: value.name.clone(),
+            name_hash: value.name_hash,
         }
     }
 }
@@ -587,6 +587,7 @@ impl From<&ssab::ssab::PartAttributePartColorT> for PartAttributePartColorKey {
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeShaderKey {
     pub id: Option<String>,
+    pub id_hash: u32,
     pub param0: ordered_float::OrderedFloat<f32>,
     pub param1: ordered_float::OrderedFloat<f32>,
     pub param2: ordered_float::OrderedFloat<f32>,
@@ -596,14 +597,15 @@ pub struct PartAttributeShaderKey {
     pub param6: ordered_float::OrderedFloat<f32>,
     pub param7: ordered_float::OrderedFloat<f32>,
     pub map0_id: i32,
-    pub map0_name: Option<String>,
+    pub map0_name_hash: u32,
     pub map1_id: i32,
-    pub map1_name: Option<String>,
+    pub map1_name_hash: u32,
 }
 impl From<&ssab::ssab::PartAttributeShaderT> for PartAttributeShaderKey {
     fn from(value: &ssab::ssab::PartAttributeShaderT) -> Self {
         Self {
             id: value.id.clone(),
+            id_hash: value.id_hash,
             param0: ordered_float::OrderedFloat(value.param0),
             param1: ordered_float::OrderedFloat(value.param1),
             param2: ordered_float::OrderedFloat(value.param2),
@@ -613,9 +615,9 @@ impl From<&ssab::ssab::PartAttributeShaderT> for PartAttributeShaderKey {
             param6: ordered_float::OrderedFloat(value.param6),
             param7: ordered_float::OrderedFloat(value.param7),
             map0_id: value.map0_id,
-            map0_name: value.map0_name.clone(),
+            map0_name_hash: value.map0_name_hash,
             map1_id: value.map1_id,
-            map1_name: value.map1_name.clone(),
+            map1_name_hash: value.map1_name_hash,
         }
     }
 }
@@ -725,9 +727,9 @@ pub struct PartAttributeInstanceKey {
     pub pingpong: bool,
     pub independent: bool,
     pub loop_num: i32,
-    pub start_label: Option<String>,
+    pub start_label_hash: u32,
     pub start_offset: i32,
-    pub end_label: Option<String>,
+    pub end_label_hash: u32,
     pub end_offset: i32,
     pub speed: ordered_float::OrderedFloat<f32>,
 }
@@ -737,9 +739,9 @@ impl From<&ssab::ssab::PartAttributeInstanceT> for PartAttributeInstanceKey {
             pingpong: value.pingpong,
             independent: value.independent,
             loop_num: value.loop_num,
-            start_label: value.start_label.clone(),
+            start_label_hash: value.start_label_hash,
             start_offset: value.start_offset,
-            end_label: value.end_label.clone(),
+            end_label_hash: value.end_label_hash,
             end_offset: value.end_offset,
             speed: ordered_float::OrderedFloat(value.speed),
         }
@@ -1375,7 +1377,7 @@ impl<'a> SsabCache<'a> {
 
         let mut args = ssab::ssab::PartAttributeCellArgs::default();
         args.map_id = part_attribute_cell.map_id;
-        args.name = part_attribute_cell.name.as_ref().map(|s| fb.create_shared_string(s));
+        args.name_hash = part_attribute_cell.name_hash;
 
         let offset = ssab::ssab::PartAttributeCell::create(fb, &args);
         self.part_attribute_cell_cache.insert(key, offset);
@@ -1423,6 +1425,7 @@ impl<'a> SsabCache<'a> {
 
         let mut args = ssab::ssab::PartAttributeShaderArgs::default();
         args.id = part_attribute_shader.id.as_ref().map(|id| fb.create_shared_string(&id));
+        args.id_hash = part_attribute_shader.id_hash;
         args.param0 = part_attribute_shader.param0;
         args.param1 = part_attribute_shader.param1;
         args.param2 = part_attribute_shader.param2;
@@ -1432,9 +1435,9 @@ impl<'a> SsabCache<'a> {
         args.param6 = part_attribute_shader.param6;
         args.param7 = part_attribute_shader.param7;
         args.map0_id = part_attribute_shader.map0_id;
-        args.map0_name = part_attribute_shader.map0_name.as_ref().map(|s| fb.create_shared_string(s));
+        args.map0_name_hash = part_attribute_shader.map0_name_hash;
         args.map1_id = part_attribute_shader.map1_id;
-        args.map1_name = part_attribute_shader.map1_name.as_ref().map(|s| fb.create_shared_string(s));
+        args.map1_name_hash = part_attribute_shader.map1_name_hash;
 
         let offset = ssab::ssab::PartAttributeShader::create(fb, &args);
         self.part_attribute_shader_cache.insert(key, offset);
@@ -1534,9 +1537,9 @@ impl<'a> SsabCache<'a> {
         args.pingpong = part_attribute_instance.pingpong;
         args.independent = part_attribute_instance.independent;
         args.loop_num = part_attribute_instance.loop_num;
-        args.start_label = part_attribute_instance.start_label.as_ref().map(|start_label| fb.create_shared_string(&start_label));
+        args.start_label_hash = part_attribute_instance.start_label_hash;
         args.start_offset = part_attribute_instance.start_offset;
-        args.end_label = part_attribute_instance.end_label.as_ref().map(|end_label| fb.create_shared_string(&end_label));
+        args.end_label_hash = part_attribute_instance.end_label_hash;
         args.end_offset = part_attribute_instance.end_offset;
         args.speed = part_attribute_instance.speed;
         let offset = ssab::ssab::PartAttributeInstance::create(fb, &args);
@@ -1578,13 +1581,13 @@ impl<'a> SsabCache<'a> {
             },
             ssab::ssab::PartTypeT::PartTypeInstance(v) => {
                 let mut p_args = ssab::ssab::PartTypeInstanceArgs::default();
-                p_args.ref_anime = v.ref_anime.as_ref().map(|s| fb.create_shared_string(s));
+                p_args.ref_anime_hash = v.ref_anime_hash;
                 let offset = ssab::ssab::PartTypeInstance::create(fb, &p_args);
                 offset.as_union_value()
             },
             ssab::ssab::PartTypeT::PartTypeEffect(v) => {
                 let mut p_args = ssab::ssab::PartTypeEffectArgs::default();
-                p_args.ref_effect_name = v.ref_effect_name.as_ref().map(|s| fb.create_shared_string(s));
+                p_args.ref_effect_name_hash = v.ref_effect_name_hash;
                 let offset = ssab::ssab::PartTypeEffect::create(fb, &p_args);
                 offset.as_union_value()
             },
