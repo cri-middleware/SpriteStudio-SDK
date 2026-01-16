@@ -40,9 +40,10 @@ impl SspjLoader {
 
 pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, crate::converter::converter_error::ConverterError> {
     let sspj = SspjLoader::new(path).load_ss_project()?;
+    let sspj_parent = path.parent().unwrap();
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
+    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, &sspj_parent)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
 
     let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Result<Vec<ssab::ssqb::SsSequenceBinaryT>, _>>()?;
 

@@ -17,10 +17,16 @@ fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::CellT> {
     v
 }
 
-fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap) -> ssab::ssab::CellMapT {
+fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path) -> Result<ssab::ssab::CellMapT, crate::ConverterError> {
     let mut cell_map_t = ssab::ssab::CellMapT::default();
     cell_map_t.name_hash = crate::utils::fnv1a_hash_str(&cellmap.name);
-    cell_map_t.name = if cellmap.name.is_empty() { None } else { Some(cellmap.name.to_string()) } ;
+    cell_map_t.name = if cellmap.name.is_empty() { None } else { Some(cellmap.name.to_string()) };
+
+    let r = crate::utils::validate_file_path(&cellmap.image_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, &sspj).as_path());
+    match r {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
     cell_map_t.image_path = if cellmap.image_path.is_empty() { None } else { Some(cellmap.image_path.to_string()) };
     cell_map_t.size_original = Some(Box::new(model_t::common::convert_vec2t(&cellmap.pixel_size)));
     cell_map_t.wrap_mode = match &cellmap.wrap_mode {
@@ -34,10 +40,10 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap) -> ssab::ssab::CellMapT {
     };
     cell_map_t.cells = if cellmap.cells.is_empty() { None } else { Some(convert_cellt_list(&cellmap.cells)) };
 
-    cell_map_t
+    Ok(cell_map_t)
 }
-pub fn convert_cellmapt_list(_sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap]) -> Vec<ssab::ssab::CellMapT> {
-    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap)).collect::<Vec<ssab::ssab::CellMapT>>();
+pub fn convert_cellmapt_list(sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap], sspj_parent_path: &std::path::Path) -> Result<Vec<ssab::ssab::CellMapT>, crate::ConverterError> {
+    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap, sspj, sspj_parent_path)).collect::<Result<Vec<ssab::ssab::CellMapT>, _>>()?;
     v.sort_by_key(|cellmap| cellmap.name_hash);
-    v
+    Ok(v)
 }

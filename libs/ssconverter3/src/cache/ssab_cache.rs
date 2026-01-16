@@ -2004,6 +2004,10 @@ impl<'a> SsabCache<'a> {
         args.effects = ss_anime_binary_t.effects.as_ref().map(|effect| self.create_shared_effect_list(fb, effect));
         args.sound_lists = ss_anime_binary_t.sound_lists.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
         args.font_bitmaps = ss_anime_binary_t.font_bitmaps.as_ref().map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
+        args.external_textures = ss_anime_binary_t.external_textures.as_ref().map(|textures| { 
+            let vec = textures.iter().map(|texture| fb.create_shared_string(texture)).collect::<Vec<_>>();
+            fb.create_vector(&vec)
+        });
         args.external_instances = ss_anime_binary_t.external_instances.as_ref().map(|external_instances| {
             let vec = external_instances.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
             fb.create_vector(&vec)
