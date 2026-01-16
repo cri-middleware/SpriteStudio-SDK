@@ -152,7 +152,7 @@ table PartState {
   skew_x: float = 0.0;
   skew_y: float = 0.0;
   deform: int = -1;
-  texture: int = -1;
+  texture: uint32 = 0;
 }
 
 table FrameData {

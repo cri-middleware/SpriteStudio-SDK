@@ -28,6 +28,7 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProjec
         Err(e) => return Err(e),
     }
     cell_map_t.image_path = if cellmap.image_path.is_empty() { None } else { Some(cellmap.image_path.to_string()) };
+    cell_map_t.image_path_hash = crate::utils::fnv1a_hash_str(&cellmap.image_path);
     cell_map_t.size_original = Some(Box::new(model_t::common::convert_vec2t(&cellmap.pixel_size)));
     cell_map_t.wrap_mode = match &cellmap.wrap_mode {
         sspj::sstypes::SsTexWrapMode::Clamp => ssab::ssab::TexWrapMode::Clamp,

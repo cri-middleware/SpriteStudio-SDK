@@ -58,12 +58,15 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list)) };
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
     anime_binary.external_textures = if external_textures.is_empty() { None } else { Some(external_textures.iter().map(|texture_path| {
+        let mut external_texture = ssab::ssab::ExternalTextureT::default();
+        external_texture.name_hash = crate::utils::fnv1a_hash_str(texture_path);
+        external_texture.name = Some(texture_path.to_string());
         let r = crate::utils::validate_file_path(texture_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, sspj).as_path());
         match r {
-            Ok(_) => Ok(texture_path.clone()),
+            Ok(_) => Ok(external_texture),
             Err(e) => Err(e),
         }
-    }).collect::<Result<Vec<String>, _>>()?) };
+    }).collect::<Result<Vec<ssab::ssab::ExternalTextureT>, _>>()?) };
     anime_binary.external_instances = if external_instances.is_empty() { None } else { Some( external_instances.iter().map(|external_instance| external_instance.clone()).collect::<Vec<_>>()) };
 
     Ok(anime_binary)
