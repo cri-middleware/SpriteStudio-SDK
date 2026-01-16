@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+#[warn(unused)]
 pub fn delivery_ssab_suite(ssab_map: &HashMap<String, Vec<u8>>) -> HashSet<String> {
     ssab_map.values().flat_map(|data| {
         let anime = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(data.as_slice()) };
