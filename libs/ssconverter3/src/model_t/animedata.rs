@@ -104,7 +104,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                                             ssab::ssab::SignalCommandParamValueT::Text(Box::new(s))
                                         },
                                         sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
-                                            let mut n = ssab::ssab::NoneValueEntryT::default();
+                                            let n = ssab::ssab::NoneValueEntryT::default();
                                             ssab::ssab::SignalCommandParamValueT::None(Box::new(n))
                                         },
                                     };
@@ -258,92 +258,92 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
     setup_attributes.iter().for_each(|attribute| {
         match attribute {
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosZ(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotZ(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Alpha(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipV(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Hide(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
@@ -351,122 +351,122 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
                 // TODO: impl
             },
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::PivotX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::PivotY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Mask(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::User(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Signal(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Instance(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Effect(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|key| {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     // TODO: impl
                 });
             },
