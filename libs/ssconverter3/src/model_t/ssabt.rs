@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model_t;
 
-pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject) -> Result<ssab::ssab::SsAnimeBinaryT, crate::ConverterError> {
+pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path) -> Result<ssab::ssab::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == sspj::sstypes::SsPartType::Effect {
@@ -51,7 +51,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         let animations = model_t::animedata::convert_animation_data_list(&anime_pack, &parts_map);
         if animations.is_empty() { None } else { Some(animations) }
     };
-    anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps)) };
+    anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps, sspj_parent_path)?) };
     anime_binary.effects = if using_effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &using_effect_file_list)) };
     anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list)) };
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
