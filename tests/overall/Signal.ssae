@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.02.00" editorVersion="7.5.0">
+<SpriteStudioAnimePack version="2.02.00" editorVersion="7.5.1">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -225,7 +225,7 @@
 			</labels>
 			<guidelines />
 			<isSetup>0</isSetup>
-			<lastFrame>0</lastFrame>
+			<lastFrame>19</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -244,16 +244,6 @@
 											<commandId>test_cmd</commandId>
 											<params>
 												<value>
-													<paramId>floating</paramId>
-													<type>floating</type>
-													<value>0</value>
-												</value>
-												<value>
-													<paramId>list</paramId>
-													<type>index</type>
-													<value>0</value>
-												</value>
-												<value>
 													<paramId>none</paramId>
 													<type>none</type>
 												</value>
@@ -262,8 +252,23 @@
 													<type>integer</type>
 													<value>0</value>
 												</value>
+												<value>
+													<paramId>list</paramId>
+													<type>index</type>
+													<value>0</value>
+												</value>
+												<value>
+													<paramId>floating</paramId>
+													<type>floating</type>
+													<value>0</value>
+												</value>
+												<value>
+													<paramId>text</paramId>
+													<type>text</type>
+													<value>文字列</value>
+												</value>
 											</params>
-											<note></note>
+											<note>全タイプの値を含むコマンドの例	</note>
 										</value>
 										<value>
 											<active>1</active>

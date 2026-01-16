@@ -16,7 +16,7 @@
 		<copyImageWhenExportCellmap>1</copyImageWhenExportCellmap>
 		<ssConverterOptions></ssConverterOptions>
 		<player>custom</player>
-		<signal></signal>
+		<signal>Sample</signal>
 		<strictVer4>0</strictVer4>
 		<dontUseMatrixForTransform>0</dontUseMatrixForTransform>
 		<rootPartFunctionAsVer4>0</rootPartFunctionAsVer4>
