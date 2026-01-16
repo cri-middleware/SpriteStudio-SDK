@@ -1,6 +1,5 @@
 use rayon::prelude::*;
 use crate::cache::{ssab_cache, ssqb_cache};
-use ssab::ssab::SsAnimeBinaryT;
 use sspj::sspj::SsProject;
 use std::collections::HashMap;
 use std::ffi::OsString;
@@ -49,9 +48,9 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Resul
     };
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj)).collect::<Vec<SsAnimeBinaryT>>();
+    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
 
-    let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Vec<ssab::ssqb::SsSequenceBinaryT>>();
+    let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Result<Vec<ssab::ssqb::SsSequenceBinaryT>, _>>()?;
 
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {

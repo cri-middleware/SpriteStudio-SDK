@@ -1,8 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model_t;
 
-
-pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject) -> ssab::ssab::SsAnimeBinaryT {
+pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject) -> Result<ssab::ssab::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == sspj::sstypes::SsPartType::Effect {
@@ -58,5 +57,5 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
     anime_binary.external_instances = if external_instances.is_empty() { None } else { Some( external_instances.iter().map(|external_instance| external_instance.clone()).collect::<Vec<_>>()) };
 
-    anime_binary
+    Ok(anime_binary)
 }
