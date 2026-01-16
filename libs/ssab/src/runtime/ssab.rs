@@ -13462,7 +13462,8 @@ impl<'a> SsAnimeBinary<'a> {
   pub const VT_EFFECTS: ::flatbuffers::VOffsetT = 16;
   pub const VT_SOUND_LISTS: ::flatbuffers::VOffsetT = 18;
   pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 20;
-  pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 22;
+  pub const VT_EXTERNAL_TEXTURES: ::flatbuffers::VOffsetT = 22;
+  pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 24;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -13475,6 +13476,7 @@ impl<'a> SsAnimeBinary<'a> {
   ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
     if let Some(x) = args.external_instances { builder.add_external_instances(x); }
+    if let Some(x) = args.external_textures { builder.add_external_textures(x); }
     if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
     if let Some(x) = args.sound_lists { builder.add_sound_lists(x); }
     if let Some(x) = args.effects { builder.add_effects(x); }
@@ -13552,6 +13554,13 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAPS, None)}
   }
   #[inline]
+  pub fn external_textures(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, None)}
+  }
+  #[inline]
   pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
     // Safety:
     // Created from valid Table for this object
@@ -13575,6 +13584,7 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_textures", Self::VT_EXTERNAL_TEXTURES, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
      .finish();
     Ok(())
@@ -13590,6 +13600,7 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
+    pub external_textures: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
     pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
@@ -13605,6 +13616,7 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
       effects: None,
       sound_lists: None,
       font_bitmaps: None,
+      external_textures: None,
       external_instances: None,
     }
   }
@@ -13652,6 +13664,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAPS, font_bitmaps);
   }
   #[inline]
+  pub fn add_external_textures(&mut self, external_textures: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, external_textures);
+  }
+  #[inline]
   pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, external_instances);
   }
@@ -13682,6 +13698,7 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
       ds.field("effects", &self.effects());
       ds.field("sound_lists", &self.sound_lists());
       ds.field("font_bitmaps", &self.font_bitmaps());
+      ds.field("external_textures", &self.external_textures());
       ds.field("external_instances", &self.external_instances());
       ds.finish()
   }

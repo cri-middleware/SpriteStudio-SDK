@@ -725,6 +725,7 @@ table SsAnimeBinary {
   sound_lists: [SoundList];
   font_bitmaps: [FontBitmap];
 
+  external_textures: [string];
   external_instances: [string];
 }
 

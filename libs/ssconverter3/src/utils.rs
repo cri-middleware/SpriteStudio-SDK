@@ -38,6 +38,5 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
 
 #[cfg(test)]
 mod test {
-    use crate::utils::fnv1a_hash_str;
-
+    
 }
