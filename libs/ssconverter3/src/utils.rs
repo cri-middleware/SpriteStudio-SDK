@@ -36,6 +36,17 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
     Ok(())
 }
 
+pub fn get_ssab_outout_directory(sspj_path: &std::path::Path, embedded: bool) -> Result<std::path::PathBuf, crate::ConverterError> {
+    let suffix = if embedded { "_emb_ssab" } else { "_ssab" };
+    let Some(stem) = sspj_path.file_stem() else {
+        return Err(crate::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("not found: path stem: {}", sspj_path.as_os_str().to_string_lossy()))))
+    };
+    let Some(sspj_parent) = sspj_path.parent() else {
+        return Err(crate::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("not found: path parent: {}", sspj_path.as_os_str().to_string_lossy()))))
+    };
+    Ok(sspj_parent.join(format!("{}{}", stem.to_str().unwrap(), suffix)))
+}
+
 #[cfg(test)]
 mod test {
     

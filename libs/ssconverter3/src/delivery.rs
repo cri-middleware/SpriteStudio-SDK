@@ -1,11 +1,20 @@
 use std::collections::{HashMap, HashSet};
 
-#[warn(unused)]
-pub fn delivery_ssab_suite(ssab_map: &HashMap<String, Vec<u8>>) -> HashSet<String> {
+pub fn get_assets_of_ssab_using(ssab_map: &HashMap<String, Vec<u8>>, sspj: &sspj::sspj::SsProject) -> HashSet<String> {
     ssab_map.values().flat_map(|data| {
         let anime = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(data.as_slice()) };
 
-        let images = anime.cellmaps().into_iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| s.to_string()));
+        let images = anime.cellmaps().into_iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| {
+            std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()
+        })).collect::<HashSet<String>>();
+
+        let external_textures = anime.external_textures().into_iter().flatten().map(|external_texture| {
+            std::path::PathBuf::from(&sspj.settings.image_base_directory).join(external_texture.name().unwrap()).to_string_lossy().to_string()
+        });
+
+        anime.cellmaps().into_iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| {
+            std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()
+        }));
 
         // TODO: impl
         //let sounds = anime.sound_lists().into_iter().flatten().flat_map(|soundlist| {
@@ -18,6 +27,6 @@ pub fn delivery_ssab_suite(ssab_map: &HashMap<String, Vec<u8>>) -> HashSet<Strin
         });
 
         //images.chain(sounds).chain(fonts)
-        images.chain(fonts)
+        images.into_iter().chain(external_textures).chain(fonts)
     }).collect()
 }
