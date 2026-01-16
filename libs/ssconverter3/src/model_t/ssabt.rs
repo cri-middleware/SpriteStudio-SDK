@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model_t;
 
-pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path) -> Result<ssab::ssab::SsAnimeBinaryT, crate::ConverterError> {
+pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path, embedded: bool) -> Result<ssab::ssab::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == sspj::sstypes::SsPartType::Effect {
@@ -68,6 +68,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         }
     }).collect::<Result<Vec<ssab::ssab::ExternalTextureT>, _>>()?) };
     anime_binary.external_instances = if external_instances.is_empty() { None } else { Some( external_instances.iter().map(|external_instance| external_instance.clone()).collect::<Vec<_>>()) };
+    anime_binary.embedded_assets = if embedded { None /* TODO: impl */ } else { None };
 
     Ok(anime_binary)
 }

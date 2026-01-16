@@ -13717,6 +13717,146 @@ impl ::core::fmt::Debug for ExternalTexture<'_> {
       ds.finish()
   }
 }
+pub enum EmbeddedAssetOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct EmbeddedAsset<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for EmbeddedAsset<'a> {
+  type Inner = EmbeddedAsset<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> EmbeddedAsset<'a> {
+  pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
+  pub const VT_DATA: ::flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    EmbeddedAsset { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args EmbeddedAssetArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<EmbeddedAsset<'bldr>> {
+    let mut builder = EmbeddedAssetBuilder::new(_fbb);
+    if let Some(x) = args.data { builder.add_data(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_name_hash(args.name_hash);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(EmbeddedAsset::VT_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &EmbeddedAsset) -> bool {
+    self.name_hash() < o.name_hash()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
+    let key = self.name_hash();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(EmbeddedAsset::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn data(&self) -> Option<::flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u8>>>(EmbeddedAsset::VT_DATA, None)}
+  }
+}
+
+impl ::flatbuffers::Verifiable for EmbeddedAsset<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u8>>>("data", Self::VT_DATA, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct EmbeddedAssetArgs<'a> {
+    pub name_hash: u32,
+    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, u8>>>,
+}
+impl<'a> Default for EmbeddedAssetArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    EmbeddedAssetArgs {
+      name_hash: 0,
+      name: None,
+      data: None,
+    }
+  }
+}
+
+pub struct EmbeddedAssetBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EmbeddedAssetBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name_hash(&mut self, name_hash: u32) {
+    self.fbb_.push_slot::<u32>(EmbeddedAsset::VT_NAME_HASH, name_hash, 0);
+  }
+  #[inline]
+  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EmbeddedAsset::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_data(&mut self, data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EmbeddedAsset::VT_DATA, data);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> EmbeddedAssetBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    EmbeddedAssetBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<EmbeddedAsset<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for EmbeddedAsset<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("EmbeddedAsset");
+      ds.field("name_hash", &self.name_hash());
+      ds.field("name", &self.name());
+      ds.field("data", &self.data());
+      ds.finish()
+  }
+}
 pub enum SsAnimeBinaryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -13744,6 +13884,7 @@ impl<'a> SsAnimeBinary<'a> {
   pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 20;
   pub const VT_EXTERNAL_TEXTURES: ::flatbuffers::VOffsetT = 22;
   pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 24;
+  pub const VT_EMBEDDED_ASSETS: ::flatbuffers::VOffsetT = 26;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -13755,6 +13896,7 @@ impl<'a> SsAnimeBinary<'a> {
     args: &'args SsAnimeBinaryArgs<'args>
   ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
+    if let Some(x) = args.embedded_assets { builder.add_embedded_assets(x); }
     if let Some(x) = args.external_instances { builder.add_external_instances(x); }
     if let Some(x) = args.external_textures { builder.add_external_textures(x); }
     if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
@@ -13847,6 +13989,13 @@ impl<'a> SsAnimeBinary<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, None)}
   }
+  #[inline]
+  pub fn embedded_assets(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset>>>>(SsAnimeBinary::VT_EMBEDDED_ASSETS, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
@@ -13866,6 +14015,7 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<ExternalTexture>>>>("external_textures", Self::VT_EXTERNAL_TEXTURES, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EmbeddedAsset>>>>("embedded_assets", Self::VT_EMBEDDED_ASSETS, false)?
      .finish();
     Ok(())
   }
@@ -13882,6 +14032,7 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
     pub external_textures: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalTexture<'a>>>>>,
     pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub embedded_assets: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'a>>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
   #[inline]
@@ -13898,6 +14049,7 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
       font_bitmaps: None,
       external_textures: None,
       external_instances: None,
+      embedded_assets: None,
     }
   }
 }
@@ -13952,6 +14104,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, external_instances);
   }
   #[inline]
+  pub fn add_embedded_assets(&mut self, embedded_assets: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EMBEDDED_ASSETS, embedded_assets);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsAnimeBinaryBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     SsAnimeBinaryBuilder {
@@ -13980,6 +14136,7 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
       ds.field("font_bitmaps", &self.font_bitmaps());
       ds.field("external_textures", &self.external_textures());
       ds.field("external_instances", &self.external_instances());
+      ds.field("embedded_assets", &self.embedded_assets());
       ds.finish()
   }
 }

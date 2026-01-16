@@ -724,6 +724,13 @@ table ExternalTexture {
   name: string;
 }
 
+table EmbeddedAsset {
+  name_hash: uint32 (key);
+  name: string;
+
+  data: [ubyte];
+}
+
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
@@ -740,6 +747,8 @@ table SsAnimeBinary {
 
   external_textures: [ExternalTexture];
   external_instances: [string];
+
+  embedded_assets: [EmbeddedAsset];
 }
 
 file_identifier "SSAB";

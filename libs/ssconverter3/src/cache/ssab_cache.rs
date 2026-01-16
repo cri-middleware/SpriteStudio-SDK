@@ -2075,6 +2075,16 @@ impl<'a> SsabCache<'a> {
             let vec = external_instances.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
             fb.create_vector(&vec)
         });
+        args.embedded_assets = ss_anime_binary_t.embedded_assets.as_ref().map(|embedded_assets| {
+            let vec = embedded_assets.iter().map(|s| {
+                let mut args = ssab::ssab::EmbeddedAssetArgs::default();
+                args.name_hash = s.name_hash;
+                args.name = s.name.as_ref().map(|name| fb.create_shared_string(name));
+                args.data = s.data.as_ref().map(|data| fb.create_vector(&data));
+                ssab::ssab::EmbeddedAsset::create(fb, &args)
+            }).collect::<Vec<_>>();
+            fb.create_vector(&vec)
+        });
 
         ssab::ssab::SsAnimeBinary::create(fb, &args)
     }

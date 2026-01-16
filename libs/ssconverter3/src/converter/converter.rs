@@ -10,6 +10,7 @@ use sspj::ssloader::SsLoader;
 
 #[derive(Debug, Clone)]
 pub struct ConvertConfig {
+    pub embedded: bool,
     pub debug: bool,
     pub split: bool,
     pub shared: bool,
@@ -17,6 +18,7 @@ pub struct ConvertConfig {
 impl Default for ConvertConfig {
     fn default() -> Self {
         Self {
+            embedded: false,
             debug: false,
             split: false,
             shared: true,
@@ -43,7 +45,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Resul
     let sspj_parent = path.parent().unwrap();
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, &sspj_parent)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
+    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, &sspj_parent, config.embedded)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
 
     let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Result<Vec<ssab::ssqb::SsSequenceBinaryT>, _>>()?;
 
