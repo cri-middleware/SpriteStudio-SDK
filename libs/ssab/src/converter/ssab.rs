@@ -5624,10 +5624,11 @@ impl<'a> CellMap<'a> {
   pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
   pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
   pub const VT_IMAGE_PATH: ::flatbuffers::VOffsetT = 8;
-  pub const VT_SIZE_ORIGINAL: ::flatbuffers::VOffsetT = 10;
-  pub const VT_WRAP_MODE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_FILTER_MODE: ::flatbuffers::VOffsetT = 14;
-  pub const VT_CELLS: ::flatbuffers::VOffsetT = 16;
+  pub const VT_IMAGE_PATH_HASH: ::flatbuffers::VOffsetT = 10;
+  pub const VT_SIZE_ORIGINAL: ::flatbuffers::VOffsetT = 12;
+  pub const VT_WRAP_MODE: ::flatbuffers::VOffsetT = 14;
+  pub const VT_FILTER_MODE: ::flatbuffers::VOffsetT = 16;
+  pub const VT_CELLS: ::flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -5641,6 +5642,7 @@ impl<'a> CellMap<'a> {
     let mut builder = CellMapBuilder::new(_fbb);
     if let Some(x) = args.cells { builder.add_cells(x); }
     if let Some(x) = args.size_original { builder.add_size_original(x); }
+    builder.add_image_path_hash(args.image_path_hash);
     if let Some(x) = args.image_path { builder.add_image_path(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_name_hash(args.name_hash);
@@ -5657,6 +5659,7 @@ impl<'a> CellMap<'a> {
     let image_path = self.image_path().map(|x| {
       alloc::string::ToString::to_string(x)
     });
+    let image_path_hash = self.image_path_hash();
     let size_original = self.size_original().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
@@ -5669,6 +5672,7 @@ impl<'a> CellMap<'a> {
       name_hash,
       name,
       image_path,
+      image_path_hash,
       size_original,
       wrap_mode,
       filter_mode,
@@ -5706,6 +5710,13 @@ impl<'a> CellMap<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(CellMap::VT_IMAGE_PATH, None)}
+  }
+  #[inline]
+  pub fn image_path_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(CellMap::VT_IMAGE_PATH_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn size_original(&self) -> Option<Vec2<'a>> {
@@ -5746,6 +5757,7 @@ impl ::flatbuffers::Verifiable for CellMap<'_> {
      .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("image_path", Self::VT_IMAGE_PATH, false)?
+     .visit_field::<u32>("image_path_hash", Self::VT_IMAGE_PATH_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("size_original", Self::VT_SIZE_ORIGINAL, false)?
      .visit_field::<TexWrapMode>("wrap_mode", Self::VT_WRAP_MODE, false)?
      .visit_field::<TexFilterMode>("filter_mode", Self::VT_FILTER_MODE, false)?
@@ -5758,6 +5770,7 @@ pub struct CellMapArgs<'a> {
     pub name_hash: u32,
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub image_path: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub image_path_hash: u32,
     pub size_original: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub wrap_mode: TexWrapMode,
     pub filter_mode: TexFilterMode,
@@ -5770,6 +5783,7 @@ impl<'a> Default for CellMapArgs<'a> {
       name_hash: 0,
       name: None,
       image_path: None,
+      image_path_hash: 0,
       size_original: None,
       wrap_mode: TexWrapMode::Clamp,
       filter_mode: TexFilterMode::Nearest,
@@ -5794,6 +5808,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> CellMapBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_image_path(&mut self, image_path: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(CellMap::VT_IMAGE_PATH, image_path);
+  }
+  #[inline]
+  pub fn add_image_path_hash(&mut self, image_path_hash: u32) {
+    self.fbb_.push_slot::<u32>(CellMap::VT_IMAGE_PATH_HASH, image_path_hash, 0);
   }
   #[inline]
   pub fn add_size_original(&mut self, size_original: ::flatbuffers::WIPOffset<Vec2<'b >>) {
@@ -5832,6 +5850,7 @@ impl ::core::fmt::Debug for CellMap<'_> {
       ds.field("name_hash", &self.name_hash());
       ds.field("name", &self.name());
       ds.field("image_path", &self.image_path());
+      ds.field("image_path_hash", &self.image_path_hash());
       ds.field("size_original", &self.size_original());
       ds.field("wrap_mode", &self.wrap_mode());
       ds.field("filter_mode", &self.filter_mode());
@@ -5845,6 +5864,7 @@ pub struct CellMapT {
   pub name_hash: u32,
   pub name: Option<alloc::string::String>,
   pub image_path: Option<alloc::string::String>,
+  pub image_path_hash: u32,
   pub size_original: Option<alloc::boxed::Box<Vec2T>>,
   pub wrap_mode: TexWrapMode,
   pub filter_mode: TexFilterMode,
@@ -5856,6 +5876,7 @@ impl Default for CellMapT {
       name_hash: 0,
       name: None,
       image_path: None,
+      image_path_hash: 0,
       size_original: None,
       wrap_mode: TexWrapMode::Clamp,
       filter_mode: TexFilterMode::Nearest,
@@ -5875,6 +5896,7 @@ impl CellMapT {
     let image_path = self.image_path.as_ref().map(|x|{
       _fbb.create_string(x)
     });
+    let image_path_hash = self.image_path_hash;
     let size_original = self.size_original.as_ref().map(|x|{
       x.pack(_fbb)
     });
@@ -5887,6 +5909,7 @@ impl CellMapT {
       name_hash,
       name,
       image_path,
+      image_path_hash,
       size_original,
       wrap_mode,
       filter_mode,
@@ -12400,14 +12423,14 @@ impl<'a> PartAttributes<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributes::VT_OPACITY, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_OPACITY, Some(1.0)).unwrap()}
   }
   #[inline]
   pub fn localopacity(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALOPACITY, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALOPACITY, Some(1.0)).unwrap()}
   }
   #[inline]
   pub fn priority(&self) -> i16 {
@@ -12515,11 +12538,11 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>(PartAttributes::VT_DEFORM, None)}
   }
   #[inline]
-  pub fn texture(&self) -> i32 {
+  pub fn texture(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributes::VT_TEXTURE, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(PartAttributes::VT_TEXTURE, Some(0)).unwrap()}
   }
 }
 
@@ -12551,7 +12574,7 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<f32>("mask", Self::VT_MASK, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("skew", Self::VT_SKEW, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>("deform", Self::VT_DEFORM, false)?
-     .visit_field::<i32>("texture", Self::VT_TEXTURE, false)?
+     .visit_field::<u32>("texture", Self::VT_TEXTURE, false)?
      .finish();
     Ok(())
   }
@@ -12579,7 +12602,7 @@ pub struct PartAttributesArgs<'a> {
     pub mask: f32,
     pub skew: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub deform: Option<::flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
-    pub texture: i32,
+    pub texture: u32,
 }
 impl<'a> Default for PartAttributesArgs<'a> {
   #[inline]
@@ -12590,8 +12613,8 @@ impl<'a> Default for PartAttributesArgs<'a> {
       rotation: None,
       scale: None,
       local_scale: None,
-      opacity: 0.0,
-      localopacity: 0.0,
+      opacity: 1.0,
+      localopacity: 1.0,
       priority: 0,
       flip_v: false,
       flip_h: false,
@@ -12639,11 +12662,11 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
   }
   #[inline]
   pub fn add_opacity(&mut self, opacity: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributes::VT_OPACITY, opacity, 0.0);
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_OPACITY, opacity, 1.0);
   }
   #[inline]
   pub fn add_localopacity(&mut self, localopacity: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALOPACITY, localopacity, 0.0);
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALOPACITY, localopacity, 1.0);
   }
   #[inline]
   pub fn add_priority(&mut self, priority: i16) {
@@ -12706,8 +12729,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeDeform>>(PartAttributes::VT_DEFORM, deform);
   }
   #[inline]
-  pub fn add_texture(&mut self, texture: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributes::VT_TEXTURE, texture, 0);
+  pub fn add_texture(&mut self, texture: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributes::VT_TEXTURE, texture, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributesBuilder<'a, 'b, A> {
@@ -12778,7 +12801,7 @@ pub struct PartAttributesT {
   pub mask: f32,
   pub skew: Option<alloc::boxed::Box<Vec2T>>,
   pub deform: Option<alloc::boxed::Box<PartAttributeDeformT>>,
-  pub texture: i32,
+  pub texture: u32,
 }
 impl Default for PartAttributesT {
   fn default() -> Self {
@@ -12788,8 +12811,8 @@ impl Default for PartAttributesT {
       rotation: None,
       scale: None,
       local_scale: None,
-      opacity: 0.0,
-      localopacity: 0.0,
+      opacity: 1.0,
+      localopacity: 1.0,
       priority: 0,
       flip_v: false,
       flip_h: false,
@@ -15434,6 +15457,187 @@ impl PartAnimationDataIntValueT {
     })
   }
 }
+pub enum PartAnimationDataUIntValueOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct PartAnimationDataUIntValue<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for PartAnimationDataUIntValue<'a> {
+  type Inner = PartAnimationDataUIntValue<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> PartAnimationDataUIntValue<'a> {
+  pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
+  pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
+  pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    PartAnimationDataUIntValue { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args PartAnimationDataUIntValueArgs
+  ) -> ::flatbuffers::WIPOffset<PartAnimationDataUIntValue<'bldr>> {
+    let mut builder = PartAnimationDataUIntValueBuilder::new(_fbb);
+    builder.add_value(args.value);
+    builder.add_index(args.index);
+    builder.add_interpolation(args.interpolation);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> PartAnimationDataUIntValueT {
+    let index = self.index();
+    let interpolation = self.interpolation();
+    let value = self.value();
+    PartAnimationDataUIntValueT {
+      index,
+      interpolation,
+      value,
+    }
+  }
+
+  #[inline]
+  pub fn index(&self) -> u16 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u16>(PartAnimationDataUIntValue::VT_INDEX, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &PartAnimationDataUIntValue) -> bool {
+    self.index() < o.index()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: u16) -> ::core::cmp::Ordering {
+    let key = self.index();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn interpolation(&self) -> InterpolationType {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<InterpolationType>(PartAnimationDataUIntValue::VT_INTERPOLATION, Some(InterpolationType::None)).unwrap()}
+  }
+  #[inline]
+  pub fn value(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(PartAnimationDataUIntValue::VT_VALUE, Some(0)).unwrap()}
+  }
+}
+
+impl ::flatbuffers::Verifiable for PartAnimationDataUIntValue<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<u16>("index", Self::VT_INDEX, false)?
+     .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
+     .visit_field::<u32>("value", Self::VT_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct PartAnimationDataUIntValueArgs {
+    pub index: u16,
+    pub interpolation: InterpolationType,
+    pub value: u32,
+}
+impl<'a> Default for PartAnimationDataUIntValueArgs {
+  #[inline]
+  fn default() -> Self {
+    PartAnimationDataUIntValueArgs {
+      index: 0,
+      interpolation: InterpolationType::None,
+      value: 0,
+    }
+  }
+}
+
+pub struct PartAnimationDataUIntValueBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataUIntValueBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_index(&mut self, index: u16) {
+    self.fbb_.push_slot::<u16>(PartAnimationDataUIntValue::VT_INDEX, index, 0);
+  }
+  #[inline]
+  pub fn add_interpolation(&mut self, interpolation: InterpolationType) {
+    self.fbb_.push_slot::<InterpolationType>(PartAnimationDataUIntValue::VT_INTERPOLATION, interpolation, InterpolationType::None);
+  }
+  #[inline]
+  pub fn add_value(&mut self, value: u32) {
+    self.fbb_.push_slot::<u32>(PartAnimationDataUIntValue::VT_VALUE, value, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataUIntValueBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    PartAnimationDataUIntValueBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartAnimationDataUIntValue<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for PartAnimationDataUIntValue<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("PartAnimationDataUIntValue");
+      ds.field("index", &self.index());
+      ds.field("interpolation", &self.interpolation());
+      ds.field("value", &self.value());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct PartAnimationDataUIntValueT {
+  pub index: u16,
+  pub interpolation: InterpolationType,
+  pub value: u32,
+}
+impl Default for PartAnimationDataUIntValueT {
+  fn default() -> Self {
+    Self {
+      index: 0,
+      interpolation: InterpolationType::None,
+      value: 0,
+    }
+  }
+}
+impl PartAnimationDataUIntValueT {
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> ::flatbuffers::WIPOffset<PartAnimationDataUIntValue<'b>> {
+    let index = self.index;
+    let interpolation = self.interpolation;
+    let value = self.value;
+    PartAnimationDataUIntValue::create(_fbb, &PartAnimationDataUIntValueArgs{
+      index,
+      interpolation,
+      value,
+    })
+  }
+}
 pub enum PartAnimationDataBoolValueOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -17364,11 +17568,11 @@ impl<'a> PartAnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>>(PartAnimationData::VT_DEFORM_ARRAY, None)}
   }
   #[inline]
-  pub fn texture_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>> {
+  pub fn texture_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>>(PartAnimationData::VT_TEXTURE_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>>(PartAnimationData::VT_TEXTURE_ARRAY, None)}
   }
 }
 
@@ -17415,7 +17619,7 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("mask_array", Self::VT_MASK_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2>>>>("skew_array", Self::VT_SKEW_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>>("deform_array", Self::VT_DEFORM_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>>("texture_array", Self::VT_TEXTURE_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>>("texture_array", Self::VT_TEXTURE_ARRAY, false)?
      .finish();
     Ok(())
   }
@@ -17458,7 +17662,7 @@ pub struct PartAnimationDataArgs<'a> {
     pub mask_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
     pub skew_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2<'a>>>>>,
     pub deform_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform<'a>>>>>,
-    pub texture_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>>>,
+    pub texture_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue<'a>>>>>,
 }
 impl<'a> Default for PartAnimationDataArgs<'a> {
   #[inline]
@@ -17660,7 +17864,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_DEFORM_ARRAY, deform_array);
   }
   #[inline]
-  pub fn add_texture_array(&mut self, texture_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'b >>>>) {
+  pub fn add_texture_array(&mut self, texture_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_TEXTURE_ARRAY, texture_array);
   }
   #[inline]
@@ -17762,7 +17966,7 @@ pub struct PartAnimationDataT {
   pub mask_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
   pub skew_array: Option<alloc::vec::Vec<PartAnimationDataVec2T>>,
   pub deform_array: Option<alloc::vec::Vec<PartAnimationDataDeformT>>,
-  pub texture_array: Option<alloc::vec::Vec<PartAnimationDataIntValueT>>,
+  pub texture_array: Option<alloc::vec::Vec<PartAnimationDataUIntValueT>>,
 }
 impl Default for PartAnimationDataT {
   fn default() -> Self {
@@ -18627,6 +18831,357 @@ impl AnimationDataT {
     })
   }
 }
+pub enum ExternalTextureOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct ExternalTexture<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for ExternalTexture<'a> {
+  type Inner = ExternalTexture<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> ExternalTexture<'a> {
+  pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    ExternalTexture { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args ExternalTextureArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<ExternalTexture<'bldr>> {
+    let mut builder = ExternalTextureBuilder::new(_fbb);
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_name_hash(args.name_hash);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> ExternalTextureT {
+    let name_hash = self.name_hash();
+    let name = self.name().map(|x| {
+      alloc::string::ToString::to_string(x)
+    });
+    ExternalTextureT {
+      name_hash,
+      name,
+    }
+  }
+
+  #[inline]
+  pub fn name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(ExternalTexture::VT_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &ExternalTexture) -> bool {
+    self.name_hash() < o.name_hash()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
+    let key = self.name_hash();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(ExternalTexture::VT_NAME, None)}
+  }
+}
+
+impl ::flatbuffers::Verifiable for ExternalTexture<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct ExternalTextureArgs<'a> {
+    pub name_hash: u32,
+    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for ExternalTextureArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    ExternalTextureArgs {
+      name_hash: 0,
+      name: None,
+    }
+  }
+}
+
+pub struct ExternalTextureBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> ExternalTextureBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name_hash(&mut self, name_hash: u32) {
+    self.fbb_.push_slot::<u32>(ExternalTexture::VT_NAME_HASH, name_hash, 0);
+  }
+  #[inline]
+  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(ExternalTexture::VT_NAME, name);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> ExternalTextureBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    ExternalTextureBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<ExternalTexture<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for ExternalTexture<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("ExternalTexture");
+      ds.field("name_hash", &self.name_hash());
+      ds.field("name", &self.name());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExternalTextureT {
+  pub name_hash: u32,
+  pub name: Option<alloc::string::String>,
+}
+impl Default for ExternalTextureT {
+  fn default() -> Self {
+    Self {
+      name_hash: 0,
+      name: None,
+    }
+  }
+}
+impl ExternalTextureT {
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> ::flatbuffers::WIPOffset<ExternalTexture<'b>> {
+    let name_hash = self.name_hash;
+    let name = self.name.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    ExternalTexture::create(_fbb, &ExternalTextureArgs{
+      name_hash,
+      name,
+    })
+  }
+}
+pub enum EmbeddedAssetOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct EmbeddedAsset<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for EmbeddedAsset<'a> {
+  type Inner = EmbeddedAsset<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> EmbeddedAsset<'a> {
+  pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
+  pub const VT_DATA: ::flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    EmbeddedAsset { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args EmbeddedAssetArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<EmbeddedAsset<'bldr>> {
+    let mut builder = EmbeddedAssetBuilder::new(_fbb);
+    if let Some(x) = args.data { builder.add_data(x); }
+    if let Some(x) = args.name { builder.add_name(x); }
+    builder.add_name_hash(args.name_hash);
+    builder.finish()
+  }
+
+  pub fn unpack(&self) -> EmbeddedAssetT {
+    let name_hash = self.name_hash();
+    let name = self.name().map(|x| {
+      alloc::string::ToString::to_string(x)
+    });
+    let data = self.data().map(|x| {
+      x.into_iter().collect()
+    });
+    EmbeddedAssetT {
+      name_hash,
+      name,
+      data,
+    }
+  }
+
+  #[inline]
+  pub fn name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(EmbeddedAsset::VT_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &EmbeddedAsset) -> bool {
+    self.name_hash() < o.name_hash()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
+    let key = self.name_hash();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(EmbeddedAsset::VT_NAME, None)}
+  }
+  #[inline]
+  pub fn data(&self) -> Option<::flatbuffers::Vector<'a, u8>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u8>>>(EmbeddedAsset::VT_DATA, None)}
+  }
+}
+
+impl ::flatbuffers::Verifiable for EmbeddedAsset<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u8>>>("data", Self::VT_DATA, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct EmbeddedAssetArgs<'a> {
+    pub name_hash: u32,
+    pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, u8>>>,
+}
+impl<'a> Default for EmbeddedAssetArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    EmbeddedAssetArgs {
+      name_hash: 0,
+      name: None,
+      data: None,
+    }
+  }
+}
+
+pub struct EmbeddedAssetBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EmbeddedAssetBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_name_hash(&mut self, name_hash: u32) {
+    self.fbb_.push_slot::<u32>(EmbeddedAsset::VT_NAME_HASH, name_hash, 0);
+  }
+  #[inline]
+  pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EmbeddedAsset::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_data(&mut self, data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(EmbeddedAsset::VT_DATA, data);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> EmbeddedAssetBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    EmbeddedAssetBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<EmbeddedAsset<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for EmbeddedAsset<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("EmbeddedAsset");
+      ds.field("name_hash", &self.name_hash());
+      ds.field("name", &self.name());
+      ds.field("data", &self.data());
+      ds.finish()
+  }
+}
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq)]
+pub struct EmbeddedAssetT {
+  pub name_hash: u32,
+  pub name: Option<alloc::string::String>,
+  pub data: Option<alloc::vec::Vec<u8>>,
+}
+impl Default for EmbeddedAssetT {
+  fn default() -> Self {
+    Self {
+      name_hash: 0,
+      name: None,
+      data: None,
+    }
+  }
+}
+impl EmbeddedAssetT {
+  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
+    &self,
+    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
+  ) -> ::flatbuffers::WIPOffset<EmbeddedAsset<'b>> {
+    let name_hash = self.name_hash;
+    let name = self.name.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
+    let data = self.data.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
+    EmbeddedAsset::create(_fbb, &EmbeddedAssetArgs{
+      name_hash,
+      name,
+      data,
+    })
+  }
+}
 pub enum SsAnimeBinaryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -18654,6 +19209,7 @@ impl<'a> SsAnimeBinary<'a> {
   pub const VT_FONT_BITMAPS: ::flatbuffers::VOffsetT = 20;
   pub const VT_EXTERNAL_TEXTURES: ::flatbuffers::VOffsetT = 22;
   pub const VT_EXTERNAL_INSTANCES: ::flatbuffers::VOffsetT = 24;
+  pub const VT_EMBEDDED_ASSETS: ::flatbuffers::VOffsetT = 26;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -18665,6 +19221,7 @@ impl<'a> SsAnimeBinary<'a> {
     args: &'args SsAnimeBinaryArgs<'args>
   ) -> ::flatbuffers::WIPOffset<SsAnimeBinary<'bldr>> {
     let mut builder = SsAnimeBinaryBuilder::new(_fbb);
+    if let Some(x) = args.embedded_assets { builder.add_embedded_assets(x); }
     if let Some(x) = args.external_instances { builder.add_external_instances(x); }
     if let Some(x) = args.external_textures { builder.add_external_textures(x); }
     if let Some(x) = args.font_bitmaps { builder.add_font_bitmaps(x); }
@@ -18704,10 +19261,13 @@ impl<'a> SsAnimeBinary<'a> {
       x.iter().map(|t| t.unpack()).collect()
     });
     let external_textures = self.external_textures().map(|x| {
-      x.iter().map(|s| alloc::string::ToString::to_string(s)).collect()
+      x.iter().map(|t| t.unpack()).collect()
     });
     let external_instances = self.external_instances().map(|x| {
       x.iter().map(|s| alloc::string::ToString::to_string(s)).collect()
+    });
+    let embedded_assets = self.embedded_assets().map(|x| {
+      x.iter().map(|t| t.unpack()).collect()
     });
     SsAnimeBinaryT {
       version,
@@ -18721,6 +19281,7 @@ impl<'a> SsAnimeBinary<'a> {
       font_bitmaps,
       external_textures,
       external_instances,
+      embedded_assets,
     }
   }
 
@@ -18788,11 +19349,11 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>(SsAnimeBinary::VT_FONT_BITMAPS, None)}
   }
   #[inline]
-  pub fn external_textures(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
+  pub fn external_textures(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalTexture<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalTexture>>>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, None)}
   }
   #[inline]
   pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
@@ -18800,6 +19361,13 @@ impl<'a> SsAnimeBinary<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, None)}
+  }
+  #[inline]
+  pub fn embedded_assets(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset>>>>(SsAnimeBinary::VT_EMBEDDED_ASSETS, None)}
   }
 }
 
@@ -18818,8 +19386,9 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Effect>>>>("effects", Self::VT_EFFECTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_textures", Self::VT_EXTERNAL_TEXTURES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<ExternalTexture>>>>("external_textures", Self::VT_EXTERNAL_TEXTURES, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EmbeddedAsset>>>>("embedded_assets", Self::VT_EMBEDDED_ASSETS, false)?
      .finish();
     Ok(())
   }
@@ -18834,8 +19403,9 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub effects: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Effect<'a>>>>>,
     pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
-    pub external_textures: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub external_textures: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalTexture<'a>>>>>,
     pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub embedded_assets: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'a>>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
   #[inline]
@@ -18852,6 +19422,7 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
       font_bitmaps: None,
       external_textures: None,
       external_instances: None,
+      embedded_assets: None,
     }
   }
 }
@@ -18898,12 +19469,16 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_FONT_BITMAPS, font_bitmaps);
   }
   #[inline]
-  pub fn add_external_textures(&mut self, external_textures: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
+  pub fn add_external_textures(&mut self, external_textures: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<ExternalTexture<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, external_textures);
   }
   #[inline]
   pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, external_instances);
+  }
+  #[inline]
+  pub fn add_embedded_assets(&mut self, embedded_assets: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EMBEDDED_ASSETS, embedded_assets);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsAnimeBinaryBuilder<'a, 'b, A> {
@@ -18934,6 +19509,7 @@ impl ::core::fmt::Debug for SsAnimeBinary<'_> {
       ds.field("font_bitmaps", &self.font_bitmaps());
       ds.field("external_textures", &self.external_textures());
       ds.field("external_instances", &self.external_instances());
+      ds.field("embedded_assets", &self.embedded_assets());
       ds.finish()
   }
 }
@@ -18949,8 +19525,9 @@ pub struct SsAnimeBinaryT {
   pub effects: Option<alloc::vec::Vec<EffectT>>,
   pub sound_lists: Option<alloc::vec::Vec<SoundListT>>,
   pub font_bitmaps: Option<alloc::vec::Vec<FontBitmapT>>,
-  pub external_textures: Option<alloc::vec::Vec<alloc::string::String>>,
+  pub external_textures: Option<alloc::vec::Vec<ExternalTextureT>>,
   pub external_instances: Option<alloc::vec::Vec<alloc::string::String>>,
+  pub embedded_assets: Option<alloc::vec::Vec<EmbeddedAssetT>>,
 }
 impl Default for SsAnimeBinaryT {
   fn default() -> Self {
@@ -18966,6 +19543,7 @@ impl Default for SsAnimeBinaryT {
       font_bitmaps: None,
       external_textures: None,
       external_instances: None,
+      embedded_assets: None,
     }
   }
 }
@@ -18998,10 +19576,13 @@ impl SsAnimeBinaryT {
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let external_textures = self.external_textures.as_ref().map(|x|{
-      let w: alloc::vec::Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
+      let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let external_instances = self.external_instances.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
+    });
+    let embedded_assets = self.embedded_assets.as_ref().map(|x|{
+      let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     SsAnimeBinary::create(_fbb, &SsAnimeBinaryArgs{
       version,
@@ -19015,6 +19596,7 @@ impl SsAnimeBinaryT {
       font_bitmaps,
       external_textures,
       external_instances,
+      embedded_assets,
     })
   }
 }

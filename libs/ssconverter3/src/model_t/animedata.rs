@@ -936,10 +936,10 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                 },
                 sspj::ssattribute::SsAttributeKind::Texchange(v) => {
                     v.keys.iter().for_each(|key| {
-                        let mut m_args = ssab::ssab::PartAnimationDataIntValueT::default();
+                        let mut m_args = ssab::ssab::PartAnimationDataUIntValueT::default();
                         m_args.index = key.time as u16;
                         m_args.interpolation = ssab::ssab::InterpolationType::None;
-                        // m_args.value = key.value; // TODO: impl get index from texture name
+                        m_args.value = crate::utils::fnv1a_hash_str(&key.value.texture_name);
                         part_animation_data_t.texture_array.get_or_insert_with(Vec::new).push(m_args);
                     });
                 },

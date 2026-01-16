@@ -192,6 +192,7 @@ table CellMap {
   name: string;
 
   image_path: string;
+  image_path_hash: uint32;
   size_original: Vec2;
 
   wrap_mode: TexWrapMode;
@@ -450,12 +451,12 @@ table PartAttributes {
   rotation: Vec3;
   scale: Vec2;
   local_scale: Vec2;
-  opacity: float;
-  localopacity: float;
-  priority: short;
-  flip_v: bool;
-  flip_h: bool;
-  hide: bool;
+  opacity: float = 1.0;
+  localopacity: float = 1.0;
+  priority: short = 0;
+  flip_v: bool = false;
+  flip_h: bool = false;
+  hide: bool = false;
   parts_color: PartAttributePartColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
@@ -463,12 +464,12 @@ table PartAttributes {
   size: Vec2;
   uv_move: Vec3;
   uv_scale: Vec2;
-  bounding_radius: float;
-  mask: float;
+  bounding_radius: float = 0.0;
+  mask: float = 0.0;
   skew: Vec2;
   deform: PartAttributeDeform;
 
-  texture: int;
+  texture: uint32 = 0;
 }
 
 table PartTypeNone {
@@ -588,6 +589,13 @@ table PartAnimationDataIntValue {
   value: int;
 }
 
+table PartAnimationDataUIntValue {
+  index: ushort (key);
+  interpolation: InterpolationType = None;
+
+  value: uint32;
+}
+
 table PartAnimationDataBoolValue {
   index: ushort (key);
 
@@ -679,7 +687,7 @@ table PartAnimationData {
   mask_array: [PartAnimationDataFloatValue];
   skew_array: [PartAnimationDataVec2];
   deform_array: [PartAnimationDataDeform];
-  texture_array: [PartAnimationDataIntValue];
+  texture_array: [PartAnimationDataUIntValue];
 }
 
 table PartMeshData {
@@ -711,6 +719,18 @@ table AnimationData {
   canvas: Rect;
 }
 
+table ExternalTexture {
+  name_hash: uint32 (key);
+  name: string;
+}
+
+table EmbeddedAsset {
+  name_hash: uint32 (key);
+  name: string;
+
+  data: [ubyte];
+}
+
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
@@ -725,8 +745,10 @@ table SsAnimeBinary {
   sound_lists: [SoundList];
   font_bitmaps: [FontBitmap];
 
-  external_textures: [string];
+  external_textures: [ExternalTexture];
   external_instances: [string];
+
+  embedded_assets: [EmbeddedAsset];
 }
 
 file_identifier "SSAB";

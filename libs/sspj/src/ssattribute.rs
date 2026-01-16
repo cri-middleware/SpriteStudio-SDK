@@ -625,7 +625,7 @@ pub struct SsAttributeAudio {
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct SsAttributeTexchangeKeyValue {
-    texture_name: String,
+    pub texture_name: String,
 }
 #[derive(Deserialize, PartialEq, Debug)]
 pub struct SsAttributeTexchangeKey {

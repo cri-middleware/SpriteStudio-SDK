@@ -217,6 +217,35 @@ impl From<&[ssab::ssab::PartAnimationDataIntValueT]> for PartAnimationDataIntVal
 }
 
 #[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataUIntValueKey {
+    pub index: u16,
+    pub interpolation: ssab::ssab::InterpolationType,
+    pub value: u32,
+}
+impl From<&ssab::ssab::PartAnimationDataUIntValueT> for PartAnimationDataUIntValueKey {
+    fn from(value: &ssab::ssab::PartAnimationDataUIntValueT) -> Self {
+        Self {
+            index: value.index,
+            interpolation: ssab::ssab::InterpolationType::from(value.interpolation),
+            value: value.value,
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAnimationDataUIntValueVecKey {
+    pub v: Vec<PartAnimationDataUIntValueKey>,
+}
+impl From<&[ssab::ssab::PartAnimationDataUIntValueT]> for PartAnimationDataUIntValueVecKey {
+    fn from(value: &[ssab::ssab::PartAnimationDataUIntValueT]) -> Self {
+        Self {
+            v: value.iter().map(|v| PartAnimationDataUIntValueKey::from(v)).collect(),
+        }
+    }
+}
+
+
+#[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataBoolValueKey {
     pub index: u16,
     pub value: bool,
@@ -448,7 +477,7 @@ pub struct PartAnimationDataKey {
     pub mask_array: Option<PartAnimationDataFloatValueVecKey>,
     pub skew_array: Option<PartAnimationDataVec2VecKey>,
     pub deform_array: Option<PartAnimationDataDeformVecKey>,
-    pub texture_array: Option<PartAnimationDataIntValueVecKey>,
+    pub texture_array: Option<PartAnimationDataUIntValueVecKey>,
 }
 impl From<&ssab::ssab::PartAnimationDataT> for PartAnimationDataKey {
     fn from(value: &ssab::ssab::PartAnimationDataT) -> Self {
@@ -490,7 +519,7 @@ impl From<&ssab::ssab::PartAnimationDataT> for PartAnimationDataKey {
             mask_array: value.mask_array.as_ref().map(|m| PartAnimationDataFloatValueVecKey::from(m.as_ref())),
             skew_array: value.skew_array.as_ref().map(|s| PartAnimationDataVec2VecKey::from(s.as_ref())),
             deform_array: value.deform_array.as_ref().map(|d| PartAnimationDataDeformVecKey::from(d.as_ref())),
-            texture_array: value.texture_array.as_ref().map(|t| PartAnimationDataIntValueVecKey::from(t.as_ref())),
+            texture_array: value.texture_array.as_ref().map(|t| PartAnimationDataUIntValueVecKey::from(t.as_ref())),
 
         }
     }
@@ -678,7 +707,7 @@ pub struct PartAttributesKey {
     pub mask: ordered_float::OrderedFloat<f32>,
     pub skew: Option<Vec2Key>,
     pub deform: Option<PartAttributeDeformKey>,
-    pub texture: i32,
+    pub texture: u32,
 }
 impl From<&ssab::ssab::PartAttributesT> for PartAttributesKey {
     fn from(value: &ssab::ssab::PartAttributesT) -> Self {
@@ -779,6 +808,8 @@ pub struct SsabCache<'a> {
     pub part_animation_data_float_value_vec_cache: HashMap<PartAnimationDataFloatValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataFloatValue<'a>>>>>,
     pub part_animation_data_int_value_cache: HashMap<PartAnimationDataIntValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataIntValue<'a>>>,
     pub part_animation_data_int_value_vec_cache: HashMap<PartAnimationDataIntValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataIntValue<'a>>>>>,
+    pub part_animation_data_uint_value_cache: HashMap<PartAnimationDataUIntValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataUIntValue<'a>>>,
+    pub part_animation_data_uint_value_vec_cache: HashMap<PartAnimationDataUIntValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataUIntValue<'a>>>>>,
     pub part_animation_data_bool_value_cache: HashMap<PartAnimationDataBoolValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataBoolValue<'a>>>,
     pub part_animation_data_bool_value_vec_cache: HashMap<PartAnimationDataBoolValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataBoolValue<'a>>>>>,
     pub part_animation_data_cell_value_cache: HashMap<PartAnimationDataCellValueKey, flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataCellValue<'a>>>,
@@ -827,6 +858,8 @@ impl<'a> SsabCache<'a> {
             part_animation_data_float_value_vec_cache: HashMap::new(),
             part_animation_data_int_value_cache: HashMap::new(),
             part_animation_data_int_value_vec_cache: HashMap::new(),
+            part_animation_data_uint_value_cache: HashMap::new(),
+            part_animation_data_uint_value_vec_cache: HashMap::new(),
             part_animation_data_bool_value_cache: HashMap::new(),
             part_animation_data_bool_value_vec_cache: HashMap::new(),
             part_animation_data_cell_value_cache: HashMap::new(),
@@ -1021,6 +1054,30 @@ impl<'a> SsabCache<'a> {
         let v = part_animation_data_int_value_t_array.iter().map(|t| self.create_shared_part_animation_data_int_value(fb, t)).collect::<Vec<_>>();
         let offset = fb.create_vector(&v);
         self.part_animation_data_int_value_vec_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_uint_value(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_uint_value_t: &ssab::ssab::PartAnimationDataUIntValueT) -> flatbuffers::WIPOffset<ssab::ssab::PartAnimationDataUIntValue<'a>> {
+        let key = PartAnimationDataUIntValueKey::from(part_animation_data_uint_value_t);
+        if let Some(&offset) = self.part_animation_data_uint_value_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::PartAnimationDataUIntValueArgs::default();
+        args.index = part_animation_data_uint_value_t.index;
+        args.value = part_animation_data_uint_value_t.value;
+        let offset = ssab::ssab::PartAnimationDataUIntValue::create(fb, &args);
+        self.part_animation_data_uint_value_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_part_animation_data_uint_value_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_animation_data_uint_value_t_array: &[ssab::ssab::PartAnimationDataUIntValueT]) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationDataUIntValue<'a>>>> {
+        let key = PartAnimationDataUIntValueVecKey::from(part_animation_data_uint_value_t_array);
+        if let Some(&offset) = self.part_animation_data_uint_value_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = part_animation_data_uint_value_t_array.iter().map(|t| self.create_shared_part_animation_data_uint_value(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.part_animation_data_uint_value_vec_cache.insert(key, offset);
         offset
     }
 
@@ -1319,7 +1376,7 @@ impl<'a> SsabCache<'a> {
             self.create_shared_part_animation_data_deform_list(fb, deform_array)
         });
         p_args.texture_array = part_animation_data.texture_array.as_ref().map(|texture_array| {
-            self.create_shared_part_animation_data_int_value_list(fb, texture_array)
+            self.create_shared_part_animation_data_uint_value_list(fb, texture_array)
         });
 
         let offset = ssab::ssab::PartAnimationData::create(fb, &p_args);
@@ -1805,6 +1862,7 @@ impl<'a> SsabCache<'a> {
             args.name_hash = cell_map_t.name_hash;
             args.name = cell_map_t.name.as_ref().map(|name| fb.create_shared_string(name));
             args.image_path = cell_map_t.image_path.as_ref().map(|s| fb.create_shared_string(s));
+            args.image_path_hash = cell_map_t.image_path_hash;
             args.size_original = cell_map_t.size_original.as_ref().map(|s| self.create_shared_vec2(fb, s));
             args.wrap_mode = cell_map_t.wrap_mode;
             args.filter_mode = cell_map_t.filter_mode;
@@ -2005,11 +2063,26 @@ impl<'a> SsabCache<'a> {
         args.sound_lists = ss_anime_binary_t.sound_lists.as_ref().map(|sound_list| self.create_shared_sound_list(fb, sound_list));
         args.font_bitmaps = ss_anime_binary_t.font_bitmaps.as_ref().map(|font_bitmap| self.create_shared_font_bitmap(fb, font_bitmap));
         args.external_textures = ss_anime_binary_t.external_textures.as_ref().map(|textures| { 
-            let vec = textures.iter().map(|texture| fb.create_shared_string(texture)).collect::<Vec<_>>();
+            let vec = textures.iter().map(|texture| {
+                let mut args = ssab::ssab::ExternalTextureArgs::default();
+                args.name_hash = texture.name_hash;
+                args.name = texture.name.as_ref().map(|name| fb.create_shared_string(name));
+                ssab::ssab::ExternalTexture::create(fb, &args)
+            }).collect::<Vec<_>>();
             fb.create_vector(&vec)
         });
         args.external_instances = ss_anime_binary_t.external_instances.as_ref().map(|external_instances| {
             let vec = external_instances.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
+            fb.create_vector(&vec)
+        });
+        args.embedded_assets = ss_anime_binary_t.embedded_assets.as_ref().map(|embedded_assets| {
+            let vec = embedded_assets.iter().map(|s| {
+                let mut args = ssab::ssab::EmbeddedAssetArgs::default();
+                args.name_hash = s.name_hash;
+                args.name = s.name.as_ref().map(|name| fb.create_shared_string(name));
+                args.data = s.data.as_ref().map(|data| fb.create_vector(&data));
+                ssab::ssab::EmbeddedAsset::create(fb, &args)
+            }).collect::<Vec<_>>();
             fb.create_vector(&vec)
         });
 

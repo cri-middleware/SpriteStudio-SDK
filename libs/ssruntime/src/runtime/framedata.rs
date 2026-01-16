@@ -2017,11 +2017,11 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<i32>(PartState::VT_DEFORM, Some(-1)).unwrap()}
   }
   #[inline]
-  pub fn texture(&self) -> i32 {
+  pub fn texture(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartState::VT_TEXTURE, Some(-1)).unwrap()}
+    unsafe { self._tab.get::<u32>(PartState::VT_TEXTURE, Some(0)).unwrap()}
   }
 }
 
@@ -2070,7 +2070,7 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<f32>("skew_x", Self::VT_SKEW_X, false)?
      .visit_field::<f32>("skew_y", Self::VT_SKEW_Y, false)?
      .visit_field::<i32>("deform", Self::VT_DEFORM, false)?
-     .visit_field::<i32>("texture", Self::VT_TEXTURE, false)?
+     .visit_field::<u32>("texture", Self::VT_TEXTURE, false)?
      .finish();
     Ok(())
   }
@@ -2115,7 +2115,7 @@ pub struct PartStateArgs<'a> {
     pub skew_x: f32,
     pub skew_y: f32,
     pub deform: i32,
-    pub texture: i32,
+    pub texture: u32,
 }
 impl<'a> Default for PartStateArgs<'a> {
   #[inline]
@@ -2160,7 +2160,7 @@ impl<'a> Default for PartStateArgs<'a> {
       skew_x: 0.0,
       skew_y: 0.0,
       deform: -1,
-      texture: -1,
+      texture: 0,
     }
   }
 }
@@ -2327,8 +2327,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<i32>(PartState::VT_DEFORM, deform, -1);
   }
   #[inline]
-  pub fn add_texture(&mut self, texture: i32) {
-    self.fbb_.push_slot::<i32>(PartState::VT_TEXTURE, texture, -1);
+  pub fn add_texture(&mut self, texture: u32) {
+    self.fbb_.push_slot::<u32>(PartState::VT_TEXTURE, texture, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartStateBuilder<'a, 'b, A> {
