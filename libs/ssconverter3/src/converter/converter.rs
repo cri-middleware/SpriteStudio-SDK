@@ -39,13 +39,7 @@ impl SspjLoader {
 }
 
 pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Result<HashMap<String, Vec<u8>>, crate::converter::converter_error::ConverterError> {
-    let sspj_loader = SspjLoader::new(path);
-    let sspj = match sspj_loader.load_ss_project() {
-        Ok(sspj) => sspj,
-        Err(error) => {
-            return Err(crate::converter::converter_error::ConverterError::SspjError(error));
-        }
-    };
+    let sspj = SspjLoader::new(path).load_ss_project()?;
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
     let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
@@ -55,7 +49,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Resul
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = if(config.shared) {
+        let offset = if config.shared {
             let mut ssab_cache = ssab_cache::SsabCache::new();
             ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t)
         } else {
@@ -70,7 +64,7 @@ pub fn convert_sspj_to_ssab_data(path: &Path, config: &ConvertConfig, ) -> Resul
     // convert ssqb structures to binary data
     let ssqb_bin_map = ssqb_model_list.par_iter().zip(sspj.sequencepack_names.par_iter()).map(|(sequence_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = if(config.shared) {
+        let offset = if config.shared {
             let mut ssqb_cache = ssqb_cache::SsqbCache::new();
             ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t)
         } else {
