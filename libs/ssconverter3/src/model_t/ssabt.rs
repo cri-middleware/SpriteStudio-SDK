@@ -68,7 +68,25 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         }
     }).collect::<Result<Vec<ssab::ssab::ExternalTextureT>, _>>()?) };
     anime_binary.external_instances = if external_instances.is_empty() { None } else { Some( external_instances.iter().map(|external_instance| external_instance.clone()).collect::<Vec<_>>()) };
-    anime_binary.embedded_assets = if embedded { None /* TODO: impl */ } else { None };
+    anime_binary.embedded_assets = if embedded {
+        let asset_files = crate::utils::get_assets_of_ssab_object_class(&anime_binary, &sspj);
+        let v = asset_files.iter().map(|(name, path)| {
+            let r = std::fs::read(path);
+            let data = match r {
+                Ok(data) => data,
+                Err(e) => {
+                    return Err(crate::ConverterError::IoError(e));
+                }
+            };
+            let mut embedded_asset = ssab::ssab::EmbeddedAssetT::default();
+            embedded_asset.name = Some(name.to_string());
+            embedded_asset.name_hash = crate::utils::fnv1a_hash_str(name);
+            embedded_asset.data = Some(data);
+
+            Ok(embedded_asset)
+        }).collect::<Result<Vec<ssab::ssab::EmbeddedAssetT>, _>>()?;
+        Some(v)
+    } else { None };
 
     Ok(anime_binary)
 }
