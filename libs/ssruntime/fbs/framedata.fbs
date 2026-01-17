@@ -131,7 +131,7 @@ table PartState {
   flip_v: bool = false;
   flip_h: bool = false;
   hide: bool = false;
-  parts_color: PartAttributePartColor;
+  part_color: PartAttributePartColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
   pivot_x: float = 0.0;

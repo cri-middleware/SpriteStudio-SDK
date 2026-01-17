@@ -115,7 +115,7 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
         });
     });
 
-    let mut parts_color_: Option<PartAttributePartColor> = None;
+    let mut part_color: Option<PartAttributePartColor> = None;
     part.parts_color_array().and_then(|parts_color_array| {
         parts_color_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).and_then(|parts_color| {
             parts_color.value().map(|color| {
@@ -153,12 +153,12 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
                     &lb,
                     &rb
                 );
-                parts_color_ = Some(a);
+                part_color = Some(a);
             })
         })
     });
-    if parts_color_.is_some() {
-        p_args.parts_color = parts_color_.as_ref();
+    if part_color.is_some() {
+        p_args.part_color = part_color.as_ref();
         p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor;
     }
 
