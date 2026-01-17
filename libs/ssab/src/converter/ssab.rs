@@ -8358,7 +8358,8 @@ impl<'a> ::flatbuffers::Follow<'a> for SoundFile<'a> {
 impl<'a> SoundFile<'a> {
   pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
   pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
-  pub const VT_TIME_TOTAL: ::flatbuffers::VOffsetT = 8;
+  pub const VT_FILE_PATH: ::flatbuffers::VOffsetT = 8;
+  pub const VT_TIME_TOTAL: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -8371,6 +8372,7 @@ impl<'a> SoundFile<'a> {
   ) -> ::flatbuffers::WIPOffset<SoundFile<'bldr>> {
     let mut builder = SoundFileBuilder::new(_fbb);
     builder.add_time_total(args.time_total);
+    if let Some(x) = args.file_path { builder.add_file_path(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_name_hash(args.name_hash);
     builder.finish()
@@ -8381,10 +8383,14 @@ impl<'a> SoundFile<'a> {
     let name = self.name().map(|x| {
       alloc::string::ToString::to_string(x)
     });
+    let file_path = self.file_path().map(|x| {
+      alloc::string::ToString::to_string(x)
+    });
     let time_total = self.time_total();
     SoundFileT {
       name_hash,
       name,
+      file_path,
       time_total,
     }
   }
@@ -8414,6 +8420,13 @@ impl<'a> SoundFile<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_NAME, None)}
   }
   #[inline]
+  pub fn file_path(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_FILE_PATH, None)}
+  }
+  #[inline]
   pub fn time_total(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
@@ -8430,6 +8443,7 @@ impl ::flatbuffers::Verifiable for SoundFile<'_> {
     v.visit_table(pos)?
      .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("file_path", Self::VT_FILE_PATH, false)?
      .visit_field::<u32>("time_total", Self::VT_TIME_TOTAL, false)?
      .finish();
     Ok(())
@@ -8438,6 +8452,7 @@ impl ::flatbuffers::Verifiable for SoundFile<'_> {
 pub struct SoundFileArgs<'a> {
     pub name_hash: u32,
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub file_path: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub time_total: u32,
 }
 impl<'a> Default for SoundFileArgs<'a> {
@@ -8446,6 +8461,7 @@ impl<'a> Default for SoundFileArgs<'a> {
     SoundFileArgs {
       name_hash: 0,
       name: None,
+      file_path: None,
       time_total: 0,
     }
   }
@@ -8463,6 +8479,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SoundFileBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SoundFile::VT_NAME, name);
+  }
+  #[inline]
+  pub fn add_file_path(&mut self, file_path: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SoundFile::VT_FILE_PATH, file_path);
   }
   #[inline]
   pub fn add_time_total(&mut self, time_total: u32) {
@@ -8488,6 +8508,7 @@ impl ::core::fmt::Debug for SoundFile<'_> {
     let mut ds = f.debug_struct("SoundFile");
       ds.field("name_hash", &self.name_hash());
       ds.field("name", &self.name());
+      ds.field("file_path", &self.file_path());
       ds.field("time_total", &self.time_total());
       ds.finish()
   }
@@ -8497,6 +8518,7 @@ impl ::core::fmt::Debug for SoundFile<'_> {
 pub struct SoundFileT {
   pub name_hash: u32,
   pub name: Option<alloc::string::String>,
+  pub file_path: Option<alloc::string::String>,
   pub time_total: u32,
 }
 impl Default for SoundFileT {
@@ -8504,6 +8526,7 @@ impl Default for SoundFileT {
     Self {
       name_hash: 0,
       name: None,
+      file_path: None,
       time_total: 0,
     }
   }
@@ -8517,10 +8540,14 @@ impl SoundFileT {
     let name = self.name.as_ref().map(|x|{
       _fbb.create_string(x)
     });
+    let file_path = self.file_path.as_ref().map(|x|{
+      _fbb.create_string(x)
+    });
     let time_total = self.time_total;
     SoundFile::create(_fbb, &SoundFileArgs{
       name_hash,
       name,
+      file_path,
       time_total,
     })
   }

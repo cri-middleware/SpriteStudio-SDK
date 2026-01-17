@@ -4,6 +4,7 @@ fn convert_sound_file_list(_sspj: &sspj::sspj::SsProject, sssound_list: &sspj::s
 
         sound_file_t.name_hash = crate::utils::fnv1a_hash_str(&sssound.filename);
         sound_file_t.name = if sssound.filename.is_empty() { None } else { Some(sssound.filename.to_string()) };
+        sound_file_t.file_path = if sssound.filename.is_empty() { None } else { Some(sssound.filename.to_string()) };
         sound_file_t.time_total = sssound.msec;
 
         sound_file_t

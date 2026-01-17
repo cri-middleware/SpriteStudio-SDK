@@ -23,7 +23,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
 
     // font_bitmap
     let using_font_bitmap_names = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Text).filter_map(|part| {
-        if part.text_bitmap { Some(part.name.to_string()) } else { None }
+        if part.text_bitmap { Some(part.text_char_map.to_string()) } else { None }
     }).collect::<HashSet<String>>();
     let using_fnt_bitmaps = using_font_bitmap_names.iter().filter_map(|name| {
         let Some(charmap) = sspj.charmap_dic.get(name) else {
