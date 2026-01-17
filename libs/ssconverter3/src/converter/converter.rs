@@ -41,7 +41,7 @@ impl SspjLoader {
 pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig, ) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError> {
     let sspj = SspjLoader::new(path).load_ss_project()?;
     let Some(sspj_parent) = path.parent() else {
-        return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::NotFound, format!("not found: path parent: {}", path.as_os_str().to_string_lossy()))))
+            return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::NotFound, format!("not found: path parent: {}", path.as_os_str().to_string_lossy()))))
     };
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
@@ -108,16 +108,18 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
     };
 
     if !outdir_path.exists() {
-        let Ok(_) = std::fs::create_dir_all(outdir_path.as_path()) else {
-            return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::PermissionDenied, format!("can't create a directory: {}", outdir_path.as_path().to_str().unwrap()))))
-        };
+        let r = std::fs::create_dir_all(outdir_path.as_path());
+        match r {
+            Ok(_) => (),
+            Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
+        }
     }
 
     convert_result.par_iter().try_for_each(|(name, data)| {
         let output_path = outdir_path.join(name);
         match std::fs::write(output_path.as_path(), data) {
             Ok(_) => Ok(()),
-            Err(_) => Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::Other, format!("can't write a ssab file: {}", output_path.as_path().to_str().unwrap()))))
+            Err(e) => Err(crate::converter::converter_error::ConverterError::IoError(e)),
         }
     })?;
 
@@ -125,15 +127,18 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
         let src_path_buf = std::path::PathBuf::from(path);
         let src_prefix = src_path_buf.parent().unwrap();
         let assets = crate::delivery::get_assets_of_ssab_using(&convert_result, &sspj);
-        assets.iter().map(|asset| {
-            let src = src_prefix.join(asset);
-            let dst = outdir_path.join(asset);
-            let Ok(_) = std::fs::create_dir_all(dst.parent().unwrap()) else {
-                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::PermissionDenied, format!("can't create a directory: {}", outdir_path.as_path().to_str().unwrap()))))
+        assets.iter().map(|(dst_rel_path, src_rel_path)| {
+            let src = src_prefix.join(src_rel_path);
+            let dst = outdir_path.join(dst_rel_path);
+            let r = std::fs::create_dir_all(dst.parent().unwrap());
+            match r {
+                Ok(_) => (),
+                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
             };
             let r = std::fs::copy(&src, &dst);
-            if r.is_err() {
-                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::Other, format!("can't copy a file: {}", dst.as_path().to_str().unwrap()))));
+            match r {
+                Ok(_) => (),
+                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
             }
             Ok(())
         }).collect::<Result<Vec<_>, _>>()?;
