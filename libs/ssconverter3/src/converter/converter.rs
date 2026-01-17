@@ -126,7 +126,7 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
     if !config.convert_config.embedded {
         let src_path_buf = std::path::PathBuf::from(path);
         let src_prefix = src_path_buf.parent().unwrap();
-        let assets = crate::delivery::get_assets_of_ssab_using(&convert_result, &sspj);
+        let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
         assets.iter().map(|(dst_rel_path, src_rel_path)| {
             let src = src_prefix.join(src_rel_path);
             let dst = outdir_path.join(dst_rel_path);
