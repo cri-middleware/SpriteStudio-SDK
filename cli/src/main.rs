@@ -3,24 +3,26 @@ use std::env;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 use std::thread::JoinHandle;
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 
 
 #[derive(Parser, Debug)]
 #[command(
     name = "ssconverter3-cli",
     override_usage = "
-single mode: convert a single sspj project or a single sspj project zip file usage:
-  $ ssconverter3-cli [OPTIONS] <sspj_file>
-  $ ssconverter3-cli [OPTIONS] <sspj_zip_file>
+  single mode: convert a single sspj project or a single sspj project zip file
+  usage:
+    $ ssconverter3-cli [OPTIONS] <sspj_file>
+    $ ssconverter3-cli [OPTIONS] <sspj_zip_file>
 
-batch mode: convert multiple sspj projects usage:
-  $ ssconverter3-cli [OPTIONS] <sspj_file> <sspj_file> ...
-  $ ssconverter3-cli [OPTIONS] <directory> <directory> ...
+  batch mode: convert multiple sspj projects
+  usage:
+    $ ssconverter3-cli [OPTIONS] <sspj_file> <sspj_file> ...
+    $ ssconverter3-cli [OPTIONS] <directory> <directory> ...
 "
 )]
 struct Cli {
-    #[arg(required = true, value_names = &["sspj_files", "sspj_zip_files", "directories"], num_args = 1..)]
+    #[arg(required = true, value_names = &["sspj_files", "sspj_zip_file", "directories"], num_args = 1..)]
     files: Vec<PathBuf>,
 
     #[arg(short, long, help = "embed assets into a ssab file")]
@@ -35,6 +37,14 @@ fn main() -> Result<(), ssconverter3::ConverterError> {
     let args = Cli::parse();
 
     let sspj_paths = ssconverter3::utility::parse_args(&args.files);
+    if sspj_paths.is_empty() {
+        eprintln!("sspj files not found.");
+
+        let mut cmd = Cli::command();
+        eprintln!("{}", cmd.render_usage());
+        return Ok(());
+    }
+
     let mut config = ssconverter3::ConverterConfig::default();
     if sspj_paths.len() == 1 {
         // single mode (sspj file or sspj zip file)
