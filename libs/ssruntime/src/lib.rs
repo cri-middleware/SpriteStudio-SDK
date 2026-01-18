@@ -9,19 +9,18 @@ pub mod ffi;
 pub mod web;
 
 pub struct Context {
-    ssab: ssab::ssab::SsAnimeBinary<'static>,
-    controller: core::playback_controller::PlaybackController,
+    ssab_buf: Vec<u8>,
     fb: flatbuffers::FlatBufferBuilder<'static>,
-    animation: Option<ssab::ssab::AnimationData<'static>>,
+    controller: core::playback_controller::PlaybackController,
+    animation_idx: i32,
 }
 
 impl Context {
     pub fn new(buf: &[u8]) -> Result<Context, std::io::Error> {
-        let buf: &'static [u8] = unsafe { std::mem::transmute(buf) };
+        let ssab_buf = buf.to_vec();
 
+        // validate ssab version
         let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
-
-        // validate version
         if ssab.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
             let msg = "invalid ssab version expected: ".to_string()
@@ -32,24 +31,40 @@ impl Context {
         }
 
         Ok(Context {
-            controller: core::playback_controller::PlaybackController::new(),
-            ssab,
+            ssab_buf,
             fb: flatbuffers::FlatBufferBuilder::new(),
-            animation: None,
+            controller: core::playback_controller::PlaybackController::new(),
+            animation_idx: -1,
         })
     }
 
+    pub fn get_ssab_buf(&self) -> &[u8] {
+        self.ssab_buf.as_ref()
+    }
+
+    pub fn get_ssab_buf_ptr(&self) -> *const u8 {
+        self.ssab_buf.as_ptr()
+    }
+
+    pub fn get_ssab_buf_len(&self) -> usize {
+        self.ssab_buf.len()
+    }
+
     pub fn setup_animation(&mut self, name: &str) -> bool {
-        let Some(animation) = self.ssab.animations().map(|animations| {
-            animations.lookup_by_key(name, |en, key| en.key_compare_with_value(key))
-        }).flatten() else { return false; };
+        let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
+        let Some((index, animation)) = ssab.animations().and_then(|animations| {
+            animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == std::cmp::Ordering::Equal })
+        }) else {
+            return false;
+        };
         self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
-        self.animation = Some(animation);
+        self.animation_idx = index as i32;
         true
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
-        let Some(animation) = self.animation else {
+        let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
+        let Some(animation) =  ssab.animations().map(|animations| animations.get(self.animation_idx as usize)) else {
             return None;
         };
         if !(animation.start_frame() as i32 <= frame_no && frame_no <= animation.end_frame() as i32) {
@@ -214,6 +229,32 @@ mod tests {
                 let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
                 let config = ssconverter3::ConverterConfig::default();
                 let _ = ssconverter3::convert_sspj_to_ssab_files(sspj.as_path(), &config);
+            }
+        });
+    }
+
+    #[test]
+    fn load_parts_of_ssab_files() {
+        prepare();
+        TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
+            let ssab_dir = get_test_base_path().join(dir);
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            for entry in ssab_dir.read_dir().unwrap() {
+                let f = entry.unwrap().path();
+                if !f.is_file() || f.extension().unwrap() != "ssab" { continue; }
+
+                let input_buf =  std::fs::read(&f).unwrap();
+                let mut context = Context::new(&input_buf).unwrap();
+
+                let ssab_buf = context.get_ssab_buf();
+                let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(ssab_buf) };
+                println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
+                println!("  parts");
+                ssab.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {
+                    println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
+                }));
+
+                println!();
             }
         });
     }
