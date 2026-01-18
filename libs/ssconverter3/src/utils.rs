@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use ssab::ssab::ExternalTextureT;
 
 pub fn fnv1a_hash_str(text: &str) -> u32 {
     let mut hash: u32 = 2166136261;
@@ -100,9 +99,11 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
         })).collect::<HashMap<_, _>>();
 
     // TODO: improve font bitmap path
+    /*
     let fonts = anime.font_bitmaps().into_iter().flatten().flat_map(|font_bitmap| {
         font_bitmap.name_texture().into_iter().flatten().map(|name_texture| name_texture.to_string())
     });
+     */
 
     let mut output = HashMap::<String, String>::new();
     output.extend(images);
