@@ -130,11 +130,14 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
         assets.iter().map(|(dst_rel_path, src_rel_path)| {
             let src = src_prefix.join(src_rel_path);
             let dst = outdir_path.join(dst_rel_path);
-            let r = std::fs::create_dir_all(dst.parent().unwrap());
-            match r {
-                Ok(_) => (),
-                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
-            };
+            let dst_parent = dst.parent().unwrap();
+            if !dst_parent.exists() {
+                let r = std::fs::create_dir_all(dst.parent().unwrap());
+                match r {
+                    Ok(_) => (),
+                    Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
+                };
+            }
             let r = std::fs::copy(&src, &dst);
             match r {
                 Ok(_) => (),

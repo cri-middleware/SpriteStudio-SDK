@@ -1882,6 +1882,7 @@ impl<'a> SsabCache<'a> {
             let mut sound_file_args = ssab::ssab::SoundFileArgs::default();
             sound_file_args.name_hash = table_data_t.name_hash;
             sound_file_args.name = table_data_t.name.as_ref().map(|name| fb.create_shared_string(name));
+            sound_file_args.file_path = table_data_t.file_path.as_ref().map(|s| fb.create_shared_string(s));
             sound_file_args.time_total = table_data_t.time_total;
 
             ssab::ssab::SoundFile::create(fb, &sound_file_args)

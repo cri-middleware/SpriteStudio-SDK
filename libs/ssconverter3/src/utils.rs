@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use ssab::ssab::ExternalTextureT;
 
 pub fn fnv1a_hash_str(text: &str) -> u32 {
     let mut hash: u32 = 2166136261;
@@ -59,10 +58,12 @@ pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::SsAnimeBinaryT, ss
         external_texture.name.as_ref().map(|s| (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()))
     ).collect::<HashMap<String, String>>();
 
-    // TODO: impl
-    //let sounds = anime.sound_lists().into_iter().flatten().flat_map(|soundlist| {
-    //    soundlist.table_data().into_iter().flatten().map(|item| item.name().to_string())
-    //});
+    let sounds = ssab_obj.sound_lists.iter().flat_map(|soundlist| soundlist.iter()).flat_map(|soundlist| {
+        soundlist.table_data.iter().flatten().map(|file| {
+            let file_path = file.file_path.as_ref().unwrap();
+            (file_path.to_string(), file_path.to_string())
+        })
+    }).collect::<HashMap<String, String>>();
 
     // TODO: improve font bitmap path
     /*
@@ -74,6 +75,7 @@ pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::SsAnimeBinaryT, ss
     let mut output = HashMap::<String, String>::new();
     output.extend(images);
     output.extend(external_textures);
+    output.extend(sounds);
     output
 }
 
@@ -81,28 +83,32 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
     let ssab_data = ssab_pair.1;
     let anime = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(ssab_data) };
 
-    let images = anime.cellmaps().into_iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| {
+    let images = anime.cellmaps().iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| {
         (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string())
     })).collect::<HashMap<_, _>>();
 
-    let external_textures = anime.external_textures().into_iter().flatten().map(|external_texture| {
+    let external_textures = anime.external_textures().iter().flatten().map(|external_texture| {
         let s = external_texture.name().unwrap();
         (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(external_texture.name().unwrap()).to_string_lossy().to_string())
     }).collect::<HashMap<_, _>>();
 
-    // TODO: impl
-    //let sounds = anime.sound_lists().into_iter().flatten().flat_map(|soundlist| {
-    //    soundlist.table_data().into_iter().flatten().map(|item| item.name().to_string())
-    //});
+    let sounds = anime.sound_lists().iter().flatten().flat_map(|soundlist|
+        soundlist.table_data().into_iter().flatten().map(|item| {
+            let file_path = item.file_path().unwrap().to_string();
+            (file_path.to_string(), file_path.to_string())
+        })).collect::<HashMap<_, _>>();
 
     // TODO: improve font bitmap path
+    /*
     let fonts = anime.font_bitmaps().into_iter().flatten().flat_map(|font_bitmap| {
         font_bitmap.name_texture().into_iter().flatten().map(|name_texture| name_texture.to_string())
     });
+     */
 
     let mut output = HashMap::<String, String>::new();
     output.extend(images);
     output.extend(external_textures);
+    output.extend(sounds);
     output
 }
 

@@ -297,6 +297,7 @@ table Effect {
 table SoundFile {
   name_hash: uint32 (key);
   name: string;
+  file_path: string;
   time_total: uint;
 }
 

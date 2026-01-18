@@ -23,7 +23,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
 
     // font_bitmap
     let using_font_bitmap_names = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Text).filter_map(|part| {
-        if part.text_bitmap { Some(part.name.to_string()) } else { None }
+        if part.text_bitmap { Some(part.text_char_map.to_string()) } else { None }
     }).collect::<HashSet<String>>();
     let using_fnt_bitmaps = using_font_bitmap_names.iter().filter_map(|name| {
         let Some(charmap) = sspj.charmap_dic.get(name) else {
@@ -55,22 +55,26 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     };
     anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps, sspj_parent_path)?) };
     anime_binary.effects = if using_effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &using_effect_file_list)) };
-    anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list)) };
+    anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list, sspj_parent_path)?) };
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
-    anime_binary.external_textures = if external_textures.is_empty() { None } else { Some(external_textures.iter().map(|texture_path| {
-        let mut external_texture = ssab::ssab::ExternalTextureT::default();
-        external_texture.name_hash = crate::utils::fnv1a_hash_str(texture_path);
-        external_texture.name = Some(texture_path.to_string());
-        let r = crate::utils::validate_file_path(texture_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, sspj).as_path());
-        match r {
-            Ok(_) => Ok(external_texture),
-            Err(e) => Err(e),
-        }
-    }).collect::<Result<Vec<ssab::ssab::ExternalTextureT>, _>>()?) };
+    anime_binary.external_textures = if external_textures.is_empty() { None } else {
+        let mut v = external_textures.iter().map(|texture_path| {
+            let mut external_texture = ssab::ssab::ExternalTextureT::default();
+            external_texture.name_hash = crate::utils::fnv1a_hash_str(texture_path);
+            external_texture.name = Some(texture_path.to_string());
+            let r = crate::utils::validate_file_path(texture_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, sspj).as_path());
+            match r {
+                Ok(_) => Ok(external_texture),
+                Err(e) => Err(e),
+            }
+        }).collect::<Result<Vec<ssab::ssab::ExternalTextureT>, _>>()?;
+        v.sort_by_key(|external_texture| external_texture.name_hash);
+        Some(v)
+    };
     anime_binary.external_instances = if external_instances.is_empty() { None } else { Some( external_instances.iter().map(|external_instance| external_instance.clone()).collect::<Vec<_>>()) };
     anime_binary.embedded_assets = if embedded {
         let asset_files = crate::utils::get_assets_of_ssab_object_class(&anime_binary, &sspj);
-        let v = asset_files.iter().map(|(name, path)| {
+        let mut v = asset_files.iter().map(|(name, path)| {
             let r = std::fs::read(path);
             let data = match r {
                 Ok(data) => data,
@@ -85,6 +89,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
 
             Ok(embedded_asset)
         }).collect::<Result<Vec<ssab::ssab::EmbeddedAssetT>, _>>()?;
+        v.sort_by_key(|embedded_asset| embedded_asset.name_hash);
         Some(v)
     } else { None };
 

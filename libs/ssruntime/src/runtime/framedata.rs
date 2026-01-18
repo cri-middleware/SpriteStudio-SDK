@@ -1666,7 +1666,7 @@ impl<'a> PartState<'a> {
   pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 34;
   pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 36;
   pub const VT_HIDE: ::flatbuffers::VOffsetT = 38;
-  pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 40;
+  pub const VT_PART_COLOR: ::flatbuffers::VOffsetT = 40;
   pub const VT_SHADER: ::flatbuffers::VOffsetT = 42;
   pub const VT_VERTEX: ::flatbuffers::VOffsetT = 44;
   pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 46;
@@ -1719,7 +1719,7 @@ impl<'a> PartState<'a> {
     builder.add_pivot_x(args.pivot_x);
     if let Some(x) = args.vertex { builder.add_vertex(x); }
     if let Some(x) = args.shader { builder.add_shader(x); }
-    if let Some(x) = args.parts_color { builder.add_parts_color(x); }
+    if let Some(x) = args.part_color { builder.add_part_color(x); }
     builder.add_priority(args.priority);
     builder.add_localopacity(args.localopacity);
     builder.add_opacity(args.opacity);
@@ -1870,11 +1870,11 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<bool>(PartState::VT_HIDE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn parts_color(&self) -> Option<&'a PartAttributePartColor> {
+  pub fn part_color(&self) -> Option<&'a PartAttributePartColor> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<PartAttributePartColor>(PartState::VT_PARTS_COLOR, None)}
+    unsafe { self._tab.get::<PartAttributePartColor>(PartState::VT_PART_COLOR, None)}
   }
   #[inline]
   pub fn shader(&self) -> Option<&'a PartAttributeShader> {
@@ -2049,7 +2049,7 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
-     .visit_field::<PartAttributePartColor>("parts_color", Self::VT_PARTS_COLOR, false)?
+     .visit_field::<PartAttributePartColor>("part_color", Self::VT_PART_COLOR, false)?
      .visit_field::<PartAttributeShader>("shader", Self::VT_SHADER, false)?
      .visit_field::<PartAttributeVertex>("vertex", Self::VT_VERTEX, false)?
      .visit_field::<f32>("pivot_x", Self::VT_PIVOT_X, false)?
@@ -2094,7 +2094,7 @@ pub struct PartStateArgs<'a> {
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
-    pub parts_color: Option<&'a PartAttributePartColor>,
+    pub part_color: Option<&'a PartAttributePartColor>,
     pub shader: Option<&'a PartAttributeShader>,
     pub vertex: Option<&'a PartAttributeVertex>,
     pub pivot_x: f32,
@@ -2139,7 +2139,7 @@ impl<'a> Default for PartStateArgs<'a> {
       flip_v: false,
       flip_h: false,
       hide: false,
-      parts_color: None,
+      part_color: None,
       shader: None,
       vertex: None,
       pivot_x: 0.0,
@@ -2243,8 +2243,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(PartState::VT_HIDE, hide, false);
   }
   #[inline]
-  pub fn add_parts_color(&mut self, parts_color: &PartAttributePartColor) {
-    self.fbb_.push_slot_always::<&PartAttributePartColor>(PartState::VT_PARTS_COLOR, parts_color);
+  pub fn add_part_color(&mut self, part_color: &PartAttributePartColor) {
+    self.fbb_.push_slot_always::<&PartAttributePartColor>(PartState::VT_PART_COLOR, part_color);
   }
   #[inline]
   pub fn add_shader(&mut self, shader: &PartAttributeShader) {
@@ -2366,7 +2366,7 @@ impl ::core::fmt::Debug for PartState<'_> {
       ds.field("flip_v", &self.flip_v());
       ds.field("flip_h", &self.flip_h());
       ds.field("hide", &self.hide());
-      ds.field("parts_color", &self.parts_color());
+      ds.field("part_color", &self.part_color());
       ds.field("shader", &self.shader());
       ds.field("vertex", &self.vertex());
       ds.field("pivot_x", &self.pivot_x());
