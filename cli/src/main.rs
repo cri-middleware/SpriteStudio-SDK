@@ -1,34 +1,56 @@
 use ssconverter3;
 use std::env;
 use std::ffi::{OsStr, OsString};
+use std::path::PathBuf;
 use std::thread::JoinHandle;
+use clap::Parser;
 
-fn print_usage(prog: &OsStr) {
-    let p = prog.to_string_lossy();
-    let formatted_output = format!(
-        r#"
-single sspj file usage:
-$ {} <sspj_file>
 
-multiple sspj files usage:
-$ {} <sspj_file OR directory> [sspj_file OR directory...]
-"#,
-        p, p,
-    );
-    println!("{}", formatted_output);
+#[derive(Parser, Debug)]
+#[command(
+    name = "ssconverter3-cli",
+    override_usage = "
+single mode: convert a single sspj project or a single sspj project zip file usage:
+  $ ssconverter3-cli [OPTIONS] <sspj_file>
+  $ ssconverter3-cli [OPTIONS] <sspj_zip_file>
+
+batch mode: convert multiple sspj projects usage:
+  $ ssconverter3-cli [OPTIONS] <sspj_file> <sspj_file> ...
+  $ ssconverter3-cli [OPTIONS] <directory> <directory> ...
+"
+)]
+struct Cli {
+    #[arg(required = true, value_names = &["sspj_files", "sspj_zip_files", "directories"], num_args = 1..)]
+    files: Vec<PathBuf>,
+
+    #[arg(short, long, help = "embed assets into a ssab file")]
+    embedded: bool,
+
+    #[arg(short, long, value_name = "directory", help = "output directory path (available for single mode only)")]
+    out_dir: Option<OsString>,
+
 }
+
 fn main() -> Result<(), ssconverter3::ConverterError> {
-    let args: Vec<OsString> = env::args_os().collect();
-    if args.len() <= 1 {
-        print_usage(args[0].as_os_str());
-        return Ok(());
+    let args = Cli::parse();
+
+    let sspj_paths = ssconverter3::utility::parse_args(&args.files);
+    let mut config = ssconverter3::ConverterConfig::default();
+    if sspj_paths.len() == 1 {
+        // single mode (sspj file or sspj zip file)
+        config.convert_config = ssconverter3::ConvertConfig {
+            embedded: args.embedded,
+            ..Default::default()
+        };
+        config.out_dir = args.out_dir;
+    } else {
+        // batch mode
+        config.convert_config = ssconverter3::ConvertConfig {
+            embedded: args.embedded,
+            ..Default::default()
+        };
+        config.out_dir = None; // batch mode does not support out_dir
     }
-    let sspj_paths = ssconverter3::utility::parse_args(&args);
-    if sspj_paths.is_empty() {
-        print_usage(&args[0]);
-        return Ok(());
-    }
-    let config = ssconverter3::ConverterConfig::default();
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter3::ConverterError>>> = vec![];
     sspj_paths.iter().for_each(|path_buf| {
