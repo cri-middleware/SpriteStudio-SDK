@@ -17,6 +17,18 @@ pub extern "C" fn ss_runtime_destroy(context: *mut crate::Context) {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut crate::Context) -> *mut c_uchar {
+    let context = unsafe { &mut *context };
+    context.get_ssab_buf_ptr() as *mut c_uchar
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_ssab_buf_len(context: *mut crate::Context) -> usize {
+    let context = unsafe { &mut *context };
+    context.get_ssab_buf_len()
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_setup_animation(context: *mut crate::Context, name: *mut c_char) -> bool {
     let context = unsafe { &mut *context };
 
