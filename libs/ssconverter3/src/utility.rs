@@ -3,11 +3,10 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-pub fn parse_args(args: &[OsString]) -> Vec<PathBuf> {
+pub fn parse_args(args: &[PathBuf]) -> Vec<PathBuf> {
     args.iter()
         .filter_map(|arg| {
-            let path = Path::new(arg);
-            path.exists().then(|| collect_sspj_files(path))
+            arg.exists().then(|| collect_sspj_files(arg))
         })
         .flatten()
         .collect::<HashSet<_>>()
