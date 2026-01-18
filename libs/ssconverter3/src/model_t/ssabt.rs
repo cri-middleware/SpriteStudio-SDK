@@ -77,7 +77,8 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.embedded_assets = if embedded {
         let asset_files = crate::utils::get_assets_of_ssab_object_class(&anime_binary, &sspj);
         let mut v = asset_files.iter().map(|(name, path)| {
-            let r = std::fs::read(path);
+            let src = sspj_parent_path.join(path);
+            let r = std::fs::read(src);
             let data = match r {
                 Ok(data) => data,
                 Err(e) => {
