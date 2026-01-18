@@ -213,6 +213,25 @@ impl SsLoader for SsProject {
         Ok(sspj)
     }
 
+    fn load_from_maps(name: &str, maps: &std::collections::HashMap<String, String>) -> Result<Self::Output, crate::sspj_error::SspjError> {
+        let Some(xml_data) = maps.get(name) else {
+            return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to read a file: {:?}", name))));
+        };
+        let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
+
+        sspj.sound_list = sspj.audiopack_names.par_iter().map(|audiopack| { SsAudioPack::load_from_maps(audiopack, maps)  }).collect::<Result<Vec<SsAudioPack>, crate::sspj_error::SspjError>>()?;
+        sspj.sequence_list = sspj.sequencepack_names.par_iter().map(|sequence_name| { SsSequencePack::load_from_maps(sequence_name, maps)  }).collect::<Result<Vec<SsSequencePack>, crate::sspj_error::SspjError>>()?;
+        sspj.charmap_dic = sspj.charmap_names.par_iter().map(|charmap_name| {
+            let charmap_data = SsCharMap::load_from_maps(charmap_name, maps).map_err(|e| e)?;
+            Ok((charmap_name.to_string(), charmap_data))
+        }).collect::<Result<HashMap<String, SsCharMap>, crate::sspj_error::SspjError>>()?;
+        sspj.cellmap_list = sspj.cellmap_names.par_iter().map(|cellmap_name| { SsCellMap::load_from_maps(cellmap_name, maps)  }).collect::<Result<Vec<SsCellMap>, crate::sspj_error::SspjError>>()?;
+        sspj.effect_file_list = sspj.effect_file_names.par_iter().map(|effect_file_name| { SsEffectFile::load_from_maps(effect_file_name, maps)  }).collect::<Result<Vec<SsEffectFile>, crate::sspj_error::SspjError>>()?;
+        sspj.anime_list = sspj.animepack_names.par_iter().map(|animepack_name| { SsAnimePack::load_from_maps(animepack_name, maps)  }).collect::<Result<Vec<SsAnimePack>, crate::sspj_error::SspjError>>()?;
+
+        Ok(sspj)
+    }
+
     fn load(_: &str) -> Result<<Self as SsLoader>::Output, crate::sspj_error::SspjError> {
         Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, "Not support Sspj::load()")))
     }
