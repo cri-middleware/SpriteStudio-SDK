@@ -82,9 +82,6 @@ pub struct SsCellMap {
 
     #[serde(deserialize_with = "parse_ss_cells")]
     pub cells: Vec<SsCell>,
-
-    #[serde(default)]
-    pub load_file_path: String,
 }
 impl SsLoader for SsCellMap {
     type Output = SsCellMap;

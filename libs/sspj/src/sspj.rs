@@ -138,34 +138,35 @@ impl SsLoader for SsProject {
         let Some(parent) = path.parent() else {
             return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to get a parent directory: {:?}", path.parent()))))
         };
+        let parent_path_buf = parent.to_path_buf();
         let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
 
         let sound_handle = {
-            let parent_path = parent.to_path_buf();
             let audiopack_names = sspj.audiopack_names.clone();
+            let p = parent_path_buf.clone();
             std::thread::spawn(move || {
                 audiopack_names.par_iter().map(|audiopack| {
-                    SsAudioPack::load_from_file(&parent_path.join(audiopack))
+                    SsAudioPack::load_from_file(&p.join(audiopack))
                 }).collect::<Result<Vec<SsAudioPack>, crate::sspj_error::SspjError>>()
             })
         };
 
         let sequence_handle = {
-            let parent_path = parent.to_path_buf();
             let sequencepack_names = sspj.sequencepack_names.clone();
+            let p = parent_path_buf.clone();
             std::thread::spawn(move || {
                 sequencepack_names.par_iter().map(|sequencepack| {
-                    SsSequencePack::load_from_file(&parent_path.join(sequencepack))
+                    SsSequencePack::load_from_file(&p.join(sequencepack))
                 }).collect::<Result<Vec<SsSequencePack>, crate::sspj_error::SspjError>>()
             })
         };
 
         let charmap_handle = {
-            let parent_path = parent.to_path_buf();
             let charmap_names = sspj.charmap_names.clone();
+            let p = parent_path_buf.clone();
             std::thread::spawn(move || {
                 charmap_names.par_iter().map(|charmap_name| {
-                    let path = parent_path.join(charmap_name);
+                    let path = p.join(charmap_name);
                     let charmap_data = SsCharMap::load_from_file(&path).map_err(|e| e)?;
                     Ok((charmap_name.to_string(), charmap_data))
                 }).collect::<Result<HashMap<String, SsCharMap>, crate::sspj_error::SspjError>>()
@@ -173,34 +174,31 @@ impl SsLoader for SsProject {
         };
         
         let cellmap_handle = {
-            let parent_path = parent.to_path_buf().join(&sspj.settings.cell_map_base_directory);
             let cellmap_names = sspj.cellmap_names.clone();
+            let p = parent_path_buf.clone().join(&sspj.settings.cell_map_base_directory);
             std::thread::spawn(move || {
                 cellmap_names.par_iter().map(|cellmap| {
-                    let ssce_path = parent_path.join(cellmap);
-                    let mut ssce = SsCellMap::load_from_file(&ssce_path)?;
-                    ssce.load_file_path = ssce_path.file_name().unwrap().to_string_lossy().to_string();
-                    Ok(ssce)
+                    SsCellMap::load_from_file(&p.join(cellmap))
                 }).collect::<Result<Vec<SsCellMap>, crate::sspj_error::SspjError>>()
             })
         };
 
         let effect_handle = {
-            let parent_path = parent.to_path_buf().join(&sspj.settings.effect_base_directory);
             let effect_file_names = sspj.effect_file_names.clone();
+            let p = parent_path_buf.clone().join(&sspj.settings.effect_base_directory);
             std::thread::spawn(move || {
                 effect_file_names.par_iter().map(|effect_file| {
-                    SsEffectFile::load_from_file(&parent_path.join(effect_file))
+                    SsEffectFile::load_from_file(&p.join(effect_file))
                 }).collect::<Result<Vec<SsEffectFile>, crate::sspj_error::SspjError>>()
             })
         };
 
         let animepack_handle = {
-            let parent_path = parent.to_path_buf().join(&sspj.settings.anime_base_directory);
             let animepack_names = sspj.animepack_names.clone();
+            let p = parent_path_buf.clone().join(&sspj.settings.anime_base_directory);
             std::thread::spawn(move || {
                 animepack_names.par_iter().map(|animepack| {
-                    SsAnimePack::load_from_file(&parent_path.join(animepack))
+                    SsAnimePack::load_from_file(&p.join(animepack))
                 }).collect::<Result<Vec<SsAnimePack>, crate::sspj_error::SspjError>>()
             })
         };

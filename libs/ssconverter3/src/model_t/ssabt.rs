@@ -17,9 +17,11 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     // cellmap
     let effects_use_cellmap_names = using_effect_file_list.iter().flat_map(|f| &f.effect_data.node_list).map(|n| &n.behavior.cell_map_name).filter(|name| !name.is_empty()).cloned().collect::<Vec<String>>();
     let cellmap_names = anime_pack.cellmap_names.iter().map(|cellmap_file| cellmap_file.to_string()).chain(effects_use_cellmap_names).collect::<HashSet<String>>();
-    let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| {
-        sspj.cellmap_list.iter().find(|cellmap| cellmap.load_file_path == *cellmap_name)
-    }).collect::<Vec<_>>();
+    let cellmaps = cellmap_names.iter().filter_map(|cellmap_name| sspj.cellmap_list.iter().find(|cellmap| {
+        let cell_file_name = cellmap.name.to_string() + ".ssce";
+        cell_file_name == *cellmap_name
+    })
+    ).collect::<Vec<_>>();
 
     // font_bitmap
     let using_font_bitmap_names = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Text).filter_map(|part| {
