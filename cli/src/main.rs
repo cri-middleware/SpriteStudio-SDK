@@ -31,9 +31,10 @@ fn main() -> Result<(), ssconverter3::ConverterError> {
     let config = ssconverter3::ConverterConfig::default();
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter3::ConverterError>>> = vec![];
-    sspj_paths.into_iter().for_each(|p| {
-        println!("convert {:?}", p.display());
+    sspj_paths.iter().for_each(|path_buf| {
+        println!("convert {:?}", path_buf.display());
         handlers.push({
+            let p = path_buf.clone();
             let c = config.clone();
             std::thread::spawn(move || {
                 ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &c)
