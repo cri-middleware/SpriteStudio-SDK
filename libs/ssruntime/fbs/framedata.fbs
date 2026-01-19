@@ -125,9 +125,9 @@ table PartState {
   scale_y: float = 1.0;
   local_scale_x: float = 1.0;
   local_scale_y: float = 1.0;
-  opacity: float = 1.0;
-  localopacity: float = 1.0;
-  priority: int = 0;
+  alpha: float = 1.0;
+  local_alpha: float = 1.0;
+  priority: float = 0.0;
   flip_v: bool = false;
   flip_h: bool = false;
   hide: bool = false;
@@ -142,9 +142,9 @@ table PartState {
   size_y: float = 1.0;
   img_flip_h: bool = false;
   img_flip_v: bool = false;
-  uv_move_x: float = 0.0;
-  uv_move_y: float = 0.0;
-  uv_move_z: float = 0.0;
+  uv_translation_x: float = 0.0;
+  uv_translation_y: float = 0.0;
+  uv_rotation_z: float = 0.0;
   uv_scale_x: float = 1.0;
   uv_scale_y: float = 1.0;
   bounding_radius: float = 0.0;
