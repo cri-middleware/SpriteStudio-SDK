@@ -1,6 +1,5 @@
 use ssconverter3;
-use std::env;
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::path::PathBuf;
 use std::thread::JoinHandle;
 use clap::{CommandFactory, Parser};
