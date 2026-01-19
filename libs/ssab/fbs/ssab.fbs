@@ -3,12 +3,6 @@ table Vec2 {
   v2: float;
 }
 
-table Vec3 {
-  v1: float;
-  v2: float;
-  v3: float;
-}
-
 table Rect {
   x1: float;
   y1: float;
