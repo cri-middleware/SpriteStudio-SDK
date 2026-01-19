@@ -264,67 +264,66 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
             },
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.position_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.position_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosZ(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.position_z = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.rotation_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.rotation_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotZ(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.rotation_z = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.scale_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.scale_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.local_scale_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.local_scale_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Alpha(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.alpha = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.local_alpha = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
@@ -348,7 +347,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
                 });
             },
             sspj::ssattribute::SsAttributeKind::Color => {
-                // TODO: impl
+                /* MEMO: Not Supported (Feature prior to Ver.6.0) */
             },
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
@@ -362,32 +361,32 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
             },
             sspj::ssattribute::SsAttributeKind::PivotX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.pivot_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::PivotY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.pivot_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.anchor_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.anchor_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
-                });
+                    p_args.size_x = _key.value;
+               });
             },
             sspj::ssattribute::SsAttributeKind::SizeY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.size_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
@@ -402,27 +401,28 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
             },
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.uv_translation_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.uv_translation_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    /* MEMO: (Preliminary) "rotation" is set to "move.z". */
+                    p_args.uv_rotation_z = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsX(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.uv_scale_x = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsY(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.uv_scale_y = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {

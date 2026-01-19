@@ -12272,28 +12272,42 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributes<'a> {
 
 impl<'a> PartAttributes<'a> {
   pub const VT_CELL: ::flatbuffers::VOffsetT = 4;
-  pub const VT_POSITION: ::flatbuffers::VOffsetT = 6;
-  pub const VT_ROTATION: ::flatbuffers::VOffsetT = 8;
-  pub const VT_SCALE: ::flatbuffers::VOffsetT = 10;
-  pub const VT_LOCAL_SCALE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_OPACITY: ::flatbuffers::VOffsetT = 14;
-  pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 16;
-  pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 18;
-  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 20;
-  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 22;
-  pub const VT_HIDE: ::flatbuffers::VOffsetT = 24;
-  pub const VT_PARTS_COLOR: ::flatbuffers::VOffsetT = 26;
-  pub const VT_SHADER: ::flatbuffers::VOffsetT = 28;
-  pub const VT_VERTEX: ::flatbuffers::VOffsetT = 30;
-  pub const VT_PIVOT: ::flatbuffers::VOffsetT = 32;
-  pub const VT_SIZE: ::flatbuffers::VOffsetT = 34;
-  pub const VT_UV_MOVE: ::flatbuffers::VOffsetT = 36;
-  pub const VT_UV_SCALE: ::flatbuffers::VOffsetT = 38;
-  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 40;
-  pub const VT_MASK: ::flatbuffers::VOffsetT = 42;
-  pub const VT_SKEW: ::flatbuffers::VOffsetT = 44;
-  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 46;
-  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 48;
+  pub const VT_POSITION_X: ::flatbuffers::VOffsetT = 6;
+  pub const VT_POSITION_Y: ::flatbuffers::VOffsetT = 8;
+  pub const VT_POSITION_Z: ::flatbuffers::VOffsetT = 10;
+  pub const VT_ROTATION_X: ::flatbuffers::VOffsetT = 12;
+  pub const VT_ROTATION_Y: ::flatbuffers::VOffsetT = 14;
+  pub const VT_ROTATION_Z: ::flatbuffers::VOffsetT = 16;
+  pub const VT_SCALE_X: ::flatbuffers::VOffsetT = 18;
+  pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 20;
+  pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 22;
+  pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 24;
+  pub const VT_ALPHA: ::flatbuffers::VOffsetT = 26;
+  pub const VT_LOCAL_ALPHA: ::flatbuffers::VOffsetT = 28;
+  pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 30;
+  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 32;
+  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 34;
+  pub const VT_HIDE: ::flatbuffers::VOffsetT = 36;
+  pub const VT_PART_COLOR: ::flatbuffers::VOffsetT = 38;
+  pub const VT_SHADER: ::flatbuffers::VOffsetT = 40;
+  pub const VT_VERTEX: ::flatbuffers::VOffsetT = 42;
+  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 44;
+  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 46;
+  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 48;
+  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 50;
+  pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 52;
+  pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 54;
+  pub const VT_UV_TRANSLATION_X: ::flatbuffers::VOffsetT = 56;
+  pub const VT_UV_TRANSLATION_Y: ::flatbuffers::VOffsetT = 58;
+  pub const VT_UV_ROTATION_Z: ::flatbuffers::VOffsetT = 60;
+  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 62;
+  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 64;
+  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 66;
+  pub const VT_MASK: ::flatbuffers::VOffsetT = 68;
+  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 70;
+  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 72;
+  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 74;
+  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 76;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12307,24 +12321,38 @@ impl<'a> PartAttributes<'a> {
     let mut builder = PartAttributesBuilder::new(_fbb);
     builder.add_texture(args.texture);
     if let Some(x) = args.deform { builder.add_deform(x); }
-    if let Some(x) = args.skew { builder.add_skew(x); }
+    builder.add_skew_y(args.skew_y);
+    builder.add_skew_x(args.skew_x);
     builder.add_mask(args.mask);
     builder.add_bounding_radius(args.bounding_radius);
-    if let Some(x) = args.uv_scale { builder.add_uv_scale(x); }
-    if let Some(x) = args.uv_move { builder.add_uv_move(x); }
-    if let Some(x) = args.size { builder.add_size(x); }
-    if let Some(x) = args.pivot { builder.add_pivot(x); }
+    builder.add_uv_scale_y(args.uv_scale_y);
+    builder.add_uv_scale_x(args.uv_scale_x);
+    builder.add_uv_rotation_z(args.uv_rotation_z);
+    builder.add_uv_translation_y(args.uv_translation_y);
+    builder.add_uv_translation_x(args.uv_translation_x);
+    builder.add_size_y(args.size_y);
+    builder.add_size_x(args.size_x);
+    builder.add_pivot_y(args.pivot_y);
+    builder.add_pivot_x(args.pivot_x);
+    builder.add_anchor_y(args.anchor_y);
+    builder.add_anchor_x(args.anchor_x);
     if let Some(x) = args.vertex { builder.add_vertex(x); }
     if let Some(x) = args.shader { builder.add_shader(x); }
-    if let Some(x) = args.parts_color { builder.add_parts_color(x); }
-    builder.add_localopacity(args.localopacity);
-    builder.add_opacity(args.opacity);
-    if let Some(x) = args.local_scale { builder.add_local_scale(x); }
-    if let Some(x) = args.scale { builder.add_scale(x); }
-    if let Some(x) = args.rotation { builder.add_rotation(x); }
-    if let Some(x) = args.position { builder.add_position(x); }
-    if let Some(x) = args.cell { builder.add_cell(x); }
+    if let Some(x) = args.part_color { builder.add_part_color(x); }
     builder.add_priority(args.priority);
+    builder.add_local_alpha(args.local_alpha);
+    builder.add_alpha(args.alpha);
+    builder.add_local_scale_y(args.local_scale_y);
+    builder.add_local_scale_x(args.local_scale_x);
+    builder.add_scale_y(args.scale_y);
+    builder.add_scale_x(args.scale_x);
+    builder.add_rotation_z(args.rotation_z);
+    builder.add_rotation_y(args.rotation_y);
+    builder.add_rotation_x(args.rotation_x);
+    builder.add_position_z(args.position_z);
+    builder.add_position_y(args.position_y);
+    builder.add_position_x(args.position_x);
+    if let Some(x) = args.cell { builder.add_cell(x); }
     builder.add_hide(args.hide);
     builder.add_flip_h(args.flip_h);
     builder.add_flip_v(args.flip_v);
@@ -12335,25 +12363,23 @@ impl<'a> PartAttributes<'a> {
     let cell = self.cell().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
-    let position = self.position().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let rotation = self.rotation().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let scale = self.scale().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let local_scale = self.local_scale().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let opacity = self.opacity();
-    let localopacity = self.localopacity();
+    let position_x = self.position_x();
+    let position_y = self.position_y();
+    let position_z = self.position_z();
+    let rotation_x = self.rotation_x();
+    let rotation_y = self.rotation_y();
+    let rotation_z = self.rotation_z();
+    let scale_x = self.scale_x();
+    let scale_y = self.scale_y();
+    let local_scale_x = self.local_scale_x();
+    let local_scale_y = self.local_scale_y();
+    let alpha = self.alpha();
+    let local_alpha = self.local_alpha();
     let priority = self.priority();
     let flip_v = self.flip_v();
     let flip_h = self.flip_h();
     let hide = self.hide();
-    let parts_color = self.parts_color().map(|x| {
+    let part_color = self.part_color().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
     let shader = self.shader().map(|x| {
@@ -12362,49 +12388,61 @@ impl<'a> PartAttributes<'a> {
     let vertex = self.vertex().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
-    let pivot = self.pivot().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let size = self.size().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let uv_move = self.uv_move().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
-    let uv_scale = self.uv_scale().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
+    let anchor_x = self.anchor_x();
+    let anchor_y = self.anchor_y();
+    let pivot_x = self.pivot_x();
+    let pivot_y = self.pivot_y();
+    let size_x = self.size_x();
+    let size_y = self.size_y();
+    let uv_translation_x = self.uv_translation_x();
+    let uv_translation_y = self.uv_translation_y();
+    let uv_rotation_z = self.uv_rotation_z();
+    let uv_scale_x = self.uv_scale_x();
+    let uv_scale_y = self.uv_scale_y();
     let bounding_radius = self.bounding_radius();
     let mask = self.mask();
-    let skew = self.skew().map(|x| {
-      alloc::boxed::Box::new(x.unpack())
-    });
+    let skew_x = self.skew_x();
+    let skew_y = self.skew_y();
     let deform = self.deform().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
     let texture = self.texture();
     PartAttributesT {
       cell,
-      position,
-      rotation,
-      scale,
-      local_scale,
-      opacity,
-      localopacity,
+      position_x,
+      position_y,
+      position_z,
+      rotation_x,
+      rotation_y,
+      rotation_z,
+      scale_x,
+      scale_y,
+      local_scale_x,
+      local_scale_y,
+      alpha,
+      local_alpha,
       priority,
       flip_v,
       flip_h,
       hide,
-      parts_color,
+      part_color,
       shader,
       vertex,
-      pivot,
-      size,
-      uv_move,
-      uv_scale,
+      anchor_x,
+      anchor_y,
+      pivot_x,
+      pivot_y,
+      size_x,
+      size_y,
+      uv_translation_x,
+      uv_translation_y,
+      uv_rotation_z,
+      uv_scale_x,
+      uv_scale_y,
       bounding_radius,
       mask,
-      skew,
+      skew_x,
+      skew_y,
       deform,
       texture,
     }
@@ -12418,53 +12456,95 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeCell>>(PartAttributes::VT_CELL, None)}
   }
   #[inline]
-  pub fn position(&self) -> Option<Vec3<'a>> {
+  pub fn position_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec3>>(PartAttributes::VT_POSITION, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_POSITION_X, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn rotation(&self) -> Option<Vec3<'a>> {
+  pub fn position_y(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec3>>(PartAttributes::VT_ROTATION, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_POSITION_Y, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn scale(&self) -> Option<Vec2<'a>> {
+  pub fn position_z(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_SCALE, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_POSITION_Z, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn local_scale(&self) -> Option<Vec2<'a>> {
+  pub fn rotation_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_LOCAL_SCALE, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ROTATION_X, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn opacity(&self) -> f32 {
+  pub fn rotation_y(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributes::VT_OPACITY, Some(1.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ROTATION_Y, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn localopacity(&self) -> f32 {
+  pub fn rotation_z(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCALOPACITY, Some(1.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ROTATION_Z, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn priority(&self) -> i16 {
+  pub fn scale_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(PartAttributes::VT_PRIORITY, Some(0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SCALE_X, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn scale_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SCALE_Y, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn local_scale_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCAL_SCALE_X, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn local_scale_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCAL_SCALE_Y, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn alpha(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ALPHA, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn local_alpha(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_LOCAL_ALPHA, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn priority(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_PRIORITY, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn flip_v(&self) -> bool {
@@ -12488,11 +12568,11 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<bool>(PartAttributes::VT_HIDE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn parts_color(&self) -> Option<PartAttributePartColor<'a>> {
+  pub fn part_color(&self) -> Option<PartAttributePartColor<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>(PartAttributes::VT_PARTS_COLOR, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>(PartAttributes::VT_PART_COLOR, None)}
   }
   #[inline]
   pub fn shader(&self) -> Option<PartAttributeShader<'a>> {
@@ -12509,32 +12589,81 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>(PartAttributes::VT_VERTEX, None)}
   }
   #[inline]
-  pub fn pivot(&self) -> Option<Vec2<'a>> {
+  pub fn anchor_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_PIVOT, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ANCHOR_X, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn size(&self) -> Option<Vec2<'a>> {
+  pub fn anchor_y(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_SIZE, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ANCHOR_Y, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn uv_move(&self) -> Option<Vec3<'a>> {
+  pub fn pivot_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec3>>(PartAttributes::VT_UV_MOVE, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_PIVOT_X, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn uv_scale(&self) -> Option<Vec2<'a>> {
+  pub fn pivot_y(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_UV_SCALE, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_PIVOT_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn size_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SIZE_X, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn size_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SIZE_Y, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_translation_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_TRANSLATION_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_translation_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_TRANSLATION_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_rotation_z(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_ROTATION_Z, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_scale_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_SCALE_X, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn uv_scale_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_UV_SCALE_Y, Some(1.0)).unwrap()}
   }
   #[inline]
   pub fn bounding_radius(&self) -> f32 {
@@ -12551,11 +12680,18 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<f32>(PartAttributes::VT_MASK, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn skew(&self) -> Option<Vec2<'a>> {
+  pub fn skew_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAttributes::VT_SKEW, None)}
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SKEW_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn skew_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_SKEW_Y, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn deform(&self) -> Option<PartAttributeDeform<'a>> {
@@ -12580,26 +12716,40 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeCell>>("cell", Self::VT_CELL, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec3>>("position", Self::VT_POSITION, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec3>>("rotation", Self::VT_ROTATION, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("scale", Self::VT_SCALE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("local_scale", Self::VT_LOCAL_SCALE, false)?
-     .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
-     .visit_field::<f32>("localopacity", Self::VT_LOCALOPACITY, false)?
-     .visit_field::<i16>("priority", Self::VT_PRIORITY, false)?
+     .visit_field::<f32>("position_x", Self::VT_POSITION_X, false)?
+     .visit_field::<f32>("position_y", Self::VT_POSITION_Y, false)?
+     .visit_field::<f32>("position_z", Self::VT_POSITION_Z, false)?
+     .visit_field::<f32>("rotation_x", Self::VT_ROTATION_X, false)?
+     .visit_field::<f32>("rotation_y", Self::VT_ROTATION_Y, false)?
+     .visit_field::<f32>("rotation_z", Self::VT_ROTATION_Z, false)?
+     .visit_field::<f32>("scale_x", Self::VT_SCALE_X, false)?
+     .visit_field::<f32>("scale_y", Self::VT_SCALE_Y, false)?
+     .visit_field::<f32>("local_scale_x", Self::VT_LOCAL_SCALE_X, false)?
+     .visit_field::<f32>("local_scale_y", Self::VT_LOCAL_SCALE_Y, false)?
+     .visit_field::<f32>("alpha", Self::VT_ALPHA, false)?
+     .visit_field::<f32>("local_alpha", Self::VT_LOCAL_ALPHA, false)?
+     .visit_field::<f32>("priority", Self::VT_PRIORITY, false)?
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("parts_color", Self::VT_PARTS_COLOR, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("part_color", Self::VT_PART_COLOR, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>("shader", Self::VT_SHADER, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>("vertex", Self::VT_VERTEX, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("pivot", Self::VT_PIVOT, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("size", Self::VT_SIZE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec3>>("uv_move", Self::VT_UV_MOVE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("uv_scale", Self::VT_UV_SCALE, false)?
+     .visit_field::<f32>("anchor_x", Self::VT_ANCHOR_X, false)?
+     .visit_field::<f32>("anchor_y", Self::VT_ANCHOR_Y, false)?
+     .visit_field::<f32>("pivot_x", Self::VT_PIVOT_X, false)?
+     .visit_field::<f32>("pivot_y", Self::VT_PIVOT_Y, false)?
+     .visit_field::<f32>("size_x", Self::VT_SIZE_X, false)?
+     .visit_field::<f32>("size_y", Self::VT_SIZE_Y, false)?
+     .visit_field::<f32>("uv_translation_x", Self::VT_UV_TRANSLATION_X, false)?
+     .visit_field::<f32>("uv_translation_y", Self::VT_UV_TRANSLATION_Y, false)?
+     .visit_field::<f32>("uv_rotation_z", Self::VT_UV_ROTATION_Z, false)?
+     .visit_field::<f32>("uv_scale_x", Self::VT_UV_SCALE_X, false)?
+     .visit_field::<f32>("uv_scale_y", Self::VT_UV_SCALE_Y, false)?
      .visit_field::<f32>("bounding_radius", Self::VT_BOUNDING_RADIUS, false)?
      .visit_field::<f32>("mask", Self::VT_MASK, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("skew", Self::VT_SKEW, false)?
+     .visit_field::<f32>("skew_x", Self::VT_SKEW_X, false)?
+     .visit_field::<f32>("skew_y", Self::VT_SKEW_Y, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>("deform", Self::VT_DEFORM, false)?
      .visit_field::<u32>("texture", Self::VT_TEXTURE, false)?
      .finish();
@@ -12608,26 +12758,40 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
 }
 pub struct PartAttributesArgs<'a> {
     pub cell: Option<::flatbuffers::WIPOffset<PartAttributeCell<'a>>>,
-    pub position: Option<::flatbuffers::WIPOffset<Vec3<'a>>>,
-    pub rotation: Option<::flatbuffers::WIPOffset<Vec3<'a>>>,
-    pub scale: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub local_scale: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub opacity: f32,
-    pub localopacity: f32,
-    pub priority: i16,
+    pub position_x: f32,
+    pub position_y: f32,
+    pub position_z: f32,
+    pub rotation_x: f32,
+    pub rotation_y: f32,
+    pub rotation_z: f32,
+    pub scale_x: f32,
+    pub scale_y: f32,
+    pub local_scale_x: f32,
+    pub local_scale_y: f32,
+    pub alpha: f32,
+    pub local_alpha: f32,
+    pub priority: f32,
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
-    pub parts_color: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
+    pub part_color: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
     pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
     pub vertex: Option<::flatbuffers::WIPOffset<PartAttributeVertex<'a>>>,
-    pub pivot: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub size: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
-    pub uv_move: Option<::flatbuffers::WIPOffset<Vec3<'a>>>,
-    pub uv_scale: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub anchor_x: f32,
+    pub anchor_y: f32,
+    pub pivot_x: f32,
+    pub pivot_y: f32,
+    pub size_x: f32,
+    pub size_y: f32,
+    pub uv_translation_x: f32,
+    pub uv_translation_y: f32,
+    pub uv_rotation_z: f32,
+    pub uv_scale_x: f32,
+    pub uv_scale_y: f32,
     pub bounding_radius: f32,
     pub mask: f32,
-    pub skew: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub skew_x: f32,
+    pub skew_y: f32,
     pub deform: Option<::flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
     pub texture: u32,
 }
@@ -12636,26 +12800,40 @@ impl<'a> Default for PartAttributesArgs<'a> {
   fn default() -> Self {
     PartAttributesArgs {
       cell: None,
-      position: None,
-      rotation: None,
-      scale: None,
-      local_scale: None,
-      opacity: 1.0,
-      localopacity: 1.0,
-      priority: 0,
+      position_x: 0.0,
+      position_y: 0.0,
+      position_z: 0.0,
+      rotation_x: 0.0,
+      rotation_y: 0.0,
+      rotation_z: 0.0,
+      scale_x: 1.0,
+      scale_y: 1.0,
+      local_scale_x: 1.0,
+      local_scale_y: 1.0,
+      alpha: 1.0,
+      local_alpha: 1.0,
+      priority: 0.0,
       flip_v: false,
       flip_h: false,
       hide: false,
-      parts_color: None,
+      part_color: None,
       shader: None,
       vertex: None,
-      pivot: None,
-      size: None,
-      uv_move: None,
-      uv_scale: None,
+      anchor_x: 0.0,
+      anchor_y: 0.0,
+      pivot_x: 0.0,
+      pivot_y: 0.0,
+      size_x: 1.0,
+      size_y: 1.0,
+      uv_translation_x: 0.0,
+      uv_translation_y: 0.0,
+      uv_rotation_z: 0.0,
+      uv_scale_x: 1.0,
+      uv_scale_y: 1.0,
       bounding_radius: 0.0,
       mask: 0.0,
-      skew: None,
+      skew_x: 0.0,
+      skew_y: 0.0,
       deform: None,
       texture: 0,
     }
@@ -12672,32 +12850,56 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeCell>>(PartAttributes::VT_CELL, cell);
   }
   #[inline]
-  pub fn add_position(&mut self, position: ::flatbuffers::WIPOffset<Vec3<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec3>>(PartAttributes::VT_POSITION, position);
+  pub fn add_position_x(&mut self, position_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_POSITION_X, position_x, 0.0);
   }
   #[inline]
-  pub fn add_rotation(&mut self, rotation: ::flatbuffers::WIPOffset<Vec3<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec3>>(PartAttributes::VT_ROTATION, rotation);
+  pub fn add_position_y(&mut self, position_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_POSITION_Y, position_y, 0.0);
   }
   #[inline]
-  pub fn add_scale(&mut self, scale: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_SCALE, scale);
+  pub fn add_position_z(&mut self, position_z: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_POSITION_Z, position_z, 0.0);
   }
   #[inline]
-  pub fn add_local_scale(&mut self, local_scale: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_LOCAL_SCALE, local_scale);
+  pub fn add_rotation_x(&mut self, rotation_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ROTATION_X, rotation_x, 0.0);
   }
   #[inline]
-  pub fn add_opacity(&mut self, opacity: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributes::VT_OPACITY, opacity, 1.0);
+  pub fn add_rotation_y(&mut self, rotation_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ROTATION_Y, rotation_y, 0.0);
   }
   #[inline]
-  pub fn add_localopacity(&mut self, localopacity: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCALOPACITY, localopacity, 1.0);
+  pub fn add_rotation_z(&mut self, rotation_z: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ROTATION_Z, rotation_z, 0.0);
   }
   #[inline]
-  pub fn add_priority(&mut self, priority: i16) {
-    self.fbb_.push_slot::<i16>(PartAttributes::VT_PRIORITY, priority, 0);
+  pub fn add_scale_x(&mut self, scale_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SCALE_X, scale_x, 1.0);
+  }
+  #[inline]
+  pub fn add_scale_y(&mut self, scale_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SCALE_Y, scale_y, 1.0);
+  }
+  #[inline]
+  pub fn add_local_scale_x(&mut self, local_scale_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCAL_SCALE_X, local_scale_x, 1.0);
+  }
+  #[inline]
+  pub fn add_local_scale_y(&mut self, local_scale_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCAL_SCALE_Y, local_scale_y, 1.0);
+  }
+  #[inline]
+  pub fn add_alpha(&mut self, alpha: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ALPHA, alpha, 1.0);
+  }
+  #[inline]
+  pub fn add_local_alpha(&mut self, local_alpha: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_LOCAL_ALPHA, local_alpha, 1.0);
+  }
+  #[inline]
+  pub fn add_priority(&mut self, priority: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_PRIORITY, priority, 0.0);
   }
   #[inline]
   pub fn add_flip_v(&mut self, flip_v: bool) {
@@ -12712,8 +12914,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<bool>(PartAttributes::VT_HIDE, hide, false);
   }
   #[inline]
-  pub fn add_parts_color(&mut self, parts_color: ::flatbuffers::WIPOffset<PartAttributePartColor<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartColor>>(PartAttributes::VT_PARTS_COLOR, parts_color);
+  pub fn add_part_color(&mut self, part_color: ::flatbuffers::WIPOffset<PartAttributePartColor<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartColor>>(PartAttributes::VT_PART_COLOR, part_color);
   }
   #[inline]
   pub fn add_shader(&mut self, shader: ::flatbuffers::WIPOffset<PartAttributeShader<'b >>) {
@@ -12724,20 +12926,48 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeVertex>>(PartAttributes::VT_VERTEX, vertex);
   }
   #[inline]
-  pub fn add_pivot(&mut self, pivot: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_PIVOT, pivot);
+  pub fn add_anchor_x(&mut self, anchor_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ANCHOR_X, anchor_x, 0.0);
   }
   #[inline]
-  pub fn add_size(&mut self, size: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_SIZE, size);
+  pub fn add_anchor_y(&mut self, anchor_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ANCHOR_Y, anchor_y, 0.0);
   }
   #[inline]
-  pub fn add_uv_move(&mut self, uv_move: ::flatbuffers::WIPOffset<Vec3<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec3>>(PartAttributes::VT_UV_MOVE, uv_move);
+  pub fn add_pivot_x(&mut self, pivot_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_PIVOT_X, pivot_x, 0.0);
   }
   #[inline]
-  pub fn add_uv_scale(&mut self, uv_scale: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_UV_SCALE, uv_scale);
+  pub fn add_pivot_y(&mut self, pivot_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_PIVOT_Y, pivot_y, 0.0);
+  }
+  #[inline]
+  pub fn add_size_x(&mut self, size_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_X, size_x, 1.0);
+  }
+  #[inline]
+  pub fn add_size_y(&mut self, size_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_Y, size_y, 1.0);
+  }
+  #[inline]
+  pub fn add_uv_translation_x(&mut self, uv_translation_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_TRANSLATION_X, uv_translation_x, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_translation_y(&mut self, uv_translation_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_TRANSLATION_Y, uv_translation_y, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_rotation_z(&mut self, uv_rotation_z: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_ROTATION_Z, uv_rotation_z, 0.0);
+  }
+  #[inline]
+  pub fn add_uv_scale_x(&mut self, uv_scale_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_SCALE_X, uv_scale_x, 1.0);
+  }
+  #[inline]
+  pub fn add_uv_scale_y(&mut self, uv_scale_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_UV_SCALE_Y, uv_scale_y, 1.0);
   }
   #[inline]
   pub fn add_bounding_radius(&mut self, bounding_radius: f32) {
@@ -12748,8 +12978,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<f32>(PartAttributes::VT_MASK, mask, 0.0);
   }
   #[inline]
-  pub fn add_skew(&mut self, skew: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAttributes::VT_SKEW, skew);
+  pub fn add_skew_x(&mut self, skew_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SKEW_X, skew_x, 0.0);
+  }
+  #[inline]
+  pub fn add_skew_y(&mut self, skew_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_SKEW_Y, skew_y, 0.0);
   }
   #[inline]
   pub fn add_deform(&mut self, deform: ::flatbuffers::WIPOffset<PartAttributeDeform<'b >>) {
@@ -12778,26 +13012,40 @@ impl ::core::fmt::Debug for PartAttributes<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributes");
       ds.field("cell", &self.cell());
-      ds.field("position", &self.position());
-      ds.field("rotation", &self.rotation());
-      ds.field("scale", &self.scale());
-      ds.field("local_scale", &self.local_scale());
-      ds.field("opacity", &self.opacity());
-      ds.field("localopacity", &self.localopacity());
+      ds.field("position_x", &self.position_x());
+      ds.field("position_y", &self.position_y());
+      ds.field("position_z", &self.position_z());
+      ds.field("rotation_x", &self.rotation_x());
+      ds.field("rotation_y", &self.rotation_y());
+      ds.field("rotation_z", &self.rotation_z());
+      ds.field("scale_x", &self.scale_x());
+      ds.field("scale_y", &self.scale_y());
+      ds.field("local_scale_x", &self.local_scale_x());
+      ds.field("local_scale_y", &self.local_scale_y());
+      ds.field("alpha", &self.alpha());
+      ds.field("local_alpha", &self.local_alpha());
       ds.field("priority", &self.priority());
       ds.field("flip_v", &self.flip_v());
       ds.field("flip_h", &self.flip_h());
       ds.field("hide", &self.hide());
-      ds.field("parts_color", &self.parts_color());
+      ds.field("part_color", &self.part_color());
       ds.field("shader", &self.shader());
       ds.field("vertex", &self.vertex());
-      ds.field("pivot", &self.pivot());
-      ds.field("size", &self.size());
-      ds.field("uv_move", &self.uv_move());
-      ds.field("uv_scale", &self.uv_scale());
+      ds.field("anchor_x", &self.anchor_x());
+      ds.field("anchor_y", &self.anchor_y());
+      ds.field("pivot_x", &self.pivot_x());
+      ds.field("pivot_y", &self.pivot_y());
+      ds.field("size_x", &self.size_x());
+      ds.field("size_y", &self.size_y());
+      ds.field("uv_translation_x", &self.uv_translation_x());
+      ds.field("uv_translation_y", &self.uv_translation_y());
+      ds.field("uv_rotation_z", &self.uv_rotation_z());
+      ds.field("uv_scale_x", &self.uv_scale_x());
+      ds.field("uv_scale_y", &self.uv_scale_y());
       ds.field("bounding_radius", &self.bounding_radius());
       ds.field("mask", &self.mask());
-      ds.field("skew", &self.skew());
+      ds.field("skew_x", &self.skew_x());
+      ds.field("skew_y", &self.skew_y());
       ds.field("deform", &self.deform());
       ds.field("texture", &self.texture());
       ds.finish()
@@ -12807,26 +13055,40 @@ impl ::core::fmt::Debug for PartAttributes<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributesT {
   pub cell: Option<alloc::boxed::Box<PartAttributeCellT>>,
-  pub position: Option<alloc::boxed::Box<Vec3T>>,
-  pub rotation: Option<alloc::boxed::Box<Vec3T>>,
-  pub scale: Option<alloc::boxed::Box<Vec2T>>,
-  pub local_scale: Option<alloc::boxed::Box<Vec2T>>,
-  pub opacity: f32,
-  pub localopacity: f32,
-  pub priority: i16,
+  pub position_x: f32,
+  pub position_y: f32,
+  pub position_z: f32,
+  pub rotation_x: f32,
+  pub rotation_y: f32,
+  pub rotation_z: f32,
+  pub scale_x: f32,
+  pub scale_y: f32,
+  pub local_scale_x: f32,
+  pub local_scale_y: f32,
+  pub alpha: f32,
+  pub local_alpha: f32,
+  pub priority: f32,
   pub flip_v: bool,
   pub flip_h: bool,
   pub hide: bool,
-  pub parts_color: Option<alloc::boxed::Box<PartAttributePartColorT>>,
+  pub part_color: Option<alloc::boxed::Box<PartAttributePartColorT>>,
   pub shader: Option<alloc::boxed::Box<PartAttributeShaderT>>,
   pub vertex: Option<alloc::boxed::Box<PartAttributeVertexT>>,
-  pub pivot: Option<alloc::boxed::Box<Vec2T>>,
-  pub size: Option<alloc::boxed::Box<Vec2T>>,
-  pub uv_move: Option<alloc::boxed::Box<Vec3T>>,
-  pub uv_scale: Option<alloc::boxed::Box<Vec2T>>,
+  pub anchor_x: f32,
+  pub anchor_y: f32,
+  pub pivot_x: f32,
+  pub pivot_y: f32,
+  pub size_x: f32,
+  pub size_y: f32,
+  pub uv_translation_x: f32,
+  pub uv_translation_y: f32,
+  pub uv_rotation_z: f32,
+  pub uv_scale_x: f32,
+  pub uv_scale_y: f32,
   pub bounding_radius: f32,
   pub mask: f32,
-  pub skew: Option<alloc::boxed::Box<Vec2T>>,
+  pub skew_x: f32,
+  pub skew_y: f32,
   pub deform: Option<alloc::boxed::Box<PartAttributeDeformT>>,
   pub texture: u32,
 }
@@ -12834,26 +13096,40 @@ impl Default for PartAttributesT {
   fn default() -> Self {
     Self {
       cell: None,
-      position: None,
-      rotation: None,
-      scale: None,
-      local_scale: None,
-      opacity: 1.0,
-      localopacity: 1.0,
-      priority: 0,
+      position_x: 0.0,
+      position_y: 0.0,
+      position_z: 0.0,
+      rotation_x: 0.0,
+      rotation_y: 0.0,
+      rotation_z: 0.0,
+      scale_x: 1.0,
+      scale_y: 1.0,
+      local_scale_x: 1.0,
+      local_scale_y: 1.0,
+      alpha: 1.0,
+      local_alpha: 1.0,
+      priority: 0.0,
       flip_v: false,
       flip_h: false,
       hide: false,
-      parts_color: None,
+      part_color: None,
       shader: None,
       vertex: None,
-      pivot: None,
-      size: None,
-      uv_move: None,
-      uv_scale: None,
+      anchor_x: 0.0,
+      anchor_y: 0.0,
+      pivot_x: 0.0,
+      pivot_y: 0.0,
+      size_x: 1.0,
+      size_y: 1.0,
+      uv_translation_x: 0.0,
+      uv_translation_y: 0.0,
+      uv_rotation_z: 0.0,
+      uv_scale_x: 1.0,
+      uv_scale_y: 1.0,
       bounding_radius: 0.0,
       mask: 0.0,
-      skew: None,
+      skew_x: 0.0,
+      skew_y: 0.0,
       deform: None,
       texture: 0,
     }
@@ -12867,25 +13143,23 @@ impl PartAttributesT {
     let cell = self.cell.as_ref().map(|x|{
       x.pack(_fbb)
     });
-    let position = self.position.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let rotation = self.rotation.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let scale = self.scale.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let local_scale = self.local_scale.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let opacity = self.opacity;
-    let localopacity = self.localopacity;
+    let position_x = self.position_x;
+    let position_y = self.position_y;
+    let position_z = self.position_z;
+    let rotation_x = self.rotation_x;
+    let rotation_y = self.rotation_y;
+    let rotation_z = self.rotation_z;
+    let scale_x = self.scale_x;
+    let scale_y = self.scale_y;
+    let local_scale_x = self.local_scale_x;
+    let local_scale_y = self.local_scale_y;
+    let alpha = self.alpha;
+    let local_alpha = self.local_alpha;
     let priority = self.priority;
     let flip_v = self.flip_v;
     let flip_h = self.flip_h;
     let hide = self.hide;
-    let parts_color = self.parts_color.as_ref().map(|x|{
+    let part_color = self.part_color.as_ref().map(|x|{
       x.pack(_fbb)
     });
     let shader = self.shader.as_ref().map(|x|{
@@ -12894,49 +13168,61 @@ impl PartAttributesT {
     let vertex = self.vertex.as_ref().map(|x|{
       x.pack(_fbb)
     });
-    let pivot = self.pivot.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let size = self.size.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let uv_move = self.uv_move.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
-    let uv_scale = self.uv_scale.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
+    let anchor_x = self.anchor_x;
+    let anchor_y = self.anchor_y;
+    let pivot_x = self.pivot_x;
+    let pivot_y = self.pivot_y;
+    let size_x = self.size_x;
+    let size_y = self.size_y;
+    let uv_translation_x = self.uv_translation_x;
+    let uv_translation_y = self.uv_translation_y;
+    let uv_rotation_z = self.uv_rotation_z;
+    let uv_scale_x = self.uv_scale_x;
+    let uv_scale_y = self.uv_scale_y;
     let bounding_radius = self.bounding_radius;
     let mask = self.mask;
-    let skew = self.skew.as_ref().map(|x|{
-      x.pack(_fbb)
-    });
+    let skew_x = self.skew_x;
+    let skew_y = self.skew_y;
     let deform = self.deform.as_ref().map(|x|{
       x.pack(_fbb)
     });
     let texture = self.texture;
     PartAttributes::create(_fbb, &PartAttributesArgs{
       cell,
-      position,
-      rotation,
-      scale,
-      local_scale,
-      opacity,
-      localopacity,
+      position_x,
+      position_y,
+      position_z,
+      rotation_x,
+      rotation_y,
+      rotation_z,
+      scale_x,
+      scale_y,
+      local_scale_x,
+      local_scale_y,
+      alpha,
+      local_alpha,
       priority,
       flip_v,
       flip_h,
       hide,
-      parts_color,
+      part_color,
       shader,
       vertex,
-      pivot,
-      size,
-      uv_move,
-      uv_scale,
+      anchor_x,
+      anchor_y,
+      pivot_x,
+      pivot_y,
+      size_x,
+      size_y,
+      uv_translation_x,
+      uv_translation_y,
+      uv_rotation_z,
+      uv_scale_x,
+      uv_scale_y,
       bounding_radius,
       mask,
-      skew,
+      skew_x,
+      skew_y,
       deform,
       texture,
     })
