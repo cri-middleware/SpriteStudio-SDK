@@ -1660,8 +1660,8 @@ impl<'a> PartState<'a> {
   pub const VT_SCALE_Y: ::flatbuffers::VOffsetT = 22;
   pub const VT_LOCAL_SCALE_X: ::flatbuffers::VOffsetT = 24;
   pub const VT_LOCAL_SCALE_Y: ::flatbuffers::VOffsetT = 26;
-  pub const VT_OPACITY: ::flatbuffers::VOffsetT = 28;
-  pub const VT_LOCALOPACITY: ::flatbuffers::VOffsetT = 30;
+  pub const VT_ALPHA: ::flatbuffers::VOffsetT = 28;
+  pub const VT_LOCAL_ALPHA: ::flatbuffers::VOffsetT = 30;
   pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 32;
   pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 34;
   pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 36;
@@ -1677,9 +1677,9 @@ impl<'a> PartState<'a> {
   pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 56;
   pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 58;
   pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 60;
-  pub const VT_UV_MOVE_X: ::flatbuffers::VOffsetT = 62;
-  pub const VT_UV_MOVE_Y: ::flatbuffers::VOffsetT = 64;
-  pub const VT_UV_MOVE_Z: ::flatbuffers::VOffsetT = 66;
+  pub const VT_UV_TRANSLATION_X: ::flatbuffers::VOffsetT = 62;
+  pub const VT_UV_TRANSLATION_Y: ::flatbuffers::VOffsetT = 64;
+  pub const VT_UV_ROTATION_Z: ::flatbuffers::VOffsetT = 66;
   pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 68;
   pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 70;
   pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 72;
@@ -1708,9 +1708,9 @@ impl<'a> PartState<'a> {
     builder.add_bounding_radius(args.bounding_radius);
     builder.add_uv_scale_y(args.uv_scale_y);
     builder.add_uv_scale_x(args.uv_scale_x);
-    builder.add_uv_move_z(args.uv_move_z);
-    builder.add_uv_move_y(args.uv_move_y);
-    builder.add_uv_move_x(args.uv_move_x);
+    builder.add_uv_rotation_z(args.uv_rotation_z);
+    builder.add_uv_translation_y(args.uv_translation_y);
+    builder.add_uv_translation_x(args.uv_translation_x);
     builder.add_size_y(args.size_y);
     builder.add_size_x(args.size_x);
     builder.add_anchor_y(args.anchor_y);
@@ -1721,8 +1721,8 @@ impl<'a> PartState<'a> {
     if let Some(x) = args.shader { builder.add_shader(x); }
     if let Some(x) = args.part_color { builder.add_part_color(x); }
     builder.add_priority(args.priority);
-    builder.add_localopacity(args.localopacity);
-    builder.add_opacity(args.opacity);
+    builder.add_local_alpha(args.local_alpha);
+    builder.add_alpha(args.alpha);
     builder.add_local_scale_y(args.local_scale_y);
     builder.add_local_scale_x(args.local_scale_x);
     builder.add_scale_y(args.scale_y);
@@ -1828,25 +1828,25 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<f32>(PartState::VT_LOCAL_SCALE_Y, Some(1.0)).unwrap()}
   }
   #[inline]
-  pub fn opacity(&self) -> f32 {
+  pub fn alpha(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartState::VT_OPACITY, Some(1.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartState::VT_ALPHA, Some(1.0)).unwrap()}
   }
   #[inline]
-  pub fn localopacity(&self) -> f32 {
+  pub fn local_alpha(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartState::VT_LOCALOPACITY, Some(1.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartState::VT_LOCAL_ALPHA, Some(1.0)).unwrap()}
   }
   #[inline]
-  pub fn priority(&self) -> i32 {
+  pub fn priority(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartState::VT_PRIORITY, Some(0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartState::VT_PRIORITY, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn flip_v(&self) -> bool {
@@ -1947,25 +1947,25 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<bool>(PartState::VT_IMG_FLIP_V, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn uv_move_x(&self) -> f32 {
+  pub fn uv_translation_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartState::VT_UV_MOVE_X, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartState::VT_UV_TRANSLATION_X, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn uv_move_y(&self) -> f32 {
+  pub fn uv_translation_y(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartState::VT_UV_MOVE_Y, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartState::VT_UV_TRANSLATION_Y, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn uv_move_z(&self) -> f32 {
+  pub fn uv_rotation_z(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartState::VT_UV_MOVE_Z, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(PartState::VT_UV_ROTATION_Z, Some(0.0)).unwrap()}
   }
   #[inline]
   pub fn uv_scale_x(&self) -> f32 {
@@ -2043,9 +2043,9 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<f32>("scale_y", Self::VT_SCALE_Y, false)?
      .visit_field::<f32>("local_scale_x", Self::VT_LOCAL_SCALE_X, false)?
      .visit_field::<f32>("local_scale_y", Self::VT_LOCAL_SCALE_Y, false)?
-     .visit_field::<f32>("opacity", Self::VT_OPACITY, false)?
-     .visit_field::<f32>("localopacity", Self::VT_LOCALOPACITY, false)?
-     .visit_field::<i32>("priority", Self::VT_PRIORITY, false)?
+     .visit_field::<f32>("alpha", Self::VT_ALPHA, false)?
+     .visit_field::<f32>("local_alpha", Self::VT_LOCAL_ALPHA, false)?
+     .visit_field::<f32>("priority", Self::VT_PRIORITY, false)?
      .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
@@ -2060,9 +2060,9 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<f32>("size_y", Self::VT_SIZE_Y, false)?
      .visit_field::<bool>("img_flip_h", Self::VT_IMG_FLIP_H, false)?
      .visit_field::<bool>("img_flip_v", Self::VT_IMG_FLIP_V, false)?
-     .visit_field::<f32>("uv_move_x", Self::VT_UV_MOVE_X, false)?
-     .visit_field::<f32>("uv_move_y", Self::VT_UV_MOVE_Y, false)?
-     .visit_field::<f32>("uv_move_z", Self::VT_UV_MOVE_Z, false)?
+     .visit_field::<f32>("uv_translation_x", Self::VT_UV_TRANSLATION_X, false)?
+     .visit_field::<f32>("uv_translation_y", Self::VT_UV_TRANSLATION_Y, false)?
+     .visit_field::<f32>("uv_rotation_z", Self::VT_UV_ROTATION_Z, false)?
      .visit_field::<f32>("uv_scale_x", Self::VT_UV_SCALE_X, false)?
      .visit_field::<f32>("uv_scale_y", Self::VT_UV_SCALE_Y, false)?
      .visit_field::<f32>("bounding_radius", Self::VT_BOUNDING_RADIUS, false)?
@@ -2088,9 +2088,9 @@ pub struct PartStateArgs<'a> {
     pub scale_y: f32,
     pub local_scale_x: f32,
     pub local_scale_y: f32,
-    pub opacity: f32,
-    pub localopacity: f32,
-    pub priority: i32,
+    pub alpha: f32,
+    pub local_alpha: f32,
+    pub priority: f32,
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
@@ -2105,9 +2105,9 @@ pub struct PartStateArgs<'a> {
     pub size_y: f32,
     pub img_flip_h: bool,
     pub img_flip_v: bool,
-    pub uv_move_x: f32,
-    pub uv_move_y: f32,
-    pub uv_move_z: f32,
+    pub uv_translation_x: f32,
+    pub uv_translation_y: f32,
+    pub uv_rotation_z: f32,
     pub uv_scale_x: f32,
     pub uv_scale_y: f32,
     pub bounding_radius: f32,
@@ -2133,9 +2133,9 @@ impl<'a> Default for PartStateArgs<'a> {
       scale_y: 1.0,
       local_scale_x: 1.0,
       local_scale_y: 1.0,
-      opacity: 1.0,
-      localopacity: 1.0,
-      priority: 0,
+      alpha: 1.0,
+      local_alpha: 1.0,
+      priority: 0.0,
       flip_v: false,
       flip_h: false,
       hide: false,
@@ -2150,9 +2150,9 @@ impl<'a> Default for PartStateArgs<'a> {
       size_y: 1.0,
       img_flip_h: false,
       img_flip_v: false,
-      uv_move_x: 0.0,
-      uv_move_y: 0.0,
-      uv_move_z: 0.0,
+      uv_translation_x: 0.0,
+      uv_translation_y: 0.0,
+      uv_rotation_z: 0.0,
       uv_scale_x: 1.0,
       uv_scale_y: 1.0,
       bounding_radius: 0.0,
@@ -2219,16 +2219,16 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<f32>(PartState::VT_LOCAL_SCALE_Y, local_scale_y, 1.0);
   }
   #[inline]
-  pub fn add_opacity(&mut self, opacity: f32) {
-    self.fbb_.push_slot::<f32>(PartState::VT_OPACITY, opacity, 1.0);
+  pub fn add_alpha(&mut self, alpha: f32) {
+    self.fbb_.push_slot::<f32>(PartState::VT_ALPHA, alpha, 1.0);
   }
   #[inline]
-  pub fn add_localopacity(&mut self, localopacity: f32) {
-    self.fbb_.push_slot::<f32>(PartState::VT_LOCALOPACITY, localopacity, 1.0);
+  pub fn add_local_alpha(&mut self, local_alpha: f32) {
+    self.fbb_.push_slot::<f32>(PartState::VT_LOCAL_ALPHA, local_alpha, 1.0);
   }
   #[inline]
-  pub fn add_priority(&mut self, priority: i32) {
-    self.fbb_.push_slot::<i32>(PartState::VT_PRIORITY, priority, 0);
+  pub fn add_priority(&mut self, priority: f32) {
+    self.fbb_.push_slot::<f32>(PartState::VT_PRIORITY, priority, 0.0);
   }
   #[inline]
   pub fn add_flip_v(&mut self, flip_v: bool) {
@@ -2287,16 +2287,16 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(PartState::VT_IMG_FLIP_V, img_flip_v, false);
   }
   #[inline]
-  pub fn add_uv_move_x(&mut self, uv_move_x: f32) {
-    self.fbb_.push_slot::<f32>(PartState::VT_UV_MOVE_X, uv_move_x, 0.0);
+  pub fn add_uv_translation_x(&mut self, uv_translation_x: f32) {
+    self.fbb_.push_slot::<f32>(PartState::VT_UV_TRANSLATION_X, uv_translation_x, 0.0);
   }
   #[inline]
-  pub fn add_uv_move_y(&mut self, uv_move_y: f32) {
-    self.fbb_.push_slot::<f32>(PartState::VT_UV_MOVE_Y, uv_move_y, 0.0);
+  pub fn add_uv_translation_y(&mut self, uv_translation_y: f32) {
+    self.fbb_.push_slot::<f32>(PartState::VT_UV_TRANSLATION_Y, uv_translation_y, 0.0);
   }
   #[inline]
-  pub fn add_uv_move_z(&mut self, uv_move_z: f32) {
-    self.fbb_.push_slot::<f32>(PartState::VT_UV_MOVE_Z, uv_move_z, 0.0);
+  pub fn add_uv_rotation_z(&mut self, uv_rotation_z: f32) {
+    self.fbb_.push_slot::<f32>(PartState::VT_UV_ROTATION_Z, uv_rotation_z, 0.0);
   }
   #[inline]
   pub fn add_uv_scale_x(&mut self, uv_scale_x: f32) {
@@ -2360,8 +2360,8 @@ impl ::core::fmt::Debug for PartState<'_> {
       ds.field("scale_y", &self.scale_y());
       ds.field("local_scale_x", &self.local_scale_x());
       ds.field("local_scale_y", &self.local_scale_y());
-      ds.field("opacity", &self.opacity());
-      ds.field("localopacity", &self.localopacity());
+      ds.field("alpha", &self.alpha());
+      ds.field("local_alpha", &self.local_alpha());
       ds.field("priority", &self.priority());
       ds.field("flip_v", &self.flip_v());
       ds.field("flip_h", &self.flip_h());
@@ -2377,9 +2377,9 @@ impl ::core::fmt::Debug for PartState<'_> {
       ds.field("size_y", &self.size_y());
       ds.field("img_flip_h", &self.img_flip_h());
       ds.field("img_flip_v", &self.img_flip_v());
-      ds.field("uv_move_x", &self.uv_move_x());
-      ds.field("uv_move_y", &self.uv_move_y());
-      ds.field("uv_move_z", &self.uv_move_z());
+      ds.field("uv_translation_x", &self.uv_translation_x());
+      ds.field("uv_translation_y", &self.uv_translation_y());
+      ds.field("uv_rotation_z", &self.uv_rotation_z());
       ds.field("uv_scale_x", &self.uv_scale_x());
       ds.field("uv_scale_y", &self.uv_scale_y());
       ds.field("bounding_radius", &self.bounding_radius());
