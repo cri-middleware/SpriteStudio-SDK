@@ -128,7 +128,10 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
                     ssab::ssab::BlendType::Screen => runtime::framedata::ss::runtime::BlendType::Screen,
                     ssab::ssab::BlendType::Exclusion => runtime::framedata::ss::runtime::BlendType::Exclusion,
                     ssab::ssab::BlendType::Invert => runtime::framedata::ss::runtime::BlendType::Invert,
-                    // TODO: blend mode
+                    ssab::ssab::BlendType::Mul2 => runtime::framedata::ss::runtime::BlendType::Mul2,
+                    ssab::ssab::BlendType::Div2 => runtime::framedata::ss::runtime::BlendType::Div2,
+                    ssab::ssab::BlendType::Screen2 => runtime::framedata::ss::runtime::BlendType::Screen2,
+                    ssab::ssab::BlendType::Overlay2 => runtime::framedata::ss::runtime::BlendType::Overlay2,
                     _ => runtime::framedata::ss::runtime::BlendType::Mix,
                 };
                 fn convert_u8rect(rgba: &ssab::ssab::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {

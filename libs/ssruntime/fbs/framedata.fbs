@@ -31,6 +31,10 @@ enum BlendType: ubyte {
   Screen,
   Exclusion,
   Invert,
+  Mul2,
+  Div2,
+  Screen2,
+  Overlay2,
 }
 
 struct PartAttributePartColor {
