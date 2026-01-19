@@ -189,7 +189,7 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
         p_args.shader = shader_.as_ref();
         p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader;
     }
-    part.vertex_array().map(|vertex_array| {
+    part.vertex_array().map(|_vertex_array| {
         // TODO: implement
         /*
         vertex_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|vertex| {

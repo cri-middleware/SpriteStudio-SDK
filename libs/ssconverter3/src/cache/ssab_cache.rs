@@ -23,22 +23,6 @@ impl Vec2Key {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct Vec3Key {
-    pub v1: ordered_float::OrderedFloat<f32>,
-    pub v2: ordered_float::OrderedFloat<f32>,
-    pub v3: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::Vec3T> for Vec3Key {
-    fn from(v: &ssab::ssab::Vec3T) -> Self {
-        Self {
-            v1: ordered_float::OrderedFloat(v.v1),
-            v2: ordered_float::OrderedFloat(v.v2),
-            v3: ordered_float::OrderedFloat(v.v3),
-        }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct RectKey {
     pub x1: ordered_float::OrderedFloat<f32>,
     pub y1: ordered_float::OrderedFloat<f32>,
@@ -804,7 +788,6 @@ impl From<&ssab::ssab::PartAttributeInstanceT> for PartAttributeInstanceKey {
 
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::Vec2<'a>>>,
-    pub vec3_cache: HashMap<Vec3Key, flatbuffers::WIPOffset<ssab::ssab::Vec3<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::Rect<'a>>>,
     pub u8rect_cache: HashMap<U8RectKey, flatbuffers::WIPOffset<ssab::ssab::U8Rect<'a>>>,
     pub bool_value_table_cache: HashMap<BoolValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::BoolValueEntry<'a>>>,
@@ -854,7 +837,6 @@ impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
         Self {
             vec2_cache: HashMap::new(),
-            vec3_cache: HashMap::new(),
             rect_cache: HashMap::new(),
             bool_value_table_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
@@ -911,20 +893,6 @@ impl<'a> SsabCache<'a> {
         args.v2 = vec2t.v2;
         let offset = ssab::ssab::Vec2::create(fb, &args);
         self.vec2_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_vec3(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec3t: &ssab::ssab::Vec3T) -> flatbuffers::WIPOffset<ssab::ssab::Vec3<'a>> {
-        let key = Vec3Key::from(vec3t);
-        if let Some(&offset) = self.vec3_cache.get(&key) {
-            return offset;
-        }
-        let mut args = ssab::ssab::Vec3Args::default();
-        args.v1 = vec3t.v1;
-        args.v2 = vec3t.v2;
-        args.v3 = vec3t.v3;
-        let offset = ssab::ssab::Vec3::create(fb, &args);
-        self.vec3_cache.insert(key, offset);
         offset
     }
 
