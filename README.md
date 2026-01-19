@@ -1,26 +1,69 @@
-# SsConverter3
-An alternatives of SsConverterVer2 that runs without dotnet runtime.
+# SpriteStudio7-SDK
 
-# Usage
-
+An Software Development Kit for [OPTPiX SpriteStudio](https://www.webtech.co.jp/spritestudio/index.html) 7
 
 
-# For Developers
+# Tools Usage 
+## ssconverter3-cli
+ssconverter3-cli has two modes, **single mode** and **batch mode**.
+
+- single mode
+    - The mode converts a sspj project or a sspj zip file.
+- batch mode
+    - The mode converts multiple sspj projects.
+
+### single mode
+
+```bash
+$ ssconverter3-cli [OPTIONS] <sspj_file>
+$ ssconverter3-cli [OPTIONS] <sspj_zip_file>
+```
+
+#### OPTIONS:
+- `-e`, `--embedded`
+    - embed assets into a ssab file
+- `-o`, `--out-dir <directory>`
+    - output directory path (available for single mode only)
+- `-h`, `--help`
+    - Print help
+
+### batch mode
+
+```bash
+$ ssconverter3-cli [OPTIONS] <sspj_file> <sspj_file> ...
+$ ssconverter3-cli [OPTIONS] <directory> <directory> ...
+```
+
+#### OPTIONS:
+- `-e`, `--embedded`
+    - embed assets into a ssab file
+- `-h`, `--help`
+    - Print help
+
+# For Player implementers
+
+Porting guide that is how to use libssruntime is coming soon.
+
+
+# For SDK Developers
 ## Prepare
 install [rustup](https://rustup.rs/)
 
 ## Build
 
-```
+```bash
 cargo build --release
 ```
 
 ## Test
+### Unit tests
 
-```
+```bash
 cargo test
 ```
 
-# For Player implementers
+### Convert tests
 
-Porting guide that is how to use libssruntime is coming soon.
+```bash
+./target/release/ssconverter3-cli ./
+```
