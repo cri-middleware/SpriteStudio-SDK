@@ -13,7 +13,7 @@ walkdir = "2.5.0"
 ordered-float = "5.1.0"
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab", features = ["converter"] }
-wasm-bindgen = { version = "0.2.106", optional = true }
+wasm-bindgen = { version = "0.2.108", optional = true }
 
 [features]
 default = ["ffi"]
