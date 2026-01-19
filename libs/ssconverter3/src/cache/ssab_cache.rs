@@ -686,26 +686,38 @@ impl From<&ssab::ssab::PartAttributeDeformT> for PartAttributeDeformKey {
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributesKey {
     pub cell: Option<PartAttributeCellKey>,
-    pub position: Option<Vec3Key>,
-    pub rotation: Option<Vec3Key>,
-    pub scale: Option<Vec2Key>,
-    pub local_scale: Option<Vec2Key>,
-    pub opacity: ordered_float::OrderedFloat<f32>,
-    pub localopacity: ordered_float::OrderedFloat<f32>,
-    pub priority: i16,
+    pub position_x: ordered_float::OrderedFloat<f32>,
+    pub position_y: ordered_float::OrderedFloat<f32>,
+    pub position_z: ordered_float::OrderedFloat<f32>,
+    pub rotation_x: ordered_float::OrderedFloat<f32>,
+    pub rotation_y: ordered_float::OrderedFloat<f32>,
+    pub rotation_z: ordered_float::OrderedFloat<f32>,
+    pub scale_x: ordered_float::OrderedFloat<f32>,
+    pub scale_y: ordered_float::OrderedFloat<f32>,
+    pub local_scale_x: ordered_float::OrderedFloat<f32>,
+    pub local_scale_y: ordered_float::OrderedFloat<f32>,
+    pub alpha: ordered_float::OrderedFloat<f32>,
+    pub local_alpha: ordered_float::OrderedFloat<f32>,
+    pub priority: ordered_float::OrderedFloat<f32>,
     pub flip_v: bool,
     pub flip_h: bool,
     pub hide: bool,
-    pub parts_color: Option<PartAttributePartColorKey>,
+    pub part_color: Option<PartAttributePartColorKey>,
     pub shader: Option<PartAttributeShaderKey>,
     pub vertex: Option<PartAttributeVertexKey>,
-    pub pivot: Option<Vec2Key>,
-    pub size: Option<Vec2Key>,
-    pub uv_move: Option<Vec3Key>,
-    pub uv_scale: Option<Vec2Key>,
+    pub pivot_x: ordered_float::OrderedFloat<f32>,
+    pub pivot_y: ordered_float::OrderedFloat<f32>,
+    pub size_x: ordered_float::OrderedFloat<f32>,
+    pub size_y: ordered_float::OrderedFloat<f32>,
+    pub uv_translation_x: ordered_float::OrderedFloat<f32>,
+    pub uv_translation_y: ordered_float::OrderedFloat<f32>,
+    pub uv_rotation_z: ordered_float::OrderedFloat<f32>,
+    pub uv_scale_x: ordered_float::OrderedFloat<f32>,
+    pub uv_scale_y: ordered_float::OrderedFloat<f32>,
     pub bounding_radius: ordered_float::OrderedFloat<f32>,
     pub mask: ordered_float::OrderedFloat<f32>,
-    pub skew: Option<Vec2Key>,
+    pub skew_x: ordered_float::OrderedFloat<f32>,
+    pub skew_y: ordered_float::OrderedFloat<f32>,
     pub deform: Option<PartAttributeDeformKey>,
     pub texture: u32,
 }
@@ -713,26 +725,38 @@ impl From<&ssab::ssab::PartAttributesT> for PartAttributesKey {
     fn from(value: &ssab::ssab::PartAttributesT) -> Self {
         Self {
             cell: value.cell.as_ref().map(|c| PartAttributeCellKey::from(c.as_ref())),
-            position: value.position.as_ref().map(|p| Vec3Key::from(p.as_ref())),
-            rotation: value.rotation.as_ref().map(|r| Vec3Key::from(r.as_ref())),
-            scale: value.scale.as_ref().map(|s| Vec2Key::from(s.as_ref())),
-            local_scale: value.local_scale.as_ref().map(|s| Vec2Key::from(s.as_ref())),
-            opacity: ordered_float::OrderedFloat(value.opacity),
-            localopacity: ordered_float::OrderedFloat(value.localopacity),
-            priority: value.priority,
+            position_x: ordered_float::OrderedFloat(value.position_x),
+            position_y: ordered_float::OrderedFloat(value.position_y),
+            position_z: ordered_float::OrderedFloat(value.position_z),
+            rotation_x: ordered_float::OrderedFloat(value.rotation_x),
+            rotation_y: ordered_float::OrderedFloat(value.rotation_y),
+            rotation_z: ordered_float::OrderedFloat(value.rotation_z),
+            scale_x: ordered_float::OrderedFloat(value.scale_x),
+            scale_y: ordered_float::OrderedFloat(value.scale_y),
+            local_scale_x: ordered_float::OrderedFloat(value.local_scale_x),
+            local_scale_y: ordered_float::OrderedFloat(value.local_scale_y),
+            alpha: ordered_float::OrderedFloat(value.alpha),
+            local_alpha: ordered_float::OrderedFloat(value.local_alpha),
+            priority: ordered_float::OrderedFloat(value.priority),
             flip_v: value.flip_v,
             flip_h: value.flip_h,
             hide: value.hide,
-            parts_color: value.parts_color.as_ref().map(|c| PartAttributePartColorKey::from(c.as_ref())),
+            part_color: value.part_color.as_ref().map(|c| PartAttributePartColorKey::from(c.as_ref())),
             shader: value.shader.as_ref().map(|s| PartAttributeShaderKey::from(s.as_ref())),
             vertex: value.vertex.as_ref().map(|v| PartAttributeVertexKey::from(v.as_ref())),
-            pivot: value.pivot.as_ref().map(|p| Vec2Key::from(p.as_ref())),
-            size: value.size.as_ref().map(|s| Vec2Key::from(s.as_ref())),
-            uv_move: value.uv_move.as_ref().map(|u| Vec3Key::from(u.as_ref())),
-            uv_scale: value.uv_scale.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            pivot_x: ordered_float::OrderedFloat(value.pivot_x),
+            pivot_y: ordered_float::OrderedFloat(value.pivot_y),
+            size_x: ordered_float::OrderedFloat(value.size_x),
+            size_y: ordered_float::OrderedFloat(value.size_y),
+            uv_translation_x: ordered_float::OrderedFloat(value.uv_translation_x),
+            uv_translation_y: ordered_float::OrderedFloat(value.uv_translation_y),
+            uv_rotation_z: ordered_float::OrderedFloat(value.uv_rotation_z),
+            uv_scale_x: ordered_float::OrderedFloat(value.uv_scale_x),
+            uv_scale_y: ordered_float::OrderedFloat(value.uv_scale_y),
             bounding_radius: ordered_float::OrderedFloat(value.bounding_radius),
             mask: ordered_float::OrderedFloat(value.mask),
-            skew: value.skew.as_ref().map(|s| Vec2Key::from(s.as_ref())),
+            skew_x: ordered_float::OrderedFloat(value.skew_x),
+            skew_y: ordered_float::OrderedFloat(value.skew_y),
             deform: value.deform.as_ref().map(|d| PartAttributeDeformKey::from(d.as_ref())),
             texture: value.texture,
         }
@@ -1544,26 +1568,38 @@ impl<'a> SsabCache<'a> {
 
         let mut args = ssab::ssab::PartAttributesArgs::default();
         args.cell = part_attributes.cell.as_ref().map(|cell| { self.create_shared_part_attribute_cell(fb, cell) });
-        args.position = part_attributes.position.as_ref().map(|position| self.create_shared_vec3(fb, &position));
-        args.rotation = part_attributes.rotation.as_ref().map(|rotation| self.create_shared_vec3(fb, &rotation));
-        args.scale = part_attributes.scale.as_ref().map(|scale| self.create_shared_vec2(fb, &scale));
-        args.local_scale = part_attributes.local_scale.as_ref().map(|local_scale|self.create_shared_vec2(fb, &local_scale));
-        args.opacity = part_attributes.opacity;
-        args.localopacity = part_attributes.localopacity;
+        args.position_x = part_attributes.position_x;
+        args.position_y = part_attributes.position_y;
+        args.position_z = part_attributes.position_z;
+        args.rotation_x = part_attributes.rotation_x;
+        args.rotation_y = part_attributes.rotation_y;
+        args.rotation_z = part_attributes.rotation_z;
+        args.scale_x = part_attributes.scale_x;
+        args.scale_y = part_attributes.scale_y;
+        args.local_scale_x = part_attributes.local_scale_x;
+        args.local_scale_y = part_attributes.local_scale_y;
+        args.alpha = part_attributes.alpha;
+        args.local_alpha = part_attributes.local_alpha;
         args.priority = part_attributes.priority;
         args.flip_v = part_attributes.flip_v;
         args.flip_h = part_attributes.flip_h;
         args.hide = part_attributes.hide;
-        args.parts_color = part_attributes.parts_color.as_ref().map(|parts_color| { self.create_shared_part_attribute_part_color(fb, parts_color) });
+        args.part_color = part_attributes.part_color.as_ref().map(|parts_color| { self.create_shared_part_attribute_part_color(fb, parts_color) });
         args.shader = part_attributes.shader.as_ref().map(|shader| { self.create_shared_part_attribute_shader(fb, shader) });
         args.vertex = part_attributes.vertex.as_ref().map(|vertex| { self.create_shared_part_attribute_vertex(fb, vertex) });
-        args.pivot = part_attributes.pivot.as_ref().map(|pivot| self.create_shared_vec2(fb, &pivot));
-        args.size = part_attributes.size.as_ref().map(|size| self.create_shared_vec2(fb, &size));
-        args.uv_move = part_attributes.uv_move.as_ref().map(|uv_move| self.create_shared_vec3(fb, &uv_move));
-        args.uv_scale = part_attributes.uv_scale.as_ref().map(|uv_scale| self.create_shared_vec2(fb, &uv_scale));
+        args.pivot_x = part_attributes.pivot_x;
+        args.pivot_y = part_attributes.pivot_y;
+        args.size_x = part_attributes.size_x;
+        args.size_y = part_attributes.size_y;
+        args.uv_translation_x = part_attributes.uv_translation_x;
+        args.uv_translation_y = part_attributes.uv_translation_y;
+        args.uv_rotation_z = part_attributes.uv_rotation_z;
+        args.uv_scale_x = part_attributes.uv_scale_x;
+        args.uv_scale_y = part_attributes.uv_scale_y;
         args.bounding_radius = part_attributes.bounding_radius;
         args.mask = part_attributes.mask;
-        args.skew = part_attributes.skew.as_ref().map(|skew| self.create_shared_vec2(fb, &skew));
+        args.skew_x = part_attributes.skew_x;
+        args.skew_y = part_attributes.skew_y;
         args.deform = part_attributes.deform.as_ref().map(|deform| { self.create_shared_part_attribute_deform(fb, deform) });
         args.texture = part_attributes.texture;
         let offset = ssab::ssab::PartAttributes::create(fb, &args);
