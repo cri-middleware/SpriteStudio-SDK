@@ -11,7 +11,7 @@ pub struct ConvertConfig {
     pub embedded: bool,
     pub debug: bool,
     pub split: bool,
-    pub shared: bool,
+    pub optimize: bool,
 }
 impl Default for ConvertConfig {
     fn default() -> Self {
@@ -19,7 +19,7 @@ impl Default for ConvertConfig {
             embedded: false,
             debug: false,
             split: false,
-            shared: true,
+            optimize: true,
         }
     }
 }
@@ -52,7 +52,7 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = if config.shared {
+        let offset = if config.optimize {
             let mut ssab_cache = ssab_cache::SsabCache::new();
             ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t)
         } else {
@@ -67,7 +67,7 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
     // convert ssqb structures to binary data
     let ssqb_bin_map = ssqb_model_list.par_iter().zip(sspj.sequencepack_names.par_iter()).map(|(sequence_binary_t, f)| {
         let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = if config.shared {
+        let offset = if config.optimize {
             let mut ssqb_cache = ssqb_cache::SsqbCache::new();
             ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t)
         } else {
