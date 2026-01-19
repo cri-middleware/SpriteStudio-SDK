@@ -3,7 +3,7 @@
 mod tests {
     use rayon::prelude::*;
     use std::path::{Path, PathBuf};
-    use ssconverter3::{convert_sspj_to_ssab_files, ConverterConfig, SspjLoader};
+    use ssconverter3::{convert_sspj_to_ssab_files, ConverterConfig};
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
         "tests/ParticleEffect/ParticleEffect.sspj",

@@ -192,11 +192,9 @@ impl Context {
 
 #[cfg(test)]
 mod tests {
-    use std::any::Any;
     use std::path::PathBuf;
     use ssconverter3;
     use super::*;
-    use super::runtime;
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
         "tests/overall/overall.sspj",
@@ -244,7 +242,7 @@ mod tests {
                 if !f.is_file() || f.extension().unwrap() != "ssab" { continue; }
 
                 let input_buf =  std::fs::read(&f).unwrap();
-                let mut context = Context::new(&input_buf).unwrap();
+                let context = Context::new(&input_buf).unwrap();
 
                 let ssab_buf = context.get_ssab_buf();
                 let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(ssab_buf) };
