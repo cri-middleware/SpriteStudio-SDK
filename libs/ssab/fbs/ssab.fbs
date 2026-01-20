@@ -461,12 +461,14 @@ table PartAttributes {
   part_color: PartAttributePartColor;
   shader: PartAttributeShader;
   vertex: PartAttributeVertex;
-  anchor_x: float = 0.0;
-  anchor_y: float = 0.0;
   pivot_x: float = 0.0;
   pivot_y: float = 0.0;
+  anchor_x: float = 0.0;
+  anchor_y: float = 0.0;
   size_x: float = 1.0;
   size_y: float = 1.0;
+  img_flip_v: bool = false;
+  img_flip_h: bool = false;
   uv_translation_x: float = 0.0;
   uv_translation_y: float = 0.0;
   uv_rotation_z: float = 0.0;

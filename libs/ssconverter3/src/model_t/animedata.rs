@@ -324,21 +324,23 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
             },
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                    // TODO: When Z-sort, priority must be based on  spatially transformed Z-values. Yuzu.
+                    p_args.priority = _key.value as f32;
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.flip_h = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipV(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.flip_v = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Hide(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.hide = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
@@ -391,12 +393,12 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.img_flip_h = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.img_flip_v = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
@@ -427,12 +429,12 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::PartAttri
             },
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.bounding_radius = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Mask(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.mask = _key.value;
                 });
             },
             sspj::ssattribute::SsAttributeKind::User(v) => {

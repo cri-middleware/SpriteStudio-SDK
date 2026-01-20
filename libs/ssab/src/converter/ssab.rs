@@ -12120,23 +12120,25 @@ impl<'a> PartAttributes<'a> {
   pub const VT_PART_COLOR: ::flatbuffers::VOffsetT = 38;
   pub const VT_SHADER: ::flatbuffers::VOffsetT = 40;
   pub const VT_VERTEX: ::flatbuffers::VOffsetT = 42;
-  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 44;
-  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 46;
-  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 48;
-  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 50;
+  pub const VT_PIVOT_X: ::flatbuffers::VOffsetT = 44;
+  pub const VT_PIVOT_Y: ::flatbuffers::VOffsetT = 46;
+  pub const VT_ANCHOR_X: ::flatbuffers::VOffsetT = 48;
+  pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 50;
   pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 52;
   pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 54;
-  pub const VT_UV_TRANSLATION_X: ::flatbuffers::VOffsetT = 56;
-  pub const VT_UV_TRANSLATION_Y: ::flatbuffers::VOffsetT = 58;
-  pub const VT_UV_ROTATION_Z: ::flatbuffers::VOffsetT = 60;
-  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 62;
-  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 64;
-  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 66;
-  pub const VT_MASK: ::flatbuffers::VOffsetT = 68;
-  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 70;
-  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 72;
-  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 74;
-  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 76;
+  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 56;
+  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 58;
+  pub const VT_UV_TRANSLATION_X: ::flatbuffers::VOffsetT = 60;
+  pub const VT_UV_TRANSLATION_Y: ::flatbuffers::VOffsetT = 62;
+  pub const VT_UV_ROTATION_Z: ::flatbuffers::VOffsetT = 64;
+  pub const VT_UV_SCALE_X: ::flatbuffers::VOffsetT = 66;
+  pub const VT_UV_SCALE_Y: ::flatbuffers::VOffsetT = 68;
+  pub const VT_BOUNDING_RADIUS: ::flatbuffers::VOffsetT = 70;
+  pub const VT_MASK: ::flatbuffers::VOffsetT = 72;
+  pub const VT_SKEW_X: ::flatbuffers::VOffsetT = 74;
+  pub const VT_SKEW_Y: ::flatbuffers::VOffsetT = 76;
+  pub const VT_DEFORM: ::flatbuffers::VOffsetT = 78;
+  pub const VT_TEXTURE: ::flatbuffers::VOffsetT = 80;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12161,10 +12163,10 @@ impl<'a> PartAttributes<'a> {
     builder.add_uv_translation_x(args.uv_translation_x);
     builder.add_size_y(args.size_y);
     builder.add_size_x(args.size_x);
-    builder.add_pivot_y(args.pivot_y);
-    builder.add_pivot_x(args.pivot_x);
     builder.add_anchor_y(args.anchor_y);
     builder.add_anchor_x(args.anchor_x);
+    builder.add_pivot_y(args.pivot_y);
+    builder.add_pivot_x(args.pivot_x);
     if let Some(x) = args.vertex { builder.add_vertex(x); }
     if let Some(x) = args.shader { builder.add_shader(x); }
     if let Some(x) = args.part_color { builder.add_part_color(x); }
@@ -12182,6 +12184,8 @@ impl<'a> PartAttributes<'a> {
     builder.add_position_y(args.position_y);
     builder.add_position_x(args.position_x);
     if let Some(x) = args.cell { builder.add_cell(x); }
+    builder.add_img_flip_h(args.img_flip_h);
+    builder.add_img_flip_v(args.img_flip_v);
     builder.add_hide(args.hide);
     builder.add_flip_h(args.flip_h);
     builder.add_flip_v(args.flip_v);
@@ -12217,12 +12221,14 @@ impl<'a> PartAttributes<'a> {
     let vertex = self.vertex().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
-    let anchor_x = self.anchor_x();
-    let anchor_y = self.anchor_y();
     let pivot_x = self.pivot_x();
     let pivot_y = self.pivot_y();
+    let anchor_x = self.anchor_x();
+    let anchor_y = self.anchor_y();
     let size_x = self.size_x();
     let size_y = self.size_y();
+    let img_flip_v = self.img_flip_v();
+    let img_flip_h = self.img_flip_h();
     let uv_translation_x = self.uv_translation_x();
     let uv_translation_y = self.uv_translation_y();
     let uv_rotation_z = self.uv_rotation_z();
@@ -12257,12 +12263,14 @@ impl<'a> PartAttributes<'a> {
       part_color,
       shader,
       vertex,
-      anchor_x,
-      anchor_y,
       pivot_x,
       pivot_y,
+      anchor_x,
+      anchor_y,
       size_x,
       size_y,
+      img_flip_v,
+      img_flip_h,
       uv_translation_x,
       uv_translation_y,
       uv_rotation_z,
@@ -12418,20 +12426,6 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>(PartAttributes::VT_VERTEX, None)}
   }
   #[inline]
-  pub fn anchor_x(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributes::VT_ANCHOR_X, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn anchor_y(&self) -> f32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(PartAttributes::VT_ANCHOR_Y, Some(0.0)).unwrap()}
-  }
-  #[inline]
   pub fn pivot_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
@@ -12446,6 +12440,20 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<f32>(PartAttributes::VT_PIVOT_Y, Some(0.0)).unwrap()}
   }
   #[inline]
+  pub fn anchor_x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ANCHOR_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn anchor_y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAttributes::VT_ANCHOR_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
   pub fn size_x(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
@@ -12458,6 +12466,20 @@ impl<'a> PartAttributes<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<f32>(PartAttributes::VT_SIZE_Y, Some(1.0)).unwrap()}
+  }
+  #[inline]
+  pub fn img_flip_v(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_IMG_FLIP_V, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn img_flip_h(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_IMG_FLIP_H, Some(false)).unwrap()}
   }
   #[inline]
   pub fn uv_translation_x(&self) -> f32 {
@@ -12564,12 +12586,14 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("part_color", Self::VT_PART_COLOR, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>("shader", Self::VT_SHADER, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>("vertex", Self::VT_VERTEX, false)?
-     .visit_field::<f32>("anchor_x", Self::VT_ANCHOR_X, false)?
-     .visit_field::<f32>("anchor_y", Self::VT_ANCHOR_Y, false)?
      .visit_field::<f32>("pivot_x", Self::VT_PIVOT_X, false)?
      .visit_field::<f32>("pivot_y", Self::VT_PIVOT_Y, false)?
+     .visit_field::<f32>("anchor_x", Self::VT_ANCHOR_X, false)?
+     .visit_field::<f32>("anchor_y", Self::VT_ANCHOR_Y, false)?
      .visit_field::<f32>("size_x", Self::VT_SIZE_X, false)?
      .visit_field::<f32>("size_y", Self::VT_SIZE_Y, false)?
+     .visit_field::<bool>("img_flip_v", Self::VT_IMG_FLIP_V, false)?
+     .visit_field::<bool>("img_flip_h", Self::VT_IMG_FLIP_H, false)?
      .visit_field::<f32>("uv_translation_x", Self::VT_UV_TRANSLATION_X, false)?
      .visit_field::<f32>("uv_translation_y", Self::VT_UV_TRANSLATION_Y, false)?
      .visit_field::<f32>("uv_rotation_z", Self::VT_UV_ROTATION_Z, false)?
@@ -12606,12 +12630,14 @@ pub struct PartAttributesArgs<'a> {
     pub part_color: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
     pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
     pub vertex: Option<::flatbuffers::WIPOffset<PartAttributeVertex<'a>>>,
-    pub anchor_x: f32,
-    pub anchor_y: f32,
     pub pivot_x: f32,
     pub pivot_y: f32,
+    pub anchor_x: f32,
+    pub anchor_y: f32,
     pub size_x: f32,
     pub size_y: f32,
+    pub img_flip_v: bool,
+    pub img_flip_h: bool,
     pub uv_translation_x: f32,
     pub uv_translation_y: f32,
     pub uv_rotation_z: f32,
@@ -12648,12 +12674,14 @@ impl<'a> Default for PartAttributesArgs<'a> {
       part_color: None,
       shader: None,
       vertex: None,
-      anchor_x: 0.0,
-      anchor_y: 0.0,
       pivot_x: 0.0,
       pivot_y: 0.0,
+      anchor_x: 0.0,
+      anchor_y: 0.0,
       size_x: 1.0,
       size_y: 1.0,
+      img_flip_v: false,
+      img_flip_h: false,
       uv_translation_x: 0.0,
       uv_translation_y: 0.0,
       uv_rotation_z: 0.0,
@@ -12755,14 +12783,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeVertex>>(PartAttributes::VT_VERTEX, vertex);
   }
   #[inline]
-  pub fn add_anchor_x(&mut self, anchor_x: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributes::VT_ANCHOR_X, anchor_x, 0.0);
-  }
-  #[inline]
-  pub fn add_anchor_y(&mut self, anchor_y: f32) {
-    self.fbb_.push_slot::<f32>(PartAttributes::VT_ANCHOR_Y, anchor_y, 0.0);
-  }
-  #[inline]
   pub fn add_pivot_x(&mut self, pivot_x: f32) {
     self.fbb_.push_slot::<f32>(PartAttributes::VT_PIVOT_X, pivot_x, 0.0);
   }
@@ -12771,12 +12791,28 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<f32>(PartAttributes::VT_PIVOT_Y, pivot_y, 0.0);
   }
   #[inline]
+  pub fn add_anchor_x(&mut self, anchor_x: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ANCHOR_X, anchor_x, 0.0);
+  }
+  #[inline]
+  pub fn add_anchor_y(&mut self, anchor_y: f32) {
+    self.fbb_.push_slot::<f32>(PartAttributes::VT_ANCHOR_Y, anchor_y, 0.0);
+  }
+  #[inline]
   pub fn add_size_x(&mut self, size_x: f32) {
     self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_X, size_x, 1.0);
   }
   #[inline]
   pub fn add_size_y(&mut self, size_y: f32) {
     self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_Y, size_y, 1.0);
+  }
+  #[inline]
+  pub fn add_img_flip_v(&mut self, img_flip_v: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_IMG_FLIP_V, img_flip_v, false);
+  }
+  #[inline]
+  pub fn add_img_flip_h(&mut self, img_flip_h: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_IMG_FLIP_H, img_flip_h, false);
   }
   #[inline]
   pub fn add_uv_translation_x(&mut self, uv_translation_x: f32) {
@@ -12860,12 +12896,14 @@ impl ::core::fmt::Debug for PartAttributes<'_> {
       ds.field("part_color", &self.part_color());
       ds.field("shader", &self.shader());
       ds.field("vertex", &self.vertex());
-      ds.field("anchor_x", &self.anchor_x());
-      ds.field("anchor_y", &self.anchor_y());
       ds.field("pivot_x", &self.pivot_x());
       ds.field("pivot_y", &self.pivot_y());
+      ds.field("anchor_x", &self.anchor_x());
+      ds.field("anchor_y", &self.anchor_y());
       ds.field("size_x", &self.size_x());
       ds.field("size_y", &self.size_y());
+      ds.field("img_flip_v", &self.img_flip_v());
+      ds.field("img_flip_h", &self.img_flip_h());
       ds.field("uv_translation_x", &self.uv_translation_x());
       ds.field("uv_translation_y", &self.uv_translation_y());
       ds.field("uv_rotation_z", &self.uv_rotation_z());
@@ -12903,12 +12941,14 @@ pub struct PartAttributesT {
   pub part_color: Option<alloc::boxed::Box<PartAttributePartColorT>>,
   pub shader: Option<alloc::boxed::Box<PartAttributeShaderT>>,
   pub vertex: Option<alloc::boxed::Box<PartAttributeVertexT>>,
-  pub anchor_x: f32,
-  pub anchor_y: f32,
   pub pivot_x: f32,
   pub pivot_y: f32,
+  pub anchor_x: f32,
+  pub anchor_y: f32,
   pub size_x: f32,
   pub size_y: f32,
+  pub img_flip_v: bool,
+  pub img_flip_h: bool,
   pub uv_translation_x: f32,
   pub uv_translation_y: f32,
   pub uv_rotation_z: f32,
@@ -12944,12 +12984,14 @@ impl Default for PartAttributesT {
       part_color: None,
       shader: None,
       vertex: None,
-      anchor_x: 0.0,
-      anchor_y: 0.0,
       pivot_x: 0.0,
       pivot_y: 0.0,
+      anchor_x: 0.0,
+      anchor_y: 0.0,
       size_x: 1.0,
       size_y: 1.0,
+      img_flip_v: false,
+      img_flip_h: false,
       uv_translation_x: 0.0,
       uv_translation_y: 0.0,
       uv_rotation_z: 0.0,
@@ -12997,12 +13039,14 @@ impl PartAttributesT {
     let vertex = self.vertex.as_ref().map(|x|{
       x.pack(_fbb)
     });
-    let anchor_x = self.anchor_x;
-    let anchor_y = self.anchor_y;
     let pivot_x = self.pivot_x;
     let pivot_y = self.pivot_y;
+    let anchor_x = self.anchor_x;
+    let anchor_y = self.anchor_y;
     let size_x = self.size_x;
     let size_y = self.size_y;
+    let img_flip_v = self.img_flip_v;
+    let img_flip_h = self.img_flip_h;
     let uv_translation_x = self.uv_translation_x;
     let uv_translation_y = self.uv_translation_y;
     let uv_rotation_z = self.uv_rotation_z;
@@ -13037,12 +13081,14 @@ impl PartAttributesT {
       part_color,
       shader,
       vertex,
-      anchor_x,
-      anchor_y,
       pivot_x,
       pivot_y,
+      anchor_x,
+      anchor_y,
       size_x,
       size_y,
+      img_flip_v,
+      img_flip_h,
       uv_translation_x,
       uv_translation_y,
       uv_rotation_z,
