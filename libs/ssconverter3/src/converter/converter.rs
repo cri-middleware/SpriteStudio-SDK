@@ -111,7 +111,7 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
         let r = std::fs::create_dir_all(outdir_path.as_path());
         match r {
             Ok(_) => (),
-            Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
+            Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", outdir_path.as_os_str().to_string_lossy(), e)))),
         }
     }
 
@@ -119,7 +119,7 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
         let output_path = outdir_path.join(name);
         match std::fs::write(output_path.as_path(), data) {
             Ok(_) => Ok(()),
-            Err(e) => Err(crate::converter::converter_error::ConverterError::IoError(e)),
+            Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("write: {}: {:?}", output_path.as_os_str().to_string_lossy(), e)))),
         }
     })?;
 
@@ -132,16 +132,16 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
             let dst = outdir_path.join(dst_rel_path);
             let dst_parent = dst.parent().unwrap();
             if !dst_parent.exists() {
-                let r = std::fs::create_dir_all(dst.parent().unwrap());
+                let r = std::fs::create_dir_all(dst_parent);
                 match r {
                     Ok(_) => (),
-                    Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
+                    Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", dst_parent.as_os_str().to_string_lossy(), e)))),
                 };
             }
             let r = std::fs::copy(&src, &dst);
             match r {
                 Ok(_) => (),
-                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(e)),
+                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("copy: src:{}, src:{} {:?}", src.as_os_str().to_string_lossy(), dst.as_os_str().to_string_lossy(), e)))),
             }
             Ok(())
         }).collect::<Result<Vec<_>, _>>()?;

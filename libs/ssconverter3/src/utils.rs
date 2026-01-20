@@ -24,7 +24,7 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
     let path_buf = std::path::PathBuf::from(dir).join(file);
 
     if !path_buf.as_path().exists() {
-        return Err(crate::ConverterError::ConversionFailed(format!("The file is not found: {}", file)));
+        return Err(crate::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("The file is not found: {}", file))));
     }
 
     if !path_buf.is_file() {
