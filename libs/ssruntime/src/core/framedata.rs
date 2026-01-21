@@ -18,61 +18,61 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
         p_args.cell = cell_.as_ref();
         p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     }
-    part.pos_x_array().map(|pos_x_array| {
-        pos_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_x| {
+    part.position_x_array().map(|position_x_array| {
+        position_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_x| {
             p_args.position_x = pos_x.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX;
         });
     });
-    part.pos_y_array().map(|pos_y_array| {
-        pos_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_y| {
+    part.position_y_array().map(|position_y_array| {
+        position_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_y| {
             p_args.position_y = pos_y.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosY;
         });
     });
-    part.pos_z_array().map(|pos_z_array| {
-        pos_z_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_z| {
+    part.position_z_array().map(|position_z_array| {
+        position_z_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|pos_z| {
             p_args.position_z = pos_z.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosZ;
         });
     });
-    part.rot_x_array().map(|rotation_x_array| {
+    part.rotation_x_array().map(|rotation_x_array| {
         rotation_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|rotation_x| {
             p_args.rotation_x = rotation_x.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotX;
         });
     });
-    part.rot_y_array().map(|rotation_y_array| {
+    part.rotation_y_array().map(|rotation_y_array| {
         rotation_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|rotation_y| {
             p_args.rotation_y = rotation_y.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotY;
         });
     });
-    part.rot_z_array().map(|rotation_z_array| {
+    part.rotation_z_array().map(|rotation_z_array| {
         rotation_z_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|rotation_z| {
             p_args.rotation_z = rotation_z.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotZ;
         });
     });
-    part.scl_x_array().map(|scale_x_array| {
+    part.scale_x_array().map(|scale_x_array| {
         scale_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|scale_x| {
             p_args.scale_x = scale_x.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSclX;
         });
     });
-    part.scl_y_array().map(|scale_y_array| {
+    part.scale_y_array().map(|scale_y_array| {
         scale_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|scale_y| {
             p_args.scale_y = scale_y.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSclY;
         });
     });
-    part.loscl_x_array().map(|local_scale_x_array| {
+    part.local_scale_x_array().map(|local_scale_x_array| {
         local_scale_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|local_scale_x| {
             p_args.local_scale_x = local_scale_x.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLosclX;
         });
     });
-    part.loscl_y_array().map(|local_scale_y_array| {
+    part.local_scale_y_array().map(|local_scale_y_array| {
         local_scale_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|local_scale_y| {
             p_args.local_scale_y = local_scale_y.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLosclY;
@@ -84,28 +84,28 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAlpha;
         });
     });
-    part.lo_alpha_array().map(|local_alpha_array| {
+    part.local_alpha_array().map(|local_alpha_array| {
         local_alpha_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|local_alpha| {
             p_args.local_alpha = local_alpha.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLoAlpha;
         });
     });
-    part.prio_array().map(|priority_array| {
+    part.priority_array().map(|priority_array| {
         priority_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|priority| {
             p_args.priority = priority.value() as f32;
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePrio;
-        });
-    });
-    part.flip_v_array().map(|flip_v_array| {
-        flip_v_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|flip_v| {
-            p_args.flip_v = flip_v.value();
-            p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipV;
         });
     });
     part.flip_h_array().map(|flip_h_array| {
         flip_h_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|flip_h| {
             p_args.flip_h = flip_h.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipH;
+        });
+    });
+    part.flip_v_array().map(|flip_v_array| {
+        flip_v_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|flip_v| {
+            p_args.flip_v = flip_v.value();
+            p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipV;
         });
     });
     part.hide_array().map(|hide_array| {
@@ -116,8 +116,8 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
     });
 
     let mut part_color: Option<PartAttributePartColor> = None;
-    part.parts_color_array().and_then(|parts_color_array| {
-        parts_color_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).and_then(|parts_color| {
+    part.part_color_array().and_then(|part_color_array| {
+        part_color_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).and_then(|parts_color| {
             parts_color.value().map(|color| {
                 let blend_type = match color.blend_type() {
                     ssab::ssab::BlendType::Mix => runtime::framedata::ss::runtime::BlendType::Mix,
@@ -256,39 +256,39 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, part: &ssab::ssab::
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeImgFlipV;
         });
     });
-    part.uvt_x_array().map(|uvt_x_array| {
-        uvt_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_translation_x| {
+    part.uv_translation_x_array().map(|uv_translation_x_array| {
+        uv_translation_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_translation_x| {
             p_args.uv_translation_x = uv_translation_x.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvtX;
         });
     });
-    part.uvt_y_array().map(|uvt_y_array| {
-        uvt_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_translation_y| {
+    part.uv_translation_y_array().map(|uv_translation_y_array| {
+        uv_translation_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_translation_y| {
             p_args.uv_translation_y = uv_translation_y.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvtY;
         });
     });
-    part.uvr_z_array().map(|uvr_z_array| {
-        uvr_z_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_rotation_z| {
+    part.uv_rotation_z_array().map(|uv_rotation_z_array| {
+        uv_rotation_z_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_rotation_z| {
             p_args.uv_rotation_z = uv_rotation_z.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvrZ;
         });
     });
-    part.uvs_x_array().map(|uvs_x_array| {
-        uvs_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uvs_x| {
-            p_args.uv_scale_x = uvs_x.value();
+    part.uv_scale_x_array().map(|uv_scale_x_array| {
+        uv_scale_x_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_scale_x| {
+            p_args.uv_scale_x = uv_scale_x.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvsX;
         });
     });
-    part.uvs_y_array().map(|uvs_y_array| {
-        uvs_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uvs_y| {
-            p_args.uv_scale_y = uvs_y.value();
+    part.uv_scale_y_array().map(|uv_scale_y_array| {
+        uv_scale_y_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|uv_scale_y| {
+            p_args.uv_scale_y = uv_scale_y.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvsY;
         });
     });
-    part.boundr_array().map(|boundr_array| {
-        boundr_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|boundr| {
-            p_args.bounding_radius = boundr.value();
+    part.bounding_radius_array().map(|bounding_radius_array| {
+        bounding_radius_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).map(|bounding_radius| {
+            p_args.bounding_radius = bounding_radius.value();
             p_args.update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeBoundr;
         });
     });

@@ -1679,8 +1679,8 @@ impl<'a> PartState<'a> {
   pub const VT_ALPHA: ::flatbuffers::VOffsetT = 28;
   pub const VT_LOCAL_ALPHA: ::flatbuffers::VOffsetT = 30;
   pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 32;
-  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 34;
-  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 36;
+  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 34;
+  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 36;
   pub const VT_HIDE: ::flatbuffers::VOffsetT = 38;
   pub const VT_PART_COLOR: ::flatbuffers::VOffsetT = 40;
   pub const VT_SHADER: ::flatbuffers::VOffsetT = 42;
@@ -1753,8 +1753,8 @@ impl<'a> PartState<'a> {
     builder.add_img_flip_v(args.img_flip_v);
     builder.add_img_flip_h(args.img_flip_h);
     builder.add_hide(args.hide);
-    builder.add_flip_h(args.flip_h);
     builder.add_flip_v(args.flip_v);
+    builder.add_flip_h(args.flip_h);
     builder.finish()
   }
 
@@ -1865,18 +1865,18 @@ impl<'a> PartState<'a> {
     unsafe { self._tab.get::<f32>(PartState::VT_PRIORITY, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn flip_v(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartState::VT_FLIP_V, Some(false)).unwrap()}
-  }
-  #[inline]
   pub fn flip_h(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(PartState::VT_FLIP_H, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn flip_v(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartState::VT_FLIP_V, Some(false)).unwrap()}
   }
   #[inline]
   pub fn hide(&self) -> bool {
@@ -2062,8 +2062,8 @@ impl ::flatbuffers::Verifiable for PartState<'_> {
      .visit_field::<f32>("alpha", Self::VT_ALPHA, false)?
      .visit_field::<f32>("local_alpha", Self::VT_LOCAL_ALPHA, false)?
      .visit_field::<f32>("priority", Self::VT_PRIORITY, false)?
-     .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
+     .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
      .visit_field::<PartAttributePartColor>("part_color", Self::VT_PART_COLOR, false)?
      .visit_field::<PartAttributeShader>("shader", Self::VT_SHADER, false)?
@@ -2107,8 +2107,8 @@ pub struct PartStateArgs<'a> {
     pub alpha: f32,
     pub local_alpha: f32,
     pub priority: f32,
-    pub flip_v: bool,
     pub flip_h: bool,
+    pub flip_v: bool,
     pub hide: bool,
     pub part_color: Option<&'a PartAttributePartColor>,
     pub shader: Option<&'a PartAttributeShader>,
@@ -2152,8 +2152,8 @@ impl<'a> Default for PartStateArgs<'a> {
       alpha: 1.0,
       local_alpha: 1.0,
       priority: 0.0,
-      flip_v: false,
       flip_h: false,
+      flip_v: false,
       hide: false,
       part_color: None,
       shader: None,
@@ -2247,12 +2247,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartStateBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<f32>(PartState::VT_PRIORITY, priority, 0.0);
   }
   #[inline]
-  pub fn add_flip_v(&mut self, flip_v: bool) {
-    self.fbb_.push_slot::<bool>(PartState::VT_FLIP_V, flip_v, false);
-  }
-  #[inline]
   pub fn add_flip_h(&mut self, flip_h: bool) {
     self.fbb_.push_slot::<bool>(PartState::VT_FLIP_H, flip_h, false);
+  }
+  #[inline]
+  pub fn add_flip_v(&mut self, flip_v: bool) {
+    self.fbb_.push_slot::<bool>(PartState::VT_FLIP_V, flip_v, false);
   }
   #[inline]
   pub fn add_hide(&mut self, hide: bool) {
@@ -2379,8 +2379,8 @@ impl ::core::fmt::Debug for PartState<'_> {
       ds.field("alpha", &self.alpha());
       ds.field("local_alpha", &self.local_alpha());
       ds.field("priority", &self.priority());
-      ds.field("flip_v", &self.flip_v());
       ds.field("flip_h", &self.flip_h());
+      ds.field("flip_v", &self.flip_v());
       ds.field("hide", &self.hide());
       ds.field("part_color", &self.part_color());
       ds.field("shader", &self.shader());

@@ -12114,8 +12114,8 @@ impl<'a> PartAttributes<'a> {
   pub const VT_ALPHA: ::flatbuffers::VOffsetT = 26;
   pub const VT_LOCAL_ALPHA: ::flatbuffers::VOffsetT = 28;
   pub const VT_PRIORITY: ::flatbuffers::VOffsetT = 30;
-  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 32;
-  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 34;
+  pub const VT_FLIP_H: ::flatbuffers::VOffsetT = 32;
+  pub const VT_FLIP_V: ::flatbuffers::VOffsetT = 34;
   pub const VT_HIDE: ::flatbuffers::VOffsetT = 36;
   pub const VT_PART_COLOR: ::flatbuffers::VOffsetT = 38;
   pub const VT_SHADER: ::flatbuffers::VOffsetT = 40;
@@ -12126,8 +12126,8 @@ impl<'a> PartAttributes<'a> {
   pub const VT_ANCHOR_Y: ::flatbuffers::VOffsetT = 50;
   pub const VT_SIZE_X: ::flatbuffers::VOffsetT = 52;
   pub const VT_SIZE_Y: ::flatbuffers::VOffsetT = 54;
-  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 56;
-  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 58;
+  pub const VT_IMG_FLIP_H: ::flatbuffers::VOffsetT = 56;
+  pub const VT_IMG_FLIP_V: ::flatbuffers::VOffsetT = 58;
   pub const VT_UV_TRANSLATION_X: ::flatbuffers::VOffsetT = 60;
   pub const VT_UV_TRANSLATION_Y: ::flatbuffers::VOffsetT = 62;
   pub const VT_UV_ROTATION_Z: ::flatbuffers::VOffsetT = 64;
@@ -12184,11 +12184,11 @@ impl<'a> PartAttributes<'a> {
     builder.add_position_y(args.position_y);
     builder.add_position_x(args.position_x);
     if let Some(x) = args.cell { builder.add_cell(x); }
-    builder.add_img_flip_h(args.img_flip_h);
     builder.add_img_flip_v(args.img_flip_v);
+    builder.add_img_flip_h(args.img_flip_h);
     builder.add_hide(args.hide);
-    builder.add_flip_h(args.flip_h);
     builder.add_flip_v(args.flip_v);
+    builder.add_flip_h(args.flip_h);
     builder.finish()
   }
 
@@ -12209,8 +12209,8 @@ impl<'a> PartAttributes<'a> {
     let alpha = self.alpha();
     let local_alpha = self.local_alpha();
     let priority = self.priority();
-    let flip_v = self.flip_v();
     let flip_h = self.flip_h();
+    let flip_v = self.flip_v();
     let hide = self.hide();
     let part_color = self.part_color().map(|x| {
       alloc::boxed::Box::new(x.unpack())
@@ -12227,8 +12227,8 @@ impl<'a> PartAttributes<'a> {
     let anchor_y = self.anchor_y();
     let size_x = self.size_x();
     let size_y = self.size_y();
-    let img_flip_v = self.img_flip_v();
     let img_flip_h = self.img_flip_h();
+    let img_flip_v = self.img_flip_v();
     let uv_translation_x = self.uv_translation_x();
     let uv_translation_y = self.uv_translation_y();
     let uv_rotation_z = self.uv_rotation_z();
@@ -12257,8 +12257,8 @@ impl<'a> PartAttributes<'a> {
       alpha,
       local_alpha,
       priority,
-      flip_v,
       flip_h,
+      flip_v,
       hide,
       part_color,
       shader,
@@ -12269,8 +12269,8 @@ impl<'a> PartAttributes<'a> {
       anchor_y,
       size_x,
       size_y,
-      img_flip_v,
       img_flip_h,
+      img_flip_v,
       uv_translation_x,
       uv_translation_y,
       uv_rotation_z,
@@ -12384,18 +12384,18 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<f32>(PartAttributes::VT_PRIORITY, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn flip_v(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartAttributes::VT_FLIP_V, Some(false)).unwrap()}
-  }
-  #[inline]
   pub fn flip_h(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(PartAttributes::VT_FLIP_H, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn flip_v(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_FLIP_V, Some(false)).unwrap()}
   }
   #[inline]
   pub fn hide(&self) -> bool {
@@ -12468,18 +12468,18 @@ impl<'a> PartAttributes<'a> {
     unsafe { self._tab.get::<f32>(PartAttributes::VT_SIZE_Y, Some(1.0)).unwrap()}
   }
   #[inline]
-  pub fn img_flip_v(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartAttributes::VT_IMG_FLIP_V, Some(false)).unwrap()}
-  }
-  #[inline]
   pub fn img_flip_h(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(PartAttributes::VT_IMG_FLIP_H, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn img_flip_v(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributes::VT_IMG_FLIP_V, Some(false)).unwrap()}
   }
   #[inline]
   pub fn uv_translation_x(&self) -> f32 {
@@ -12580,8 +12580,8 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<f32>("alpha", Self::VT_ALPHA, false)?
      .visit_field::<f32>("local_alpha", Self::VT_LOCAL_ALPHA, false)?
      .visit_field::<f32>("priority", Self::VT_PRIORITY, false)?
-     .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("flip_h", Self::VT_FLIP_H, false)?
+     .visit_field::<bool>("flip_v", Self::VT_FLIP_V, false)?
      .visit_field::<bool>("hide", Self::VT_HIDE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("part_color", Self::VT_PART_COLOR, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>("shader", Self::VT_SHADER, false)?
@@ -12592,8 +12592,8 @@ impl ::flatbuffers::Verifiable for PartAttributes<'_> {
      .visit_field::<f32>("anchor_y", Self::VT_ANCHOR_Y, false)?
      .visit_field::<f32>("size_x", Self::VT_SIZE_X, false)?
      .visit_field::<f32>("size_y", Self::VT_SIZE_Y, false)?
-     .visit_field::<bool>("img_flip_v", Self::VT_IMG_FLIP_V, false)?
      .visit_field::<bool>("img_flip_h", Self::VT_IMG_FLIP_H, false)?
+     .visit_field::<bool>("img_flip_v", Self::VT_IMG_FLIP_V, false)?
      .visit_field::<f32>("uv_translation_x", Self::VT_UV_TRANSLATION_X, false)?
      .visit_field::<f32>("uv_translation_y", Self::VT_UV_TRANSLATION_Y, false)?
      .visit_field::<f32>("uv_rotation_z", Self::VT_UV_ROTATION_Z, false)?
@@ -12624,8 +12624,8 @@ pub struct PartAttributesArgs<'a> {
     pub alpha: f32,
     pub local_alpha: f32,
     pub priority: f32,
-    pub flip_v: bool,
     pub flip_h: bool,
+    pub flip_v: bool,
     pub hide: bool,
     pub part_color: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
     pub shader: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
@@ -12636,8 +12636,8 @@ pub struct PartAttributesArgs<'a> {
     pub anchor_y: f32,
     pub size_x: f32,
     pub size_y: f32,
-    pub img_flip_v: bool,
     pub img_flip_h: bool,
+    pub img_flip_v: bool,
     pub uv_translation_x: f32,
     pub uv_translation_y: f32,
     pub uv_rotation_z: f32,
@@ -12668,8 +12668,8 @@ impl<'a> Default for PartAttributesArgs<'a> {
       alpha: 1.0,
       local_alpha: 1.0,
       priority: 0.0,
-      flip_v: false,
       flip_h: false,
+      flip_v: false,
       hide: false,
       part_color: None,
       shader: None,
@@ -12680,8 +12680,8 @@ impl<'a> Default for PartAttributesArgs<'a> {
       anchor_y: 0.0,
       size_x: 1.0,
       size_y: 1.0,
-      img_flip_v: false,
       img_flip_h: false,
+      img_flip_v: false,
       uv_translation_x: 0.0,
       uv_translation_y: 0.0,
       uv_rotation_z: 0.0,
@@ -12759,12 +12759,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<f32>(PartAttributes::VT_PRIORITY, priority, 0.0);
   }
   #[inline]
-  pub fn add_flip_v(&mut self, flip_v: bool) {
-    self.fbb_.push_slot::<bool>(PartAttributes::VT_FLIP_V, flip_v, false);
-  }
-  #[inline]
   pub fn add_flip_h(&mut self, flip_h: bool) {
     self.fbb_.push_slot::<bool>(PartAttributes::VT_FLIP_H, flip_h, false);
+  }
+  #[inline]
+  pub fn add_flip_v(&mut self, flip_v: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_FLIP_V, flip_v, false);
   }
   #[inline]
   pub fn add_hide(&mut self, hide: bool) {
@@ -12807,12 +12807,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributesBuilder<'a, 'b,
     self.fbb_.push_slot::<f32>(PartAttributes::VT_SIZE_Y, size_y, 1.0);
   }
   #[inline]
-  pub fn add_img_flip_v(&mut self, img_flip_v: bool) {
-    self.fbb_.push_slot::<bool>(PartAttributes::VT_IMG_FLIP_V, img_flip_v, false);
-  }
-  #[inline]
   pub fn add_img_flip_h(&mut self, img_flip_h: bool) {
     self.fbb_.push_slot::<bool>(PartAttributes::VT_IMG_FLIP_H, img_flip_h, false);
+  }
+  #[inline]
+  pub fn add_img_flip_v(&mut self, img_flip_v: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributes::VT_IMG_FLIP_V, img_flip_v, false);
   }
   #[inline]
   pub fn add_uv_translation_x(&mut self, uv_translation_x: f32) {
@@ -12890,8 +12890,8 @@ impl ::core::fmt::Debug for PartAttributes<'_> {
       ds.field("alpha", &self.alpha());
       ds.field("local_alpha", &self.local_alpha());
       ds.field("priority", &self.priority());
-      ds.field("flip_v", &self.flip_v());
       ds.field("flip_h", &self.flip_h());
+      ds.field("flip_v", &self.flip_v());
       ds.field("hide", &self.hide());
       ds.field("part_color", &self.part_color());
       ds.field("shader", &self.shader());
@@ -12902,8 +12902,8 @@ impl ::core::fmt::Debug for PartAttributes<'_> {
       ds.field("anchor_y", &self.anchor_y());
       ds.field("size_x", &self.size_x());
       ds.field("size_y", &self.size_y());
-      ds.field("img_flip_v", &self.img_flip_v());
       ds.field("img_flip_h", &self.img_flip_h());
+      ds.field("img_flip_v", &self.img_flip_v());
       ds.field("uv_translation_x", &self.uv_translation_x());
       ds.field("uv_translation_y", &self.uv_translation_y());
       ds.field("uv_rotation_z", &self.uv_rotation_z());
@@ -12935,8 +12935,8 @@ pub struct PartAttributesT {
   pub alpha: f32,
   pub local_alpha: f32,
   pub priority: f32,
-  pub flip_v: bool,
   pub flip_h: bool,
+  pub flip_v: bool,
   pub hide: bool,
   pub part_color: Option<alloc::boxed::Box<PartAttributePartColorT>>,
   pub shader: Option<alloc::boxed::Box<PartAttributeShaderT>>,
@@ -12947,8 +12947,8 @@ pub struct PartAttributesT {
   pub anchor_y: f32,
   pub size_x: f32,
   pub size_y: f32,
-  pub img_flip_v: bool,
   pub img_flip_h: bool,
+  pub img_flip_v: bool,
   pub uv_translation_x: f32,
   pub uv_translation_y: f32,
   pub uv_rotation_z: f32,
@@ -12978,8 +12978,8 @@ impl Default for PartAttributesT {
       alpha: 1.0,
       local_alpha: 1.0,
       priority: 0.0,
-      flip_v: false,
       flip_h: false,
+      flip_v: false,
       hide: false,
       part_color: None,
       shader: None,
@@ -12990,8 +12990,8 @@ impl Default for PartAttributesT {
       anchor_y: 0.0,
       size_x: 1.0,
       size_y: 1.0,
-      img_flip_v: false,
       img_flip_h: false,
+      img_flip_v: false,
       uv_translation_x: 0.0,
       uv_translation_y: 0.0,
       uv_rotation_z: 0.0,
@@ -13027,8 +13027,8 @@ impl PartAttributesT {
     let alpha = self.alpha;
     let local_alpha = self.local_alpha;
     let priority = self.priority;
-    let flip_v = self.flip_v;
     let flip_h = self.flip_h;
+    let flip_v = self.flip_v;
     let hide = self.hide;
     let part_color = self.part_color.as_ref().map(|x|{
       x.pack(_fbb)
@@ -13045,8 +13045,8 @@ impl PartAttributesT {
     let anchor_y = self.anchor_y;
     let size_x = self.size_x;
     let size_y = self.size_y;
-    let img_flip_v = self.img_flip_v;
     let img_flip_h = self.img_flip_h;
+    let img_flip_v = self.img_flip_v;
     let uv_translation_x = self.uv_translation_x;
     let uv_translation_y = self.uv_translation_y;
     let uv_rotation_z = self.uv_rotation_z;
@@ -13075,8 +13075,8 @@ impl PartAttributesT {
       alpha,
       local_alpha,
       priority,
-      flip_v,
       flip_h,
+      flip_v,
       hide,
       part_color,
       shader,
@@ -13087,8 +13087,8 @@ impl PartAttributesT {
       anchor_y,
       size_x,
       size_y,
-      img_flip_v,
       img_flip_h,
+      img_flip_v,
       uv_translation_x,
       uv_translation_y,
       uv_rotation_z,
@@ -17250,23 +17250,23 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAnimationData<'a> {
 
 impl<'a> PartAnimationData<'a> {
   pub const VT_CELL_ARRAY: ::flatbuffers::VOffsetT = 4;
-  pub const VT_POS_X_ARRAY: ::flatbuffers::VOffsetT = 6;
-  pub const VT_POS_Y_ARRAY: ::flatbuffers::VOffsetT = 8;
-  pub const VT_POS_Z_ARRAY: ::flatbuffers::VOffsetT = 10;
-  pub const VT_ROT_X_ARRAY: ::flatbuffers::VOffsetT = 12;
-  pub const VT_ROT_Y_ARRAY: ::flatbuffers::VOffsetT = 14;
-  pub const VT_ROT_Z_ARRAY: ::flatbuffers::VOffsetT = 16;
-  pub const VT_SCL_X_ARRAY: ::flatbuffers::VOffsetT = 18;
-  pub const VT_SCL_Y_ARRAY: ::flatbuffers::VOffsetT = 20;
-  pub const VT_LOSCL_X_ARRAY: ::flatbuffers::VOffsetT = 22;
-  pub const VT_LOSCL_Y_ARRAY: ::flatbuffers::VOffsetT = 24;
+  pub const VT_POSITION_X_ARRAY: ::flatbuffers::VOffsetT = 6;
+  pub const VT_POSITION_Y_ARRAY: ::flatbuffers::VOffsetT = 8;
+  pub const VT_POSITION_Z_ARRAY: ::flatbuffers::VOffsetT = 10;
+  pub const VT_ROTATION_X_ARRAY: ::flatbuffers::VOffsetT = 12;
+  pub const VT_ROTATION_Y_ARRAY: ::flatbuffers::VOffsetT = 14;
+  pub const VT_ROTATION_Z_ARRAY: ::flatbuffers::VOffsetT = 16;
+  pub const VT_SCALE_X_ARRAY: ::flatbuffers::VOffsetT = 18;
+  pub const VT_SCALE_Y_ARRAY: ::flatbuffers::VOffsetT = 20;
+  pub const VT_LOCAL_SCALE_X_ARRAY: ::flatbuffers::VOffsetT = 22;
+  pub const VT_LOCAL_SCALE_Y_ARRAY: ::flatbuffers::VOffsetT = 24;
   pub const VT_ALPHA_ARRAY: ::flatbuffers::VOffsetT = 26;
-  pub const VT_LO_ALPHA_ARRAY: ::flatbuffers::VOffsetT = 28;
-  pub const VT_PRIO_ARRAY: ::flatbuffers::VOffsetT = 30;
+  pub const VT_LOCAL_ALPHA_ARRAY: ::flatbuffers::VOffsetT = 28;
+  pub const VT_PRIORITY_ARRAY: ::flatbuffers::VOffsetT = 30;
   pub const VT_FLIP_H_ARRAY: ::flatbuffers::VOffsetT = 32;
   pub const VT_FLIP_V_ARRAY: ::flatbuffers::VOffsetT = 34;
   pub const VT_HIDE_ARRAY: ::flatbuffers::VOffsetT = 36;
-  pub const VT_PARTS_COLOR_ARRAY: ::flatbuffers::VOffsetT = 38;
+  pub const VT_PART_COLOR_ARRAY: ::flatbuffers::VOffsetT = 38;
   pub const VT_SHADER_ARRAY: ::flatbuffers::VOffsetT = 40;
   pub const VT_VERTEX_ARRAY: ::flatbuffers::VOffsetT = 42;
   pub const VT_PIVOT_X_ARRAY: ::flatbuffers::VOffsetT = 44;
@@ -17277,12 +17277,12 @@ impl<'a> PartAnimationData<'a> {
   pub const VT_SIZE_Y_ARRAY: ::flatbuffers::VOffsetT = 54;
   pub const VT_IMG_FLIP_H_ARRAY: ::flatbuffers::VOffsetT = 56;
   pub const VT_IMG_FLIP_V_ARRAY: ::flatbuffers::VOffsetT = 58;
-  pub const VT_UVT_X_ARRAY: ::flatbuffers::VOffsetT = 60;
-  pub const VT_UVT_Y_ARRAY: ::flatbuffers::VOffsetT = 62;
-  pub const VT_UVR_Z_ARRAY: ::flatbuffers::VOffsetT = 64;
-  pub const VT_UVS_X_ARRAY: ::flatbuffers::VOffsetT = 66;
-  pub const VT_UVS_Y_ARRAY: ::flatbuffers::VOffsetT = 68;
-  pub const VT_BOUNDR_ARRAY: ::flatbuffers::VOffsetT = 70;
+  pub const VT_UV_TRANSLATION_X_ARRAY: ::flatbuffers::VOffsetT = 60;
+  pub const VT_UV_TRANSLATION_Y_ARRAY: ::flatbuffers::VOffsetT = 62;
+  pub const VT_UV_ROTATION_Z_ARRAY: ::flatbuffers::VOffsetT = 64;
+  pub const VT_UV_SCALE_X_ARRAY: ::flatbuffers::VOffsetT = 66;
+  pub const VT_UV_SCALE_Y_ARRAY: ::flatbuffers::VOffsetT = 68;
+  pub const VT_BOUNDING_RADIUS_ARRAY: ::flatbuffers::VOffsetT = 70;
   pub const VT_MASK_ARRAY: ::flatbuffers::VOffsetT = 72;
   pub const VT_SKEW_ARRAY: ::flatbuffers::VOffsetT = 74;
   pub const VT_DEFORM_ARRAY: ::flatbuffers::VOffsetT = 76;
@@ -17302,12 +17302,12 @@ impl<'a> PartAnimationData<'a> {
     if let Some(x) = args.deform_array { builder.add_deform_array(x); }
     if let Some(x) = args.skew_array { builder.add_skew_array(x); }
     if let Some(x) = args.mask_array { builder.add_mask_array(x); }
-    if let Some(x) = args.boundr_array { builder.add_boundr_array(x); }
-    if let Some(x) = args.uvs_y_array { builder.add_uvs_y_array(x); }
-    if let Some(x) = args.uvs_x_array { builder.add_uvs_x_array(x); }
-    if let Some(x) = args.uvr_z_array { builder.add_uvr_z_array(x); }
-    if let Some(x) = args.uvt_y_array { builder.add_uvt_y_array(x); }
-    if let Some(x) = args.uvt_x_array { builder.add_uvt_x_array(x); }
+    if let Some(x) = args.bounding_radius_array { builder.add_bounding_radius_array(x); }
+    if let Some(x) = args.uv_scale_y_array { builder.add_uv_scale_y_array(x); }
+    if let Some(x) = args.uv_scale_x_array { builder.add_uv_scale_x_array(x); }
+    if let Some(x) = args.uv_rotation_z_array { builder.add_uv_rotation_z_array(x); }
+    if let Some(x) = args.uv_translation_y_array { builder.add_uv_translation_y_array(x); }
+    if let Some(x) = args.uv_translation_x_array { builder.add_uv_translation_x_array(x); }
     if let Some(x) = args.img_flip_v_array { builder.add_img_flip_v_array(x); }
     if let Some(x) = args.img_flip_h_array { builder.add_img_flip_h_array(x); }
     if let Some(x) = args.size_y_array { builder.add_size_y_array(x); }
@@ -17318,23 +17318,23 @@ impl<'a> PartAnimationData<'a> {
     if let Some(x) = args.pivot_x_array { builder.add_pivot_x_array(x); }
     if let Some(x) = args.vertex_array { builder.add_vertex_array(x); }
     if let Some(x) = args.shader_array { builder.add_shader_array(x); }
-    if let Some(x) = args.parts_color_array { builder.add_parts_color_array(x); }
+    if let Some(x) = args.part_color_array { builder.add_part_color_array(x); }
     if let Some(x) = args.hide_array { builder.add_hide_array(x); }
     if let Some(x) = args.flip_v_array { builder.add_flip_v_array(x); }
     if let Some(x) = args.flip_h_array { builder.add_flip_h_array(x); }
-    if let Some(x) = args.prio_array { builder.add_prio_array(x); }
-    if let Some(x) = args.lo_alpha_array { builder.add_lo_alpha_array(x); }
+    if let Some(x) = args.priority_array { builder.add_priority_array(x); }
+    if let Some(x) = args.local_alpha_array { builder.add_local_alpha_array(x); }
     if let Some(x) = args.alpha_array { builder.add_alpha_array(x); }
-    if let Some(x) = args.loscl_y_array { builder.add_loscl_y_array(x); }
-    if let Some(x) = args.loscl_x_array { builder.add_loscl_x_array(x); }
-    if let Some(x) = args.scl_y_array { builder.add_scl_y_array(x); }
-    if let Some(x) = args.scl_x_array { builder.add_scl_x_array(x); }
-    if let Some(x) = args.rot_z_array { builder.add_rot_z_array(x); }
-    if let Some(x) = args.rot_y_array { builder.add_rot_y_array(x); }
-    if let Some(x) = args.rot_x_array { builder.add_rot_x_array(x); }
-    if let Some(x) = args.pos_z_array { builder.add_pos_z_array(x); }
-    if let Some(x) = args.pos_y_array { builder.add_pos_y_array(x); }
-    if let Some(x) = args.pos_x_array { builder.add_pos_x_array(x); }
+    if let Some(x) = args.local_scale_y_array { builder.add_local_scale_y_array(x); }
+    if let Some(x) = args.local_scale_x_array { builder.add_local_scale_x_array(x); }
+    if let Some(x) = args.scale_y_array { builder.add_scale_y_array(x); }
+    if let Some(x) = args.scale_x_array { builder.add_scale_x_array(x); }
+    if let Some(x) = args.rotation_z_array { builder.add_rotation_z_array(x); }
+    if let Some(x) = args.rotation_y_array { builder.add_rotation_y_array(x); }
+    if let Some(x) = args.rotation_x_array { builder.add_rotation_x_array(x); }
+    if let Some(x) = args.position_z_array { builder.add_position_z_array(x); }
+    if let Some(x) = args.position_y_array { builder.add_position_y_array(x); }
+    if let Some(x) = args.position_x_array { builder.add_position_x_array(x); }
     if let Some(x) = args.cell_array { builder.add_cell_array(x); }
     builder.finish()
   }
@@ -17343,43 +17343,43 @@ impl<'a> PartAnimationData<'a> {
     let cell_array = self.cell_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let pos_x_array = self.pos_x_array().map(|x| {
+    let position_x_array = self.position_x_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let pos_y_array = self.pos_y_array().map(|x| {
+    let position_y_array = self.position_y_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let pos_z_array = self.pos_z_array().map(|x| {
+    let position_z_array = self.position_z_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let rot_x_array = self.rot_x_array().map(|x| {
+    let rotation_x_array = self.rotation_x_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let rot_y_array = self.rot_y_array().map(|x| {
+    let rotation_y_array = self.rotation_y_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let rot_z_array = self.rot_z_array().map(|x| {
+    let rotation_z_array = self.rotation_z_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let scl_x_array = self.scl_x_array().map(|x| {
+    let scale_x_array = self.scale_x_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let scl_y_array = self.scl_y_array().map(|x| {
+    let scale_y_array = self.scale_y_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let loscl_x_array = self.loscl_x_array().map(|x| {
+    let local_scale_x_array = self.local_scale_x_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let loscl_y_array = self.loscl_y_array().map(|x| {
+    let local_scale_y_array = self.local_scale_y_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let alpha_array = self.alpha_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let lo_alpha_array = self.lo_alpha_array().map(|x| {
+    let local_alpha_array = self.local_alpha_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let prio_array = self.prio_array().map(|x| {
+    let priority_array = self.priority_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let flip_h_array = self.flip_h_array().map(|x| {
@@ -17391,7 +17391,7 @@ impl<'a> PartAnimationData<'a> {
     let hide_array = self.hide_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let parts_color_array = self.parts_color_array().map(|x| {
+    let part_color_array = self.part_color_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let shader_array = self.shader_array().map(|x| {
@@ -17424,22 +17424,22 @@ impl<'a> PartAnimationData<'a> {
     let img_flip_v_array = self.img_flip_v_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let uvt_x_array = self.uvt_x_array().map(|x| {
+    let uv_translation_x_array = self.uv_translation_x_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let uvt_y_array = self.uvt_y_array().map(|x| {
+    let uv_translation_y_array = self.uv_translation_y_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let uvr_z_array = self.uvr_z_array().map(|x| {
+    let uv_rotation_z_array = self.uv_rotation_z_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let uvs_x_array = self.uvs_x_array().map(|x| {
+    let uv_scale_x_array = self.uv_scale_x_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let uvs_y_array = self.uvs_y_array().map(|x| {
+    let uv_scale_y_array = self.uv_scale_y_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let boundr_array = self.boundr_array().map(|x| {
+    let bounding_radius_array = self.bounding_radius_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
     let mask_array = self.mask_array().map(|x| {
@@ -17456,23 +17456,23 @@ impl<'a> PartAnimationData<'a> {
     });
     PartAnimationDataT {
       cell_array,
-      pos_x_array,
-      pos_y_array,
-      pos_z_array,
-      rot_x_array,
-      rot_y_array,
-      rot_z_array,
-      scl_x_array,
-      scl_y_array,
-      loscl_x_array,
-      loscl_y_array,
+      position_x_array,
+      position_y_array,
+      position_z_array,
+      rotation_x_array,
+      rotation_y_array,
+      rotation_z_array,
+      scale_x_array,
+      scale_y_array,
+      local_scale_x_array,
+      local_scale_y_array,
       alpha_array,
-      lo_alpha_array,
-      prio_array,
+      local_alpha_array,
+      priority_array,
       flip_h_array,
       flip_v_array,
       hide_array,
-      parts_color_array,
+      part_color_array,
       shader_array,
       vertex_array,
       pivot_x_array,
@@ -17483,12 +17483,12 @@ impl<'a> PartAnimationData<'a> {
       size_y_array,
       img_flip_h_array,
       img_flip_v_array,
-      uvt_x_array,
-      uvt_y_array,
-      uvr_z_array,
-      uvs_x_array,
-      uvs_y_array,
-      boundr_array,
+      uv_translation_x_array,
+      uv_translation_y_array,
+      uv_rotation_z_array,
+      uv_scale_x_array,
+      uv_scale_y_array,
+      bounding_radius_array,
       mask_array,
       skew_array,
       deform_array,
@@ -17504,74 +17504,74 @@ impl<'a> PartAnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataCellValue>>>>(PartAnimationData::VT_CELL_ARRAY, None)}
   }
   #[inline]
-  pub fn pos_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn position_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_POS_X_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_POSITION_X_ARRAY, None)}
   }
   #[inline]
-  pub fn pos_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn position_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_POS_Y_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_POSITION_Y_ARRAY, None)}
   }
   #[inline]
-  pub fn pos_z_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn position_z_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_POS_Z_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_POSITION_Z_ARRAY, None)}
   }
   #[inline]
-  pub fn rot_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn rotation_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ROT_X_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ROTATION_X_ARRAY, None)}
   }
   #[inline]
-  pub fn rot_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn rotation_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ROT_Y_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ROTATION_Y_ARRAY, None)}
   }
   #[inline]
-  pub fn rot_z_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn rotation_z_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ROT_Z_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ROTATION_Z_ARRAY, None)}
   }
   #[inline]
-  pub fn scl_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn scale_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_SCL_X_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_SCALE_X_ARRAY, None)}
   }
   #[inline]
-  pub fn scl_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn scale_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_SCL_Y_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_SCALE_Y_ARRAY, None)}
   }
   #[inline]
-  pub fn loscl_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn local_scale_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_LOSCL_X_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_LOCAL_SCALE_X_ARRAY, None)}
   }
   #[inline]
-  pub fn loscl_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn local_scale_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_LOSCL_Y_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_LOCAL_SCALE_Y_ARRAY, None)}
   }
   #[inline]
   pub fn alpha_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
@@ -17581,18 +17581,18 @@ impl<'a> PartAnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_ALPHA_ARRAY, None)}
   }
   #[inline]
-  pub fn lo_alpha_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn local_alpha_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_LO_ALPHA_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_LOCAL_ALPHA_ARRAY, None)}
   }
   #[inline]
-  pub fn prio_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>> {
+  pub fn priority_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>>(PartAnimationData::VT_PRIO_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>>(PartAnimationData::VT_PRIORITY_ARRAY, None)}
   }
   #[inline]
   pub fn flip_h_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>> {
@@ -17616,11 +17616,11 @@ impl<'a> PartAnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>(PartAnimationData::VT_HIDE_ARRAY, None)}
   }
   #[inline]
-  pub fn parts_color_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'a>>>> {
+  pub fn part_color_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor>>>>(PartAnimationData::VT_PARTS_COLOR_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor>>>>(PartAnimationData::VT_PART_COLOR_ARRAY, None)}
   }
   #[inline]
   pub fn shader_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataShader<'a>>>> {
@@ -17693,46 +17693,46 @@ impl<'a> PartAnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>(PartAnimationData::VT_IMG_FLIP_V_ARRAY, None)}
   }
   #[inline]
-  pub fn uvt_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn uv_translation_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UVT_X_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UV_TRANSLATION_X_ARRAY, None)}
   }
   #[inline]
-  pub fn uvt_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn uv_translation_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UVT_Y_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UV_TRANSLATION_Y_ARRAY, None)}
   }
   #[inline]
-  pub fn uvr_z_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn uv_rotation_z_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UVR_Z_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UV_ROTATION_Z_ARRAY, None)}
   }
   #[inline]
-  pub fn uvs_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn uv_scale_x_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UVS_X_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UV_SCALE_X_ARRAY, None)}
   }
   #[inline]
-  pub fn uvs_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn uv_scale_y_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UVS_Y_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_UV_SCALE_Y_ARRAY, None)}
   }
   #[inline]
-  pub fn boundr_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
+  pub fn bounding_radius_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_BOUNDR_ARRAY, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>(PartAnimationData::VT_BOUNDING_RADIUS_ARRAY, None)}
   }
   #[inline]
   pub fn mask_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>> {
@@ -17771,23 +17771,23 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataCellValue>>>>("cell_array", Self::VT_CELL_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("pos_x_array", Self::VT_POS_X_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("pos_y_array", Self::VT_POS_Y_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("pos_z_array", Self::VT_POS_Z_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("rot_x_array", Self::VT_ROT_X_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("rot_y_array", Self::VT_ROT_Y_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("rot_z_array", Self::VT_ROT_Z_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("scl_x_array", Self::VT_SCL_X_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("scl_y_array", Self::VT_SCL_Y_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("loscl_x_array", Self::VT_LOSCL_X_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("loscl_y_array", Self::VT_LOSCL_Y_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("position_x_array", Self::VT_POSITION_X_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("position_y_array", Self::VT_POSITION_Y_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("position_z_array", Self::VT_POSITION_Z_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("rotation_x_array", Self::VT_ROTATION_X_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("rotation_y_array", Self::VT_ROTATION_Y_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("rotation_z_array", Self::VT_ROTATION_Z_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("scale_x_array", Self::VT_SCALE_X_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("scale_y_array", Self::VT_SCALE_Y_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("local_scale_x_array", Self::VT_LOCAL_SCALE_X_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("local_scale_y_array", Self::VT_LOCAL_SCALE_Y_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("alpha_array", Self::VT_ALPHA_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("lo_alpha_array", Self::VT_LO_ALPHA_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>>("prio_array", Self::VT_PRIO_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("local_alpha_array", Self::VT_LOCAL_ALPHA_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>>("priority_array", Self::VT_PRIORITY_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("flip_h_array", Self::VT_FLIP_H_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("flip_v_array", Self::VT_FLIP_V_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("hide_array", Self::VT_HIDE_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor>>>>("parts_color_array", Self::VT_PARTS_COLOR_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor>>>>("part_color_array", Self::VT_PART_COLOR_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataShader>>>>("shader_array", Self::VT_SHADER_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataVertex>>>>("vertex_array", Self::VT_VERTEX_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("pivot_x_array", Self::VT_PIVOT_X_ARRAY, false)?
@@ -17798,12 +17798,12 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("size_y_array", Self::VT_SIZE_Y_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("img_flip_h_array", Self::VT_IMG_FLIP_H_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>>("img_flip_v_array", Self::VT_IMG_FLIP_V_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uvt_x_array", Self::VT_UVT_X_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uvt_y_array", Self::VT_UVT_Y_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uvr_z_array", Self::VT_UVR_Z_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uvs_x_array", Self::VT_UVS_X_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uvs_y_array", Self::VT_UVS_Y_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("boundr_array", Self::VT_BOUNDR_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uv_translation_x_array", Self::VT_UV_TRANSLATION_X_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uv_translation_y_array", Self::VT_UV_TRANSLATION_Y_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uv_rotation_z_array", Self::VT_UV_ROTATION_Z_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uv_scale_x_array", Self::VT_UV_SCALE_X_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("uv_scale_y_array", Self::VT_UV_SCALE_Y_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("bounding_radius_array", Self::VT_BOUNDING_RADIUS_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>>("mask_array", Self::VT_MASK_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2>>>>("skew_array", Self::VT_SKEW_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>>("deform_array", Self::VT_DEFORM_ARRAY, false)?
@@ -17814,23 +17814,23 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
 }
 pub struct PartAnimationDataArgs<'a> {
     pub cell_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataCellValue<'a>>>>>,
-    pub pos_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub pos_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub pos_z_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub rot_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub rot_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub rot_z_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub scl_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub scl_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub loscl_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub loscl_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub position_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub position_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub position_z_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub rotation_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub rotation_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub rotation_z_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub scale_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub scale_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub local_scale_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub local_scale_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
     pub alpha_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub lo_alpha_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub prio_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>>>,
+    pub local_alpha_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub priority_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'a>>>>>,
     pub flip_h_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
     pub flip_v_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
     pub hide_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
-    pub parts_color_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'a>>>>>,
+    pub part_color_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'a>>>>>,
     pub shader_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataShader<'a>>>>>,
     pub vertex_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataVertex<'a>>>>>,
     pub pivot_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
@@ -17841,12 +17841,12 @@ pub struct PartAnimationDataArgs<'a> {
     pub size_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
     pub img_flip_h_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
     pub img_flip_v_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'a>>>>>,
-    pub uvt_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub uvt_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub uvr_z_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub uvs_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub uvs_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
-    pub boundr_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub uv_translation_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub uv_translation_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub uv_rotation_z_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub uv_scale_x_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub uv_scale_y_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
+    pub bounding_radius_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
     pub mask_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'a>>>>>,
     pub skew_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2<'a>>>>>,
     pub deform_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform<'a>>>>>,
@@ -17857,23 +17857,23 @@ impl<'a> Default for PartAnimationDataArgs<'a> {
   fn default() -> Self {
     PartAnimationDataArgs {
       cell_array: None,
-      pos_x_array: None,
-      pos_y_array: None,
-      pos_z_array: None,
-      rot_x_array: None,
-      rot_y_array: None,
-      rot_z_array: None,
-      scl_x_array: None,
-      scl_y_array: None,
-      loscl_x_array: None,
-      loscl_y_array: None,
+      position_x_array: None,
+      position_y_array: None,
+      position_z_array: None,
+      rotation_x_array: None,
+      rotation_y_array: None,
+      rotation_z_array: None,
+      scale_x_array: None,
+      scale_y_array: None,
+      local_scale_x_array: None,
+      local_scale_y_array: None,
       alpha_array: None,
-      lo_alpha_array: None,
-      prio_array: None,
+      local_alpha_array: None,
+      priority_array: None,
       flip_h_array: None,
       flip_v_array: None,
       hide_array: None,
-      parts_color_array: None,
+      part_color_array: None,
       shader_array: None,
       vertex_array: None,
       pivot_x_array: None,
@@ -17884,12 +17884,12 @@ impl<'a> Default for PartAnimationDataArgs<'a> {
       size_y_array: None,
       img_flip_h_array: None,
       img_flip_v_array: None,
-      uvt_x_array: None,
-      uvt_y_array: None,
-      uvr_z_array: None,
-      uvs_x_array: None,
-      uvs_y_array: None,
-      boundr_array: None,
+      uv_translation_x_array: None,
+      uv_translation_y_array: None,
+      uv_rotation_z_array: None,
+      uv_scale_x_array: None,
+      uv_scale_y_array: None,
+      bounding_radius_array: None,
       mask_array: None,
       skew_array: None,
       deform_array: None,
@@ -17908,56 +17908,56 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_CELL_ARRAY, cell_array);
   }
   #[inline]
-  pub fn add_pos_x_array(&mut self, pos_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_POS_X_ARRAY, pos_x_array);
+  pub fn add_position_x_array(&mut self, position_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_POSITION_X_ARRAY, position_x_array);
   }
   #[inline]
-  pub fn add_pos_y_array(&mut self, pos_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_POS_Y_ARRAY, pos_y_array);
+  pub fn add_position_y_array(&mut self, position_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_POSITION_Y_ARRAY, position_y_array);
   }
   #[inline]
-  pub fn add_pos_z_array(&mut self, pos_z_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_POS_Z_ARRAY, pos_z_array);
+  pub fn add_position_z_array(&mut self, position_z_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_POSITION_Z_ARRAY, position_z_array);
   }
   #[inline]
-  pub fn add_rot_x_array(&mut self, rot_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ROT_X_ARRAY, rot_x_array);
+  pub fn add_rotation_x_array(&mut self, rotation_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ROTATION_X_ARRAY, rotation_x_array);
   }
   #[inline]
-  pub fn add_rot_y_array(&mut self, rot_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ROT_Y_ARRAY, rot_y_array);
+  pub fn add_rotation_y_array(&mut self, rotation_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ROTATION_Y_ARRAY, rotation_y_array);
   }
   #[inline]
-  pub fn add_rot_z_array(&mut self, rot_z_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ROT_Z_ARRAY, rot_z_array);
+  pub fn add_rotation_z_array(&mut self, rotation_z_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ROTATION_Z_ARRAY, rotation_z_array);
   }
   #[inline]
-  pub fn add_scl_x_array(&mut self, scl_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_SCL_X_ARRAY, scl_x_array);
+  pub fn add_scale_x_array(&mut self, scale_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_SCALE_X_ARRAY, scale_x_array);
   }
   #[inline]
-  pub fn add_scl_y_array(&mut self, scl_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_SCL_Y_ARRAY, scl_y_array);
+  pub fn add_scale_y_array(&mut self, scale_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_SCALE_Y_ARRAY, scale_y_array);
   }
   #[inline]
-  pub fn add_loscl_x_array(&mut self, loscl_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_LOSCL_X_ARRAY, loscl_x_array);
+  pub fn add_local_scale_x_array(&mut self, local_scale_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_LOCAL_SCALE_X_ARRAY, local_scale_x_array);
   }
   #[inline]
-  pub fn add_loscl_y_array(&mut self, loscl_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_LOSCL_Y_ARRAY, loscl_y_array);
+  pub fn add_local_scale_y_array(&mut self, local_scale_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_LOCAL_SCALE_Y_ARRAY, local_scale_y_array);
   }
   #[inline]
   pub fn add_alpha_array(&mut self, alpha_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_ALPHA_ARRAY, alpha_array);
   }
   #[inline]
-  pub fn add_lo_alpha_array(&mut self, lo_alpha_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_LO_ALPHA_ARRAY, lo_alpha_array);
+  pub fn add_local_alpha_array(&mut self, local_alpha_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_LOCAL_ALPHA_ARRAY, local_alpha_array);
   }
   #[inline]
-  pub fn add_prio_array(&mut self, prio_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_PRIO_ARRAY, prio_array);
+  pub fn add_priority_array(&mut self, priority_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataIntValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_PRIORITY_ARRAY, priority_array);
   }
   #[inline]
   pub fn add_flip_h_array(&mut self, flip_h_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue<'b >>>>) {
@@ -17972,8 +17972,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_HIDE_ARRAY, hide_array);
   }
   #[inline]
-  pub fn add_parts_color_array(&mut self, parts_color_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_PARTS_COLOR_ARRAY, parts_color_array);
+  pub fn add_part_color_array(&mut self, part_color_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataPartColor<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_PART_COLOR_ARRAY, part_color_array);
   }
   #[inline]
   pub fn add_shader_array(&mut self, shader_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataShader<'b >>>>) {
@@ -18016,28 +18016,28 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_IMG_FLIP_V_ARRAY, img_flip_v_array);
   }
   #[inline]
-  pub fn add_uvt_x_array(&mut self, uvt_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UVT_X_ARRAY, uvt_x_array);
+  pub fn add_uv_translation_x_array(&mut self, uv_translation_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UV_TRANSLATION_X_ARRAY, uv_translation_x_array);
   }
   #[inline]
-  pub fn add_uvt_y_array(&mut self, uvt_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UVT_Y_ARRAY, uvt_y_array);
+  pub fn add_uv_translation_y_array(&mut self, uv_translation_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UV_TRANSLATION_Y_ARRAY, uv_translation_y_array);
   }
   #[inline]
-  pub fn add_uvr_z_array(&mut self, uvr_z_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UVR_Z_ARRAY, uvr_z_array);
+  pub fn add_uv_rotation_z_array(&mut self, uv_rotation_z_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UV_ROTATION_Z_ARRAY, uv_rotation_z_array);
   }
   #[inline]
-  pub fn add_uvs_x_array(&mut self, uvs_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UVS_X_ARRAY, uvs_x_array);
+  pub fn add_uv_scale_x_array(&mut self, uv_scale_x_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UV_SCALE_X_ARRAY, uv_scale_x_array);
   }
   #[inline]
-  pub fn add_uvs_y_array(&mut self, uvs_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UVS_Y_ARRAY, uvs_y_array);
+  pub fn add_uv_scale_y_array(&mut self, uv_scale_y_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_UV_SCALE_Y_ARRAY, uv_scale_y_array);
   }
   #[inline]
-  pub fn add_boundr_array(&mut self, boundr_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_BOUNDR_ARRAY, boundr_array);
+  pub fn add_bounding_radius_array(&mut self, bounding_radius_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_BOUNDING_RADIUS_ARRAY, bounding_radius_array);
   }
   #[inline]
   pub fn add_mask_array(&mut self, mask_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue<'b >>>>) {
@@ -18074,23 +18074,23 @@ impl ::core::fmt::Debug for PartAnimationData<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAnimationData");
       ds.field("cell_array", &self.cell_array());
-      ds.field("pos_x_array", &self.pos_x_array());
-      ds.field("pos_y_array", &self.pos_y_array());
-      ds.field("pos_z_array", &self.pos_z_array());
-      ds.field("rot_x_array", &self.rot_x_array());
-      ds.field("rot_y_array", &self.rot_y_array());
-      ds.field("rot_z_array", &self.rot_z_array());
-      ds.field("scl_x_array", &self.scl_x_array());
-      ds.field("scl_y_array", &self.scl_y_array());
-      ds.field("loscl_x_array", &self.loscl_x_array());
-      ds.field("loscl_y_array", &self.loscl_y_array());
+      ds.field("position_x_array", &self.position_x_array());
+      ds.field("position_y_array", &self.position_y_array());
+      ds.field("position_z_array", &self.position_z_array());
+      ds.field("rotation_x_array", &self.rotation_x_array());
+      ds.field("rotation_y_array", &self.rotation_y_array());
+      ds.field("rotation_z_array", &self.rotation_z_array());
+      ds.field("scale_x_array", &self.scale_x_array());
+      ds.field("scale_y_array", &self.scale_y_array());
+      ds.field("local_scale_x_array", &self.local_scale_x_array());
+      ds.field("local_scale_y_array", &self.local_scale_y_array());
       ds.field("alpha_array", &self.alpha_array());
-      ds.field("lo_alpha_array", &self.lo_alpha_array());
-      ds.field("prio_array", &self.prio_array());
+      ds.field("local_alpha_array", &self.local_alpha_array());
+      ds.field("priority_array", &self.priority_array());
       ds.field("flip_h_array", &self.flip_h_array());
       ds.field("flip_v_array", &self.flip_v_array());
       ds.field("hide_array", &self.hide_array());
-      ds.field("parts_color_array", &self.parts_color_array());
+      ds.field("part_color_array", &self.part_color_array());
       ds.field("shader_array", &self.shader_array());
       ds.field("vertex_array", &self.vertex_array());
       ds.field("pivot_x_array", &self.pivot_x_array());
@@ -18101,12 +18101,12 @@ impl ::core::fmt::Debug for PartAnimationData<'_> {
       ds.field("size_y_array", &self.size_y_array());
       ds.field("img_flip_h_array", &self.img_flip_h_array());
       ds.field("img_flip_v_array", &self.img_flip_v_array());
-      ds.field("uvt_x_array", &self.uvt_x_array());
-      ds.field("uvt_y_array", &self.uvt_y_array());
-      ds.field("uvr_z_array", &self.uvr_z_array());
-      ds.field("uvs_x_array", &self.uvs_x_array());
-      ds.field("uvs_y_array", &self.uvs_y_array());
-      ds.field("boundr_array", &self.boundr_array());
+      ds.field("uv_translation_x_array", &self.uv_translation_x_array());
+      ds.field("uv_translation_y_array", &self.uv_translation_y_array());
+      ds.field("uv_rotation_z_array", &self.uv_rotation_z_array());
+      ds.field("uv_scale_x_array", &self.uv_scale_x_array());
+      ds.field("uv_scale_y_array", &self.uv_scale_y_array());
+      ds.field("bounding_radius_array", &self.bounding_radius_array());
       ds.field("mask_array", &self.mask_array());
       ds.field("skew_array", &self.skew_array());
       ds.field("deform_array", &self.deform_array());
@@ -18118,23 +18118,23 @@ impl ::core::fmt::Debug for PartAnimationData<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAnimationDataT {
   pub cell_array: Option<alloc::vec::Vec<PartAnimationDataCellValueT>>,
-  pub pos_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub pos_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub pos_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub rot_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub rot_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub rot_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub scl_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub scl_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub loscl_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub loscl_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub position_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub position_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub position_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub rotation_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub rotation_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub rotation_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub scale_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub scale_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub local_scale_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub local_scale_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
   pub alpha_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub lo_alpha_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub prio_array: Option<alloc::vec::Vec<PartAnimationDataIntValueT>>,
+  pub local_alpha_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub priority_array: Option<alloc::vec::Vec<PartAnimationDataIntValueT>>,
   pub flip_h_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
   pub flip_v_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
   pub hide_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
-  pub parts_color_array: Option<alloc::vec::Vec<PartAnimationDataPartColorT>>,
+  pub part_color_array: Option<alloc::vec::Vec<PartAnimationDataPartColorT>>,
   pub shader_array: Option<alloc::vec::Vec<PartAnimationDataShaderT>>,
   pub vertex_array: Option<alloc::vec::Vec<PartAnimationDataVertexT>>,
   pub pivot_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
@@ -18145,12 +18145,12 @@ pub struct PartAnimationDataT {
   pub size_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
   pub img_flip_h_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
   pub img_flip_v_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
-  pub uvt_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub uvt_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub uvr_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub uvs_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub uvs_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
-  pub boundr_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub uv_translation_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub uv_translation_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub uv_rotation_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub uv_scale_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub uv_scale_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+  pub bounding_radius_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
   pub mask_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
   pub skew_array: Option<alloc::vec::Vec<PartAnimationDataVec2T>>,
   pub deform_array: Option<alloc::vec::Vec<PartAnimationDataDeformT>>,
@@ -18160,23 +18160,23 @@ impl Default for PartAnimationDataT {
   fn default() -> Self {
     Self {
       cell_array: None,
-      pos_x_array: None,
-      pos_y_array: None,
-      pos_z_array: None,
-      rot_x_array: None,
-      rot_y_array: None,
-      rot_z_array: None,
-      scl_x_array: None,
-      scl_y_array: None,
-      loscl_x_array: None,
-      loscl_y_array: None,
+      position_x_array: None,
+      position_y_array: None,
+      position_z_array: None,
+      rotation_x_array: None,
+      rotation_y_array: None,
+      rotation_z_array: None,
+      scale_x_array: None,
+      scale_y_array: None,
+      local_scale_x_array: None,
+      local_scale_y_array: None,
       alpha_array: None,
-      lo_alpha_array: None,
-      prio_array: None,
+      local_alpha_array: None,
+      priority_array: None,
       flip_h_array: None,
       flip_v_array: None,
       hide_array: None,
-      parts_color_array: None,
+      part_color_array: None,
       shader_array: None,
       vertex_array: None,
       pivot_x_array: None,
@@ -18187,12 +18187,12 @@ impl Default for PartAnimationDataT {
       size_y_array: None,
       img_flip_h_array: None,
       img_flip_v_array: None,
-      uvt_x_array: None,
-      uvt_y_array: None,
-      uvr_z_array: None,
-      uvs_x_array: None,
-      uvs_y_array: None,
-      boundr_array: None,
+      uv_translation_x_array: None,
+      uv_translation_y_array: None,
+      uv_rotation_z_array: None,
+      uv_scale_x_array: None,
+      uv_scale_y_array: None,
+      bounding_radius_array: None,
       mask_array: None,
       skew_array: None,
       deform_array: None,
@@ -18208,43 +18208,43 @@ impl PartAnimationDataT {
     let cell_array = self.cell_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let pos_x_array = self.pos_x_array.as_ref().map(|x|{
+    let position_x_array = self.position_x_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let pos_y_array = self.pos_y_array.as_ref().map(|x|{
+    let position_y_array = self.position_y_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let pos_z_array = self.pos_z_array.as_ref().map(|x|{
+    let position_z_array = self.position_z_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let rot_x_array = self.rot_x_array.as_ref().map(|x|{
+    let rotation_x_array = self.rotation_x_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let rot_y_array = self.rot_y_array.as_ref().map(|x|{
+    let rotation_y_array = self.rotation_y_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let rot_z_array = self.rot_z_array.as_ref().map(|x|{
+    let rotation_z_array = self.rotation_z_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let scl_x_array = self.scl_x_array.as_ref().map(|x|{
+    let scale_x_array = self.scale_x_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let scl_y_array = self.scl_y_array.as_ref().map(|x|{
+    let scale_y_array = self.scale_y_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let loscl_x_array = self.loscl_x_array.as_ref().map(|x|{
+    let local_scale_x_array = self.local_scale_x_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let loscl_y_array = self.loscl_y_array.as_ref().map(|x|{
+    let local_scale_y_array = self.local_scale_y_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let alpha_array = self.alpha_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let lo_alpha_array = self.lo_alpha_array.as_ref().map(|x|{
+    let local_alpha_array = self.local_alpha_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let prio_array = self.prio_array.as_ref().map(|x|{
+    let priority_array = self.priority_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let flip_h_array = self.flip_h_array.as_ref().map(|x|{
@@ -18256,7 +18256,7 @@ impl PartAnimationDataT {
     let hide_array = self.hide_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let parts_color_array = self.parts_color_array.as_ref().map(|x|{
+    let part_color_array = self.part_color_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let shader_array = self.shader_array.as_ref().map(|x|{
@@ -18289,22 +18289,22 @@ impl PartAnimationDataT {
     let img_flip_v_array = self.img_flip_v_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let uvt_x_array = self.uvt_x_array.as_ref().map(|x|{
+    let uv_translation_x_array = self.uv_translation_x_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let uvt_y_array = self.uvt_y_array.as_ref().map(|x|{
+    let uv_translation_y_array = self.uv_translation_y_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let uvr_z_array = self.uvr_z_array.as_ref().map(|x|{
+    let uv_rotation_z_array = self.uv_rotation_z_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let uvs_x_array = self.uvs_x_array.as_ref().map(|x|{
+    let uv_scale_x_array = self.uv_scale_x_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let uvs_y_array = self.uvs_y_array.as_ref().map(|x|{
+    let uv_scale_y_array = self.uv_scale_y_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let boundr_array = self.boundr_array.as_ref().map(|x|{
+    let bounding_radius_array = self.bounding_radius_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     let mask_array = self.mask_array.as_ref().map(|x|{
@@ -18321,23 +18321,23 @@ impl PartAnimationDataT {
     });
     PartAnimationData::create(_fbb, &PartAnimationDataArgs{
       cell_array,
-      pos_x_array,
-      pos_y_array,
-      pos_z_array,
-      rot_x_array,
-      rot_y_array,
-      rot_z_array,
-      scl_x_array,
-      scl_y_array,
-      loscl_x_array,
-      loscl_y_array,
+      position_x_array,
+      position_y_array,
+      position_z_array,
+      rotation_x_array,
+      rotation_y_array,
+      rotation_z_array,
+      scale_x_array,
+      scale_y_array,
+      local_scale_x_array,
+      local_scale_y_array,
       alpha_array,
-      lo_alpha_array,
-      prio_array,
+      local_alpha_array,
+      priority_array,
       flip_h_array,
       flip_v_array,
       hide_array,
-      parts_color_array,
+      part_color_array,
       shader_array,
       vertex_array,
       pivot_x_array,
@@ -18348,12 +18348,12 @@ impl PartAnimationDataT {
       size_y_array,
       img_flip_h_array,
       img_flip_v_array,
-      uvt_x_array,
-      uvt_y_array,
-      uvr_z_array,
-      uvs_x_array,
-      uvs_y_array,
-      boundr_array,
+      uv_translation_x_array,
+      uv_translation_y_array,
+      uv_rotation_z_array,
+      uv_scale_x_array,
+      uv_scale_y_array,
+      bounding_radius_array,
       mask_array,
       skew_array,
       deform_array,
