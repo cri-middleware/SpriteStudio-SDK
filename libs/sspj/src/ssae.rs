@@ -54,7 +54,7 @@ pub struct SsPart {
     #[serde(default)]
     pub ref_effect_name: String,
     #[serde(default)]
-    pub bone_length: i32,
+    pub bone_length: f32,
     #[serde(default)]
     pub bone_position: SsPoint2,
     #[serde(default)]
