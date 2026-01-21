@@ -8,14 +8,14 @@ pub mod ffi;
 #[cfg(feature = "web")]
 pub mod web;
 
-pub struct Context {
+pub struct Context<'a> {
     ssab_buf: Vec<u8>,
-    fb: flatbuffers::FlatBufferBuilder<'static>,
+    fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
 }
 
-impl Context {
+impl<'a> Context<'a> {
     pub fn new(buf: &[u8]) -> Result<Context, std::io::Error> {
         let ssab_buf = buf.to_vec();
 
