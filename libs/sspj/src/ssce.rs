@@ -7,6 +7,7 @@ use crate::sspj_error::SspjError;
 #[serde(rename_all = "snake_case")]
 pub enum SsMeshDivType {
     #[default]
+    #[serde(alias = "invalid")]
     Unknown,
     #[serde(rename = "polyline")]
     PolylineBase,
