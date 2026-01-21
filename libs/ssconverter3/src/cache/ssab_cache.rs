@@ -425,23 +425,23 @@ impl From<&[ssab::ssab::PartAnimationDataDeformT]> for PartAnimationDataDeformVe
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataKey {
     pub cell_array: Option<PartAnimationDataCellValueVecKey>,
-    pub pos_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub pos_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub pos_z_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub rot_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub rot_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub rot_z_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub scl_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub scl_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub loscl_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub loscl_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub position_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub position_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub position_z_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub rotation_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub rotation_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub rotation_z_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub scale_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub scale_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub local_scale_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub local_scale_y_array: Option<PartAnimationDataFloatValueVecKey>,
     pub alpha_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub lo_alpha_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub prio_array: Option<PartAnimationDataIntValueVecKey>,
+    pub local_alpha_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub priority_array: Option<PartAnimationDataIntValueVecKey>,
     pub flip_h_array: Option<PartAnimationDataBoolValueVecKey>,
     pub flip_v_array: Option<PartAnimationDataBoolValueVecKey>,
     pub hide_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub parts_color_array: Option<PartAnimationDataPartColorVecKey>,
+    pub part_color_array: Option<PartAnimationDataPartColorVecKey>,
     pub shader_array: Option<PartAnimationDataShaderVecKey>,
     pub vertex_array: Option<PartAnimationDataVertexVecKey>,
     pub pivot_x_array: Option<PartAnimationDataFloatValueVecKey>,
@@ -452,12 +452,12 @@ pub struct PartAnimationDataKey {
     pub size_y_array: Option<PartAnimationDataFloatValueVecKey>,
     pub img_flip_h_array: Option<PartAnimationDataBoolValueVecKey>,
     pub img_flip_v_array: Option<PartAnimationDataBoolValueVecKey>,
-    pub uvt_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uvt_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uvr_z_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uvs_x_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub uvs_y_array: Option<PartAnimationDataFloatValueVecKey>,
-    pub boundr_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uv_translation_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uv_translation_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uv_rotation_z_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uv_scale_x_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub uv_scale_y_array: Option<PartAnimationDataFloatValueVecKey>,
+    pub bounding_radius_array: Option<PartAnimationDataFloatValueVecKey>,
     pub mask_array: Option<PartAnimationDataFloatValueVecKey>,
     pub skew_array: Option<PartAnimationDataVec2VecKey>,
     pub deform_array: Option<PartAnimationDataDeformVecKey>,
@@ -467,23 +467,23 @@ impl From<&ssab::ssab::PartAnimationDataT> for PartAnimationDataKey {
     fn from(value: &ssab::ssab::PartAnimationDataT) -> Self {
         Self {
             cell_array: value.cell_array.as_ref().map(|c| PartAnimationDataCellValueVecKey::from(c.as_ref())),
-            pos_x_array: value.pos_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            pos_y_array: value.pos_y_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            pos_z_array: value.pos_z_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
-            rot_x_array: value.rot_x_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
-            rot_y_array: value.rot_y_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
-            rot_z_array: value.rot_z_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
-            scl_x_array: value.scl_x_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
-            scl_y_array: value.scl_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
-            loscl_x_array: value.loscl_x_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
-            loscl_y_array: value.loscl_y_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
+            position_x_array: value.position_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            position_y_array: value.position_y_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            position_z_array: value.position_z_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
+            rotation_x_array: value.rotation_x_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
+            rotation_y_array: value.rotation_y_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
+            rotation_z_array: value.rotation_z_array.as_ref().map(|r| PartAnimationDataFloatValueVecKey::from(r.as_ref())),
+            scale_x_array: value.scale_x_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
+            scale_y_array: value.scale_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
+            local_scale_x_array: value.local_scale_x_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
+            local_scale_y_array: value.local_scale_y_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
             alpha_array: value.alpha_array.as_ref().map(|a| PartAnimationDataFloatValueVecKey::from(a.as_ref())),
-            lo_alpha_array: value.lo_alpha_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
-            prio_array: value.prio_array.as_ref().map(|p| PartAnimationDataIntValueVecKey::from(p.as_ref())),
+            local_alpha_array: value.local_alpha_array.as_ref().map(|l| PartAnimationDataFloatValueVecKey::from(l.as_ref())),
+            priority_array: value.priority_array.as_ref().map(|p| PartAnimationDataIntValueVecKey::from(p.as_ref())),
             flip_h_array: value.flip_h_array.as_ref().map(|f| PartAnimationDataBoolValueVecKey::from(f.as_ref())),
             flip_v_array: value.flip_v_array.as_ref().map(|f| PartAnimationDataBoolValueVecKey::from(f.as_ref())),
             hide_array: value.hide_array.as_ref().map(|h| PartAnimationDataBoolValueVecKey::from(h.as_ref())),
-            parts_color_array: value.parts_color_array.as_ref().map(|c| PartAnimationDataPartColorVecKey::from(c.as_ref())),
+            part_color_array: value.part_color_array.as_ref().map(|c| PartAnimationDataPartColorVecKey::from(c.as_ref())),
             shader_array: value.shader_array.as_ref().map(|s| PartAnimationDataShaderVecKey::from(s.as_ref())),
             vertex_array: value.vertex_array.as_ref().map(|v| PartAnimationDataVertexVecKey::from(v.as_ref())),
             pivot_x_array: value.pivot_x_array.as_ref().map(|p| PartAnimationDataFloatValueVecKey::from(p.as_ref())),
@@ -494,12 +494,12 @@ impl From<&ssab::ssab::PartAnimationDataT> for PartAnimationDataKey {
             size_y_array: value.size_y_array.as_ref().map(|s| PartAnimationDataFloatValueVecKey::from(s.as_ref())),
             img_flip_h_array: value.img_flip_h_array.as_ref().map(|i| PartAnimationDataBoolValueVecKey::from(i.as_ref())),
             img_flip_v_array: value.img_flip_v_array.as_ref().map(|i| PartAnimationDataBoolValueVecKey::from(i.as_ref())),
-            uvt_x_array: value.uvt_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uvt_y_array: value.uvt_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uvr_z_array: value.uvr_z_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uvs_x_array: value.uvs_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            uvs_y_array: value.uvs_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
-            boundr_array: value.boundr_array.as_ref().map(|b| PartAnimationDataFloatValueVecKey::from(b.as_ref())),
+            uv_translation_x_array: value.uv_translation_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uv_translation_y_array: value.uv_translation_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uv_rotation_z_array: value.uv_rotation_z_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uv_scale_x_array: value.uv_scale_x_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            uv_scale_y_array: value.uv_scale_y_array.as_ref().map(|u| PartAnimationDataFloatValueVecKey::from(u.as_ref())),
+            bounding_radius_array: value.bounding_radius_array.as_ref().map(|b| PartAnimationDataFloatValueVecKey::from(b.as_ref())),
             mask_array: value.mask_array.as_ref().map(|m| PartAnimationDataFloatValueVecKey::from(m.as_ref())),
             skew_array: value.skew_array.as_ref().map(|s| PartAnimationDataVec2VecKey::from(s.as_ref())),
             deform_array: value.deform_array.as_ref().map(|d| PartAnimationDataDeformVecKey::from(d.as_ref())),
@@ -683,8 +683,8 @@ pub struct PartAttributesKey {
     pub alpha: ordered_float::OrderedFloat<f32>,
     pub local_alpha: ordered_float::OrderedFloat<f32>,
     pub priority: ordered_float::OrderedFloat<f32>,
-    pub flip_v: bool,
     pub flip_h: bool,
+    pub flip_v: bool,
     pub hide: bool,
     pub part_color: Option<PartAttributePartColorKey>,
     pub shader: Option<PartAttributeShaderKey>,
@@ -695,8 +695,8 @@ pub struct PartAttributesKey {
     pub anchor_y: ordered_float::OrderedFloat<f32>,
     pub size_x: ordered_float::OrderedFloat<f32>,
     pub size_y: ordered_float::OrderedFloat<f32>,
-    pub img_flip_v: bool,
     pub img_flip_h: bool,
+    pub img_flip_v: bool,
     pub uv_translation_x: ordered_float::OrderedFloat<f32>,
     pub uv_translation_y: ordered_float::OrderedFloat<f32>,
     pub uv_rotation_z: ordered_float::OrderedFloat<f32>,
@@ -726,8 +726,8 @@ impl From<&ssab::ssab::PartAttributesT> for PartAttributesKey {
             alpha: ordered_float::OrderedFloat(value.alpha),
             local_alpha: ordered_float::OrderedFloat(value.local_alpha),
             priority: ordered_float::OrderedFloat(value.priority),
-            flip_v: value.flip_v,
             flip_h: value.flip_h,
+            flip_v: value.flip_v,
             hide: value.hide,
             part_color: value.part_color.as_ref().map(|c| PartAttributePartColorKey::from(c.as_ref())),
             shader: value.shader.as_ref().map(|s| PartAttributeShaderKey::from(s.as_ref())),
@@ -738,8 +738,8 @@ impl From<&ssab::ssab::PartAttributesT> for PartAttributesKey {
             anchor_y: ordered_float::OrderedFloat(value.pivot_y),
             size_x: ordered_float::OrderedFloat(value.size_x),
             size_y: ordered_float::OrderedFloat(value.size_y),
-            img_flip_v: value.img_flip_v,
             img_flip_h: value.img_flip_h,
+            img_flip_v: value.img_flip_v,
             uv_translation_x: ordered_float::OrderedFloat(value.uv_translation_x),
             uv_translation_y: ordered_float::OrderedFloat(value.uv_translation_y),
             uv_rotation_z: ordered_float::OrderedFloat(value.uv_rotation_z),
@@ -1266,45 +1266,45 @@ impl<'a> SsabCache<'a> {
             self.create_shared_part_animation_data_cell_value_list(fb, cell_array)
         });
 
-        p_args.pos_x_array = part_animation_data.pos_x_array.as_ref().map(|pos_x_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, pos_x_array)
+        p_args.position_x_array = part_animation_data.position_x_array.as_ref().map(|position_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, position_x_array)
         });
 
-        p_args.pos_y_array = part_animation_data.pos_y_array.as_ref().map(|pos_y_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, pos_y_array)
+        p_args.position_y_array = part_animation_data.position_y_array.as_ref().map(|position_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, position_y_array)
         });
-        p_args.pos_z_array = part_animation_data.pos_z_array.as_ref().map(|pos_z_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, pos_z_array)
+        p_args.position_z_array = part_animation_data.position_z_array.as_ref().map(|position_z_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, position_z_array)
         });
-        p_args.rot_x_array = part_animation_data.rot_x_array.as_ref().map(|rot_x_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, rot_x_array)
+        p_args.rotation_x_array = part_animation_data.rotation_x_array.as_ref().map(|rotation_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, rotation_x_array)
         });
-        p_args.rot_y_array = part_animation_data.rot_y_array.as_ref().map(|rot_y_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, rot_y_array)
+        p_args.rotation_y_array = part_animation_data.rotation_y_array.as_ref().map(|rotation_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, rotation_y_array)
         });
-        p_args.rot_z_array = part_animation_data.rot_z_array.as_ref().map(|rot_z_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, rot_z_array)
+        p_args.rotation_z_array = part_animation_data.rotation_z_array.as_ref().map(|rotation_z_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, rotation_z_array)
         });
-        p_args.scl_x_array = part_animation_data.scl_x_array.as_ref().map(|scl_x_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, scl_x_array)
+        p_args.scale_x_array = part_animation_data.scale_x_array.as_ref().map(|scale_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, scale_x_array)
         });
-        p_args.scl_y_array = part_animation_data.scl_y_array.as_ref().map(|scl_y_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, scl_y_array)
+        p_args.scale_y_array = part_animation_data.scale_y_array.as_ref().map(|scale_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, scale_y_array)
         });
-        p_args.loscl_x_array = part_animation_data.loscl_x_array.as_ref().map(|loscl_x_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, loscl_x_array)
+        p_args.local_scale_x_array = part_animation_data.local_scale_x_array.as_ref().map(|local_scale_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, local_scale_x_array)
         });
-        p_args.loscl_y_array = part_animation_data.loscl_y_array.as_ref().map(|loscl_y_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, loscl_y_array)
+        p_args.local_scale_y_array = part_animation_data.local_scale_y_array.as_ref().map(|local_scale_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, local_scale_y_array)
         });
         p_args.alpha_array = part_animation_data.alpha_array.as_ref().map(|alpha_array| {
             self.create_shared_part_animation_data_float_value_list(fb, alpha_array)
         });
-        p_args.lo_alpha_array = part_animation_data.lo_alpha_array.as_ref().map(|lo_alpha_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, lo_alpha_array)
+        p_args.local_alpha_array = part_animation_data.local_alpha_array.as_ref().map(|local_alpha_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, local_alpha_array)
         });
-        p_args.prio_array = part_animation_data.prio_array.as_ref().map(|prio_array| {
-            self.create_shared_part_animation_data_int_value_list(fb, prio_array)
+        p_args.priority_array = part_animation_data.priority_array.as_ref().map(|priority_array| {
+            self.create_shared_part_animation_data_int_value_list(fb, priority_array)
         });
         p_args.flip_h_array = part_animation_data.flip_h_array.as_ref().map(|flip_h_array| {
             self.create_shared_part_animation_data_bool_value_list(fb, flip_h_array)
@@ -1315,8 +1315,8 @@ impl<'a> SsabCache<'a> {
         p_args.hide_array = part_animation_data.hide_array.as_ref().map(|hide_array| {
             self.create_shared_part_animation_data_bool_value_list(fb, hide_array)
         });
-        p_args.parts_color_array = part_animation_data.parts_color_array.as_ref().map(|parts_color_array| {
-            self.create_shared_part_animation_data_part_color_list(fb, parts_color_array)
+        p_args.part_color_array = part_animation_data.part_color_array.as_ref().map(|part_color_array| {
+            self.create_shared_part_animation_data_part_color_list(fb, part_color_array)
         });
         p_args.shader_array = part_animation_data.shader_array.as_ref().map(|shader_array| {
             self.create_shared_part_animation_data_shader_list(fb, shader_array)
@@ -1348,23 +1348,23 @@ impl<'a> SsabCache<'a> {
         p_args.img_flip_v_array = part_animation_data.img_flip_v_array.as_ref().map(|img_flip_v_array| {
             self.create_shared_part_animation_data_bool_value_list(fb, img_flip_v_array)
         });
-        p_args.uvt_x_array = part_animation_data.uvt_x_array.as_ref().map(|uvt_x_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, uvt_x_array)
+        p_args.uv_translation_x_array = part_animation_data.uv_translation_x_array.as_ref().map(|uv_translation_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uv_translation_x_array)
         });
-        p_args.uvt_y_array = part_animation_data.uvt_y_array.as_ref().map(|uvt_y_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, uvt_y_array)
+        p_args.uv_translation_y_array = part_animation_data.uv_translation_y_array.as_ref().map(|uv_translation_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uv_translation_y_array)
         });
-        p_args.uvr_z_array = part_animation_data.uvr_z_array.as_ref().map(|uvr_z_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, uvr_z_array)
+        p_args.uv_rotation_z_array = part_animation_data.uv_rotation_z_array.as_ref().map(|uv_rotation_z_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uv_rotation_z_array)
         });
-        p_args.uvs_x_array = part_animation_data.uvs_x_array.as_ref().map(|uvs_x_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, uvs_x_array)
+        p_args.uv_scale_x_array = part_animation_data.uv_scale_x_array.as_ref().map(|uv_scale_x_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uv_scale_x_array)
         });
-        p_args.uvs_y_array = part_animation_data.uvs_y_array.as_ref().map(|uvs_y_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, uvs_y_array)
+        p_args.uv_scale_y_array = part_animation_data.uv_scale_y_array.as_ref().map(|uv_scale_y_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, uv_scale_y_array)
         });
-        p_args.boundr_array = part_animation_data.boundr_array.as_ref().map(|boundr_array| {
-            self.create_shared_part_animation_data_float_value_list(fb, boundr_array)
+        p_args.bounding_radius_array = part_animation_data.bounding_radius_array.as_ref().map(|bounding_radius_array| {
+            self.create_shared_part_animation_data_float_value_list(fb, bounding_radius_array)
         });
         p_args.mask_array = part_animation_data.mask_array.as_ref().map(|mask_array| {
             self.create_shared_part_animation_data_float_value_list(fb, mask_array)
@@ -1557,16 +1557,20 @@ impl<'a> SsabCache<'a> {
         args.alpha = part_attributes.alpha;
         args.local_alpha = part_attributes.local_alpha;
         args.priority = part_attributes.priority;
-        args.flip_v = part_attributes.flip_v;
         args.flip_h = part_attributes.flip_h;
+        args.flip_v = part_attributes.flip_v;
         args.hide = part_attributes.hide;
         args.part_color = part_attributes.part_color.as_ref().map(|parts_color| { self.create_shared_part_attribute_part_color(fb, parts_color) });
         args.shader = part_attributes.shader.as_ref().map(|shader| { self.create_shared_part_attribute_shader(fb, shader) });
         args.vertex = part_attributes.vertex.as_ref().map(|vertex| { self.create_shared_part_attribute_vertex(fb, vertex) });
         args.pivot_x = part_attributes.pivot_x;
         args.pivot_y = part_attributes.pivot_y;
+        args.anchor_x = part_attributes.anchor_x;
+        args.anchor_y = part_attributes.anchor_y;
         args.size_x = part_attributes.size_x;
         args.size_y = part_attributes.size_y;
+        args.img_flip_h = part_attributes.img_flip_h;
+        args.img_flip_v = part_attributes.img_flip_v;
         args.uv_translation_x = part_attributes.uv_translation_x;
         args.uv_translation_y = part_attributes.uv_translation_y;
         args.uv_rotation_z = part_attributes.uv_rotation_z;

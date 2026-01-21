@@ -509,7 +509,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         x_args.index = key.time as u16;
                         x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
-                        part_animation_data_t.pos_x_array.get_or_insert_with(Vec::new).push(x_args);
+                        part_animation_data_t.position_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::PosY(v) => {
@@ -518,7 +518,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         y_args.index = key.time as u16;
                         y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
-                        part_animation_data_t.pos_y_array.get_or_insert_with(Vec::new).push(y_args);
+                        part_animation_data_t.position_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::PosZ(v) => {
@@ -527,7 +527,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         z_args.index = key.time as u16;
                         z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
-                        part_animation_data_t.pos_z_array.get_or_insert_with(Vec::new).push(z_args);
+                        part_animation_data_t.position_z_array.get_or_insert_with(Vec::new).push(z_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::RotX(v) => {
@@ -536,7 +536,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         x_args.index = key.time as u16;
                         x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
-                        part_animation_data_t.rot_x_array.get_or_insert_with(Vec::new).push(x_args);
+                        part_animation_data_t.rotation_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::RotY(v) => {
@@ -545,7 +545,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         y_args.index = key.time as u16;
                         y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
-                        part_animation_data_t.rot_y_array.get_or_insert_with(Vec::new).push(y_args);
+                        part_animation_data_t.rotation_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::RotZ(v) => {
@@ -554,7 +554,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         z_args.index = key.time as u16;
                         z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
-                        part_animation_data_t.rot_y_array.get_or_insert_with(Vec::new).push(z_args);
+                        part_animation_data_t.rotation_y_array.get_or_insert_with(Vec::new).push(z_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::SclX(v) => {
@@ -563,7 +563,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         x_args.index = key.time as u16;
                         x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
-                        part_animation_data_t.scl_x_array.get_or_insert_with(Vec::new).push(x_args);
+                        part_animation_data_t.scale_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::SclY(v) => {
@@ -572,7 +572,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         y_args.index = key.time as u16;
                         y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
-                        part_animation_data_t.scl_y_array.get_or_insert_with(Vec::new).push(y_args);
+                        part_animation_data_t.scale_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::LosclX(v) => {
@@ -581,7 +581,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         x_args.index = key.time as u16;
                         x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
-                        part_animation_data_t.loscl_x_array.get_or_insert_with(Vec::new).push(x_args);
+                        part_animation_data_t.local_scale_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::LosclY(v) => {
@@ -590,7 +590,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         y_args.index = key.time as u16;
                         y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
-                        part_animation_data_t.loscl_y_array.get_or_insert_with(Vec::new).push(y_args);
+                        part_animation_data_t.local_scale_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Alpha(v) => {
@@ -608,7 +608,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         a_args.index = key.time as u16;
                         a_args.interpolation = convert_interpolation_type(&key.ip_type);
                         a_args.value = key.value;
-                        part_animation_data_t.lo_alpha_array.get_or_insert_with(Vec::new).push(a_args);
+                        part_animation_data_t.local_alpha_array.get_or_insert_with(Vec::new).push(a_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Prio(v) => {
@@ -617,7 +617,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         p_args.index = key.time as u16;
                         p_args.interpolation = convert_interpolation_type(&key.ip_type);
                         p_args.value = key.value;
-                        part_animation_data_t.prio_array.get_or_insert_with(Vec::new).push(p_args);
+                        part_animation_data_t.priority_array.get_or_insert_with(Vec::new).push(p_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::FlipH(v) => {
@@ -641,7 +641,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         let mut v_args = ssab::ssab::PartAnimationDataBoolValueT::default();
                         v_args.index = key.time as u16;
                         v_args.value = key.value;
-                        part_animation_data_t.flip_v_array.get_or_insert_with(Vec::new).push(v_args);
+                        part_animation_data_t.hide_array.get_or_insert_with(Vec::new).push(v_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
@@ -694,7 +694,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
 
                         c_args.value = Some(Box::new(value));
 
-                        part_animation_data_t.parts_color_array.get_or_insert_with(Vec::new).push(c_args);
+                        part_animation_data_t.part_color_array.get_or_insert_with(Vec::new).push(c_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Color => {
@@ -854,7 +854,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         x_args.index = key.time as u16;
                         x_args.interpolation = convert_interpolation_type(&key.ip_type);
                         x_args.value = key.value;
-                        part_animation_data_t.uvt_x_array.get_or_insert_with(Vec::new).push(x_args);
+                        part_animation_data_t.uv_translation_x_array.get_or_insert_with(Vec::new).push(x_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::UvtY(v) => {
@@ -863,7 +863,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         y_args.index = key.time as u16;
                         y_args.interpolation = convert_interpolation_type(&key.ip_type);
                         y_args.value = key.value;
-                        part_animation_data_t.uvt_y_array.get_or_insert_with(Vec::new).push(y_args);
+                        part_animation_data_t.uv_translation_y_array.get_or_insert_with(Vec::new).push(y_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
@@ -872,7 +872,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         z_args.index = key.time as u16;
                         z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
-                        part_animation_data_t.uvr_z_array.get_or_insert_with(Vec::new).push(z_args);
+                        part_animation_data_t.uv_rotation_z_array.get_or_insert_with(Vec::new).push(z_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::UvsX(v) => {
@@ -881,7 +881,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         z_args.index = key.time as u16;
                         z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
-                        part_animation_data_t.uvs_x_array.get_or_insert_with(Vec::new).push(z_args);
+                        part_animation_data_t.uv_scale_x_array.get_or_insert_with(Vec::new).push(z_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::UvsY(v) => {
@@ -890,7 +890,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         z_args.index = key.time as u16;
                         z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
-                        part_animation_data_t.uvs_y_array.get_or_insert_with(Vec::new).push(z_args);
+                        part_animation_data_t.uv_scale_y_array.get_or_insert_with(Vec::new).push(z_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Boundr(v) => {
@@ -899,7 +899,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_ani
                         z_args.index = key.time as u16;
                         z_args.interpolation = convert_interpolation_type(&key.ip_type);
                         z_args.value = key.value;
-                        part_animation_data_t.boundr_array.get_or_insert_with(Vec::new).push(z_args);
+                        part_animation_data_t.bounding_radius_array.get_or_insert_with(Vec::new).push(z_args);
                     });
                 },
                 sspj::ssattribute::SsAttributeKind::Mask(v) => {

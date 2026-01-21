@@ -78,11 +78,11 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         let asset_files = crate::utils::get_assets_of_ssab_object_class(&anime_binary, &sspj);
         let mut v = asset_files.iter().map(|(name, path)| {
             let src = sspj_parent_path.join(path);
-            let r = std::fs::read(src);
+            let r = std::fs::read(&src);
             let data = match r {
                 Ok(data) => data,
                 Err(e) => {
-                    return Err(crate::ConverterError::IoError(e));
+                    return Err(crate::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read: {}: {:?}", src.as_os_str().to_string_lossy(), e))));
                 }
             };
             let mut embedded_asset = ssab::ssab::EmbeddedAssetT::default();

@@ -24,7 +24,7 @@ impl std::error::Error for ConverterError {
         match self {
             ConverterError::IoError(e) => Some(e),
             ConverterError::SspjError(e) => Some(e),
-            ConverterError::ConversionFailed(_) => None,
+            ConverterError::ConversionFailed(_e) => None,
         }
     }
 }
