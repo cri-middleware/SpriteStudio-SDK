@@ -115,52 +115,67 @@ enum UpdateAttributeFlags: ulong (bit_flags) {
   AttributeTexture,
 }
 
-table PartState {
-  update_flag: UpdateAttributeFlags = 0;
+struct PartState {
+  update_flag: UpdateAttributeFlags;
 
-  cell: PartAttributeCell;
-  position_x: float = 0.0;
-  position_y: float = 0.0;
-  position_z: float = 0.0;
-  rotation_x: float = 0.0;
-  rotation_y: float = 0.0;
-  rotation_z: float = 0.0;
-  scale_x: float = 1.0;
-  scale_y: float = 1.0;
-  local_scale_x: float = 1.0;
-  local_scale_y: float = 1.0;
-  alpha: float = 1.0;
-  local_alpha: float = 1.0;
-  priority: float = 0.0;  
-  flip_h: bool = false;
-  flip_v: bool = false;
-  hide: bool = false;
-  part_color: PartAttributePartColor;
-  shader: PartAttributeShader;
-  vertex: PartAttributeVertex;
-  pivot_x: float = 0.0;
-  pivot_y: float = 0.0;
-  anchor_x: float = 0.0;
-  anchor_y: float = 0.0;
-  size_x: float = 1.0;
-  size_y: float = 1.0;
-  img_flip_h: bool = false;
-  img_flip_v: bool = false;  
-  uv_translation_x: float = 0.0;
-  uv_translation_y: float = 0.0;
-  uv_rotation_z: float = 0.0;
-  uv_scale_x: float = 1.0;
-  uv_scale_y: float = 1.0;
-  bounding_radius: float = 0.0;
-  mask: float = 0.0;
-  skew_x: float = 0.0;
-  skew_y: float = 0.0;
-  deform: int = -1;
-  texture: uint32 = 0;
+  position_x: float;
+  position_y: float;
+  position_z: float;
+
+  rotation_x: float;
+  rotation_y: float;
+  rotation_z: float;
+
+  scale_x: float;
+  scale_y: float;
+  local_scale_x: float;
+  local_scale_y: float;
+
+  alpha: float;
+  local_alpha: float;
+  priority: float;
+
+  pivot_x: float;
+  pivot_y: float;
+  anchor_x: float;
+  anchor_y: float;
+  size_x: float;
+  size_y: float;
+
+  uv_translation_x: float;
+  uv_translation_y: float;
+  uv_rotation_z: float;
+  uv_scale_x: float;
+  uv_scale_y: float;
+
+  bounding_radius: float;
+  mask: float;
+  skew_x: float;
+  skew_y: float;
+
+  texture: uint32;
+
+  part_index: short;
+  cell: short;
+  part_color: short;
+  shader: short;
+  vertex: short;
+  deform: short;
+
+  flip_h: bool;
+  flip_v: bool;
+  hide: bool;
+  img_flip_h: bool;
+  img_flip_v: bool;
 }
 
 table FrameData {
   parts: [PartState];
+
+  cells: [PartAttributeCell];
+  parts_color: [PartAttributePartColor];
+  shaders: [PartAttributeShader];
+  vertices: [PartAttributeVertex];
   deforms: [PartAttributeDeform];
 }
 
