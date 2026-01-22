@@ -4,10 +4,15 @@ use std::path::PathBuf;
 use std::thread::JoinHandle;
 use clap::{CommandFactory, Parser};
 
-
+const VERSION: &str = concat!(
+env!("CARGO_PKG_VERSION"),
+"+",
+env!("VERGEN_GIT_SHA")
+);
 #[derive(Parser, Debug)]
 #[command(
     name = "ssconverter-cli",
+    version = VERSION,
     override_usage = "
   single mode: convert a single sspj project or a single sspj project zip file
   usage:
@@ -32,17 +37,29 @@ struct Cli {
 
 }
 
+/*
+fn version_string() -> String {
+    let sha = env!("VERGEN_GIT_SHA");
+    let short_sha = if sha.len() >= 7 { &sha[..7] } else { sha };
+    format!("{}+{}", env!("CARGO_PKG_VERSION"), short_sha)
+}
+ */
+
 fn main() -> Result<(), ssconverter::ConverterError> {
     let args = Cli::parse();
+    let mut cmd = Cli::command();
 
     let sspj_paths = ssconverter::utility::parse_args(&args.files);
     if sspj_paths.is_empty() {
         eprintln!("sspj files not found.");
 
-        let mut cmd = Cli::command();
+
         eprintln!("{}", cmd.render_usage());
         return Ok(());
     }
+
+
+    println!("{} {}", cmd.get_name(), VERSION);
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
