@@ -10,7 +10,7 @@ fn main() {
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let output_file = PathBuf::from(&crate_dir)
         .join("target")
-        .join("ssconverter3.h");
+        .join("ssconverter.h");
 
     let config = cbindgen::Builder::new()
         .with_crate(&crate_dir)

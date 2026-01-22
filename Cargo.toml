@@ -2,7 +2,7 @@
 resolver = "3"
 members = [
     "cli",
-    "libs/ssconverter3",
+    "libs/ssconverter",
     "libs/sspj",
     "libs/ssab",
     "libs/ssruntime",
@@ -10,7 +10,7 @@ members = [
 
 [workspace.dependencies]
 sspj = { path = "libs/sspj" }
-ssconverter3 = { path = "libs/ssconverter3" }
+ssconverter = { path = "libs/ssconverter" }
 ssab = { path = "libs/ssab" }
 ssruntime = { path = "libs/ssruntime" }
 

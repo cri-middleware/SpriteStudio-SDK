@@ -13,7 +13,7 @@ cargo build --target x86_64-apple-darwin --release
 OUTPUT=target/universal-apple-darwin
 /bin/mkdir -p ${OUTPUT}
 
-LIBS=(libssruntime.a libssruntime.dylib libssconverter3.a libssconverter3.dylib ssconverter3-cli)
+LIBS=(libssruntime.a libssruntime.dylib libssconverter.a libssconverter.dylib ssconverter-cli)
 for lib in ${LIBS[@]}; do
     lipo -create target/aarch64-apple-darwin/release/${lib} target/x86_64-apple-darwin/release/${lib} -output ${OUTPUT}/${lib}
 done

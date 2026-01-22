@@ -1,6 +1,6 @@
 [package]
 name = "ssruntime"
-version = "0.1.0"
+version = "7.0.0"
 edition = "2024"
 
 [dependencies]
@@ -14,7 +14,7 @@ ffi = []
 web = ["wasm-bindgen"]
 
 [dev-dependencies]
-ssconverter3 = { path = "../ssconverter3" }
+ssconverter = { path = "../ssconverter" }
 
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]

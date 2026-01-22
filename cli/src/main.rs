@@ -1,4 +1,4 @@
-use ssconverter3;
+use ssconverter;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::thread::JoinHandle;
@@ -7,17 +7,17 @@ use clap::{CommandFactory, Parser};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "ssconverter3-cli",
+    name = "ssconverter-cli",
     override_usage = "
   single mode: convert a single sspj project or a single sspj project zip file
   usage:
-    $ ssconverter3-cli [OPTIONS] <sspj_file>
-    $ ssconverter3-cli [OPTIONS] <sspj_zip_file>
+    $ ssconverter-cli [OPTIONS] <sspj_file>
+    $ ssconverter-cli [OPTIONS] <sspj_zip_file>
 
   batch mode: convert multiple sspj projects
   usage:
-    $ ssconverter3-cli [OPTIONS] <sspj_file> <sspj_file> ...
-    $ ssconverter3-cli [OPTIONS] <directory> <directory> ...
+    $ ssconverter-cli [OPTIONS] <sspj_file> <sspj_file> ...
+    $ ssconverter-cli [OPTIONS] <directory> <directory> ...
 "
 )]
 struct Cli {
@@ -32,10 +32,10 @@ struct Cli {
 
 }
 
-fn main() -> Result<(), ssconverter3::ConverterError> {
+fn main() -> Result<(), ssconverter::ConverterError> {
     let args = Cli::parse();
 
-    let sspj_paths = ssconverter3::utility::parse_args(&args.files);
+    let sspj_paths = ssconverter::utility::parse_args(&args.files);
     if sspj_paths.is_empty() {
         eprintln!("sspj files not found.");
 
@@ -44,31 +44,31 @@ fn main() -> Result<(), ssconverter3::ConverterError> {
         return Ok(());
     }
 
-    let mut config = ssconverter3::ConverterConfig::default();
+    let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
         // single mode (sspj file or sspj zip file)
-        config.convert_config = ssconverter3::ConvertConfig {
+        config.convert_config = ssconverter::ConvertConfig {
             embedded: args.embedded,
             ..Default::default()
         };
         config.out_dir = args.out_dir;
     } else {
         // batch mode
-        config.convert_config = ssconverter3::ConvertConfig {
+        config.convert_config = ssconverter::ConvertConfig {
             embedded: args.embedded,
             ..Default::default()
         };
         config.out_dir = None; // batch mode does not support out_dir
     }
 
-    let mut handlers: Vec<JoinHandle<Result<(), ssconverter3::ConverterError>>> = vec![];
+    let mut handlers: Vec<JoinHandle<Result<(), ssconverter::ConverterError>>> = vec![];
     sspj_paths.iter().for_each(|path_buf| {
         println!("convert {:?}", path_buf.display());
         handlers.push({
             let p = path_buf.clone();
             let c = config.clone();
             std::thread::spawn(move || {
-                ssconverter3::convert_sspj_to_ssab_files(p.as_path(), &c)
+                ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c)
             })
         })
     });
@@ -114,8 +114,8 @@ mod tests {
     fn test_convert_ssab() {
         TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
-            let config = ssconverter3::ConverterConfig::default();
-            let r = ssconverter3::convert_sspj_to_ssab_files(
+            let config = ssconverter::ConverterConfig::default();
+            let r = ssconverter::convert_sspj_to_ssab_files(
                 &get_test_base_path().join(p).as_path(),
                 &config,
             );
