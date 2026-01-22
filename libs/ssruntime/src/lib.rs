@@ -193,7 +193,7 @@ impl<'a> Context<'a> {
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
-    use ssconverter3;
+    use ssconverter;
     use super::*;
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
@@ -225,8 +225,8 @@ mod tests {
             let ssab_dir = get_test_base_path().join(dir);
             if !ssab_dir.exists() {
                 let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
-                let config = ssconverter3::ConverterConfig::default();
-                let _ = ssconverter3::convert_sspj_to_ssab_files(sspj.as_path(), &config);
+                let config = ssconverter::ConverterConfig::default();
+                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config);
             }
         });
     }

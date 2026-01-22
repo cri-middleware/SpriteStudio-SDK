@@ -4,8 +4,8 @@ An Software Development Kit for [OPTPiX SpriteStudio](https://www.webtech.co.jp/
 
 
 # Tools Usage 
-## ssconverter3-cli
-ssconverter3-cli has two modes, **single mode** and **batch mode**.
+## ssconverter-cli
+ssconverte3-cli has two modes, **single mode** and **batch mode**.
 
 - single mode
     - The mode converts a sspj project or a sspj zip file.
@@ -15,8 +15,8 @@ ssconverter3-cli has two modes, **single mode** and **batch mode**.
 ### single mode
 
 ```bash
-$ ssconverter3-cli [OPTIONS] <sspj_file>
-$ ssconverter3-cli [OPTIONS] <sspj_zip_file>
+$ ssconverter-cli [OPTIONS] <sspj_file>
+$ ssconverter-cli [OPTIONS] <sspj_zip_file>
 ```
 
 #### OPTIONS:
@@ -30,8 +30,8 @@ $ ssconverter3-cli [OPTIONS] <sspj_zip_file>
 ### batch mode
 
 ```bash
-$ ssconverter3-cli [OPTIONS] <sspj_file> <sspj_file> ...
-$ ssconverter3-cli [OPTIONS] <directory> <directory> ...
+$ ssconverter-cli [OPTIONS] <sspj_file> <sspj_file> ...
+$ ssconverter-cli [OPTIONS] <directory> <directory> ...
 ```
 
 #### OPTIONS:
@@ -65,5 +65,5 @@ cargo test
 ### Convert tests
 
 ```bash
-./target/release/ssconverter3-cli ./
+./target/release/ssconverter-cli ./
 ```
