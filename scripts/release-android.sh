@@ -1,4 +1,10 @@
 #!/bin/bash
+
+# # prepare
+# $ rustup target add aarch64-linux-android
+# $ rustup target add armv7-linux-androideabi
+# $ rustup target add x86_64-linux-android
+
 set -e
 
 BASEDIR=$(dirname $0)

@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# # prepare
+# $ rustup target add aarch64-apple-ios
+# $ rustup target add x86_64-apple-ios
+
 set -e
 
 BASEDIR=$(dirname $0)
