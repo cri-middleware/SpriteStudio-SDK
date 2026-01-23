@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# # prepare
+# $ rustup target add wasm32-unknown-unknown
+
 set -e
 
 BASEDIR=$(dirname $0)
