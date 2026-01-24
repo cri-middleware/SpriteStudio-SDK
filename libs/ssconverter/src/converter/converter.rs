@@ -45,9 +45,9 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
     };
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, &sspj_parent, config.embedded)).collect::<Result<Vec<ssab::ssab::SsAnimeBinaryT>, _>>()?;
+    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, &sspj_parent, config.embedded)).collect::<Result<Vec<ssab::ssab::ss::format::SsAnimeBinaryT>, _>>()?;
 
-    let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Result<Vec<ssab::ssqb::SsSequenceBinaryT>, _>>()?;
+    let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {
@@ -58,9 +58,9 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
         } else {
             anime_binary_t.pack(&mut fb)
         };
-        ssab::ssab::finish_ss_anime_binary_buffer(&mut fb, offset);
+        ssab::ssab::ss::format::finish_ss_anime_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
-        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::SS_ANIME_BINARY_EXTENSION].join(".");
+        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION].join(".");
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 
@@ -73,10 +73,10 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
         } else {
             sequence_binary_t.pack(&mut fb)
         };
-        ssab::ssqb::finish_ss_sequence_binary_buffer(&mut fb, offset);
+        ssab::ssqb::ss::format::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
-        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::SS_SEQUENCE_BINARY_EXTENSION].join(".");
+        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION].join(".");
         (output_file, buf.to_vec())
     }).collect::<HashMap<String, Vec<u8>>>();
 

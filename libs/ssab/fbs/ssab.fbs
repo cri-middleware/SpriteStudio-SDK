@@ -1,3 +1,5 @@
+namespace ss.format;
+
 table Vec2 {
   v1: float;
   v2: float;

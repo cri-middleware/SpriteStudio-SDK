@@ -1,7 +1,7 @@
 use crate::runtime;
 
 fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                part: &ssab::ssab::PartAnimationData,
+                part: &ssab::ssab::ss::format::PartAnimationData,
                 part_index: i16,
                 frame_no: i32,
                 cells: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -124,21 +124,21 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
         part_color_array.lookup_by_key(frame_no, |value, key| { value.key_compare_with_value(*key as u16) }).and_then(|part_color| {
             part_color.value().map(|color| {
                 let blend_type = match color.blend_type() {
-                    ssab::ssab::BlendType::Mix => runtime::framedata::ss::runtime::BlendType::Mix,
-                    ssab::ssab::BlendType::Mul => runtime::framedata::ss::runtime::BlendType::Mul,
-                    ssab::ssab::BlendType::Add => runtime::framedata::ss::runtime::BlendType::Add,
-                    ssab::ssab::BlendType::Sub => runtime::framedata::ss::runtime::BlendType::Sub,
-                    ssab::ssab::BlendType::Mulalpha => runtime::framedata::ss::runtime::BlendType::Mulalpha,
-                    ssab::ssab::BlendType::Screen => runtime::framedata::ss::runtime::BlendType::Screen,
-                    ssab::ssab::BlendType::Exclusion => runtime::framedata::ss::runtime::BlendType::Exclusion,
-                    ssab::ssab::BlendType::Invert => runtime::framedata::ss::runtime::BlendType::Invert,
-                    ssab::ssab::BlendType::Mul2 => runtime::framedata::ss::runtime::BlendType::Mul2,
-                    ssab::ssab::BlendType::Div2 => runtime::framedata::ss::runtime::BlendType::Div2,
-                    ssab::ssab::BlendType::Screen2 => runtime::framedata::ss::runtime::BlendType::Screen2,
-                    ssab::ssab::BlendType::Overlay2 => runtime::framedata::ss::runtime::BlendType::Overlay2,
+                    ssab::ssab::ss::format::BlendType::Mix => runtime::framedata::ss::runtime::BlendType::Mix,
+                    ssab::ssab::ss::format::BlendType::Mul => runtime::framedata::ss::runtime::BlendType::Mul,
+                    ssab::ssab::ss::format::BlendType::Add => runtime::framedata::ss::runtime::BlendType::Add,
+                    ssab::ssab::ss::format::BlendType::Sub => runtime::framedata::ss::runtime::BlendType::Sub,
+                    ssab::ssab::ss::format::BlendType::Mulalpha => runtime::framedata::ss::runtime::BlendType::Mulalpha,
+                    ssab::ssab::ss::format::BlendType::Screen => runtime::framedata::ss::runtime::BlendType::Screen,
+                    ssab::ssab::ss::format::BlendType::Exclusion => runtime::framedata::ss::runtime::BlendType::Exclusion,
+                    ssab::ssab::ss::format::BlendType::Invert => runtime::framedata::ss::runtime::BlendType::Invert,
+                    ssab::ssab::ss::format::BlendType::Mul2 => runtime::framedata::ss::runtime::BlendType::Mul2,
+                    ssab::ssab::ss::format::BlendType::Div2 => runtime::framedata::ss::runtime::BlendType::Div2,
+                    ssab::ssab::ss::format::BlendType::Screen2 => runtime::framedata::ss::runtime::BlendType::Screen2,
+                    ssab::ssab::ss::format::BlendType::Overlay2 => runtime::framedata::ss::runtime::BlendType::Overlay2,
                     _ => runtime::framedata::ss::runtime::BlendType::Mix,
                 };
-                fn convert_u8rect(rgba: &ssab::ssab::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {
+                fn convert_u8rect(rgba: &ssab::ssab::ss::format::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {
                     runtime::framedata::ss::runtime::U8Rect::new(rgba.a(), rgba.r(), rgba.g(), rgba.b())
                 }
                 let lt = color.lt().and_then(|lt|
@@ -332,7 +332,7 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
 }
 
 fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                 p: &flatbuffers::Vector<::flatbuffers::ForwardsUOffset<ssab::ssab::PartAnimationData>>,
+                 p: &flatbuffers::Vector<::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationData>>,
                  frame_no: i32,
                  cells: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
                  parts_color: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
@@ -370,7 +370,7 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
 }
 
 
-pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation: &ssab::ssab::AnimationData, frame_no: i32) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
+pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation: &ssab::ssab::ss::format::AnimationData, frame_no: i32) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
     let mut parts_color: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>> = None;

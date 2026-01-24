@@ -1,6 +1,6 @@
 use crate::model_t;
-fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::CellT {
-    let mut cell_t = ssab::ssab::CellT::default();
+fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::ss::format::CellT {
+    let mut cell_t = ssab::ssab::ss::format::CellT::default();
     cell_t.name_hash = crate::utils::fnv1a_hash_str(&sscell.name);
     cell_t.name = if sscell.name.is_empty() { None } else { Some(sscell.name.to_string()) };
     cell_t.rectangle = Some(Box::new(model_t::common::convert_rectt(sscell.pos.x, sscell.pos.y, sscell.size.x, sscell.size.y, )));
@@ -11,14 +11,14 @@ fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::CellT {
 
     cell_t
 }
-fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::CellT> {
-    let mut v = cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<ssab::ssab::CellT>>();
+fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::ss::format::CellT> {
+    let mut v = cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<ssab::ssab::ss::format::CellT>>();
     v.sort_by_key(|cell| cell.name_hash);
     v
 }
 
-fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path) -> Result<ssab::ssab::CellMapT, crate::ConverterError> {
-    let mut cell_map_t = ssab::ssab::CellMapT::default();
+fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path) -> Result<ssab::ssab::ss::format::CellMapT, crate::ConverterError> {
+    let mut cell_map_t = ssab::ssab::ss::format::CellMapT::default();
     cell_map_t.name_hash = crate::utils::fnv1a_hash_str(&cellmap.name);
     cell_map_t.name = if cellmap.name.is_empty() { None } else { Some(cellmap.name.to_string()) };
 
@@ -31,20 +31,20 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProjec
     cell_map_t.image_path_hash = crate::utils::fnv1a_hash_str(&cellmap.image_path);
     cell_map_t.size_original = Some(Box::new(model_t::common::convert_vec2t(&cellmap.pixel_size)));
     cell_map_t.wrap_mode = match &cellmap.wrap_mode {
-        sspj::sstypes::SsTexWrapMode::Clamp => ssab::ssab::TexWrapMode::Clamp,
-        sspj::sstypes::SsTexWrapMode::Repeat => ssab::ssab::TexWrapMode::Repeat,
-        sspj::sstypes::SsTexWrapMode::Mirror => ssab::ssab::TexWrapMode::Mirror,
+        sspj::sstypes::SsTexWrapMode::Clamp => ssab::ssab::ss::format::TexWrapMode::Clamp,
+        sspj::sstypes::SsTexWrapMode::Repeat => ssab::ssab::ss::format::TexWrapMode::Repeat,
+        sspj::sstypes::SsTexWrapMode::Mirror => ssab::ssab::ss::format::TexWrapMode::Mirror,
     };
     cell_map_t.filter_mode = match &cellmap.filter_mode {
-        sspj::sstypes::SsTexFilterMode::Nearest => ssab::ssab::TexFilterMode::Nearest,
-        sspj::sstypes::SsTexFilterMode::Linear => ssab::ssab::TexFilterMode::Linear,
+        sspj::sstypes::SsTexFilterMode::Nearest => ssab::ssab::ss::format::TexFilterMode::Nearest,
+        sspj::sstypes::SsTexFilterMode::Linear => ssab::ssab::ss::format::TexFilterMode::Linear,
     };
     cell_map_t.cells = if cellmap.cells.is_empty() { None } else { Some(convert_cellt_list(&cellmap.cells)) };
 
     Ok(cell_map_t)
 }
-pub fn convert_cellmapt_list(sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap], sspj_parent_path: &std::path::Path) -> Result<Vec<ssab::ssab::CellMapT>, crate::ConverterError> {
-    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap, sspj, sspj_parent_path)).collect::<Result<Vec<ssab::ssab::CellMapT>, _>>()?;
+pub fn convert_cellmapt_list(sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap], sspj_parent_path: &std::path::Path) -> Result<Vec<ssab::ssab::ss::format::CellMapT>, crate::ConverterError> {
+    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap, sspj, sspj_parent_path)).collect::<Result<Vec<ssab::ssab::ss::format::CellMapT>, _>>()?;
     v.sort_by_key(|cellmap| cellmap.name_hash);
     Ok(v)
 }
