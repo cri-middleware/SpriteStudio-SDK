@@ -14,7 +14,7 @@ fn main() {
 
     let config = cbindgen::Builder::new()
         .with_crate(&crate_dir)
-        .with_language(cbindgen::Language::C)
+        .with_language(cbindgen::Language::Cxx)
         .generate()
         .expect("Unable to generate bindings");
 
