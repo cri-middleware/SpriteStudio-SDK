@@ -6,7 +6,7 @@ An Software Development Kit for sspj projects that are created by  [OPTPiX Sprit
     - [libsspj](./libs/sspj): a library that parses `sspj` projects that contains of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
     - [libssab](./libs/ssab): a library that creates and parses `ssab` files that is an animation binary file.
     - [libssconverter](./libs/ssconverter): a library that parses `sspj` projects and creates `ssab` files.
-    - [libssruntime](./libs/ssruntime): a library that helps implementing an animation player. e.g. controls playback, extracts keyframes and do interpolation  ssab.
+    - [libssruntime](./libs/ssruntime): a library that helps implementing an animation player. The features are such as controls playback, extracts keyframes and do interpolation calculation.
 - Tools
     - [ssconverter-cli](./cli): a command line tools that parses `sspj` projects and creates `ssab` files.
 
