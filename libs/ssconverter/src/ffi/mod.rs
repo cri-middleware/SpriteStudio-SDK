@@ -28,20 +28,20 @@ pub enum CConverterError {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter3_create() -> *mut Context {
+pub extern "C" fn ss_converter_create() -> *mut Context {
     let c = Context::new();
     Box::into_raw(Box::new(c))
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter3_destroy(context: *mut Context) {
+pub extern "C" fn ss_converter_destroy(context: *mut Context) {
     unsafe {
         let _ = Box::from_raw(context);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter3_convert(ctx: *mut Context, sspj: *mut c_char, output_dir: *mut c_char) {
+pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
     let context = unsafe { &mut *ctx };
 
     let sspj_buf = unsafe { CStr::from_ptr(sspj) };
@@ -65,13 +65,13 @@ pub extern "C" fn ss_converter3_convert(ctx: *mut Context, sspj: *mut c_char, ou
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter3_is_finished(context: *mut Context) -> bool {
+pub extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
     let context = unsafe { &mut *context };
     context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter3_get_result(context: *mut Context) -> CConverterError {
+pub extern "C" fn ss_converter_get_result(context: *mut Context) -> CConverterError {
     let context = unsafe { &mut *context };
 
     if let Some(h) = context.handler.take() {
@@ -100,7 +100,7 @@ pub extern "C" fn ss_converter3_get_result(context: *mut Context) -> CConverterE
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter3_get_error(context: *mut Context, out_data: *mut *mut c_char, out_len: *mut usize) {
+pub extern "C" fn ss_converter_get_error(context: *mut Context, out_data: *mut *mut c_char, out_len: *mut usize) {
     let context = unsafe { &mut *context };
     unsafe {
         *out_data = context.error.as_ref().map(|s| s.as_ptr() as *mut c_char).unwrap_or(std::ptr::null_mut());

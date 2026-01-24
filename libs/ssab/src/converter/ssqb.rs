@@ -3,6 +3,14 @@
 extern crate alloc;
 
 
+#[allow(unused_imports, dead_code)]
+pub mod ss {
+extern crate alloc;
+
+#[allow(unused_imports, dead_code)]
+pub mod format {
+extern crate alloc;
+
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_SEQUENCE_TYPE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
@@ -722,3 +730,6 @@ pub fn finish_ss_sequence_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a
 pub fn finish_size_prefixed_ss_sequence_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a>(fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>, root: ::flatbuffers::WIPOffset<SsSequenceBinary<'a>>) {
   fbb.finish_size_prefixed(root, Some(SS_SEQUENCE_BINARY_IDENTIFIER));
 }
+}  // pub mod format
+}  // pub mod ss
+

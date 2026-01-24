@@ -3,6 +3,14 @@
 extern crate alloc;
 
 
+#[allow(unused_imports, dead_code)]
+pub mod ss {
+extern crate alloc;
+
+#[allow(unused_imports, dead_code)]
+pub mod format {
+extern crate alloc;
+
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_TEX_FILTER_MODE: u8 = 0;
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
@@ -19873,3 +19881,6 @@ pub fn finish_ss_anime_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a>(
 pub fn finish_size_prefixed_ss_anime_binary_buffer<'a, 'b, A: ::flatbuffers::Allocator + 'a>(fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>, root: ::flatbuffers::WIPOffset<SsAnimeBinary<'a>>) {
   fbb.finish_size_prefixed(root, Some(SS_ANIME_BINARY_IDENTIFIER));
 }
+}  // pub mod format
+}  // pub mod ss
+

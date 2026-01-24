@@ -20,11 +20,11 @@ impl<'a> Context<'a> {
         let ssab_buf = buf.to_vec();
 
         // validate ssab version
-        let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(buf) };
-        if ssab.version() != ssab::ssab::SsAnimeBinaryArgs::default().version {
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
+        if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
             let msg = "invalid ssab version expected: ".to_string()
-                + &ssab::ssab::SsAnimeBinaryArgs::default().version.to_string()
+                + &ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version.to_string()
                 + ", got: "
                 + &ssab.version().to_string();
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
@@ -51,7 +51,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn setup_animation(&mut self, name: &str) -> bool {
-        let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == std::cmp::Ordering::Equal })
         }) else {
@@ -63,7 +63,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
-        let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
         let Some(animation) =  ssab.animations().map(|animations| animations.get(self.animation_idx as usize)) else {
             return None;
         };
@@ -245,7 +245,7 @@ mod tests {
                 let context = Context::new(&input_buf).unwrap();
 
                 let ssab_buf = context.get_ssab_buf();
-                let ssab = unsafe { ssab::ssab::root_as_ss_anime_binary_unchecked(ssab_buf) };
+                let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
                 println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("  parts");
                 ssab.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {

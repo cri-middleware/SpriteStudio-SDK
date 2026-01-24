@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model_t;
 
-pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path, embedded: bool) -> Result<ssab::ssab::SsAnimeBinaryT, crate::ConverterError> {
+pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == sspj::sstypes::SsPartType::Effect {
@@ -47,7 +47,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         .map(|part| [part.ref_anime_pack.as_str(), part.ref_anime.as_str()].join("/")).collect::<HashSet<String>>();
 
 
-    let mut anime_binary = ssab::ssab::SsAnimeBinaryT::default();
+    let mut anime_binary = ssab::ssab::ss::format::SsAnimeBinaryT::default();
     anime_binary.name = if anime_pack.name.is_empty() { None } else { Some(anime_pack.name.to_string()) };
     anime_binary.parts = if anime_pack.model.part_list.is_empty() { None } else { Some(model_t::animedata::convert_part_list(&anime_pack)) };
     let parts_map: HashMap<String, &sspj::ssae::SsPart> = anime_pack.model.part_list.iter().map(|part| (part.name.to_string(), part)).collect();
@@ -61,7 +61,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
     anime_binary.external_textures = if external_textures.is_empty() { None } else {
         let mut v = external_textures.iter().map(|texture_path| {
-            let mut external_texture = ssab::ssab::ExternalTextureT::default();
+            let mut external_texture = ssab::ssab::ss::format::ExternalTextureT::default();
             external_texture.name_hash = crate::utils::fnv1a_hash_str(texture_path);
             external_texture.name = Some(texture_path.to_string());
             let r = crate::utils::validate_file_path(texture_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, sspj).as_path());
@@ -69,7 +69,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
                 Ok(_) => Ok(external_texture),
                 Err(e) => Err(e),
             }
-        }).collect::<Result<Vec<ssab::ssab::ExternalTextureT>, _>>()?;
+        }).collect::<Result<Vec<ssab::ssab::ss::format::ExternalTextureT>, _>>()?;
         v.sort_by_key(|external_texture| external_texture.name_hash);
         Some(v)
     };
@@ -85,13 +85,13 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
                     return Err(crate::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read: {}: {:?}", src.as_os_str().to_string_lossy(), e))));
                 }
             };
-            let mut embedded_asset = ssab::ssab::EmbeddedAssetT::default();
+            let mut embedded_asset = ssab::ssab::ss::format::EmbeddedAssetT::default();
             embedded_asset.name = Some(name.to_string());
             embedded_asset.name_hash = crate::utils::fnv1a_hash_str(name);
             embedded_asset.data = Some(data);
 
             Ok(embedded_asset)
-        }).collect::<Result<Vec<ssab::ssab::EmbeddedAssetT>, _>>()?;
+        }).collect::<Result<Vec<ssab::ssab::ss::format::EmbeddedAssetT>, _>>()?;
         v.sort_by_key(|embedded_asset| embedded_asset.name_hash);
         Some(v)
     } else { None };

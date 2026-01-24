@@ -1,3 +1,5 @@
+namespace ss.format;
+
 enum SequenceType: ubyte {
   Last,
   Keep,

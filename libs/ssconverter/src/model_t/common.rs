@@ -1,19 +1,19 @@
-pub fn convert_vec2t(point2: &sspj::sstypes::SsPoint2) -> ssab::ssab::Vec2T {
-    let mut vec = ssab::ssab::Vec2T::default();
+pub fn convert_vec2t(point2: &sspj::sstypes::SsPoint2) -> ssab::ssab::ss::format::Vec2T {
+    let mut vec = ssab::ssab::ss::format::Vec2T::default();
     vec.v1 = point2.x;
     vec.v2 = point2.y;
     vec
 }
-pub fn convert_vec2t_list(point2_list: &[sspj::sstypes::SsPoint2]) -> Vec<ssab::ssab::Vec2T> {
-    point2_list.iter().map(|point2| convert_vec2t(point2)).collect::<Vec<ssab::ssab::Vec2T>>()
+pub fn convert_vec2t_list(point2_list: &[sspj::sstypes::SsPoint2]) -> Vec<ssab::ssab::ss::format::Vec2T> {
+    point2_list.iter().map(|point2| convert_vec2t(point2)).collect::<Vec<ssab::ssab::ss::format::Vec2T>>()
 }
 
 pub fn convert_flat_list_from_vec3t_list(point3_list: &[sspj::sstypes::SsPoint3]) -> Vec<u16> {
     point3_list.iter().flat_map(|point3| [point3.x as u16, point3.y as u16, point3.z as u16]).collect::<Vec<u16>>()
 }
 
-pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::RectT {
-    let mut rect = ssab::ssab::RectT::default();
+pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::ss::format::RectT {
+    let mut rect = ssab::ssab::ss::format::RectT::default();
     rect.x1 = x1;
     rect.y1 = y1;
     rect.x2 = x2;
