@@ -3,12 +3,12 @@
 An Software Development Kit for sspj projects that are created by  [OPTPiX SpriteStudio](https://www.webtech.co.jp/spritestudio/index.html) 7 or higher flexibly to implement an animation player on any game engines or platforms.
 
 - Libraries
-    - [libsspj](./libs/sspj): a library that parses `sspj` projects that contains of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
-    - [libssab](./libs/ssab): a library that creates and parses `ssab` files that is an animation binary file.
+    - [libsspj](./libs/sspj): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
+    - [libssab](./libs/ssab): a library that creates and parses `ssab` files, which are animation binary files.
     - [libssconverter](./libs/ssconverter): a library that parses `sspj` projects and creates `ssab` files.
-    - [libssruntime](./libs/ssruntime): a library that helps implementing an animation player. The features are such as controls playback, extracts keyframes and do interpolation calculation.
-- Tools
-    - [ssconverter-cli](./cli): a command line tools that parses `sspj` projects and creates `ssab` files.
+    - [libssruntime](./libs/ssruntime): a library that helps implement an animation player. The features are controlling playback, extracting keyframes, and doing interpolation.
+- Tool
+    - [ssconverter-cli](./cli): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
 # Tools Usage 
 ## ssconverter-cli
