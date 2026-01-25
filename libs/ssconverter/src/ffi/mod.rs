@@ -1,4 +1,4 @@
-use std::ffi::{c_char, CStr, OsString};
+use std::ffi::{c_char, CStr, OsString, CString};
 use std::thread::JoinHandle;
 use crate::{ConverterConfig, ConverterError};
 
@@ -30,7 +30,19 @@ pub enum CConverterError {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_version() -> *const c_char {
     let s = crate::utils::version_string();
-    s.as_ptr() as *const c_char
+    let s = CString::new(s).unwrap();
+    s.into_raw()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_version_free(s: *mut c_char) {
+   if s.is_null() {
+        return;
+    }
+
+    unsafe {
+        let _ = CString::from_raw(s);
+    }
 }
 
 #[unsafe(no_mangle)]
