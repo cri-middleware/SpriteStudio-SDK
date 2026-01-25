@@ -28,6 +28,12 @@ pub enum CConverterError {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_version() -> *const c_char {
+    let s = crate::utils::version_string();
+    s.as_ptr() as *const c_char
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_create() -> *mut Context {
     let c = Context::new();
     Box::into_raw(Box::new(c))

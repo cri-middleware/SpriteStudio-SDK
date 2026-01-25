@@ -2,8 +2,10 @@
 
 use std::env;
 use std::path::PathBuf;
+use std::error::Error;
+use vergen_gitcl::{Emitter, GitclBuilder};
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     // Tell cargo to rerun this script if src/lib.rs changes
     println!("cargo:rerun-if-changed=src/lib.rs");
 
@@ -19,4 +21,15 @@ fn main() {
         .expect("Unable to generate bindings");
 
     config.write_to_file(output_file);
+
+    // get commit hash
+    let git = GitclBuilder::default()
+        .sha(true)
+        .build()?;
+
+    Emitter::default()
+        .add_instructions(&git)?
+        .emit()?;
+
+    Ok(())
 }

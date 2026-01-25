@@ -22,3 +22,4 @@ web = ["wasm-bindgen"]
 
 [build-dependencies]
 cbindgen = "0.29.2"
+vergen-gitcl = { version = "9.1.0", features = ["build"] }
