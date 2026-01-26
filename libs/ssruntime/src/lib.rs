@@ -8,17 +8,39 @@ pub mod ffi;
 #[cfg(feature = "web")]
 pub mod web;
 
+enum SsabStorage {
+    Owned(Vec<u8>),
+    Borrowed { ptr: *const u8, len: usize},
+}
+impl SsabStorage {
+     fn as_slice(&self) -> &[u8] {
+        unsafe {
+            match self {
+                SsabStorage::Owned(vec) => vec.as_slice(),
+                SsabStorage::Borrowed { ptr, len } => std::slice::from_raw_parts(*ptr, *len),
+            }
+        }
+    }
+}
+
 pub struct Context<'a> {
-    ssab_buf: Vec<u8>,
+    ssab_data: Option<SsabStorage>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
 }
 
 impl<'a> Context<'a> {
-    pub fn new(buf: &[u8]) -> Result<Context, std::io::Error> {
-        let ssab_buf = buf.to_vec();
+    pub fn new() -> Self {
+        Context {
+            ssab_data: None,
+            fb: flatbuffers::FlatBufferBuilder::new(),
+            controller: core::playback_controller::PlaybackController::new(),
+            animation_idx: -1,
+        }
+    }
 
+    fn validate_ssab_data(&self, buf: &[u8]) -> Result<bool, std::io::Error> {
         // validate ssab version
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
@@ -29,29 +51,34 @@ impl<'a> Context<'a> {
                 + &ssab.version().to_string();
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
         }
-
-        Ok(Context {
-            ssab_buf,
-            fb: flatbuffers::FlatBufferBuilder::new(),
-            controller: core::playback_controller::PlaybackController::new(),
-            animation_idx: -1,
-        })
+        Ok(true)
     }
 
-    pub fn get_ssab_buf(&self) -> &[u8] {
-        self.ssab_buf.as_ref()
+    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<bool, std::io::Error> {
+        self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
+        let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else { 
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
+        };
+        self.validate_ssab_data(data)
     }
 
-    pub fn get_ssab_buf_ptr(&self) -> *const u8 {
-        self.ssab_buf.as_ptr()
+    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<bool, std::io::Error> {
+        self.ssab_data = Some(SsabStorage::Borrowed { ptr, len });
+        let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
+        };
+        self.validate_ssab_data(data)
     }
 
-    pub fn get_ssab_buf_len(&self) -> usize {
-        self.ssab_buf.len()
+    pub fn get_ssab_data(&self) -> Option<&[u8]> {
+        self.ssab_data.as_ref().map(|d| d.as_slice())
     }
 
     pub fn setup_animation(&mut self, name: &str) -> bool {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
+        let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
+            return false;
+        };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == std::cmp::Ordering::Equal })
         }) else {
@@ -63,7 +90,10 @@ impl<'a> Context<'a> {
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(&self.ssab_buf) };
+        let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
+            return None;
+        };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some(animation) =  ssab.animations().map(|animations| animations.get(self.animation_idx as usize)) else {
             return None;
         };
@@ -242,9 +272,10 @@ mod tests {
                 if !f.is_file() || f.extension().unwrap() != "ssab" { continue; }
 
                 let input_buf =  std::fs::read(&f).unwrap();
-                let context = Context::new(&input_buf).unwrap();
+                let mut context = Context::new();
+                context.load_copy(&input_buf);
 
-                let ssab_buf = context.get_ssab_buf();
+                let ssab_buf = context.get_ssab_data().unwrap();
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
                 println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("  parts");

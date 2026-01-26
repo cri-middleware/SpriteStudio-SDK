@@ -4,17 +4,15 @@ pub struct FfiContext {
     pub ctx: crate::Context<'static>,
 }
 impl<'a> FfiContext {
-    pub fn new(buf: &'static [u8]) -> Result<Self, std::io::Error> {
-        Ok(Self { ctx: crate::Context::new(buf)? })
+    pub fn new() -> Self {
+        Self { ctx: crate::Context::new() }
     }
 }
 
+
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_create(ptr: *mut c_uchar, len: usize) -> *mut c_void {
-    let buf = unsafe { std::slice::from_raw_parts(ptr as *const u8, len) };
-    let Ok(c) = FfiContext::new(buf) else {
-        return std::ptr::null_mut();
-    };
+pub extern "C" fn ss_runtime_create() -> *mut c_void {
+    let c = FfiContext::new();
     Box::into_raw(Box::new(c)) as *mut c_void
 }
 
@@ -27,15 +25,47 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *mut c_uchar {
+pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *mut c_uchar, len: usize) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
-    ffi_context.ctx.get_ssab_buf_ptr() as *mut c_uchar
+    let r = ffi_context.ctx.load_copy( unsafe { std::slice::from_raw_parts(ptr as *const u8, len) } );
+    r.unwrap_or(false)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_ssab_buf_len(context: *mut c_void) -> usize {
+pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *mut c_uchar, len: usize) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
-    ffi_context.ctx.get_ssab_buf_len()
+    let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
+    r.unwrap_or(false)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+    let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
+    let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() else {
+        return;
+    };
+    unsafe {
+        *out_data = ssab_buf.as_ptr() as *mut c_uchar;
+        *out_len = ssab_buf.len();
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *mut c_uchar {
+    let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
+    let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() else {
+        return std::ptr::null_mut();
+    };
+    ssab_buf.as_ptr() as *mut c_uchar
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
+    let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
+    let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() else {
+        return 0;
+    };
+    ssab_buf.len()
 }
 
 #[unsafe(no_mangle)]
