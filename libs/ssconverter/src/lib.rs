@@ -8,4 +8,3 @@ pub use converter::converter_error::*;
 
 #[cfg(feature = "ffi")]
 pub mod ffi;
-

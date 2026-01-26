@@ -1,5 +1,17 @@
 use std::collections::HashMap;
 
+pub const VERSION: &str = concat!(
+env!("CARGO_PKG_VERSION"),
+"+",
+env!("VERGEN_GIT_SHA")
+);
+
+pub fn version_string() -> String {
+    let sha = env!("VERGEN_GIT_SHA");
+    let short_sha = if sha.len() >= 7 { &sha[..7] } else { sha };
+    format!("{}+{}", env!("CARGO_PKG_VERSION"), short_sha)
+}
+
 pub fn fnv1a_hash_str(text: &str) -> u32 {
     let mut hash: u32 = 2166136261;
     let prime: u32 = 16777619;
