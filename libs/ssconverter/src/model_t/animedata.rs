@@ -259,7 +259,10 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
         match attribute {
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeCellT::default();
+                    value.map_id = _key.value.map_id;
+                    value.name_hash = crate::utils::fnv1a_hash_str(&_key.value.name);
+                    p_args.cell = Some(Box::new(value));
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
@@ -345,7 +348,53 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value =  ssab::ssab::ss::format::PartAttributePartColorT::default();
+                    value.blend_type = convert_alpha_blend_type(&_key.value.blend_type);
+
+                    let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+
+//                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+//                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = _key.value.lt.rgba.a;
+                    rgba.r = _key.value.lt.rgba.r;
+                    rgba.g = _key.value.lt.rgba.g;
+                    rgba.b = _key.value.lt.rgba.b;
+                    color.rgba = Some(Box::new(rgba));
+                    color.rate = _key.value.lt.rate;
+                    value.lt = Some(Box::new(color));
+
+                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = _key.value.rt.rgba.a;
+                    rgba.r = _key.value.rt.rgba.r;
+                    rgba.g = _key.value.rt.rgba.g;
+                    rgba.b = _key.value.rt.rgba.b;
+                    color.rgba = Some(Box::new(rgba));
+                    color.rate = _key.value.rt.rate;
+                    value.rt = Some(Box::new(color));
+
+                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = _key.value.lb.rgba.a;
+                    rgba.r = _key.value.lb.rgba.r;
+                    rgba.g = _key.value.lb.rgba.g;
+                    rgba.b = _key.value.lb.rgba.b;
+                    color.rgba = Some(Box::new(rgba));
+                    color.rate = _key.value.lb.rate;
+                    value.lb = Some(Box::new(color));
+
+                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = _key.value.rb.rgba.a;
+                    rgba.r = _key.value.rb.rgba.r;
+                    rgba.g = _key.value.rb.rgba.g;
+                    rgba.b = _key.value.rb.rgba.b;
+                    color.rgba = Some(Box::new(rgba));
+                    color.rate = _key.value.rb.rate;
+                    value.rb = Some(Box::new(color));
+
+                    p_args.part_color = Some(Box::new(value));
                 });
             },
             sspj::ssattribute::SsAttributeKind::Color => {
@@ -353,12 +402,79 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
+                    value.id = Some(_key.value.id.clone());
+                    value.id_hash = crate::utils::fnv1a_hash_str(&_key.value.id);
+
+                    value.param0 = _key.value.param0;
+                    value.param1 = _key.value.param1;
+                    value.param2 = _key.value.param2;
+                    value.param3 = _key.value.param3;
+                    value.param4 = _key.value.param4;
+                    value.param5 = _key.value.param5;
+                    value.param6 = _key.value.param6;
+                    value.param7 = _key.value.param7;
+
+                    value.map0_id = _key.value.map0.map_id;
+                    value.map0_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map0.name);
+                    value.map1_id = _key.value.map1.map_id;
+                    value.map1_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map1.name);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    if _key.value.use_skew.is_some() && _key.value.use_skew.unwrap() == true {
+                        // Skew
+                        match &_key.value.skew {
+                            None => {
+                                p_args.skew_x = 0.0f32;
+                                p_args.skew_y = 0.0f32;
+                            }
+                            Some(_skew) => {
+                                p_args.skew_x = _skew.x;
+                                p_args.skew_y = _skew.x;
+                            }
+                        }
+
+                        p_args.vertex = None;
+                    } else {
+                        // Vertex
+                        let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
+                        let mut coordinate = ssab::ssab::ss::format::Vec2T::default();
+
+                        //                       coordinate = ssab::ssab::ss::format::Vec2T::default();
+                        _key.value.lt.as_ref().map(|_lt| {
+                            coordinate.v1 = _lt.x;
+                            coordinate.v2 = _lt.y;
+                        });
+                        value.lt = Some(Box::new(coordinate));
+
+                        coordinate = ssab::ssab::ss::format::Vec2T::default();
+                        _key.value.rt.as_ref().map(|_rt| {
+                            coordinate.v1 = _rt.x;
+                            coordinate.v2 = _rt.y;
+                        });
+                        value.rt = Some(Box::new(coordinate));
+
+                        coordinate = ssab::ssab::ss::format::Vec2T::default();
+                        _key.value.lb.as_ref().map(|_lb| {
+                            coordinate.v1 = _lb.x;
+                            coordinate.v2 = _lb.y;
+                        });
+                        value.lb = Some(Box::new(coordinate));
+
+                        coordinate = ssab::ssab::ss::format::Vec2T::default();
+                        _key.value.rb.as_ref().map(|_rb| {
+                            coordinate.v1 = _rb.x;
+                            coordinate.v2 = _rb.y;
+                        });
+                        value.rb = Some(Box::new(coordinate));
+
+                        p_args.vertex = Some(Box::new(value));
+
+                        p_args.skew_x = 0.0f32;
+                        p_args.skew_y = 0.0f32;
+                    }
                 });
             },
             sspj::ssattribute::SsAttributeKind::PivotX(v) => {
@@ -459,7 +575,21 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
+
+                    let mut coordinate = Vec::new();
+                    let mut index = Vec::<i16>::new();
+                    _key.value.vchg.iter().for_each(|_item| {
+                        let mut vec2 = ssab::ssab::ss::format::Vec2T::default();
+                        vec2.v1 = _item.x;
+                        vec2.v2 = _item.y;
+                        coordinate.push(vec2);
+                        index.push(_item.x_index as i16);
+                    });
+
+                    value.coordinate = Some(coordinate);
+                    value.index = Some(index);
+                    p_args.deform = Some(Box::new(value));
                 });
             },
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
@@ -469,7 +599,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    p_args.texture = crate::utils::fnv1a_hash_str(&_key.value.texture_name);
                 });
             },
         }
