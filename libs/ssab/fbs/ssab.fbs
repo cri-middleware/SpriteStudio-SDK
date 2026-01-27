@@ -481,11 +481,11 @@ enum PartAttributesUpdateFlags: ulong (bit_flags) {
   AttributeSkew,
   AttributeDeform,
   AttributeTexture,
-  AttributeUserData,    // only setup : EventUserData
-  AttributeSignal,      // only setup : EventSignal
-  AttributeAudio,       // only setup : EventAudio
-  AttributeInstance,    // only setup : EventInstance
-  AttributeEffect,      // only setup : EventEffect
+  AttributeUserData,    // only setup
+  AttributeSignal,      // only setup
+  AttributeAudio,       // only setup
+  AttributeInstance,    // only setup
+  AttributeEffect,      // only setup
 }
 
 table InitialPartAttributes {
@@ -532,11 +532,11 @@ table InitialPartAttributes {
 
   texture: uint32 = 0;
 
-  user_data: EventUserData;
-  signal: EventSignal;
-  audio: EventAudio;
-  instance: EventInstance;
-  effect: EventEffect;
+  user_data: PartAttributeUserData;
+  signal: PartAttributeSignal;
+  audio: PartAttributeAudio;
+  instance: PartAttributeInstance;
+  effect: PartAttributeEffect;
 }
 
 table PartTypeNone {

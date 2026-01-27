@@ -5,9 +5,11 @@ extern crate alloc;
 
 #[allow(unused_imports, dead_code)]
 pub mod ss {
+  extern crate alloc;
 
 #[allow(unused_imports, dead_code)]
 pub mod format {
+  extern crate alloc;
 
 
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]

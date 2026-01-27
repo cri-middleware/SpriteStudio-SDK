@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use ssab::ssab::ss;
 
 fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::ss::format::LabelT> {
     let mut v = labels.iter().map(|label| {
@@ -595,22 +594,58 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::User(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeUserDataT::default();
+                    value.integer = _key.value.integer.as_ref().map(|v| {
+                        let mut i = ssab::ssab::ss::format::IntValueEntryT::default(); i.value = *v;
+                        Box::new(i)
+                    });
+                    value.rect = _key.value.rect.as_ref().map(|v| {
+                        let mut r = ssab::ssab::ss::format::RectT::default();
+                        r.x1 = v.x1 as f32;
+                        r.x2 = v.x2 as f32;
+                        r.y1 = v.y1 as f32;
+                        r.y2 = v.y2 as f32;
+                        Box::new(r)
+                    });
+                    value.point = _key.value.point.as_ref().map(|v| {
+                        let mut p = ssab::ssab::ss::format::Vec2T::default();
+                        p.v1 = v.x;
+                        p.v2 = v.y;
+                        Box::new(p)
+                    });
+                    value.str = _key.value.user_string.as_ref().map(|v| v.to_string());
+                    p_args.user_data = Some(Box::new(value));
+                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUserData;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Signal(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    // TODO: impl.
                 });
             },
             sspj::ssattribute::SsAttributeKind::Instance(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeInstanceT::default();
+                    value.pingpong = _key.value.pingpong;
+                    value.independent = _key.value.independent;
+                    value.loop_num = _key.value.loop_num;
+                    value.start_label_hash = crate::utils::fnv1a_hash_str(&_key.value.start_label);
+                    value.start_offset = _key.value.start_offset;
+                    value.end_label_hash = crate::utils::fnv1a_hash_str(&_key.value.end_label);
+                    value.end_offset = _key.value.end_offset;
+                    value.speed = _key.value.speed;
+                    p_args.instance = Some(Box::new(value));
+                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeInstance;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Effect(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeEffectT::default();
+                    value.cur_keyframe;
+                    value.start_time = _key.value.start_time;
+                    value.speed = _key.value.speed;
+                    value.loopflag;
+                    p_args.effect = Some(Box::new(value));
                 });
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
@@ -635,7 +670,12 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl
+                    let mut value = ssab::ssab::ss::format::PartAttributeAudioT::default();
+                    value.sound_list_id = _key.value.sound_list_id;
+                    value.sound_name = Some(_key.value.sound_name.to_string());
+                    value.loop_num = _key.value.loop_num;
+                    p_args.audio = Some(Box::new(value));
+                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeAudio;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
