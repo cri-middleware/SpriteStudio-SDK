@@ -5,11 +5,12 @@ extern crate alloc;
 
 #[allow(unused_imports, dead_code)]
 pub mod ss {
-extern crate alloc;
+  extern crate alloc;
 
 #[allow(unused_imports, dead_code)]
 pub mod format {
-extern crate alloc;
+  extern crate alloc;
+
 
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
 pub const ENUM_MIN_SEQUENCE_TYPE: u8 = 0;

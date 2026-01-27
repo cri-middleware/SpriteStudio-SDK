@@ -442,7 +442,55 @@ table PartAttributeAudio {
   loop_num: int;
 }
 
-table PartAttributes {
+enum PartAttributesUpdateFlags: ulong (bit_flags) {
+  AttributeCell,
+  AttributePosX,
+  AttributePosY,
+  AttributePosZ,
+  AttributeRotX,
+  AttributeRotY,
+  AttributeRotZ,
+  AttributeSclX,
+  AttributeSclY,
+  AttributeLosclX,
+  AttributeLosclY,
+  AttributeAlpha,
+  AttributeLoAlpha,
+  AttributePrio,
+  AttributeFlipH,
+  AttributeFlipV,
+  AttributeHide,
+  AttributePartColor,
+  AttributeShader,
+  AttributeVertex,
+  AttributePivotX,
+  AttributePivotY,
+  AttributeAnchorX,
+  AttributeAnchorY,
+  AttributeSizeX,
+  AttributeSizeY,
+  AttributeImgFlipH,
+  AttributeImgFlipV,
+  AttributeUvtX,
+  AttributeUvtY,
+  AttributeUvrZ,
+  AttributeUvsX,
+  AttributeUvsY,
+  AttributeBoundr,
+  AttributeMask,
+  AttributeSkew,
+  AttributeDeform,
+  AttributeTexture,
+  AttributeUserData,    // only setup
+  AttributeSignal,      // only setup
+  AttributeAudio,       // only setup
+  AttributeInstance,    // only setup
+  AttributeEffect,      // only setup
+}
+
+table InitialPartAttributes {
+  update_flag: PartAttributesUpdateFlags = 0;
+
   cell: PartAttributeCell;
   position_x: float = 0.0;
   position_y: float = 0.0;
@@ -483,6 +531,12 @@ table PartAttributes {
   deform: PartAttributeDeform;
 
   texture: uint32 = 0;
+
+  user_data: PartAttributeUserData;
+  signal: PartAttributeSignal;
+  audio: PartAttributeAudio;
+  instance: PartAttributeInstance;
+  effect: PartAttributeEffect;
 }
 
 table PartTypeNone {
@@ -716,7 +770,7 @@ table AnimationData {
   name: string (key);
   name_hash: uint32;
 
-  parts_initial_attributes: [PartAttributes];
+  parts_initial_attributes: [InitialPartAttributes];
   parts_animation_data: [PartAnimationData];
   parts_mesh_data: [PartMeshData];
 
