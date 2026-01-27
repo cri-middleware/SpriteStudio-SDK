@@ -709,8 +709,8 @@ pub struct PartAttributesKey {
     pub deform: Option<PartAttributeDeformKey>,
     pub texture: u32,
 }
-impl From<&ssab::ssab::ss::format::PartAttributesT> for PartAttributesKey {
-    fn from(value: &ssab::ssab::ss::format::PartAttributesT) -> Self {
+impl From<&ssab::ssab::ss::format::InitialPartAttributesT> for PartAttributesKey {
+    fn from(value: &ssab::ssab::ss::format::InitialPartAttributesT) -> Self {
         Self {
             cell: value.cell.as_ref().map(|c| PartAttributeCellKey::from(c.as_ref())),
             position_x: ordered_float::OrderedFloat(value.position_x),
@@ -759,8 +759,8 @@ impl From<&ssab::ssab::ss::format::PartAttributesT> for PartAttributesKey {
 pub struct PartAttributesVecKey {
     v: Vec<PartAttributesKey>,
 }
-impl From<&Vec<ssab::ssab::ss::format::PartAttributesT>> for PartAttributesVecKey {
-    fn from(value: &Vec<ssab::ssab::ss::format::PartAttributesT>) -> Self {
+impl From<&Vec<ssab::ssab::ss::format::InitialPartAttributesT>> for PartAttributesVecKey {
+    fn from(value: &Vec<ssab::ssab::ss::format::InitialPartAttributesT>) -> Self {
         Self {
             v: value.iter().map(|v| PartAttributesKey::from(v)).collect(),
         }
@@ -813,8 +813,8 @@ pub struct SsabCache<'a> {
     pub part_attribute_shader_cache: HashMap<PartAttributeShaderKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeShader<'a>>>,
     pub part_attribute_vertex_cache: HashMap<PartAttributeVertexKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeVertex<'a>>>,
     pub part_attribute_deform_cache: HashMap<PartAttributeDeformKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeDeform<'a>>>,
-    pub part_attributes_cache: HashMap<PartAttributesKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributes<'a>>>,
-    pub part_attributes_vec_cache: HashMap<PartAttributesVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAttributes<'a>>>>>,
+    pub part_attributes_cache: HashMap<PartAttributesKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>,
+    pub part_attributes_vec_cache: HashMap<PartAttributesVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>>>,
     pub part_attribute_instance_cache: HashMap<PartAttributeInstanceKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeInstance<'a>>>,
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartTypeNone<'a>>>,
@@ -1536,13 +1536,13 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    fn create_shared_part_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attributes: &ssab::ssab::ss::format::PartAttributesT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributes<'a>> {
+    fn create_shared_part_attributes(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attributes: &ssab::ssab::ss::format::InitialPartAttributesT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>> {
         let key =  PartAttributesKey::from(part_attributes);
         if let Some(&offset) = self.part_attributes_cache.get(&key) {
             return offset;
         }
 
-        let mut args = ssab::ssab::ss::format::PartAttributesArgs::default();
+        let mut args = ssab::ssab::ss::format::InitialPartAttributesArgs::default();
         args.cell = part_attributes.cell.as_ref().map(|cell| { self.create_shared_part_attribute_cell(fb, cell) });
         args.position_x = part_attributes.position_x;
         args.position_y = part_attributes.position_y;
@@ -1582,13 +1582,13 @@ impl<'a> SsabCache<'a> {
         args.skew_y = part_attributes.skew_y;
         args.deform = part_attributes.deform.as_ref().map(|deform| { self.create_shared_part_attribute_deform(fb, deform) });
         args.texture = part_attributes.texture;
-        let offset = ssab::ssab::ss::format::PartAttributes::create(fb, &args);
+        let offset = ssab::ssab::ss::format::InitialPartAttributes::create(fb, &args);
 
         self.part_attributes_cache.insert(key, offset);
         offset
     }
 
-    fn create_shared_part_attributes_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attributes_vec: &Vec<ssab::ssab::ss::format::PartAttributesT>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAttributes<'a>>>> {
+    fn create_shared_part_attributes_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attributes_vec: &Vec<ssab::ssab::ss::format::InitialPartAttributesT>) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>> {
         let key = PartAttributesVecKey::from(part_attributes_vec);
         if let Some(&offset) = self.part_attributes_vec_cache.get(&key) {
             return offset;
