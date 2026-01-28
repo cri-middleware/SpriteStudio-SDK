@@ -26,6 +26,12 @@ foreach ($f in Get-ChildItem ./fbs/*.fbs) {
     $name = $f.BaseName
     & $FLATC_CMD --rust --gen-compare --gen-object-api --gen-mutable $f
     mv "${name}_generated.rs" "./src/$FEATURE/$name.rs" -Force
+
+    $targetFile = "./src/$FEATURE/$name.rs"
+    (Get-Content $targetFile -Raw) `
+        -replace 'pub mod ss \{', "pub mod ss {`nextern crate alloc;" `
+        -replace 'pub mod format \{', "pub mod format {`nextern crate alloc;" |
+        Set-Content $targetFile -NoNewline
 }
 
 popd
