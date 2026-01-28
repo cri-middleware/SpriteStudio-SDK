@@ -1,6 +1,8 @@
+[**日本語**](./README.ja.md) | [**English**](./README.md)
+
 # SpriteStudio7-SDK
 
-An Software Development Kit for sspj projects that are created by  [OPTPiX SpriteStudio](https://www.webtech.co.jp/spritestudio/index.html) 7 or higher flexibly to implement an animation player on any game engines or platforms.
+A Software Development Kit for sspj projects that are created by  [OPTPiX SpriteStudio](https://www.webtech.co.jp/eng/spritestudio/) 7 or higher flexibly to implement an animation player on any game engines or platforms.
 
 - Libraries
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
@@ -31,7 +33,7 @@ cargo build --release
 cargo test
 ```
 
-### Convert tests
+### tests for converting from sspj files to ssab files
 
 ```bash
 ./target/release/ssconverter-cli ./
