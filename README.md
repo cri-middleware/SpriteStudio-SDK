@@ -3,54 +3,16 @@
 An Software Development Kit for sspj projects that are created by  [OPTPiX SpriteStudio](https://www.webtech.co.jp/spritestudio/index.html) 7 or higher flexibly to implement an animation player on any game engines or platforms.
 
 - Libraries
-    - [libsspj](./libs/sspj): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
-    - [libssab](./libs/ssab): a library that creates and parses `ssab` files, which are animation binary files.
-    - [libssconverter](./libs/ssconverter): a library that parses `sspj` projects and creates `ssab` files.
-    - [libssruntime](./libs/ssruntime): a library that helps implement an animation player. The features are controlling playback, extracting keyframes, and doing interpolation.
+    - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
+    - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
+    - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` files.
+    - [libssruntime](./libs/ssruntime/README.md): a library that helps implement an animation player. The features are controlling playback, extracting keyframes, and doing interpolation.
 - Tool
-    - [ssconverter-cli](./cli): a command-line tool that parses `sspj` projects and creates `ssab` files.
+    - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
-# Tools Usage 
+# Tools Usage
 ## ssconverter-cli
-ssconverter-cli has two modes, **single mode** and **batch mode**.
-
-- single mode
-    - The mode converts a sspj project or a sspj zip file.
-- batch mode
-    - The mode converts multiple sspj projects.
-
-### single mode
-
-```bash
-$ ssconverter-cli [OPTIONS] <sspj_file>
-$ ssconverter-cli [OPTIONS] <sspj_zip_file>
-```
-
-#### OPTIONS:
-- `-e`, `--embedded`
-    - embed assets into a ssab file
-- `-o`, `--out-dir <directory>`
-    - output directory path (available for single mode only)
-- `-h`, `--help`
-    - Print help
-
-### batch mode
-
-```bash
-$ ssconverter-cli [OPTIONS] <sspj_file> <sspj_file> ...
-$ ssconverter-cli [OPTIONS] <directory> <directory> ...
-```
-
-#### OPTIONS:
-- `-e`, `--embedded`
-    - embed assets into a ssab file
-- `-h`, `--help`
-    - Print help
-
-# For Player implementers
-
-Porting guide that is how to use libssruntime is coming soon.
-
+reference: [ssconverter-cli](./cli/README.md)
 
 # For SDK Developers
 ## Prepare
