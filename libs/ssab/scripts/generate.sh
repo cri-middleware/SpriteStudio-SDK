@@ -25,6 +25,15 @@ do
   name=$(basename "$f" .fbs)
   ${FLATC} $f
   mv "${name}_generated.rs" "./src/${FEATURE}/$name.rs"
+  if [ $(uname) == "Darwin" ]; then
+    # bsd sed
+    sed -i '' 's/pub mod ss {/pub mod ss {\nextern crate alloc;/g' "./src/${FEATURE}/$name.rs"
+    sed -i '' 's/pub mod format {/pub mod format {\nextern crate alloc;/g' "./src/${FEATURE}/$name.rs"
+  else
+    # gnu sed
+    sed -i 's/pub mod ss {/pub mod ss {\nextern crate alloc;/g' "./src/${FEATURE}/$name.rs"
+    sed -i 's/pub mod format {/pub mod format {\nextern crate alloc;/g' "./src/${FEATURE}/$name.rs"
+  fi
 done
 
 popd > /dev/null
