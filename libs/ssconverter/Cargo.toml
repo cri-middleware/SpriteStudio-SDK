@@ -15,6 +15,7 @@ ordered-float = "5.1.0"
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab", features = ["converter"] }
 wasm-bindgen = { version = "0.2.108", optional = true }
+notify-debouncer-mini = "0.7.0"
 
 [features]
 default = ["ffi"]

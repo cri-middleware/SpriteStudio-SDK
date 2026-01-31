@@ -35,6 +35,8 @@ struct Cli {
     #[arg(short, long, value_name = "directory", help = "output directory path (available for single mode only)")]
     out_dir: Option<OsString>,
 
+    #[arg(short, long, help = "watch modifying a sspj project")]
+    watcher: bool,
 }
 
 /*
@@ -52,8 +54,6 @@ fn main() -> Result<(), ssconverter::ConverterError> {
     let sspj_paths = ssconverter::utility::parse_args(&args.files);
     if sspj_paths.is_empty() {
         eprintln!("sspj files not found.");
-
-
         eprintln!("{}", cmd.render_usage());
         return Ok(());
     }
@@ -63,12 +63,16 @@ fn main() -> Result<(), ssconverter::ConverterError> {
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
-        // single mode (sspj file or sspj zip file)
         config.convert_config = ssconverter::ConvertConfig {
             embedded: args.embedded,
             ..Default::default()
         };
         config.output = args.out_dir;
+        if args.watcher {
+            // watcher mode
+            ssconverter::watcher::watch_sspj_project(sspj_paths[0].as_path(), &config)?;
+            return Ok(());
+        }
     } else {
         // batch mode
         config.convert_config = ssconverter::ConvertConfig {
