@@ -2334,23 +2334,23 @@ pub struct PartTypeUnionTableOffset {}
 #[derive(Debug, Clone, PartialEq)]
 pub enum PartTypeT {
   NONE,
-  PartTypeNull(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeNormal(alloc::boxed::Box<PartTypeNoneT>),
+  PartTypeNull(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeNormal(alloc::boxed::Box<NoneValueEntryT>),
   PartTypeShape(alloc::boxed::Box<PartTypeShapeT>),
   PartTypeText(alloc::boxed::Box<PartTypeTextT>),
   PartTypeNines(alloc::boxed::Box<PartTypeNinesT>),
   PartTypeInstance(alloc::boxed::Box<PartTypeInstanceT>),
-  PartTypeArmature(alloc::boxed::Box<PartTypeNoneT>),
+  PartTypeArmature(alloc::boxed::Box<NoneValueEntryT>),
   PartTypeEffect(alloc::boxed::Box<PartTypeEffectT>),
-  PartTypeMesh(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeMovenode(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeConstraint(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeMask(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeJoint(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeBonepoint(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeTransformConstraint(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeCamera(alloc::boxed::Box<PartTypeNoneT>),
-  PartTypeAudio(alloc::boxed::Box<PartTypeNoneT>),
+  PartTypeMesh(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeMovenode(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeConstraint(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeMask(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeJoint(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeBonepoint(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeTransformConstraint(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeCamera(alloc::boxed::Box<NoneValueEntryT>),
+  PartTypeAudio(alloc::boxed::Box<NoneValueEntryT>),
 }
 impl Default for PartTypeT {
   fn default() -> Self {
@@ -2402,8 +2402,8 @@ impl PartTypeT {
       Self::PartTypeAudio(v) => Some(v.pack(fbb).as_union_value()),
     }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_null(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_null(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeNull(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeNull(w) = v {
@@ -2415,16 +2415,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_null(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_null(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeNull(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_null_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_null_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeNull(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_normal(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_normal(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeNormal(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeNormal(w) = v {
@@ -2436,12 +2436,12 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_normal(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_normal(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeNormal(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_normal_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_normal_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeNormal(v) = self { Some(v.as_mut()) } else { None }
   }
   /// If the union variant matches, return the owned PartTypeShapeT, setting the union to NONE.
@@ -2528,8 +2528,8 @@ impl PartTypeT {
   pub fn as_part_type_instance_mut(&mut self) -> Option<&mut PartTypeInstanceT> {
     if let Self::PartTypeInstance(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_armature(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_armature(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeArmature(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeArmature(w) = v {
@@ -2541,12 +2541,12 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_armature(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_armature(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeArmature(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_armature_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_armature_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeArmature(v) = self { Some(v.as_mut()) } else { None }
   }
   /// If the union variant matches, return the owned PartTypeEffectT, setting the union to NONE.
@@ -2570,8 +2570,8 @@ impl PartTypeT {
   pub fn as_part_type_effect_mut(&mut self) -> Option<&mut PartTypeEffectT> {
     if let Self::PartTypeEffect(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_mesh(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_mesh(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeMesh(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeMesh(w) = v {
@@ -2583,16 +2583,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_mesh(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_mesh(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeMesh(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_mesh_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_mesh_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeMesh(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_movenode(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_movenode(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeMovenode(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeMovenode(w) = v {
@@ -2604,16 +2604,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_movenode(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_movenode(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeMovenode(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_movenode_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_movenode_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeMovenode(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_constraint(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_constraint(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeConstraint(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeConstraint(w) = v {
@@ -2625,16 +2625,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_constraint(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_constraint(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeConstraint(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_constraint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_constraint_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeConstraint(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_mask(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_mask(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeMask(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeMask(w) = v {
@@ -2646,16 +2646,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_mask(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_mask(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeMask(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_mask_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_mask_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeMask(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_joint(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_joint(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeJoint(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeJoint(w) = v {
@@ -2667,16 +2667,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_joint(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_joint(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeJoint(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_joint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_joint_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeJoint(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_bonepoint(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_bonepoint(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeBonepoint(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeBonepoint(w) = v {
@@ -2688,16 +2688,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_bonepoint(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_bonepoint(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeBonepoint(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_bonepoint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_bonepoint_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeBonepoint(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_transform_constraint(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_transform_constraint(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeTransformConstraint(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeTransformConstraint(w) = v {
@@ -2709,16 +2709,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_transform_constraint(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_transform_constraint(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeTransformConstraint(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_transform_constraint_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_transform_constraint_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeTransformConstraint(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_camera(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_camera(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeCamera(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeCamera(w) = v {
@@ -2730,16 +2730,16 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_camera(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_camera(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeCamera(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_camera_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_camera_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeCamera(v) = self { Some(v.as_mut()) } else { None }
   }
-  /// If the union variant matches, return the owned PartTypeNoneT, setting the union to NONE.
-  pub fn take_part_type_audio(&mut self) -> Option<alloc::boxed::Box<PartTypeNoneT>> {
+  /// If the union variant matches, return the owned NoneValueEntryT, setting the union to NONE.
+  pub fn take_part_type_audio(&mut self) -> Option<alloc::boxed::Box<NoneValueEntryT>> {
     if let Self::PartTypeAudio(_) = self {
       let v = ::core::mem::replace(self, Self::NONE);
       if let Self::PartTypeAudio(w) = v {
@@ -2751,12 +2751,12 @@ impl PartTypeT {
       None
     }
   }
-  /// If the union variant matches, return a reference to the PartTypeNoneT.
-  pub fn as_part_type_audio(&self) -> Option<&PartTypeNoneT> {
+  /// If the union variant matches, return a reference to the NoneValueEntryT.
+  pub fn as_part_type_audio(&self) -> Option<&NoneValueEntryT> {
     if let Self::PartTypeAudio(v) = self { Some(v.as_ref()) } else { None }
   }
-  /// If the union variant matches, return a mutable reference to the PartTypeNoneT.
-  pub fn as_part_type_audio_mut(&mut self) -> Option<&mut PartTypeNoneT> {
+  /// If the union variant matches, return a mutable reference to the NoneValueEntryT.
+  pub fn as_part_type_audio_mut(&mut self) -> Option<&mut NoneValueEntryT> {
     if let Self::PartTypeAudio(v) = self { Some(v.as_mut()) } else { None }
   }
 }
@@ -13461,107 +13461,6 @@ impl InitialEventsT {
     })
   }
 }
-pub enum PartTypeNoneOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartTypeNone<'a> {
-  pub _tab: ::flatbuffers::Table<'a>,
-}
-
-impl<'a> ::flatbuffers::Follow<'a> for PartTypeNone<'a> {
-  type Inner = PartTypeNone<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> PartTypeNone<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartTypeNone { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args PartTypeNoneArgs
-  ) -> ::flatbuffers::WIPOffset<PartTypeNone<'bldr>> {
-    let mut builder = PartTypeNoneBuilder::new(_fbb);
-    builder.finish()
-  }
-
-  pub fn unpack(&self) -> PartTypeNoneT {
-    PartTypeNoneT {
-    }
-  }
-}
-
-impl ::flatbuffers::Verifiable for PartTypeNone<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut ::flatbuffers::Verifier, pos: usize
-  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct PartTypeNoneArgs {
-}
-impl<'a> Default for PartTypeNoneArgs {
-  #[inline]
-  fn default() -> Self {
-    PartTypeNoneArgs {
-    }
-  }
-}
-
-pub struct PartTypeNoneBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeNoneBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartTypeNoneBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartTypeNoneBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartTypeNone<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    ::flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl ::core::fmt::Debug for PartTypeNone<'_> {
-  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartTypeNone");
-      ds.finish()
-  }
-}
-#[non_exhaustive]
-#[derive(Debug, Clone, PartialEq)]
-pub struct PartTypeNoneT {
-}
-impl Default for PartTypeNoneT {
-  fn default() -> Self {
-    Self {
-    }
-  }
-}
-impl PartTypeNoneT {
-  pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
-    &self,
-    _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> ::flatbuffers::WIPOffset<PartTypeNone<'b>> {
-    PartTypeNone::create(_fbb, &PartTypeNoneArgs{
-    })
-  }
-}
 pub enum PartTypeShapeOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -14758,13 +14657,13 @@ impl<'a> PartData<'a> {
   }
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_null(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_null(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeNull {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14773,13 +14672,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_normal(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_normal(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeNormal {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14848,13 +14747,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_armature(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_armature(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeArmature {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14878,13 +14777,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_mesh(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_mesh(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeMesh {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14893,13 +14792,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_movenode(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_movenode(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeMovenode {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14908,13 +14807,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_constraint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_constraint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeConstraint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14923,13 +14822,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_mask(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_mask(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeMask {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14938,13 +14837,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_joint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_joint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeJoint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14953,13 +14852,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_bonepoint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_bonepoint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeBonepoint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14968,13 +14867,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_transform_constraint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_transform_constraint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeTransformConstraint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14983,13 +14882,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_camera(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_camera(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeCamera {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -14998,13 +14897,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_audio(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_audio(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeAudio {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -15025,23 +14924,23 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
      .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
      .visit_union::<PartType, _>("part_type_type", Self::VT_PART_TYPE_TYPE, "part_type", Self::VT_PART_TYPE, false, |key, v, pos| {
         match key {
-          PartType::PartTypeNull => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeNull", pos),
-          PartType::PartTypeNormal => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeNormal", pos),
+          PartType::PartTypeNull => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeNull", pos),
+          PartType::PartTypeNormal => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeNormal", pos),
           PartType::PartTypeShape => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeShape>>("PartType::PartTypeShape", pos),
           PartType::PartTypeText => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeText>>("PartType::PartTypeText", pos),
           PartType::PartTypeNines => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNines>>("PartType::PartTypeNines", pos),
           PartType::PartTypeInstance => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeInstance>>("PartType::PartTypeInstance", pos),
-          PartType::PartTypeArmature => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeArmature", pos),
+          PartType::PartTypeArmature => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeArmature", pos),
           PartType::PartTypeEffect => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeEffect>>("PartType::PartTypeEffect", pos),
-          PartType::PartTypeMesh => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeMesh", pos),
-          PartType::PartTypeMovenode => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeMovenode", pos),
-          PartType::PartTypeConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeConstraint", pos),
-          PartType::PartTypeMask => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeMask", pos),
-          PartType::PartTypeJoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeJoint", pos),
-          PartType::PartTypeBonepoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeBonepoint", pos),
-          PartType::PartTypeTransformConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeTransformConstraint", pos),
-          PartType::PartTypeCamera => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeCamera", pos),
-          PartType::PartTypeAudio => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeAudio", pos),
+          PartType::PartTypeMesh => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeMesh", pos),
+          PartType::PartTypeMovenode => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeMovenode", pos),
+          PartType::PartTypeConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeConstraint", pos),
+          PartType::PartTypeMask => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeMask", pos),
+          PartType::PartTypeJoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeJoint", pos),
+          PartType::PartTypeBonepoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeBonepoint", pos),
+          PartType::PartTypeTransformConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeTransformConstraint", pos),
+          PartType::PartTypeCamera => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeCamera", pos),
+          PartType::PartTypeAudio => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeAudio", pos),
           _ => Ok(()),
         }
      })?

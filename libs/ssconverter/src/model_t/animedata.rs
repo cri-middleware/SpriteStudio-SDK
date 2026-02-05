@@ -1294,8 +1294,8 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         };
         part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
         part_data_t.part_type = match &part.part_type {
-            sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Normal => ssab::ssab::ss::format::PartTypeT::PartTypeNormal(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
+            sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Normal => ssab::ssab::ss::format::PartTypeT::PartTypeNormal(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
             sspj::sstypes::SsPartType::Shape => {
                 let mut part_type = ssab::ssab::ss::format::PartTypeShapeT::default();
                 part_type.shape_type = match &part.shape_type {
@@ -1353,21 +1353,21 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 part_type.ref_anime_hash = crate::utils::fnv1a_hash_str(&part.ref_anime);
                 ssab::ssab::ss::format::PartTypeT::PartTypeInstance(Box::new(part_type))
             },
-            sspj::sstypes::SsPartType::Armature => ssab::ssab::ss::format::PartTypeT::PartTypeArmature(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
+            sspj::sstypes::SsPartType::Armature => ssab::ssab::ss::format::PartTypeT::PartTypeArmature(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
             sspj::sstypes::SsPartType::Effect => {
                 let mut part_type = ssab::ssab::ss::format::PartTypeEffectT::default();
                 part_type.ref_effect_name_hash = crate::utils::fnv1a_hash_str(&part.ref_effect_name);
                 ssab::ssab::ss::format::PartTypeT::PartTypeEffect(Box::new(part_type))
             },
-            sspj::sstypes::SsPartType::Mesh => ssab::ssab::ss::format::PartTypeT::PartTypeMesh(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Movenode => ssab::ssab::ss::format::PartTypeT::PartTypeMovenode(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Constraint => ssab::ssab::ss::format::PartTypeT::PartTypeConstraint(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Mask => ssab::ssab::ss::format::PartTypeT::PartTypeMask(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Joint => ssab::ssab::ss::format::PartTypeT::PartTypeJoint(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Bonepoint => ssab::ssab::ss::format::PartTypeT::PartTypeBonepoint(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::TransformConstraint => ssab::ssab::ss::format::PartTypeT::PartTypeTransformConstraint(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Camera => ssab::ssab::ss::format::PartTypeT::PartTypeCamera(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
-            sspj::sstypes::SsPartType::Audio => ssab::ssab::ss::format::PartTypeT::PartTypeAudio(Box::new(ssab::ssab::ss::format::PartTypeNoneT::default())),
+            sspj::sstypes::SsPartType::Mesh => ssab::ssab::ss::format::PartTypeT::PartTypeMesh(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Movenode => ssab::ssab::ss::format::PartTypeT::PartTypeMovenode(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Constraint => ssab::ssab::ss::format::PartTypeT::PartTypeConstraint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Mask => ssab::ssab::ss::format::PartTypeT::PartTypeMask(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Joint => ssab::ssab::ss::format::PartTypeT::PartTypeJoint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Bonepoint => ssab::ssab::ss::format::PartTypeT::PartTypeBonepoint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::TransformConstraint => ssab::ssab::ss::format::PartTypeT::PartTypeTransformConstraint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Camera => ssab::ssab::ss::format::PartTypeT::PartTypeCamera(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Audio => ssab::ssab::ss::format::PartTypeT::PartTypeAudio(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
         };
 
         part_data_t

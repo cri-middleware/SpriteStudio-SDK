@@ -69,6 +69,17 @@ impl From<&ssab::ssab::ss::format::U8RectT> for U8RectKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
+pub struct NoneValueEntryKey {
+}
+impl From<&ssab::ssab::ss::format::NoneValueEntryT> for NoneValueEntryKey {
+    fn from(_none_value_table_t: &ssab::ssab::ss::format::NoneValueEntryT) -> Self {
+        Self {
+        }
+    }
+}
+
+
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct BoolValueEntryKey {
     pub value: bool,
 }
@@ -937,6 +948,7 @@ pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Rect<'a>>>,
     pub u8rect_cache: HashMap<U8RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Rect<'a>>>,
+    pub none_value_table_cache: HashMap<NoneValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::NoneValueEntry<'a>>>,
     pub bool_value_table_cache: HashMap<BoolValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::BoolValueEntry<'a>>>,
     pub int_value_table_cache: HashMap<IntValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::IntValueEntry<'a>>>,
     pub float_value_table_cache: HashMap<FloatValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::FloatValueEntry<'a>>>,
@@ -961,8 +973,6 @@ pub struct SsabCache<'a> {
     pub part_attribute_effect_cache: HashMap<PartAttributeEffectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeEffect<'a>>>,
     pub initial_events_cache: HashMap<InitialEventsKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialEvents<'a>>>,
     pub initial_events_vec_cache: HashMap<InitialEventsVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>>,
-
-    pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartTypeNone<'a>>>,
 
     pub part_animation_data_float_value_cache: HashMap<PartAnimationDataFloatValueKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>,
     pub part_animation_data_float_value_vec_cache: HashMap<PartAnimationDataFloatValueVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>>,
@@ -991,6 +1001,7 @@ impl<'a> SsabCache<'a> {
         Self {
             vec2_cache: HashMap::new(),
             rect_cache: HashMap::new(),
+            none_value_table_cache: HashMap::new(),
             bool_value_table_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
@@ -1016,8 +1027,6 @@ impl<'a> SsabCache<'a> {
             part_attribute_effect_cache: HashMap::new(),
             initial_events_cache: HashMap::new(),
             initial_events_vec_cache: HashMap::new(),
-
-            part_type_none_cache: HashMap::new(),
 
             part_animation_data_float_value_cache: HashMap::new(),
             part_animation_data_float_value_vec_cache: HashMap::new(),
@@ -1082,6 +1091,17 @@ impl<'a> SsabCache<'a> {
         args.b = u8rectt.b;
         let offset = ssab::ssab::ss::format::U8Rect::create(fb, &args);
         self.u8rect_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_none_value_entry(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, none_value_table: &ssab::ssab::ss::format::NoneValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::NoneValueEntry<'a>> {
+        let key = NoneValueEntryKey::from(none_value_table);
+        if let Some(&offset) = self.none_value_table_cache.get(&key) {
+            return offset;
+        }
+        let mut args = ssab::ssab::ss::format::NoneValueEntryArgs::default();
+        let offset = ssab::ssab::ss::format::NoneValueEntry::create(fb, &args);
+        self.none_value_table_cache.insert(key, offset);
         offset
     }
 
@@ -1954,12 +1974,8 @@ impl<'a> SsabCache<'a> {
                 offset.as_union_value()
             },
             _ => {
-                if let Some(&offset) = self.part_type_none_cache.get("dummy") {
-                    return offset.as_union_value()
-                };
-                let p_args = ssab::ssab::ss::format::PartTypeNoneArgs::default();
-                let offset = ssab::ssab::ss::format::PartTypeNone::create(fb, &p_args);
-                self.part_type_none_cache.insert("dummy".to_string(), offset);
+                let p_args = ssab::ssab::ss::format::NoneValueEntryT::default();
+                let offset = self.create_shared_none_value_entry(fb, &p_args);
                 offset.as_union_value()
             },
         }
