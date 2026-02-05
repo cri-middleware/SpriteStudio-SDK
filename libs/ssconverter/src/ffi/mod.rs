@@ -1,4 +1,6 @@
 use std::ffi::{c_char, CStr, OsString, CString};
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::thread::JoinHandle;
 use crate::{ConverterConfig, ConverterError};
 
@@ -7,12 +9,14 @@ pub struct Context {
     error: Option<String>,
 
     handler: Option<JoinHandle<Result<(), crate::ConverterError>>>,
+    should_stop: Arc<AtomicBool>,
 }
 impl Context {
     pub fn new() -> Self {
         Self {
             error: None,
             handler: None,
+            should_stop: Arc::new(AtomicBool::new(false)),
         }
     }
 }
@@ -80,6 +84,41 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
         crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c)
     });
     context.handler = Some(handler);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
+    let context = unsafe { &mut *ctx };
+
+    let sspj_buf = unsafe { CStr::from_ptr(sspj) };
+    let sspj_str = sspj_buf.to_string_lossy().into_owned();
+    let sspj_path = std::path::PathBuf::from(&sspj_str);
+
+    let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
+    let output_dir_str = Some(OsString::from(output_dir_buf.to_string_lossy().into_owned()));
+    let mut config = ConverterConfig::default();
+    config.output = output_dir_str.clone();
+
+    context.should_stop = Arc::new(AtomicBool::new(false));
+    let should_stop_clone = context.should_stop.clone();
+
+    let c = config.clone();
+    let handler = std::thread::spawn(move || {
+        crate::watch::watch_sspj_project(sspj_path.as_path(), &c, should_stop_clone)
+    });
+    context.handler = Some(handler);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_is_running(context: *mut Context) -> bool {
+    let context = unsafe { &mut *context };
+    context.handler.is_some()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_abort(context: *mut Context) {
+    let context = unsafe { &mut *context };
+    context.should_stop.store(true, std::sync::atomic::Ordering::Relaxed)
 }
 
 #[unsafe(no_mangle)]

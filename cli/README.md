@@ -64,7 +64,7 @@ $ ssconverter-cli my_game/project.sspj
 Keeps the process running and re-converts whenever you save changes in SpriteStudio.
 
 ```bash
-$ ssconverter-cli my_game/project.sspj --watcher
+$ ssconverter-cli my_game/project.sspj --watch
 ```
 
 

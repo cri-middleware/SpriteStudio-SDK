@@ -62,7 +62,7 @@ $ ssconverter-cli my_game/project.sspj
 プロセスを常駐させ、SpriteStudio で保存などの変更が行われるたびに自動で再変換します。
 
 ```bash
-$ ssconverter-cli my_game/project.sspj --watcher
+$ ssconverter-cli my_game/project.sspj --watch
 ```
 
 **3. アセット埋め込み**

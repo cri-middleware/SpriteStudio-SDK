@@ -1,6 +1,8 @@
 use ssconverter;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::thread::JoinHandle;
 use clap::{CommandFactory, Parser};
 
@@ -36,7 +38,7 @@ struct Cli {
     out_dir: Option<OsString>,
 
     #[arg(short, long, help = "watch modifying a sspj project")]
-    watcher: bool,
+    watch: bool,
 }
 
 /*
@@ -68,9 +70,10 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             ..Default::default()
         };
         config.output = args.out_dir;
-        if args.watcher {
-            // watcher mode
-            ssconverter::watcher::watch_sspj_project(sspj_paths[0].as_path(), &config)?;
+        if args.watch {
+            // watch mode
+            let should_stop = Arc::new(AtomicBool::new(false));
+            ssconverter::watch::watch_sspj_project(sspj_paths[0].as_path(), &config, should_stop)?;
             return Ok(());
         }
     } else {
