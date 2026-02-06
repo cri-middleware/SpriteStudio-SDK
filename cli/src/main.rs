@@ -99,7 +99,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             let p = path_buf.clone();
             let c = config.clone();
             std::thread::spawn(move || {
-                ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c)
+                ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c, &|msg| println!("{}", msg))
             })
         })
     });
