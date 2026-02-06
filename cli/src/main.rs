@@ -149,6 +149,7 @@ mod tests {
             let r = ssconverter::convert_sspj_to_ssab_files(
                 &get_test_base_path().join(p).as_path(),
                 &config,
+                &|msg: &str| println!("{}", msg)
             );
             match r {
                 Ok(_) => {
