@@ -66,8 +66,10 @@ pub extern "C" fn ss_converter_destroy(context: *mut Context) {
     }));
 }
 
+type LogCallback = extern "C" fn(*const c_char);
+
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
+pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, callback: LogCallback) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
 
@@ -82,11 +84,16 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
         config.output = output_dir_str;
 
         if let Some(prev_handler)  = context.handler.take() {
+            // ignore previous handler result
             let _ = prev_handler.join();
         }
         let c = config.clone();
         let handler = std::thread::spawn(move || {
-            crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c)
+            let on_log = |msg: &str| {
+                let c_msg = CString::new(msg).unwrap();
+                callback(c_msg.as_ptr());
+            };
+            crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
         });
         context.handler = Some(handler);
     }));

@@ -22,7 +22,10 @@ impl Default for ConvertConfig {
     }
 }
 
-fn convert_sspj_to_ssab_data(asset_provider: &Box<dyn crate::asset_provider::AssetProvider>, config: &ConvertConfig, ) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError> {
+pub fn convert_sspj_to_ssab_data<F>(asset_provider: &Box<dyn crate::asset_provider::AssetProvider>, config: &ConvertConfig, _on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+where
+    F: Fn(&str) + Sync + Send,
+{
     let sspj = asset_provider.load_sspj()?;
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
@@ -82,9 +85,12 @@ impl Default for ConverterConfig {
     }
 }
 
-pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConfig) -> Result<(), crate::converter::converter_error::ConverterError> {
+pub fn convert_sspj_to_ssab_files<F>(path: &std::path::Path, config: &ConverterConfig, on_log: &F) -> Result<(), crate::converter::converter_error::ConverterError>
+where
+    F: Fn(&str) + Sync + Send,
+{
     let asset_provider = crate::asset_provider::create_asset_provider(path)?;
-    let (sspj, convert_result) = convert_sspj_to_ssab_data(&asset_provider, &config.convert_config)?;
+    let (sspj, convert_result) = convert_sspj_to_ssab_data(&asset_provider, &config.convert_config, on_log)?;
 
     let outdir_path = match &config.output {
         Some(out_dir) => std::path::PathBuf::from(&out_dir),
