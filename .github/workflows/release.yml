@@ -252,20 +252,49 @@ jobs:
 
           popd # static/runtime
 
-          # TODO: dynamic libraries
-          # rm -rf dynamic
-          # mkdir -p dynamic/runtime
-          # pushd dynamic/runtime
-          # mkdir -p libs
-          # echo ${{ steps.commit.outputs }} > VERSION
-          # ...
+          rm -rf dynamic
+          mkdir -p dynamic/runtime
+          pushd dynamic/runtime
+          mkdir -p libs
+          pushd libs
+          echo ${{ steps.commit.outputs }} > VERSION
+          mkdir -p macos
+          mkdir -p web
+          mkdir -p ios
+          mkdir -p linux/x86_64
+          mkdir -p android/arm32
+          mkdir -p android/arm64
+          mkdir -p android/x86_64
+          mkdir -p windows/x86_64
+          popd # libs
+
+          mv ../../spritestudio7-sdk-libraries-macos/libssconverter.dylib libs/macos/
+          mv ../../spritestudio7-sdk-libraries-macos/libssruntime.dylib libs/macos/
+          mv ../../spritestudio7-sdk-libraries-web/ssruntime.wasm libs/web/
+          mv ../../spritestudio7-sdk-libraries-ios/libssruntime.dylib libs/ios/
+          mv ../../spritestudio7-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
+          mv ../../spritestudio7-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
+          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64
+          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.so libs/android/arm32
+          mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
+          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
+          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
+
+          popd # static/runtime
 
           rm -rf ../output
           mkdir -p ../output
           mv static ../output/
+          mv dynamic ../output/
 
       - name: Upload final release package
         uses: actions/upload-artifact@v4
         with:
           name: spritestudio7-sdk-static-libs
           path: output/static
+
+      - name: Upload final release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: spritestudio7-sdk-dynamic-libs
+          path: output/dynamic
