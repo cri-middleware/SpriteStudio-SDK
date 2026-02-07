@@ -1,0 +1,20 @@
+name: Setup
+description: Setup build dependencies for SpriteStudio7-SDK
+
+inputs:
+  platform:
+    required: true
+    description: Target platform.
+  os:
+    required: true
+    description: build host os.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Android dependencies
+      if: inputs.platform == 'android'
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r23c
+        link-to-sdk: true
