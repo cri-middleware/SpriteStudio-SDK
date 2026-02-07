@@ -50,44 +50,40 @@ jobs:
             platform: web
             arch: wasm32
 
-    defaults:
-      run:
-        shell: zsh {0}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           submodules: recursive
 
-      - name: setup for release
-        uses: ./.github/actions/setup-extension
+      - name: setup for SpriteStudio7-SDK
+        uses: ./.github/actions/setup
         with:
           platform: ${{ matrix.platform }}
           os: ${{ matrix.os }}
 
-      - name: Retrieve the secret and decode it to a file
-        if: matrix.platform == 'macos' || matrix.platform == 'ios'
-        env:
-          DEV_CERT_APPLICATION: ${{ secrets.DEV_CERT_APPLICATION }}
-          DEV_CERT_PASS: ${{ secrets.DEV_CERT_PASS }}
-          KC_PASS: ${{ secrets.KC_PASS }}
-        run: |
-          # create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-
-          # import certificate and provisioning profile from secrets
-          echo -n "$DEV_CERT_APPLICATION" | base64 --decode > $CERTIFICATE_PATH
-
-          # create temporary keychain
-          security create-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-          security set-keychain-settings -lut 21600 ${{ env.KEYCHAIN_PATH }}
-          security unlock-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-
-          # import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$DEV_CERT_PASS" -f pkcs12 -k ${{ env.KEYCHAIN_PATH }} -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-          security list-keychain -d user -s ${{ env.KEYCHAIN_PATH }}
+#      - name: Retrieve the secret and decode it to a file
+#        if: matrix.platform == 'macos' || matrix.platform == 'ios'
+#        env:
+#          DEV_CERT_APPLICATION: ${{ secrets.DEV_CERT_APPLICATION }}
+#          DEV_CERT_PASS: ${{ secrets.DEV_CERT_PASS }}
+#          KC_PASS: ${{ secrets.KC_PASS }}
+#        run: |
+#          # create variables
+#          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+#
+#          # import certificate and provisioning profile from secrets
+#          echo -n "$DEV_CERT_APPLICATION" | base64 --decode > $CERTIFICATE_PATH
+#
+#          # create temporary keychain
+#          security create-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
+#          security set-keychain-settings -lut 21600 ${{ env.KEYCHAIN_PATH }}
+#          security unlock-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
+#
+#          # import certificate to keychain
+#          security import $CERTIFICATE_PATH -P "$DEV_CERT_PASS" -f pkcs12 -k ${{ env.KEYCHAIN_PATH }} -T /usr/bin/codesign
+#          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
+#          security list-keychain -d user -s ${{ env.KEYCHAIN_PATH }}
 
       - name: build Linux
         if: matrix.platform == 'linux' && matrix.arch == 'x86_64'
@@ -95,6 +91,9 @@ jobs:
           ./scripts/release-linux.sh
           mkdir -p bin
           cp -r target/release/ssconverter-cli bin/
+          mkdir -p lib
+          cp target/release/*.a lib/
+          cp target/release/*.so lib/
 
       - name: build macOS
         if: matrix.platform == 'macos' && matrix.arch == 'universal'
@@ -105,14 +104,18 @@ jobs:
           rustup target add x86_64-apple-darwin
           ./scripts/release-macos.sh
 
-          for f in ./target/universal-apple-darwin/*.dylib
-          do
-            codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
-          done
-          codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" ssconverter-cli --deep --options runtime --timestamp
+          # TODO: codesign
+          # for f in ./target/universal-apple-darwin/*.dylib
+          # do
+          #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
+          # done
+          # codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" ssconverter-cli --deep --options runtime --timestamp
           # TODO: notary
           mkdir -p bin
           cp -r target/universal-apple-darwin/ssconverter-cli bin/
+          mkdir -p lib
+          cp target/universal-apple-darwin/*.a lib/
+          cp target/universal-apple-darwin/*.dylib lib/
 
       - name: build iOS
         if: matrix.platform == 'ios' && matrix.arch == 'universal'
@@ -123,10 +126,16 @@ jobs:
           rustup target add x86_64-apple-ios
           ./scripts/release-ios.sh
 
-          for f in ./target/universal-apple-darwin/*.dylib
-          do
-            codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
-          done
+          # TODO: codesign
+          # for f in ./target/universal-apple-ios/*.dylib
+          # do
+          #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
+          # done
+
+          mkdir -p lib
+          cp target/universal-apple-ios/*.a lib/
+          cp target/universal-apple-ios/*.dylib lib/
+
 
       - name: build Android
         if: matrix.platform == 'android'
@@ -137,26 +146,41 @@ jobs:
           rustup target add x86_64-linux-android
           ./scripts/release-android.sh
 
+          mkdir -p lib/arm64
+          cp target/aarch64-linux-android/release/*.a lib/arm64/
+          cp target/aarch64-linux-android/release/*.so lib/arm64/
+          mkdir -p lib/armv7
+          cp target/armv7-linux-androideabi/release/*.a lib/armv7/
+          cp target/armv7-linux-androideabi/release/*.so lib/armv7/
+          mkdir -p lib/x86_64
+          cp target/x86_64-linux-android/release/*.a lib/x86_64/
+          cp target/x86_64-linux-android/release/*.so lib/x86_64/
+
       - name: build Windows
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           rustup target add x86_64-pc-windows-msvc
-          rustup target add i686-pc-windows-msvc
           ./scripts/release-windows.ps1
           mkdir bin
           mkdir bin/x86_64
-          mkdir bin/i686
           cp target/x86_64-pc-windows-msvc/release/ssconverter-cli.exe bin/x86_64/
-          cp target/i686-pc-windows-msvc/release/ssconverter-cli.exe bin/i686/
+          mkdir lib
+          mkdir lib/x86_64
+          cp target/x86_64-pc-windows-msvc/release/*.lib lib/x86_64/
+          cp target/x86_64-pc-windows-msvc/release/*.dll lib/x86_64/
 
       - name: build Web
         if: matrix.platform == 'web'
         run: |
           rustup target add wasm32-unknown-unknown
           ./scripts/release-wasm.sh
+          mkdir -p lib
+          cp target/wasm32-unknown-unknown/release/*.a lib/
+          cp target/wasm32-unknown-unknown/release/*.wasm lib/
 
       - name: Upload artifact ssconverter-cli
+        if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
           name: ssconverter-cli-${{ matrix.platform }}
@@ -167,7 +191,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: spritestudio7-sdk-libraries-${{ matrix.platform }}
-          path: target
+          path: lib
           if-no-files-found: error
 
   package:
@@ -192,9 +216,10 @@ jobs:
 
           rm -rf static
           mkdir -p static/runtime
-          cd static/runtime
+          pushd static/runtime
           mkdir -p libs
-          echo ${{ steps.commit.outputs }} > VERSION
+          pushd libs
+          echo ${{ steps.commit.outputs.hash }} > VERSION
           mkdir -p macos
           mkdir -p web
           mkdir -p ios
@@ -203,31 +228,34 @@ jobs:
           mkdir -p android/arm64
           mkdir -p android/x86_64
           mkdir -p windows/x86_64
-          cd ..
+          popd # libs
 
-          mv ../../spritestudio7-sdk-libraries-macos/target/universal-apple-darwin/libssconverter.a libs/macos/
-          mv ../../spritestudio7-sdk-libraries-macos/target/universal-apple-darwin/libssruntime.a libs/macos/
-          mv ../../spritestudio7-sdk-libraries-web/target/wasm32-unknown-unknown/release/libssruntime.a libs/web/
-          mv ../../spritestudio7-sdk-libraries-ios/target/universal-apple-ios/libssruntime.a libs/ios/
-          mv ../../spritestudio7-sdk-libraries-linux/target/release/libssconverter.a libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-linux/target/release/libssruntime.a libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-android/target/aarch64-linux-android/release/libssruntime.a libs/android/arm64
-          mv ../../spritestudio7-sdk-libraries-android/target/armv7-linux-androideabi/release/libssruntime.a libs/android/arm32
-          mv ../../spritestudio7-sdk-libraries-android/target/x86_64-linux-android/release/libssruntime.a libs/android/x86_64
-          mv ../../spritestudio7-sdk-libraries-windows/target/x86_64-pc-windows-msvc/release/ssconverter.lib libs/windows/x86_64
-          mv ../../spritestudio7-sdk-libraries-windows/target/x86_64-pc-windows-msvc/release/ssruntime.lib libs/windows/x86_64
-          cd libs/windows
-          cp x86_64/ssconverter.lib ssconverter.windows.editor.x86_64.lib
-          cp x86_64/ssconverter.lib ssconverter.windows.template_debug.x86_64.lib
-          cp x86_64/ssconverter.lib ssconverter.windows.template_release.x86_64.lib
-          cp x86_64/ssruntime.lib ssruntime.windows.editor.x86_64.lib
-          cp x86_64/ssruntime.lib ssruntime.windows.template_debug.x86_64.lib
-          cp x86_64/ssruntime.lib ssruntime.windows.template_release.x86_64.lib
-          cd ../../
+          mv ../../spritestudio7-sdk-libraries-macos/libssconverter.a libs/macos/
+          mv ../../spritestudio7-sdk-libraries-macos/libssruntime.a libs/macos/
+          mv ../../spritestudio7-sdk-libraries-web/libssruntime.a libs/web/
+          mv ../../spritestudio7-sdk-libraries-ios/libssruntime.a libs/ios/
+          mv ../../spritestudio7-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
+          mv ../../spritestudio7-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
+          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64
+          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.a libs/android/arm32
+          mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
+          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
+          mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
+          # pushd libs/windows
+          # cp x86_64/ssconverter.lib ssconverter.windows.editor.x86_64.lib
+          # cp x86_64/ssconverter.lib ssconverter.windows.template_debug.x86_64.lib
+          # cp x86_64/ssconverter.lib ssconverter.windows.template_release.x86_64.lib
+          # cp x86_64/ssruntime.lib ssruntime.windows.editor.x86_64.lib
+          # cp x86_64/ssruntime.lib ssruntime.windows.template_debug.x86_64.lib
+          # cp x86_64/ssruntime.lib ssruntime.windows.template_release.x86_64.lib
+          # popd # libs/windows
+
+          popd # static/runtime
 
           # TODO: dynamic libraries
+          # rm -rf dynamic
           # mkdir -p dynamic/runtime
-          # cd dynamic/runtime
+          # pushd dynamic/runtime
           # mkdir -p libs
           # echo ${{ steps.commit.outputs }} > VERSION
           # ...
@@ -239,5 +267,5 @@ jobs:
       - name: Upload final release package
         uses: actions/upload-artifact@v4
         with:
-          name: ssplayer-godot-extension-${{ env.GODOT_VERSION_4 }}-${{ steps.commit.outputs.short }}
+          name: spritestudio7-sdk-static-libs
           path: output/static

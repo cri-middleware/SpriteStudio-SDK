@@ -10,4 +10,4 @@ ROOTDIR=$(cd $ROOTDIR && pwd -P)
 pushd ${ROOTDIR} > /dev/null
 cargo build --release
 
-popd $ROOTDIR > /dev/null
+popd > /dev/null

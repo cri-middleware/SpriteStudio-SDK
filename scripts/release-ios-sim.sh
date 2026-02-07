@@ -23,4 +23,4 @@ for lib in ${LIBS[@]}; do
     lipo -create target/aarch64-apple-ios-sim/release/${lib} target/x86_64-apple-ios/release/${lib} -output ${OUTPUT}/${lib}
 done
 
-popd $ROOTDIR > /dev/null
+popd > /dev/null

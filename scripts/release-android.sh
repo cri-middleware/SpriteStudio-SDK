@@ -16,4 +16,4 @@ pushd ${ROOTDIR} > /dev/null
 cargo ndk --target aarch64-linux-android build -p ssruntime --release
 cargo ndk --target armv7-linux-androideabi build -p ssruntime --release
 cargo ndk --target x86_64-linux-android build -p ssruntime --release
-popd $ROOTDIR > /dev/null
+popd > /dev/null

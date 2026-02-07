@@ -13,4 +13,4 @@ ROOTDIR=$(cd $ROOTDIR && pwd -P)
 pushd ${ROOTDIR} > /dev/null
 cargo build --target wasm32-unknown-unknown -p ssruntime --release
 
-popd $ROOTDIR > /dev/null
+popd > /dev/null
