@@ -423,6 +423,40 @@ impl From<&[ssab::ssab::ss::format::PartAnimationDataDeformT]> for PartAnimation
 }
 
 #[derive(Hash, Eq, PartialEq)]
+pub struct InitialEventsKey {
+    pub user: Option<PartAttributeUserDataKey>,
+    // TODO: impl
+    // pub signal: Option<PartAttributeSignalT>,
+    pub audio: Option<PartAttributeAudioKey>,
+    pub instance: Option<PartAttributeInstanceKey>,
+    pub effect: Option<PartAttributeEffectKey>,
+}
+impl From<&ssab::ssab::ss::format::InitialEventsT> for InitialEventsKey {
+    fn from(value: &ssab::ssab::ss::format::InitialEventsT) -> Self {
+        Self {
+            user: value.user.as_ref().map(|u| PartAttributeUserDataKey::from(u.as_ref())),
+            // TODO: impl
+            //signal: Option<PartAttributeSignalT>,
+            audio: value.audio.as_ref().map(|a| PartAttributeAudioKey::from(a.as_ref())),
+            instance: value.instance.as_ref().map(|i| PartAttributeInstanceKey::from(i.as_ref())),
+            effect: value.effect.as_ref().map(|e| PartAttributeEffectKey::from(e.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct InitialEventsVecKey {
+    pub v: Vec<InitialEventsKey>,
+}
+impl From<&[ssab::ssab::ss::format::InitialEventsT]> for InitialEventsVecKey {
+    fn from(value: &[ssab::ssab::ss::format::InitialEventsT]) -> Self {
+        Self {
+            v: value.iter().map(|v| InitialEventsKey::from(v)).collect(),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataKey {
     pub cell_array: Option<PartAnimationDataCellValueVecKey>,
     pub position_x_array: Option<PartAnimationDataFloatValueVecKey>,
@@ -793,6 +827,94 @@ impl From<&ssab::ssab::ss::format::PartAttributeInstanceT> for PartAttributeInst
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeUserDataKey {
+    pub integer: Option<IntValueEntryKey>,
+    pub rect: Option<RectKey>,
+    pub point: Option<Vec2Key>,
+    pub str: Option<String>,
+}
+impl From<&ssab::ssab::ss::format::PartAttributeUserDataT> for PartAttributeUserDataKey {
+    fn from(value: &ssab::ssab::ss::format::PartAttributeUserDataT) -> Self {
+        Self {
+            integer: value.integer.as_ref().map(|i| IntValueEntryKey::from(i.as_ref())),
+            rect: value.rect.as_ref().map(|r| RectKey::from(r.as_ref())),
+            point: value.point.as_ref().map(|p| Vec2Key::from(p.as_ref())),
+            str: value.str.clone(),
+        }
+    }
+}
+
+
+/* TODO: impl
+#[derive(Hash, Eq, PartialEq)]
+pub struct SignalCommandParamKey {
+    pub param_id: Option<String>,
+    pub type_: SignalCommandParamType,
+    pub value: SignalCommandParamValueT,
+}
+impl From<&ssab::ssab::ss::format::SignalCommandParamT> for SignalCommandParamKey {
+    fn from(value: &ssab::ssab::ss::format::SignalCommandParamT) -> Self {
+        Self {
+            active: value.active,
+            command_id: value.command_id.clone(),
+            params: value.params.as_ref().map(|p| p.iter().map(|v| SignalCommandParamT::from(v)).collect()),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeSignalKey {
+    pub active: bool,
+    pub command_id: Option<String>,
+    pub params: Option<Vec<SignalCommandParamT>>,
+}
+impl From<&ssab::ssab::ss::format::PartAttributeSignalT> for PartAttributeSignalKey {
+    fn from(value: &ssab::ssab::ss::format::PartAttributeSignalT) -> Self {
+        Self {
+            active: value.active,
+            command_id: value.command_id.clone(),
+            params: value.params.as_ref().map(|p| p.iter().map(|v| SignalCommandParamT::from(v)).collect()),
+        }
+    }
+}
+ */
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeAudioKey {
+    pub sound_list_id: i32,
+    pub sound_name: Option<String>,
+    pub loop_num: i32,
+}
+impl From<&ssab::ssab::ss::format::PartAttributeAudioT> for PartAttributeAudioKey {
+    fn from(value: &ssab::ssab::ss::format::PartAttributeAudioT) -> Self {
+        Self {
+            sound_list_id: value.sound_list_id,
+            sound_name: value.sound_name.clone(),
+            loop_num: value.loop_num,
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartAttributeEffectKey {
+    pub cur_keyframe: i32,
+    pub start_time: i32,
+    pub speed: ordered_float::OrderedFloat<f32>,
+    pub loopflag: i32,
+}
+impl From<&ssab::ssab::ss::format::PartAttributeEffectT> for PartAttributeEffectKey {
+    fn from(value: &ssab::ssab::ss::format::PartAttributeEffectT) -> Self {
+        Self {
+            cur_keyframe: value.cur_keyframe,
+            start_time: value.start_time,
+            speed: ordered_float::OrderedFloat(value.speed),
+            loopflag: value.loopflag,
+        }
+    }
+}
+
+
 
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>>>,
@@ -816,6 +938,11 @@ pub struct SsabCache<'a> {
     pub part_attributes_cache: HashMap<PartAttributesKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>,
     pub part_attributes_vec_cache: HashMap<PartAttributesVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>>>,
     pub part_attribute_instance_cache: HashMap<PartAttributeInstanceKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeInstance<'a>>>,
+    pub part_attribute_user_data_cache: HashMap<PartAttributeUserDataKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeUserData<'a>>>,
+    pub part_attribute_audio_cache: HashMap<PartAttributeAudioKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeAudio<'a>>>,
+    pub part_attribute_effect_cache: HashMap<PartAttributeEffectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeEffect<'a>>>,
+    pub initial_events_cache: HashMap<InitialEventsKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialEvents<'a>>>,
+    pub initial_events_vec_cache: HashMap<InitialEventsVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>>,
 
     pub part_type_none_cache: HashMap<String, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartTypeNone<'a>>>,
 
@@ -865,6 +992,11 @@ impl<'a> SsabCache<'a> {
             part_attributes_cache: HashMap::new(),
             part_attributes_vec_cache: HashMap::new(),
             part_attribute_instance_cache: HashMap::new(),
+            part_attribute_user_data_cache: HashMap::new(),
+            part_attribute_audio_cache: HashMap::new(),
+            part_attribute_effect_cache: HashMap::new(),
+            initial_events_cache: HashMap::new(),
+            initial_events_vec_cache: HashMap::new(),
 
             part_type_none_cache: HashMap::new(),
 
@@ -1621,6 +1753,86 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
+    fn create_shared_user_data(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_user_data: &ssab::ssab::ss::format::PartAttributeUserDataT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeUserData<'a>> {
+        let key =  PartAttributeUserDataKey::from(part_attribute_user_data);
+        if let Some(&offset) = self.part_attribute_user_data_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::ss::format::PartAttributeUserDataArgs::default();
+        args.integer = part_attribute_user_data.integer.as_ref().map(|integer| self.create_shared_int_value_table(fb, integer));
+        args.rect = part_attribute_user_data.rect.as_ref().map(|rect| self.create_shared_rect(fb, rect));
+        args.point = part_attribute_user_data.point.as_ref().map(|point| self.create_shared_vec2(fb, point));
+        args.str = part_attribute_user_data.str.as_ref().map(|str| fb.create_shared_string(str));
+
+        let offset = ssab::ssab::ss::format::PartAttributeUserData::create(fb, &args);
+
+        self.part_attribute_user_data_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_audio(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_audio: &ssab::ssab::ss::format::PartAttributeAudioT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeAudio<'a>> {
+        let key =  PartAttributeAudioKey::from(part_attribute_audio);
+        if let Some(&offset) = self.part_attribute_audio_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::ss::format::PartAttributeAudioArgs::default();
+        args.sound_list_id = part_attribute_audio.sound_list_id;
+        args.sound_name = part_attribute_audio.sound_name.as_ref().map(|sound_name| fb.create_shared_string(sound_name));
+        args.loop_num = part_attribute_audio.loop_num;
+        let offset = ssab::ssab::ss::format::PartAttributeAudio::create(fb, &args);
+
+        self.part_attribute_audio_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_effect(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_attribute_effect: &ssab::ssab::ss::format::PartAttributeEffectT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeEffect<'a>> {
+        let key =  PartAttributeEffectKey::from(part_attribute_effect);
+        if let Some(&offset) = self.part_attribute_effect_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::ss::format::PartAttributeEffectArgs::default();
+        args.cur_keyframe = part_attribute_effect.cur_keyframe;
+        args.start_time = part_attribute_effect.start_time;
+        args.speed = part_attribute_effect.speed;
+        args.loopflag = part_attribute_effect.loopflag;
+        let offset = ssab::ssab::ss::format::PartAttributeEffect::create(fb, &args);
+
+        self.part_attribute_effect_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_initial_events(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, initial_events: &ssab::ssab::ss::format::InitialEventsT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::InitialEvents<'a>> {
+        let key =  InitialEventsKey::from(initial_events);
+        if let Some(&offset) = self.initial_events_cache.get(&key) {
+            return offset;
+        }
+
+        let mut args = ssab::ssab::ss::format::InitialEventsArgs::default();
+        args.user = initial_events.user.as_ref().map(|user| self.create_shared_user_data(fb, &user));
+        // TODO: impl
+        // args.signal = self.create_shared_signal_table(fb, &event.signal);
+        args.audio = initial_events.audio.as_ref().map(|audio| self.create_shared_audio(fb, audio));
+        args.instance = initial_events.instance.as_ref().map(|instance| self.create_shared_part_instance(fb, instance));
+        args.effect = initial_events.effect.as_ref().map(|effect| self.create_shared_effect(fb, effect));
+        let offset = ssab::ssab::ss::format::InitialEvents::create(fb, &args);
+        self.initial_events_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_initial_events_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, initial_events_array: &[ssab::ssab::ss::format::InitialEventsT]) -> ::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>> {
+        let key = InitialEventsVecKey::from(initial_events_array);
+        if let Some(&offset) = self.initial_events_vec_cache.get(&key) {
+            return offset;
+        }
+        let v = initial_events_array.iter().map(|t| self.create_shared_initial_events(fb, t)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&v);
+        self.initial_events_vec_cache.insert(key, offset);
+        offset
+    }
+
     fn create_shared_part_type(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, part_type: &ssab::ssab::ss::format::PartTypeT) -> flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset> {
         match part_type {
             ssab::ssab::ss::format::PartTypeT::PartTypeShape(v) => {
@@ -1854,6 +2066,7 @@ impl<'a> SsabCache<'a> {
             args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
             args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
             args.events = animation_data_t.events.as_ref().map(|events| { self.create_shared_events_per_frame(fb, events) });
+            args.initial_events = animation_data_t.initial_events.as_ref().map(|initial_events| { self.create_shared_initial_events_list(fb, initial_events) });
             args.labels = animation_data_t.labels.as_ref().map(|labels| {
                 let v = labels.iter().map(|label| {
                     self.create_shared_label(fb, label)
