@@ -534,11 +534,11 @@ table InitialPartAttributes {
 }
 
 table InitialEvents {
-  users: [EventUserData];
-  signals: [EventSignal];
-  audios: [EventAudio];
-  instances: [EventInstance];
-  effects: [EventEffect];
+  user: EventUserData;
+  signal: EventSignal;
+  audio: EventAudio;
+  instance: EventInstance;
+  effect: EventEffect;
 }
 
 table PartTypeNone {
@@ -777,7 +777,7 @@ table AnimationData {
   parts_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
-  initial_events: InitialEvents;
+  initial_events: [InitialEvents];
 
   labels: [Label];
 

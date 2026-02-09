@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-extern crate alloc;
 
 fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::ss::format::LabelT> {
     let mut v = labels.iter().map(|label| {
@@ -598,18 +597,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeMask;
                 });
             },
-            sspj::ssattribute::SsAttributeKind::User(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Signal(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Instance(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Effect(_) => {
-                // Empty.
-            },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
@@ -630,130 +617,19 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeDeform;
                 });
             },
-            sspj::ssattribute::SsAttributeKind::Audio(_) => {
+            _ => {
                 // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    p_args.texture = crate::utils::fnv1a_hash_str(&_key.value.texture_name);
-                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeTexture;
-                });
             },
         }
     });
 }
 
-fn merge_setup_attributes_to_part_event_t(p_args: &mut ssab::ssab::ss::format::InitialEventsT, parts_map: &HashMap<String, &sspj::ssae::SsPart>, part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::format::InitialEventsT>, parts_map: &HashMap<String, &sspj::ssae::SsPart>, part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+    let mut initial_event_t = ssab::ssab::ss::format::InitialEventsT::default();
+    let mut flag_exist_event = false;
+
     setup_attributes.iter().for_each(|attribute| {
         match attribute {
-            sspj::ssattribute::SsAttributeKind::Cell(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::PosX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::PosY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::PosZ(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::RotX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::RotY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::RotZ(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::SclX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::SclY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::LosclX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::LosclY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Alpha(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::LoAlpha(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Prio(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::FlipH(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::FlipV(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Hide(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::PartsColor(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Color => {
-                /* MEMO: Not Supported (Feature prior to Ver.6.0) */
-            },
-            sspj::ssattribute::SsAttributeKind::Shader(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Vertex(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::PivotX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::PivotY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::AnchorX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::AnchorY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::SizeX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::SizeY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::ImgFlipH(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::ImgFlipV(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::UvtX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::UvtY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::UvrZ(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::UvsX(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::UvsY(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Boundr(_) => {
-                // Empty.
-            },
-            sspj::ssattribute::SsAttributeKind::Mask(_) => {
-                // Empty.
-            },
             sspj::ssattribute::SsAttributeKind::User(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     let mut value = ssab::ssab::ss::format::PartAttributeUserDataT::default();
@@ -781,7 +657,9 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut ssab::ssab::ss::format::I
                     let mut event = ssab::ssab::ss::format::EventUserDataT::default();
                     event.part_index = part_index;
                     event.value = Some(Box::new(value));
-                    p_args.users.get_or_insert_with(Vec::new).push(event);
+
+                    initial_event_t.user = Some(Box::new(event));
+                    flag_exist_event = true;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Signal(v) => {
@@ -844,7 +722,9 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut ssab::ssab::ss::format::I
                         let mut event = ssab::ssab::ss::format::EventSignalT::default();
                         event.part_index = part_index;
                         event.value = Some(Box::new(value));
-                        p_args.signals.get_or_insert_with(Vec::new).push(event);
+
+                        initial_event_t.signal = Some(Box::new(event));
+                        flag_exist_event = true;
                     });
                 });
             },
@@ -863,7 +743,9 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut ssab::ssab::ss::format::I
                     let mut event = ssab::ssab::ss::format::EventInstanceT::default();
                     event.part_index = part_index;
                     event.value = Some(Box::new(value));
-                    p_args.instances.get_or_insert_with(Vec::new).push(event);
+
+                    initial_event_t.instance = Some(Box::new(event));
+                    flag_exist_event = true;
                 });
             },
             sspj::ssattribute::SsAttributeKind::Effect(v) => {
@@ -877,11 +759,10 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut ssab::ssab::ss::format::I
                     let mut event = ssab::ssab::ss::format::EventEffectT::default();
                     event.part_index = part_index;
                     event.value = Some(Box::new(value));
-                    p_args.effects.get_or_insert_with(Vec::new).push(event);
+
+                    initial_event_t.effect = Some(Box::new(event));
+                    flag_exist_event = true;
                 });
-            },
-            sspj::ssattribute::SsAttributeKind::Deform(_) => {
-                // Empty.
             },
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
@@ -893,14 +774,20 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut ssab::ssab::ss::format::I
                     let mut event = ssab::ssab::ss::format::EventAudioT::default();
                     event.part_index = part_index;
                     event.value = Some(Box::new(value));
-                    p_args.audios.get_or_insert_with(Vec::new).push(event);
+
+                    initial_event_t.audio = Some(Box::new(event));
+                    flag_exist_event = true;
                 });
             },
-            sspj::ssattribute::SsAttributeKind::Texchange(_) => {
+            _ => {
                 // Empty.
             },
         }
     });
+
+    if flag_exist_event {
+        p_args.push(initial_event_t);
+    }
 }
 
 fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT>{
@@ -914,8 +801,8 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_
     }).collect::<Vec<_>>()
 }
 
-fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, setup_animation: &sspj::ssae::SsAnimation) -> Option<alloc::boxed::Box<ssab::ssab::ss::format::InitialEventsT>> {
-    let mut events_t = ssab::ssab::ss::format::InitialEventsT::default();
+fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, setup_animation: &sspj::ssae::SsAnimation) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
+    let mut events_t = Vec::<ssab::ssab::ss::format::InitialEventsT>::new();
     for part_anime in &setup_animation.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
             // not found part (an illegal case)
@@ -924,7 +811,8 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
 
         merge_setup_attributes_to_part_event_t(&mut events_t, parts_map, p.array_index as u16, &part_anime.attributes);
    }
-    Some(alloc::boxed::Box::new(events_t))
+
+    Some(events_t)
 }
 
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
