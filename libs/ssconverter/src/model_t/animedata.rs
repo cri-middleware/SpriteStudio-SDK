@@ -654,11 +654,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
                     });
                     value.str = _key.value.user_string.as_ref().map(|v| v.to_string());
 
-                    let mut event = ssab::ssab::ss::format::EventUserDataT::default();
-                    event.part_index = part_index;
-                    event.value = Some(Box::new(value));
-
-                    initial_event_t.user = Some(Box::new(event));
+                    initial_event_t.user = Some(Box::new(value));
                     flag_exist_event = true;
                 });
             },
@@ -719,11 +715,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
                             Some(params)
                         };
 
-                        let mut event = ssab::ssab::ss::format::EventSignalT::default();
-                        event.part_index = part_index;
-                        event.value = Some(Box::new(value));
-
-                        initial_event_t.signal = Some(Box::new(event));
+                        initial_event_t.signal = Some(Box::new(value));
                         flag_exist_event = true;
                     });
                 });
@@ -740,11 +732,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
                     value.end_offset = _key.value.end_offset;
                     value.speed = _key.value.speed;
 
-                    let mut event = ssab::ssab::ss::format::EventInstanceT::default();
-                    event.part_index = part_index;
-                    event.value = Some(Box::new(value));
-
-                    initial_event_t.instance = Some(Box::new(event));
+                    initial_event_t.instance = Some(Box::new(value));
                     flag_exist_event = true;
                 });
             },
@@ -756,11 +744,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
                     value.speed = _key.value.speed;
                     value.loopflag;
 
-                    let mut event = ssab::ssab::ss::format::EventEffectT::default();
-                    event.part_index = part_index;
-                    event.value = Some(Box::new(value));
-
-                    initial_event_t.effect = Some(Box::new(event));
+                    initial_event_t.effect = Some(Box::new(value));
                     flag_exist_event = true;
                 });
             },
@@ -771,11 +755,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
                     value.sound_name = Some(_key.value.sound_name.to_string());
                     value.loop_num = _key.value.loop_num;
 
-                    let mut event = ssab::ssab::ss::format::EventAudioT::default();
-                    event.part_index = part_index;
-                    event.value = Some(Box::new(value));
-
-                    initial_event_t.audio = Some(Box::new(event));
+                    initial_event_t.audio = Some(Box::new(value));
                     flag_exist_event = true;
                 });
             },
@@ -786,7 +766,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
     });
 
     if flag_exist_event {
-        p_args.push(initial_event_t);
+        p_args[part_index as usize] = initial_event_t;
     }
 }
 
@@ -803,6 +783,8 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_
 
 fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, setup_animation: &sspj::ssae::SsAnimation) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
     let mut events_t = Vec::<ssab::ssab::ss::format::InitialEventsT>::new();
+    events_t.resize(parts_map.len(), ssab::ssab::ss::format::InitialEventsT::default());
+
     for part_anime in &setup_animation.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
             // not found part (an illegal case)
