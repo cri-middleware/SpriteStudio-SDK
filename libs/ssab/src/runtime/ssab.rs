@@ -9553,39 +9553,39 @@ impl<'a> InitialEvents<'a> {
 
 
   #[inline]
-  pub fn user(&self) -> Option<EventUserData<'a>> {
+  pub fn user(&self) -> Option<PartAttributeUserData<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<EventUserData>>(InitialEvents::VT_USER, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeUserData>>(InitialEvents::VT_USER, None)}
   }
   #[inline]
-  pub fn signal(&self) -> Option<EventSignal<'a>> {
+  pub fn signal(&self) -> Option<PartAttributeSignal<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<EventSignal>>(InitialEvents::VT_SIGNAL, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeSignal>>(InitialEvents::VT_SIGNAL, None)}
   }
   #[inline]
-  pub fn audio(&self) -> Option<EventAudio<'a>> {
+  pub fn audio(&self) -> Option<PartAttributeAudio<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<EventAudio>>(InitialEvents::VT_AUDIO, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeAudio>>(InitialEvents::VT_AUDIO, None)}
   }
   #[inline]
-  pub fn instance(&self) -> Option<EventInstance<'a>> {
+  pub fn instance(&self) -> Option<PartAttributeInstance<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<EventInstance>>(InitialEvents::VT_INSTANCE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeInstance>>(InitialEvents::VT_INSTANCE, None)}
   }
   #[inline]
-  pub fn effect(&self) -> Option<EventEffect<'a>> {
+  pub fn effect(&self) -> Option<PartAttributeEffect<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<EventEffect>>(InitialEvents::VT_EFFECT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeEffect>>(InitialEvents::VT_EFFECT, None)}
   }
 }
 
@@ -9595,21 +9595,21 @@ impl ::flatbuffers::Verifiable for InitialEvents<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<EventUserData>>("user", Self::VT_USER, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<EventSignal>>("signal", Self::VT_SIGNAL, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<EventAudio>>("audio", Self::VT_AUDIO, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<EventInstance>>("instance", Self::VT_INSTANCE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<EventEffect>>("effect", Self::VT_EFFECT, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeUserData>>("user", Self::VT_USER, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeSignal>>("signal", Self::VT_SIGNAL, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeAudio>>("audio", Self::VT_AUDIO, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeInstance>>("instance", Self::VT_INSTANCE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeEffect>>("effect", Self::VT_EFFECT, false)?
      .finish();
     Ok(())
   }
 }
 pub struct InitialEventsArgs<'a> {
-    pub user: Option<::flatbuffers::WIPOffset<EventUserData<'a>>>,
-    pub signal: Option<::flatbuffers::WIPOffset<EventSignal<'a>>>,
-    pub audio: Option<::flatbuffers::WIPOffset<EventAudio<'a>>>,
-    pub instance: Option<::flatbuffers::WIPOffset<EventInstance<'a>>>,
-    pub effect: Option<::flatbuffers::WIPOffset<EventEffect<'a>>>,
+    pub user: Option<::flatbuffers::WIPOffset<PartAttributeUserData<'a>>>,
+    pub signal: Option<::flatbuffers::WIPOffset<PartAttributeSignal<'a>>>,
+    pub audio: Option<::flatbuffers::WIPOffset<PartAttributeAudio<'a>>>,
+    pub instance: Option<::flatbuffers::WIPOffset<PartAttributeInstance<'a>>>,
+    pub effect: Option<::flatbuffers::WIPOffset<PartAttributeEffect<'a>>>,
 }
 impl<'a> Default for InitialEventsArgs<'a> {
   #[inline]
@@ -9630,24 +9630,24 @@ pub struct InitialEventsBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> InitialEventsBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_user(&mut self, user: ::flatbuffers::WIPOffset<EventUserData<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<EventUserData>>(InitialEvents::VT_USER, user);
+  pub fn add_user(&mut self, user: ::flatbuffers::WIPOffset<PartAttributeUserData<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeUserData>>(InitialEvents::VT_USER, user);
   }
   #[inline]
-  pub fn add_signal(&mut self, signal: ::flatbuffers::WIPOffset<EventSignal<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<EventSignal>>(InitialEvents::VT_SIGNAL, signal);
+  pub fn add_signal(&mut self, signal: ::flatbuffers::WIPOffset<PartAttributeSignal<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeSignal>>(InitialEvents::VT_SIGNAL, signal);
   }
   #[inline]
-  pub fn add_audio(&mut self, audio: ::flatbuffers::WIPOffset<EventAudio<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<EventAudio>>(InitialEvents::VT_AUDIO, audio);
+  pub fn add_audio(&mut self, audio: ::flatbuffers::WIPOffset<PartAttributeAudio<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeAudio>>(InitialEvents::VT_AUDIO, audio);
   }
   #[inline]
-  pub fn add_instance(&mut self, instance: ::flatbuffers::WIPOffset<EventInstance<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<EventInstance>>(InitialEvents::VT_INSTANCE, instance);
+  pub fn add_instance(&mut self, instance: ::flatbuffers::WIPOffset<PartAttributeInstance<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeInstance>>(InitialEvents::VT_INSTANCE, instance);
   }
   #[inline]
-  pub fn add_effect(&mut self, effect: ::flatbuffers::WIPOffset<EventEffect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<EventEffect>>(InitialEvents::VT_EFFECT, effect);
+  pub fn add_effect(&mut self, effect: ::flatbuffers::WIPOffset<PartAttributeEffect<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeEffect>>(InitialEvents::VT_EFFECT, effect);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> InitialEventsBuilder<'a, 'b, A> {

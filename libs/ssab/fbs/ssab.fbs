@@ -534,11 +534,11 @@ table InitialPartAttributes {
 }
 
 table InitialEvents {
-  user: EventUserData;
-  signal: EventSignal;
-  audio: EventAudio;
-  instance: EventInstance;
-  effect: EventEffect;
+  user: PartAttributeUserData;
+  signal: PartAttributeSignal;
+  audio: PartAttributeAudio;
+  instance: PartAttributeInstance;
+  effect: PartAttributeEffect;
 }
 
 table PartTypeNone {
