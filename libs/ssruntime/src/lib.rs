@@ -56,7 +56,7 @@ impl<'a> Context<'a> {
 
     pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<bool, std::io::Error> {
         self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
-        let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else { 
+        let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
         };
         self.validate_ssab_data(data)
@@ -124,6 +124,10 @@ impl<'a> Context<'a> {
     // setting getter functions
     pub fn is_playing(&self) -> bool {
         self.controller.is_playing()
+    }
+
+    pub fn is_pausing(&self) -> bool {
+        self.controller.is_pausing()
     }
 
     pub fn get_skip_frames(&mut self) -> bool {
