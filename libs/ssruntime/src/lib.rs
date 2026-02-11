@@ -1,4 +1,5 @@
 
+/// cbindgen:ignore
 mod runtime;
 pub mod core;
 
