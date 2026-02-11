@@ -6,19 +6,25 @@ use std::error::Error;
 use vergen_gitcl::{Emitter, GitclBuilder};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // Tell cargo to rerun this script if src/lib.rs changes
-    println!("cargo:rerun-if-changed=src/lib.rs");
+    // Tell cargo to rerun this script if src directory changes
+    println!("cargo:rerun-if-changed=src");
 
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let output_file = PathBuf::from(&crate_dir)
         .join("target")
         .join("ssconverter.h");
 
-    let config = cbindgen::Builder::new()
+    let config = match cbindgen::Builder::new()
         .with_crate(&crate_dir)
         .with_language(cbindgen::Language::Cxx)
         .generate()
-        .expect("Unable to generate bindings");
+    {
+        Ok(bindings) => bindings,
+        Err(e) => {
+            eprintln!("Error generating C++ bindings: {:?}", e);
+            panic!("Unable to generate bindings: {}", e);
+        }
+    };
 
     config.write_to_file(output_file);
 
