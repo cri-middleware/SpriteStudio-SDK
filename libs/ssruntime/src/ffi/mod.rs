@@ -25,14 +25,14 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *mut c_uchar, len: usize) -> bool {
+pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
     let r = ffi_context.ctx.load_copy( unsafe { std::slice::from_raw_parts(ptr as *const u8, len) } );
     r.unwrap_or(false)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *mut c_uchar, len: usize) -> bool {
+pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
     let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
     r.unwrap_or(false)
@@ -51,12 +51,12 @@ pub extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut 
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *mut c_uchar {
+pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_uchar {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
     let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() else {
         return std::ptr::null_mut();
     };
-    ssab_buf.as_ptr() as *mut c_uchar
+    ssab_buf.as_ptr() as *const c_uchar
 }
 
 #[unsafe(no_mangle)]
@@ -69,7 +69,7 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *mut c_char) -> bool {
+pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
 
     let c_buf = unsafe { CStr::from_ptr(name) };
@@ -111,6 +111,12 @@ pub extern "C" fn ss_runtime_is_end_frame_reached(context: *mut c_void) -> bool 
 pub extern "C" fn ss_runtime_is_playing(context: *mut c_void) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
     ffi_context.ctx.is_playing()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_pausing(context: *mut c_void) -> bool {
+    let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
+    ffi_context.ctx.is_pausing()
 }
 
 #[unsafe(no_mangle)]

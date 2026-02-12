@@ -13,7 +13,7 @@ pub enum PlaybackDirection {
 pub struct PlaybackController {
     is_pausing: bool,
     is_playing: bool,
-    
+
     anime_data_start_frame: i32,
     anime_data_end_frame: i32,
     anime_data_fps: i32,
@@ -51,6 +51,10 @@ impl PlaybackController {
 
     pub fn is_playing(&self) -> bool {
         self.is_playing
+    }
+
+    pub fn is_pausing(&self) -> bool {
+        self.is_pausing
     }
 
     pub fn get_skip_frames(&mut self) -> bool {
