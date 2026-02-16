@@ -9675,84 +9675,6 @@ impl ::core::fmt::Debug for InitialEvents<'_> {
       ds.finish()
   }
 }
-pub enum PartTypeNoneOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartTypeNone<'a> {
-  pub _tab: ::flatbuffers::Table<'a>,
-}
-
-impl<'a> ::flatbuffers::Follow<'a> for PartTypeNone<'a> {
-  type Inner = PartTypeNone<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> PartTypeNone<'a> {
-
-  #[inline]
-  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartTypeNone { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    _args: &'args PartTypeNoneArgs
-  ) -> ::flatbuffers::WIPOffset<PartTypeNone<'bldr>> {
-    let mut builder = PartTypeNoneBuilder::new(_fbb);
-    builder.finish()
-  }
-
-}
-
-impl ::flatbuffers::Verifiable for PartTypeNone<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut ::flatbuffers::Verifier, pos: usize
-  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-    v.visit_table(pos)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct PartTypeNoneArgs {
-}
-impl<'a> Default for PartTypeNoneArgs {
-  #[inline]
-  fn default() -> Self {
-    PartTypeNoneArgs {
-    }
-  }
-}
-
-pub struct PartTypeNoneBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeNoneBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartTypeNoneBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartTypeNoneBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartTypeNone<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    ::flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl ::core::fmt::Debug for PartTypeNone<'_> {
-  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartTypeNone");
-      ds.finish()
-  }
-}
 pub enum PartTypeShapeOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -10592,13 +10514,13 @@ impl<'a> PartData<'a> {
   }
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_null(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_null(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeNull {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10607,13 +10529,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_normal(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_normal(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeNormal {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10682,13 +10604,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_armature(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_armature(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeArmature {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10712,13 +10634,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_mesh(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_mesh(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeMesh {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10727,13 +10649,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_movenode(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_movenode(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeMovenode {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10742,13 +10664,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_constraint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_constraint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeConstraint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10757,13 +10679,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_mask(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_mask(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeMask {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10772,13 +10694,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_joint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_joint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeJoint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10787,13 +10709,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_bonepoint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_bonepoint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeBonepoint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10802,13 +10724,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_transform_constraint(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_transform_constraint(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeTransformConstraint {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10817,13 +10739,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_camera(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_camera(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeCamera {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10832,13 +10754,13 @@ impl<'a> PartData<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn part_type_as_part_type_audio(&self) -> Option<PartTypeNone<'a>> {
+  pub fn part_type_as_part_type_audio(&self) -> Option<NoneValueEntry<'a>> {
     if self.part_type_type() == PartType::PartTypeAudio {
       self.part_type().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { PartTypeNone::init_from_table(t) }
+       unsafe { NoneValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -10859,23 +10781,23 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
      .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
      .visit_union::<PartType, _>("part_type_type", Self::VT_PART_TYPE_TYPE, "part_type", Self::VT_PART_TYPE, false, |key, v, pos| {
         match key {
-          PartType::PartTypeNull => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeNull", pos),
-          PartType::PartTypeNormal => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeNormal", pos),
+          PartType::PartTypeNull => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeNull", pos),
+          PartType::PartTypeNormal => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeNormal", pos),
           PartType::PartTypeShape => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeShape>>("PartType::PartTypeShape", pos),
           PartType::PartTypeText => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeText>>("PartType::PartTypeText", pos),
           PartType::PartTypeNines => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNines>>("PartType::PartTypeNines", pos),
           PartType::PartTypeInstance => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeInstance>>("PartType::PartTypeInstance", pos),
-          PartType::PartTypeArmature => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeArmature", pos),
+          PartType::PartTypeArmature => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeArmature", pos),
           PartType::PartTypeEffect => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeEffect>>("PartType::PartTypeEffect", pos),
-          PartType::PartTypeMesh => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeMesh", pos),
-          PartType::PartTypeMovenode => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeMovenode", pos),
-          PartType::PartTypeConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeConstraint", pos),
-          PartType::PartTypeMask => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeMask", pos),
-          PartType::PartTypeJoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeJoint", pos),
-          PartType::PartTypeBonepoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeBonepoint", pos),
-          PartType::PartTypeTransformConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeTransformConstraint", pos),
-          PartType::PartTypeCamera => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeCamera", pos),
-          PartType::PartTypeAudio => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<PartTypeNone>>("PartType::PartTypeAudio", pos),
+          PartType::PartTypeMesh => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeMesh", pos),
+          PartType::PartTypeMovenode => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeMovenode", pos),
+          PartType::PartTypeConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeConstraint", pos),
+          PartType::PartTypeMask => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeMask", pos),
+          PartType::PartTypeJoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeJoint", pos),
+          PartType::PartTypeBonepoint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeBonepoint", pos),
+          PartType::PartTypeTransformConstraint => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeTransformConstraint", pos),
+          PartType::PartTypeCamera => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeCamera", pos),
+          PartType::PartTypeAudio => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeAudio", pos),
           _ => Ok(()),
         }
      })?

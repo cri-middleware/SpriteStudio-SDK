@@ -541,10 +541,6 @@ table InitialEvents {
   effect: PartAttributeEffect;
 }
 
-table PartTypeNone {
-  // nothing
-}
-
 enum ShapeType: ubyte {
   Unknown,
   Triangle,
@@ -604,23 +600,23 @@ table PartTypeEffect {
 }
 
 union PartType {
-  PartTypeNull: PartTypeNone,
-  PartTypeNormal: PartTypeNone,
+  PartTypeNull: NoneValueEntry,
+  PartTypeNormal: NoneValueEntry,
   PartTypeShape,
   PartTypeText,
   PartTypeNines,
   PartTypeInstance,
-  PartTypeArmature: PartTypeNone,
+  PartTypeArmature: NoneValueEntry,
   PartTypeEffect,
-  PartTypeMesh: PartTypeNone,
-  PartTypeMovenode: PartTypeNone,
-  PartTypeConstraint: PartTypeNone,
-  PartTypeMask: PartTypeNone,
-  PartTypeJoint: PartTypeNone,
-  PartTypeBonepoint: PartTypeNone,
-  PartTypeTransformConstraint: PartTypeNone,
-  PartTypeCamera: PartTypeNone,
-  PartTypeAudio: PartTypeNone,
+  PartTypeMesh: NoneValueEntry,
+  PartTypeMovenode: NoneValueEntry,
+  PartTypeConstraint: NoneValueEntry,
+  PartTypeMask: NoneValueEntry,
+  PartTypeJoint: NoneValueEntry,
+  PartTypeBonepoint: NoneValueEntry,
+  PartTypeTransformConstraint: NoneValueEntry,
+  PartTypeCamera: NoneValueEntry,
+  PartTypeAudio: NoneValueEntry,
 }
 
 table PartData {
