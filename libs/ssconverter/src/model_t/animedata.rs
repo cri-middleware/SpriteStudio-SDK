@@ -29,7 +29,8 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, parts_map: &H
                         u_args.part_index = part_index;
                         let mut userdata = ssab::ssab::ss::format::PartAttributeUserDataT::default();
                         userdata.integer = key.value.integer.as_ref().map(|v| {
-                            let mut i = ssab::ssab::ss::format::IntValueEntryT::default(); i.value = *v;
+                            let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                            i.value = *v;
                             Box::new(i)
                         });
                         userdata.rect = key.value.rect.as_ref().map(|v| {
@@ -209,6 +210,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation));
     anime_data_t.parts_mesh_data = None;
     anime_data_t.events = convert_events_per_frames(&anime_data, parts_map);
+    anime_data_t.initial_events = convert_parts_initial_events(&anime_data, parts_map, setup_animation);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
@@ -255,6 +257,9 @@ fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType
 }
 
 fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+    // MEMO: This function. Since only “setup” is targeted, “key.time == 0” might not be necessary.
+    //       It's required because the caller is attempting to composite with frame 0,
+    //         but that should probably be done during key-frame placement ?    Yuzu.
     setup_attributes.iter().for_each(|attribute| {
 //        p_args.update_flag = 0;
         match attribute {
@@ -592,62 +597,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeMask;
                 });
             },
-            sspj::ssattribute::SsAttributeKind::User(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    let mut value = ssab::ssab::ss::format::PartAttributeUserDataT::default();
-                    value.integer = _key.value.integer.as_ref().map(|v| {
-                        let mut i = ssab::ssab::ss::format::IntValueEntryT::default(); i.value = *v;
-                        Box::new(i)
-                    });
-                    value.rect = _key.value.rect.as_ref().map(|v| {
-                        let mut r = ssab::ssab::ss::format::RectT::default();
-                        r.x1 = v.x1 as f32;
-                        r.x2 = v.x2 as f32;
-                        r.y1 = v.y1 as f32;
-                        r.y2 = v.y2 as f32;
-                        Box::new(r)
-                    });
-                    value.point = _key.value.point.as_ref().map(|v| {
-                        let mut p = ssab::ssab::ss::format::Vec2T::default();
-                        p.v1 = v.x;
-                        p.v2 = v.y;
-                        Box::new(p)
-                    });
-                    value.str = _key.value.user_string.as_ref().map(|v| v.to_string());
-                    p_args.user_data = Some(Box::new(value));
-                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUserData;
-                });
-            },
-            sspj::ssattribute::SsAttributeKind::Signal(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    // TODO: impl.
-                });
-            },
-            sspj::ssattribute::SsAttributeKind::Instance(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    let mut value = ssab::ssab::ss::format::PartAttributeInstanceT::default();
-                    value.pingpong = _key.value.pingpong;
-                    value.independent = _key.value.independent;
-                    value.loop_num = _key.value.loop_num;
-                    value.start_label_hash = crate::utils::fnv1a_hash_str(&_key.value.start_label);
-                    value.start_offset = _key.value.start_offset;
-                    value.end_label_hash = crate::utils::fnv1a_hash_str(&_key.value.end_label);
-                    value.end_offset = _key.value.end_offset;
-                    value.speed = _key.value.speed;
-                    p_args.instance = Some(Box::new(value));
-                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeInstance;
-                });
-            },
-            sspj::ssattribute::SsAttributeKind::Effect(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    let mut value = ssab::ssab::ss::format::PartAttributeEffectT::default();
-                    value.cur_keyframe;
-                    value.start_time = _key.value.start_time;
-                    value.speed = _key.value.speed;
-                    value.loopflag;
-                    p_args.effect = Some(Box::new(value));
-                });
-            },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
@@ -668,24 +617,157 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeDeform;
                 });
             },
+            _ => {
+                // Empty.
+            },
+        }
+    });
+}
+
+fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::format::InitialEventsT>, parts_map: &HashMap<String, &sspj::ssae::SsPart>, part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+    let mut initial_event_t = ssab::ssab::ss::format::InitialEventsT::default();
+    let mut flag_exist_event = false;
+
+    setup_attributes.iter().for_each(|attribute| {
+        match attribute {
+            sspj::ssattribute::SsAttributeKind::User(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                    let mut value = ssab::ssab::ss::format::PartAttributeUserDataT::default();
+                    value.integer = _key.value.integer.as_ref().map(|v| {
+                        let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                        i.value = *v;
+                        Box::new(i)
+                    });
+                    value.rect = _key.value.rect.as_ref().map(|v| {
+                        let mut r = ssab::ssab::ss::format::RectT::default();
+                        r.x1 = v.x1 as f32;
+                        r.x2 = v.x2 as f32;
+                        r.y1 = v.y1 as f32;
+                        r.y2 = v.y2 as f32;
+                        Box::new(r)
+                    });
+                    value.point = _key.value.point.as_ref().map(|v| {
+                        let mut p = ssab::ssab::ss::format::Vec2T::default();
+                        p.v1 = v.x;
+                        p.v2 = v.y;
+                        Box::new(p)
+                    });
+                    value.str = _key.value.user_string.as_ref().map(|v| v.to_string());
+
+                    initial_event_t.user = Some(Box::new(value));
+                    flag_exist_event = true;
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Signal(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                    _key.value.commands.iter().for_each(|command| {
+                        let mut value = ssab::ssab::ss::format::PartAttributeSignalT::default();
+                        value.active = command.active;
+                        value.command_id = Some(command.command_id.to_string());
+                        value.params = if command.params.is_empty() { None } else {
+                            let params = command.params.iter().map(|p| {
+                                let mut command_param_t = ssab::ssab::ss::format::SignalCommandParamT::default();
+                                command_param_t.param_id = Some(p.param_id.to_string());
+                                command_param_t.type_ = match &p.param_type {
+                                    sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::ss::format::SignalCommandParamType::Bool,
+                                    sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::ss::format::SignalCommandParamType::Index,
+                                    sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::ss::format::SignalCommandParamType::Integer,
+                                    sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::ss::format::SignalCommandParamType::Floating,
+                                    sspj::ssattribute::SsAttributeSignalCommandParamType::Text => ssab::ssab::ss::format::SignalCommandParamType::Text,
+                                    sspj::ssattribute::SsAttributeSignalCommandParamType::None => ssab::ssab::ss::format::SignalCommandParamType::None,
+                                };
+
+                                command_param_t.value = match &p.value {
+                                    sspj::ssattribute::SsAttributeSignalCommandParamValue::Bool(v) => {
+                                        let mut b = ssab::ssab::ss::format::BoolValueEntryT::default();
+                                        b.value = *v;
+                                        ssab::ssab::ss::format::SignalCommandParamValueT::Bool(Box::new(b))
+                                    },
+                                    sspj::ssattribute::SsAttributeSignalCommandParamValue::Index(v) => {
+                                        let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                                        i.value = *v;
+                                        ssab::ssab::ss::format::SignalCommandParamValueT::Index(Box::new(i))
+                                    },
+                                    sspj::ssattribute::SsAttributeSignalCommandParamValue::Integer(v) => {
+                                        let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                                        i.value = *v;
+                                        ssab::ssab::ss::format::SignalCommandParamValueT::Integer(Box::new(i))
+                                    },
+                                    sspj::ssattribute::SsAttributeSignalCommandParamValue::Floating(v) =>{
+                                        let mut f = ssab::ssab::ss::format::FloatValueEntryT::default();
+                                        f.value = *v;
+                                        ssab::ssab::ss::format::SignalCommandParamValueT::Floating(Box::new(f))
+                                    },
+                                    sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
+                                        let mut s = ssab::ssab::ss::format::StringValueEntryT::default();
+                                        s.value = Some(v.to_string());
+                                        ssab::ssab::ss::format::SignalCommandParamValueT::Text(Box::new(s))
+                                    },
+                                    sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
+                                        let n = ssab::ssab::ss::format::NoneValueEntryT::default();
+                                        ssab::ssab::ss::format::SignalCommandParamValueT::None(Box::new(n))
+                                    },
+                                };
+
+                                command_param_t
+                            }).collect::<Vec<_>>();
+
+                            Some(params)
+                        };
+
+                        initial_event_t.signal = Some(Box::new(value));
+                        flag_exist_event = true;
+                    });
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Instance(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                    let mut value = ssab::ssab::ss::format::PartAttributeInstanceT::default();
+                    value.pingpong = _key.value.pingpong;
+                    value.independent = _key.value.independent;
+                    value.loop_num = _key.value.loop_num;
+                    value.start_label_hash = crate::utils::fnv1a_hash_str(&_key.value.start_label);
+                    value.start_offset = _key.value.start_offset;
+                    value.end_label_hash = crate::utils::fnv1a_hash_str(&_key.value.end_label);
+                    value.end_offset = _key.value.end_offset;
+                    value.speed = _key.value.speed;
+
+                    initial_event_t.instance = Some(Box::new(value));
+                    flag_exist_event = true;
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Effect(v) => {
+                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                    let mut value = ssab::ssab::ss::format::PartAttributeEffectT::default();
+                    value.cur_keyframe;
+                    value.start_time = _key.value.start_time;
+                    value.speed = _key.value.speed;
+                    value.loopflag;
+
+                    initial_event_t.effect = Some(Box::new(value));
+                    flag_exist_event = true;
+                });
+            },
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
                     let mut value = ssab::ssab::ss::format::PartAttributeAudioT::default();
                     value.sound_list_id = _key.value.sound_list_id;
                     value.sound_name = Some(_key.value.sound_name.to_string());
                     value.loop_num = _key.value.loop_num;
-                    p_args.audio = Some(Box::new(value));
-                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeAudio;
+
+                    initial_event_t.audio = Some(Box::new(value));
+                    flag_exist_event = true;
                 });
             },
-            sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    p_args.texture = crate::utils::fnv1a_hash_str(&_key.value.texture_name);
-                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeTexture;
-                });
+            _ => {
+                // Empty.
             },
         }
     });
+
+    if flag_exist_event {
+        p_args[part_index as usize] = initial_event_t;
+    }
 }
 
 fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT>{
@@ -693,10 +775,26 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_
         let mut part_attribute_t = ssab::ssab::ss::format::InitialPartAttributesT::default();
         // TODO: impl
         merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &setup_part_anime.attributes);
-        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);
+//        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);  // Probably don't need this.   Yuzu.
 
         part_attribute_t
     }).collect::<Vec<_>>()
+}
+
+fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, setup_animation: &sspj::ssae::SsAnimation) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
+    let mut events_t = Vec::<ssab::ssab::ss::format::InitialEventsT>::new();
+    events_t.resize(parts_map.len(), ssab::ssab::ss::format::InitialEventsT::default());
+
+    for part_anime in &setup_animation.part_animes {
+        let Some(p) = parts_map.get(&part_anime.part_name) else {
+            // not found part (an illegal case)
+            continue;
+        };
+
+        merge_setup_attributes_to_part_event_t(&mut events_t, parts_map, p.array_index as u16, &part_anime.attributes);
+   }
+
+    Some(events_t)
 }
 
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {

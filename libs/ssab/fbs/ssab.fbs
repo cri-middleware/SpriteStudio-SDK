@@ -481,11 +481,11 @@ enum PartAttributesUpdateFlags: ulong (bit_flags) {
   AttributeSkew,
   AttributeDeform,
   AttributeTexture,
-  AttributeUserData,    // only setup
-  AttributeSignal,      // only setup
-  AttributeAudio,       // only setup
-  AttributeInstance,    // only setup
-  AttributeEffect,      // only setup
+//  AttributeUserData,    // Reserved
+//  AttributeSignal,      // Reserved
+//  AttributeAudio,       // Reserved
+//  AttributeInstance,    // Reserved
+//  AttributeEffect,      // Reserved
 }
 
 table InitialPartAttributes {
@@ -531,8 +531,10 @@ table InitialPartAttributes {
   deform: PartAttributeDeform;
 
   texture: uint32 = 0;
+}
 
-  user_data: PartAttributeUserData;
+table InitialEvents {
+  user: PartAttributeUserData;
   signal: PartAttributeSignal;
   audio: PartAttributeAudio;
   instance: PartAttributeInstance;
@@ -775,6 +777,7 @@ table AnimationData {
   parts_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
+  initial_events: [InitialEvents];
 
   labels: [Label];
 
