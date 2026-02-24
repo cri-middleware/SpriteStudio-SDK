@@ -206,11 +206,11 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
-    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(anime_data, setup_animation));
-    anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation));
+    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation));
+    anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map));
     anime_data_t.parts_mesh_data = None;
     anime_data_t.events = convert_events_per_frames(&anime_data, parts_map);
-    anime_data_t.initial_events = convert_parts_initial_events(&anime_data, parts_map, setup_animation);
+    anime_data_t.initial_events = convert_parts_initial_events(&setup_animation, parts_map);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
@@ -624,7 +624,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
     });
 }
 
-fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::format::InitialEventsT>, parts_map: &HashMap<String, &sspj::ssae::SsPart>, part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::format::InitialEventsT>, part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
     let mut initial_event_t = ssab::ssab::ss::format::InitialEventsT::default();
     let mut flag_exist_event = false;
 
@@ -770,20 +770,653 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec::<ssab::ssab::ss::for
     }
 }
 
-fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT>{
-    anime_data.part_animes.iter().zip(setup_animation.part_animes.iter()).map(|(part_anime, setup_part_anime)| {
+fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT>{
+    anime_data.part_animes.iter().map(|part_anime| {
         let mut part_attribute_t = ssab::ssab::ss::format::InitialPartAttributesT::default();
         // TODO: impl
-        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &setup_part_anime.attributes);
+        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);
 //        merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);  // Probably don't need this.   Yuzu.
 
         part_attribute_t
     }).collect::<Vec<_>>()
 }
 
-fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, setup_animation: &sspj::ssae::SsAnimation) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
+fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
     let mut events_t = Vec::<ssab::ssab::ss::format::InitialEventsT>::new();
     events_t.resize(parts_map.len(), ssab::ssab::ss::format::InitialEventsT::default());
+
+    for part_anime in &anime_data.part_animes {
+        let Some(p) = parts_map.get(&part_anime.part_name) else {
+            // not found part (an illegal case)
+            continue;
+        };
+
+        merge_setup_attributes_to_part_event_t(&mut events_t, p.array_index as u16, &part_anime.attributes);
+   }
+
+    Some(events_t)
+}
+
+// fn vec_replace_or_add_by_frame_number<T>(vec: &mut Vec<T>, value: T) {
+//     if let Some(pos) = vec.iter().position(|&element| element.index == value.index) {
+//         vec[pos] = value;
+//     } else {
+//         vec.push(value);
+//     }
+// }
+fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, anime_data: &sspj::ssae::SsPartAnime) {
+    anime_data.attributes.iter().for_each(|attribute| {
+        match attribute {
+            sspj::ssattribute::SsAttributeKind::Cell(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut c_args = ssab::ssab::ss::format::PartAnimationDataCellValueT::default();
+                    c_args.index = key.time as u16;
+                    let mut value = ssab::ssab::ss::format::PartAttributeCellT::default();
+                    value.map_id = key.value.map_id;
+                    value.name_hash = crate::utils::fnv1a_hash_str(&key.value.name);
+                    c_args.value = Some(Box::new(value));
+
+                    if let Some(pos) = p_arg.cell_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == c_args.index) {
+                        p_arg.cell_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.cell_array.get_or_insert_default().push(c_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PosX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.position_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.position_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.position_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PosY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.position_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.position_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.position_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PosZ(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut z_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    z_args.index = key.time as u16;
+                    z_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    z_args.value = key.value;
+
+                    if let Some(pos) = p_arg.position_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
+                        p_arg.position_z_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.position_z_array.get_or_insert_default().push(z_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::RotX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.rotation_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.rotation_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.rotation_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::RotY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.rotation_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.rotation_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.rotation_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::RotZ(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut z_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    z_args.index = key.time as u16;
+                    z_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    z_args.value = key.value;
+
+                    if let Some(pos) = p_arg.rotation_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
+                        p_arg.rotation_z_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.rotation_z_array.get_or_insert_default().push(z_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SclX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.scale_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.scale_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SclY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.scale_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.scale_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::LosclX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.local_scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.local_scale_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.local_scale_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::LosclY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.local_scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.local_scale_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.local_scale_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Alpha(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut a_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    a_args.index = key.time as u16;
+                    a_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    a_args.value = key.value;
+
+                    if let Some(pos) = p_arg.alpha_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == a_args.index) {
+                        p_arg.alpha_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.alpha_array.get_or_insert_default().push(a_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut a_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    a_args.index = key.time as u16;
+                    a_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    a_args.value = key.value;
+
+                    if let Some(pos) = p_arg.local_alpha_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == a_args.index) {
+                        p_arg.local_alpha_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.local_alpha_array.get_or_insert_default().push(a_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Prio(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut p_args = ssab::ssab::ss::format::PartAnimationDataIntValueT::default();
+                    p_args.index = key.time as u16;
+                    p_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    p_args.value = key.value;
+
+                    if let Some(pos) = p_arg.priority_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == p_args.index) {
+                        p_arg.priority_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.priority_array.get_or_insert_default().push(p_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::FlipH(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut h_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                    h_args.index = key.time as u16;
+                    h_args.value = key.value;
+
+                    if let Some(pos) = p_arg.flip_h_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == h_args.index) {
+                        p_arg.flip_h_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.flip_h_array.get_or_insert_default().push(h_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::FlipV(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut v_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                    v_args.index = key.time as u16;
+                    v_args.value = key.value;
+
+                    if let Some(pos) = p_arg.flip_v_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == v_args.index) {
+                        p_arg.flip_v_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.flip_v_array.get_or_insert_default().push(v_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Hide(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut v_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                    v_args.index = key.time as u16;
+                    v_args.value = key.value;
+
+                    if let Some(pos) = p_arg.hide_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == v_args.index) {
+                        p_arg.hide_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.hide_array.get_or_insert_default().push(v_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut c_args = ssab::ssab::ss::format::PartAnimationDataPartColorT::default();
+                    c_args.index = key.time as u16;
+                    let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
+                    value.blend_type = convert_alpha_blend_type(&key.value.blend_type);
+                    let mut key_value;
+                    let mut rgba;
+                    key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = key.value.lt.rgba.a;
+                    rgba.r = key.value.lt.rgba.r;
+                    rgba.g = key.value.lt.rgba.g;
+                    rgba.b = key.value.lt.rgba.b;
+                    key_value.rgba = Some(Box::new(rgba));
+                    key_value.rate = key.value.lt.rate;
+                    value.lt = Some(Box::new(key_value));
+
+                    key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = key.value.rt.rgba.a;
+                    rgba.r = key.value.rt.rgba.r;
+                    rgba.g = key.value.rt.rgba.g;
+                    rgba.b = key.value.rt.rgba.b;
+                    key_value.rgba = Some(Box::new(rgba));
+                    key_value.rate = key.value.rt.rate;
+                    value.rt = Some(Box::new(key_value));
+
+                    key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = key.value.lb.rgba.a;
+                    rgba.r = key.value.lb.rgba.r;
+                    rgba.g = key.value.lb.rgba.g;
+                    rgba.b = key.value.lb.rgba.b;
+                    key_value.rgba = Some(Box::new(rgba));
+                    key_value.rate = key.value.lb.rate;
+                    value.lb = Some(Box::new(key_value));
+
+                    key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                    rgba = ssab::ssab::ss::format::U8RectT::default();
+                    rgba.a = key.value.rb.rgba.a;
+                    rgba.r = key.value.rb.rgba.r;
+                    rgba.g = key.value.rb.rgba.g;
+                    rgba.b = key.value.rb.rgba.b;
+                    key_value.rgba = Some(Box::new(rgba));
+                    key_value.rate = key.value.rb.rate;
+                    value.rb = Some(Box::new(key_value));
+
+                    c_args.value = Some(Box::new(value));
+
+                    if let Some(pos) = p_arg.part_color_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == c_args.index) {
+                        p_arg.part_color_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.part_color_array.get_or_insert_default().push(c_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Color => {
+                // TODO: impl
+            },
+            sspj::ssattribute::SsAttributeKind::Shader(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut s_args = ssab::ssab::ss::format::PartAnimationDataShaderT::default();
+                    s_args.index = key.time as u16;
+                    s_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
+                    value.id = Some(key.value.id.clone());
+                    value.id_hash = crate::utils::fnv1a_hash_str(&key.value.id);
+                    value.param0 = key.value.param0;
+                    value.param1 = key.value.param1;
+                    value.param2 = key.value.param2;
+                    value.param3 = key.value.param3;
+                    value.param4 = key.value.param4;
+                    value.param5 = key.value.param5;
+                    value.param6 = key.value.param6;
+                    value.param7 = key.value.param7;
+                    value.map0_id = key.value.map0.map_id;
+                    value.map0_name_hash = crate::utils::fnv1a_hash_str(&key.value.map0.name);
+                    value.map1_id = key.value.map1.map_id;
+                    value.map1_name_hash = crate::utils::fnv1a_hash_str(&key.value.map1.name);
+                    s_args.value = Some(Box::new(value));
+
+                    if let Some(pos) = p_arg.shader_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == s_args.index) {
+                        p_arg.shader_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.shader_array.get_or_insert_default().push(s_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Vertex(v) => {
+                v.keys.iter().for_each(|key| {
+                    if key.value.use_skew.is_some() && key.value.use_skew.unwrap() == true {
+                        // Skew
+                        let mut s_args = ssab::ssab::ss::format::PartAnimationDataVec2T::default();
+                        s_args.index = key.time as u16;
+                        s_args.interpolation = convert_interpolation_type(&key.ip_type);
+                        s_args.value = key.value.skew.as_ref().map(|v| {
+                            let mut value = ssab::ssab::ss::format::Vec2T::default();
+                            value.v1 = v.x;
+                            value.v2 = v.y;
+                            Box::new(value)
+                        });
+
+                        if let Some(pos) = p_arg.skew_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == s_args.index) {
+                            p_arg.skew_array.get_or_insert_default().remove(pos);
+                        }
+                        p_arg.skew_array.get_or_insert_default().push(s_args);
+                    } else {
+                        // Vertex
+                        let mut s_args = ssab::ssab::ss::format::PartAnimationDataVertexT::default();
+                        s_args.index = key.time as u16;
+                        s_args.interpolation = convert_interpolation_type(&key.ip_type);
+                        let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
+                        let mut v: ssab::ssab::ss::format::Vec2T;
+                        v = ssab::ssab::ss::format::Vec2T::default();
+                        key.value.lt.as_ref().map(|lt| {
+                            v.v1 = lt.x;
+                            v.v2 = lt.y;
+                        });
+                        value.lt = Some(Box::new(v));
+                        v = ssab::ssab::ss::format::Vec2T::default();
+                        key.value.rt.as_ref().map(|rt| {
+                            v.v1 = rt.x;
+                            v.v2 = rt.y;
+                        });
+                        value.rt = Some(Box::new(v));
+
+                        v = ssab::ssab::ss::format::Vec2T::default();
+                        key.value.lb.as_ref().map(|lb| {
+                            v.v1 = lb.x;
+                            v.v2 = lb.y;
+                        });
+                        value.lb = Some(Box::new(v));
+
+                        v = ssab::ssab::ss::format::Vec2T::default();
+                        key.value.rb.as_ref().map(|rb| {
+                            v.v1 = rb.x;
+                            v.v2 = rb.y;
+                        });
+                        value.rb = Some(Box::new(v));
+
+                        s_args.value = Some(Box::new(value));
+
+                        if let Some(pos) = p_arg.vertex_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == s_args.index) {
+                            p_arg.vertex_array.get_or_insert_default().remove(pos);
+                        }
+                        p_arg.vertex_array.get_or_insert_default().push(s_args);
+                    }
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PivotX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.pivot_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.pivot_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.pivot_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::PivotY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.pivot_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.pivot_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.pivot_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.anchor_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.anchor_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.anchor_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.anchor_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.anchor_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.anchor_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SizeX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.size_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.size_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.size_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::SizeY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.size_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.size_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.size_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut h_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                    h_args.index = key.time as u16;
+                    h_args.value = key.value;
+
+                    if let Some(pos) = p_arg.img_flip_h_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == h_args.index) {
+                        p_arg.img_flip_h_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.img_flip_h_array.get_or_insert_default().push(h_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut v_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                    v_args.index = key.time as u16;
+                    v_args.value = key.value;
+
+                    if let Some(pos) = p_arg.img_flip_v_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == v_args.index) {
+                        p_arg.img_flip_v_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.img_flip_v_array.get_or_insert_default().push(v_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvtX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut x_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    x_args.index = key.time as u16;
+                    x_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    x_args.value = key.value;
+
+                    if let Some(pos) = p_arg.uv_translation_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
+                        p_arg.uv_translation_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.uv_translation_x_array.get_or_insert_default().push(x_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvtY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut y_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    y_args.index = key.time as u16;
+                    y_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    y_args.value = key.value;
+
+                    if let Some(pos) = p_arg.uv_translation_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
+                        p_arg.uv_translation_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.uv_translation_y_array.get_or_insert_default().push(y_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut z_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    z_args.index = key.time as u16;
+                    z_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    z_args.value = key.value;
+
+                    if let Some(pos) = p_arg.uv_rotation_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
+                        p_arg.uv_rotation_z_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.uv_rotation_z_array.get_or_insert_default().push(z_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvsX(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut z_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    z_args.index = key.time as u16;
+                    z_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    z_args.value = key.value;
+
+                    if let Some(pos) = p_arg.uv_scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
+                        p_arg.uv_scale_x_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.uv_scale_x_array.get_or_insert_default().push(z_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::UvsY(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut z_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    z_args.index = key.time as u16;
+                    z_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    z_args.value = key.value;
+
+                    if let Some(pos) = p_arg.uv_scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
+                        p_arg.uv_scale_y_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.uv_scale_y_array.get_or_insert_default().push(z_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Boundr(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut z_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    z_args.index = key.time as u16;
+                    z_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    z_args.value = key.value;
+
+                    if let Some(pos) = p_arg.bounding_radius_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
+                        p_arg.bounding_radius_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.bounding_radius_array.get_or_insert_default().push(z_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Mask(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut m_args = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+                    m_args.index = key.time as u16;
+                    m_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    m_args.value = key.value;
+
+                    if let Some(pos) = p_arg.mask_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == m_args.index) {
+                        p_arg.mask_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.mask_array.get_or_insert_default().push(m_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Deform(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut m_args = ssab::ssab::ss::format::PartAnimationDataDeformT::default();
+                    m_args.index = key.time as u16;
+                    m_args.interpolation = convert_interpolation_type(&key.ip_type);
+                    if key.value.vchg.is_empty() {
+                        m_args.value = None;
+                    } else {
+                        let mut coordinate = Vec::new();
+                        let mut index = Vec::<i16>::new();
+                        key.value.vchg.iter().for_each(|item| {
+                            let mut vec2 = ssab::ssab::ss::format::Vec2T::default();
+                            vec2.v1 = item.x;
+                            vec2.v2 = item.y;
+                            coordinate.push(vec2);
+                            index.push(item.x_index as i16);
+                        });
+                        let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
+                        value.coordinate = Some(coordinate);
+                        value.index = Some(index);
+                        m_args.value = Some(Box::new(value));
+                    }
+
+                    if let Some(pos) = p_arg.deform_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == m_args.index) {
+                        p_arg.deform_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.deform_array.get_or_insert_default().push(m_args);
+                });
+            },
+            sspj::ssattribute::SsAttributeKind::Texchange(v) => {
+                v.keys.iter().for_each(|key| {
+                    let mut m_args = ssab::ssab::ss::format::PartAnimationDataUIntValueT::default();
+                    m_args.index = key.time as u16;
+                    m_args.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                    m_args.value = crate::utils::fnv1a_hash_str(&key.value.texture_name);
+
+                    if let Some(pos) = p_arg.texture_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == m_args.index) {
+                        p_arg.texture_array.get_or_insert_default().remove(pos);
+                    }
+                    p_arg.texture_array.get_or_insert_default().push(m_args);
+                });
+            },
+            _ => {},
+        }
+    });
+}
+fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
+    let mut parts_animation_data_t = Vec::<ssab::ssab::ss::format::PartAnimationDataT>::new();
+    parts_animation_data_t.resize(parts_map.len(), ssab::ssab::ss::format::PartAnimationDataT::default());
 
     for part_anime in &setup_animation.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
@@ -791,12 +1424,24 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
             continue;
         };
 
-        merge_setup_attributes_to_part_event_t(&mut events_t, parts_map, p.array_index as u16, &part_anime.attributes);
-   }
+        let index_part = p.array_index as usize;
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], &part_anime);
+    }
 
-    Some(events_t)
+    for part_anime in &anime_data.part_animes {
+        let Some(p) = parts_map.get(&part_anime.part_name) else {
+            // not found part (an illegal case)
+            continue;
+        };
+
+        let index_part = p.array_index as usize;
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], &part_anime);
+    }
+
+    parts_animation_data_t
 }
 
+#[cfg(false)]
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, _setup_animation: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
     anime_data.part_animes.iter().map(|part_anime| {
         let mut part_animation_data_t = ssab::ssab::ss::format::PartAnimationDataT::default();
