@@ -14,7 +14,7 @@ pub fn parse_args(args: &[PathBuf]) -> Vec<PathBuf> {
 }
 
 fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
-    if is_sspj_file(path) {
+    if is_sspj_file(path) || is_zip_file(path) {
         return vec![path.canonicalize().unwrap().to_path_buf()];
     }
 
@@ -35,4 +35,8 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
 
 fn is_sspj_file(path: &Path) -> bool {
     path.is_file() && path.extension().and_then(|ext| ext.to_str()).map_or(false, |ext| ext == "sspj")
+}
+
+fn is_zip_file(path: &Path) -> bool {
+    path.is_file() && path.extension().and_then(|ext| ext.to_str()).map_or(false, |ext| ext == "zip")
 }

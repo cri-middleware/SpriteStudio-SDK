@@ -17,12 +17,13 @@ fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::ss::forma
     v
 }
 
-fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path) -> Result<ssab::ssab::ss::format::CellMapT, crate::ConverterError> {
+fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProject, asset_provider: &Box<dyn crate::asset_provider::AssetProvider>) -> Result<ssab::ssab::ss::format::CellMapT, crate::ConverterError> {
     let mut cell_map_t = ssab::ssab::ss::format::CellMapT::default();
     cell_map_t.name_hash = crate::utils::fnv1a_hash_str(&cellmap.name);
     cell_map_t.name = if cellmap.name.is_empty() { None } else { Some(cellmap.name.to_string()) };
 
-    let r = crate::utils::validate_file_path(&cellmap.image_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, &sspj).as_path());
+    let path = std::path::PathBuf::from(&sspj.settings.image_base_directory).join(&cellmap.image_path);
+    let r = asset_provider.validate_asset(&path.as_path().to_str().unwrap());
     match r {
         Ok(_) => (),
         Err(e) => return Err(e),
@@ -43,8 +44,8 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProjec
 
     Ok(cell_map_t)
 }
-pub fn convert_cellmapt_list(sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap], sspj_parent_path: &std::path::Path) -> Result<Vec<ssab::ssab::ss::format::CellMapT>, crate::ConverterError> {
-    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap, sspj, sspj_parent_path)).collect::<Result<Vec<ssab::ssab::ss::format::CellMapT>, _>>()?;
+pub fn convert_cellmapt_list(sspj: &sspj::sspj::SsProject, cellmap_names: &[&sspj::ssce::SsCellMap], asset_provider: &Box<dyn crate::asset_provider::AssetProvider>) -> Result<Vec<ssab::ssab::ss::format::CellMapT>, crate::ConverterError> {
+    let mut v = cellmap_names.iter().map(|cellmap| convert_cellmapt(cellmap, sspj, asset_provider)).collect::<Result<Vec<ssab::ssab::ss::format::CellMapT>, _>>()?;
     v.sort_by_key(|cellmap| cellmap.name_hash);
     Ok(v)
 }
