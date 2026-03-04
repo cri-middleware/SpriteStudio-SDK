@@ -1101,8 +1101,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = cell_array.iter().position(|item| item.index == c_args.index) {
                         cell_array.remove(pos);
+                        cell_array.insert(pos, c_args);
+                    } else {
+                        cell_array.push(c_args);
                     }
-                    cell_array.push(c_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
@@ -1127,8 +1129,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = position_x_array.iter().position(|item| item.index == x_args.index) {
                         position_x_array.remove(pos);
+                        position_x_array.insert(pos, x_args);
+                    } else {
+                        position_x_array.push(x_args);
                     }
-                    position_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosY(v) => {
@@ -1153,8 +1157,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = position_y_array.iter().position(|item| item.index == y_args.index) {
                         position_y_array.remove(pos);
+                        position_y_array.insert(pos, y_args);
+                    } else {
+                        position_y_array.push(y_args);
                     }
-                    position_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosZ(v) => {
@@ -1179,8 +1185,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = position_z_array.iter().position(|item| item.index == z_args.index) {
                         position_z_array.remove(pos);
+                        position_z_array.insert(pos, z_args);
+                    } else {
+                        position_z_array.push(z_args);
                     }
-                    position_z_array.push(z_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotX(v) => {
@@ -1205,8 +1213,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = rotation_x_array.iter().position(|item| item.index == x_args.index) {
                         rotation_x_array.remove(pos);
+                        rotation_x_array.insert(pos, x_args);
+                    } else {
+                        rotation_x_array.push(x_args);
                     }
-                    rotation_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotY(v) => {
@@ -1231,8 +1241,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = rotation_y_array.iter().position(|item| item.index == y_args.index) {
                         rotation_y_array.remove(pos);
+                        rotation_y_array.insert(pos, y_args);
+                    } else {
+                        rotation_y_array.push(y_args);
                     }
-                    rotation_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotZ(v) => {
@@ -1257,8 +1269,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = rotation_z_array.iter().position(|item| item.index == z_args.index) {
                         rotation_z_array.remove(pos);
+                        rotation_z_array.insert(pos, z_args);
+                    } else {
+                        rotation_z_array.push(z_args);
                     }
-                    rotation_z_array.push(z_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclX(v) => {
@@ -1283,8 +1297,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = scale_x_array.iter().position(|item| item.index == x_args.index) {
                         scale_x_array.remove(pos);
+                        scale_x_array.insert(pos, x_args);
+                    } else {
+                        scale_x_array.push(x_args);
                     }
-                    scale_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclY(v) => {
@@ -1309,8 +1325,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = scale_y_array.iter().position(|item| item.index == y_args.index) {
                         scale_y_array.remove(pos);
+                        scale_y_array.insert(pos, y_args);
+                    } else {
+                        scale_y_array.push(y_args);
                     }
-                    scale_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclX(v) => {
@@ -1335,8 +1353,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = local_scale_x_array.iter().position(|item| item.index == x_args.index) {
                         local_scale_x_array.remove(pos);
+                        local_scale_x_array.insert(pos, x_args);
+                    } else {
+                        local_scale_x_array.push(x_args);
                     }
-                    local_scale_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclY(v) => {
@@ -1361,8 +1381,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = local_scale_y_array.iter().position(|item| item.index == y_args.index) {
                         local_scale_y_array.remove(pos);
+                        local_scale_y_array.insert(pos, y_args);
+                    } else {
+                        local_scale_y_array.push(y_args);
                     }
-                    local_scale_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Alpha(v) => {
@@ -1387,8 +1409,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = alpha_array.iter().position(|item| item.index == a_args.index) {
                         alpha_array.remove(pos);
+                        alpha_array.insert(pos, a_args);
+                    } else {
+                        alpha_array.push(a_args);
                     }
-                    alpha_array.push(a_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
@@ -1413,8 +1437,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = local_alpha_array.iter().position(|item| item.index == a_args.index) {
                         local_alpha_array.remove(pos);
+                        local_alpha_array.insert(pos, a_args);
+                    } else {
+                        local_alpha_array.push(a_args);
                     }
-                    local_alpha_array.push(a_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
@@ -1439,8 +1465,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = priority_array.iter().position(|item| item.index == p_args.index) {
                         priority_array.remove(pos);
+                        priority_array.insert(pos, p_args);
+                    } else {
+                        priority_array.push(p_args);
                     }
-                    priority_array.push(p_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
@@ -1463,8 +1491,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = flip_h_array.iter().position(|item| item.index == h_args.index) {
                         flip_h_array.remove(pos);
+                        flip_h_array.insert(pos, h_args);
+                    } else {
+                        flip_h_array.push(h_args);
                     }
-                    flip_h_array.push(h_args);
                });
             },
             sspj::ssattribute::SsAttributeKind::FlipV(v) => {
@@ -1487,8 +1517,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = flip_v_array.iter().position(|item| item.index == v_args.index) {
                         flip_v_array.remove(pos);
+                        flip_v_array.insert(pos, v_args);
+                    } else {
+                        flip_v_array.push(v_args);
                     }
-                    flip_v_array.push(v_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Hide(v) => {
@@ -1511,8 +1543,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = hide_array.iter().position(|item| item.index == h_args.index) {
                         hide_array.remove(pos);
+                        hide_array.insert(pos, h_args);
+                    } else {
+                        hide_array.push(h_args);
                     }
-                    hide_array.push(h_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
@@ -1580,8 +1614,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = part_color_array.iter().position(|item| item.index == c_args.index) {
                         part_color_array.remove(pos);
+                        part_color_array.insert(pos, c_args);
+                    } else {
+                        part_color_array.push(c_args);
                     }
-                    part_color_array.push(c_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Color => {
@@ -1624,8 +1660,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = shader_array.iter().position(|item| item.index == s_args.index) {
                         shader_array.remove(pos);
+                        shader_array.insert(pos, s_args);
+                    } else {
+                        shader_array.push(s_args);
                     }
-                    shader_array.push(s_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
@@ -1657,8 +1695,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         });
                         if let Some(pos) = skew_array.iter().position(|item| item.index == s_args.index) {
                             skew_array.remove(pos);
+                            skew_array.insert(pos, s_args);
+                        } else {
+                            skew_array.push(s_args);
                         }
-                        skew_array.push(s_args);
                     } else {
                         // Vertex
                         let mut v_args = ssab::ssab::ss::format::PartAnimationDataVertexT::default();
@@ -1710,8 +1750,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         });
                         if let Some(pos) = vertex_array.iter().position(|item| item.index == v_args.index) {
                             vertex_array.remove(pos);
+                            vertex_array.insert(pos, v_args);
+                        } else {
+                            vertex_array.push(v_args);
                         }
-                        vertex_array.push(v_args);
                     }
                 });
             },
@@ -1737,8 +1779,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = pivot_x_array.iter().position(|item| item.index == x_args.index) {
                         pivot_x_array.remove(pos);
+                        pivot_x_array.insert(pos, x_args);
+                    } else {
+                        pivot_x_array.push(x_args);
                     }
-                    pivot_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PivotY(v) => {
@@ -1763,8 +1807,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = pivot_y_array.iter().position(|item| item.index == y_args.index) {
                         pivot_y_array.remove(pos);
+                        pivot_y_array.insert(pos, y_args);
+                    } else {
+                        pivot_y_array.push(y_args);
                     }
-                    pivot_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
@@ -1789,8 +1835,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = anchor_x_array.iter().position(|item| item.index == x_args.index) {
                         anchor_x_array.remove(pos);
+                        anchor_x_array.insert(pos, x_args);
+                    } else {
+                        anchor_x_array.push(x_args);
                     }
-                    anchor_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
@@ -1815,8 +1863,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = anchor_y_array.iter().position(|item| item.index == y_args.index) {
                         anchor_y_array.remove(pos);
+                        anchor_y_array.insert(pos, y_args);
+                    } else {
+                        anchor_y_array.push(y_args);
                     }
-                    anchor_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeX(v) => {
@@ -1841,8 +1891,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = size_x_array.iter().position(|item| item.index == x_args.index) {
                         size_x_array.remove(pos);
+                        size_x_array.insert(pos, x_args);
+                    } else {
+                        size_x_array.push(x_args);
                     }
-                    size_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeY(v) => {
@@ -1867,8 +1919,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = size_y_array.iter().position(|item| item.index == y_args.index) {
                         size_y_array.remove(pos);
+                        size_y_array.insert(pos, y_args);
+                    } else {
+                        size_y_array.push(y_args);
                     }
-                    size_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
@@ -1891,8 +1945,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = img_flip_h_array.iter().position(|item| item.index == h_args.index) {
                         img_flip_h_array.remove(pos);
+                        img_flip_h_array.insert(pos, h_args);
+                    } else {
+                        img_flip_h_array.push(h_args);
                     }
-                    img_flip_h_array.push(h_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
@@ -1915,8 +1971,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = img_flip_v_array.iter().position(|item| item.index == v_args.index) {
                         img_flip_v_array.remove(pos);
+                        img_flip_v_array.insert(pos, v_args);
+                    } else {
+                        img_flip_v_array.push(v_args);
                     }
-                    img_flip_v_array.push(v_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
@@ -1941,8 +1999,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = uv_translation_x_array.iter().position(|item| item.index == x_args.index) {
                         uv_translation_x_array.remove(pos);
+                        uv_translation_x_array.insert(pos, x_args);
+                    } else {
+                        uv_translation_x_array.push(x_args);
                     }
-                    uv_translation_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtY(v) => {
@@ -1967,8 +2027,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = uv_translation_x_array.iter().position(|item| item.index == y_args.index) {
                         uv_translation_x_array.remove(pos);
+                        uv_translation_x_array.insert(pos, y_args);
+                    } else {
+                        uv_translation_x_array.push(y_args);
                     }
-                    uv_translation_x_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
@@ -1993,8 +2055,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = uv_rotation_z_array.iter().position(|item| item.index == z_args.index) {
                         uv_rotation_z_array.remove(pos);
+                        uv_rotation_z_array.insert(pos, z_args);
+                    } else {
+                        uv_rotation_z_array.push(z_args);
                     }
-                    uv_rotation_z_array.push(z_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsX(v) => {
@@ -2019,8 +2083,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = uv_scale_x_array.iter().position(|item| item.index == x_args.index) {
                         uv_scale_x_array.remove(pos);
+                        uv_scale_x_array.insert(pos, x_args);
+                    } else {
+                        uv_scale_x_array.push(x_args);
                     }
-                    uv_scale_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsY(v) => {
@@ -2045,8 +2111,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = uv_scale_y_array.iter().position(|item| item.index == y_args.index) {
                         uv_scale_y_array.remove(pos);
+                        uv_scale_y_array.insert(pos, y_args);
+                    } else {
+                        uv_scale_y_array.push(y_args);
                     }
-                    uv_scale_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {
@@ -2071,8 +2139,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = bounding_radius_array.iter().position(|item| item.index == b_args.index) {
                         bounding_radius_array.remove(pos);
+                        bounding_radius_array.insert(pos, b_args);
+                    } else {
+                        bounding_radius_array.push(b_args);
                     }
-                    bounding_radius_array.push(b_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Mask(v) => {
@@ -2097,8 +2167,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = mask_array.iter().position(|item| item.index == m_args.index) {
                         mask_array.remove(pos);
+                        mask_array.insert(pos, m_args);
+                    } else {
+                        mask_array.push(m_args);
                     }
-                    mask_array.push(m_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
@@ -2139,8 +2211,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = deform_array.iter().position(|item| item.index == d_args.index) {
                         deform_array.remove(pos);
+                        deform_array.insert(pos, d_args);
+                    } else {
+                        deform_array.push(d_args);
                     }
-                    deform_array.push(d_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
@@ -2165,8 +2239,10 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
                     if let Some(pos) = texture_array.iter().position(|item| item.index == t_args.index) {
                         texture_array.remove(pos);
+                        texture_array.insert(pos, t_args);
+                    } else {
+                        texture_array.push(t_args);
                     }
-                    texture_array.push(t_args);
                });
             },
             _ => {},
