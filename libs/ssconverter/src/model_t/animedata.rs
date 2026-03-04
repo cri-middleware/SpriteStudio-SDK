@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use ssab::ssab::ss::format::PartAnimationDataCellValueT;
 
 fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::ss::format::LabelT> {
     let mut v = labels.iter().map(|label| {
@@ -1086,16 +1087,22 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     value.name_hash = crate::utils::fnv1a_hash_str(&key.value.name);
                     c_args.value = Some(Box::new(value));
 
-                    if let Some(pos) = p_arg.cell_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == c_args.index) {
-                        p_arg.cell_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.cell_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let cell_array = &mut p_arg.cell_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut c_args_frame_0 = c_args.clone();
-                        c_args_frame_0.index = 0;
-                        p_arg.cell_array.get_or_insert_default().insert(0, c_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = c_args.clone();
+                            args_frame_0.index = 0;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = cell_array.iter().position(|item| item.index == c_args.index) {
+                        cell_array.remove(pos);
                     }
-                    p_arg.cell_array.get_or_insert_default().push(c_args);
+                    cell_array.push(c_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
@@ -1105,17 +1112,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.position_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.position_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.position_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let position_x_array = &mut p_arg.position_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.position_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = position_x_array.iter().position(|item| item.index == x_args.index) {
+                        position_x_array.remove(pos);
                     }
-                    p_arg.position_x_array.get_or_insert_default().push(x_args);
+                    position_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosY(v) => {
@@ -1125,17 +1138,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.position_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.position_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.position_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let position_y_array = &mut p_arg.position_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.position_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = position_y_array.iter().position(|item| item.index == y_args.index) {
+                        position_y_array.remove(pos);
                     }
-                    p_arg.position_y_array.get_or_insert_default().push(y_args);
+                    position_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PosZ(v) => {
@@ -1145,17 +1164,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     z_args.interpolation = convert_interpolation_type(&key.ip_type);
                     z_args.value = key.value;
 
-                    if let Some(pos) = p_arg.position_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
-                        p_arg.position_z_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.position_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let position_z_array = &mut p_arg.position_z_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut z_args_frame_0 = z_args.clone();
-                        z_args_frame_0.index = 0;
-                        z_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.position_z_array.get_or_insert_default().insert(0, z_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = z_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = position_z_array.iter().position(|item| item.index == z_args.index) {
+                        position_z_array.remove(pos);
                     }
-                    p_arg.position_z_array.get_or_insert_default().push(z_args);
+                    position_z_array.push(z_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotX(v) => {
@@ -1165,17 +1190,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.rotation_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.rotation_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.rotation_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let rotation_x_array = &mut p_arg.rotation_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.rotation_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = rotation_x_array.iter().position(|item| item.index == x_args.index) {
+                        rotation_x_array.remove(pos);
                     }
-                    p_arg.rotation_x_array.get_or_insert_default().push(x_args);
+                    rotation_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotY(v) => {
@@ -1185,17 +1216,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.rotation_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.rotation_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.rotation_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let rotation_y_array = &mut p_arg.rotation_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.rotation_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = rotation_y_array.iter().position(|item| item.index == y_args.index) {
+                        rotation_y_array.remove(pos);
                     }
-                    p_arg.rotation_y_array.get_or_insert_default().push(y_args);
+                    rotation_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::RotZ(v) => {
@@ -1205,17 +1242,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     z_args.interpolation = convert_interpolation_type(&key.ip_type);
                     z_args.value = key.value;
 
-                    if let Some(pos) = p_arg.rotation_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
-                        p_arg.rotation_z_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.rotation_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let rotation_z_array = &mut p_arg.rotation_z_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut z_args_frame_0 = z_args.clone();
-                        z_args_frame_0.index = 0;
-                        z_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.rotation_z_array.get_or_insert_default().insert(0, z_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = z_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = rotation_z_array.iter().position(|item| item.index == z_args.index) {
+                        rotation_z_array.remove(pos);
                     }
-                    p_arg.rotation_z_array.get_or_insert_default().push(z_args);
+                    rotation_z_array.push(z_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclX(v) => {
@@ -1225,17 +1268,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.scale_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let scale_x_array = &mut p_arg.scale_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.scale_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = scale_x_array.iter().position(|item| item.index == x_args.index) {
+                        scale_x_array.remove(pos);
                     }
-                    p_arg.scale_x_array.get_or_insert_default().push(x_args);
+                    scale_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SclY(v) => {
@@ -1245,17 +1294,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.scale_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let scale_y_array = &mut p_arg.scale_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.scale_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = scale_y_array.iter().position(|item| item.index == y_args.index) {
+                        scale_y_array.remove(pos);
                     }
-                    p_arg.scale_y_array.get_or_insert_default().push(y_args);
+                    scale_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclX(v) => {
@@ -1265,17 +1320,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.local_scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.local_scale_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.local_scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let local_scale_x_array = &mut p_arg.local_scale_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.local_scale_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = local_scale_x_array.iter().position(|item| item.index == x_args.index) {
+                        local_scale_x_array.remove(pos);
                     }
-                    p_arg.local_scale_x_array.get_or_insert_default().push(x_args);
+                    local_scale_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::LosclY(v) => {
@@ -1285,17 +1346,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.local_scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.local_scale_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.local_scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let local_scale_y_array = &mut p_arg.local_scale_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.local_scale_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = local_scale_y_array.iter().position(|item| item.index == y_args.index) {
+                        local_scale_y_array.remove(pos);
                     }
-                    p_arg.local_scale_y_array.get_or_insert_default().push(y_args);
+                    local_scale_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Alpha(v) => {
@@ -1305,17 +1372,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     a_args.interpolation = convert_interpolation_type(&key.ip_type);
                     a_args.value = key.value;
 
-                    if let Some(pos) = p_arg.alpha_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == a_args.index) {
-                        p_arg.alpha_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.alpha_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let alpha_array = &mut p_arg.alpha_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut a_args_frame_0 = a_args.clone();
-                        a_args_frame_0.index = 0;
-                        a_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.alpha_array.get_or_insert_default().insert(0, a_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = a_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = alpha_array.iter().position(|item| item.index == a_args.index) {
+                        alpha_array.remove(pos);
                     }
-                    p_arg.alpha_array.get_or_insert_default().push(a_args);
+                    alpha_array.push(a_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
@@ -1325,17 +1398,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     a_args.interpolation = convert_interpolation_type(&key.ip_type);
                     a_args.value = key.value;
 
-                    if let Some(pos) = p_arg.local_alpha_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == a_args.index) {
-                        p_arg.local_alpha_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.local_alpha_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let local_alpha_array = &mut p_arg.local_alpha_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut a_args_frame_0 = a_args.clone();
-                        a_args_frame_0.index = 0;
-                        a_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.local_alpha_array.get_or_insert_default().insert(0, a_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = a_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = local_alpha_array.iter().position(|item| item.index == a_args.index) {
+                        local_alpha_array.remove(pos);
                     }
-                    p_arg.local_alpha_array.get_or_insert_default().push(a_args);
+                    local_alpha_array.push(a_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
@@ -1345,17 +1424,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     p_args.interpolation = convert_interpolation_type(&key.ip_type);
                     p_args.value = key.value;
 
-                    if let Some(pos) = p_arg.priority_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == p_args.index) {
-                        p_arg.priority_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.priority_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let priority_array = &mut p_arg.priority_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut p_args_frame_0 = p_args.clone();
-                        p_args_frame_0.index = 0;
-                        p_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.priority_array.get_or_insert_default().insert(0, p_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = p_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = priority_array.iter().position(|item| item.index == p_args.index) {
+                        priority_array.remove(pos);
                     }
-                    p_arg.priority_array.get_or_insert_default().push(p_args);
+                    priority_array.push(p_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
@@ -1364,17 +1449,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     h_args.index = key.time as u16;
                     h_args.value = key.value;
 
-                    if let Some(pos) = p_arg.flip_h_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == h_args.index) {
-                        p_arg.flip_h_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.flip_h_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let flip_h_array = &mut p_arg.flip_h_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut h_args_frame_0 = h_args.clone();
-                        h_args_frame_0.index = 0;
-                        p_arg.flip_h_array.get_or_insert_default().insert(0, h_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = h_args.clone();
+                            args_frame_0.index = 0;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = flip_h_array.iter().position(|item| item.index == h_args.index) {
+                        flip_h_array.remove(pos);
                     }
-                    p_arg.flip_h_array.get_or_insert_default().push(h_args);
-                });
+                    flip_h_array.push(h_args);
+               });
             },
             sspj::ssattribute::SsAttributeKind::FlipV(v) => {
                 v.keys.iter().for_each(|key| {
@@ -1382,34 +1473,46 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     v_args.index = key.time as u16;
                     v_args.value = key.value;
 
-                    if let Some(pos) = p_arg.flip_v_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == v_args.index) {
-                        p_arg.flip_v_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.flip_v_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let flip_v_array = &mut p_arg.flip_v_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut v_args_frame_0 = v_args.clone();
-                        v_args_frame_0.index = 0;
-                        p_arg.flip_v_array.get_or_insert_default().insert(0, v_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = v_args.clone();
+                            args_frame_0.index = 0;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = flip_v_array.iter().position(|item| item.index == v_args.index) {
+                        flip_v_array.remove(pos);
                     }
-                    p_arg.flip_v_array.get_or_insert_default().push(v_args);
+                    flip_v_array.push(v_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Hide(v) => {
                 v.keys.iter().for_each(|key| {
-                    let mut v_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
-                    v_args.index = key.time as u16;
-                    v_args.value = key.value;
+                    let mut h_args = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                    h_args.index = key.time as u16;
+                    h_args.value = key.value;
 
-                    if let Some(pos) = p_arg.hide_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == v_args.index) {
-                        p_arg.hide_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.hide_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let hide_array = &mut p_arg.hide_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut v_args_frame_0 = v_args.clone();
-                        v_args_frame_0.index = 0;
-                        p_arg.hide_array.get_or_insert_default().insert(0, v_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = h_args.clone();
+                            args_frame_0.index = 0;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = hide_array.iter().position(|item| item.index == h_args.index) {
+                        hide_array.remove(pos);
                     }
-                    p_arg.hide_array.get_or_insert_default().push(v_args);
+                    hide_array.push(h_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
@@ -1462,17 +1565,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
 
                     c_args.value = Some(Box::new(value));
 
-                    if let Some(pos) = p_arg.part_color_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == c_args.index) {
-                        p_arg.part_color_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.part_color_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let part_color_array = &mut p_arg.part_color_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut c_args_frame_0 = c_args.clone();
-                        c_args_frame_0.index = 0;
-                        c_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.part_color_array.get_or_insert_default().insert(0, c_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = c_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = part_color_array.iter().position(|item| item.index == c_args.index) {
+                        part_color_array.remove(pos);
                     }
-                    p_arg.part_color_array.get_or_insert_default().push(c_args);
+                    part_color_array.push(c_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Color => {
@@ -1500,17 +1609,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     value.map1_name_hash = crate::utils::fnv1a_hash_str(&key.value.map1.name);
                     s_args.value = Some(Box::new(value));
 
-                    if let Some(pos) = p_arg.shader_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == s_args.index) {
-                        p_arg.shader_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.shader_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let shader_array = &mut p_arg.shader_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut s_args_frame_0 = s_args.clone();
-                        s_args_frame_0.index = 0;
-                        s_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.shader_array.get_or_insert_default().insert(0, s_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = s_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = shader_array.iter().position(|item| item.index == s_args.index) {
+                        shader_array.remove(pos);
                     }
-                    p_arg.shader_array.get_or_insert_default().push(s_args);
+                    shader_array.push(s_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
@@ -1527,22 +1642,28 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                             Box::new(value)
                         });
 
-                        if let Some(pos) = p_arg.skew_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == s_args.index) {
-                            p_arg.skew_array.get_or_insert_default().remove(pos);
-                        }
-                        if key.time > 0 && let None = p_arg.skew_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                        let skew_array = &mut p_arg.skew_array.get_or_insert_with(|| {
+                            let mut array_new = Vec::new();
+
                             // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                            let mut s_args_frame_0 = s_args.clone();
-                            s_args_frame_0.index = 0;
-                            s_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                            p_arg.skew_array.get_or_insert_default().insert(0, s_args_frame_0);
+                            if key.time > 0 {
+                                let mut args_frame_0 = s_args.clone();
+                                args_frame_0.index = 0;
+                                args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                                array_new.push(args_frame_0);
+                            }
+
+                            array_new
+                        });
+                        if let Some(pos) = skew_array.iter().position(|item| item.index == s_args.index) {
+                            skew_array.remove(pos);
                         }
-                        p_arg.skew_array.get_or_insert_default().push(s_args);
+                        skew_array.push(s_args);
                     } else {
                         // Vertex
-                        let mut s_args = ssab::ssab::ss::format::PartAnimationDataVertexT::default();
-                        s_args.index = key.time as u16;
-                        s_args.interpolation = convert_interpolation_type(&key.ip_type);
+                        let mut v_args = ssab::ssab::ss::format::PartAnimationDataVertexT::default();
+                        v_args.index = key.time as u16;
+                        v_args.interpolation = convert_interpolation_type(&key.ip_type);
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut v: ssab::ssab::ss::format::Vec2T;
                         v = ssab::ssab::ss::format::Vec2T::default();
@@ -1572,19 +1693,25 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         });
                         value.rb = Some(Box::new(v));
 
-                        s_args.value = Some(Box::new(value));
+                        v_args.value = Some(Box::new(value));
 
-                        if let Some(pos) = p_arg.vertex_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == s_args.index) {
-                            p_arg.vertex_array.get_or_insert_default().remove(pos);
-                        }
-                        if key.time > 0 && let None = p_arg.vertex_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                        let vertex_array = &mut p_arg.vertex_array.get_or_insert_with(|| {
+                            let mut array_new = Vec::new();
+
                             // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                            let mut s_args_frame_0 = s_args.clone();
-                            s_args_frame_0.index = 0;
-                            s_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                            p_arg.vertex_array.get_or_insert_default().insert(0, s_args_frame_0);
+                            if key.time > 0 {
+                                let mut args_frame_0 = v_args.clone();
+                                args_frame_0.index = 0;
+                                args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                                array_new.push(args_frame_0);
+                            }
+
+                            array_new
+                        });
+                        if let Some(pos) = vertex_array.iter().position(|item| item.index == v_args.index) {
+                            vertex_array.remove(pos);
                         }
-                        p_arg.vertex_array.get_or_insert_default().push(s_args);
+                        vertex_array.push(v_args);
                     }
                 });
             },
@@ -1595,17 +1722,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.pivot_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.pivot_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.pivot_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let pivot_x_array = &mut p_arg.pivot_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.pivot_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = pivot_x_array.iter().position(|item| item.index == x_args.index) {
+                        pivot_x_array.remove(pos);
                     }
-                    p_arg.pivot_x_array.get_or_insert_default().push(x_args);
+                    pivot_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::PivotY(v) => {
@@ -1615,17 +1748,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.pivot_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.pivot_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.pivot_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let pivot_y_array = &mut p_arg.pivot_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.pivot_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = pivot_y_array.iter().position(|item| item.index == y_args.index) {
+                        pivot_y_array.remove(pos);
                     }
-                    p_arg.pivot_y_array.get_or_insert_default().push(y_args);
+                    pivot_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
@@ -1635,17 +1774,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.anchor_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.anchor_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.anchor_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let anchor_x_array = &mut p_arg.anchor_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.anchor_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = anchor_x_array.iter().position(|item| item.index == x_args.index) {
+                        anchor_x_array.remove(pos);
                     }
-                    p_arg.anchor_x_array.get_or_insert_default().push(x_args);
+                    anchor_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
@@ -1655,17 +1800,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.anchor_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.anchor_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.anchor_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let anchor_y_array = &mut p_arg.anchor_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.anchor_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = anchor_y_array.iter().position(|item| item.index == y_args.index) {
+                        anchor_y_array.remove(pos);
                     }
-                    p_arg.anchor_y_array.get_or_insert_default().push(y_args);
+                    anchor_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeX(v) => {
@@ -1675,17 +1826,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.size_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.size_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.size_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let size_x_array = &mut p_arg.size_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.size_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = size_x_array.iter().position(|item| item.index == x_args.index) {
+                        size_x_array.remove(pos);
                     }
-                    p_arg.size_x_array.get_or_insert_default().push(x_args);
+                    size_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::SizeY(v) => {
@@ -1695,17 +1852,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.size_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.size_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.size_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let size_y_array = &mut p_arg.size_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.size_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = size_y_array.iter().position(|item| item.index == y_args.index) {
+                        size_y_array.remove(pos);
                     }
-                    p_arg.size_y_array.get_or_insert_default().push(y_args);
+                    size_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
@@ -1714,16 +1877,22 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     h_args.index = key.time as u16;
                     h_args.value = key.value;
 
-                    if let Some(pos) = p_arg.img_flip_h_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == h_args.index) {
-                        p_arg.img_flip_h_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.img_flip_h_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let img_flip_h_array = &mut p_arg.img_flip_h_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut h_args_frame_0 = h_args.clone();
-                        h_args_frame_0.index = 0;
-                        p_arg.img_flip_h_array.get_or_insert_default().insert(0, h_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = h_args.clone();
+                            args_frame_0.index = 0;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = img_flip_h_array.iter().position(|item| item.index == h_args.index) {
+                        img_flip_h_array.remove(pos);
                     }
-                    p_arg.img_flip_h_array.get_or_insert_default().push(h_args);
+                    img_flip_h_array.push(h_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
@@ -1732,16 +1901,22 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     v_args.index = key.time as u16;
                     v_args.value = key.value;
 
-                    if let Some(pos) = p_arg.img_flip_v_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == v_args.index) {
-                        p_arg.img_flip_v_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.img_flip_v_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let img_flip_v_array = &mut p_arg.img_flip_v_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut v_args_frame_0 = v_args.clone();
-                        v_args_frame_0.index = 0;
-                        p_arg.img_flip_v_array.get_or_insert_default().insert(0, v_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = v_args.clone();
+                            args_frame_0.index = 0;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = img_flip_v_array.iter().position(|item| item.index == v_args.index) {
+                        img_flip_v_array.remove(pos);
                     }
-                    p_arg.img_flip_v_array.get_or_insert_default().push(v_args);
+                    img_flip_v_array.push(v_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
@@ -1751,17 +1926,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.uv_translation_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.uv_translation_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.uv_translation_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let uv_translation_x_array = &mut p_arg.uv_translation_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.uv_translation_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = uv_translation_x_array.iter().position(|item| item.index == x_args.index) {
+                        uv_translation_x_array.remove(pos);
                     }
-                    p_arg.uv_translation_x_array.get_or_insert_default().push(x_args);
+                    uv_translation_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvtY(v) => {
@@ -1771,17 +1952,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.uv_translation_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.uv_translation_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.uv_translation_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let uv_translation_x_array = &mut p_arg.uv_translation_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.uv_translation_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = uv_translation_x_array.iter().position(|item| item.index == y_args.index) {
+                        uv_translation_x_array.remove(pos);
                     }
-                    p_arg.uv_translation_y_array.get_or_insert_default().push(y_args);
+                    uv_translation_x_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
@@ -1791,17 +1978,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     z_args.interpolation = convert_interpolation_type(&key.ip_type);
                     z_args.value = key.value;
 
-                    if let Some(pos) = p_arg.uv_rotation_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == z_args.index) {
-                        p_arg.uv_rotation_z_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.uv_rotation_z_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let uv_rotation_z_array = &mut p_arg.uv_rotation_z_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut z_args_frame_0 = z_args.clone();
-                        z_args_frame_0.index = 0;
-                        z_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.uv_rotation_z_array.get_or_insert_default().insert(0, z_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = z_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = uv_rotation_z_array.iter().position(|item| item.index == z_args.index) {
+                        uv_rotation_z_array.remove(pos);
                     }
-                    p_arg.uv_rotation_z_array.get_or_insert_default().push(z_args);
+                    uv_rotation_z_array.push(z_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsX(v) => {
@@ -1811,17 +2004,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     x_args.interpolation = convert_interpolation_type(&key.ip_type);
                     x_args.value = key.value;
 
-                    if let Some(pos) = p_arg.uv_scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == x_args.index) {
-                        p_arg.uv_scale_x_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.uv_scale_x_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let uv_scale_x_array = &mut p_arg.uv_scale_x_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut x_args_frame_0 = x_args.clone();
-                        x_args_frame_0.index = 0;
-                        x_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.uv_scale_x_array.get_or_insert_default().insert(0, x_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = x_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = uv_scale_x_array.iter().position(|item| item.index == x_args.index) {
+                        uv_scale_x_array.remove(pos);
                     }
-                    p_arg.uv_scale_x_array.get_or_insert_default().push(x_args);
+                    uv_scale_x_array.push(x_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::UvsY(v) => {
@@ -1831,17 +2030,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    if let Some(pos) = p_arg.uv_scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == y_args.index) {
-                        p_arg.uv_scale_y_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.uv_scale_y_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let uv_scale_y_array = &mut p_arg.uv_scale_y_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut y_args_frame_0 = y_args.clone();
-                        y_args_frame_0.index = 0;
-                        y_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.uv_scale_y_array.get_or_insert_default().insert(0, y_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = y_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = uv_scale_y_array.iter().position(|item| item.index == y_args.index) {
+                        uv_scale_y_array.remove(pos);
                     }
-                    p_arg.uv_scale_y_array.get_or_insert_default().push(y_args);
+                    uv_scale_y_array.push(y_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {
@@ -1851,17 +2056,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     b_args.interpolation = convert_interpolation_type(&key.ip_type);
                     b_args.value = key.value;
 
-                    if let Some(pos) = p_arg.bounding_radius_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == b_args.index) {
-                        p_arg.bounding_radius_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.bounding_radius_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let bounding_radius_array = &mut p_arg.bounding_radius_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut b_args_frame_0 = b_args.clone();
-                        b_args_frame_0.index = 0;
-                        b_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.bounding_radius_array.get_or_insert_default().insert(0, b_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = b_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = bounding_radius_array.iter().position(|item| item.index == b_args.index) {
+                        bounding_radius_array.remove(pos);
                     }
-                    p_arg.bounding_radius_array.get_or_insert_default().push(b_args);
+                    bounding_radius_array.push(b_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Mask(v) => {
@@ -1871,17 +2082,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     m_args.interpolation = convert_interpolation_type(&key.ip_type);
                     m_args.value = key.value;
 
-                    if let Some(pos) = p_arg.mask_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == m_args.index) {
-                        p_arg.mask_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.mask_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let mask_array = &mut p_arg.mask_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut m_args_frame_0 = m_args.clone();
-                        m_args_frame_0.index = 0;
-                        m_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.mask_array.get_or_insert_default().insert(0, m_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = m_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = mask_array.iter().position(|item| item.index == m_args.index) {
+                        mask_array.remove(pos);
                     }
-                    p_arg.mask_array.get_or_insert_default().push(m_args);
+                    mask_array.push(m_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
@@ -1907,17 +2124,23 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         d_args.value = Some(Box::new(value));
                     }
 
-                    if let Some(pos) = p_arg.deform_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == d_args.index) {
-                        p_arg.deform_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.deform_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let deform_array = &mut p_arg.deform_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut d_args_frame_0 = d_args.clone();
-                        d_args_frame_0.index = 0;
-                        d_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.deform_array.get_or_insert_default().insert(0, d_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = d_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = deform_array.iter().position(|item| item.index == d_args.index) {
+                        deform_array.remove(pos);
                     }
-                    p_arg.deform_array.get_or_insert_default().push(d_args);
+                    deform_array.push(d_args);
                 });
             },
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
@@ -1927,18 +2150,24 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     t_args.interpolation = ssab::ssab::ss::format::InterpolationType::None;
                     t_args.value = crate::utils::fnv1a_hash_str(&key.value.texture_name);
 
-                    if let Some(pos) = p_arg.texture_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == t_args.index) {
-                        p_arg.texture_array.get_or_insert_default().remove(pos);
-                    }
-                    if key.time > 0 && let None = p_arg.texture_array.get_or_insert_with(Vec::new).iter().position(|item| item.index == 0) {
+                    let texture_array = &mut p_arg.texture_array.get_or_insert_with(|| {
+                        let mut array_new = Vec::new();
+
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
-                        let mut t_args_frame_0 = t_args.clone();
-                        t_args_frame_0.index = 0;
-//                        t_args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                        p_arg.texture_array.get_or_insert_default().insert(0, t_args_frame_0);
+                        if key.time > 0 {
+                            let mut args_frame_0 = t_args.clone();
+                            args_frame_0.index = 0;
+                            args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                            array_new.push(args_frame_0);
+                        }
+
+                        array_new
+                    });
+                    if let Some(pos) = texture_array.iter().position(|item| item.index == t_args.index) {
+                        texture_array.remove(pos);
                     }
-                    p_arg.texture_array.get_or_insert_default().push(t_args);
-                });
+                    texture_array.push(t_args);
+               });
             },
             _ => {},
         }
