@@ -119,17 +119,34 @@ impl PlaybackController {
         }
     }
 
-    pub fn reset(&mut self) {
+    pub fn reset_setup(&mut self) {
+        self.reset_state();
+
+        self.is_pausing = true;
+        self.is_playing = false;
+        self.anime_data_start_frame = 0;
+        self.anime_data_end_frame = 0;
+        self.anime_data_fps = 0;
+
+        self.start_frame = 0;
+        self.end_frame = 0;
+        self.fps = 0;
+        self.fps_rate = 1.0;
+
+        self.update_interval = 0.0;
+    }
+
+    fn reset_state(&mut self) {
         self.next_frame_time = 0.0;
         self.current_frame = 0.0;
         self.end_frame_reached = false;
     }
 
     pub fn setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
-        self.reset();
+        self.reset_state();
 
-        self.is_playing = false;
         self.is_pausing = true;
+        self.is_playing = false;
 
         self.anime_data_start_frame = start_frame;
         self.anime_data_end_frame = end_frame;
@@ -325,7 +342,7 @@ impl PlaybackController {
     }
 
     pub fn pause(&mut self) {
-        self.is_pausing = true;
+        self.is_pausing = !self.is_pausing;
     }
 
     pub fn stop(&mut self) {

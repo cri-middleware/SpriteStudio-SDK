@@ -25,6 +25,13 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
+    let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
+    ffi_context.ctx.reset();
+}
+
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
     let r = ffi_context.ctx.load_copy( unsafe { std::slice::from_raw_parts(ptr as *const u8, len) } );
