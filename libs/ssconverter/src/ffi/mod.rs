@@ -69,7 +69,7 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
     let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
     let output_dir_str = Some(OsString::from(output_dir_buf.to_string_lossy().into_owned()));
     let mut config = ConverterConfig::default();
-    config.out_dir = output_dir_str;
+    config.output = output_dir_str;
 
     if let Some(prev_handler)  = context.handler.take() {
         // ignore previous handler result

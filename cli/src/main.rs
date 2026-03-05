@@ -68,14 +68,14 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             embedded: args.embedded,
             ..Default::default()
         };
-        config.out_dir = args.out_dir;
+        config.output = args.out_dir;
     } else {
         // batch mode
         config.convert_config = ssconverter::ConvertConfig {
             embedded: args.embedded,
             ..Default::default()
         };
-        config.out_dir = None; // batch mode does not support out_dir
+        config.output = None; // batch mode does not support out_dir
     }
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter::ConverterError>>> = vec![];
