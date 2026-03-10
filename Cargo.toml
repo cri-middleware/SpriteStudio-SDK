@@ -5,7 +5,8 @@ members = [
     "libs/ssconverter",
     "libs/sspj",
     "libs/ssab",
-    "libs/ssruntime", "libs/ssinterpolate",
+    "libs/ssruntime",
+    "libs/ssinterpolate",
 ]
 
 [workspace.dependencies]
