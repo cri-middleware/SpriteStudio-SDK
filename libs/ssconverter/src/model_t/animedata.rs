@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ssab::ssab::ss::format::PartAnimationDataCellValueT;
+use ssinterpolate;
 
 fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::ss::format::LabelT> {
     let mut v = labels.iter().map(|label| {
@@ -726,8 +726,8 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         // Skew
                         match &_key.value.skew {
                             None => {
-                                p_args.skew_x = 0.0f32;
-                                p_args.skew_y = 0.0f32;
+                                p_args.skew_x = 0.0 as f32;
+                                p_args.skew_y = 0.0 as f32;
                             }
                             Some(_skew) => {
                                 p_args.skew_x = _skew.x;
@@ -742,7 +742,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut coordinate = ssab::ssab::ss::format::Vec2T::default();
 
-                        //                       coordinate = ssab::ssab::ss::format::Vec2T::default();
+//                       coordinate = ssab::ssab::ss::format::Vec2T::default();
                         _key.value.lt.as_ref().map(|_lt| {
                             coordinate.v1 = _lt.x;
                             coordinate.v2 = _lt.y;
@@ -773,8 +773,8 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         p_args.vertex = Some(Box::new(value));
                         p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeVertex;
 
-                        p_args.skew_x = 0.0f32; // mutually exclusive with "Skew"
-                        p_args.skew_y = 0.0f32;
+                        p_args.skew_x = 0.0 as f32; // mutually exclusive with "Skew"
+                        p_args.skew_y = 0.0 as f32;
                     }
                 });
             },
@@ -1068,13 +1068,6 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
     Some(events_t)
 }
 
-// fn vec_replace_or_add_by_frame_number<T>(vec: &mut Vec<T>, value: T) {
-//     if let Some(pos) = vec.iter().position(|&element| element.index == value.index) {
-//         vec[pos] = value;
-//     } else {
-//         vec.push(value);
-//     }
-// }
 fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, anime_data: &sspj::ssae::SsPartAnime) {
     anime_data.attributes.iter().for_each(|attribute| {
         match attribute {
@@ -2249,6 +2242,73 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
         }
     });
 }
+
+// fn modify_part_animation_data_float(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataFloatValueT>>, anime_data: &sspj::ssae::SsPartAnime) {
+//     if let Some(attribute) = p_attr {
+//         let mut index_key_begin = 0 as usize;
+//         let mut index_key_end = 1 as usize;
+//         while index_key_end < attribute.len() {
+// 
+// 
+//         }
+// 
+//         match attribute.len() {
+//             0 => {  // Remove attribute.
+//                 *p_attr = None;
+//             },
+//             1 => {  // Not need to interpolate.
+//                 attribute[0].interpolation = ssab::ssab::ss::format::InterpolationType::None;
+//             },
+//             _ => {},
+//         }
+//     }
+// }
+// 
+fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, anime_data: &sspj::ssae::SsPartAnime) {
+
+//    modify_part_animation_data_float(&mut p_args.position_x_array, anime_data);
+
+
+//    pub cell_array: Option<alloc::vec::Vec<PartAnimationDataCellValueT>>,
+//    pub position_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub position_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub position_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub rotation_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub rotation_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub rotation_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub scale_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub scale_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub local_scale_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub local_scale_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub alpha_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub local_alpha_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub priority_array: Option<alloc::vec::Vec<PartAnimationDataIntValueT>>,
+//    pub flip_h_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
+//    pub flip_v_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
+//    pub hide_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
+//    pub part_color_array: Option<alloc::vec::Vec<PartAnimationDataPartColorT>>,
+//    pub shader_array: Option<alloc::vec::Vec<PartAnimationDataShaderT>>,
+//    pub vertex_array: Option<alloc::vec::Vec<PartAnimationDataVertexT>>,
+//    pub pivot_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub pivot_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub anchor_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub anchor_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub size_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub size_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub img_flip_h_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
+//    pub img_flip_v_array: Option<alloc::vec::Vec<PartAnimationDataBoolValueT>>,
+//    pub uv_translation_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub uv_translation_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub uv_rotation_z_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub uv_scale_x_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub uv_scale_y_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub bounding_radius_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub mask_array: Option<alloc::vec::Vec<PartAnimationDataFloatValueT>>,
+//    pub skew_array: Option<alloc::vec::Vec<PartAnimationDataVec2T>>,
+//    pub deform_array: Option<alloc::vec::Vec<PartAnimationDataDeformT>>,
+//    pub texture_array: Option<alloc::vec::Vec<PartAnimationDataUIntValueT>>,
+}
+
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
     let mut parts_animation_data_t = Vec::<ssab::ssab::ss::format::PartAnimationDataT>::new();
     parts_animation_data_t.resize(parts_map.len(), ssab::ssab::ss::format::PartAnimationDataT::default());
@@ -2271,6 +2331,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
 
         let index_part = p.array_index as usize;
         convert_part_animation_data(&mut parts_animation_data_t[index_part], &part_anime);
+        modify_part_animation_data(&mut parts_animation_data_t[index_part], &part_anime);
     }
 
     parts_animation_data_t

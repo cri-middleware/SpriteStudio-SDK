@@ -631,6 +631,7 @@ dependencies = [
  "ordered-float",
  "rayon",
  "ssab",
+ "ssinterpolate",
  "sspj",
  "vergen-gitcl",
  "walkdir",
@@ -650,6 +651,9 @@ dependencies = [
 [[package]]
 name = "ssinterpolate"
 version = "0.1.0"
+dependencies = [
+ "ssab",
+]
 
 [[package]]
 name = "sspj"
