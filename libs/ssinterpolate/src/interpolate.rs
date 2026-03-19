@@ -178,7 +178,7 @@ pub extern "C" fn ss_interpolate_ease_out(value_start:f32, value_end:f32, rate:f
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_inout(rate:f32, power_easing:f32) -> f32 {
-    let rate_mul_2 = rate * rate;
+    let rate_mul_2 = rate * 2.0_f32;
     if rate_mul_2 < 1.0_f32 {
         0.5_f32 * rate.powf(power_easing)
     } else {
