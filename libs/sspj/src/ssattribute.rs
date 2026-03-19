@@ -37,6 +37,10 @@ pub struct SsAttributeIntKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
     #[serde(rename = "value")]
     pub value: i32,
 }
@@ -170,6 +174,13 @@ pub struct SsAttributePartsColorKeyValue {
 pub struct SsAttributePartsColorKey {
     #[serde(rename = "@time")]
     pub time: i32,
+    #[serde(rename = "@ipType", default)]
+    pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributePartsColorKeyValue,
 }
 #[derive(Deserialize, PartialEq, Debug)]
@@ -214,6 +225,11 @@ pub struct SsAttributeShaderKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributeShaderKeyValue,
 }
 #[derive(Deserialize, PartialEq, Debug)]
@@ -244,6 +260,11 @@ pub struct SsAttributeVertexKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributeVertexKeyValue,
 }
 
@@ -594,6 +615,11 @@ pub struct SsAttributeDeformKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributeDeformKeyValue,
 }
 #[derive(Deserialize, PartialEq, Debug)]
