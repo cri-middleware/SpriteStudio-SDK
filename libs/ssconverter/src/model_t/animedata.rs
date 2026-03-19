@@ -2866,7 +2866,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     y_args.interpolation = convert_interpolation_type(&key.ip_type);
                     y_args.value = key.value;
 
-                    let uv_translation_x_array = &mut p_arg.uv_translation_x_array.get_or_insert_with(|| {
+                    let uv_translation_y_array = &mut p_arg.uv_translation_y_array.get_or_insert_with(|| {
                         let mut array_new = Vec::new();
 
                         // MEMO: Backfill if no key is in frame 0. (No interpolation)
@@ -2881,25 +2881,25 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     });
 
                     let index_key_start: usize;
-                    if let Some(pos) = uv_translation_x_array.iter().position(|item| item.index == y_args.index) {
-                        uv_translation_x_array.remove(pos);
-                        uv_translation_x_array.insert(pos, y_args);
+                    if let Some(pos) = uv_translation_y_array.iter().position(|item| item.index == y_args.index) {
+                        uv_translation_y_array.remove(pos);
+                        uv_translation_y_array.insert(pos, y_args);
                         index_key_start = pos;
                     } else {
-                        uv_translation_x_array.push(y_args);
-                        index_key_start = uv_translation_x_array.len() - 1;
+                        uv_translation_y_array.push(y_args);
+                        index_key_start = uv_translation_y_array.len() - 1;
                     }
                     if i < (count_keys - 1) && convert_part_animation_data_required_precalculation(&key.ip_type) {  // Expand between 2 keys
                         let key_next = &v.keys[i + 1];
 
-                        uv_translation_x_array[index_key_start].interpolation = ssab::ssab::ss::format::InterpolationType::None;  // overwrite beginning of range.
+                        uv_translation_y_array[index_key_start].interpolation = ssab::ssab::ss::format::InterpolationType::None;  // overwrite beginning of range.
 
                         for time_now in (key.time + 1)..key_next.time {
                             let mut args_now = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
                             args_now.index = time_now as u16;
                             args_now.interpolation = ssab::ssab::ss::format::InterpolationType::None;
                             args_now.value = convert_part_animation_data_expand_key_float(key, key_next, time_now);
-                            uv_translation_x_array.push(args_now);
+                            uv_translation_y_array.push(args_now);
                         }
                     }
                 }
@@ -3878,7 +3878,7 @@ fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimation
     if !capacity[KindAttributeCapacity::UvTranslationY as usize]    {   p_args.uv_translation_y_array = None;   }
     if !capacity[KindAttributeCapacity::UvRotationZ as usize]       {   p_args.uv_rotation_z_array = None;  }
     if !capacity[KindAttributeCapacity::UvScaleX as usize]          {   p_args.uv_scale_x_array = None; }
-    if !capacity[KindAttributeCapacity::UvTranslationY as usize]    {   p_args.uv_scale_y_array = None; }
+    if !capacity[KindAttributeCapacity::UvScaleY as usize]          {   p_args.uv_scale_y_array = None; }
     if !capacity[KindAttributeCapacity::BoundingRadius as usize]    {   p_args.bounding_radius_array = None;    }
     if !capacity[KindAttributeCapacity::Mask as usize]              {   p_args.mask_array = None;   }
 //    if !capacity[KindAttributeCapacity::Vertex as usize]          {   p_args.skew_array = None;   }   // Included in "Vertex"
