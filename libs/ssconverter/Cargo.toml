@@ -13,6 +13,7 @@ walkdir = "2.5.0"
 ordered-float = "5.1.0"
 sspj = { path = "../sspj" }
 ssab = { path = "../ssab", features = ["converter"] }
+ssinterpolate = { path = "../ssinterpolate" }
 wasm-bindgen = { version = "0.2.108", optional = true }
 
 [features]
