@@ -1,4 +1,6 @@
 // Numeric-literals in this source-code are not written as "X as T". (Because often appears  in mathematical-expressions.)
+const EASE_BACK_OVERRUN: f32 = 1.70158_f32;
+const EASE_BACK_INOUT_OVERRUN: f32 = EASE_BACK_OVERRUN * 1.525_f32;
 
 fn bounce_time(rate:f32) -> f32 {
     if rate < (1.0_f32 / 2.75_f32) {
@@ -178,8 +180,7 @@ pub extern "C" fn ss_interpolate_ease_out(value_start:f32, value_end:f32, rate:f
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_inout(rate:f32, power_easing:f32) -> f32 {
-    let rate_mul_2 = rate * 2.0_f32;
-    if rate_mul_2 < 1.0_f32 {
+    if (rate * 2.0_f32) < 1.0_f32 {
         0.5_f32 * rate.powf(power_easing)
     } else {
         1.0_f32 - (0.5_f32 * (2.0_f32 - rate).powf(power_easing))
@@ -192,7 +193,7 @@ pub extern "C" fn ss_interpolate_ease_inout(value_start:f32, value_end:f32, rate
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_exponential_in(rate:f32) -> f32 {
-    if rate == 0.0_f32 {
+    if rate.abs() <= f32::EPSILON {
         0.0_f32
     } else {
         2.0_f32.powf((10.0_f32 * (rate - 1.0_f32)) - (1.0_f32 * 0.001_f32))
@@ -218,8 +219,7 @@ pub extern "C" fn ss_interpolate_ease_exponential_out(value_start:f32, value_end
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_exponential_inout(rate:f32) -> f32 {
-    let rate_mul_2 = rate * 2.0_f32;
-    if rate_mul_2 < 1.0_f32 {
+    if (rate * 2.0_f32) < 1.0_f32 {
         0.5_f32 * 2.0_f32.powf(10.0_f32 * (rate - 1.0_f32))
     } else {
         0.5_f32 * (-1.0_f32 * 2.0_f32.powf(-10.0_f32 * (rate - 1.0_f32)) + 2.0_f32)
@@ -344,8 +344,7 @@ pub extern "C" fn ss_interpolate_ease_bounce_inout(value_start:f32, value_end:f3
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_back_in(rate:f32) -> f32 {
-    let overshoot = 1.70158_f32;
-    rate * rate * ((overshoot + 1.0_f32) * rate - overshoot)
+    rate * rate * ((EASE_BACK_OVERRUN + 1.0_f32) * rate - EASE_BACK_OVERRUN)
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_ease_back_in(value_start:f32, value_end:f32, rate:f32) -> f32 {
@@ -354,9 +353,8 @@ pub extern "C" fn ss_interpolate_ease_back_in(value_start:f32, value_end:f32, ra
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_back_out(rate:f32) -> f32 {
-    let overshoot = 1.70158_f32;
     let rate_slide = rate - 1.0_f32;
-    rate_slide * rate_slide * ((overshoot + 1.0_f32) * rate_slide + overshoot) + 1.0_f32
+    rate_slide * rate_slide * ((EASE_BACK_OVERRUN + 1.0_f32) * rate_slide + EASE_BACK_OVERRUN) + 1.0_f32
 }
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_ease_back_out(value_start:f32, value_end:f32, rate:f32) -> f32 {
@@ -365,13 +363,12 @@ pub extern "C" fn ss_interpolate_ease_back_out(value_start:f32, value_end:f32, r
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_back_inout(rate:f32) -> f32 {
-    let overshoot = 1.70158_f32 * 1.525_f32;
     let mut rate_mul_2 = rate * 2.0_f32;
     if rate_mul_2 < 1.0_f32 {
-        (rate_mul_2 * rate_mul_2 * ((overshoot + 1.0_f32) * rate_mul_2 - overshoot)) * 0.5_f32
+        (rate_mul_2 * rate_mul_2 * ((EASE_BACK_INOUT_OVERRUN + 1.0_f32) * rate_mul_2 - EASE_BACK_INOUT_OVERRUN)) * 0.5_f32
     } else {
         rate_mul_2 -= 2.0_f32;
-        (rate_mul_2 * rate_mul_2 * ((overshoot + 1.0_f32) * rate_mul_2 + overshoot)) * 0.5_f32 + 1.0_f32
+        (rate_mul_2 * rate_mul_2 * ((EASE_BACK_INOUT_OVERRUN + 1.0_f32) * rate_mul_2 + EASE_BACK_INOUT_OVERRUN)) * 0.5_f32 + 1.0_f32
     }
 }
 #[unsafe(no_mangle)]
