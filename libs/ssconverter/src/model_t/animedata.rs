@@ -3229,11 +3229,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
     });
 }
 
-fn modify_part_animation_data_value_changing_range(interpolation:&ssab::ssab::ss::format::InterpolationType) -> bool {
-    // Check whether value change in interpolating even if range-begin and range-end values are the same.
-
-    // MEMO: Inherently, while Hermite and Bezier curves change value in range even if beginning and ending values are the same.
-    //       * However, currently, in the case of Hermite and Bezier curves, key-data are   baked (pre-interpolated).
+fn optimize_part_animation_data_value_changing_range(interpolation: &ssab::ssab::ss::format::InterpolationType) -> bool {
     match *interpolation {
         ssab::ssab::ss::format::InterpolationType::None => false,
         ssab::ssab::ss::format::InterpolationType::Linear => false,
@@ -3262,503 +3258,277 @@ fn modify_part_animation_data_value_changing_range(interpolation:&ssab::ssab::ss
         _ => false,
     }
 }
-fn modify_part_animation_data_float(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataFloatValueT>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
+fn optimize_part_animation_data_float(attribute: &[ssab::ssab::ss::format::PartAnimationDataFloatValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataFloatValueT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
 
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        // 冗長なキーの判定: 前後と同じ値で、補間も発生しない場合
+        let is_redundant = current.value == prev.value && current.value == next.value
+            && !optimize_part_animation_data_value_changing_range(&prev.interpolation)
+            && !optimize_part_animation_data_value_changing_range(&current.interpolation);
+
+        if !is_redundant {
+            optimized.push(current.clone());
         }
     }
+
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_int(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataIntValueT>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
+fn optimize_part_animation_data_int(attribute: &[ssab::ssab::ss::format::PartAnimationDataIntValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataIntValueT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
-
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
 
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        let is_redundant = current.value == prev.value && current.value == next.value
+            && !optimize_part_animation_data_value_changing_range(&prev.interpolation)
+            && !optimize_part_animation_data_value_changing_range(&current.interpolation);
+
+        if !is_redundant {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_bool(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataBoolValueT>>) {
-    // MEMO: Since "bool-value" has no interpolation, simply compares current to previous.
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
 
-            if key.value == key_previous.value {
-                attribute.remove(index);    // Delete key-data:[0].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+fn optimize_part_animation_data_bool(attribute: &[ssab::ssab::ss::format::PartAnimationDataBoolValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataBoolValueT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        if i == 0 || current.value != attribute[i - 1].value {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_cell(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataCellValueT>>) {
-    // MEMO: Since "Cell" has no interpolation, simply compares current to previous.
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
 
-            if key.value == key_previous.value {
-                attribute.remove(index);    // Delete key-data:[0].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+fn optimize_part_animation_data_cell(attribute: &[ssab::ssab::ss::format::PartAnimationDataCellValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataCellValueT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        if i == 0 || current.value != attribute[i - 1].value {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_partcolor(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataPartColorT>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
+fn optimize_part_animation_data_partcolor(attribute: &[ssab::ssab::ss::format::PartAnimationDataPartColorT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataPartColorT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
-
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
+        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_shader(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataShaderT>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
+fn optimize_part_animation_data_shader(attribute: &[ssab::ssab::ss::format::PartAnimationDataShaderT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataShaderT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
+        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_vertex(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataVertexT>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
+fn optimize_part_animation_data_vertex(attribute: &[ssab::ssab::ss::format::PartAnimationDataVertexT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataVertexT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
+        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_skew(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataVec2T>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
+fn optimize_part_animation_data_skew(attribute: &[ssab::ssab::ss::format::PartAnimationDataVec2T]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataVec2T>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
+        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_deform(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataDeformT>>) {
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut is_value_change_previous = true;
 
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
+fn optimize_part_animation_data_deform(attribute: &[ssab::ssab::ss::format::PartAnimationDataDeformT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataDeformT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        let is_first = i == 0;
+        let is_last = i == attribute.len() - 1;
 
-            let mut is_value_change = true;
-            let mut is_unnecessary_previous = false;
-            if key.value == key_previous.value {    // Range in:[-1]/out:[0] values are not changing
-                is_value_change = modify_part_animation_data_value_changing_range(&key_previous.interpolation);
-                if !is_value_change_previous && !is_value_change  {    // Range [-2][-1][0] values are not changing.
-                    // If interpolation has value not changing, the previous key:[-1] is unnecessary.
-                    is_unnecessary_previous = true;
-                }
+        if is_first || is_last {
+            let mut key = current.clone();
+            if is_last {
+                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
             }
-
-            if !is_value_change {
-                // MEMO: Get previous-key-data[-1] separately for overwriting.
-                if let Some(key_previous_mut) = attribute.get_mut(index_previous) {
-                    key_previous_mut.interpolation = ssab::ssab::ss::format::InterpolationType::None;  // Disable interpolation
-                }
-            }
-            if is_unnecessary_previous {
-                attribute.remove(index_previous);    // Delete key-data:[-1].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-
-            is_value_change_previous = is_value_change;
+            optimized.push(key);
+            continue;
         }
 
-        // MEMO: When the interpolation for the last range is either Bezier or Hermite, there are case that the last key-data is not optimized (rare cases).
-        //       * Improving precise of function "modify_part_animation_data_value_changing_range" should probably resolve the issue.
-        if is_value_change_previous {
-            attribute.remove(index_previous);    // Delete key-data.
-        }
-        if let Some(key) = attribute.last_mut() {   // Remove trailing interpolation specifications (ineffective).
-            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+        let prev = &attribute[i - 1];
+        let next = &attribute[i + 1];
+        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
-fn modify_part_animation_data_texture(p_attr: &mut Option<Vec<ssab::ssab::ss::format::PartAnimationDataUIntValueT>>) {
-    // MEMO: Since "Texture Change" has no interpolation, simply compares current to previous.
-    if let Some(attribute) = p_attr {
-        // Delete key-data that values do not change.
-        let mut index_previous = 0;
-        let mut index = 1;
-        while index < attribute.len() {
-            let key = &attribute[index];
-            let key_previous = &attribute[index_previous];
 
-            if key.value == key_previous.value {
-                attribute.remove(index);    // Delete key-data:[0].
-
-                // "index" and "index_previous" must not increment (must not change).
-            } else {
-                index_previous = index;
-                index += 1;
-            }
-        }
-
-        // Remove empty
-        if attribute.is_empty() {
-            *p_attr = None;
+fn optimize_part_animation_data_texture(attribute: &[ssab::ssab::ss::format::PartAnimationDataUIntValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataUIntValueT>> {
+    if attribute.is_empty() { return None; }
+    let mut optimized = Vec::with_capacity(attribute.len());
+    for i in 0..attribute.len() {
+        let current = &attribute[i];
+        if i == 0 || current.value != attribute[i - 1].value {
+            optimized.push(current.clone());
         }
     }
+    if optimized.is_empty() { None } else { Some(optimized) }
 }
 
 fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
     // Key-data optimization per attribute
-    modify_part_animation_data_cell(&mut p_args.cell_array);
-    modify_part_animation_data_float(&mut p_args.position_x_array);
-    modify_part_animation_data_float(&mut p_args.position_y_array);
-    modify_part_animation_data_float(&mut p_args.position_z_array);
-    modify_part_animation_data_float(&mut p_args.rotation_x_array);
-    modify_part_animation_data_float(&mut p_args.rotation_y_array);
-    modify_part_animation_data_float(&mut p_args.rotation_z_array);
-    modify_part_animation_data_float(&mut p_args.scale_x_array);
-    modify_part_animation_data_float(&mut p_args.scale_y_array);
-    modify_part_animation_data_float(&mut p_args.local_scale_x_array);
-    modify_part_animation_data_float(&mut p_args.local_scale_y_array);
-    modify_part_animation_data_float(&mut p_args.alpha_array);
-    modify_part_animation_data_float(&mut p_args.local_alpha_array);
-    modify_part_animation_data_int(&mut p_args.priority_array);
-    modify_part_animation_data_bool(&mut p_args.flip_h_array);
-    modify_part_animation_data_bool(&mut p_args.flip_v_array);
-    modify_part_animation_data_bool(&mut p_args.hide_array);
-    modify_part_animation_data_partcolor(&mut p_args.part_color_array);
-    modify_part_animation_data_shader(&mut p_args.shader_array);
-    modify_part_animation_data_vertex(&mut p_args.vertex_array);
-    modify_part_animation_data_float(&mut p_args.pivot_x_array);
-    modify_part_animation_data_float(&mut p_args.pivot_y_array);
-    modify_part_animation_data_float(&mut p_args.anchor_x_array);
-    modify_part_animation_data_float(&mut p_args.anchor_y_array);
-    modify_part_animation_data_float(&mut p_args.size_x_array);
-    modify_part_animation_data_float(&mut p_args.size_y_array);
-    modify_part_animation_data_bool(&mut p_args.img_flip_h_array);
-    modify_part_animation_data_bool(&mut p_args.img_flip_v_array);
-    modify_part_animation_data_float(&mut p_args.uv_translation_x_array);
-    modify_part_animation_data_float(&mut p_args.uv_translation_y_array);
-    modify_part_animation_data_float(&mut p_args.uv_rotation_z_array);
-    modify_part_animation_data_float(&mut p_args.uv_scale_x_array);
-    modify_part_animation_data_float(&mut p_args.uv_scale_y_array);
-    modify_part_animation_data_float(&mut p_args.bounding_radius_array);
-    modify_part_animation_data_float(&mut p_args.mask_array);
-    modify_part_animation_data_skew(&mut p_args.skew_array);
-    modify_part_animation_data_deform(&mut p_args.deform_array);
-    modify_part_animation_data_texture(&mut p_args.texture_array);
+    p_args.cell_array = p_args.cell_array.as_ref().and_then(|v| optimize_part_animation_data_cell(v));
+    p_args.position_x_array = p_args.position_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.position_y_array = p_args.position_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.position_z_array = p_args.position_z_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.rotation_x_array = p_args.rotation_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.rotation_y_array = p_args.rotation_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.rotation_z_array = p_args.rotation_z_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.scale_x_array = p_args.scale_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.scale_y_array = p_args.scale_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.local_scale_x_array = p_args.local_scale_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.local_scale_y_array = p_args.local_scale_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.alpha_array = p_args.alpha_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.local_alpha_array = p_args.local_alpha_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.priority_array = p_args.priority_array.as_ref().and_then(|v| optimize_part_animation_data_int(v));
+    p_args.flip_h_array = p_args.flip_h_array.as_ref().and_then(|v| optimize_part_animation_data_bool(v));
+    p_args.flip_v_array = p_args.flip_v_array.as_ref().and_then(|v| optimize_part_animation_data_bool(v));
+    p_args.hide_array = p_args.hide_array.as_ref().and_then(|v| optimize_part_animation_data_bool(v));
+    p_args.part_color_array = p_args.part_color_array.as_ref().and_then(|v| optimize_part_animation_data_partcolor(v));
+    p_args.shader_array = p_args.shader_array.as_ref().and_then(|v| optimize_part_animation_data_shader(v));
+    p_args.vertex_array = p_args.vertex_array.as_ref().and_then(|v| optimize_part_animation_data_vertex(v));
+    p_args.pivot_x_array = p_args.pivot_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.pivot_y_array = p_args.pivot_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.anchor_x_array = p_args.anchor_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.anchor_y_array = p_args.anchor_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.size_x_array = p_args.size_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.size_y_array = p_args.size_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.img_flip_h_array = p_args.img_flip_h_array.as_ref().and_then(|v| optimize_part_animation_data_bool(v));
+    p_args.img_flip_v_array = p_args.img_flip_v_array.as_ref().and_then(|v| optimize_part_animation_data_bool(v));
+    p_args.uv_translation_x_array = p_args.uv_translation_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.uv_translation_y_array = p_args.uv_translation_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.uv_rotation_z_array = p_args.uv_rotation_z_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.uv_scale_x_array = p_args.uv_scale_x_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.uv_scale_y_array = p_args.uv_scale_y_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.bounding_radius_array = p_args.bounding_radius_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.mask_array = p_args.mask_array.as_ref().and_then(|v| optimize_part_animation_data_float(v));
+    p_args.skew_array = p_args.skew_array.as_ref().and_then(|v| optimize_part_animation_data_skew(v));
+    p_args.deform_array = p_args.deform_array.as_ref().and_then(|v| optimize_part_animation_data_deform(v));
+    p_args.texture_array = p_args.texture_array.as_ref().and_then(|v| optimize_part_animation_data_texture(v));
 }
 
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
