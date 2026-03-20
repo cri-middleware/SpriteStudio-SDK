@@ -9,6 +9,7 @@ A Software Development Kit for sspj projects that are created by  [OPTPiX Sprite
     - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
     - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` files.
     - [libssruntime](./libs/ssruntime/README.md): a library that helps implement an animation player. The features are controlling playback, extracting keyframes, and doing interpolation.
+    - [libssinterpolate](./libs/ssinterpolate/README.md): a platform-agnostic math library for animation interpolations.
 - Tool
     - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
