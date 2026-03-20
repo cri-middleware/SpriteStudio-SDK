@@ -3719,63 +3719,46 @@ fn modify_part_animation_data_texture(p_attr: &mut Option<Vec<ssab::ssab::ss::fo
     }
 }
 
-fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
-    let support = part_type.support_profile();
-
-    macro_rules! apply {
-        ($field:ident, $supported:expr, $opt_fn:ident) => {
-            if !$supported {
-                p_args.$field = None;
-            } else {
-                $opt_fn(&mut p_args.$field);
-            }
-        };
-    }
-
-    apply!(cell_array, support.cell, modify_part_animation_data_cell);
-    apply!(position_x_array, support.position_x, modify_part_animation_data_float);
-    apply!(position_y_array, support.position_y, modify_part_animation_data_float);
-    apply!(position_z_array, support.position_z, modify_part_animation_data_float);
-    apply!(rotation_x_array, support.rotation_x, modify_part_animation_data_float);
-    apply!(rotation_y_array, support.rotation_y, modify_part_animation_data_float);
-    apply!(rotation_z_array, support.rotation_z, modify_part_animation_data_float);
-    apply!(scale_x_array, support.scale_x, modify_part_animation_data_float);
-    apply!(scale_y_array, support.scale_y, modify_part_animation_data_float);
-    apply!(local_scale_x_array, support.local_scale_x, modify_part_animation_data_float);
-    apply!(local_scale_y_array, support.local_scale_y, modify_part_animation_data_float);
-    apply!(alpha_array, support.alpha, modify_part_animation_data_float);
-    apply!(local_alpha_array, support.local_alpha, modify_part_animation_data_float);
-    apply!(priority_array, support.priority, modify_part_animation_data_int);
-    apply!(flip_h_array, support.flip_h, modify_part_animation_data_bool);
-    apply!(flip_v_array, support.flip_v, modify_part_animation_data_bool);
-    apply!(hide_array, support.hide, modify_part_animation_data_bool);
-    apply!(part_color_array, support.part_color, modify_part_animation_data_partcolor);
-    apply!(shader_array, support.shader, modify_part_animation_data_shader);
-    apply!(vertex_array, support.vertex, modify_part_animation_data_vertex);
-    apply!(pivot_x_array, support.pivot_x, modify_part_animation_data_float);
-    apply!(pivot_y_array, support.pivot_y, modify_part_animation_data_float);
-    apply!(anchor_x_array, support.anchor_x, modify_part_animation_data_float);
-    apply!(anchor_y_array, support.anchor_y, modify_part_animation_data_float);
-    apply!(size_x_array, support.size_x, modify_part_animation_data_float);
-    apply!(size_y_array, support.size_y, modify_part_animation_data_float);
-    apply!(img_flip_h_array, support.img_flip_h, modify_part_animation_data_bool);
-    apply!(img_flip_v_array, support.img_flip_v, modify_part_animation_data_bool);
-    apply!(uv_translation_x_array, support.uv_translation_x, modify_part_animation_data_float);
-    apply!(uv_translation_y_array, support.uv_translation_y, modify_part_animation_data_float);
-    apply!(uv_rotation_z_array, support.uv_rotation_z, modify_part_animation_data_float);
-    apply!(uv_scale_x_array, support.uv_scale_x, modify_part_animation_data_float);
-    apply!(uv_scale_y_array, support.uv_scale_y, modify_part_animation_data_float);
-    apply!(bounding_radius_array, support.bounding_radius, modify_part_animation_data_float);
-    apply!(mask_array, support.mask, modify_part_animation_data_float);
-    apply!(deform_array, support.deform, modify_part_animation_data_deform);
-    apply!(texture_array, support.texture, modify_part_animation_data_texture);
-
-    // Special case: Skew is also controlled by the Vertex flag in the original matrix
-    if !support.vertex {
-        p_args.skew_array = None;
-    } else {
-        modify_part_animation_data_skew(&mut p_args.skew_array);
-    }
+fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
+    // Key-data optimization per attribute
+    modify_part_animation_data_cell(&mut p_args.cell_array);
+    modify_part_animation_data_float(&mut p_args.position_x_array);
+    modify_part_animation_data_float(&mut p_args.position_y_array);
+    modify_part_animation_data_float(&mut p_args.position_z_array);
+    modify_part_animation_data_float(&mut p_args.rotation_x_array);
+    modify_part_animation_data_float(&mut p_args.rotation_y_array);
+    modify_part_animation_data_float(&mut p_args.rotation_z_array);
+    modify_part_animation_data_float(&mut p_args.scale_x_array);
+    modify_part_animation_data_float(&mut p_args.scale_y_array);
+    modify_part_animation_data_float(&mut p_args.local_scale_x_array);
+    modify_part_animation_data_float(&mut p_args.local_scale_y_array);
+    modify_part_animation_data_float(&mut p_args.alpha_array);
+    modify_part_animation_data_float(&mut p_args.local_alpha_array);
+    modify_part_animation_data_int(&mut p_args.priority_array);
+    modify_part_animation_data_bool(&mut p_args.flip_h_array);
+    modify_part_animation_data_bool(&mut p_args.flip_v_array);
+    modify_part_animation_data_bool(&mut p_args.hide_array);
+    modify_part_animation_data_partcolor(&mut p_args.part_color_array);
+    modify_part_animation_data_shader(&mut p_args.shader_array);
+    modify_part_animation_data_vertex(&mut p_args.vertex_array);
+    modify_part_animation_data_float(&mut p_args.pivot_x_array);
+    modify_part_animation_data_float(&mut p_args.pivot_y_array);
+    modify_part_animation_data_float(&mut p_args.anchor_x_array);
+    modify_part_animation_data_float(&mut p_args.anchor_y_array);
+    modify_part_animation_data_float(&mut p_args.size_x_array);
+    modify_part_animation_data_float(&mut p_args.size_y_array);
+    modify_part_animation_data_bool(&mut p_args.img_flip_h_array);
+    modify_part_animation_data_bool(&mut p_args.img_flip_v_array);
+    modify_part_animation_data_float(&mut p_args.uv_translation_x_array);
+    modify_part_animation_data_float(&mut p_args.uv_translation_y_array);
+    modify_part_animation_data_float(&mut p_args.uv_rotation_z_array);
+    modify_part_animation_data_float(&mut p_args.uv_scale_x_array);
+    modify_part_animation_data_float(&mut p_args.uv_scale_y_array);
+    modify_part_animation_data_float(&mut p_args.bounding_radius_array);
+    modify_part_animation_data_float(&mut p_args.mask_array);
+    modify_part_animation_data_skew(&mut p_args.skew_array);
+    modify_part_animation_data_deform(&mut p_args.deform_array);
+    modify_part_animation_data_texture(&mut p_args.texture_array);
 }
 
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
