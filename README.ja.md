@@ -9,6 +9,7 @@
     - [libssab](./libs/ssab/README.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
     - [libssconverter](./libs/ssconverter/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。
     - [libssruntime](./libs/ssruntime/README.md): アニメーションプレーヤーの実装を支援するライブラリです。再生の制御、キーフレームの抽出、補間などの機能を備えています。
+    - [libssinterpolate](./libs/ssinterpolate/README.ja.md): アニメーション補間計算のためのプラットフォーム非依存な数学ライブラリです。
 - ツール
     - [ssconverter-cli](./cli/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
 
