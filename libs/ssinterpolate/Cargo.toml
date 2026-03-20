@@ -3,5 +3,8 @@ name = "ssinterpolate"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["ffi"]
+ffi = []
+
 [dependencies]
-ssab = { path = "../ssab", features = ["converter"] }

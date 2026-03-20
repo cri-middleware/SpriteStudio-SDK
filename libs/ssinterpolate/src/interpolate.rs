@@ -1,148 +1,133 @@
-// Numeric-literals in this source-code are not written as "X as T". (Because often appears  in mathematical-expressions.)
-const EASE_BACK_OVERRUN: f32 = 1.70158_f32;
-const EASE_BACK_INOUT_OVERRUN: f32 = EASE_BACK_OVERRUN * 1.525_f32;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-fn bounce_time(rate:f32) -> f32 {
-    if rate < (1.0_f32 / 2.75_f32) {
-        7.5625_f32 * rate * rate
-    } else if rate < (2.0_f32 / 2.75_f32) {
-        let rate_modify = rate - (1.5_f32 / 2.72_f32);
-        7.5625_f32 * rate_modify * rate_modify + 0.75_f32
-    } else if rate < (2.5_f32 / 2.75_f32) {
-        let rate_modify = rate - (2.25_f32 / 2.75_f32);
-        7.5625f32 * rate_modify * rate_modify + 0.9375_f32
+/// A trait to abstract floating-point operations for generic interpolation.
+pub trait SsFloat:
+    Sized
+    + Copy
+    + PartialEq
+    + PartialOrd
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Div<Output = Self>
+    + AddAssign
+    + SubAssign
+    + MulAssign
+    + DivAssign
+{
+    fn from_f32(v: f32) -> Self;
+    fn to_i32(self) -> i32;
+    fn powf(self, n: Self) -> Self;
+    fn sin(self) -> Self;
+    fn cos(self) -> Self;
+    fn pi() -> Self;
+}
+
+impl SsFloat for f32 {
+    #[inline] fn from_f32(v: f32) -> Self { v }
+    #[inline] fn to_i32(self) -> i32 { self as i32 }
+    #[inline] fn powf(self, n: Self) -> Self { f32::powf(self, n) }
+    #[inline] fn sin(self) -> Self { f32::sin(self) }
+    #[inline] fn cos(self) -> Self { f32::cos(self) }
+    #[inline] fn pi() -> Self { std::f32::consts::PI }
+}
+
+impl SsFloat for f64 {
+    #[inline] fn from_f32(v: f32) -> Self { v as f64 }
+    #[inline] fn to_i32(self) -> i32 { self as i32 }
+    #[inline] fn powf(self, n: Self) -> Self { f64::powf(self, n) }
+    #[inline] fn sin(self) -> Self { f64::sin(self) }
+    #[inline] fn cos(self) -> Self { f64::cos(self) }
+    #[inline] fn pi() -> Self { std::f64::consts::PI }
+}
+
+// --- Core Generic Implementations ---
+
+fn bounce_time<T: SsFloat>(rate: T) -> T {
+    let div_2_75 = T::from_f32(1.0 / 2.75);
+    let div_2_0_2_75 = T::from_f32(2.0 / 2.75);
+    let div_2_5_2_75 = T::from_f32(2.5 / 2.75);
+    
+    let mul_7_5625 = T::from_f32(7.5625);
+
+    if rate < div_2_75 {
+        mul_7_5625 * rate * rate
+    } else if rate < div_2_0_2_75 {
+        let rate_modify = rate - T::from_f32(1.5 / 2.72); // Note: original code has 2.72 here, keeping it to match behavior
+        mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.75)
+    } else if rate < div_2_5_2_75 {
+        let rate_modify = rate - T::from_f32(2.25 / 2.75);
+        mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.9375)
     } else {
-        let rate_modify = rate - (2.625_f32 / 2.75_f32);
-        7.5625_f32 * rate_modify * rate_modify + 0.984375_f32
+        let rate_modify = rate - T::from_f32(2.625 / 2.75);
+        mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.984375)
     }
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_linear(value_now:f32, value_start:f32, value_end:f32) -> f32 {
+pub fn rate_linear<T: SsFloat>(value_now: T, value_start: T, value_end: T) -> T {
     (value_now - value_start) / (value_end - value_start)
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_linear(value_start:f32, value_end:f32, rate:f32) -> f32 {
+
+pub fn linear<T: SsFloat>(value_start: T, value_end: T, rate: T) -> T {
     (value_end - value_start) * rate + value_start
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_accelerate(rate:f32) -> f32 {
+pub fn rate_accelerate<T: SsFloat>(rate: T) -> T {
     rate * rate
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_accelerate(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ((value_end - value_start) * (rate * rate)) + value_start
+
+pub fn rate_decelerate<T: SsFloat>(rate: T) -> T {
+    let rate_inverse = T::from_f32(1.0) - rate;
+    T::from_f32(1.0) - (rate_inverse * rate_inverse)
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_decelerate(rate:f32) -> f32 {
-    let rate_inverse = 1.0_f32 - rate;
-    1.0_f32 - (rate_inverse * rate_inverse)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_decelerate(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    let rate_inverse = 1.0_f32 - rate;
-    ((value_end - value_start) * (1.0_f32 - (rate_inverse * rate_inverse))) + value_start
-}
+pub fn hermite<T: SsFloat>(value_start: T, value_end: T, rate: T, speed_start: T, speed_end: T) -> T {
+    let rate_pow2 = rate * rate;
+    let rate_pow3 = rate_pow2 * rate;
+    
+    let two = T::from_f32(2.0);
+    let three = T::from_f32(3.0);
+    let one = T::from_f32(1.0);
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_hermite(rate:f32, speed_start:f32, speed_end:f32) -> f32 {
-    ss_interpolate_hermite(0.0_f32, 1.0_f32, rate, speed_start, speed_end)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_hermite_accuracy(rate:f64, speed_start:f64, speed_end:f64) -> f64 {
-    // MEMO: for Converter
-    ss_interpolate_hermite_accuracy(0.0_f64, 1.0_f64, rate, speed_start, speed_end)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_hermite(value_start:f32, value_end:f32, rate:f32, speed_start:f32, speed_end:f32) -> f32 {
-    let rate_pow2 = rate * rate;
-    let rate_pow3 = rate_pow2 * rate;
-    (((2.0_f32 * rate_pow3) - (3.0_f32 * rate_pow2) + 1.0_f32) * value_start)
-            + (((3.0_f32 * rate_pow2) - (2.0_f32 * rate_pow3)) * value_end)
-            + ((rate_pow3 - (2.0_f32 * rate_pow2) + rate) * (speed_start - value_start))
-            + ((rate_pow3 - rate_pow2) * (speed_end - value_end))
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_hermite_accuracy(value_start:f64, value_end:f64, rate:f64, speed_start:f64, speed_end:f64) -> f64 {
-    // MEMO: for Converter
-    let rate_pow2 = rate * rate;
-    let rate_pow3 = rate_pow2 * rate;
-    (((2.0_f64 * rate_pow3) - (3.0_f64 * rate_pow2) + 1.0_f64) * value_start)
-        + (((3.0_f64 * rate_pow2) - (2.0_f64 * rate_pow3)) * value_end)
-        + ((rate_pow3 - (2.0_f64 * rate_pow2) + rate) * (speed_start - value_start))
+    (((two * rate_pow3) - (three * rate_pow2) + one) * value_start)
+        + (((three * rate_pow2) - (two * rate_pow3)) * value_end)
+        + ((rate_pow3 - (two * rate_pow2) + rate) * (speed_start - value_start))
         + ((rate_pow3 - rate_pow2) * (speed_end - value_end))
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_bezier(value_start_x:f32, value_end_x:f32, rate:f32, vector_start_x:f32, vector_start_y:f32, vector_end_x:f32, vector_end_y:f32) -> f32 {
-    ss_interpolate_bezier(value_start_x, 0.0_f32, value_end_x, 1.0_f32, rate, vector_start_x, vector_start_y, vector_end_x, vector_end_y)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_bezier_accuracy(value_start_x:f64, value_end_x:f64, rate:f64, vector_start_x:f64, vector_start_y:f64, vector_end_x:f64, vector_end_y:f64) -> f64 {
-    // MEMO: for Converter
-    ss_interpolate_bezier_accuracy(value_start_x, 0.0_f64, value_end_x, 1.0_f64, rate, vector_start_x, vector_start_y, vector_end_x, vector_end_y)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_bezier(value_start_x:f32, value_start_y:f32, value_end_x:f32, value_end_y:f32, rate:f32, vector_start_x:f32, vector_start_y:f32, vector_end_x:f32, vector_end_y:f32) -> f32 {
-    let frame = (ss_interpolate_linear(value_start_x, value_end_x, rate) as i32) as f32;
+pub fn bezier<T: SsFloat>(
+    value_start_x: T, value_start_y: T,
+    value_end_x: T, value_end_y: T,
+    rate: T,
+    vector_start_x: T, vector_start_y: T,
+    vector_end_x: T, vector_end_y: T
+) -> T {
+    let frame_i32 = linear(value_start_x, value_end_x, rate).to_i32();
+    let frame = T::from_f32(frame_i32 as f32);
 
-    let mut area_now = 0.5_f32;
-    let mut range_now = 0.5_f32;
+    let mut area_now = T::from_f32(0.5);
+    let mut range_now = T::from_f32(0.5);
     let mut base_now;
     let mut base_now_pow2;
     let mut base_now_pow3;
     let mut area_now_pow2;
+    
+    let one = T::from_f32(1.0);
+    let three = T::from_f32(3.0);
+    let half = T::from_f32(0.5);
 
     for _ in 0..8 {
-        base_now = 1.0_f32 - area_now;
+        base_now = one - area_now;
         base_now_pow2 = base_now * base_now;
         base_now_pow3 = base_now_pow2 * base_now;
         area_now_pow2 = area_now * area_now;
+        
         let frame_temp = (base_now_pow3 * value_start_x)
-                            + (3.0_f32 * base_now_pow2 * area_now * (vector_start_x + value_start_x))
-                            + (3.0_f32 * base_now * area_now_pow2 * (vector_end_x + value_end_x))
-                            + (area_now * area_now_pow2 * value_end_x);
-        range_now *= 0.5_f32;
-        if frame_temp > frame {
-            area_now -= range_now;
-        } else {
-            area_now += range_now;
-        }
-    }
-
-    area_now_pow2 = area_now * area_now;
-    base_now = 1.0_f32 - area_now;
-    base_now_pow2 = base_now * base_now;
-    base_now_pow3 = base_now_pow2 * base_now;
-    (base_now_pow3 * value_start_y)
-        + (3.0_f32 * base_now_pow2 * area_now * (vector_start_y + value_start_y))
-        + (3.0_f32 * base_now * area_now_pow2 * (vector_end_y + value_end_y))
-        + (area_now * area_now_pow2 * value_end_y)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_bezier_accuracy(value_start_x:f64, value_start_y:f64, value_end_x:f64, value_end_y:f64, rate:f64, vector_start_x:f64, vector_start_y:f64, vector_end_x:f64, vector_end_y:f64) -> f64 {
-    // MEMO: for Converter
-    let frame = (ss_interpolate_linear(value_start_x as f32, value_end_x as f32, rate as f32) as i32) as f64;
-
-    let mut area_now = 0.5_f64;
-    let mut range_now = 0.5_f64;
-    let mut base_now;
-    let mut base_now_pow2;
-    let mut base_now_pow3;
-    let mut area_now_pow2;
-
-    for _ in 0..8 {
-        base_now = 1.0_f64 - area_now;
-        base_now_pow2 = base_now * base_now;
-        base_now_pow3 = base_now_pow2 * base_now;
-        area_now_pow2 = area_now * area_now;
-        let frame_temp = (base_now_pow3 * value_start_x)
-            + (3.0_f64 * base_now_pow2 * area_now * (vector_start_x + value_start_x))
-            + (3.0_f64 * base_now * area_now_pow2 * (vector_end_x + value_end_x))
+            + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x))
+            + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
             + (area_now * area_now_pow2 * value_end_x);
-        range_now *= 0.5_f64;
+            
+        range_now *= half;
         if frame_temp > frame {
             area_now -= range_now;
         } else {
@@ -151,24 +136,25 @@ pub extern "C" fn ss_interpolate_bezier_accuracy(value_start_x:f64, value_start_
     }
 
     area_now_pow2 = area_now * area_now;
-    base_now = 1.0_f64 - area_now;
+    base_now = one - area_now;
     base_now_pow2 = base_now * base_now;
     base_now_pow3 = base_now_pow2 * base_now;
+    
     (base_now_pow3 * value_start_y)
-        + (3.0_f64 * base_now_pow2 * area_now * (vector_start_y + value_start_y))
-        + (3.0_f64 * base_now * area_now_pow2 * (vector_end_y + value_end_y))
+        + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y))
+        + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y))
         + (area_now * area_now_pow2 * value_end_y)
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_in(rate:f32, power_easing:f32) -> f32 {
+pub fn rate_ease_in<T: SsFloat>(rate: T, power_easing: T) -> T {
     rate.powf(power_easing)
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_in(value_start:f32, value_end:f32, rate:f32, power_easing:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_in(rate, power_easing))
+
+pub fn rate_ease_out<T: SsFloat>(rate: T, power_easing: T) -> T {
+    rate.powf(T::from_f32(1.0) / power_easing)
 }
 
+<<<<<<< HEAD
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_out(rate:f32, power_easing:f32) -> f32 {
     rate.powf(1.0_f32 / power_easing)
@@ -182,166 +168,161 @@ pub extern "C" fn ss_interpolate_ease_out(value_start:f32, value_end:f32, rate:f
 pub extern "C" fn ss_interpolate_rate_ease_inout(rate:f32, power_easing:f32) -> f32 {
     if (rate * 2.0_f32) < 1.0_f32 {
         0.5_f32 * rate.powf(power_easing)
-    } else {
-        1.0_f32 - (0.5_f32 * (2.0_f32 - rate).powf(power_easing))
-    }
+||||||| parent of 8303652 (declare public rust methods in ssinterpolate)
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_out(rate:f32, power_easing:f32) -> f32 {
+    rate.powf(1.0_f32 / power_easing)
 }
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_inout(value_start:f32, value_end:f32, rate:f32, power_easing:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_inout(rate, power_easing))
+pub extern "C" fn ss_interpolate_ease_out(value_start:f32, value_end:f32, rate:f32, power_easing:f32) -> f32 {
+    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_out(rate, power_easing))
 }
 
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_inout(rate:f32, power_easing:f32) -> f32 {
+    let rate_mul_2 = rate * rate;
+    if rate_mul_2 < 1.0_f32 {
+        0.5_f32 * rate.powf(power_easing)
+=======
+pub fn rate_ease_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
+    let rate_mul_2 = rate * T::from_f32(2.0);
+    if rate_mul_2 < T::from_f32(1.0) {
+        T::from_f32(0.5) * rate.powf(power_easing)
+>>>>>>> 8303652 (declare public rust methods in ssinterpolate)
+    } else {
+        T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate).powf(power_easing))
+    }
+}
+
+<<<<<<< HEAD
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_exponential_in(rate:f32) -> f32 {
     if rate.abs() <= f32::EPSILON {
         0.0_f32
+||||||| parent of 8303652 (declare public rust methods in ssinterpolate)
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_exponential_in(rate:f32) -> f32 {
+    if rate == 0.0_f32 {
+        0.0_f32
+=======
+pub fn rate_ease_exponential_in<T: SsFloat>(rate: T) -> T {
+    if rate == T::from_f32(0.0) {
+        T::from_f32(0.0)
+>>>>>>> 8303652 (declare public rust methods in ssinterpolate)
     } else {
-        2.0_f32.powf((10.0_f32 * (rate - 1.0_f32)) - (1.0_f32 * 0.001_f32))
+        T::from_f32(2.0).powf((T::from_f32(10.0) * (rate - T::from_f32(1.0))) - T::from_f32(0.001))
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_exponential_in(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_exponential_in(rate))
-}
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_exponential_out(rate:f32) -> f32 {
-    if rate >= 0.0_f32 {
-        1.0_f32
+pub fn rate_ease_exponential_out<T: SsFloat>(rate: T) -> T {
+    if rate >= T::from_f32(0.0) {
+        T::from_f32(1.0)
     } else {
-        -1.0_f32 * 2.0_f32.powf((-10.0_f32 * rate) + 1.0_f32)
+        T::from_f32(-1.0) * T::from_f32(2.0).powf((T::from_f32(-10.0) * rate) + T::from_f32(1.0))
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_exponential_out(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_exponential_out(rate))
-}
 
+<<<<<<< HEAD
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_exponential_inout(rate:f32) -> f32 {
     if (rate * 2.0_f32) < 1.0_f32 {
         0.5_f32 * 2.0_f32.powf(10.0_f32 * (rate - 1.0_f32))
+||||||| parent of 8303652 (declare public rust methods in ssinterpolate)
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_exponential_inout(rate:f32) -> f32 {
+    let rate_mul_2 = rate * 2.0_f32;
+    if rate_mul_2 < 1.0_f32 {
+        0.5_f32 * 2.0_f32.powf(10.0_f32 * (rate - 1.0_f32))
+=======
+pub fn rate_ease_exponential_inout<T: SsFloat>(rate: T) -> T {
+    let rate_mul_2 = rate * T::from_f32(2.0);
+    if rate_mul_2 < T::from_f32(1.0) {
+        T::from_f32(0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0)))
+>>>>>>> 8303652 (declare public rust methods in ssinterpolate)
     } else {
-        0.5_f32 * (-1.0_f32 * 2.0_f32.powf(-10.0_f32 * (rate - 1.0_f32)) + 2.0_f32)
+        T::from_f32(0.5) * (T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(-10.0) * (rate - T::from_f32(1.0))) + T::from_f32(2.0))
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_exponential_inout(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_exponential_inout(rate))
+
+pub fn rate_ease_sine_in<T: SsFloat>(rate: T) -> T {
+    T::from_f32(-1.0) * (rate * (T::pi() * T::from_f32(0.5))).cos() + T::from_f32(1.0)
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_sine_in(rate:f32) -> f32 {
-    -1.0_f32 * (rate * (std::f32::consts::PI * 0.5_f32)).cos() + 1.0_f32
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_sine_in(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_sine_in(rate))
+pub fn rate_ease_sine_out<T: SsFloat>(rate: T) -> T {
+    (rate * (T::pi() * T::from_f32(0.5))).cos()
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_sine_out(rate:f32) -> f32 {
-    (rate * (std::f32::consts::PI * 0.5_f32)).cos()
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_sine_out(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_sine_out(rate))
+pub fn rate_ease_sine_inout<T: SsFloat>(rate: T) -> T {
+    T::from_f32(-0.5) * (T::pi() * rate).cos() - T::from_f32(1.0)
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_sine_inout(rate:f32) -> f32 {
-    -0.5_f32 * (std::f32::consts::PI * rate).cos() - 1.0_f32
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_sine_inout(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_sine_inout(rate))
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_elastic_in(rate:f32, power_easing:f32) -> f32 {
-    if rate <= 0.0_f32 || rate >= 1.0 {
+pub fn rate_ease_elastic_in<T: SsFloat>(rate: T, power_easing: T) -> T {
+    let zero = T::from_f32(0.0);
+    let one = T::from_f32(1.0);
+    if rate <= zero || rate >= one {
         rate
     } else {
-        let s = power_easing * 0.25_f32;
-        let rate_slide = rate - 1.0_f32;
-        -1.0_f32 * 2.0_f32.powf(10.0_f32 * rate_slide) * ((rate_slide - s) * (std::f32::consts::PI * 2.0_f32) / power_easing).sin()
+        let s = power_easing * T::from_f32(0.25);
+        let rate_slide = rate - one;
+        T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_slide) * ((rate_slide - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin()
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_elastic_in(value_start:f32, value_end:f32, rate:f32, power_easing:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_elastic_in(rate, power_easing))
-}
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_elastic_out(rate:f32, power_easing:f32) -> f32 {
-    if rate <= 0.0_f32 || rate >= 1.0 {
+pub fn rate_ease_elastic_out<T: SsFloat>(rate: T, power_easing: T) -> T {
+    let zero = T::from_f32(0.0);
+    let one = T::from_f32(1.0);
+    if rate <= zero || rate >= one {
         rate
     } else {
-        let s = power_easing * 0.25_f32;
-        2.0_f32.powf(-10.0_f32 * rate) * ((rate - s) * (std::f32::consts::PI * 2.0_f32) / power_easing).sin() + 1.0_f32
+        let s = power_easing * T::from_f32(0.25);
+        T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin() + one
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_elastic_out(value_start:f32, value_end:f32, rate:f32, power_easing:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_elastic_out(rate, power_easing))
-}
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_elastic_inout(rate:f32, power_easing:f32) -> f32 {
-    if rate <= 0.0_f32 || rate >= 1.0_f32 {
+pub fn rate_ease_elastic_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
+    let zero = T::from_f32(0.0);
+    let one = T::from_f32(1.0);
+    if rate <= zero || rate >= one {
         rate
     } else {
-        let mut rate_mul_2 = rate * 2.0_f32;
+        let mut rate_mul_2 = rate * T::from_f32(2.0);
         let mut power_easing_modify = power_easing;
-        if power_easing_modify == 0.0_f32 {
-            power_easing_modify = 0.3_f32 * 1.5_f32;
+        if power_easing_modify == zero {
+            power_easing_modify = T::from_f32(0.3 * 1.5);
         }
 
-        let s = power_easing_modify * 0.25_f32;
-        rate_mul_2 -= 1.0_f32;
-        if rate_mul_2 < 0.0_f32 {
-            -0.5_f32 * 2.0_f32.powf(10.0_f32 * rate_mul_2) * ((rate - s) * (std::f32::consts::PI * 2.0_f32) / power_easing_modify).sin()
+        let s = power_easing_modify * T::from_f32(0.25);
+        rate_mul_2 -= one;
+        if rate_mul_2 < zero {
+            T::from_f32(-0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_mul_2) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin()
         } else {
-            2.0_f32.powf(-10.0_f32 * rate_mul_2) * ((rate_mul_2 - s) * (std::f32::consts::PI * 2.0_f32) / power_easing_modify).sin() * 0.5_f32 + 1.0_f32
+            T::from_f32(2.0).powf(T::from_f32(-10.0) * rate_mul_2) * ((rate_mul_2 - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin() * T::from_f32(0.5) + one
         }
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_elastic_inout(value_start:f32, value_end:f32, rate:f32, power_easing:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_elastic_inout(rate, power_easing))
+
+pub fn rate_ease_bounce_in<T: SsFloat>(rate: T) -> T {
+    T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - rate)
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_bounce_in(rate:f32) -> f32 {
-    1.0_f32 - bounce_time(1.0_f32 - rate)
-}
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_bounce_in(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_bounce_in(rate))
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_bounce_out(rate:f32) -> f32 {
+pub fn rate_ease_bounce_out<T: SsFloat>(rate: T) -> T {
     bounce_time(rate)
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_bounce_out(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_bounce_out(rate))
-}
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_rate_ease_bounce_inout(rate:f32) -> f32 {
-    if rate < 0.5_f32 {
-        1.0_f32 - bounce_time(1.0_f32 - (2.0_f32 * rate)) * 0.5_f32
+pub fn rate_ease_bounce_inout<T: SsFloat>(rate: T) -> T {
+    if rate < T::from_f32(0.5) {
+        T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate)) * T::from_f32(0.5)
     } else {
-        bounce_time(rate * 2.0_f32 - 1.0_f32) * 0.5_f32 + 0.5_f32
+        bounce_time(rate * T::from_f32(2.0) - T::from_f32(1.0)) * T::from_f32(0.5) + T::from_f32(0.5)
     }
 }
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_bounce_inout(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_bounce_inout(rate))
+
+pub fn rate_ease_back_in<T: SsFloat>(rate: T) -> T {
+    let overshoot = T::from_f32(1.70158);
+    rate * rate * ((overshoot + T::from_f32(1.0)) * rate - overshoot)
 }
 
+<<<<<<< HEAD
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_back_in(rate:f32) -> f32 {
     rate * rate * ((EASE_BACK_OVERRUN + 1.0_f32) * rate - EASE_BACK_OVERRUN)
@@ -349,8 +330,24 @@ pub extern "C" fn ss_interpolate_rate_ease_back_in(rate:f32) -> f32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_ease_back_in(value_start:f32, value_end:f32, rate:f32) -> f32 {
     ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_back_in(rate))
+||||||| parent of 8303652 (declare public rust methods in ssinterpolate)
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_back_in(rate:f32) -> f32 {
+    let overshoot = 1.70158_f32;
+    rate * rate * ((overshoot + 1.0_f32) * rate - overshoot)
+}
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_ease_back_in(value_start:f32, value_end:f32, rate:f32) -> f32 {
+    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_back_in(rate))
+=======
+pub fn rate_ease_back_out<T: SsFloat>(rate: T) -> T {
+    let overshoot = T::from_f32(1.70158);
+    let rate_slide = rate - T::from_f32(1.0);
+    rate_slide * rate_slide * ((overshoot + T::from_f32(1.0)) * rate_slide + overshoot) + T::from_f32(1.0)
+>>>>>>> 8303652 (declare public rust methods in ssinterpolate)
 }
 
+<<<<<<< HEAD
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_interpolate_rate_ease_back_out(rate:f32) -> f32 {
     let rate_slide = rate - 1.0_f32;
@@ -366,12 +363,42 @@ pub extern "C" fn ss_interpolate_rate_ease_back_inout(rate:f32) -> f32 {
     let mut rate_mul_2 = rate * 2.0_f32;
     if rate_mul_2 < 1.0_f32 {
         (rate_mul_2 * rate_mul_2 * ((EASE_BACK_INOUT_OVERRUN + 1.0_f32) * rate_mul_2 - EASE_BACK_INOUT_OVERRUN)) * 0.5_f32
-    } else {
-        rate_mul_2 -= 2.0_f32;
-        (rate_mul_2 * rate_mul_2 * ((EASE_BACK_INOUT_OVERRUN + 1.0_f32) * rate_mul_2 + EASE_BACK_INOUT_OVERRUN)) * 0.5_f32 + 1.0_f32
-    }
+||||||| parent of 8303652 (declare public rust methods in ssinterpolate)
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_back_out(rate:f32) -> f32 {
+    let overshoot = 1.70158_f32;
+    let rate_slide = rate - 1.0_f32;
+    rate_slide * rate_slide * ((overshoot + 1.0_f32) * rate_slide + overshoot) + 1.0_f32
 }
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_ease_back_inout(value_start:f32, value_end:f32, rate:f32) -> f32 {
-    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_back_inout(rate))
+pub extern "C" fn ss_interpolate_ease_back_out(value_start:f32, value_end:f32, rate:f32) -> f32 {
+    ss_interpolate_linear(value_start, value_end, ss_interpolate_rate_ease_back_out(rate))
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_interpolate_rate_ease_back_inout(rate:f32) -> f32 {
+    let overshoot = 1.70158_f32 * 1.525_f32;
+    let mut rate_mul_2 = rate * 2.0_f32;
+    if rate_mul_2 < 1.0_f32 {
+        (rate_mul_2 * rate_mul_2 * ((overshoot + 1.0_f32) * rate_mul_2 - overshoot)) * 0.5_f32
+=======
+pub fn rate_ease_back_inout<T: SsFloat>(rate: T) -> T {
+    let overshoot = T::from_f32(1.70158 * 1.525);
+    let mut rate_mul_2 = rate * T::from_f32(2.0);
+    if rate_mul_2 < T::from_f32(1.0) {
+        (rate_mul_2 * rate_mul_2 * ((overshoot + T::from_f32(1.0)) * rate_mul_2 - overshoot)) * T::from_f32(0.5)
+>>>>>>> 8303652 (declare public rust methods in ssinterpolate)
+    } else {
+<<<<<<< HEAD
+        rate_mul_2 -= 2.0_f32;
+        (rate_mul_2 * rate_mul_2 * ((EASE_BACK_INOUT_OVERRUN + 1.0_f32) * rate_mul_2 + EASE_BACK_INOUT_OVERRUN)) * 0.5_f32 + 1.0_f32
+||||||| parent of 8303652 (declare public rust methods in ssinterpolate)
+        rate_mul_2 -= 2.0_f32;
+        (rate_mul_2 * rate_mul_2 * ((overshoot + 1.0_f32) * rate_mul_2 + overshoot)) * 0.5_f32 + 1.0_f32
+=======
+        rate_mul_2 -= T::from_f32(2.0);
+        (rate_mul_2 * rate_mul_2 * ((overshoot + T::from_f32(1.0)) * rate_mul_2 + overshoot)) * T::from_f32(0.5) + T::from_f32(1.0)
+>>>>>>> 8303652 (declare public rust methods in ssinterpolate)
+    }
+}
+
