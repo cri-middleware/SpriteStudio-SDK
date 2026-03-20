@@ -3719,189 +3719,63 @@ fn modify_part_animation_data_texture(p_attr: &mut Option<Vec<ssab::ssab::ss::fo
     }
 }
 
-enum KindAttributeCapacity {
-    Cell           = 0,
-    PositionX      = 1,
-    PositionY      = 2,
-    PositionZ      = 3,
-    RotationX      = 4,
-    RotationY      = 5,
-    RotationZ      = 6,
-    ScaleX         = 7,
-    ScaleY         = 8,
-    LocalScaleX    = 9,
-    LocalScaleY    = 10,
-    Alpha          = 11,
-    LocalAlpha     = 12,
-    Priority       = 13,
-    FlipH          = 14,
-    FlipV          = 15,
-    Hide           = 16,
-    PartColor      = 17,
-    Shader         = 18,
-    Vertex         = 19,     // "Skew" included
-    PivotX         = 20,
-    PivotY         = 21,
-    AnchorX        = 22,
-    AnchorY        = 23,
-    SizeX          = 24,
-    SizeY          = 25,
-    ImgFlipH       = 26,
-    ImgFlipV       = 27,
-    UvTranslationX = 28,
-    UvTranslationY = 29,
-    UvRotationZ    = 30,
-    UvScaleX       = 31,
-    UvScaleY       = 32,
-    BoundingRadius = 33,
-    Mask           = 34,
-    Deform         = 35,
-    Texture        = 36,
+fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
+    let support = part_type.support_profile();
 
-    _Max_          = 37
-}
-enum KindPartCapacity {
-    Null                = 0,
-    Normal              = 1,
-    Shape               = 2,
-    Text                = 3,
-    Nines               = 4,
-    Instance            = 5,
-    Armature            = 6,
-    Effect              = 7,
-    Mesh                = 8,
-    Movenode            = 9,
-    Constraint          = 10,
-    Mask                = 11,
-    Joint               = 12,
-    Bonepoint           = 13,
-    TransformConstraint = 14,
-    Camera              = 15,
-    Audio               = 16,
-
-    _Max_               = 17
-}
-const CAPACITY_ATTRIBUTE: [[bool; KindAttributeCapacity::_Max_ as usize]; KindPartCapacity::_Max_ as usize] = [
-                                //  Cell,  PositionX, PositionY, PositionZ, RotationX, RotationY, RotationZ, ScaleX, ScaleY, LocalScaleX, LocalScaleY, Alpha, LocalAlpha, Priority, FlipH, FlipV, Hide,  PartColor, Shader, Vertex, PivotX, PivotY, AnchorX, AnchorY, SizeX, SizeY, ImgFlipH, ImgFlipV, UvTranslationX, UvTranslationY, UvRotationZ, UvScaleX, UvScaleY, BoundingRadius, Mask,  Deform, Texture
-    /* Null */                  [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Normal */                [   true,  true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     true,  true,  true,  true,      true,   true,   true,   true,   true,    true,    true,  true,  true,     true,     true,           true,           true,        true,     true,     true,           true,  false,  true    ],
-    /* Shape */                 [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     true,  true,  true,  true,      false,  true,   true,   true,   false,   false,   true,  true,  false,    false,    false,          false,          false,       false,    false,    true,           true,  false,  false   ],
-    /* Text */                  [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     true,  true,  true,  true,      false,  true,   true,   true,   false,   false,   false, false, false,    false,    false,          false,          false,       false,    false,    true,           true,  false,  false   ],
-    /* Nines */                 [   true,  true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     false, false, true,  true,      false,  false,  true,   true,   false,   false,   true,  true,  false,    false,    false,          false,          false,       false,    false,    true,           true,  false,  true    ],
-    /* Instance */              [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     true,  true,  true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    true,           false, false,  false   ],
-    /* Armature */              [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Effect */                [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    true,           false, false,  false   ],
-    /* Mesh */                  [   true,  true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     true,  true,  true,  true,      true,   false,  false,  false,  true,    true,    false, false, true,     true,     true,           true,           true,        true,     true,     true,           true,  true,   true    ],
-    /* Movenode */              [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Constraint */            [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Mask */                  [   true,  true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       true,     true,  true,  true,  true,      true,   true,   true,   true,   true,    true,    true,  true,  true,     true,     true,           true,           true,        true,     true,     true,           true,  false,  true    ],
-    /* Joint */                 [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Bonepoint */             [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* TransformConstraint */   [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Camera */                [   false, true,      true,      true,      true,      true,      true,      true,   true,   true,        true,        true,  true,       false,    false, false, true,  false,     false,  false,  false,  false,  true,    true,    false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-    /* Audio */                 [   false, false,     false,     false,     false,     false,     false,     false,  false,  false,       false,       false, false,      false,    false, false, false, false,     false,  false,  false,  false,  false,   false,   false, false, false,    false,    false,          false,          false,       false,    false,    false,          false, false,  false   ],
-];
-fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part_type: &sspj::sstypes::SsPartType, anime_data: &sspj::ssae::SsPartAnime) {
-    // Erase unused Attributes for each part type
-    let index_capacity_part: usize;
-    match part_type {
-        sspj::sstypes::SsPartType::Null =>                  {   index_capacity_part = KindPartCapacity::Null as usize   },
-        sspj::sstypes::SsPartType::Normal =>                {   index_capacity_part = KindPartCapacity::Normal as usize   },
-        sspj::sstypes::SsPartType::Shape =>                 {   index_capacity_part = KindPartCapacity::Shape as usize   },
-        sspj::sstypes::SsPartType::Text =>                  {   index_capacity_part = KindPartCapacity::Text as usize   },
-        sspj::sstypes::SsPartType::Nines =>                 {   index_capacity_part = KindPartCapacity::Nines as usize   },
-        sspj::sstypes::SsPartType::Instance =>              {   index_capacity_part = KindPartCapacity::Instance as usize   },
-        sspj::sstypes::SsPartType::Armature =>              {   index_capacity_part = KindPartCapacity::Armature as usize   },
-        sspj::sstypes::SsPartType::Effect =>                {   index_capacity_part = KindPartCapacity::Effect as usize   },
-        sspj::sstypes::SsPartType::Mesh =>                  {   index_capacity_part = KindPartCapacity::Mesh as usize   },
-        sspj::sstypes::SsPartType::Movenode =>              {   index_capacity_part = KindPartCapacity::Movenode as usize   },
-        sspj::sstypes::SsPartType::Constraint =>            {   index_capacity_part = KindPartCapacity::Constraint as usize   },
-        sspj::sstypes::SsPartType::Mask =>                  {   index_capacity_part = KindPartCapacity::Mask as usize   },
-        sspj::sstypes::SsPartType::Joint =>                 {   index_capacity_part = KindPartCapacity::Joint as usize   },
-        sspj::sstypes::SsPartType::Bonepoint =>             {   index_capacity_part = KindPartCapacity::Bonepoint as usize   },
-        sspj::sstypes::SsPartType::TransformConstraint =>   {   index_capacity_part = KindPartCapacity::TransformConstraint as usize   },
-        sspj::sstypes::SsPartType::Camera =>                {   index_capacity_part = KindPartCapacity::Camera as usize   },
-        sspj::sstypes::SsPartType::Audio =>                 {   index_capacity_part = KindPartCapacity::Audio as usize   },
+    macro_rules! apply {
+        ($field:ident, $supported:expr, $opt_fn:ident) => {
+            if !$supported {
+                p_args.$field = None;
+            } else {
+                $opt_fn(&mut p_args.$field);
+            }
+        };
     }
-    let capacity = CAPACITY_ATTRIBUTE[index_capacity_part];
-    if !capacity[KindAttributeCapacity::Cell as usize]              {   p_args.cell_array = None;   }
-    if !capacity[KindAttributeCapacity::PositionX as usize]         {   p_args.position_x_array = None; }
-    if !capacity[KindAttributeCapacity::PositionY as usize]         {   p_args.position_y_array = None; }
-    if !capacity[KindAttributeCapacity::PositionZ as usize]         {   p_args.position_z_array = None; }
-    if !capacity[KindAttributeCapacity::RotationX as usize]         {   p_args.rotation_x_array = None; }
-    if !capacity[KindAttributeCapacity::RotationY as usize]         {   p_args.rotation_y_array = None; }
-    if !capacity[KindAttributeCapacity::RotationZ as usize]         {   p_args.rotation_z_array = None; }
-    if !capacity[KindAttributeCapacity::ScaleX as usize]            {   p_args.scale_x_array = None;    }
-    if !capacity[KindAttributeCapacity::ScaleY as usize]            {   p_args.scale_y_array = None;    }
-    if !capacity[KindAttributeCapacity::LocalScaleX as usize]       {   p_args.local_scale_x_array = None;  }
-    if !capacity[KindAttributeCapacity::LocalScaleY as usize]       {   p_args.local_scale_y_array = None;  }
-    if !capacity[KindAttributeCapacity::Alpha as usize]             {   p_args.alpha_array = None;  }
-    if !capacity[KindAttributeCapacity::LocalAlpha as usize]        {   p_args.local_alpha_array = None;    }
-    if !capacity[KindAttributeCapacity::Priority as usize]          {   p_args.priority_array = None;   }
-    if !capacity[KindAttributeCapacity::FlipH as usize]             {   p_args.flip_h_array = None; }
-    if !capacity[KindAttributeCapacity::FlipV as usize]             {   p_args.flip_v_array = None; }
-    if !capacity[KindAttributeCapacity::Hide as usize]              {   p_args.hide_array = None;   }
-    if !capacity[KindAttributeCapacity::PartColor as usize]         {   p_args.part_color_array = None; }
-    if !capacity[KindAttributeCapacity::Shader as usize]            {   p_args.shader_array = None; }
-    if !capacity[KindAttributeCapacity::Vertex as usize]            {   p_args.vertex_array = None;     p_args.skew_array = None;   }
-    if !capacity[KindAttributeCapacity::PivotX as usize]            {   p_args.pivot_x_array = None;    }
-    if !capacity[KindAttributeCapacity::PivotY as usize]            {   p_args.pivot_y_array = None;    }
-    if !capacity[KindAttributeCapacity::AnchorX as usize]           {   p_args.anchor_x_array = None;   }
-    if !capacity[KindAttributeCapacity::AnchorY as usize]           {   p_args.anchor_y_array = None;   }
-    if !capacity[KindAttributeCapacity::SizeX as usize]             {   p_args.size_x_array = None; }
-    if !capacity[KindAttributeCapacity::SizeY as usize]             {   p_args.size_y_array = None; }
-    if !capacity[KindAttributeCapacity::ImgFlipH as usize]          {   p_args.img_flip_h_array = None; }
-    if !capacity[KindAttributeCapacity::ImgFlipV as usize]          {   p_args.img_flip_v_array = None; }
-    if !capacity[KindAttributeCapacity::UvTranslationX as usize]    {   p_args.uv_translation_x_array = None;   }
-    if !capacity[KindAttributeCapacity::UvTranslationY as usize]    {   p_args.uv_translation_y_array = None;   }
-    if !capacity[KindAttributeCapacity::UvRotationZ as usize]       {   p_args.uv_rotation_z_array = None;  }
-    if !capacity[KindAttributeCapacity::UvScaleX as usize]          {   p_args.uv_scale_x_array = None; }
-    if !capacity[KindAttributeCapacity::UvScaleY as usize]          {   p_args.uv_scale_y_array = None; }
-    if !capacity[KindAttributeCapacity::BoundingRadius as usize]    {   p_args.bounding_radius_array = None;    }
-    if !capacity[KindAttributeCapacity::Mask as usize]              {   p_args.mask_array = None;   }
-//    if !capacity[KindAttributeCapacity::Vertex as usize]          {   p_args.skew_array = None;   }   // Included in "Vertex"
-    if !capacity[KindAttributeCapacity::Deform as usize]            {   p_args.deform_array = None; }
-    if !capacity[KindAttributeCapacity::Texture as usize]           {   p_args.texture_array = None;    }
 
-    // Key-data optimization per attribute
-    modify_part_animation_data_cell(&mut p_args.cell_array);
-    modify_part_animation_data_float(&mut p_args.position_x_array);
-    modify_part_animation_data_float(&mut p_args.position_y_array);
-    modify_part_animation_data_float(&mut p_args.position_z_array);
-    modify_part_animation_data_float(&mut p_args.rotation_x_array);
-    modify_part_animation_data_float(&mut p_args.rotation_y_array);
-    modify_part_animation_data_float(&mut p_args.rotation_z_array);
-    modify_part_animation_data_float(&mut p_args.scale_x_array);
-    modify_part_animation_data_float(&mut p_args.scale_y_array);
-    modify_part_animation_data_float(&mut p_args.local_scale_x_array);
-    modify_part_animation_data_float(&mut p_args.local_scale_y_array);
-    modify_part_animation_data_float(&mut p_args.alpha_array);
-    modify_part_animation_data_float(&mut p_args.local_alpha_array);
-    modify_part_animation_data_int(&mut p_args.priority_array);
-    modify_part_animation_data_bool(&mut p_args.flip_h_array);
-    modify_part_animation_data_bool(&mut p_args.flip_v_array);
-    modify_part_animation_data_bool(&mut p_args.hide_array);
-    modify_part_animation_data_partcolor(&mut p_args.part_color_array);
-    modify_part_animation_data_shader(&mut p_args.shader_array);
-    modify_part_animation_data_vertex(&mut p_args.vertex_array);
-    modify_part_animation_data_float(&mut p_args.pivot_x_array);
-    modify_part_animation_data_float(&mut p_args.pivot_y_array);
-    modify_part_animation_data_float(&mut p_args.anchor_x_array);
-    modify_part_animation_data_float(&mut p_args.anchor_y_array);
-    modify_part_animation_data_float(&mut p_args.size_x_array);
-    modify_part_animation_data_float(&mut p_args.size_y_array);
-    modify_part_animation_data_bool(&mut p_args.img_flip_h_array);
-    modify_part_animation_data_bool(&mut p_args.img_flip_v_array);
-    modify_part_animation_data_float(&mut p_args.uv_translation_x_array);
-    modify_part_animation_data_float(&mut p_args.uv_translation_y_array);
-    modify_part_animation_data_float(&mut p_args.uv_rotation_z_array);
-    modify_part_animation_data_float(&mut p_args.uv_scale_x_array);
-    modify_part_animation_data_float(&mut p_args.uv_scale_y_array);
-    modify_part_animation_data_float(&mut p_args.bounding_radius_array);
-    modify_part_animation_data_float(&mut p_args.mask_array);
-    modify_part_animation_data_skew(&mut p_args.skew_array);
-    modify_part_animation_data_deform(&mut p_args.deform_array);
-    modify_part_animation_data_texture(&mut p_args.texture_array);
+    apply!(cell_array, support.cell, modify_part_animation_data_cell);
+    apply!(position_x_array, support.position_x, modify_part_animation_data_float);
+    apply!(position_y_array, support.position_y, modify_part_animation_data_float);
+    apply!(position_z_array, support.position_z, modify_part_animation_data_float);
+    apply!(rotation_x_array, support.rotation_x, modify_part_animation_data_float);
+    apply!(rotation_y_array, support.rotation_y, modify_part_animation_data_float);
+    apply!(rotation_z_array, support.rotation_z, modify_part_animation_data_float);
+    apply!(scale_x_array, support.scale_x, modify_part_animation_data_float);
+    apply!(scale_y_array, support.scale_y, modify_part_animation_data_float);
+    apply!(local_scale_x_array, support.local_scale_x, modify_part_animation_data_float);
+    apply!(local_scale_y_array, support.local_scale_y, modify_part_animation_data_float);
+    apply!(alpha_array, support.alpha, modify_part_animation_data_float);
+    apply!(local_alpha_array, support.local_alpha, modify_part_animation_data_float);
+    apply!(priority_array, support.priority, modify_part_animation_data_int);
+    apply!(flip_h_array, support.flip_h, modify_part_animation_data_bool);
+    apply!(flip_v_array, support.flip_v, modify_part_animation_data_bool);
+    apply!(hide_array, support.hide, modify_part_animation_data_bool);
+    apply!(part_color_array, support.part_color, modify_part_animation_data_partcolor);
+    apply!(shader_array, support.shader, modify_part_animation_data_shader);
+    apply!(vertex_array, support.vertex, modify_part_animation_data_vertex);
+    apply!(pivot_x_array, support.pivot_x, modify_part_animation_data_float);
+    apply!(pivot_y_array, support.pivot_y, modify_part_animation_data_float);
+    apply!(anchor_x_array, support.anchor_x, modify_part_animation_data_float);
+    apply!(anchor_y_array, support.anchor_y, modify_part_animation_data_float);
+    apply!(size_x_array, support.size_x, modify_part_animation_data_float);
+    apply!(size_y_array, support.size_y, modify_part_animation_data_float);
+    apply!(img_flip_h_array, support.img_flip_h, modify_part_animation_data_bool);
+    apply!(img_flip_v_array, support.img_flip_v, modify_part_animation_data_bool);
+    apply!(uv_translation_x_array, support.uv_translation_x, modify_part_animation_data_float);
+    apply!(uv_translation_y_array, support.uv_translation_y, modify_part_animation_data_float);
+    apply!(uv_rotation_z_array, support.uv_rotation_z, modify_part_animation_data_float);
+    apply!(uv_scale_x_array, support.uv_scale_x, modify_part_animation_data_float);
+    apply!(uv_scale_y_array, support.uv_scale_y, modify_part_animation_data_float);
+    apply!(bounding_radius_array, support.bounding_radius, modify_part_animation_data_float);
+    apply!(mask_array, support.mask, modify_part_animation_data_float);
+    apply!(deform_array, support.deform, modify_part_animation_data_deform);
+    apply!(texture_array, support.texture, modify_part_animation_data_texture);
+
+    // Special case: Skew is also controlled by the Vertex flag in the original matrix
+    if !support.vertex {
+        p_args.skew_array = None;
+    } else {
+        modify_part_animation_data_skew(&mut p_args.skew_array);
+    }
 }
 
 fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
