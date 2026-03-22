@@ -247,59 +247,81 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
 fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
                  p: &flatbuffers::Vector<::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationData>>,
                  frame_no: i32,
-                 cells: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
-                 parts_color: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
-                 shaders: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
-                 vertices: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
-                 deforms: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>
-) -> Vec<crate::runtime::framedata::ss::runtime::PartState> {
-    let mut cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell> = Vec::new();
-    let mut parts_colo_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor> = Vec::new();
-    let mut shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader> = Vec::new();
-    let mut vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
-    let mut deform_vec: Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform>> = Vec::new();
+                 parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
+                 cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+                 parts_colo_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+                 shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+                 vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+                 deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+                 cells_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
+                 parts_color_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
+                 shaders_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
+                 vertices_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
+                 deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>
+) {
+    parts_vec.clear();
+    cell_vec.clear();
+    parts_colo_vec.clear();
+    shader_vec.clear();
+    vertice_vec.clear();
+    deform_vec.clear();
 
-    let parts = p.iter().enumerate().filter_map(|(i, part)| {
-        get_part(fb, &part, i as i16, frame_no, &mut cell_vec, &mut parts_colo_vec, &mut shader_vec, &mut vertice_vec, &mut deform_vec)
-    }).collect::<Vec<_>>();
+    for (i, part) in p.iter().enumerate() {
+        if let Some(state) = get_part(fb, &part, i as i16, frame_no, cell_vec, parts_colo_vec, shader_vec, vertice_vec, deform_vec) {
+            parts_vec.push(state);
+        }
+    }
 
     if !cell_vec.is_empty() {
-        *cells = Some(fb.create_vector(&cell_vec));
-    }
-    if !parts_colo_vec.is_empty() {
-        *parts_color = Some(fb.create_vector(&parts_colo_vec));
-    }
-    if !shader_vec.is_empty() {
-        *shaders = Some(fb.create_vector(&shader_vec));
-    }
-    if !vertice_vec.is_empty() {
-        *vertices = Some(fb.create_vector(&vertice_vec));
-    }
-    if !deform_vec.is_empty() {
-        *deforms = Some(fb.create_vector(&deform_vec));
-    }
+        *cells_off = Some(fb.create_vector(&cell_vec));
+    } else { *cells_off = None; }
 
-    parts
+    if !parts_colo_vec.is_empty() {
+        *parts_color_off = Some(fb.create_vector(&parts_colo_vec));
+    } else { *parts_color_off = None; }
+
+    if !shader_vec.is_empty() {
+        *shaders_off = Some(fb.create_vector(&shader_vec));
+    } else { *shaders_off = None; }
+
+    if !vertice_vec.is_empty() {
+        *vertices_off = Some(fb.create_vector(&vertice_vec));
+    } else { *vertices_off = None; }
+
+    if !deform_vec.is_empty() {
+        *deforms_off = Some(fb.create_vector(&deform_vec));
+    } else { *deforms_off = None; }
 }
 
 
-pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, animation: &ssab::ssab::ss::format::AnimationData, frame_no: i32) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
+pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+                          animation: &ssab::ssab::ss::format::AnimationData,
+                          frame_no: i32,
+                          parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
+                          cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+                          parts_colo_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+                          shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+                          vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+                          deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
-    let mut cells: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
-    let mut parts_color: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>> = None;
-    let mut shaders: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>> = None;
-    let mut vertices: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
-    let mut deforms: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
+    let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
+    let mut parts_color_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>> = None;
+    let mut shaders_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>> = None;
+    let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
+    let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    // args.parts = animation.parts_animation_data().map( |parts_animation_data| get_parts(fb, &parts_animation_data, frame_no, &mut deforms));
-    args.parts = animation.parts_animation_data().and_then( |parts_animation_data| {
-        let parts = get_parts(fb, &parts_animation_data, frame_no, &mut cells, &mut parts_color, &mut shaders, &mut vertices, &mut deforms);
-        if parts.is_empty() { None } else { Some(fb.create_vector(&parts)) }
-    });
-    args.cells = cells;
-    args.parts_color = parts_color;
-    args.shaders = shaders;
-    args.vertices = vertices;
-    args.deforms = deforms;
+    if let Some(parts_animation_data) = animation.parts_animation_data() {
+        get_parts(fb, &parts_animation_data, frame_no, parts_vec, cell_vec, parts_colo_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off);
+        if !parts_vec.is_empty() {
+            args.parts = Some(fb.create_vector(&parts_vec));
+        }
+    }
+
+    args.cells = cells_off;
+    args.parts_color = parts_color_off;
+    args.shaders = shaders_off;
+    args.vertices = vertices_off;
+    args.deforms = deforms_off;
     runtime::framedata::ss::runtime::FrameData::create(fb, &args)
 }

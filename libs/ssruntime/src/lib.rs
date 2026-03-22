@@ -24,11 +24,34 @@ impl SsabStorage {
     }
 }
 
+struct ContextBuffers<'a> {
+    parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
+    cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+    parts_colo_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+    vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+}
+
+impl<'a> ContextBuffers<'a> {
+    fn new() -> Self {
+        Self {
+            parts_vec: Vec::with_capacity(32),
+            cell_vec: Vec::with_capacity(32),
+            parts_colo_vec: Vec::with_capacity(32),
+            shader_vec: Vec::with_capacity(32),
+            vertice_vec: Vec::with_capacity(32),
+            deform_vec: Vec::with_capacity(32),
+        }
+    }
+}
+
 pub struct Context<'a> {
     ssab_data: Option<SsabStorage>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
+    buffers: ContextBuffers<'a>,
 }
 
 impl<'a> Context<'a> {
@@ -38,6 +61,7 @@ impl<'a> Context<'a> {
             fb: flatbuffers::FlatBufferBuilder::new(),
             controller: core::playback_controller::PlaybackController::new(),
             animation_idx: -1,
+            buffers: ContextBuffers::new(),
         }
     }
 
@@ -103,7 +127,17 @@ impl<'a> Context<'a> {
             return None;
         }
         self.fb.reset();
-        let offset = core::framedata::get_frame_data(&mut self.fb, &animation, frame_no);
+        let offset = core::framedata::get_frame_data(
+            &mut self.fb,
+            &animation,
+            frame_no,
+            &mut self.buffers.parts_vec,
+            &mut self.buffers.cell_vec,
+            &mut self.buffers.parts_colo_vec,
+            &mut self.buffers.shader_vec,
+            &mut self.buffers.vertice_vec,
+            &mut self.buffers.deform_vec,
+        );
         self.fb.finish_minimal(offset);
         Some(self.fb.finished_data())
     }
