@@ -14,6 +14,7 @@ sspj = { path = "libs/sspj" }
 ssconverter = { path = "libs/ssconverter" }
 ssab = { path = "libs/ssab" }
 ssruntime = { path = "libs/ssruntime" }
+ssinterpolate = { path = "libs/ssinterpolate" }
 
 [profile.release]
 lto = true
