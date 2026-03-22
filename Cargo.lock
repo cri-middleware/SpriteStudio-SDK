@@ -670,6 +670,7 @@ dependencies = [
  "flatbuffers",
  "ssab",
  "ssconverter",
+ "ssinterpolate",
  "wasm-bindgen",
 ]
 
