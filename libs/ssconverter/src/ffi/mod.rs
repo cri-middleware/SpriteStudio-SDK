@@ -30,7 +30,7 @@ pub enum CConverterError {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_version() -> *const c_char {
     let s = crate::utils::version_string();
-    let s = CString::new(s).unwrap();
+    let s = CString::new(s).unwrap_or_else(|_| CString::new("unknown").unwrap());
     s.into_raw()
 }
 

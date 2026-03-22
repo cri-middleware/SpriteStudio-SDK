@@ -15,7 +15,7 @@ pub fn parse_args(args: &[PathBuf]) -> Vec<PathBuf> {
 
 fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
     if is_sspj_file(path) {
-        return vec![path.canonicalize().unwrap().to_path_buf()];
+        return vec![path.canonicalize().unwrap_or_else(|_| path.to_path_buf())];
     }
 
     if path.is_dir() {
@@ -26,7 +26,7 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
             })
             .filter_map(Result::ok)
             .filter(|entry| is_sspj_file(entry.path()))
-            .map(|entry| entry.path().canonicalize().unwrap().to_path_buf())
+            .map(|entry| entry.path().canonicalize().unwrap_or_else(|_| entry.path().to_path_buf()))
             .collect();
     }
 

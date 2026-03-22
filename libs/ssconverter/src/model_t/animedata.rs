@@ -529,7 +529,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    if _key.value.use_skew.is_some() && _key.value.use_skew.unwrap() == true {
+                    if _key.value.use_skew.unwrap_or(false) {
                         // Skew
                         match &_key.value.skew {
                             None => {
@@ -1634,7 +1634,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
                 v.keys.iter().for_each(|key| {
-                    if key.value.use_skew.is_some() && key.value.use_skew.unwrap() == true {
+                    if key.value.use_skew.unwrap_or(false) {
                         process_interpolatable_attribute!(std::slice::from_ref(key), p_arg.skew_array, ssab::ssab::ss::format::PartAnimationDataVec2T, |k: &sspj::ssattribute::SsAttributeVertexKey| {
                             k.value.skew.as_ref().map(|v| {
                                 let mut val = ssab::ssab::ss::format::Vec2T::default();

@@ -133,9 +133,8 @@ pub struct Vec2ValueEntryKey {
 }
 impl From<&ssab::ssab::ss::format::Vec2ValueEntryT> for Vec2ValueEntryKey {
     fn from(vec2_value_table_t: &ssab::ssab::ss::format::Vec2ValueEntryT) -> Self {
-        let value = vec2_value_table_t.value.clone().unwrap();
-        let v1 = value.v1;
-        let v2 = value.v2;
+        let v1 = vec2_value_table_t.value.as_ref().map_or(0.0, |v| v.v1);
+        let v2 = vec2_value_table_t.value.as_ref().map_or(0.0, |v| v.v2);
         Self {
             value: Vec2Key::new(v1, v2),
         }
@@ -148,9 +147,12 @@ pub struct RectValueEntryKey {
 }
 impl From<&ssab::ssab::ss::format::RectValueEntryT> for RectValueEntryKey {
     fn from(rect_value_table_t: &ssab::ssab::ss::format::RectValueEntryT) -> Self {
-        let value = rect_value_table_t.value.as_ref().unwrap();
+        let x1 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.x1);
+        let y1 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.y1);
+        let x2 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.x2);
+        let y2 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.y2);
         Self {
-            value: RectKey::new(value.x1, value.y1, value.x2, value.y2),
+            value: RectKey::new(x1, y1, x2, y2),
         }
     }
 }
@@ -1159,8 +1161,9 @@ impl<'a> SsabCache<'a> {
             return offset;
         }
         let mut args = ssab::ssab::ss::format::Vec2ValueEntryArgs::default();
-        let v = vec2_value_table_t.value.as_ref().unwrap();
-        args.value = Some(self.create_shared_vec2(fb, &v));
+        if let Some(v) = vec2_value_table_t.value.as_ref() {
+            args.value = Some(self.create_shared_vec2(fb, v));
+        }
         let offset = ssab::ssab::ss::format::Vec2ValueEntry::create(fb, &args);
         self.vec2_value_table_cache.insert(key, offset);
         offset
@@ -1172,8 +1175,9 @@ impl<'a> SsabCache<'a> {
             return offset;
         }
         let mut args = ssab::ssab::ss::format::RectValueEntryArgs::default();
-        let v = rect_value_table_t.value.as_ref().unwrap();
-        args.value = Some(self.create_shared_rect(fb, &v));
+        if let Some(v) = rect_value_table_t.value.as_ref() {
+            args.value = Some(self.create_shared_rect(fb, v));
+        }
         let offset = ssab::ssab::ss::format::RectValueEntry::create(fb, &args);
         self.rect_value_table_cache.insert(key, offset);
         offset

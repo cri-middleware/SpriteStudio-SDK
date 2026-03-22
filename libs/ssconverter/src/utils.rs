@@ -57,7 +57,7 @@ pub fn get_ssab_outout_directory(sspj_path: &std::path::Path, embedded: bool) ->
     let Some(sspj_parent) = sspj_path.parent() else {
         return Err(crate::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("not found: path parent: {}", sspj_path.as_os_str().to_string_lossy()))))
     };
-    Ok(sspj_parent.join(format!("{}{}", stem.to_str().unwrap(), suffix)))
+    Ok(sspj_parent.join(format!("{}{}", stem.to_string_lossy(), suffix)))
 }
 
 pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::ss::format::SsAnimeBinaryT, sspj: &sspj::sspj::SsProject) -> HashMap<String, String> {
@@ -71,9 +71,9 @@ pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::ss::format::SsAnim
     ).collect::<HashMap<String, String>>();
 
     let sounds = ssab_obj.sound_lists.iter().flat_map(|soundlist| soundlist.iter()).flat_map(|soundlist| {
-        soundlist.table_data.iter().flatten().map(|file| {
-            let file_path = file.file_path.as_ref().unwrap();
-            (file_path.to_string(), file_path.to_string())
+        soundlist.table_data.iter().flatten().filter_map(|file| {
+            let file_path = file.file_path.as_ref()?;
+            Some((file_path.to_string(), file_path.to_string()))
         })
     }).collect::<HashMap<String, String>>();
 
@@ -99,15 +99,15 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
         (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string())
     })).collect::<HashMap<_, _>>();
 
-    let external_textures = anime.external_textures().iter().flatten().map(|external_texture| {
-        let s = external_texture.name().unwrap();
-        (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(external_texture.name().unwrap()).to_string_lossy().to_string())
+    let external_textures = anime.external_textures().iter().flatten().filter_map(|external_texture| {
+        let s = external_texture.name()?;
+        Some((s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()))
     }).collect::<HashMap<_, _>>();
 
     let sounds = anime.sound_lists().iter().flatten().flat_map(|soundlist|
-        soundlist.table_data().into_iter().flatten().map(|item| {
-            let file_path = item.file_path().unwrap().to_string();
-            (file_path.to_string(), file_path.to_string())
+        soundlist.table_data().into_iter().flatten().filter_map(|item| {
+            let file_path = item.file_path()?;
+            Some((file_path.to_string(), file_path.to_string()))
         })).collect::<HashMap<_, _>>();
 
     // TODO: improve font bitmap path
