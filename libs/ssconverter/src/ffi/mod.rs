@@ -1,6 +1,7 @@
 use std::ffi::{c_char, CStr, OsString, CString};
 use std::thread::JoinHandle;
 use crate::{ConverterConfig, ConverterError};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 // #[repr(C)]
 pub struct Context {
@@ -36,13 +37,14 @@ pub extern "C" fn ss_converter_version() -> *const c_char {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_version_free(s: *mut c_char) {
-   if s.is_null() {
-        return;
-    }
-
-    unsafe {
-        let _ = CString::from_raw(s);
-    }
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        if s.is_null() {
+            return;
+        }
+        unsafe {
+            let _ = CString::from_raw(s);
+        }
+    }));
 }
 
 #[unsafe(no_mangle)]
@@ -53,75 +55,87 @@ pub extern "C" fn ss_converter_create() -> *mut Context {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_destroy(context: *mut Context) {
-    unsafe {
-        let _ = Box::from_raw(context);
-    }
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        unsafe {
+            let _ = Box::from_raw(context);
+        }
+    }));
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
-    let context = unsafe { &mut *ctx };
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        let context = unsafe { &mut *ctx };
 
-    let sspj_buf = unsafe { CStr::from_ptr(sspj) };
-    let sspj_str = sspj_buf.to_string_lossy().into_owned();
-    let sspj_path = std::path::PathBuf::from(&sspj_str);
+        if sspj.is_null() || output_dir.is_null() { return; }
+        let sspj_buf = unsafe { CStr::from_ptr(sspj) };
+        let sspj_str = sspj_buf.to_string_lossy().into_owned();
+        let sspj_path = std::path::PathBuf::from(&sspj_str);
 
-    let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
-    let output_dir_str = Some(OsString::from(output_dir_buf.to_string_lossy().into_owned()));
-    let mut config = ConverterConfig::default();
-    config.out_dir = output_dir_str;
+        let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
+        let output_dir_str = Some(OsString::from(output_dir_buf.to_string_lossy().into_owned()));
+        let mut config = ConverterConfig::default();
+        config.out_dir = output_dir_str;
 
-    if let Some(prev_handler)  = context.handler.take() {
-        // ignore previous handler result
-        let _ = prev_handler.join();
-    }
-    let c = config.clone();
-    let handler = std::thread::spawn(move || {
-        crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c)
-    });
-    context.handler = Some(handler);
+        if let Some(prev_handler)  = context.handler.take() {
+            let _ = prev_handler.join();
+        }
+        let c = config.clone();
+        let handler = std::thread::spawn(move || {
+            crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c)
+        });
+        context.handler = Some(handler);
+    }));
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
-    let context = unsafe { &mut *context };
-    context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        let context = unsafe { &mut *context };
+        context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
+    }));
+    result.unwrap_or(false)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_get_result(context: *mut Context) -> CConverterError {
-    let context = unsafe { &mut *context };
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        let context = unsafe { &mut *context };
 
-    if let Some(h) = context.handler.take() {
-        match h.join() {
-            Ok(result) => {
-                match result {
-                    Ok(_) => CConverterError::Success,
-                    Err(e) => {
-                        context.error = Some(e.to_string());
-                        match e {
-                            ConverterError::IoError(_) => CConverterError::ErrorIo,
-                            ConverterError::SspjError(_) => CConverterError::ErrorSspj,
-                            ConverterError::ConversionFailed(_) => CConverterError::ErrorConversion,
-                        }
-                    },
+        if let Some(h) = context.handler.take() {
+            match h.join() {
+                Ok(result) => {
+                    match result {
+                        Ok(_) => CConverterError::Success,
+                        Err(e) => {
+                            context.error = Some(e.to_string());
+                            match e {
+                                ConverterError::IoError(_) => CConverterError::ErrorIo,
+                                ConverterError::SspjError(_) => CConverterError::ErrorSspj,
+                                ConverterError::ConversionFailed(_) => CConverterError::ErrorConversion,
+                            }
+                        },
+                    }
+                }
+                Err(_) => {
+                    context.error = Some("Converter thread panicked".to_string());
+                    CConverterError::Success
                 }
             }
-            Err(_) => {
-                context.error = Some("Converter thread panicked".to_string());
-                CConverterError::Success
-            }
+        } else {
+            CConverterError::ErrorNotYetStarted
         }
-    } else {
-        CConverterError::ErrorNotYetStarted
-    }
+    }));
+    result.unwrap_or(CConverterError::ErrorUnknown)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_get_error(context: *mut Context, out_data: *mut *mut c_char, out_len: *mut usize) {
-    let context = unsafe { &mut *context };
-    unsafe {
-        *out_data = context.error.as_ref().map(|s| s.as_ptr() as *mut c_char).unwrap_or(std::ptr::null_mut());
-        *out_len = context.error.as_ref().map(|s| s.len()).unwrap_or(0)
-    }
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        let context = unsafe { &mut *context };
+        unsafe {
+            *out_data = context.error.as_ref().map(|s| s.as_ptr() as *mut c_char).unwrap_or(std::ptr::null_mut());
+            *out_len = context.error.as_ref().map(|s| s.len()).unwrap_or(0)
+        }
+    }));
 }
