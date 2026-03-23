@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-// MEMO: Omit entire namespace, because public functions  (in ssinterpolate) are defined extern "C".
-use ssinterpolate::interpolate::*;
 
 fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::ss::format::LabelT> {
     let mut v = labels.iter().map(|label| {
@@ -998,20 +996,22 @@ fn convert_part_animation_data_expand_key_float(value_start:&sspj::ssattribute::
             ssinterpolate::interpolate::linear(value_start.value, value_end.value, rate)
         },
         sspj::sstypes::SsInterpolationType::Hermite => {
+            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
             ssinterpolate::interpolate::hermite(
-                value_start.value, value_end.value, rate,
-                value_start.curve.start_value,
-                value_start.curve.end_value
-            )
+                value_start.value as f64, value_end.value as f64, rate as f64,
+                value_start.curve.start_value as f64,
+                value_start.curve.end_value as f64
+            ) as f32
         },
         sspj::sstypes::SsInterpolationType::Bezier => {
+            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
             ssinterpolate::interpolate::bezier(
-                value_start.time as f32, value_start.value,
-                value_end.time as f32, value_end.value,
-                rate,
-                value_start.curve.start_time, value_start.curve.start_value,
-                value_start.curve.end_time, value_start.curve.end_value
-            )
+                value_start.time as f64, value_start.value as f64,
+                value_end.time as f64, value_end.value as f64,
+                rate as f64,
+                value_start.curve.start_time as f64, value_start.curve.start_value as f64,
+                value_start.curve.end_time as f64, value_start.curve.end_value as f64
+            ) as f32
         },
         sspj::sstypes::SsInterpolationType::Acceleration => {
             ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_accelerate(rate))
@@ -1088,19 +1088,21 @@ fn convert_part_animation_data_expand_key_int(value_start:&sspj::ssattribute::Ss
             ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, rate) as i32
         },
         sspj::sstypes::SsInterpolationType::Hermite => {
+            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
             ssinterpolate::interpolate::hermite(
-                value_start.value as f32, value_end.value as f32, rate,
-                value_start.curve.start_value,
-                value_start.curve.end_value
+                value_start.value as f64, value_end.value as f64, rate as f64,
+                value_start.curve.start_value as f64,
+                value_start.curve.end_value as f64
             ) as i32
         },
         sspj::sstypes::SsInterpolationType::Bezier => {
+            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
             ssinterpolate::interpolate::bezier(
-                value_start.time as f32, value_start.value as f32,
-                value_end.time as f32, value_end.value as f32,
-                rate,
-                value_start.curve.start_time, value_start.curve.start_value,
-                value_start.curve.end_time, value_start.curve.end_value
+                value_start.time as f64, value_start.value as f64,
+                value_end.time as f64, value_end.value as f64,
+                rate as f64,
+                value_start.curve.start_time as f64, value_start.curve.start_value as f64,
+                value_start.curve.end_time as f64, value_start.curve.end_value as f64
             ) as i32
         },
         sspj::sstypes::SsInterpolationType::Acceleration => {
@@ -1714,235 +1716,116 @@ fn optimize_part_animation_data_value_changing_range(interpolation: &ssab::ssab:
     }
 }
 
-fn optimize_part_animation_data_float(attribute: &[ssab::ssab::ss::format::PartAnimationDataFloatValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataFloatValueT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
+#[cfg(false)]
+macro_rules! impl_optimize_interpolatable_attribute {
+    ($fn_name:ident, $type_t:ty) => {
+        fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
+            if attribute.is_empty() { return None; }
+            let mut optimized = Vec::with_capacity(attribute.len());
+            
+            for i in 0..attribute.len() {
+                let current = &attribute[i];
+                let is_first = i == 0;
+                let is_last = i == attribute.len() - 1;
 
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                if is_first || is_last {
+                    let mut key = current.clone();
+                    if is_last {
+                        key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                    }
+                    optimized.push(key);
+                    continue;
+                }
+
+                let prev = &attribute[i - 1];
+                let next = &attribute[i + 1];
+
+                // 冗長なキーの判定: 前後と同じ値で、補間も発生しない場合
+                // MEMO: 値の変化がない区間でも、補間タイプによっては曲線を描く可能性があるため interpolation もチェックする
+                let is_redundant = current.value == prev.value && current.value == next.value
+                    && !optimize_part_animation_data_value_changing_range(&prev.interpolation)
+                    && !optimize_part_animation_data_value_changing_range(&current.interpolation);
+
+                if !is_redundant {
+                    optimized.push(current.clone());
+                }
             }
-            optimized.push(key);
-            continue;
+            if optimized.is_empty() { None } else { Some(optimized) }
         }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-
-        // 冗長なキーの判定: 前後と同じ値で、補間も発生しない場合
-        let is_redundant = current.value == prev.value && current.value == next.value
-            && !optimize_part_animation_data_value_changing_range(&prev.interpolation)
-            && !optimize_part_animation_data_value_changing_range(&current.interpolation);
-
-        if !is_redundant {
-            optimized.push(current.clone());
-        }
-    }
-
-    if optimized.is_empty() { None } else { Some(optimized) }
+    };
 }
-fn optimize_part_animation_data_int(attribute: &[ssab::ssab::ss::format::PartAnimationDataIntValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataIntValueT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
+macro_rules! impl_optimize_interpolatable_attribute {
+    ($fn_name:ident, $type_t:ty) => {
+        fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
+            if attribute.is_empty() { return None; }
+            let mut optimized = Vec::with_capacity(attribute.len());
+            optimized.push(attribute[0].clone());     // First key always exist.
 
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+            for i in 1..attribute.len() {
+                let current = &attribute[i];
+                if let Some(prev) = optimized.last_mut() {
+                    let is_last = i == attribute.len() - 1;
+                    let mut is_lost_interpolation_previous = false;
+        
+                    let mut is_redundant = false;
+                    if current.value == prev.value && !optimize_part_animation_data_value_changing_range(&prev.interpolation) {
+                        is_lost_interpolation_previous = true;
+        
+                        if is_last || current.interpolation == ssab::ssab::ss::format::InterpolationType::None {
+                            is_redundant = true;
+                        } else {
+                            if !is_last {
+                                let next = &attribute[i + 1];
+                                if current.value == next.value && !optimize_part_animation_data_value_changing_range(&current.interpolation) {
+                                   is_redundant = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if is_lost_interpolation_previous {
+                        prev.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                    }
+                    if !is_redundant {
+                        let mut key = current.clone();
+                        if is_last {
+                            key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                        }
+                        optimized.push(key);
+                    }
+                }
             }
-            optimized.push(key);
-            continue;
+            if optimized.is_empty() { None } else { Some(optimized) }
         }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-
-        let is_redundant = current.value == prev.value && current.value == next.value
-            && !optimize_part_animation_data_value_changing_range(&prev.interpolation)
-            && !optimize_part_animation_data_value_changing_range(&current.interpolation);
-
-        if !is_redundant {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
+    };
 }
 
-fn optimize_part_animation_data_bool(attribute: &[ssab::ssab::ss::format::PartAnimationDataBoolValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataBoolValueT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        if i == 0 || current.value != attribute[i - 1].value {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
-
-fn optimize_part_animation_data_cell(attribute: &[ssab::ssab::ss::format::PartAnimationDataCellValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataCellValueT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        if i == 0 || current.value != attribute[i - 1].value {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
-fn optimize_part_animation_data_partcolor(attribute: &[ssab::ssab::ss::format::PartAnimationDataPartColorT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataPartColorT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
-
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+macro_rules! impl_optimize_simple_attribute {
+    ($fn_name:ident, $type_t:ty) => {
+        fn $fn_name(attribute: &[$type_t]) -> Option<Vec<$type_t>> {
+            if attribute.is_empty() { return None; }
+            let mut optimized = Vec::with_capacity(attribute.len());
+            for i in 0..attribute.len() {
+                let current = &attribute[i];
+                if i == 0 || current.value != attribute[i - 1].value {
+                    optimized.push(current.clone());
+                }
             }
-            optimized.push(key);
-            continue;
+            if optimized.is_empty() { None } else { Some(optimized) }
         }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
+    };
 }
 
-fn optimize_part_animation_data_shader(attribute: &[ssab::ssab::ss::format::PartAnimationDataShaderT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataShaderT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
-
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-            }
-            optimized.push(key);
-            continue;
-        }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
-
-fn optimize_part_animation_data_vertex(attribute: &[ssab::ssab::ss::format::PartAnimationDataVertexT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataVertexT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
-
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-            }
-            optimized.push(key);
-            continue;
-        }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
-
-fn optimize_part_animation_data_skew(attribute: &[ssab::ssab::ss::format::PartAnimationDataVec2T]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataVec2T>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
-
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-            }
-            optimized.push(key);
-            continue;
-        }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
-
-fn optimize_part_animation_data_deform(attribute: &[ssab::ssab::ss::format::PartAnimationDataDeformT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataDeformT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        let is_first = i == 0;
-        let is_last = i == attribute.len() - 1;
-
-        if is_first || is_last {
-            let mut key = current.clone();
-            if is_last {
-                key.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-            }
-            optimized.push(key);
-            continue;
-        }
-
-        let prev = &attribute[i - 1];
-        let next = &attribute[i + 1];
-        if current.value != prev.value || current.value != next.value || optimize_part_animation_data_value_changing_range(&prev.interpolation) {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
-
-fn optimize_part_animation_data_texture(attribute: &[ssab::ssab::ss::format::PartAnimationDataUIntValueT]) -> Option<Vec<ssab::ssab::ss::format::PartAnimationDataUIntValueT>> {
-    if attribute.is_empty() { return None; }
-    let mut optimized = Vec::with_capacity(attribute.len());
-    for i in 0..attribute.len() {
-        let current = &attribute[i];
-        if i == 0 || current.value != attribute[i - 1].value {
-            optimized.push(current.clone());
-        }
-    }
-    if optimized.is_empty() { None } else { Some(optimized) }
-}
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_float, ssab::ssab::ss::format::PartAnimationDataFloatValueT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_int, ssab::ssab::ss::format::PartAnimationDataIntValueT);
+impl_optimize_simple_attribute!(optimize_part_animation_data_bool, ssab::ssab::ss::format::PartAnimationDataBoolValueT);
+impl_optimize_simple_attribute!(optimize_part_animation_data_cell, ssab::ssab::ss::format::PartAnimationDataCellValueT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_partcolor, ssab::ssab::ss::format::PartAnimationDataPartColorT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_shader, ssab::ssab::ss::format::PartAnimationDataShaderT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_vertex, ssab::ssab::ss::format::PartAnimationDataVertexT);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_skew, ssab::ssab::ss::format::PartAnimationDataVec2T);
+impl_optimize_interpolatable_attribute!(optimize_part_animation_data_deform, ssab::ssab::ss::format::PartAnimationDataDeformT);
+impl_optimize_simple_attribute!(optimize_part_animation_data_texture, ssab::ssab::ss::format::PartAnimationDataUIntValueT);
 
 fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, _part_type: &sspj::sstypes::SsPartType, _anime_data: &sspj::ssae::SsPartAnime) {
     // Key-data optimization per attribute
