@@ -31,7 +31,6 @@ pub fn watch_sspj_project(
 
     loop {
         if should_stop.load(Ordering::Relaxed) {
-            // println!("Stop requested.");
             break;
         }
 
@@ -39,17 +38,19 @@ pub fn watch_sspj_project(
             Ok(res) => {
                 match res {
                     Ok(events) => {
-                        let ret = events.iter().find(|event| is_sspj_or_ssxe_files(&event.path));
+                        let ret = events.iter().find(|event| is_relevant_file(&event.path));
                         if let Some(_) = ret {
-                            // println!("{:?} changed", event.path);
                             let r = crate::converter::converter::convert_sspj_to_ssab_files(sspj, &config);
                             match r {
                                 Ok(_) => println!("convert success"),
-                                Err(e) => return Err(e)
+                                Err(e) => {
+                                    eprintln!("convert error: {:?}", e);
+                                    // 監視を継続するために、ここではエラーを返さずループを続けます
+                                }
                             }
                         }
                     },
-                    Err(e) => println!("watch error: {:?}", e),
+                    Err(e) => eprintln!("watch error: {:?}", e),
                 }
             },
             Err(RecvTimeoutError::Timeout) => {
@@ -64,7 +65,10 @@ pub fn watch_sspj_project(
     Ok(())
 }
 
-fn is_sspj_or_ssxe_files(path: &Path) -> bool {
-    let ext = path.extension().unwrap_or(std::ffi::OsStr::new(""));
-    ext == "sspj" || ext == "ssce" || ext == "ssae" || ext == "ssee" || ext == "ssse"
+fn is_relevant_file(path: &Path) -> bool {
+    let ext = path.extension().unwrap_or(std::ffi::OsStr::new("")).to_ascii_lowercase();
+    matches!(
+        ext.to_str().unwrap_or(""),
+        "sspj" | "ssce" | "ssae" | "ssee" | "ssse" | "ssqe" // SpriteStudio files
+    )
 }

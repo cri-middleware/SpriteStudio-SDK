@@ -110,9 +110,9 @@ pub extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_char, out
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter_is_running(context: *mut Context) -> bool {
-    let context = unsafe { &mut *context };
-    context.handler.is_some()
+pub extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
+    let context = unsafe { &mut *ctx };
+    context.handler.as_ref().map_or(false, |h| !h.is_finished())
 }
 
 #[unsafe(no_mangle)]
@@ -124,7 +124,7 @@ pub extern "C" fn ss_converter_abort(context: *mut Context) {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
     let context = unsafe { &mut *context };
-    context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
+    context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(true)
 }
 
 #[unsafe(no_mangle)]

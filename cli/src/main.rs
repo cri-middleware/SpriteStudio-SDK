@@ -73,6 +73,13 @@ fn main() -> Result<(), ssconverter::ConverterError> {
         if args.watch {
             // watch mode
             let should_stop = Arc::new(AtomicBool::new(false));
+            let s = should_stop.clone();
+            ctrlc::set_handler(move || {
+                s.store(true, std::sync::atomic::Ordering::Relaxed);
+                println!("\nStopping watcher...");
+            }).expect("Error setting Ctrl-C handler");
+
+            println!("Watching for changes in {:?}... (Press Ctrl+C to stop)", sspj_paths[0].as_path());
             ssconverter::watch::watch_sspj_project(sspj_paths[0].as_path(), &config, should_stop)?;
             return Ok(());
         }
