@@ -1,6 +1,15 @@
 name: release 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
+    inputs:
+      upload_release:
+        description: 'Upload to GitHub Release'
+        required: false
+        default: false
+        type: boolean
 
 env:
   LANG: en_US.UTF-8
@@ -257,7 +266,7 @@ jobs:
           pushd dynamic/runtime
           mkdir -p libs
           pushd libs
-          echo ${{ steps.commit.outputs }} > VERSION
+          echo ${{ steps.commit.outputs.hash }} > VERSION
           mkdir -p macos
           mkdir -p web
           mkdir -p ios
@@ -298,3 +307,29 @@ jobs:
         with:
           name: spritestudio7-sdk-dynamic-libs
           path: output/dynamic
+
+      - name: Archive release packages
+        run: |
+          mkdir -p release-dist
+          zip -r release-dist/spritestudio7-sdk-static-libs.zip output/static
+          zip -r release-dist/spritestudio7-sdk-dynamic-libs.zip output/dynamic
+          
+          for dir in artifacts/ssconverter-cli-*; do
+            if [ -d "$dir" ]; then
+              platform=${dir#artifacts/ssconverter-cli-}
+              zip -rj "release-dist/ssconverter-cli-${platform}.zip" "$dir"
+            fi
+          done
+
+      - name: Create GitHub Release
+        if: |
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.upload_release == 'true')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-dist/*.zip
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
