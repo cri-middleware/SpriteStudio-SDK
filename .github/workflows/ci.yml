@@ -71,11 +71,11 @@ jobs:
       - name: Install targets (Rust)
         run: |
           if [ "${{ matrix.platform }}" == "macos" ]; then
-            rustup target add aarch64-apple-darwin x86_64-apple-darwin
+            rustup target add aarch64-apple-darwin
           elif [ "${{ matrix.platform }}" == "ios" ]; then
-            rustup target add aarch64-apple-ios x86_64-apple-ios
+            rustup target add aarch64-apple-ios
           elif [ "${{ matrix.platform }}" == "android" ]; then
-            rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+            rustup target add aarch64-linux-android
             cargo install cargo-ndk
           elif [ "${{ matrix.platform }}" == "web" ]; then
             rustup target add wasm32-unknown-unknown
@@ -97,8 +97,7 @@ jobs:
 
       - name: Test
         run: |
-          if [ "${{ matrix.platform }}" == "linux" ] || [ "${{ matrix.platform }}" == "windows" ] || [ "${{ matrix.platform }}" == "macos" ]; then
-            cargo test --verbose
-          fi
+          export RAYON_NUM_THREADS=1
+          cargo test --verbose -- --test-threads=1
         shell: bash
 
