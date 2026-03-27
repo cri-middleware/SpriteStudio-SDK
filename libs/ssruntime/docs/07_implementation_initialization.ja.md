@@ -3,11 +3,16 @@
 Player の基本機能の実装において、初期化時に行うべき処理と、メモリ管理の戦略について記載します。
 
 ## 1. libssruntime の初期化
-まず、libssruntime の各機能を利用するためのコンテキストを作成します。通常、1 つの Player インスタンス（または 1 つのアニメーションオブジェクト）につき 1 つのコンテキストを保持します。
+まず、libssruntime の各機能を利用するためのコンテキストを作成します。通常、1 つの Player インスタンス（または 1 つのアニメーションオブジェクト）につき 1 つ의 コンテキストを保持します。
 
 ```cpp
-// コンテキストの作成
-void* context = ss_runtime_create();
+#include "runtime/ssruntime.h"
+
+// コンストラクタ等でコンテキストの作成
+void* runtime_ctx = ss_runtime_create();
+
+// デストラクタ等でコンテキストの破棄
+ss_runtime_destroy(runtime_ctx);
 ```
 
 ## 2. ssab ファイルのロードと libssruntime への渡し方
@@ -15,9 +20,19 @@ void* context = ss_runtime_create();
 
 ### パターン A：ポインタを直接渡せる場合（推奨）
 - **対象言語:** C++, C# (unsafe) など
-- **運用:** ssab データのオーナー（メモリ管理責任者）は Player 側になります。
+- **運用:** ssab データのオーナー（メモリ管理責任者）は Player 側になります。ゲームエンジン側のアセット管理（Godot の Resource や Unity の ScriptableObject 等）でバイナリを保持し続ける場合に最適です。
 - **実装:** `ss_runtime_load_ssab_borrow` を使用します。
 - **メリット:** メモリコピーが発生せず、最も効率的です。
+
+```cpp
+// Godot (C++) での実装例
+// Resource として保持している PackedByteArray からポインタを取得して渡す
+bool loaded = ss_runtime_load_ssab_borrow(
+    runtime_ctx, 
+    ssab_resource->get_data_ptr(), 
+    ssab_resource->get_data_size()
+);
+```
 
 ### パターン B：ポインタ経由で参照のみ可能な場合
 - **対象言語:** Kotlin, TypeScript(JavaScript) など
@@ -34,33 +49,48 @@ void* context = ss_runtime_create();
 - **デメリット:** メモリ消費が 2 倍になるため、可能な限り避けてください。
 
 ## 3. アセット（テクスチャ）のロードと紐付け
-ssab 内には「どのセルマップ（画像）を使用するか」という情報が含まれています。Player は設計方針で選択した `ssab` のタイプに合わせて、以下のいずれかの方法でテクスチャを準備する必要があります。
+ssab 内には「どのセルマップ（画像）を使用するか」という情報が含まれています。Player は設計方針で選択した `ssab` のタイプに合わせて、テクスチャを準備する必要があります。
 
 ### Reference (参照方式) の場合
 - **ロード元**: 外部ファイル（PNG 等）。
-- **手順**: `cellmap->image_path()` から取得できるファイルパス（相対パス）を基に、ゲームエンジンの標準的なアセットロード機構を用いてテクスチャを読み込みます。
+- **手順**: `cellmap->image_path()` から取得できるファイルパスを基に、エンジンの標準的なアセットロード機構を用いてテクスチャを読み込みます。
+- **注意点**: `image_path` は通常 `.sspj` や `.ssab` からの相対パスです。Player 側でベースディレクトリと結合して絶対パス（またはエンジン内のリソースパス）を生成する必要があります。
+
+```cpp
+// Godot (C++) での実装例
+void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
+    for (int i = 0; i < binary->cellmaps()->size(); i++) {
+        auto cellmap = binary->cellmaps()->Get(i);
+        // パスの解決
+        String image_path = base_dir.path_join(String::utf8(cellmap->image_path()->c_str()));
+        // エンジンの機能でロード
+        Ref<Texture2D> texture = ResourceLoader::get_singleton()->load(image_path);
+        // ハッシュ値で管理
+        _textures[cellmap->name_hash()] = texture;
+    }
+}
+```
 
 ### Embedded (埋め込み方式) の場合
 - **ロード元**: ssab バイナリ内部。
-- **手順**: `ssab->embedded_assets()` を走査し、各セルマップに対応するバイナリデータ（`data()` 配列）を直接取得します。このメモリ上のデータを、エンジンの「画像データからのテクスチャ作成」機能（`CreateTextureFromMemory` 等）に渡して読み込みます。
+- **手順**: `ssab->embedded_assets()` を走査し、各セルマップに対応するバイナリデータを直接取得します。このメモリ上のデータを、エンジンの「画像データからのテクスチャ作成」機能に渡して読み込みます。
 
 ### 共通の処理：セル情報のインデックス化
-描画パフォーマンスを向上させるため、初期化時に以下の情報を事前に計算・キャッシュしておくことを強く推奨します。
+描画パフォーマンスを向上させるため、初期化時に以下の情報をキャッシュしておくことを強く推奨します。
 
-- **CellMap のインデックス化**: `ssab->cellmaps()` の並び順（インデックス）と、ロードしたテクスチャオブジェクトを紐付けます。
+- **CellMap のインデックス化**: `ssab->cellmaps()` の並び順や `name_hash()` をキーとして、ロードしたテクスチャオブジェクトを紐付けます。
 - **セルの高速検索**: 各 CellMap 内の `cells()` を走査し、`name_hash()` をキーとして、そのセルの切り出し矩形（UV）や原点（Pivot）情報を即座に引けるようにしておきます。
-    - 描画時、`PartState` から得られる `cell_attr->name_hash()` を使って、このキャッシュから情報を引き当てます。
 
 ## 4. 再生するアニメーション情報の管理
-ssab データには複数のアニメーションが格納されている場合があります。
+ssab データには複数のアニメーションが格納されています。
 
 ```cpp
 // ssab 内のアニメーション名一覧を取得する例
-if (ssab->animations()) {
-    for (auto anime : *ssab->animations()) {
+auto ss_anime_binary = ss::format::GetSsAnimeBinary(binary_ptr);
+if (ss_anime_binary->animations()) {
+    for (auto anime : *ss_anime_binary->animations()) {
         std::string name = anime->name()->str();
-        // anime->name_hash() も利用可能
-        // この名前（またはハッシュ）を Player の外部 API（Play("name") など）で利用できるようにする
+        // この名前を Player の外部 API（Play("name") など）で利用できるようにする
     }
 }
 ```
@@ -70,11 +100,5 @@ if (ssab->animations()) {
 
 ```cpp
 // コンテキストの破棄
-ss_runtime_destroy(context);
+ss_runtime_destroy(runtime_ctx);
 ```
-
-# アセットロード方式別の実装（詳細）
-※ ここには、選択したアセット管理戦略（Reference/Embedded）に応じた具体的なロード・リソース管理の実装を記載します。
-
-- **Reference (参照方式) の場合**: ssab 内のパスを基に、エンジンのアセットローダー経由でファイルを読み込む手順。
-- **Embedded (埋め込み方式) の場合**: ssab 内の `embedded_assets` からメモリバッファとしてデータを取得し、テクスチャを作成する手順。

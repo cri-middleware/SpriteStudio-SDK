@@ -3,17 +3,48 @@
 アニメーションの最初の一歩として、まずは **フレーム 0 を正しく描画（静止画表示）** することを目指します。
 
 ## 1. 最初のステップ：フレーム 0 の描画
-「キャラクターアニメーション テンプレート」などを表示し、正しく座標とテクスチャが反映されるかを確認します。
+「キャラクターアニメーション テンプレート」などの単純なデータを表示し、正しく座標とテクスチャが反映されるかを確認します。
 
-1. `ss_runtime_update(context, 0.0f)` を呼び出し、再生時間を進めずに初期状態にします。
-2. `ss_runtime_get_frame_no(context)` で現在のフレーム（0）を確認します。
-3. `ss_runtime_get_frame_data(context, 0, &buf, &len)` を呼び出し、0 番目のフレームデータを取得します。
-4. `PartState` をループして、基本的なアトリビュートを適用して描画します。
+1. `ss_runtime_update(runtime_ctx, 0.0f)` を呼び出し、再生時間を進めずに初期状態にします。
+2. `ss_runtime_get_part_states(runtime_ctx, &parts, &count)` を呼び出し、現在のフレームの全パーツの状態を取得します。
+3. パーツのリスト（`parts`）をループして、基本的なアトリビュートを適用して描画します。
+
+```cpp
+// 基本的な描画ループの例 (C++)
+int part_count = 0;
+const ss_part_state* part_states = nullptr;
+
+// 現在のフレームにおける全パーツの計算済み状態を取得
+ss_runtime_get_part_states(runtime_ctx, &part_states, &part_count);
+
+for (int i = 0; i < part_count; i++) {
+    const ss_part_state& state = part_states[i];
+
+    // 非表示フラグの確認
+    if (state.hide) continue;
+
+    // 座標・回転・スケールの取得
+    // これらは libssruntime 内部で親子関係が計算された後の「ワールド座標」相当の値です
+    float x = state.position_x;
+    float y = state.position_y;
+    float rotation = state.rotation_z;
+    float scale_x = state.scale_x;
+    float scale_y = state.scale_y;
+
+    // テクスチャと UV の取得
+    // state.cell_index を元に、初期化時に構築したキャッシュからテクスチャと UV を引く
+    Texture* tex = GetTextureByCellIndex(state.cell_index);
+    Rect uv = GetUVByCellIndex(state.cell_index);
+
+    // 描画の実行
+    DrawTexture(tex, x, y, rotation, scale_x, scale_y, uv, state.alpha);
+}
+```
 
 ## 2. 最低限実装が必要なアトリビュート
 まずは以下の項目を反映することから始めます。これが出来れば、多くのアニメーションが形になります。
 
-- **セル (cell)**: `PartState->cell()` で得られるインデックスを使い、`FrameData->cells()` からセルのハッシュ値等を取得します。
+- **セル (cell_index)**: libssruntime が返すインデックスを使い、事前にロードしたテクスチャや UV を特定します。
 - **座標 (position_x, position_y)**: 位置。
 - **Z 軸回転 (rotation_z)**: 回転。
 - **スケール (scale_x, scale_y)**: 拡大縮小。
@@ -23,12 +54,24 @@
 ## 3. 座標変換とエンジンの合わせ込み
 SpriteStudio とゲームエンジンの座標系の違いを吸収する必要があります。
 
-- **原点**: SpriteStudio は通常「左上原点」ですが、エンジンが「中心原点」や「左下原点」の場合は補正が必要です。
-- **軸の向き**: Y 軸の上下（SpriteStudio は下向きが正）を反転させる必要がある場合が多いです。
-- **行列計算**: 親パーツの行列に自身の行列を掛けて、最終的なワールド行列を算出します。
+- **原点**: SpriteStudio は「左上原点」ですが、libssruntime が返す座標は通常、アニメーションの中心（Pivot）を基準とした相対座標です。
+- **軸の向き**: Godot などのエンジンでは Y 軸の下向きが正（Y-Down）ですが、他のエンジンでは上向きが正（Y-Up）の場合があります。
+- **行列計算**: libssruntime は親子関係を考慮した最終的な各パーツの座標・回転・スケールを個別に返します。Player 側ではこれらを組み合わせてワールド行列を生成するか、エンジンのトランスフォーム機能に直接セットします。
+
+```cpp
+// Godot (C++) での描画適用例
+Transform2D t;
+t.set_origin(Vector2(state.position_x, state.position_y));
+t.set_rotation(Math::deg_to_rad(state.rotation_z));
+t.set_scale(Vector2(state.scale_x, state.scale_y));
+
+// Godot の CanvasItem API を使用
+draw_set_transform_matrix(t);
+draw_texture_rect_region(texture, rect, uv_rect, Color(1, 1, 1, state.alpha));
+```
 
 ## 4. 合成モード (Blend Mode) の適用
-パーツごとに指定された合成モード（`PartData->blend_type()`）を反映します。
+パーツごとに指定された合成モード（`state.blend_type`）を反映します。
 
 - **Mix (通常)**: アルファブレンディング
 - **Add (加算)**: 加算合成
@@ -40,11 +83,11 @@ SpriteStudio とゲームエンジンの座標系の違いを吸収する必要�
 
 ```cpp
 // 毎フレームの更新ループ
-float delta = GetDeltaTime(); // 経過秒数
-int frame_no = ss_runtime_update(context, delta);
+float delta_ms = GetDeltaTime() * 1000.0f; // ミリ秒で渡す
+int current_frame = ss_runtime_update(runtime_ctx, delta_ms);
 
-// 補間計算が必要な場合、小数のフレーム番号を利用できます
-float frame_decimal = ss_runtime_get_frame_no_decimal(context);
+// 更新後に描画関数を呼び出す
+Render(runtime_ctx);
 ```
 
 ## 6. この段階での動作確認 (Validation)
@@ -59,14 +102,9 @@ float frame_decimal = ss_runtime_get_frame_no_decimal(context);
         - 各パーツに指定された合成モード（Mix, Add, Sub, Mul）が視覚的に正しく反映されているか。
 
 # 描画方式別の実装パターン（詳細）
-※ ここには、選択した内部構造（GameObject 方式 / フラットレンダリング方式）に応じた具体的なループ構成や管理手法を記載します。
 
-- **GameObject / 階層ノード方式**: パーツ単位でのノード生成、階層ツリーの更新。
-- **フラットレンダリング方式**: 描画命令のバッチ化、頂点バッファへの書き込み。
-
-# 座標変換の詳細仕様
-※ ここには、SpriteStudio の座標系から対象エンジンの座標系への具体的な変換アルゴリズムを記載します。
-
-- **Y 軸反転**: SpriteStudio (Y-Down) から Y-Up 系への変換。
-- **原点補正**: 左上原点から中心原点へのオフセット計算。
-- **行列計算の順序**: SRT (Scale-Rotate-Translate) の適用順序。
+- **階層ノード方式 (Godot Node2D / Unity GameObject)**: 
+  パーツの数だけエンジンのオブジェクトを生成します。各 `PartState` の値をそのまま各オブジェクトの `transform` に反映させます。libssruntime が親子関係を計算済みであるため、エンジン側で親子階層を組まずに、すべてのノードをフラットな子として管理する（ワールド座標として扱う）のが最もシンプルです。
+  
+- **フラットレンダリング方式 (CanvasItem / Custom Shader)**:
+  1 つの描画関数内でループを回し、連続して描画命令を発行します。Godot の `_draw` 関数内でのループ処理や、頂点バッファへの流し込みがこれに当たります。パフォーマンス面で優れています。
