@@ -312,7 +312,7 @@ mod tests {
 
                 let input_buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new();
-                context.load_copy(&input_buf);
+                context.load_copy(&input_buf).unwrap();
 
                 let ssab_buf = context.get_ssab_data().unwrap();
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };

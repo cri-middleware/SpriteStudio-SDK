@@ -1101,7 +1101,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.none_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::NoneValueEntryArgs::default();
+        let args = ssab::ssab::ss::format::NoneValueEntryArgs::default();
         let offset = ssab::ssab::ss::format::NoneValueEntry::create(fb, &args);
         self.none_value_table_cache.insert(key, offset);
         offset
