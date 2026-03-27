@@ -249,10 +249,11 @@ mod tests {
     }
 
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .ancestors()
-            .nth(2)
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+        PathBuf::from(manifest_dir)
+            .parent()
+            .expect("Failed to get libs directory")
+            .parent()
             .expect("Failed to get the base directory")
             .to_path_buf()
     }
