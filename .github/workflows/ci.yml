@@ -97,7 +97,6 @@ jobs:
 
       - name: Test
         run: |
-          export RAYON_NUM_THREADS=1
           cargo test --verbose -- --test-threads=1
         shell: bash
 
