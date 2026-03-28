@@ -133,74 +133,53 @@ impl crate::ssloader::SsLoader for SsProject {
         let parent_path_buf = parent.to_path_buf();
         let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
 
-        let sound_handle = {
-            let audiopack_names = sspj.audiopack_names.clone();
-            let p = parent_path_buf.clone();
-            std::thread::spawn(move || {
-                audiopack_names.par_iter().map(|audiopack| {
-                    crate::ssse::SsAudioPack::load_from_file(&p.join(audiopack))
-                }).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()
-            })
+        let sound_list = {
+            sspj.audiopack_names.par_iter().map(|audiopack| {
+                crate::ssse::SsAudioPack::load_from_file(&parent_path_buf.join(audiopack))
+            }).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()?
         };
 
-        let sequence_handle = {
-            let sequencepack_names = sspj.sequencepack_names.clone();
-            let p = parent_path_buf.clone();
-            std::thread::spawn(move || {
-                sequencepack_names.par_iter().map(|sequencepack| {
-                    crate::ssqe::SsSequencePack::load_from_file(&p.join(sequencepack))
-                }).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()
-            })
+        let sequence_list = {
+            sspj.sequencepack_names.par_iter().map(|sequencepack| {
+                crate::ssqe::SsSequencePack::load_from_file(&parent_path_buf.join(sequencepack))
+            }).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()?
         };
 
-        let charmap_handle = {
-            let charmap_names = sspj.charmap_names.clone();
-            let p = parent_path_buf.clone();
-            std::thread::spawn(move || {
-                charmap_names.par_iter().map(|charmap_name| {
-                    let path = p.join(charmap_name);
-                    let charmap_data = crate::sscharmap::SsCharMap::load_from_file(&path).map_err(|e| e)?;
-                    Ok((charmap_name.to_string(), charmap_data))
-                }).collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()
-            })
-        };
-        
-        let cellmap_handle = {
-            let cellmap_names = sspj.cellmap_names.clone();
-            let p = parent_path_buf.clone().join(&sspj.settings.cell_map_base_directory);
-            std::thread::spawn(move || {
-                cellmap_names.par_iter().map(|cellmap| {
-                    crate::ssce::SsCellMap::load_from_file(&p.join(cellmap))
-                }).collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()
-            })
+        let charmap_dic = {
+            sspj.charmap_names.par_iter().map(|charmap_name| {
+                let path = parent_path_buf.join(charmap_name);
+                let charmap_data = crate::sscharmap::SsCharMap::load_from_file(&path).map_err(|e| e)?;
+                Ok((charmap_name.to_string(), charmap_data))
+            }).collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()?
         };
 
-        let effect_handle = {
-            let effect_file_names = sspj.effect_file_names.clone();
-            let p = parent_path_buf.clone().join(&sspj.settings.effect_base_directory);
-            std::thread::spawn(move || {
-                effect_file_names.par_iter().map(|effect_file| {
-                    crate::ssee::SsEffectFile::load_from_file(&p.join(effect_file))
-                }).collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()
-            })
+        let cellmap_list = {
+            let p = parent_path_buf.join(&sspj.settings.cell_map_base_directory);
+            sspj.cellmap_names.par_iter().map(|cellmap| {
+                crate::ssce::SsCellMap::load_from_file(&p.join(cellmap))
+            }).collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()?
         };
 
-        let animepack_handle = {
-            let animepack_names = sspj.animepack_names.clone();
-            let p = parent_path_buf.clone().join(&sspj.settings.anime_base_directory);
-            std::thread::spawn(move || {
-                animepack_names.par_iter().map(|animepack| {
-                    crate::ssae::SsAnimePack::load_from_file(&p.join(animepack))
-                }).collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()
-            })
+        let effect_file_list = {
+            let p = parent_path_buf.join(&sspj.settings.effect_base_directory);
+            sspj.effect_file_names.par_iter().map(|effect_file| {
+                crate::ssee::SsEffectFile::load_from_file(&p.join(effect_file))
+            }).collect::<Result<Vec<crate::ssee::SsEffectFile>, crate::sspj_error::SspjError>>()?
         };
 
-        sspj.sound_list = sound_handle.join().unwrap()?;
-        sspj.sequence_list = sequence_handle.join().unwrap()?;
-        sspj.charmap_dic = charmap_handle.join().unwrap()?;
-        sspj.cellmap_list = cellmap_handle.join().unwrap()?;
-        sspj.effect_file_list = effect_handle.join().unwrap()?;
-        sspj.anime_list = animepack_handle.join().unwrap()?;
+        let anime_list = {
+            let p = parent_path_buf.join(&sspj.settings.anime_base_directory);
+            sspj.animepack_names.par_iter().map(|animepack| {
+                crate::ssae::SsAnimePack::load_from_file(&p.join(animepack))
+            }).collect::<Result<Vec<crate::ssae::SsAnimePack>, crate::sspj_error::SspjError>>()?
+        };
+
+        sspj.sound_list = sound_list;
+        sspj.sequence_list = sequence_list;
+        sspj.charmap_dic = charmap_dic;
+        sspj.cellmap_list = cellmap_list;
+        sspj.effect_file_list = effect_file_list;
+        sspj.anime_list = anime_list;
 
         Ok(sspj)
     }
