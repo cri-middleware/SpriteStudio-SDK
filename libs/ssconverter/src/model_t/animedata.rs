@@ -538,7 +538,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                             }
                             Some(_skew) => {
                                 p_args.skew_x = _skew.x;
-                                p_args.skew_y = _skew.x;
+                                p_args.skew_y = _skew.y;
                             }
                         }
                         p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeSkew;
@@ -1311,7 +1311,7 @@ fn convert_part_animation_data_expand_key_vertex(value_start:&sspj::ssattribute:
         coordinate_end.v2 = c.y;
     });
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
+    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.lt = Some(Box::new(coordinate));
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
@@ -1326,7 +1326,7 @@ fn convert_part_animation_data_expand_key_vertex(value_start:&sspj::ssattribute:
         coordinate_end.v2 = c.y;
     });
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
+    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.rt = Some(Box::new(coordinate));
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
@@ -1341,7 +1341,7 @@ fn convert_part_animation_data_expand_key_vertex(value_start:&sspj::ssattribute:
         coordinate_end.v2 = c.y;
     });
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
+    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.lb = Some(Box::new(coordinate));
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
@@ -1356,7 +1356,7 @@ fn convert_part_animation_data_expand_key_vertex(value_start:&sspj::ssattribute:
         coordinate_end.v2 = c.y;
     });
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
+    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.rb = Some(Box::new(coordinate));
 
     Some(Box::new(result))
@@ -1380,7 +1380,7 @@ fn convert_part_animation_data_expand_key_skew(value_start:&sspj::ssattribute::S
         coordinate_end.v2 = c.y;
     });
     result.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    result.v2 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
+    result.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
 
     Some(Box::new(result))
 }
@@ -1404,8 +1404,8 @@ fn convert_part_animation_data_expand_key_deform(value_start:&sspj::ssattribute:
         }
         coordinate_end = ssab::ssab::ss::format::Vec2T::default();
         if i < count_vertex_end {
-            coordinate_end.v1 = value_start.value.vchg[i].x;
-            coordinate_end.v2 = value_start.value.vchg[i].y;
+            coordinate_end.v1 = value_end.value.vchg[i].x;
+            coordinate_end.v2 = value_end.value.vchg[i].y;
         }
 
         coordinate = ssab::ssab::ss::format::Vec2T::default();
