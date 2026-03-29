@@ -1,5 +1,6 @@
 
 extern crate libm;
+extern crate alloc;
 
 /// cbindgen:ignore
 mod runtime;

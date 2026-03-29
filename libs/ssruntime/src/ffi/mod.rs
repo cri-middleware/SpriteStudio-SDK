@@ -1,4 +1,4 @@
-use std::ffi::{c_char, c_float, c_int, c_uchar, c_void, CStr};
+use core::ffi::{c_char, c_float, c_int, c_uchar, c_void, CStr};
 use std::panic::catch_unwind;
 
 pub struct FfiContext {
@@ -127,7 +127,7 @@ pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const 
         let ffi_context = get_context(context);
         check_ptr(name, "animation_name");
         let c_buf = unsafe { CStr::from_ptr(name) };
-        let a = c_buf.to_string_lossy().into_owned();
+        let a = alloc::string::String::from_utf8_lossy(c_buf.to_bytes()).into_owned();
         ffi_context.ctx.setup_animation(&a)
     });
     result.unwrap_or(false)
