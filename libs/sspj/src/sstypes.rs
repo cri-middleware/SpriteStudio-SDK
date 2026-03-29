@@ -3,7 +3,7 @@ use serde::de::{MapAccess, Visitor};
 use std::fmt::Formatter;
 use std::str::FromStr;
 
-#[derive(PartialEq, Default, Clone, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy, Default)]
 pub struct SsPoint2 {
     pub x: f32,
     pub y: f32,
@@ -87,7 +87,7 @@ impl<'de> Deserialize<'de> for SsPoint3 {
     }
 }
 
-#[derive(PartialEq, Default, Clone, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy, Default)]
 pub struct SsU8Color {
     pub a: u8,
     pub r: u8,
@@ -286,7 +286,7 @@ pub enum SsShapeType {
 }
 
 
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct SsCurve {
     pub start_time: f32,
     pub start_value: f32,

@@ -875,7 +875,10 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
     Some(events_t)
 }
 
-fn convert_part_animation_data_required_precalculation(interpolation:&sspj::sstypes::SsInterpolationType) -> bool {
+fn convert_part_animation_data_required_precalculation<T: PartialEq>(interpolation:&sspj::sstypes::SsInterpolationType, value_start: &T, value_end: &T) -> bool {
+    if value_start == value_end {
+        return false;
+    }
     // Determines whether to calculate in runtime or pre-interpolation.
     // Return also false when range is need not interpolate.
     match interpolation {
@@ -1202,7 +1205,7 @@ fn convert_part_animation_data_expand_key_partcolor(value_start:&sspj::ssattribu
     let rt_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
     let rb_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
     let lb_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    match value_start.value.target {
+    match value_end.value.target {
         sspj::sstypes::SsColorBlendTarget::Whole => {
             lt_end = &value_end.value.color;
             rt_end = &value_end.value.color;
@@ -1447,7 +1450,7 @@ macro_rules! process_interpolatable_attribute {
                 array.len() - 1
             };
 
-            if i < (count_keys - 1) && convert_part_animation_data_required_precalculation(&key.ip_type) {
+            if i < (count_keys - 1) && convert_part_animation_data_required_precalculation(&key.ip_type, &key.value, &($keys[i+1].value)) {
                 let key_next = &$keys[i + 1];
                 array[index_key_start].interpolation = ssab::ssab::ss::format::InterpolationType::None;
                 for time_now in (key.time + 1)..key_next.time {

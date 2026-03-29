@@ -142,7 +142,7 @@ pub struct SsAttributeHide {
     pub keys: Vec<SsAttributeBoolKey>,
 }
 
-#[derive(Deserialize, PartialEq, Default, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug, Clone)]
 pub struct SsAttributePartsColorKeyValueColor {
     pub rgba: SsU8Color,
     pub rate: f32,
@@ -189,7 +189,7 @@ pub struct SsAttributePartsColor {
     pub keys: Vec<SsAttributePartsColorKey>,
 }
 
-#[derive(Deserialize, PartialEq, Default, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeShaderKeyValueMap {
     pub map_id: i32,
@@ -238,7 +238,7 @@ pub struct SsAttributeShader {
     pub keys: Vec<SsAttributeShaderKey>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeVertexKeyValue {
     #[serde(rename = "LT")]
@@ -567,14 +567,14 @@ pub struct SsAttributeEffect {
     pub keys: Vec<SsAttributeEffectKey>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Default, Clone)]
 pub struct SsDeformValue {
     pub x_index: f32,
     pub x: f32,
     pub y: f32,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Default, Clone)]
 pub struct SsAttributeDeformKeyValue {
     pub vsize: i32,
     #[serde(deserialize_with = "parse_ss_point3_list")]
