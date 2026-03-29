@@ -5,39 +5,43 @@
 ## 1. 最初のステップ：フレーム 0 の描画
 「キャラクターアニメーション テンプレート」などの単純なデータを表示し、正しく座標とテクスチャが反映されるかを確認します。
 
-1. `ss_runtime_update(runtime_ctx, 0.0f)` を呼び出し、再生時間を進めずに初期状態にします。
-2. `ss_runtime_get_part_states(runtime_ctx, &parts, &count)` を呼び出し、現在のフレームの全パーツの状態を取得します。
-3. パーツのリスト（`parts`）をループして、基本的なアトリビュートを適用して描画します。
+1. `ss_runtime_update` 等の関数を呼び出し、再生時間を進めずに初期状態の `FrameData` （FlatBuffersチャンク）を取得します。
+2. 取得したチャンクを Player 側で `FrameData` テーブルとしてデコードし、パーツのリスト（`parts`）を取得します。
+3. パーツのリストをループして、基本的なアトリビュートを適用して描画します。
 
 ```cpp
-// 基本的な描画ループの例 (C++)
-int part_count = 0;
-const ss_part_state* part_states = nullptr;
+// 基本的な描画ループの概念を示す擬似コード (C++ / FlatBuffers)
 
-// 現在のフレームにおける全パーツの計算済み状態を取得
-ss_runtime_get_part_states(runtime_ctx, &part_states, &part_count);
+// libssruntime から現在のフレームの計算済み状態（FlatBuffers のチャンク）を取得
+const uint8_t* chunk_data = nullptr;
+size_t chunk_size = 0;
+ss_runtime_get_frame_data(runtime_ctx, &chunk_data, &chunk_size);
 
-for (int i = 0; i < part_count; i++) {
-    const ss_part_state& state = part_states[i];
+// FlatBuffers のデコード
+auto frame_data = GetFrameData(chunk_data);
+auto parts = frame_data->parts();
+
+for (size_t i = 0; i < parts->size(); i++) {
+    auto part = parts->Get(i);
 
     // 非表示フラグの確認
-    if (state.hide) continue;
+    if (part->hide()) continue;
 
     // 座標・回転・スケールの取得
     // これらは libssruntime 内部で親子関係が計算された後の「ワールド座標」相当の値です
-    float x = state.position_x;
-    float y = state.position_y;
-    float rotation = state.rotation_z;
-    float scale_x = state.scale_x;
-    float scale_y = state.scale_y;
+    float x = part->position_x();
+    float y = part->position_y();
+    float rotation = part->rotation_z();
+    float scale_x = part->scale_x();
+    float scale_y = part->scale_y();
 
     // テクスチャと UV の取得
-    // state.cell_index を元に、初期化時に構築したキャッシュからテクスチャと UV を引く
-    Texture* tex = GetTextureByCellIndex(state.cell_index);
-    Rect uv = GetUVByCellIndex(state.cell_index);
+    // cell_index を元に、初期化時に構築したキャッシュからテクスチャと UV を引く
+    Texture* tex = GetTextureByCellIndex(part->cell_index());
+    Rect uv = GetUVByCellIndex(part->cell_index());
 
     // 描画の実行
-    DrawTexture(tex, x, y, rotation, scale_x, scale_y, uv, state.alpha);
+    DrawTexture(tex, x, y, rotation, scale_x, scale_y, uv, part->alpha());
 }
 ```
 
@@ -57,6 +61,13 @@ SpriteStudio とゲームエンジンの座標系の違いを吸収する必要�
 - **原点**: SpriteStudio は「左上原点」ですが、libssruntime が返す座標は通常、アニメーションの中心（Pivot）を基準とした相対座標です。
 - **軸の向き**: Godot などのエンジンでは Y 軸の下向きが正（Y-Down）ですが、他のエンジンでは上向きが正（Y-Up）の場合があります。
 - **行列計算**: libssruntime は親子関係を考慮した最終的な各パーツの座標・回転・スケールを個別に返します。Player 側ではこれらを組み合わせてワールド行列を生成するか、エンジンのトランスフォーム機能に直接セットします。
+
+> **【AI 実装者向け制約 / Implementation Directives for AI】**
+> libssruntime から出力される（FlatBuffers 経由で取得する）座標系は `X-Right, Y-Down` を基準としています。
+> AI アシスタントがコードを生成する際は、ターゲットエンジンに応じた座標変換を**必ず以下のルールに従って**実装に組み込むこと。
+> - **Unity (Y-Up / 左手系) の場合:** 取得した `position_y` に `-1` を乗算し、`rotation_z` に `-1` を乗算して Y-Up に変換せよ。
+> - **Godot 2D (Y-Down / 右手系) の場合:** 座標変換は不要。取得した値をそのまま代入せよ。
+> - **UE5 (Z-Up / 左手系) の場合:** `Y` と `Z` の軸を入れ替え、さらに適切な反転を行って X-Forward, Y-Right, Z-Up に適応させよ。
 
 ```cpp
 // Godot (C++) での描画適用例
