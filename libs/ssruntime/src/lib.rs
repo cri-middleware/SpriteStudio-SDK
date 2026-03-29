@@ -22,7 +22,7 @@ impl SsabStorage {
         unsafe {
             match self {
                 SsabStorage::Owned(vec) => vec.as_slice(),
-                SsabStorage::Borrowed { ptr, len } => std::slice::from_raw_parts(*ptr, *len),
+                SsabStorage::Borrowed { ptr, len } => ::core::slice::from_raw_parts(*ptr, *len),
             }
         }
     }

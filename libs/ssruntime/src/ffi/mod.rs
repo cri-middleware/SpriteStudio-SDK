@@ -54,7 +54,7 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
     let result = catch_unwind(|| {
         let ffi_context = get_context(context);
         check_ptr(ptr, "ssab_data");
-        let r = ffi_context.ctx.load_copy( unsafe { std::slice::from_raw_parts(ptr as *const u8, len) } );
+        let r = ffi_context.ctx.load_copy( unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) } );
         match r {
             Ok(b) => b,
             Err(e) => {
