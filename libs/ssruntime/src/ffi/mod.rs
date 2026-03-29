@@ -102,11 +102,11 @@ pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_ucha
     let result = catch_unwind(|| {
         let ffi_context = get_context(context);
         let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() else {
-            return std::ptr::null();
+            return core::ptr::null();
         };
         ssab_buf.as_ptr() as *const c_uchar
     });
-    result.unwrap_or(std::ptr::null())
+    result.unwrap_or(core::ptr::null())
 }
 
 #[unsafe(no_mangle)]
