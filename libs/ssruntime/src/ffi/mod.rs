@@ -12,8 +12,18 @@ impl<'a> FfiContext {
 
 #[inline(always)]
 fn get_context<'a>(ptr: *mut c_void) -> &'a mut FfiContext {
-    assert!(!ptr.is_null());
+    if ptr.is_null() {
+        eprintln!("SSRuntime Error: Context pointer is null.");
+        panic!("Context pointer is null.");
+    }
     unsafe { &mut *(ptr as *mut FfiContext) }
+}
+
+fn check_ptr<T>(ptr: *const T, name: &str) {
+    if ptr.is_null() {
+        eprintln!("SSRuntime Error: {} pointer is null.", name);
+        panic!("{} pointer is null.", name);
+    }
 }
 
 
@@ -36,6 +46,7 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let result = catch_unwind(|| {
         let ffi_context = get_context(context);
+        check_ptr(ptr, "ssab_data");
         let r = ffi_context.ctx.load_copy( unsafe { std::slice::from_raw_parts(ptr as *const u8, len) } );
         r.unwrap_or(false)
     });
@@ -46,6 +57,7 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
 pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let result = catch_unwind(|| {
         let ffi_context = get_context(context);
+        check_ptr(ptr, "ssab_data");
         let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
         r.unwrap_or(false)
     });
@@ -94,7 +106,7 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
 pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
     let result = catch_unwind(|| {
         let ffi_context = get_context(context);
-        if name.is_null() { return false; }
+        check_ptr(name, "animation_name");
         let c_buf = unsafe { CStr::from_ptr(name) };
         let a = c_buf.to_string_lossy().into_owned();
         ffi_context.ctx.setup_animation(&a)
