@@ -133,7 +133,7 @@ pub fn evaluate_int(
             let rate = (frame_no - prev_index) as f32 / (next_index - prev_index) as f32;
             let eased_rate = get_interpolated_rate(interpolation, rate);
             
-            linear(prev.value() as f32, next.value() as f32, eased_rate) as i32
+            linear(prev.value() as f32, next.value() as f32, eased_rate).round() as i32
         } else {
             prev.value()
         }
