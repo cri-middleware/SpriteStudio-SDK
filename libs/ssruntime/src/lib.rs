@@ -1,4 +1,6 @@
 
+extern crate libm;
+
 /// cbindgen:ignore
 mod runtime;
 pub mod core;

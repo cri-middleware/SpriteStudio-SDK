@@ -7,6 +7,7 @@ edition = "2024"
 flatbuffers = { version = "25.12.19", features = ["default"] }
 ssab = { path = "../ssab", features = ["default"] }
 ssinterpolate = { path = "../ssinterpolate" }
+libm = "0.2.16"
 wasm-bindgen = { version = "0.2.108", optional = true }
 
 [features]
