@@ -1,5 +1,6 @@
 use crate::runtime;
 use crate::core::interpolation::*;
+use alloc::vec::Vec;
 
 fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
                 part: &ssab::ssab::ss::format::PartAnimationData,

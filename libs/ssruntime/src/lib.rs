@@ -1,6 +1,15 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+#[panic_handler]
+fn panic(_info: &::core::panic::PanicInfo) -> ! {
+    loop {}
+}
 
 extern crate libm;
 extern crate alloc;
+
+use alloc::vec::Vec;
 
 /// cbindgen:ignore
 mod runtime;

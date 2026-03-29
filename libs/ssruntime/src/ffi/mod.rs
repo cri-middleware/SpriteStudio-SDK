@@ -1,4 +1,11 @@
 use core::ffi::{c_char, c_float, c_int, c_uchar, c_void, CStr};
+use alloc::boxed::Box;
+
+// Placeholder for eprintln! in no_std
+#[allow(unused_macros)]
+macro_rules! eprintln {
+    ($($arg:tt)*) => {};
+}
 
 pub struct FfiContext {
     pub ctx: crate::Context<'static>,
@@ -47,8 +54,8 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
     let r = ffi_context.ctx.load_copy( unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) } );
     match r {
         Ok(b) => b,
-        Err(e) => {
-            eprintln!("SSRuntime Error: {}", e);
+        Err(_e) => {
+            eprintln!("SSRuntime Error: {}", _e);
             false
         }
     }
@@ -62,8 +69,8 @@ pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const 
     let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
     match r {
         Ok(b) => b,
-        Err(e) => {
-            eprintln!("SSRuntime Error: {}", e);
+        Err(_e) => {
+            eprintln!("SSRuntime Error: {}", _e);
             false
         }
     }
