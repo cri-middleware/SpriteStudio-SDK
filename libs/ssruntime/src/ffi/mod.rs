@@ -55,7 +55,13 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
         let ffi_context = get_context(context);
         check_ptr(ptr, "ssab_data");
         let r = ffi_context.ctx.load_copy( unsafe { std::slice::from_raw_parts(ptr as *const u8, len) } );
-        r.unwrap_or(false)
+        match r {
+            Ok(b) => b,
+            Err(e) => {
+                eprintln!("SSRuntime Error: {}", e);
+                false
+            }
+        }
     });
     result.unwrap_or(false)
 }
@@ -66,7 +72,13 @@ pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const 
         let ffi_context = get_context(context);
         check_ptr(ptr, "ssab_data");
         let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
-        r.unwrap_or(false)
+        match r {
+            Ok(b) => b,
+            Err(e) => {
+                eprintln!("SSRuntime Error: {}", e);
+                false
+            }
+        }
     });
     result.unwrap_or(false)
 }

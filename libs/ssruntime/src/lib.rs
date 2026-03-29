@@ -4,6 +4,7 @@ extern crate libm;
 /// cbindgen:ignore
 mod runtime;
 pub mod core;
+pub mod error;
 
 #[cfg(feature = "ffi")]
 pub mod ffi;
@@ -74,32 +75,31 @@ impl<'a> Context<'a> {
         self.animation_idx = -1;
     }
 
-    fn validate_ssab_data(&self, buf: &[u8]) -> Result<bool, std::io::Error> {
+    fn validate_ssab_data(&self, buf: &[u8]) -> Result<bool, error::SSRuntimeError> {
         // validate ssab version
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
-            let msg = "invalid ssab version expected: ".to_string()
-                + &ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version.to_string()
-                + ", got: "
-                + &ssab.version().to_string();
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
+            return Err(error::SSRuntimeError::InvalidVersion {
+                expected: ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version,
+                got: ssab.version(),
+            });
         }
         Ok(true)
     }
 
-    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<bool, std::io::Error> {
+    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<bool, error::SSRuntimeError> {
         self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
+            return Err(error::SSRuntimeError::EmptyData);
         };
         self.validate_ssab_data(data)
     }
 
-    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<bool, std::io::Error> {
+    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<bool, error::SSRuntimeError> {
         self.ssab_data = Some(SsabStorage::Borrowed { ptr, len });
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
+            return Err(error::SSRuntimeError::EmptyData);
         };
         self.validate_ssab_data(data)
     }
