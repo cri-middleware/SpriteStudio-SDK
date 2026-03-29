@@ -60,9 +60,10 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
         };
         ssab::ssab::ss::format::finish_ss_anime_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
-        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION].join(".");
-        (output_file, buf.to_vec())
-    }).collect::<HashMap<String, Vec<u8>>>();
+        let file_stem = std::path::PathBuf::from(f).file_stem().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?.to_string();
+        let output_file = [file_stem, ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION.to_string()].join(".");
+        Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+    }).collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
 
     // convert ssqb structures to binary data
     let ssqb_bin_map = ssqb_model_list.par_iter().zip(sspj.sequencepack_names.par_iter()).map(|(sequence_binary_t, f)| {
@@ -76,9 +77,10 @@ pub fn convert_sspj_to_ssab_data(path: &std::path::Path, config: &ConvertConfig,
         ssab::ssqb::ss::format::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
-        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION].join(".");
-        (output_file, buf.to_vec())
-    }).collect::<HashMap<String, Vec<u8>>>();
+        let file_stem = std::path::PathBuf::from(f).file_stem().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?.to_string();
+        let output_file = [file_stem, ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION.to_string()].join(".");
+        Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+    }).collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
 
 
     ssab_bin_map.extend(ssqb_bin_map);
@@ -125,12 +127,12 @@ pub fn convert_sspj_to_ssab_files(path: &std::path::Path, config: &ConverterConf
 
     if !config.convert_config.embedded {
         let src_path_buf = std::path::PathBuf::from(path);
-        let src_prefix = src_path_buf.parent().unwrap();
+        let src_prefix = src_path_buf.parent().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "No parent directory")))?;
         let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
         assets.iter().map(|(dst_rel_path, src_rel_path)| {
             let src = src_prefix.join(src_rel_path);
             let dst = outdir_path.join(dst_rel_path);
-            let dst_parent = dst.parent().unwrap();
+            let dst_parent = dst.parent().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "No parent directory")))?;
             if !dst_parent.exists() {
                 let r = std::fs::create_dir_all(dst_parent);
                 match r {
