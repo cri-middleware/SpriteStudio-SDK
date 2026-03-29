@@ -115,7 +115,7 @@ impl<'a> Context<'a> {
         };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
-            animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == std::cmp::Ordering::Equal })
+            animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == ::core::cmp::Ordering::Equal })
         }) else {
             return false;
         };
