@@ -38,11 +38,11 @@ pub struct PlaybackController {
 
 impl PlaybackController {
     pub fn get_frame_no(&self) -> i32 {
-        self.current_frame.floor() as i32
+        libm::floorf(self.current_frame) as i32
     }
 
     pub fn get_frame_no_decimal(&self) -> f32 {
-        self.current_frame - self.current_frame.floor()
+        self.current_frame - libm::floorf(self.current_frame)
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
@@ -221,9 +221,9 @@ impl PlaybackController {
                 self.next_frame_time -= self.update_interval * step;
                 let s = if self.is_skip_frames { step * self.playback_forward as f32 } else { self.playback_forward as f32 };
                 let next: f32 = self.current_frame + s;
-                let next_frame_no = next.floor() as i32;
+                let next_frame_no = libm::floorf(next) as i32;
                 let mut next_frame_decimal = next - next_frame_no as f32;
-                let mut current_frame_no = self.current_frame.floor() as i32;
+                let mut current_frame_no = libm::floorf(self.current_frame) as i32;
 
                 let v = (next_frame_no - current_frame_no).abs();
                 for _ in 0 .. v {
@@ -314,9 +314,9 @@ impl PlaybackController {
                 self.current_frame = current_frame_no as f32 + next_frame_decimal;
             }
 
-            (self.current_frame.floor() as i32, self.current_frame - self.current_frame.floor())
+            (libm::floorf(self.current_frame) as i32, self.current_frame - libm::floorf(self.current_frame))
         } else {
-            (self.current_frame.floor() as i32, self.current_frame - self.current_frame.floor())
+            (libm::floorf(self.current_frame) as i32, self.current_frame - libm::floorf(self.current_frame))
         }
     }
 }
@@ -358,7 +358,7 @@ impl PlaybackController {
      * The function ignores direction and style.
      */
     pub fn next_frame(&mut self) {
-        let current_frame = self.current_frame.floor() as i32;
+        let current_frame = libm::floorf(self.current_frame) as i32;
         if current_frame == self.end_frame {
             return;
         }
@@ -370,7 +370,7 @@ impl PlaybackController {
      * The function ignores direction and style.
      */
     pub fn prev_frame(&mut self) {
-        let current_frame = self.current_frame.floor() as i32;
+        let current_frame = libm::floorf(self.current_frame) as i32;
         if current_frame == self.start_frame {
             return;
         }

@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A trait to abstract floating-point operations for generic interpolation.
 pub trait SsFloat:
@@ -26,19 +26,19 @@ pub trait SsFloat:
 impl SsFloat for f32 {
     #[inline] fn from_f32(v: f32) -> Self { v }
     #[inline] fn to_i32(self) -> i32 { self as i32 }
-    #[inline] fn powf(self, n: Self) -> Self { f32::powf(self, n) }
-    #[inline] fn sin(self) -> Self { f32::sin(self) }
-    #[inline] fn cos(self) -> Self { f32::cos(self) }
-    #[inline] fn pi() -> Self { std::f32::consts::PI }
+    #[inline] fn powf(self, n: Self) -> Self { libm::powf(self, n) }
+    #[inline] fn sin(self) -> Self { libm::sinf(self) }
+    #[inline] fn cos(self) -> Self { libm::cosf(self) }
+    #[inline] fn pi() -> Self { core::f32::consts::PI }
 }
 
 impl SsFloat for f64 {
     #[inline] fn from_f32(v: f32) -> Self { v as f64 }
     #[inline] fn to_i32(self) -> i32 { self as i32 }
-    #[inline] fn powf(self, n: Self) -> Self { f64::powf(self, n) }
-    #[inline] fn sin(self) -> Self { f64::sin(self) }
-    #[inline] fn cos(self) -> Self { f64::cos(self) }
-    #[inline] fn pi() -> Self { std::f64::consts::PI }
+    #[inline] fn powf(self, n: Self) -> Self { libm::pow(self, n) }
+    #[inline] fn sin(self) -> Self { libm::sin(self) }
+    #[inline] fn cos(self) -> Self { libm::cos(self) }
+    #[inline] fn pi() -> Self { core::f64::consts::PI }
 }
 
 // --- Core Generic Implementations ---
