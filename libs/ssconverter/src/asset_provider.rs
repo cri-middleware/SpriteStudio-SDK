@@ -7,7 +7,6 @@ pub trait AssetProvider: Sync + Send {
     fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError>;
     fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error>;
     fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error>;
-    fn get_project_root(&self) -> std::path::PathBuf;
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError>;
     fn is_zip(&self) -> bool;
 }
@@ -45,9 +44,6 @@ impl AssetProvider for FileSystemAssetProvider {
             Err(e) => Err(std::io::Error::new(ErrorKind::Other, format!("copy_asset: {:?}", e)))
         }
     }
-    fn get_project_root(&self) -> std::path::PathBuf {
-        self.base_path.clone()
-    }
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
         sspj::sspj::SsProject::load_from_file(self.path_buf.as_path())
     }
@@ -57,16 +53,13 @@ impl AssetProvider for FileSystemAssetProvider {
 }
 
 pub struct ZipAssetProvider {
-    zip_content: Vec<u8>,
-    zip_name: String,
     sspj_name: String,
-    sspj_dir: String,
     sspj_map: HashMap<String, String>,
     binary_map: HashMap<String, Vec<u8>>,
 }
 
 impl ZipAssetProvider {
-    pub fn new(zip_name: &str, zip_content: &[u8]) -> Result<Self, crate::converter::converter_error::ConverterError> {
+    pub fn new(_zip_name: &str, zip_content: &[u8]) -> Result<Self, crate::converter::converter_error::ConverterError> {
         let cursor = Cursor::new(zip_content);
         let mut archive = zip::ZipArchive::new(cursor).map_err(|e| {
             crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::InvalidData, format!("Zip error: {:?}", e)))
@@ -76,7 +69,7 @@ impl ZipAssetProvider {
         let mut sspj_name = "".to_string();
         let mut sspj_dir = "".to_string();
         for i in 0..archive.len() {
-            let mut file = archive.by_index(i).unwrap();
+            let file = archive.by_index(i).unwrap();
             if file.is_dir() { continue; }
 
             let path_key = file.name().to_string();
@@ -121,10 +114,7 @@ impl ZipAssetProvider {
         }
 
         Ok(Self {
-            zip_name: zip_name.to_string(),
-            zip_content: zip_content.to_vec(),
             sspj_name,
-            sspj_dir,
             sspj_map,
             binary_map,
         })
@@ -150,13 +140,9 @@ impl AssetProvider for ZipAssetProvider {
         Err(std::io::Error::new(ErrorKind::NotFound, format!("Asset not found in zip: {}", path)))
     }
 
-    fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error> {
+    fn copy_asset(&self, _src_path: &str, _dst_path: &str) -> Result<(), std::io::Error> {
         // TODO: impl
         Ok(())
-    }
-
-    fn get_project_root(&self) -> std::path::PathBuf {
-        std::path::PathBuf::from("")
     }
 
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {

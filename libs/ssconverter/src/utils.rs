@@ -17,10 +17,6 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
-pub fn get_sspj_image_dir_path(sspj_parent: &std::path::Path, sspj: &sspj::sspj::SsProject) -> std::path::PathBuf {
-    std::path::PathBuf::from(sspj_parent).join(sspj.settings.image_base_directory.clone())
-}
-
 pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate::ConverterError> {
     let file_path_buf = std::path::PathBuf::from(file);
     if file_path_buf.is_absolute() {

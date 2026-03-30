@@ -53,7 +53,6 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         let animations = model_t::animedata::convert_animation_data_list(&anime_pack, &parts_map);
         if animations.is_empty() { None } else { Some(animations) }
     };
-    let sspj_parent_path = asset_provider.get_project_root();
     anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps, &asset_provider)?) };
     anime_binary.effects = if using_effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &using_effect_file_list)) };
     anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list, &asset_provider)?) };
