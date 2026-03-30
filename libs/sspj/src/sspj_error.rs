@@ -22,3 +22,13 @@ impl std::error::Error for SspjError {
         }
     }
 }
+impl From<std::num::ParseIntError> for SspjError {
+    fn from(e: std::num::ParseIntError) -> Self {
+        SspjError::FntParseError(e.to_string())
+    }
+}
+impl From<std::num::ParseFloatError> for SspjError {
+    fn from(e: std::num::ParseFloatError) -> Self {
+        SspjError::FntParseError(e.to_string())
+    }
+}

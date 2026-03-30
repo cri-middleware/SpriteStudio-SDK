@@ -1,7 +1,20 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+#[panic_handler]
+fn panic(_info: &::core::panic::PanicInfo) -> ! {
+    loop {}
+}
+
+extern crate libm;
+extern crate alloc;
+
+use alloc::vec::Vec;
 
 /// cbindgen:ignore
 mod runtime;
 pub mod core;
+pub mod error;
 
 #[cfg(feature = "ffi")]
 pub mod ffi;
@@ -18,8 +31,30 @@ impl SsabStorage {
         unsafe {
             match self {
                 SsabStorage::Owned(vec) => vec.as_slice(),
-                SsabStorage::Borrowed { ptr, len } => std::slice::from_raw_parts(*ptr, *len),
+                SsabStorage::Borrowed { ptr, len } => ::core::slice::from_raw_parts(*ptr, *len),
             }
+        }
+    }
+}
+
+struct ContextBuffers<'a> {
+    parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
+    cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+    parts_colo_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+    vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+}
+
+impl<'a> ContextBuffers<'a> {
+    fn new() -> Self {
+        Self {
+            parts_vec: Vec::with_capacity(32),
+            cell_vec: Vec::with_capacity(32),
+            parts_colo_vec: Vec::with_capacity(32),
+            shader_vec: Vec::with_capacity(32),
+            vertice_vec: Vec::with_capacity(32),
+            deform_vec: Vec::with_capacity(32),
         }
     }
 }
@@ -29,6 +64,7 @@ pub struct Context<'a> {
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
+    buffers: ContextBuffers<'a>,
 }
 
 impl<'a> Context<'a> {
@@ -38,6 +74,7 @@ impl<'a> Context<'a> {
             fb: flatbuffers::FlatBufferBuilder::new(),
             controller: core::playback_controller::PlaybackController::new(),
             animation_idx: -1,
+            buffers: ContextBuffers::new(),
         }
     }
 
@@ -48,32 +85,31 @@ impl<'a> Context<'a> {
         self.animation_idx = -1;
     }
 
-    fn validate_ssab_data(&self, buf: &[u8]) -> Result<bool, std::io::Error> {
+    fn validate_ssab_data(&self, buf: &[u8]) -> Result<(), error::SSRuntimeError> {
         // validate ssab version
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
             // invalid ssab version
-            let msg = "invalid ssab version expected: ".to_string()
-                + &ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version.to_string()
-                + ", got: "
-                + &ssab.version().to_string();
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, msg))
+            return Err(error::SSRuntimeError::InvalidVersion {
+                expected: ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version,
+                got: ssab.version(),
+            });
         }
-        Ok(true)
+        Ok(())
     }
 
-    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<bool, std::io::Error> {
+    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<(), error::SSRuntimeError> {
         self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
+            return Err(error::SSRuntimeError::EmptyData);
         };
         self.validate_ssab_data(data)
     }
 
-    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<bool, std::io::Error> {
+    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<(), error::SSRuntimeError> {
         self.ssab_data = Some(SsabStorage::Borrowed { ptr, len });
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ssab data is empty"));
+            return Err(error::SSRuntimeError::EmptyData);
         };
         self.validate_ssab_data(data)
     }
@@ -82,37 +118,52 @@ impl<'a> Context<'a> {
         self.ssab_data.as_ref().map(|d| d.as_slice())
     }
 
-    pub fn setup_animation(&mut self, name: &str) -> bool {
+    pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
         let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
-            return false;
+            return Err(error::SSRuntimeError::NotLoaded);
         };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
-            animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == std::cmp::Ordering::Equal })
+            animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == ::core::cmp::Ordering::Equal })
         }) else {
-            return false;
+            return Err(error::SSRuntimeError::AnimationNotFound);
         };
         self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation_idx = index as i32;
-        true
+        Ok(())
     }
 
-    pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
+    pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
-            return None;
+            return Err(error::SSRuntimeError::NotLoaded);
         };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        
+        if self.animation_idx < 0 {
+            return Err(error::SSRuntimeError::AnimationNotFound);
+        }
+
         let Some(animation) =  ssab.animations().map(|animations| animations.get(self.animation_idx as usize)) else {
-            return None;
+            return Err(error::SSRuntimeError::AnimationNotFound);
         };
         if !(animation.start_frame() as i32 <= frame_no && frame_no <= animation.end_frame() as i32) {
             // invalid frame_no
-            return None;
+            return Err(error::SSRuntimeError::InvalidParameter);
         }
         self.fb.reset();
-        let offset = core::framedata::get_frame_data(&mut self.fb, &animation, frame_no);
+        let offset = core::framedata::get_frame_data(
+            &mut self.fb,
+            &animation,
+            frame_no,
+            &mut self.buffers.parts_vec,
+            &mut self.buffers.cell_vec,
+            &mut self.buffers.parts_colo_vec,
+            &mut self.buffers.shader_vec,
+            &mut self.buffers.vertice_vec,
+            &mut self.buffers.deform_vec,
+        );
         self.fb.finish_minimal(offset);
-        Some(self.fb.finished_data())
+        Ok(self.fb.finished_data())
     }
 
     // Frame Number getter functions
@@ -285,7 +336,7 @@ mod tests {
 
                 let input_buf =  std::fs::read(&f).unwrap();
                 let mut context = Context::new();
-                context.load_copy(&input_buf);
+                context.load_copy(&input_buf).unwrap();
 
                 let ssab_buf = context.get_ssab_data().unwrap();
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };

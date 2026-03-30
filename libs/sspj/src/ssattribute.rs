@@ -37,6 +37,10 @@ pub struct SsAttributeIntKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
     #[serde(rename = "value")]
     pub value: i32,
 }
@@ -138,7 +142,7 @@ pub struct SsAttributeHide {
     pub keys: Vec<SsAttributeBoolKey>,
 }
 
-#[derive(Deserialize, PartialEq, Default, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug, Clone)]
 pub struct SsAttributePartsColorKeyValueColor {
     pub rgba: SsU8Color,
     pub rate: f32,
@@ -170,6 +174,13 @@ pub struct SsAttributePartsColorKeyValue {
 pub struct SsAttributePartsColorKey {
     #[serde(rename = "@time")]
     pub time: i32,
+    #[serde(rename = "@ipType", default)]
+    pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributePartsColorKeyValue,
 }
 #[derive(Deserialize, PartialEq, Debug)]
@@ -178,7 +189,7 @@ pub struct SsAttributePartsColor {
     pub keys: Vec<SsAttributePartsColorKey>,
 }
 
-#[derive(Deserialize, PartialEq, Default, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeShaderKeyValueMap {
     pub map_id: i32,
@@ -214,6 +225,11 @@ pub struct SsAttributeShaderKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributeShaderKeyValue,
 }
 #[derive(Deserialize, PartialEq, Debug)]
@@ -222,7 +238,7 @@ pub struct SsAttributeShader {
     pub keys: Vec<SsAttributeShaderKey>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SsAttributeVertexKeyValue {
     #[serde(rename = "LT")]
@@ -244,6 +260,11 @@ pub struct SsAttributeVertexKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributeVertexKeyValue,
 }
 
@@ -546,14 +567,14 @@ pub struct SsAttributeEffect {
     pub keys: Vec<SsAttributeEffectKey>,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Default, Clone)]
 pub struct SsDeformValue {
     pub x_index: f32,
     pub x: f32,
     pub y: f32,
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
+#[derive(Deserialize, PartialEq, Debug, Default, Clone)]
 pub struct SsAttributeDeformKeyValue {
     pub vsize: i32,
     #[serde(deserialize_with = "parse_ss_point3_list")]
@@ -594,6 +615,11 @@ pub struct SsAttributeDeformKey {
     pub time: i32,
     #[serde(rename = "@ipType", default)]
     pub ip_type: SsInterpolationType,
+    #[serde(rename = "@easingRate", default)]
+    pub easing_rate: f32,
+    #[serde(default)]
+    pub curve: SsCurve,
+    #[serde(rename = "value")]
     pub value: SsAttributeDeformKeyValue,
 }
 #[derive(Deserialize, PartialEq, Debug)]

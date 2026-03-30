@@ -14,7 +14,7 @@ impl SSRuntimeContext {
         let source_data = data.to_vec();
 
         let slice_ptr = source_data.as_slice();
-        let static_slice: &'static [u8] = unsafe { std::mem::transmute(slice_ptr) };
+        let static_slice: &'static [u8] = unsafe { ::core::mem::transmute(slice_ptr) };
 
         match Context::new(static_slice) {
             Ok(ctx) => Ok(SSRuntimeContext {

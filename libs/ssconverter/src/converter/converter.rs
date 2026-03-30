@@ -41,9 +41,10 @@ fn convert_sspj_to_ssab_data(asset_provider: &Box<dyn crate::asset_provider::Ass
         };
         ssab::ssab::ss::format::finish_ss_anime_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
-        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION].join(".");
-        (output_file, buf.to_vec())
-    }).collect::<HashMap<String, Vec<u8>>>();
+        let file_stem = std::path::PathBuf::from(f).file_stem().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?.to_string();
+        let output_file = [file_stem, ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION.to_string()].join(".");
+        Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+    }).collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
 
     // convert ssqb structures to binary data
     let ssqb_bin_map = ssqb_model_list.par_iter().zip(sspj.sequencepack_names.par_iter()).map(|(sequence_binary_t, f)| {
@@ -57,9 +58,10 @@ fn convert_sspj_to_ssab_data(asset_provider: &Box<dyn crate::asset_provider::Ass
         ssab::ssqb::ss::format::finish_ss_sequence_binary_buffer(&mut fb, offset);
         let buf = fb.finished_data();
 
-        let output_file = [std::path::PathBuf::from(f).file_stem().unwrap().to_str().unwrap(), ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION].join(".");
-        (output_file, buf.to_vec())
-    }).collect::<HashMap<String, Vec<u8>>>();
+        let file_stem = std::path::PathBuf::from(f).file_stem().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?.to_string();
+        let output_file = [file_stem, ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION.to_string()].join(".");
+        Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+    }).collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
 
 
     ssab_bin_map.extend(ssqb_bin_map);

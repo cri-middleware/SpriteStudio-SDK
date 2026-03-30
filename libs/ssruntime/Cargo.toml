@@ -4,14 +4,17 @@ version = "7.0.0"
 edition = "2024"
 
 [dependencies]
-flatbuffers = { version = "25.12.19", features = ["default"] }
-ssab = { path = "../ssab", features = ["default"] }
+flatbuffers = { version = "25.12.19", default-features = false }
+ssab = { path = "../ssab", default-features = false }
+ssinterpolate = { path = "../ssinterpolate" }
+libm = "0.2.16"
 wasm-bindgen = { version = "0.2.108", optional = true }
 
 [features]
-default = ["ffi"]
+default = ["ffi", "std"]
 ffi = []
 web = ["wasm-bindgen"]
+std = ["flatbuffers/std", "ssab/std"]
 
 [dev-dependencies]
 ssconverter = { path = "../ssconverter" }
