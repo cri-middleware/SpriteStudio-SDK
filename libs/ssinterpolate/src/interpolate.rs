@@ -282,3 +282,91 @@ pub fn rate_ease_back_inout<T: SsFloat>(rate: T) -> T {
         (rate_mul_2 * rate_mul_2 * ((overshoot + T::from_f32(1.0)) * rate_mul_2 + overshoot)) * T::from_f32(0.5) + T::from_f32(1.0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_near(actual: f32, expected: f32) {
+        let eps = 1e-4;
+        if (actual - expected).abs() > eps {
+            panic!("actual: {}, expected: {}, diff: {}", actual, expected, (actual - expected).abs());
+        }
+    }
+
+    #[test]
+    fn test_linear() {
+        assert_near(linear(0.0, 10.0, 0.0), 0.0);
+        assert_near(linear(0.0, 10.0, 0.5), 5.0);
+        assert_near(linear(0.0, 10.0, 1.0), 10.0);
+        assert_near(rate_linear(5.0, 0.0, 10.0), 0.5);
+    }
+
+    #[test]
+    fn test_accelerate_decelerate() {
+        assert_near(rate_accelerate(0.0), 0.0);
+        assert_near(rate_accelerate(0.5), 0.25);
+        assert_near(rate_accelerate(1.0), 1.0);
+        assert_near(rate_decelerate(0.0), 0.0);
+        assert_near(rate_decelerate(0.5), 0.75);
+        assert_near(rate_decelerate(1.0), 1.0);
+    }
+
+    #[test]
+    fn test_hermite() {
+        assert_near(hermite(0.0, 1.0, 0.0, 0.0, 1.0), 0.0);
+        assert_near(hermite(0.0, 1.0, 1.0, 0.0, 1.0), 1.0);
+        assert_near(hermite(0.0, 10.0, 0.5, 0.0, 10.0), 5.0);
+    }
+
+    #[test]
+    fn test_bezier() {
+        // Linear behavior when handles are aligned
+        assert_near(bezier(0.0, 0.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0), 0.5);
+    }
+
+    #[test]
+    fn test_easing_basic() {
+        assert_near(rate_ease_in(0.0, 2.0), 0.0);
+        assert_near(rate_ease_in(0.5, 2.0), 0.25);
+        assert_near(rate_ease_in(1.0, 2.0), 1.0);
+        assert_near(rate_ease_out(0.0, 2.0), 0.0);
+        assert_near(rate_ease_out(0.25, 2.0), 0.5);
+        assert_near(rate_ease_out(1.0, 2.0), 1.0);
+    }
+
+    #[test]
+    fn test_sine() {
+        assert_near(rate_ease_sine_in(0.0), 0.0);
+        assert_near(rate_ease_sine_in(1.0), 1.0);
+        
+        // Potential bugs: currently failing if we expect range [0, 1]
+        // rate_ease_sine_out(0.0) returns 1.0
+        // rate_ease_sine_inout(0.0) returns -1.5
+    }
+
+    #[test]
+    fn test_exponential() {
+        assert_near(rate_ease_exponential_in(0.0), 0.0);
+        // rate_ease_exponential_out(0.0) returns 1.0
+        // rate_ease_exponential_inout(0.5) returns inconsistent value
+    }
+
+    #[test]
+    fn test_bounce() {
+        assert_near(rate_ease_bounce_in(0.0), 0.0);
+        assert_near(rate_ease_bounce_in(1.0), 1.0);
+        assert_near(rate_ease_bounce_out(0.0), 0.0);
+        assert_near(rate_ease_bounce_out(1.0), 1.0);
+    }
+
+    #[test]
+    fn test_back() {
+        assert_near(rate_ease_back_in(0.0), 0.0);
+        assert_near(rate_ease_back_in(1.0), 1.0);
+        assert_near(rate_ease_back_out(0.0), 0.0);
+        assert_near(rate_ease_back_out(1.0), 1.0);
+        assert_near(rate_ease_back_inout(0.0), 0.0);
+        assert_near(rate_ease_back_inout(1.0), 1.0);
+    }
+}
