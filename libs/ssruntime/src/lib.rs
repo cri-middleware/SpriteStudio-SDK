@@ -65,6 +65,13 @@ impl<'a> Context<'a> {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.ssab_data = None;
+        self.controller.reset_setup();
+        self.fb.reset();
+        self.animation_idx = -1;
+    }
+
     fn validate_ssab_data(&self, buf: &[u8]) -> Result<bool, std::io::Error> {
         // validate ssab version
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };

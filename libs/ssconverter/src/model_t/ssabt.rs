@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model_t;
 
-pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, sspj_parent_path: &std::path::Path, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
+pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, asset_provider: &Box<dyn crate::asset_provider::AssetProvider>, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == sspj::sstypes::SsPartType::Effect {
@@ -39,13 +39,11 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         sspj.sound_list.iter().map(|sound| sound).collect::<Vec<&sspj::ssse::SsAudioPack>>()
     };
     
-    
     let external_textures = sspj.external_textures.iter().map(|texture_info| texture_info.path_name.clone()).collect::<HashSet<String>>();
 
     let external_instances = anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Instance)
         .filter(|part| part.ref_anime_pack != anime_pack.name)
         .map(|part| [part.ref_anime_pack.as_str(), part.ref_anime.as_str()].join("/")).collect::<HashSet<String>>();
-
 
     let mut anime_binary = ssab::ssab::ss::format::SsAnimeBinaryT::default();
     anime_binary.name = if anime_pack.name.is_empty() { None } else { Some(anime_pack.name.to_string()) };
@@ -55,16 +53,17 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         let animations = model_t::animedata::convert_animation_data_list(&anime_pack, &parts_map);
         if animations.is_empty() { None } else { Some(animations) }
     };
-    anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps, sspj_parent_path)?) };
+    let sspj_parent_path = asset_provider.get_project_root();
+    anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(&sspj, &cellmaps, &asset_provider)?) };
     anime_binary.effects = if using_effect_file_list.is_empty() { None } else { Some(model_t::effect::convert_effect_list(&sspj, &using_effect_file_list)) };
-    anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list, sspj_parent_path)?) };
+    anime_binary.sound_lists = if using_sound_list.is_empty() { None } else { Some(model_t::sound::convert_sound_list(&sspj, &using_sound_list, &asset_provider)?) };
     anime_binary.font_bitmaps = if using_fnt_bitmaps.is_empty() { None } else { Some(model_t::font::convert_font_bitmaps(&sspj, &using_fnt_bitmaps)) };
     anime_binary.external_textures = if external_textures.is_empty() { None } else {
         let mut v = external_textures.iter().map(|texture_path| {
             let mut external_texture = ssab::ssab::ss::format::ExternalTextureT::default();
             external_texture.name_hash = crate::utils::fnv1a_hash_str(texture_path);
             external_texture.name = Some(texture_path.to_string());
-            let r = crate::utils::validate_file_path(texture_path, crate::utils::get_sspj_image_dir_path(sspj_parent_path, sspj).as_path());
+            let r = asset_provider.validate_asset(std::path::PathBuf::from(&sspj.settings.image_base_directory).join(texture_path).to_str().unwrap_or(texture_path));
             match r {
                 Ok(_) => Ok(external_texture),
                 Err(e) => Err(e),
@@ -77,12 +76,13 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.embedded_assets = if embedded {
         let asset_files = crate::utils::get_assets_of_ssab_object_class(&anime_binary, &sspj);
         let mut v = asset_files.iter().map(|(name, path)| {
-            let src = sspj_parent_path.join(path);
-            let r = std::fs::read(&src);
+            //let src = sspj_parent_path.join(path);
+            //let r = std::fs::read(&src);
+            let r = asset_provider.read_asset(path);
             let data = match r {
                 Ok(data) => data,
                 Err(e) => {
-                    return Err(crate::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read: {}: {:?}", src.as_os_str().to_string_lossy(), e))));
+                    return Err(crate::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read: {}: {:?}", path, e))));
                 }
             };
             let mut embedded_asset = ssab::ssab::ss::format::EmbeddedAssetT::default();

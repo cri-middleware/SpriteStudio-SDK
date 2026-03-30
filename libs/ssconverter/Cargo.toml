@@ -7,6 +7,7 @@ edition = "2024"
 crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
+zip = "8.1.0"
 flatbuffers = "25.12.19"
 rayon = "1.11.0"
 walkdir = "2.5.0"
@@ -15,6 +16,7 @@ sspj = { path = "../sspj" }
 ssab = { path = "../ssab", features = ["converter"] }
 ssinterpolate = { path = "../ssinterpolate" }
 wasm-bindgen = { version = "0.2.108", optional = true }
+notify-debouncer-mini = "0.7.0"
 
 [features]
 default = ["ffi"]

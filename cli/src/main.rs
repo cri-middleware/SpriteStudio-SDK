@@ -1,6 +1,8 @@
 use ssconverter;
 use std::ffi::OsString;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::thread::JoinHandle;
 use clap::{CommandFactory, Parser};
 
@@ -35,6 +37,8 @@ struct Cli {
     #[arg(short, long, value_name = "directory", help = "output directory path (available for single mode only)")]
     out_dir: Option<OsString>,
 
+    #[arg(short, long, help = "watch modifying a sspj project")]
+    watch: bool,
 }
 
 /*
@@ -52,8 +56,6 @@ fn main() -> Result<(), ssconverter::ConverterError> {
     let sspj_paths = ssconverter::utility::parse_args(&args.files);
     if sspj_paths.is_empty() {
         eprintln!("sspj files not found.");
-
-
         eprintln!("{}", cmd.render_usage());
         return Ok(());
     }
@@ -63,19 +65,31 @@ fn main() -> Result<(), ssconverter::ConverterError> {
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
-        // single mode (sspj file or sspj zip file)
         config.convert_config = ssconverter::ConvertConfig {
             embedded: args.embedded,
             ..Default::default()
         };
-        config.out_dir = args.out_dir;
+        config.output = args.out_dir;
+        if args.watch {
+            // watch mode
+            let should_stop = Arc::new(AtomicBool::new(false));
+            let s = should_stop.clone();
+            ctrlc::set_handler(move || {
+                s.store(true, std::sync::atomic::Ordering::Relaxed);
+                println!("\nStopping watcher...");
+            }).expect("Error setting Ctrl-C handler");
+
+            println!("Watching for changes in {:?}... (Press Ctrl+C to stop)", sspj_paths[0].as_path());
+            ssconverter::watch::watch_sspj_project(sspj_paths[0].as_path(), &config, should_stop)?;
+            return Ok(());
+        }
     } else {
         // batch mode
         config.convert_config = ssconverter::ConvertConfig {
             embedded: args.embedded,
             ..Default::default()
         };
-        config.out_dir = None; // batch mode does not support out_dir
+        config.output = None; // batch mode does not support out_dir
     }
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter::ConverterError>>> = vec![];
