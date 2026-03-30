@@ -85,7 +85,7 @@ impl<'a> Context<'a> {
         self.animation_idx = -1;
     }
 
-    fn validate_ssab_data(&self, buf: &[u8]) -> Result<bool, error::SSRuntimeError> {
+    fn validate_ssab_data(&self, buf: &[u8]) -> Result<(), error::SSRuntimeError> {
         // validate ssab version
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
@@ -95,10 +95,10 @@ impl<'a> Context<'a> {
                 got: ssab.version(),
             });
         }
-        Ok(true)
+        Ok(())
     }
 
-    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<bool, error::SSRuntimeError> {
+    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<(), error::SSRuntimeError> {
         self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
             return Err(error::SSRuntimeError::EmptyData);
@@ -106,7 +106,7 @@ impl<'a> Context<'a> {
         self.validate_ssab_data(data)
     }
 
-    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<bool, error::SSRuntimeError> {
+    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<(), error::SSRuntimeError> {
         self.ssab_data = Some(SsabStorage::Borrowed { ptr, len });
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
             return Err(error::SSRuntimeError::EmptyData);
@@ -118,32 +118,37 @@ impl<'a> Context<'a> {
         self.ssab_data.as_ref().map(|d| d.as_slice())
     }
 
-    pub fn setup_animation(&mut self, name: &str) -> bool {
+    pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
         let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
-            return false;
+            return Err(error::SSRuntimeError::NotLoaded);
         };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == ::core::cmp::Ordering::Equal })
         }) else {
-            return false;
+            return Err(error::SSRuntimeError::AnimationNotFound);
         };
         self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation_idx = index as i32;
-        true
+        Ok(())
     }
 
-    pub fn get_frame_data(&mut self, frame_no: i32) -> Option<&[u8]> {
+    pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
-            return None;
+            return Err(error::SSRuntimeError::NotLoaded);
         };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        
+        if self.animation_idx < 0 {
+            return Err(error::SSRuntimeError::AnimationNotFound);
+        }
+
         let Some(animation) =  ssab.animations().map(|animations| animations.get(self.animation_idx as usize)) else {
-            return None;
+            return Err(error::SSRuntimeError::AnimationNotFound);
         };
         if !(animation.start_frame() as i32 <= frame_no && frame_no <= animation.end_frame() as i32) {
             // invalid frame_no
-            return None;
+            return Err(error::SSRuntimeError::InvalidParameter);
         }
         self.fb.reset();
         let offset = core::framedata::get_frame_data(
@@ -158,7 +163,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.deform_vec,
         );
         self.fb.finish_minimal(offset);
-        Some(self.fb.finished_data())
+        Ok(self.fb.finished_data())
     }
 
     // Frame Number getter functions

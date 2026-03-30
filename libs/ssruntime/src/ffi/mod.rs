@@ -9,10 +9,11 @@ macro_rules! eprintln {
 
 pub struct FfiContext {
     pub ctx: crate::Context<'static>,
+    pub last_error: i32,
 }
 impl<'a> FfiContext {
     pub fn new() -> Self {
-        Self { ctx: crate::Context::new() }
+        Self { ctx: crate::Context::new(), last_error: 0 }
     }
 }
 
@@ -41,20 +42,34 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
-    let ffi_context = unsafe { &mut *(context as *mut FfiContext) };
-    ffi_context.ctx.reset();
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.reset();
+        ffi_context.last_error = 0;
+    }
 }
 
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.last_error;
+    }
+    0
+}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let Some(ffi_context) = get_context(context) else { return false; };
-    if ptr.is_null() { return false; }
+    ffi_context.last_error = 0;
+    if ptr.is_null() {
+        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        return false;
+    }
 
     let r = ffi_context.ctx.load_copy( unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) } );
     match r {
-        Ok(b) => b,
+        Ok(_) => true,
         Err(_e) => {
+            ffi_context.last_error = _e.as_code();
             eprintln!("SSRuntime Error: {}", _e);
             false
         }
@@ -64,12 +79,17 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let Some(ffi_context) = get_context(context) else { return false; };
-    if ptr.is_null() { return false; }
+    ffi_context.last_error = 0;
+    if ptr.is_null() {
+        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        return false;
+    }
 
     let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
     match r {
-        Ok(b) => b,
+        Ok(_) => true,
         Err(_e) => {
+            ffi_context.last_error = _e.as_code();
             eprintln!("SSRuntime Error: {}", _e);
             false
         }
@@ -84,6 +104,8 @@ pub extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut 
                 *out_data = ssab_buf.as_ptr() as *mut c_uchar;
                 *out_len = ssab_buf.len();
             }
+        } else {
+            ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
         }
     }
 }
@@ -93,6 +115,8 @@ pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_ucha
     if let Some(ffi_context) = get_context(context) {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.as_ptr() as *const c_uchar;
+        } else {
+            ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
         }
     }
     core::ptr::null()
@@ -103,6 +127,8 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
     if let Some(ffi_context) = get_context(context) {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.len();
+        } else {
+            ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
         }
     }
     0
@@ -111,19 +137,35 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
     let Some(ffi_context) = get_context(context) else { return false; };
-    if name.is_null() { return false; }
+    ffi_context.last_error = 0;
+    if name.is_null() {
+        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        return false;
+    }
     let c_buf = unsafe { CStr::from_ptr(name) };
     let a = alloc::string::String::from_utf8_lossy(c_buf.to_bytes()).into_owned();
-    ffi_context.ctx.setup_animation(&a)
+    match ffi_context.ctx.setup_animation(&a) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        if let Some(ret) = ffi_context.ctx.get_frame_data(frame_no) {
-            unsafe {
-                *out_data = ret.as_ptr() as *mut c_uchar;
-                *out_len = ret.len();
+        ffi_context.last_error = 0;
+        match ffi_context.ctx.get_frame_data(frame_no) {
+            Ok(ret) => {
+                unsafe {
+                    *out_data = ret.as_ptr() as *mut c_uchar;
+                    *out_len = ret.len();
+                }
+            },
+            Err(e) => {
+                ffi_context.last_error = e.as_code();
             }
         }
     }
