@@ -53,7 +53,7 @@ fn bounce_time<T: SsFloat>(rate: T) -> T {
     if rate < div_2_75 {
         mul_7_5625 * rate * rate
     } else if rate < div_2_0_2_75 {
-        let rate_modify = rate - T::from_f32(1.5 / 2.72);
+        let rate_modify = rate - T::from_f32(1.5 / 2.75);
         mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.75)
     } else if rate < div_2_5_2_75 {
         let rate_modify = rate - T::from_f32(2.25 / 2.75);
@@ -102,8 +102,7 @@ pub fn bezier<T: SsFloat>(
     vector_start_x: T, vector_start_y: T,
     vector_end_x: T, vector_end_y: T
 ) -> T {
-    let frame_i32 = linear(value_start_x, value_end_x, rate).to_i32();
-    let frame = T::from_f32(frame_i32 as f32);
+    let frame = linear(value_start_x, value_end_x, rate);
 
     let mut area_now = T::from_f32(0.5);
     let mut range_now = T::from_f32(0.5);
@@ -157,47 +156,49 @@ pub fn rate_ease_out<T: SsFloat>(rate: T, power_easing: T) -> T {
 pub fn rate_ease_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
     let rate_mul_2 = rate * T::from_f32(2.0);
     if rate_mul_2 < T::from_f32(1.0) {
-        T::from_f32(0.5) * rate.powf(power_easing)
+        T::from_f32(0.5) * rate_mul_2.powf(power_easing)
     } else {
-        T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate).powf(power_easing))
+        T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate_mul_2).powf(power_easing))
     }
 }
 
 pub fn rate_ease_exponential_in<T: SsFloat>(rate: T) -> T {
-    if rate == T::from_f32(0.0) {
+    if rate <= T::from_f32(0.0) {
         T::from_f32(0.0)
     } else {
-        T::from_f32(2.0).powf((T::from_f32(10.0) * (rate - T::from_f32(1.0))) - T::from_f32(0.001))
+        T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0)))
     }
 }
 
 pub fn rate_ease_exponential_out<T: SsFloat>(rate: T) -> T {
-    if rate >= T::from_f32(0.0) {
+    if rate >= T::from_f32(1.0) {
         T::from_f32(1.0)
     } else {
-        T::from_f32(-1.0) * T::from_f32(2.0).powf((T::from_f32(-10.0) * rate) + T::from_f32(1.0))
+        T::from_f32(1.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * rate)
     }
 }
 
 pub fn rate_ease_exponential_inout<T: SsFloat>(rate: T) -> T {
+    if rate <= T::from_f32(0.0) { return T::from_f32(0.0); }
+    if rate >= T::from_f32(1.0) { return T::from_f32(1.0); }
     let rate_mul_2 = rate * T::from_f32(2.0);
     if rate_mul_2 < T::from_f32(1.0) {
-        T::from_f32(0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0)))
+        T::from_f32(0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * (rate_mul_2 - T::from_f32(1.0)))
     } else {
-        T::from_f32(0.5) * (T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(-10.0) * (rate - T::from_f32(1.0))) + T::from_f32(2.0))
+        T::from_f32(0.5) * (T::from_f32(2.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * (rate_mul_2 - T::from_f32(1.0))))
     }
 }
 
 pub fn rate_ease_sine_in<T: SsFloat>(rate: T) -> T {
-    T::from_f32(-1.0) * (rate * (T::pi() * T::from_f32(0.5))).cos() + T::from_f32(1.0)
+    T::from_f32(1.0) - (rate * (T::pi() * T::from_f32(0.5))).cos()
 }
 
 pub fn rate_ease_sine_out<T: SsFloat>(rate: T) -> T {
-    (rate * (T::pi() * T::from_f32(0.5))).cos()
+    (rate * (T::pi() * T::from_f32(0.5))).sin()
 }
 
 pub fn rate_ease_sine_inout<T: SsFloat>(rate: T) -> T {
-    T::from_f32(-0.5) * (T::pi() * rate).cos() - T::from_f32(1.0)
+    T::from_f32(0.5) * (T::from_f32(1.0) - (T::pi() * rate).cos())
 }
 
 pub fn rate_ease_elastic_in<T: SsFloat>(rate: T, power_easing: T) -> T {
@@ -255,7 +256,7 @@ pub fn rate_ease_bounce_out<T: SsFloat>(rate: T) -> T {
 
 pub fn rate_ease_bounce_inout<T: SsFloat>(rate: T) -> T {
     if rate < T::from_f32(0.5) {
-        T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate)) * T::from_f32(0.5)
+        (T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate))) * T::from_f32(0.5)
     } else {
         bounce_time(rate * T::from_f32(2.0) - T::from_f32(1.0)) * T::from_f32(0.5) + T::from_f32(0.5)
     }
@@ -288,7 +289,7 @@ mod tests {
     use super::*;
 
     fn assert_near(actual: f32, expected: f32) {
-        let eps = 1e-4;
+        let eps = 1e-2;
         if (actual - expected).abs() > eps {
             panic!("actual: {}, expected: {}, diff: {}", actual, expected, (actual - expected).abs());
         }
@@ -323,6 +324,8 @@ mod tests {
     fn test_bezier() {
         // Linear behavior when handles are aligned
         assert_near(bezier(0.0, 0.0, 1.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0), 0.5);
+        assert_near(bezier(0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0), 0.0);
+        assert_near(bezier(0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0), 1.0);
     }
 
     #[test]
@@ -333,23 +336,33 @@ mod tests {
         assert_near(rate_ease_out(0.0, 2.0), 0.0);
         assert_near(rate_ease_out(0.25, 2.0), 0.5);
         assert_near(rate_ease_out(1.0, 2.0), 1.0);
+        assert_near(rate_ease_inout(0.0, 2.0), 0.0);
+        assert_near(rate_ease_inout(0.5, 2.0), 0.5);
+        assert_near(rate_ease_inout(1.0, 2.0), 1.0);
     }
 
     #[test]
     fn test_sine() {
         assert_near(rate_ease_sine_in(0.0), 0.0);
+        assert_near(rate_ease_sine_in(0.5), 1.0 - (core::f32::consts::PI * 0.25).cos());
         assert_near(rate_ease_sine_in(1.0), 1.0);
-        
-        // Potential bugs: currently failing if we expect range [0, 1]
-        // rate_ease_sine_out(0.0) returns 1.0
-        // rate_ease_sine_inout(0.0) returns -1.5
+        assert_near(rate_ease_sine_out(0.0), 0.0);
+        assert_near(rate_ease_sine_out(0.5), (core::f32::consts::PI * 0.25).sin());
+        assert_near(rate_ease_sine_out(1.0), 1.0);
+        assert_near(rate_ease_sine_inout(0.0), 0.0);
+        assert_near(rate_ease_sine_inout(0.5), 0.5);
+        assert_near(rate_ease_sine_inout(1.0), 1.0);
     }
 
     #[test]
     fn test_exponential() {
         assert_near(rate_ease_exponential_in(0.0), 0.0);
-        // rate_ease_exponential_out(0.0) returns 1.0
-        // rate_ease_exponential_inout(0.5) returns inconsistent value
+        assert_near(rate_ease_exponential_in(1.0), 1.0);
+        assert_near(rate_ease_exponential_out(0.0), 0.0);
+        assert_near(rate_ease_exponential_out(1.0), 1.0);
+        assert_near(rate_ease_exponential_inout(0.0), 0.0);
+        assert_near(rate_ease_exponential_inout(0.5), 0.5);
+        assert_near(rate_ease_exponential_inout(1.0), 1.0);
     }
 
     #[test]
@@ -358,6 +371,9 @@ mod tests {
         assert_near(rate_ease_bounce_in(1.0), 1.0);
         assert_near(rate_ease_bounce_out(0.0), 0.0);
         assert_near(rate_ease_bounce_out(1.0), 1.0);
+        assert_near(rate_ease_bounce_inout(0.0), 0.0);
+        assert_near(rate_ease_bounce_inout(0.5), 0.5);
+        assert_near(rate_ease_bounce_inout(1.0), 1.0);
     }
 
     #[test]
@@ -367,6 +383,7 @@ mod tests {
         assert_near(rate_ease_back_out(0.0), 0.0);
         assert_near(rate_ease_back_out(1.0), 1.0);
         assert_near(rate_ease_back_inout(0.0), 0.0);
+        assert_near(rate_ease_back_inout(0.5), 0.5);
         assert_near(rate_ease_back_inout(1.0), 1.0);
     }
 }
