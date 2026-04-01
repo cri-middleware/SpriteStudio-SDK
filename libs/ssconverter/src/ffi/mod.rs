@@ -66,8 +66,10 @@ pub extern "C" fn ss_converter_destroy(context: *mut Context) {
     }));
 }
 
+type LogCallback = Option<extern "C" fn(*const c_char)>;
+
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
+pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, callback: LogCallback) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
 
@@ -82,11 +84,25 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
         config.output = output_dir_str;
 
         if let Some(prev_handler)  = context.handler.take() {
+            // ignore previous handler result
             let _ = prev_handler.join();
         }
         let c = config.clone();
         let handler = std::thread::spawn(move || {
-            crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c)
+            let on_log = |msg: &str| {
+                if let Some(cb) = callback {
+                    if let Ok(c_msg) = CString::new(msg) {
+                        cb(c_msg.as_ptr());
+                    }
+                }
+            };
+            let result = catch_unwind(AssertUnwindSafe(|| {
+                crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
+            }));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err(crate::ConverterError::ConversionFailed("Rust thread panicked".into())),
+            }
         });
         context.handler = Some(handler);
     }));
@@ -122,18 +138,18 @@ pub extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter_abort(context: *mut Context) {
-    let context = unsafe { &mut *context };
-    context.should_stop.store(true, std::sync::atomic::Ordering::Relaxed)
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
     let result = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
         context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
     }));
     result.unwrap_or(false)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_abort(context: *mut Context) {
+    let context = unsafe { &mut *context };
+    context.should_stop.store(true, std::sync::atomic::Ordering::Relaxed)
 }
 
 #[unsafe(no_mangle)]

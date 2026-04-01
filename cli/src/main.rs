@@ -99,7 +99,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             let p = path_buf.clone();
             let c = config.clone();
             std::thread::spawn(move || {
-                ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c)
+                ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c, &|msg| println!("{}", msg))
             })
         })
     });
@@ -149,6 +149,7 @@ mod tests {
             let r = ssconverter::convert_sspj_to_ssab_files(
                 &get_test_base_path().join(p).as_path(),
                 &config,
+                &|msg: &str| println!("{}", msg)
             );
             match r {
                 Ok(_) => {
