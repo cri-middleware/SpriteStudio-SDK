@@ -154,6 +154,12 @@ impl AssetProvider for ZipAssetProvider {
 }
 
 pub fn create_asset_provider(path: &std::path::Path) -> Result<Box<dyn AssetProvider>, crate::converter::converter_error::ConverterError> {
+    if path.as_os_str().is_empty() {
+        return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Path is empty")));
+    }
+    if !path.exists() {
+        return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Path does not exist: {:?}", path))));
+    }
     if path.extension().map_or(false, |ext| ext == "zip") {
         let data = std::fs::read(path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(e))?;
         let file_name = path.file_name().unwrap().to_str().unwrap();

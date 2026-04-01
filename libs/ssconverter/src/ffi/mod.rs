@@ -91,11 +91,18 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
         let handler = std::thread::spawn(move || {
             let on_log = |msg: &str| {
                 if let Some(cb) = callback {
-                    let c_msg = CString::new(msg).unwrap();
-                    cb(c_msg.as_ptr());
+                    if let Ok(c_msg) = CString::new(msg) {
+                        cb(c_msg.as_ptr());
+                    }
                 }
             };
-            crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
+            let result = catch_unwind(AssertUnwindSafe(|| {
+                crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
+            }));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err(crate::ConverterError::ConversionFailed("Rust thread panicked".into())),
+            }
         });
         context.handler = Some(handler);
     }));
