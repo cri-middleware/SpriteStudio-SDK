@@ -9,3 +9,6 @@ pub mod sspj;
 pub mod ssqe;
 pub mod ssse;
 pub mod sstypes;
+
+#[cfg(test)]
+mod tests_robustness;

@@ -2025,3 +2025,171 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_m
         Some(convert_animedatat(anime_data, setup_animation, parts_map))
     }).collect::<Vec<ssab::ssab::ss::format::AnimationDataT>>()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ssab::ssab::ss::format::{PartAnimationDataFloatValueT, InterpolationType};
+
+    #[test]
+    fn test_optimize_part_animation_data_float_deduplication() {
+        // Test data: [index(time)=0, val=1.0], [index=1, val=1.0], [index=2, val=1.0], [index=3, val=2.0]
+        let mut data = Vec::new();
+        
+        let mut item = PartAnimationDataFloatValueT::default();
+        item.index = 0;
+        item.value = 1.0;
+        item.interpolation = InterpolationType::Linear;
+        data.push(item);
+
+        let mut item = PartAnimationDataFloatValueT::default();
+        item.index = 1;
+        item.value = 1.0;
+        item.interpolation = InterpolationType::Linear;
+        data.push(item);
+
+        let mut item = PartAnimationDataFloatValueT::default();
+        item.index = 2;
+        item.value = 1.0;
+        item.interpolation = InterpolationType::Linear;
+        data.push(item);
+
+        let mut item = PartAnimationDataFloatValueT::default();
+        item.index = 3;
+        item.value = 2.0;
+        item.interpolation = InterpolationType::None;
+        data.push(item);
+
+        let optimized = optimize_part_animation_data_float(&data).expect("Should not be empty");
+        
+        // Expected behavior:
+        // - Frame 0 is kept. Interpolation becomes None because 1.0 -> 1.0 doesn't need interpolation.
+        // - Frame 1 is omitted (redundant).
+        // - Frame 2 is kept as the last frame before value change.
+        // - Frame 3 is kept (value changed).
+        assert_eq!(optimized.len(), 3);
+        assert_eq!(optimized[0].index, 0);
+        assert_eq!(optimized[0].interpolation, InterpolationType::None);
+        assert_eq!(optimized[1].index, 2);
+        assert_eq!(optimized[2].index, 3);
+    }
+
+    #[test]
+    fn test_convert_part_animation_data_expand_key_float_interpolation() {
+        use sspj::ssattribute::SsAttributeFloatKey;
+        use sspj::sstypes::{SsInterpolationType, SsCurve};
+
+        let start_key = SsAttributeFloatKey {
+            time: 0,
+            value: 0.0,
+            ip_type: SsInterpolationType::Linear,
+            easing_rate: 0.0,
+            curve: SsCurve::default(),
+        };
+        let end_key = SsAttributeFloatKey {
+            time: 10,
+            value: 10.0,
+            ip_type: SsInterpolationType::Linear,
+            easing_rate: 0.0,
+            curve: SsCurve::default(),
+        };
+
+        let result = convert_part_animation_data_expand_key_float(&start_key, &end_key, 5);
+        assert_eq!(result, 5.0);
+
+        // Test f64 to f32 stability with Hermite
+        let start_key_hermite = SsAttributeFloatKey {
+            time: 0,
+            value: 0.0,
+            ip_type: SsInterpolationType::Hermite,
+            easing_rate: 0.0,
+            curve: SsCurve {
+                start_time: 0.0,
+                start_value: 0.0,
+                end_time: 1.0,
+                end_value: 0.0,
+                ..Default::default()
+            },
+        };
+        let result_hermite = convert_part_animation_data_expand_key_float(&start_key_hermite, &end_key, 5);
+        assert!(result_hermite >= 0.0 && result_hermite <= 10.0);
+    }
+
+    #[test]
+    fn test_optimize_part_animation_data_value_changing_range() {
+        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::Linear), false);
+        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::Hermite), true);
+        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::Bezier), true);
+        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::None), false);
+    }
+
+    #[test]
+    fn test_convert_part_animation_data_expand_key_skew() {
+        use sspj::ssattribute::{SsAttributeVertexKey, SsAttributeVertexKeyValue};
+        use sspj::sstypes::{SsPoint2, SsInterpolationType, SsCurve};
+
+        let start_key = SsAttributeVertexKey {
+            time: 0,
+            ip_type: SsInterpolationType::Linear,
+            easing_rate: 0.0,
+            curve: SsCurve::default(),
+            value: SsAttributeVertexKeyValue {
+                skew: Some(SsPoint2 { x: 0.0, y: 0.0 }),
+                ..Default::default()
+            },
+        };
+        let end_key = SsAttributeVertexKey {
+            time: 10,
+            ip_type: SsInterpolationType::Linear,
+            easing_rate: 0.0,
+            curve: SsCurve::default(),
+            value: SsAttributeVertexKeyValue {
+                skew: Some(SsPoint2 { x: 10.0, y: 20.0 }),
+                ..Default::default()
+            },
+        };
+
+        let result = convert_part_animation_data_expand_key_skew(&start_key, &end_key, 5).expect("Should expand");
+        assert_eq!(result.v1, 5.0);
+        assert_eq!(result.v2, 10.0);
+    }
+
+    #[test]
+    fn test_convert_part_animation_data_expand_key_vertex() {
+        use sspj::ssattribute::{SsAttributeVertexKey, SsAttributeVertexKeyValue};
+        use sspj::sstypes::{SsPoint2, SsInterpolationType, SsCurve};
+
+        let start_key = SsAttributeVertexKey {
+            time: 0,
+            ip_type: SsInterpolationType::Linear,
+            easing_rate: 0.0,
+            curve: SsCurve::default(),
+            value: SsAttributeVertexKeyValue {
+                lt: Some(SsPoint2 { x: 0.0, y: 0.0 }),
+                rt: Some(SsPoint2 { x: 0.0, y: 0.0 }),
+                lb: Some(SsPoint2 { x: 0.0, y: 0.0 }),
+                rb: Some(SsPoint2 { x: 0.0, y: 0.0 }),
+                ..Default::default()
+            },
+        };
+        let end_key = SsAttributeVertexKey {
+            time: 10,
+            ip_type: SsInterpolationType::Linear,
+            easing_rate: 0.0,
+            curve: SsCurve::default(),
+            value: SsAttributeVertexKeyValue {
+                lt: Some(SsPoint2 { x: 10.0, y: 10.0 }),
+                rt: Some(SsPoint2 { x: -10.0, y: 10.0 }),
+                lb: Some(SsPoint2 { x: 10.0, y: -10.0 }),
+                rb: Some(SsPoint2 { x: -10.0, y: -10.0 }),
+                ..Default::default()
+            },
+        };
+
+        let result = convert_part_animation_data_expand_key_vertex(&start_key, &end_key, 5).expect("Should expand");
+        assert_eq!(result.lt.as_ref().unwrap().v1, 5.0);
+        assert_eq!(result.rt.as_ref().unwrap().v1, -5.0);
+        assert_eq!(result.lb.as_ref().unwrap().v2, -5.0);
+        assert_eq!(result.rb.as_ref().unwrap().v2, -5.0);
+    }
+}
