@@ -66,7 +66,7 @@ pub extern "C" fn ss_converter_destroy(context: *mut Context) {
     }));
 }
 
-type LogCallback = extern "C" fn(*const c_char);
+type LogCallback = Option<extern "C" fn(*const c_char)>;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, callback: LogCallback) {
@@ -90,8 +90,10 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
         let c = config.clone();
         let handler = std::thread::spawn(move || {
             let on_log = |msg: &str| {
-                let c_msg = CString::new(msg).unwrap();
-                callback(c_msg.as_ptr());
+                if let Some(cb) = callback {
+                    let c_msg = CString::new(msg).unwrap();
+                    cb(c_msg.as_ptr());
+                }
             };
             crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
         });
@@ -129,18 +131,18 @@ pub extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_converter_abort(context: *mut Context) {
-    let context = unsafe { &mut *context };
-    context.should_stop.store(true, std::sync::atomic::Ordering::Relaxed)
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
     let result = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
         context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
     }));
     result.unwrap_or(false)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_abort(context: *mut Context) {
+    let context = unsafe { &mut *context };
+    context.should_stop.store(true, std::sync::atomic::Ordering::Relaxed)
 }
 
 #[unsafe(no_mangle)]
