@@ -37,7 +37,7 @@ mod tests {
             let mut config = ConverterConfig::default();
             config.output = Some(out_dir.as_os_str().to_os_string());
             
-            let r = convert_sspj_to_ssab_files(&sspj_path, &config, &|msg: &str| {});
+            let r = convert_sspj_to_ssab_files(&sspj_path, &config, &|_msg: &str| {});
             match r {
                 Ok(_) => {
                     assert!(true)
