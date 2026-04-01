@@ -21,28 +21,23 @@ mod tests {
             .to_path_buf()
     }
 
-    /*
-    // a test case is the same as sspj tests.
-    #[test]
-    fn test_parse_sspj() {
-        TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
-            let p = Path::new(f);
-            let sspj_loader = SspjLoader::new(&get_test_base_path().join(p).as_path());
-            let Ok(_sspj) = sspj_loader.load_ss_project() else {
-                assert!(false, "not found: {}", p.as_os_str().to_string_lossy());
-                return;
-            };
-            // println!("{:?}", _sspj);
-        });
-    }
-     */
-
     #[test]
     fn test_convert_ssab() {
         TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
-            let config = ConverterConfig::default();
-            let r = convert_sspj_to_ssab_files(&get_test_base_path().join(p).as_path(), &config);
+            let sspj_path = get_test_base_path().join(p);
+            
+            // Create a temporary output directory in target
+            let out_dir = get_test_base_path().join("target").join("ssab_test_output").join(p.file_stem().unwrap());
+            if out_dir.exists() {
+                let _ = std::fs::remove_dir_all(&out_dir);
+            }
+            std::fs::create_dir_all(&out_dir).unwrap();
+
+            let mut config = ConverterConfig::default();
+            config.output = Some(out_dir.as_os_str().to_os_string());
+            
+            let r = convert_sspj_to_ssab_files(&sspj_path, &config);
             match r {
                 Ok(_) => {
                     assert!(true)
