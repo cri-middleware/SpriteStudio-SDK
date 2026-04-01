@@ -350,4 +350,80 @@ mod tests {
             }
         });
     }
+
+    #[test]
+    fn evaluate_animation_at_frame() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+        
+        let mut context = Context::new();
+        context.load_copy(&input_buf).expect("Failed to load ssab");
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        // Find part index for "POS_XYZ"
+        let pos_xyz_idx;
+        {
+            let ssab_buf = context.get_ssab_data().unwrap();
+            let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+            let parts_meta = ssab.parts().expect("No parts in ssab");
+            pos_xyz_idx = parts_meta.iter().position(|p| p.name() == Some("POS_XYZ")).expect("Part POS_XYZ not found") as i16;
+        }
+
+        // Test frame 0
+        {
+            let frame_data_buf = context.get_frame_data(0).expect("Failed to get frame data at frame 0");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 0.0);
+        }
+
+        // Test frame 10
+        {
+            let frame_data_buf = context.get_frame_data(10).expect("Failed to get frame data at frame 10");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 32.0);
+        }
+    }
+
+    #[test]
+    fn test_part_hierarchy_and_visibility() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+        
+        let mut context = Context::new();
+        context.load_copy(&input_buf).expect("Failed to load ssab");
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        let parts_meta = ssab.parts().expect("No parts in ssab");
+        
+        // Hierarchy check
+        let scl_xy_idx = parts_meta.iter().position(|p| p.name() == Some("SCL_XY")).expect("Part SCL_XY not found");
+        let scl_xy_part = parts_meta.get(scl_xy_idx);
+        let parent_idx = scl_xy_part.parent_index();
+        assert!(parent_idx >= 0);
+        let parent_part = parts_meta.get(parent_idx as usize);
+        assert_eq!(parent_part.name(), Some("LSCL_XY"));
+
+        // Visibility (Hide flag) check
+        let hide_part_idx = parts_meta.iter().position(|p| p.name() == Some("HIDE")).expect("Part HIDE not found") as i16;
+        
+        // Frame 0: Not hidden
+        let frame_0_buf = context.get_frame_data(0).unwrap();
+        let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
+        let hide_state_0 = frame_0.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
+        assert_eq!(hide_state_0.hide(), false);
+
+        // Frame 2: Hidden
+        let frame_2_buf = context.get_frame_data(2).unwrap();
+        let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
+        let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
+        assert_eq!(hide_state_2.hide(), true);
+    }
 }
