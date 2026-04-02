@@ -162,24 +162,16 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
         part_state.set_mask(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeMask & mask;
     });
-    part.skew_array().and_then(|arr| search_prev_next(arr, frame_no, |v| v.index() as i32)).and_then(|(prev, _)| prev.value()).map(|skew| {
-                part_state.set_skew_x(skew.v1());
-                part_state.set_skew_y(skew.v2());
-                update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew;
+
+    part.skew_array().and_then(|arr| evaluate_skew(arr, frame_no)).map(|(val_x, val_y, mask)| {
+        part_state.set_skew_x(val_x);
+        part_state.set_skew_y(val_y);
+        update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     });
-    part.deform_array().and_then(|arr| search_prev_next(arr, frame_no, |v| v.index() as i32)).and_then(|(prev, _)| prev.value()).map(|deform| {
-                let mut d_args = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
-                d_args.coordinate = deform.coordinate().map(|coordinate| {
-                    let v = coordinate.iter().map(|v| runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2())).collect::<Vec<_>>();
-                    fb.create_vector(&v)
-                });
-                d_args.index = deform.index().map(|index| {
-                    let v = index.iter().map(|v| v).collect::<Vec<_>>();
-                    fb.create_vector(&v)
-                });
-                deforms.push(runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &d_args));
-                part_state.set_deform((deforms.len() - 1) as i16);
-                update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform;
+    part.deform_array().and_then(|arr| evaluate_deform(fb, arr, frame_no)).map(|(val, mask)| {
+        deforms.push(val);
+        part_state.set_deform((deforms.len() - 1) as i16);
+        update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform & mask;
     });
     part.texture_array().and_then(|arr| evaluate_texture(arr, frame_no)).map(|val| {
         part_state.set_texture(val);
