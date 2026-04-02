@@ -1,5 +1,5 @@
-use flatbuffers::Push;
-use ssab::ssab::ss::format::{InterpolationType, PartAttributePartColor, SsAttributePartColorKeyValueColor};
+use std::cmp::max;
+use ssab::ssab::ss::format::{InterpolationType, SsAttributePartColorKeyValueColor};
 use ssinterpolate::interpolate::*;
 use crate::runtime;
 
@@ -102,7 +102,7 @@ where
 #[inline]
 pub fn evaluate_float(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'_>>>,
-    frame_no: i32,
+    frame_no: i32
 ) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -129,7 +129,7 @@ pub fn evaluate_float(
 #[inline]
 pub fn evaluate_int(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'_>>>,
-    frame_no: i32,
+    frame_no: i32
 ) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -156,7 +156,7 @@ pub fn evaluate_int(
 #[inline]
 pub fn evaluate_partcolor(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'_>>>,
-    frame_no: i32,
+    frame_no: i32
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributePartColor, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -238,7 +238,7 @@ fn transfer_partcolor(source: & Option<ssab::ssab::ss::format::PartAttributePart
 #[inline]
 pub fn evaluate_shader(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataShader<'_>>>,
-    frame_no: i32,
+    frame_no: i32
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributeShader, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -301,7 +301,7 @@ fn transfer_shader(source: & Option<ssab::ssab::ss::format::PartAttributeShader>
 #[inline]
 pub fn evaluate_vertex(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'_>>>,
-    frame_no: i32,
+    frame_no: i32
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributeVertex, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -352,11 +352,109 @@ fn transfer_vertex(source: & Option<ssab::ssab::ss::format::PartAttributeVertex>
     runtime::framedata::ss::runtime::PartAttributeVertex::new(lt, rt, lb, rb)
 }
 
+#[inline]
+pub fn evaluate_skew(
+    array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>,
+    frame_no: i32
+) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+    search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
+        if let Some(next) = next_opt {
+            let prev_value = prev.value().unwrap();
+            let prev_index = prev.index() as i32;
+            let interpolation = prev.interpolation();
+            if interpolation == InterpolationType::None {
+                if prev_index == frame_no {
+                    // TODO: Think methods to improve. (Always be true even when called multiple times consecutively with same frame_no.)
+                    return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON)
+                }
+                return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF)
+            }
 
+            let next_index = next.index() as i32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index:f32, next_index:f32));
 
+            let next_value = next.value().unwrap();
+            (   linear(prev_value.v1(), next_value.v1(), rate),
+                linear(prev_value.v2(), next_value.v2(), rate),
+                UPDATE_FLAG_ON
+            )
+        } else {
+            let prev_value = prev.value().unwrap();
+            (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF)
+        }
+    })
+}
 
+#[inline]
+pub fn evaluate_deform<'a>(
+    fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+    array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
+    frame_no: i32
+) -> Option<(::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform>, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+    search_prev_next(array, frame_no, |v| v.index() as i32).map(|(prev, next_opt)| {
+        if let Some(next) = next_opt {
+            let prev_index = prev.index() as i32;
+            let interpolation = prev.interpolation();
+            if interpolation == InterpolationType::None {
+                if prev_index == frame_no {
+                    // TODO: Think methods to improve. (Always be true even when called multiple times consecutively with same frame_no.)
+                    return (transfer_deform(fb, &prev.value()), UPDATE_FLAG_ON)
+                }
+                return (transfer_deform(fb, &prev.value()), UPDATE_FLAG_OFF)
+            }
 
+            let next_index = next.index() as i32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index:f32, next_index:f32));
 
+            let mut current = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
+            let prev_value = prev.value().unwrap();
+            let next_value = next.value().unwrap();
+
+            if let Some(prev_coodinate) = prev_value.coordinate() && let Some(next_coodinate) = next_value.coordinate() {
+                // MEMO: Originally, lengths of prev_coordinate and next_coordinate are the same.
+                let length_full = prev_coodinate.len();
+                let mut coordinate: [runtime::framedata::ss::runtime::Vec2; length_full];
+                let length = max(length_full, next_coodinate.len());
+                for i in 0..length {
+                    coordinate[i].set_x(linear(prev_coodinate[i].x, next_coodinate[i].x, rate));
+                    coordinate[i].set_y(linear(prev_coodinate[i].y, next_coodinate[i].y, rate));
+                }
+                // MEMO: Overrun use the value of `prev` as is.
+                for i in length..length_full {
+                    coordinate[i] = prev_coodinate[i];
+                }
+                fb.create_vector(&coordinate);
+
+                // MEMO: "index" is not interpolated.
+                current.index = prev_value.index().map(|index| {
+                    let v = index.iter().map(|v| v).collect::<Vec<_>>();
+                    fb.create_vector(&v)
+                });
+
+                (runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &current), UPDATE_FLAG_ON)
+            } else {
+                // MEMO: (I think) Will not be run much, but duplicate prev for error trapping.
+                (transfer_deform(fb, &prev.value()), UPDATE_FLAG_ON)
+            }
+        } else {
+            (transfer_deform(fb, &prev.value()), UPDATE_FLAG_OFF)
+        }
+    })
+}
+#[inline]
+fn transfer_deform<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, source: & Option<ssab::ssab::ss::format::PartAttributeDeform>) -> ::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform> {
+    let mut destination = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
+    destination.coordinate = source.coordinate().map(|coordinate| {
+        let v = coordinate.iter().map(|v| runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2())).collect::<Vec<_>>();
+        fb.create_vector(&v)
+    });
+    destination.index = source.index().map(|index| {
+        let v = index.iter().map(|v| v).collect::<Vec<_>>();
+        fb.create_vector(&v)
+    });
+
+    runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &destination)
+}
 
 // For discrete values, we just return the previous value.
 #[inline]
