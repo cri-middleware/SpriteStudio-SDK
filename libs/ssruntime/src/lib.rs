@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), not(test)))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
     loop {}
@@ -44,6 +44,7 @@ struct ContextBuffers<'a> {
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    cursors: Vec<usize>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -55,6 +56,7 @@ impl<'a> ContextBuffers<'a> {
             shader_vec: Vec::with_capacity(32),
             vertice_vec: Vec::with_capacity(32),
             deform_vec: Vec::with_capacity(32),
+            cursors: Vec::new(),
         }
     }
 }
@@ -130,6 +132,11 @@ impl<'a> Context<'a> {
         };
         self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation_idx = index as i32;
+
+        let num_parts = animation.parts_animation_data().map(|p| p.len()).unwrap_or(0);
+        self.buffers.cursors.clear();
+        self.buffers.cursors.resize(num_parts * 38, 0);
+
         Ok(())
     }
 
@@ -161,6 +168,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.shader_vec,
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
+            &mut self.buffers.cursors,
         );
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
