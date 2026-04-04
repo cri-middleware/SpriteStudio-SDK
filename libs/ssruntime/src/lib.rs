@@ -135,7 +135,7 @@ impl<'a> Context<'a> {
 
         let num_parts = animation.parts_animation_data().map(|p| p.len()).unwrap_or(0);
         self.buffers.cursors.clear();
-        self.buffers.cursors.resize(num_parts * 38, 0);
+        self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
         Ok(())
     }
