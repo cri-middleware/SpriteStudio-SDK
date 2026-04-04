@@ -1,4 +1,3 @@
-use core::cmp::max;
 use ssab::ssab::ss::format::{InterpolationType, SsAttributePartColorKeyValueColor};
 use ssinterpolate::interpolate::*;
 use crate::runtime;
@@ -492,7 +491,7 @@ pub fn evaluate_deform<'a>(
             if let Some(prev_coodinate) = prev_val.coordinate() && let Some(next_coodinate) = next_val.coordinate() {
                 let length_full = prev_coodinate.len();
                 let mut coordinate = Vec::with_capacity(length_full);
-                let length = max(length_full, next_coodinate.len());
+                let length = core::cmp::min(length_full, next_coodinate.len());
                 for i in 0..length {
                     coordinate.push(runtime::framedata::ss::runtime::Vec2::new(
                         linear(prev_coodinate.get(i).v1(), next_coodinate.get(i).v1(), rate),
