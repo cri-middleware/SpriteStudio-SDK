@@ -90,6 +90,9 @@ where
     Some((prev, Some(next)))
 }
 
+// Optimized for forward playback (O(1) fast path). Reverse or ping-pong playback 
+// currently fallbacks to binary search (O(log N)). Bidirectional optimization 
+// can be implemented if performance bottlenecks occur in those modes.
 #[inline]
 pub fn search_prev<'a, T, F>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>,
