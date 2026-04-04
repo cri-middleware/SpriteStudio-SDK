@@ -26,6 +26,9 @@ pub fn get_interpolated_rate(interpolation: InterpolationType, rate: f32) -> f32
     }
 }
 
+// Optimized for forward playback (O(1) fast path). Reverse or ping-pong playback 
+// currently fallbacks to binary search (O(log N)). Bidirectional optimization 
+// can be implemented if performance bottlenecks occur in those modes.
 #[inline]
 pub fn search_prev_next<'a, T, F>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>,
@@ -485,7 +488,7 @@ pub fn evaluate_deform<'a>(
             let prev_val = prev.value().unwrap();
             let next_val = next.value().unwrap();
 
-            if let Some(prev_coodinate) = prev_val.coordinate() && let Some(next_coodinate) = next_val.coordinate() {
+            if let (Some(prev_coodinate), Some(next_coodinate)) = (prev_val.coordinate(), next_val.coordinate()) {
                 let length_full = prev_coodinate.len();
                 let mut coordinate = Vec::with_capacity(length_full);
                 let length = core::cmp::min(length_full, next_coodinate.len());
@@ -562,4 +565,16 @@ pub fn evaluate_texture(
     hint: &mut usize,
 ) -> Option<u32> {
     search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_linear_interpolation() {
+        assert_eq!(linear(0.0, 10.0, 0.5), 5.0);
+        assert_eq!(linear(10.0, 20.0, 0.0), 10.0);
+        assert_eq!(linear(10.0, 20.0, 1.0), 20.0);
+    }
 }
