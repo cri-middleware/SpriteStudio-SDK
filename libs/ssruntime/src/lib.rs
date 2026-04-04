@@ -458,4 +458,64 @@ mod tests {
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert_eq!(hide_state_2.hide(), true);
     }
+
+    #[test]
+    fn test_deform_animation() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7_ssab/deform.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
+        
+        let mut context = Context::new();
+        context.load_copy(&input_buf).expect("Failed to load ssab");
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        
+        // Find a part that has deform animation
+        let mut deform_part_idx = -1;
+        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.key_compare_with_value("anime_1") == ::core::cmp::Ordering::Equal)) {
+            if let Some(parts_anime) = animation.parts_animation_data() {
+                for (idx, p_anime) in parts_anime.iter().enumerate() {
+                    if p_anime.deform_array().is_some() {
+                        deform_part_idx = idx as i32;
+                        break;
+                    }
+                }
+            }
+        }
+        assert!(deform_part_idx >= 0, "No part with deform animation found in anime_1");
+
+        // Test frame 0
+        {
+            let frame_0_buf = context.get_frame_data(0).unwrap();
+            let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
+            let parts = frame_0.parts().unwrap();
+            let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 0");
+            
+            if deform_state.deform() >= 0 {
+                let deforms = frame_0.deforms().unwrap();
+                let deform_attr = deforms.get(deform_state.deform() as usize);
+                if let Some(coords) = deform_attr.coordinate() {
+                    println!("Frame 0 Deform found with {} coordinates", coords.len());
+                }
+            }
+        }
+
+        // Test frame 10: Interpolated deform
+        {
+            let frame_10_buf = context.get_frame_data(10).unwrap();
+            let frame_10 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_10_buf) };
+            let parts = frame_10.parts().unwrap();
+            let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 10");
+            
+            println!("Frame 10 Deform index: {}", deform_state.deform());
+            if deform_state.deform() >= 0 {
+                let deforms = frame_10.deforms().unwrap();
+                let deform_attr = deforms.get(deform_state.deform() as usize);
+                println!("Frame 10 Coordinates: {:?}", deform_attr.coordinate().map(|c| c.len()));
+                println!("Frame 10 Vertex Indices: {:?}", deform_attr.index().map(|i| i.len()));
+            }
+        }
+    }
 }

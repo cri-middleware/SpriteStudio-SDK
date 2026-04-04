@@ -463,81 +463,81 @@ pub fn evaluate_skew(
     })
 }
 
+#[derive(Default, Clone, Debug)]
+pub struct DeformEvaluationData {
+    pub coordinate: Vec<runtime::framedata::ss::runtime::Vec2>,
+    pub index: Vec<i16>,
+}
+
 #[inline]
-pub fn evaluate_deform<'a>(
-    fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+pub fn evaluate_deform(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
     frame_no: i32,
     hint: &mut usize,
-) -> Option<(::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+) -> Option<(DeformEvaluationData, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
-                    return (transfer_deform(fb, &prev.value()), UPDATE_FLAG_ON)
+                    return (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
                 }
-                return (transfer_deform(fb, &prev.value()), UPDATE_FLAG_OFF)
+                return (transfer_deform(&prev.value()), UPDATE_FLAG_OFF)
             }
 
             let next_index = next.index() as i32;
             let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
 
-            let mut current = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
+            let mut current = DeformEvaluationData::default();
             let prev_val = prev.value().unwrap();
             let next_val = next.value().unwrap();
 
             if let (Some(prev_coodinate), Some(next_coodinate)) = (prev_val.coordinate(), next_val.coordinate()) {
                 let length_full = prev_coodinate.len();
-                let mut coordinate = Vec::with_capacity(length_full);
+                current.coordinate.reserve(length_full);
                 let length = core::cmp::min(length_full, next_coodinate.len());
                 for i in 0..length {
-                    coordinate.push(runtime::framedata::ss::runtime::Vec2::new(
+                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(
                         linear(prev_coodinate.get(i).v1(), next_coodinate.get(i).v1(), rate),
                         linear(prev_coodinate.get(i).v2(), next_coodinate.get(i).v2(), rate)
                     ));
                 }
                 // Overrun use the value of `prev` as is.
                 for i in length..length_full {
-                    coordinate.push(runtime::framedata::ss::runtime::Vec2::new(
+                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(
                         prev_coodinate.get(i).v1(),
                         prev_coodinate.get(i).v2()
                     ));
                 }
-                current.coordinate = Some(fb.create_vector(&coordinate));
 
                 // "index" is not interpolated.
-                current.index = prev_val.index().map(|index| {
-                    let v = index.iter().collect::<Vec<_>>();
-                    fb.create_vector(&v)
-                });
+                if let Some(index) = prev_val.index() {
+                    current.index = index.iter().collect();
+                }
 
-                (runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &current), UPDATE_FLAG_ON)
+                (current, UPDATE_FLAG_ON)
             } else {
-                (transfer_deform(fb, &prev.value()), UPDATE_FLAG_ON)
+                (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
             }
         } else {
-            (transfer_deform(fb, &prev.value()), UPDATE_FLAG_OFF)
+            (transfer_deform(&prev.value()), UPDATE_FLAG_OFF)
         }
     })
 }
 
 #[inline]
-fn transfer_deform<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, source: &Option<ssab::ssab::ss::format::PartAttributeDeform>) -> ::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>> {
-    let mut destination = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
+fn transfer_deform(source: &Option<ssab::ssab::ss::format::PartAttributeDeform>) -> DeformEvaluationData {
+    let mut destination = DeformEvaluationData::default();
     if let Some(s) = source {
-        destination.coordinate = s.coordinate().map(|coordinate| {
-            let v = coordinate.iter().map(|v| runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2())).collect::<Vec<_>>();
-            fb.create_vector(&v)
-        });
-        destination.index = s.index().map(|index| {
-            let v = index.iter().collect::<Vec<_>>();
-            fb.create_vector(&v)
-        });
+        if let Some(coordinate) = s.coordinate() {
+            destination.coordinate = coordinate.iter().map(|v| runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2())).collect();
+        }
+        if let Some(index) = s.index() {
+            destination.index = index.iter().collect();
+        }
     }
-
-    runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &destination)
+    destination
 }
 
 #[inline]
