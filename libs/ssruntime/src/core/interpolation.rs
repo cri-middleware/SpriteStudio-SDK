@@ -31,7 +31,7 @@ pub fn search_prev_next<'a, T, F>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>,
     frame_no: i32,
     get_index: F,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(T::Inner, Option<T::Inner>)>
 where
     T: 'a + flatbuffers::Follow<'a>,
@@ -40,32 +40,29 @@ where
     if array.is_empty() { return None; }
     let len = array.len();
 
-    let mut left = 0;
+    let mut i = *hint;
+    if i >= len {
+        i = len - 1;
+    }
     
-    if let Some(h) = hint.as_deref() {
-        let mut i = *h;
-        if i >= len {
-            i = len - 1;
-        }
-        
-        let curr_val = array.get(i);
-        let curr_idx = get_index(&curr_val);
-        
-        if curr_idx <= frame_no {
-            if i + 1 < len {
-                let next_val = array.get(i + 1);
-                let next_idx = get_index(&next_val);
-                if frame_no < next_idx {
-                    if let Some(h_mut) = hint { *h_mut = i; }
-                    return Some((curr_val, Some(next_val)));
-                }
-            } else {
-                if let Some(h_mut) = hint { *h_mut = i; }
-                return Some((curr_val, None));
+    let curr_val = array.get(i);
+    let curr_idx = get_index(&curr_val);
+    
+    if curr_idx <= frame_no {
+        if i + 1 < len {
+            let next_val = array.get(i + 1);
+            let next_idx = get_index(&next_val);
+            if frame_no < next_idx {
+                *hint = i;
+                return Some((curr_val, Some(next_val)));
             }
+        } else {
+            *hint = i;
+            return Some((curr_val, None));
         }
     }
 
+    let mut left = 0;
     let mut right = len;
     while left < right {
         let mid = left + (right - left) / 2;
@@ -78,7 +75,7 @@ where
     }
     
     let res_idx = if left == 0 { 0 } else { left - 1 };
-    if let Some(h) = hint { *h = res_idx; }
+    *hint = res_idx;
 
     if left == 0 {
         return Some((array.get(0), None));
@@ -98,7 +95,7 @@ pub fn search_prev<'a, T, F>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>,
     frame_no: i32,
     get_index: F,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<T::Inner>
 where
     T: 'a + flatbuffers::Follow<'a>,
@@ -107,32 +104,29 @@ where
     if array.is_empty() { return None; }
     let len = array.len();
 
-    let mut left = 0;
+    let mut i = *hint;
+    if i >= len {
+        i = len - 1;
+    }
     
-    if let Some(h) = hint.as_deref() {
-        let mut i = *h;
-        if i >= len {
-            i = len - 1;
-        }
-        
-        let curr_val = array.get(i);
-        let curr_idx = get_index(&curr_val);
-        
-        if curr_idx <= frame_no {
-            if i + 1 < len {
-                let next_val = array.get(i + 1);
-                let next_idx = get_index(&next_val);
-                if frame_no < next_idx {
-                    if let Some(h_mut) = hint { *h_mut = i; }
-                    return Some(curr_val);
-                }
-            } else {
-                if let Some(h_mut) = hint { *h_mut = i; }
+    let curr_val = array.get(i);
+    let curr_idx = get_index(&curr_val);
+    
+    if curr_idx <= frame_no {
+        if i + 1 < len {
+            let next_val = array.get(i + 1);
+            let next_idx = get_index(&next_val);
+            if frame_no < next_idx {
+                *hint = i;
                 return Some(curr_val);
             }
+        } else {
+            *hint = i;
+            return Some(curr_val);
         }
     }
 
+    let mut left = 0;
     let mut right = len;
     while left < right {
         let mid = left + (right - left) / 2;
@@ -145,7 +139,7 @@ where
     }
     
     let res_idx = if left == 0 { 0 } else { left - 1 };
-    if let Some(h) = hint { *h = res_idx; }
+    *hint = res_idx;
 
     if left == 0 {
         Some(array.get(0))
@@ -158,7 +152,7 @@ where
 pub fn evaluate_float(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -185,7 +179,7 @@ pub fn evaluate_float(
 pub fn evaluate_int(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -212,7 +206,7 @@ pub fn evaluate_int(
 pub fn evaluate_partcolor(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributePartColor, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -308,7 +302,7 @@ fn transfer_partcolor(source: &Option<ssab::ssab::ss::format::PartAttributePartC
 pub fn evaluate_shader(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataShader<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributeShader, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -376,7 +370,7 @@ fn transfer_shader(source: &Option<ssab::ssab::ss::format::PartAttributeShader>)
 pub fn evaluate_vertex(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributeVertex, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -434,7 +428,7 @@ fn transfer_vertex(source: &Option<ssab::ssab::ss::format::PartAttributeVertex>)
 pub fn evaluate_skew(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -468,7 +462,7 @@ pub fn evaluate_deform<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<(::flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -544,7 +538,7 @@ fn transfer_deform<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>, source: &Opt
 pub fn evaluate_bool(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<bool> {
     search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
 }
@@ -553,7 +547,7 @@ pub fn evaluate_bool(
 pub fn evaluate_cell<'a>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
     search_prev(array, frame_no, |v| v.index() as i32, hint).and_then(|prev| prev.value())
 }
@@ -562,7 +556,7 @@ pub fn evaluate_cell<'a>(
 pub fn evaluate_texture(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'_>>>,
     frame_no: i32,
-    hint: Option<&mut usize>,
+    hint: &mut usize,
 ) -> Option<u32> {
     search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
 }
