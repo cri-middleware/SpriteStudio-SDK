@@ -351,7 +351,7 @@ mod tests {
             if !ssab_dir.exists() {
                 let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
                 let config = ssconverter::ConverterConfig::default();
-                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|msg: &str| { });
+                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|_msg: &str| { });
             }
         });
     }
