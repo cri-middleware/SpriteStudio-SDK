@@ -40,7 +40,7 @@ impl SsabStorage {
 struct ContextBuffers<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
-    parts_colo_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    parts_color_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
@@ -50,12 +50,12 @@ struct ContextBuffers<'a> {
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
         Self {
-            parts_vec: Vec::with_capacity(32),
-            cell_vec: Vec::with_capacity(32),
-            parts_colo_vec: Vec::with_capacity(32),
-            shader_vec: Vec::with_capacity(32),
-            vertice_vec: Vec::with_capacity(32),
-            deform_vec: Vec::with_capacity(32),
+            parts_vec: Vec::new(),
+            cell_vec: Vec::new(),
+            parts_color_vec: Vec::new(),
+            shader_vec: Vec::new(),
+            vertice_vec: Vec::new(),
+            deform_vec: Vec::new(),
             cursors: Vec::new(),
         }
     }
@@ -134,6 +134,30 @@ impl<'a> Context<'a> {
         self.animation_idx = index as i32;
 
         let num_parts = animation.parts_animation_data().map(|p| p.len()).unwrap_or(0);
+
+        let mut cell_c = 0;
+        let mut color_c = 0;
+        let mut shader_c = 0;
+        let mut vertex_c = 0;
+        let mut deform_c = 0;
+
+        if let Some(parts) = animation.parts_animation_data() {
+            for p in parts.iter() {
+                if p.cell_array().is_some() { cell_c += 1; }
+                if p.part_color_array().is_some() { color_c += 1; }
+                if p.shader_array().is_some() { shader_c += 1; }
+                if p.vertex_array().is_some() { vertex_c += 1; }
+                if p.deform_array().is_some() { deform_c += 1; }
+            }
+        }
+
+        self.buffers.parts_vec.reserve(num_parts);
+        self.buffers.cell_vec.reserve(cell_c);
+        self.buffers.parts_color_vec.reserve(color_c);
+        self.buffers.shader_vec.reserve(shader_c);
+        self.buffers.vertice_vec.reserve(vertex_c);
+        self.buffers.deform_vec.reserve(deform_c);
+
         self.buffers.cursors.clear();
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
@@ -164,7 +188,7 @@ impl<'a> Context<'a> {
             frame_no,
             &mut self.buffers.parts_vec,
             &mut self.buffers.cell_vec,
-            &mut self.buffers.parts_colo_vec,
+            &mut self.buffers.parts_color_vec,
             &mut self.buffers.shader_vec,
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
