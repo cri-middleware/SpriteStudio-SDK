@@ -43,23 +43,35 @@ const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateA
 const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
 
-fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                part: &ssab::ssab::ss::format::PartAnimationData,
+pub struct PartEvaluationResult {
+    pub state: runtime::framedata::ss::runtime::PartState,
+    pub cell: Option<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+    pub part_color: Option<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    pub shader: Option<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+    pub vertex: Option<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    pub deform: Option<DeformEvaluationData>,
+}
+
+fn evaluate_part(part: &ssab::ssab::ss::format::PartAnimationData,
                 part_index: i16,
                 frame_no: i32,
-                cells: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
-                parts_color: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
-                shaders: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
-                vertices: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
-                deforms: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>, part_cursors: &mut [usize]) -> Option<runtime::framedata::ss::runtime::PartState> {
+                part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
+
+    let mut result = PartEvaluationResult {
+        state: runtime::framedata::ss::runtime::PartState::default(),
+        cell: None,
+        part_color: None,
+        shader: None,
+        vertex: None,
+        deform: None,
+    };
 
     part_state.set_part_index(part_index);
 
     part.cell_array().and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])).map(|value| {
-        cells.push(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
-        part_state.set_cell((cells.len() - 1) as i16);
+        result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     });
     part.position_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSX])).map(|(val, mask)| {
@@ -128,18 +140,15 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     });
 
     part.part_color_array().and_then(|arr| evaluate_partcolor(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPARTCOLOR])).map(|(val, mask)| {
-        parts_color.push(val);
-        part_state.set_part_color((parts_color.len() - 1) as i16);
+        result.part_color = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor & mask;
     });
     part.shader_array().and_then(|arr| evaluate_shader(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESHADER])).map(|(val, mask)| {
-        shaders.push(val);
-        part_state.set_shader((shaders.len() - 1) as i16);
+        result.shader = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader & mask;
     });
     part.vertex_array().and_then(|arr| evaluate_vertex(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEVERTEX])).map(|(val, mask)| {
-        vertices.push(val);
-        part_state.set_vertex((vertices.len() - 1) as i16);
+        result.vertex = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex & mask;
     });
 
@@ -209,9 +218,8 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
         part_state.set_skew_y(val_y);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     });
-    part.deform_array().and_then(|arr| evaluate_deform(fb, arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM])).map(|(val, mask)| {
-        deforms.push(val);
-        part_state.set_deform((deforms.len() - 1) as i16);
+    part.deform_array().and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM])).map(|(val, mask)| {
+        result.deform = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform & mask;
     });
     part.texture_array().and_then(|arr| evaluate_texture(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTETEXTURE])).map(|val| {
@@ -223,7 +231,8 @@ fn get_part<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
         return None;
     }
     part_state.set_update_flag(update_flag);
-    Some(part_state)
+    result.state = part_state;
+    Some(result)
 }
 
 fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
@@ -251,8 +260,36 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
 
     for (i, part) in p.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES .. (i + 1) * NUM_PART_ATTRIBUTES];
-        if let Some(state) = get_part(fb, &part, i as i16, frame_no, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, part_cursors) {
-            parts_vec.push(state);
+        if let Some(mut result) = evaluate_part(&part, i as i16, frame_no, part_cursors) {
+            if let Some(cell) = result.cell {
+                cell_vec.push(cell);
+                result.state.set_cell((cell_vec.len() - 1) as i16);
+            }
+            if let Some(part_color) = result.part_color {
+                parts_color_vec.push(part_color);
+                result.state.set_part_color((parts_color_vec.len() - 1) as i16);
+            }
+            if let Some(shader) = result.shader {
+                shader_vec.push(shader);
+                result.state.set_shader((shader_vec.len() - 1) as i16);
+            }
+            if let Some(vertex) = result.vertex {
+                vertice_vec.push(vertex);
+                result.state.set_vertex((vertice_vec.len() - 1) as i16);
+            }
+            if let Some(deform_data) = result.deform {
+                let mut args = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
+                if !deform_data.coordinate.is_empty() {
+                    args.coordinate = Some(fb.create_vector(&deform_data.coordinate));
+                }
+                if !deform_data.index.is_empty() {
+                    args.index = Some(fb.create_vector(&deform_data.index));
+                }
+                let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &args);
+                deform_vec.push(deform_off);
+                result.state.set_deform((deform_vec.len() - 1) as i16);
+            }
+            parts_vec.push(result.state);
         }
     }
 
