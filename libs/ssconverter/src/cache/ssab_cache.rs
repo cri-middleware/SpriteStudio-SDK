@@ -1190,6 +1190,7 @@ impl<'a> SsabCache<'a> {
         }
         let mut args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs::default();
         args.index = part_animation_data_float_value_t.index;
+        args.interpolation = part_animation_data_float_value_t.interpolation;
         args.value = part_animation_data_float_value_t.value;
         let offset = ssab::ssab::ss::format::PartAnimationDataFloatValue::create(fb, &args);
         self.part_animation_data_float_value_cache.insert(key, offset);
@@ -1215,6 +1216,7 @@ impl<'a> SsabCache<'a> {
         }
         let mut args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs::default();
         args.index = part_animation_data_int_value_t.index;
+        args.interpolation = part_animation_data_int_value_t.interpolation;
         args.value = part_animation_data_int_value_t.value;
         let offset = ssab::ssab::ss::format::PartAnimationDataIntValue::create(fb, &args);
         self.part_animation_data_int_value_cache.insert(key, offset);
@@ -1239,6 +1241,7 @@ impl<'a> SsabCache<'a> {
         }
         let mut args = ssab::ssab::ss::format::PartAnimationDataUIntValueArgs::default();
         args.index = part_animation_data_uint_value_t.index;
+        args.interpolation = part_animation_data_uint_value_t.interpolation;
         args.value = part_animation_data_uint_value_t.value;
         let offset = ssab::ssab::ss::format::PartAnimationDataUIntValue::create(fb, &args);
         self.part_animation_data_uint_value_cache.insert(key, offset);
