@@ -43,6 +43,95 @@ const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateA
 const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
 
+#[derive(Clone)]
+pub struct CachedPartData<'a> {
+    pub part_index: i16,
+    pub cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
+    pub position_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub position_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub position_z_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub rotation_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub rotation_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub rotation_z_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub scale_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub scale_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub local_scale_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub local_scale_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub alpha_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub local_alpha_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub priority_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'a>>>>,
+    pub flip_h_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>>,
+    pub flip_v_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>>,
+    pub hide_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>>,
+    pub part_color_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'a>>>>,
+    pub shader_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataShader<'a>>>>,
+    pub vertex_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'a>>>>,
+    pub pivot_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub pivot_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub anchor_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub anchor_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub size_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub size_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub img_flip_h_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>>,
+    pub img_flip_v_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'a>>>>,
+    pub uv_translation_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub uv_translation_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub uv_rotation_z_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub uv_scale_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub uv_scale_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub bounding_radius_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub mask_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
+    pub skew_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'a>>>>,
+    pub deform_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>>,
+    pub texture_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>>>>,
+}
+
+impl<'a> CachedPartData<'a> {
+    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16) -> Self {
+        Self {
+            part_index,
+            cell_array: part.cell_array(),
+            position_x_array: part.position_x_array(),
+            position_y_array: part.position_y_array(),
+            position_z_array: part.position_z_array(),
+            rotation_x_array: part.rotation_x_array(),
+            rotation_y_array: part.rotation_y_array(),
+            rotation_z_array: part.rotation_z_array(),
+            scale_x_array: part.scale_x_array(),
+            scale_y_array: part.scale_y_array(),
+            local_scale_x_array: part.local_scale_x_array(),
+            local_scale_y_array: part.local_scale_y_array(),
+            alpha_array: part.alpha_array(),
+            local_alpha_array: part.local_alpha_array(),
+            priority_array: part.priority_array(),
+            flip_h_array: part.flip_h_array(),
+            flip_v_array: part.flip_v_array(),
+            hide_array: part.hide_array(),
+            part_color_array: part.part_color_array(),
+            shader_array: part.shader_array(),
+            vertex_array: part.vertex_array(),
+            pivot_x_array: part.pivot_x_array(),
+            pivot_y_array: part.pivot_y_array(),
+            anchor_x_array: part.anchor_x_array(),
+            anchor_y_array: part.anchor_y_array(),
+            size_x_array: part.size_x_array(),
+            size_y_array: part.size_y_array(),
+            img_flip_h_array: part.img_flip_h_array(),
+            img_flip_v_array: part.img_flip_v_array(),
+            uv_translation_x_array: part.uv_translation_x_array(),
+            uv_translation_y_array: part.uv_translation_y_array(),
+            uv_rotation_z_array: part.uv_rotation_z_array(),
+            uv_scale_x_array: part.uv_scale_x_array(),
+            uv_scale_y_array: part.uv_scale_y_array(),
+            bounding_radius_array: part.bounding_radius_array(),
+            mask_array: part.mask_array(),
+            skew_array: part.skew_array(),
+            deform_array: part.deform_array(),
+            texture_array: part.texture_array(),
+        }
+    }
+}
+
 pub struct PartEvaluationResult {
     pub state: runtime::framedata::ss::runtime::PartState,
     pub cell: Option<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -52,8 +141,7 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-fn evaluate_part(part: &ssab::ssab::ss::format::PartAnimationData,
-                part_index: i16,
+fn evaluate_part(cached_part: &CachedPartData,
                 frame_no: i32,
                 part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
@@ -68,161 +156,165 @@ fn evaluate_part(part: &ssab::ssab::ss::format::PartAnimationData,
         deform: None,
     };
 
-    part_state.set_part_index(part_index);
+    part_state.set_part_index(cached_part.part_index);
 
-    part.cell_array().and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])).map(|value| {
+    // Note: Calling `clone()` on `flatbuffers::Vector` here is extremely cheap and does NOT cause 
+    // memory fragmentation or heap allocation. `flatbuffers::Vector` is just a lightweight view 
+    // (a pointer and a length) into the underlying byte buffer. This shallow copy is necessary 
+    // to satisfy Rust's ownership rules when consuming the `Option` via `and_then` from a reference.
+    cached_part.cell_array.clone().and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])).map(|value| {
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     });
-    part.position_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSX])).map(|(val, mask)| {
+    cached_part.position_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSX])).map(|(val, mask)| {
         part_state.set_position_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX & mask;
     });
-    part.position_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSY])).map(|(val, mask)| {
+    cached_part.position_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSY])).map(|(val, mask)| {
         part_state.set_position_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosY & mask;
     });
-    part.position_z_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSZ])).map(|(val, mask)| {
+    cached_part.position_z_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSZ])).map(|(val, mask)| {
         part_state.set_position_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosZ & mask;
     });
-    part.rotation_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEROTX])).map(|(val, mask)| {
+    cached_part.rotation_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEROTX])).map(|(val, mask)| {
         part_state.set_rotation_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotX & mask;
     });
-    part.rotation_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEROTY])).map(|(val, mask)| {
+    cached_part.rotation_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEROTY])).map(|(val, mask)| {
         part_state.set_rotation_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotY & mask;
     });
-    part.rotation_z_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEROTZ])).map(|(val, mask)| {
+    cached_part.rotation_z_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEROTZ])).map(|(val, mask)| {
         part_state.set_rotation_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotZ & mask;
     });
-    part.scale_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESCLX])).map(|(val, mask)| {
+    cached_part.scale_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESCLX])).map(|(val, mask)| {
         part_state.set_scale_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSclX & mask;
     });
-    part.scale_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESCLY])).map(|(val, mask)| {
+    cached_part.scale_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESCLY])).map(|(val, mask)| {
         part_state.set_scale_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSclY & mask;
     });
-    part.local_scale_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTELOSCLX])).map(|(val, mask)| {
+    cached_part.local_scale_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTELOSCLX])).map(|(val, mask)| {
         part_state.set_local_scale_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLosclX & mask;
     });
-    part.local_scale_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTELOSCLY])).map(|(val, mask)| {
+    cached_part.local_scale_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTELOSCLY])).map(|(val, mask)| {
         part_state.set_local_scale_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLosclY & mask;
     });
-    part.alpha_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEALPHA])).map(|(val, mask)| {
+    cached_part.alpha_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEALPHA])).map(|(val, mask)| {
         part_state.set_alpha(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAlpha & mask;
     });
-    part.local_alpha_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTELOALPHA])).map(|(val, mask)| {
+    cached_part.local_alpha_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTELOALPHA])).map(|(val, mask)| {
         part_state.set_local_alpha(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLoAlpha & mask;
     });
-    part.priority_array().and_then(|arr| evaluate_int(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPRIO])).map(|(val, mask)| {
+    cached_part.priority_array.clone().and_then(|arr| evaluate_int(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPRIO])).map(|(val, mask)| {
         part_state.set_priority(val as f32);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePrio & mask;
     });
-    part.flip_h_array().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEFLIPH])).map(|val| {
+    cached_part.flip_h_array.clone().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEFLIPH])).map(|val| {
         part_state.set_flip_h(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipH;
     });
-    part.flip_v_array().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEFLIPV])).map(|val| {
+    cached_part.flip_v_array.clone().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEFLIPV])).map(|val| {
         part_state.set_flip_v(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeFlipV;
     });
-    part.hide_array().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEHIDE])).map(|val| {
+    cached_part.hide_array.clone().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEHIDE])).map(|val| {
         part_state.set_hide(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeHide;
     });
 
-    part.part_color_array().and_then(|arr| evaluate_partcolor(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPARTCOLOR])).map(|(val, mask)| {
+    cached_part.part_color_array.clone().and_then(|arr| evaluate_partcolor(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPARTCOLOR])).map(|(val, mask)| {
         result.part_color = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor & mask;
     });
-    part.shader_array().and_then(|arr| evaluate_shader(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESHADER])).map(|(val, mask)| {
+    cached_part.shader_array.clone().and_then(|arr| evaluate_shader(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESHADER])).map(|(val, mask)| {
         result.shader = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader & mask;
     });
-    part.vertex_array().and_then(|arr| evaluate_vertex(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEVERTEX])).map(|(val, mask)| {
+    cached_part.vertex_array.clone().and_then(|arr| evaluate_vertex(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEVERTEX])).map(|(val, mask)| {
         result.vertex = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex & mask;
     });
 
-    part.pivot_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPIVOTX])).map(|(val, mask)| {
+    cached_part.pivot_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPIVOTX])).map(|(val, mask)| {
         part_state.set_pivot_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePivotX & mask;
     });
-    part.pivot_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPIVOTY])).map(|(val, mask)| {
+    cached_part.pivot_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPIVOTY])).map(|(val, mask)| {
         part_state.set_pivot_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePivotY & mask;
     });
-    part.anchor_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEANCHORX])).map(|(val, mask)| {
+    cached_part.anchor_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEANCHORX])).map(|(val, mask)| {
         part_state.set_anchor_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAnchorX & mask;
     });
-    part.anchor_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEANCHORY])).map(|(val, mask)| {
+    cached_part.anchor_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEANCHORY])).map(|(val, mask)| {
         part_state.set_anchor_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeAnchorY & mask;
     });
-    part.size_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESIZEX])).map(|(val, mask)| {
+    cached_part.size_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESIZEX])).map(|(val, mask)| {
         part_state.set_size_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeX & mask;
     });
-    part.size_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESIZEY])).map(|(val, mask)| {
+    cached_part.size_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESIZEY])).map(|(val, mask)| {
         part_state.set_size_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeY & mask;
     });
-    part.img_flip_h_array().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEIMGFLIPH])).map(|val| {
+    cached_part.img_flip_h_array.clone().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEIMGFLIPH])).map(|val| {
         part_state.set_img_flip_h(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeImgFlipH;
     });
-    part.img_flip_v_array().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEIMGFLIPV])).map(|val| {
+    cached_part.img_flip_v_array.clone().and_then(|arr| evaluate_bool(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEIMGFLIPV])).map(|val| {
         part_state.set_img_flip_v(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeImgFlipV;
     });
-    part.uv_translation_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVTX])).map(|(val, mask)| {
+    cached_part.uv_translation_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVTX])).map(|(val, mask)| {
         part_state.set_uv_translation_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvtX & mask;
     });
-    part.uv_translation_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVTY])).map(|(val, mask)| {
+    cached_part.uv_translation_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVTY])).map(|(val, mask)| {
         part_state.set_uv_translation_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvtY & mask;
     });
-    part.uv_rotation_z_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVRZ])).map(|(val, mask)| {
+    cached_part.uv_rotation_z_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVRZ])).map(|(val, mask)| {
         part_state.set_uv_rotation_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvrZ & mask;
     });
-    part.uv_scale_x_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVSX])).map(|(val, mask)| {
+    cached_part.uv_scale_x_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVSX])).map(|(val, mask)| {
         part_state.set_uv_scale_x(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvsX & mask;
     });
-    part.uv_scale_y_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVSY])).map(|(val, mask)| {
+    cached_part.uv_scale_y_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEUVSY])).map(|(val, mask)| {
         part_state.set_uv_scale_y(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeUvsY & mask;
     });
-    part.bounding_radius_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEBOUNDR])).map(|(val, mask)| {
+    cached_part.bounding_radius_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEBOUNDR])).map(|(val, mask)| {
         part_state.set_bounding_radius(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeBoundr & mask;
     });
-    part.mask_array().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEMASK])).map(|(val, mask)| {
+    cached_part.mask_array.clone().and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEMASK])).map(|(val, mask)| {
         part_state.set_mask(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeMask & mask;
     });
 
-    part.skew_array().and_then(|arr| evaluate_skew(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESKEW])).map(|(val_x, val_y, mask)| {
+    cached_part.skew_array.clone().and_then(|arr| evaluate_skew(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESKEW])).map(|(val_x, val_y, mask)| {
         part_state.set_skew_x(val_x);
         part_state.set_skew_y(val_y);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     });
-    part.deform_array().and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM])).map(|(val, mask)| {
+    cached_part.deform_array.clone().and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM])).map(|(val, mask)| {
         result.deform = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform & mask;
     });
-    part.texture_array().and_then(|arr| evaluate_texture(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTETEXTURE])).map(|val| {
+    cached_part.texture_array.clone().and_then(|arr| evaluate_texture(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTETEXTURE])).map(|val| {
         part_state.set_texture(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture;
     });
@@ -236,7 +328,7 @@ fn evaluate_part(part: &ssab::ssab::ss::format::PartAnimationData,
 }
 
 fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                 p: &flatbuffers::Vector<::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationData>>,
+                 cached_parts: &[CachedPartData<'a>],
                  frame_no: i32,
                  parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
                  cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -258,9 +350,9 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     vertice_vec.clear();
     deform_vec.clear();
 
-    for (i, part) in p.iter().enumerate() {
+    for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES .. (i + 1) * NUM_PART_ATTRIBUTES];
-        if let Some(mut result) = evaluate_part(&part, i as i16, frame_no, part_cursors) {
+        if let Some(mut result) = evaluate_part(part, frame_no, part_cursors) {
             if let Some(cell) = result.cell {
                 cell_vec.push(cell);
                 result.state.set_cell((cell_vec.len() - 1) as i16);
@@ -314,9 +406,8 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     } else { *deforms_off = None; }
 }
 
-
 pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                          animation: &ssab::ssab::ss::format::AnimationData,
+                          cached_parts: &[CachedPartData<'a>],
                           frame_no: i32,
                           parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
                           cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -333,11 +424,9 @@ pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
     let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    if let Some(parts_animation_data) = animation.parts_animation_data() {
-        get_parts(fb, &parts_animation_data, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors);
-        if !parts_vec.is_empty() {
-            args.parts = Some(fb.create_vector(&parts_vec));
-        }
+    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors);
+    if !parts_vec.is_empty() {
+        args.parts = Some(fb.create_vector(&parts_vec));
     }
 
     args.cells = cells_off;

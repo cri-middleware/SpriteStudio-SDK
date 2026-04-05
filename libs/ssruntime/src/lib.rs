@@ -45,6 +45,7 @@ struct ContextBuffers<'a> {
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
+    cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -57,6 +58,7 @@ impl<'a> ContextBuffers<'a> {
             vertice_vec: Vec::new(),
             deform_vec: Vec::new(),
             cursors: Vec::new(),
+            cached_parts: Vec::new(),
         }
     }
 }
@@ -124,6 +126,9 @@ impl<'a> Context<'a> {
         let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
+        // Extend the lifetime of ssab_buf to 'a so we can cache the flatbuffer objects
+        // This is safe because ssab_data is owned by Context and we clear the cache on load/reset.
+        let ssab_buf: &'a [u8] = unsafe { ::core::mem::transmute(ssab_buf) };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == ::core::cmp::Ordering::Equal })
@@ -141,13 +146,18 @@ impl<'a> Context<'a> {
         let mut vertex_c = 0;
         let mut deform_c = 0;
 
+        self.buffers.cached_parts.clear();
+        self.buffers.cached_parts.reserve(num_parts);
+
         if let Some(parts) = animation.parts_animation_data() {
-            for p in parts.iter() {
+            for (i, p) in parts.iter().enumerate() {
                 if p.cell_array().is_some() { cell_c += 1; }
                 if p.part_color_array().is_some() { color_c += 1; }
                 if p.shader_array().is_some() { shader_c += 1; }
                 if p.vertex_array().is_some() { vertex_c += 1; }
                 if p.deform_array().is_some() { deform_c += 1; }
+                
+                self.buffers.cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16));
             }
         }
 
@@ -184,7 +194,7 @@ impl<'a> Context<'a> {
         self.fb.reset();
         let offset = core::framedata::get_frame_data(
             &mut self.fb,
-            &animation,
+            &self.buffers.cached_parts,
             frame_no,
             &mut self.buffers.parts_vec,
             &mut self.buffers.cell_vec,
