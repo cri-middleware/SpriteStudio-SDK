@@ -409,6 +409,17 @@ mod tests {
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 0.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        }
+
+        // Test frame 5 (interpolating)
+        {
+            let frame_data_buf = context.get_frame_data(5).expect("Failed to get frame data at frame 5");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 16.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
 
         // Test frame 10
@@ -418,6 +429,18 @@ mod tests {
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        }
+
+        // Test frame 11 (not interpolating, no key)
+        {
+            let frame_data_buf = context.get_frame_data(11).expect("Failed to get frame data at frame 11");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 32.0);
+            // Should NOT contain AttributePosX update flag because it's not a keyframe and no interpolation
+            assert!(!part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
     }
 
