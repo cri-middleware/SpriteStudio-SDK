@@ -2,8 +2,8 @@ use ssab::ssab::ss::format::{InterpolationType, SsAttributePartColorKeyValueColo
 use ssinterpolate::interpolate::*;
 use crate::runtime;
 
-const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
-const UPDATE_FLAG_OFF: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::all();
+const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::all();
+const UPDATE_FLAG_OFF: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
 #[inline]
 pub fn get_interpolated_rate(interpolation: InterpolationType, rate: f32) -> f32 {
@@ -176,7 +176,11 @@ pub fn evaluate_float(
 
             (linear(prev.value(), next.value(), rate), UPDATE_FLAG_ON)
         } else {
-            (prev.value(), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (prev.value(), UPDATE_FLAG_ON)
+            } else {
+                (prev.value(), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
@@ -203,7 +207,11 @@ pub fn evaluate_int(
 
             (libm::roundf(linear(prev.value() as f32, next.value() as f32, rate)) as i32, UPDATE_FLAG_ON)
         } else {
-            (prev.value(), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (prev.value(), UPDATE_FLAG_ON)
+            } else {
+                (prev.value(), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
@@ -254,7 +262,11 @@ pub fn evaluate_partcolor(
 
             (current, UPDATE_FLAG_ON)
         } else {
-            (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON)
+            } else {
+                (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
@@ -344,7 +356,11 @@ pub fn evaluate_shader(
                 UPDATE_FLAG_ON
             )
         } else {
-            (transfer_shader(&prev.value()), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (transfer_shader(&prev.value()), UPDATE_FLAG_ON)
+            } else {
+                (transfer_shader(&prev.value()), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
@@ -411,7 +427,11 @@ pub fn evaluate_vertex(
              UPDATE_FLAG_ON
             )
         } else {
-            (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (transfer_vertex(&prev.value()), UPDATE_FLAG_ON)
+            } else {
+                (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
@@ -458,7 +478,11 @@ pub fn evaluate_skew(
             )
         } else {
             let prev_value = prev.value().unwrap();
-            (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON)
+            } else {
+                (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
@@ -521,7 +545,11 @@ pub fn evaluate_deform(
                 (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
             }
         } else {
-            (transfer_deform(&prev.value()), UPDATE_FLAG_OFF)
+            if prev.index() as i32 == frame_no {
+                (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
+            } else {
+                (transfer_deform(&prev.value()), UPDATE_FLAG_OFF)
+            }
         }
     })
 }
