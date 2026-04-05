@@ -26,9 +26,8 @@ pub fn get_interpolated_rate(interpolation: InterpolationType, rate: f32) -> f32
     }
 }
 
-// Optimized for forward playback (O(1) fast path). Reverse or ping-pong playback 
-// currently fallbacks to binary search (O(log N)). Bidirectional optimization 
-// can be implemented if performance bottlenecks occur in those modes.
+// Optimized for both forward and reverse playback (O(1) fast path).
+// Long distance seeks will fallback to binary search (O(log N)).
 #[inline]
 pub fn search_prev_next<'a, T, F>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>,
@@ -48,20 +47,38 @@ where
         i = len - 1;
     }
     
-    let curr_val = array.get(i);
+    let mut curr_val = array.get(i);
     let curr_idx = get_index(&curr_val);
     
     if curr_idx <= frame_no {
-        if i + 1 < len {
+        let mut checks = 0;
+        while i + 1 < len && checks < 4 {
             let next_val = array.get(i + 1);
             let next_idx = get_index(&next_val);
             if frame_no < next_idx {
                 *hint = i;
                 return Some((curr_val, Some(next_val)));
             }
-        } else {
+            i += 1;
+            curr_val = next_val;
+            checks += 1;
+        }
+        if i + 1 == len {
             *hint = i;
             return Some((curr_val, None));
+        }
+    } else {
+        let mut checks = 0;
+        let mut local_i = i;
+        while local_i > 0 && checks < 4 {
+            local_i -= 1;
+            let prev_val = array.get(local_i);
+            let prev_idx = get_index(&prev_val);
+            if prev_idx <= frame_no {
+                *hint = local_i;
+                return Some((prev_val, Some(array.get(local_i + 1))));
+            }
+            checks += 1;
         }
     }
 
@@ -93,9 +110,8 @@ where
     Some((prev, Some(next)))
 }
 
-// Optimized for forward playback (O(1) fast path). Reverse or ping-pong playback 
-// currently fallbacks to binary search (O(log N)). Bidirectional optimization 
-// can be implemented if performance bottlenecks occur in those modes.
+// Optimized for both forward and reverse playback (O(1) fast path).
+// Long distance seeks will fallback to binary search (O(log N)).
 #[inline]
 pub fn search_prev<'a, T, F>(
     array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>,
@@ -115,20 +131,38 @@ where
         i = len - 1;
     }
     
-    let curr_val = array.get(i);
+    let mut curr_val = array.get(i);
     let curr_idx = get_index(&curr_val);
     
     if curr_idx <= frame_no {
-        if i + 1 < len {
+        let mut checks = 0;
+        while i + 1 < len && checks < 4 {
             let next_val = array.get(i + 1);
             let next_idx = get_index(&next_val);
             if frame_no < next_idx {
                 *hint = i;
                 return Some(curr_val);
             }
-        } else {
+            i += 1;
+            curr_val = next_val;
+            checks += 1;
+        }
+        if i + 1 == len {
             *hint = i;
             return Some(curr_val);
+        }
+    } else {
+        let mut checks = 0;
+        let mut local_i = i;
+        while local_i > 0 && checks < 4 {
+            local_i -= 1;
+            let prev_val = array.get(local_i);
+            let prev_idx = get_index(&prev_val);
+            if prev_idx <= frame_no {
+                *hint = local_i;
+                return Some(prev_val);
+            }
+            checks += 1;
         }
     }
 
@@ -153,6 +187,7 @@ where
         Some(array.get(left - 1))
     }
 }
+
 
 #[inline]
 pub fn evaluate_float(
