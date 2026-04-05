@@ -1636,30 +1636,38 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 }, convert_part_animation_data_expand_key_shader);
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
-                v.keys.iter().for_each(|key| {
+                let mut skew_keys = Vec::new();
+                let mut vertex_keys = Vec::new();
+                for key in &v.keys {
                     if key.value.use_skew.unwrap_or(false) {
-                        process_interpolatable_attribute!(std::slice::from_ref(key), p_arg.skew_array, ssab::ssab::ss::format::PartAnimationDataVec2T, |k: &sspj::ssattribute::SsAttributeVertexKey| {
-                            k.value.skew.as_ref().map(|v| {
-                                let mut val = ssab::ssab::ss::format::Vec2T::default();
-                                val.v1 = v.x; val.v2 = v.y;
-                                Box::new(val)
-                            })
-                        }, convert_part_animation_data_expand_key_skew);
+                        skew_keys.push(key);
                     } else {
-                        process_interpolatable_attribute!(std::slice::from_ref(key), p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
-                            let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            k.value.lt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lt = Some(Box::new(c));
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            k.value.rt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rt = Some(Box::new(c));
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            k.value.lb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lb = Some(Box::new(c));
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            k.value.rb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rb = Some(Box::new(c));
-                            Some(Box::new(value))
-                        }, convert_part_animation_data_expand_key_vertex);
+                        vertex_keys.push(key);
                     }
-                });
+                }
+                if !skew_keys.is_empty() {
+                    process_interpolatable_attribute!(&skew_keys, p_arg.skew_array, ssab::ssab::ss::format::PartAnimationDataVec2T, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                        k.value.skew.as_ref().map(|v| {
+                            let mut val = ssab::ssab::ss::format::Vec2T::default();
+                            val.v1 = v.x; val.v2 = v.y;
+                            Box::new(val)
+                        })
+                    }, convert_part_animation_data_expand_key_skew);
+                }
+                if !vertex_keys.is_empty() {
+                    process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                        let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
+                        let mut c = ssab::ssab::ss::format::Vec2T::default();
+                        k.value.lt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lt = Some(Box::new(c));
+                        let mut c = ssab::ssab::ss::format::Vec2T::default();
+                        k.value.rt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rt = Some(Box::new(c));
+                        let mut c = ssab::ssab::ss::format::Vec2T::default();
+                        k.value.lb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lb = Some(Box::new(c));
+                        let mut c = ssab::ssab::ss::format::Vec2T::default();
+                        k.value.rb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rb = Some(Box::new(c));
+                        Some(Box::new(value))
+                    }, convert_part_animation_data_expand_key_vertex);
+                }
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
                 process_interpolatable_attribute!(&v.keys, p_arg.deform_array, ssab::ssab::ss::format::PartAnimationDataDeformT, |k: &sspj::ssattribute::SsAttributeDeformKey| {
