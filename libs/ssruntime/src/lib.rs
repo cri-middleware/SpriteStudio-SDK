@@ -87,6 +87,8 @@ impl<'a> Context<'a> {
         self.controller.reset_setup();
         self.fb.reset();
         self.animation_idx = -1;
+        self.buffers.cached_parts.clear();
+        self.buffers.cursors.clear();
     }
 
     fn validate_ssab_data(&self, buf: &[u8]) -> Result<(), error::SSRuntimeError> {
@@ -103,6 +105,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<(), error::SSRuntimeError> {
+        self.reset();
         self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
             return Err(error::SSRuntimeError::EmptyData);
@@ -111,6 +114,7 @@ impl<'a> Context<'a> {
     }
 
     pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<(), error::SSRuntimeError> {
+        self.reset();
         self.ssab_data = Some(SsabStorage::Borrowed { ptr, len });
         let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
             return Err(error::SSRuntimeError::EmptyData);
