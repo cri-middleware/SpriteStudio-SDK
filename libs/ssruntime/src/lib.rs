@@ -28,12 +28,10 @@ enum SsabStorage {
 }
 impl SsabStorage {
      fn as_slice(&self) -> &[u8] {
-        unsafe {
-            match self {
-                SsabStorage::Owned(vec) => vec.as_slice(),
-                SsabStorage::Borrowed { ptr, len } => ::core::slice::from_raw_parts(*ptr, *len),
-            }
-        }
+         match self {
+             SsabStorage::Owned(vec) => vec.as_slice(),
+             SsabStorage::Borrowed { ptr, len } => unsafe { ::core::slice::from_raw_parts(*ptr, *len) },
+         }
     }
 }
 
@@ -235,7 +233,7 @@ impl<'a> Context<'a> {
         self.controller.is_pausing()
     }
 
-    pub fn get_skip_frames(&mut self) -> bool {
+    pub fn get_skip_frames(&self) -> bool {
         self.controller.get_skip_frames()
     }
 
@@ -247,11 +245,11 @@ impl<'a> Context<'a> {
         self.controller.get_playback_style()
     }
 
-    pub fn get_loops(&mut self) -> i32 {
+    pub fn get_loops(&self) -> i32 {
         self.controller.get_loops()
     }
 
-    pub fn get_remain_loops(&mut self) -> i32 {
+    pub fn get_remain_loops(&self) -> i32 {
         self.controller.get_remain_loops()
     }
 

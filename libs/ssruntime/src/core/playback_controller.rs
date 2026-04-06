@@ -57,7 +57,7 @@ impl PlaybackController {
         self.is_pausing
     }
 
-    pub fn get_skip_frames(&mut self) -> bool {
+    pub fn get_skip_frames(&self) -> bool {
         self.is_skip_frames
     }
 
@@ -69,11 +69,11 @@ impl PlaybackController {
         self.playback_style
     }
 
-    pub fn get_loops(&mut self) -> i32 {
+    pub fn get_loops(&self) -> i32 {
         self.loops
     }
 
-    pub fn get_remain_loops(&mut self) -> i32 {
+    pub fn get_remain_loops(&self) -> i32 {
         self.remain_loops
     }
 
@@ -177,7 +177,7 @@ impl PlaybackController {
      * n: loop n times
      */
     pub fn set_loops(&mut self, loops: i32) {
-        self.loops = if loops > 0 {loops} else {-1};
+        self.loops = if loops >= 0 {loops} else {-1};
         self.remain_loops = loops;
     }
 
