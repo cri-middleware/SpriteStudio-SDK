@@ -94,7 +94,7 @@ where
 
     let outdir_path = match &config.output {
         Some(out_dir) => std::path::PathBuf::from(&out_dir),
-        None => crate::utils::get_ssab_outout_directory(path, config.convert_config.embedded)?
+        None => crate::utils::get_ssab_output_directory(path, config.convert_config.embedded)?
     };
 
     if asset_provider.is_zip() {
