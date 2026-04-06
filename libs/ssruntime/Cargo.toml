@@ -1,14 +1,14 @@
 [package]
 name = "ssruntime"
 version = "7.0.0"
-edition = "2024"
+edition.workspace = true
 
 [dependencies]
-flatbuffers = { version = "25.12.19", default-features = false }
-ssab = { path = "../ssab", default-features = false }
-ssinterpolate = { path = "../ssinterpolate" }
-libm = "0.2.16"
-wasm-bindgen = { version = "0.2.108", optional = true }
+flatbuffers = { workspace = true }
+ssab = { workspace = true }
+ssinterpolate = { workspace = true }
+libm = { workspace = true }
+wasm-bindgen = { workspace = true, optional = true }
 
 [features]
 default = ["ffi", "std"]
@@ -17,11 +17,11 @@ web = ["wasm-bindgen"]
 std = ["flatbuffers/std", "ssab/std"]
 
 [dev-dependencies]
-ssconverter = { path = "../ssconverter" }
+ssconverter = { workspace = true }
 
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 
 [build-dependencies]
-cbindgen = "0.29.2"
+cbindgen = { workspace = true }
 csbindgen = "1.9.7"

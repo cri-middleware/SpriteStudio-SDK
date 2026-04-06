@@ -1,12 +1,12 @@
 [package]
 name = "ssinterpolate"
 version = "7.0.0"
-edition = "2024"
+edition.workspace = true
 
 [features]
 default = []
 ffi = []
 
 [dependencies]
-libm = "0.2.16"
+libm = { workspace = true }
 wide = { version = "1.2.0", default-features = false }

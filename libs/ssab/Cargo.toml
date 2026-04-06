@@ -1,10 +1,10 @@
 [package]
 name = "ssab"
 version = "7.0.0"
-edition = "2024"
+edition.workspace = true
 
 [dependencies]
-flatbuffers = { version = "25.12.19", default-features = false }
+flatbuffers = { workspace = true }
 
 [features]
 default = ["std"]
