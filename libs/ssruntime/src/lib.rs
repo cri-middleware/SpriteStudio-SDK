@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), not(test)))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
     loop {}
@@ -40,21 +40,25 @@ impl SsabStorage {
 struct ContextBuffers<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
-    parts_colo_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    parts_color_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    cursors: Vec<usize>,
+    cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
         Self {
-            parts_vec: Vec::with_capacity(32),
-            cell_vec: Vec::with_capacity(32),
-            parts_colo_vec: Vec::with_capacity(32),
-            shader_vec: Vec::with_capacity(32),
-            vertice_vec: Vec::with_capacity(32),
-            deform_vec: Vec::with_capacity(32),
+            parts_vec: Vec::new(),
+            cell_vec: Vec::new(),
+            parts_color_vec: Vec::new(),
+            shader_vec: Vec::new(),
+            vertice_vec: Vec::new(),
+            deform_vec: Vec::new(),
+            cursors: Vec::new(),
+            cached_parts: Vec::new(),
         }
     }
 }
@@ -122,6 +126,9 @@ impl<'a> Context<'a> {
         let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
+        // Extend the lifetime of ssab_buf to 'a so we can cache the flatbuffer objects
+        // This is safe because ssab_data is owned by Context and we clear the cache on load/reset.
+        let ssab_buf: &'a [u8] = unsafe { ::core::mem::transmute(ssab_buf) };
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         let Some((index, animation)) = ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == ::core::cmp::Ordering::Equal })
@@ -130,6 +137,40 @@ impl<'a> Context<'a> {
         };
         self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
         self.animation_idx = index as i32;
+
+        let num_parts = animation.parts_animation_data().map(|p| p.len()).unwrap_or(0);
+
+        let mut cell_c = 0;
+        let mut color_c = 0;
+        let mut shader_c = 0;
+        let mut vertex_c = 0;
+        let mut deform_c = 0;
+
+        self.buffers.cached_parts.clear();
+        self.buffers.cached_parts.reserve(num_parts);
+
+        if let Some(parts) = animation.parts_animation_data() {
+            for (i, p) in parts.iter().enumerate() {
+                if p.cell_array().is_some() { cell_c += 1; }
+                if p.part_color_array().is_some() { color_c += 1; }
+                if p.shader_array().is_some() { shader_c += 1; }
+                if p.vertex_array().is_some() { vertex_c += 1; }
+                if p.deform_array().is_some() { deform_c += 1; }
+                
+                self.buffers.cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16));
+            }
+        }
+
+        self.buffers.parts_vec.reserve(num_parts);
+        self.buffers.cell_vec.reserve(cell_c);
+        self.buffers.parts_color_vec.reserve(color_c);
+        self.buffers.shader_vec.reserve(shader_c);
+        self.buffers.vertice_vec.reserve(vertex_c);
+        self.buffers.deform_vec.reserve(deform_c);
+
+        self.buffers.cursors.clear();
+        self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+
         Ok(())
     }
 
@@ -153,14 +194,15 @@ impl<'a> Context<'a> {
         self.fb.reset();
         let offset = core::framedata::get_frame_data(
             &mut self.fb,
-            &animation,
+            &self.buffers.cached_parts,
             frame_no,
             &mut self.buffers.parts_vec,
             &mut self.buffers.cell_vec,
-            &mut self.buffers.parts_colo_vec,
+            &mut self.buffers.parts_color_vec,
             &mut self.buffers.shader_vec,
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
+            &mut self.buffers.cursors,
         );
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
@@ -319,7 +361,7 @@ mod tests {
             if !ssab_dir.exists() {
                 let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
                 let config = ssconverter::ConverterConfig::default();
-                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|msg: &str| { });
+                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|_msg: &str| { });
             }
         });
     }
@@ -377,6 +419,17 @@ mod tests {
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 0.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        }
+
+        // Test frame 5 (interpolating)
+        {
+            let frame_data_buf = context.get_frame_data(5).expect("Failed to get frame data at frame 5");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 16.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
 
         // Test frame 10
@@ -386,6 +439,18 @@ mod tests {
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        }
+
+        // Test frame 11 (not interpolating, no key)
+        {
+            let frame_data_buf = context.get_frame_data(11).expect("Failed to get frame data at frame 11");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 32.0);
+            // Should NOT contain AttributePosX update flag because it's not a keyframe and no interpolation
+            assert!(!part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
     }
 
@@ -425,5 +490,65 @@ mod tests {
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert_eq!(hide_state_2.hide(), true);
+    }
+
+    #[test]
+    fn test_deform_animation() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7_ssab/deform.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
+        
+        let mut context = Context::new();
+        context.load_copy(&input_buf).expect("Failed to load ssab");
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        
+        // Find a part that has deform animation
+        let mut deform_part_idx = -1;
+        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.key_compare_with_value("anime_1") == ::core::cmp::Ordering::Equal)) {
+            if let Some(parts_anime) = animation.parts_animation_data() {
+                for (idx, p_anime) in parts_anime.iter().enumerate() {
+                    if p_anime.deform_array().is_some() {
+                        deform_part_idx = idx as i32;
+                        break;
+                    }
+                }
+            }
+        }
+        assert!(deform_part_idx >= 0, "No part with deform animation found in anime_1");
+
+        // Test frame 0
+        {
+            let frame_0_buf = context.get_frame_data(0).unwrap();
+            let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
+            let parts = frame_0.parts().unwrap();
+            let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 0");
+            
+            if deform_state.deform() >= 0 {
+                let deforms = frame_0.deforms().unwrap();
+                let deform_attr = deforms.get(deform_state.deform() as usize);
+                if let Some(coords) = deform_attr.coordinate() {
+                    println!("Frame 0 Deform found with {} coordinates", coords.len());
+                }
+            }
+        }
+
+        // Test frame 10: Interpolated deform
+        {
+            let frame_10_buf = context.get_frame_data(10).unwrap();
+            let frame_10 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_10_buf) };
+            let parts = frame_10.parts().unwrap();
+            let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 10");
+            
+            println!("Frame 10 Deform index: {}", deform_state.deform());
+            if deform_state.deform() >= 0 {
+                let deforms = frame_10.deforms().unwrap();
+                let deform_attr = deforms.get(deform_state.deform() as usize);
+                println!("Frame 10 Coordinates: {:?}", deform_attr.coordinate().map(|c| c.len()));
+                println!("Frame 10 Vertex Indices: {:?}", deform_attr.index().map(|i| i.len()));
+            }
+        }
     }
 }
