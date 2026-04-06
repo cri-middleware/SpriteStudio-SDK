@@ -1,13 +1,13 @@
 [package]
 name = "sspj"
 version = "7.0.0"
-edition = "2024"
+edition.workspace = true
 
 [lib]
 crate-type = ["rlib"]
 
 [dependencies]
 serde = {  version = "1.0.228", features = ["derive"] }
-quick-xml = {  version = "0.39.1", features = ["serialize"] }
-rayon = "1.11.0"
+quick-xml = {  version = "0.39.2", features = ["serialize"] }
+rayon = { workspace = true }
 
