@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+  PYTHONIOENCODING: utf8
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ci-cargo-${{ github.actor }}-${{ github.head_ref || github.run_number }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 🐧 Linux (GCC)
+            os: ubuntu-latest
+            platform: linux
+            arch: x86_64
+
+          - name: 🏁 Windows (x86_64, MSVC)
+            os: windows-latest
+            platform: windows
+            arch: x86_64
+
+          - name: 🍎 macOS (universal)
+            os: macos-latest
+            platform: macos
+            arch: universal
+
+          - name: 🤖 Android (arm64)
+            os: ubuntu-latest
+            platform: android
+            arch: arm64
+
+          - name: 🍏 iOS (arm64)
+            os: macos-latest
+            platform: ios
+            arch: universal
+
+          - name: 🌐 Web (wasm32)
+            os: ubuntu-latest
+            platform: web
+            arch: wasm32
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: setup for SpriteStudio7-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: ${{ matrix.platform }}
+          os: ${{ matrix.os }}
+
+      - name: Install targets (Rust)
+        run: |
+          if [ "${{ matrix.platform }}" == "macos" ]; then
+            rustup target add aarch64-apple-darwin
+          elif [ "${{ matrix.platform }}" == "ios" ]; then
+            rustup target add aarch64-apple-ios
+          elif [ "${{ matrix.platform }}" == "android" ]; then
+            rustup target add aarch64-linux-android
+            cargo install cargo-ndk
+          elif [ "${{ matrix.platform }}" == "web" ]; then
+            rustup target add wasm32-unknown-unknown
+          fi
+        shell: bash
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.platform }}" == "android" ]; then
+            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime
+          elif [ "${{ matrix.platform }}" == "ios" ]; then
+            cargo build --target aarch64-apple-ios --verbose -p ssruntime
+          elif [ "${{ matrix.platform }}" == "web" ]; then
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime
+          else
+            cargo build --verbose
+          fi
+        shell: bash
+
+      - name: Test (ssinterpolate)
+        if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
+        run: cargo test -p ssinterpolate --verbose
+        shell: bash
+
+      - name: Test (ssconverter)
+        if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
+        run: cargo test -p ssconverter --verbose -- --test-threads=1
+        shell: bash
+
+      - name: Test (ssruntime)
+        if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
+        run: cargo test -p ssruntime --verbose -- --test-threads=1
+        shell: bash
+
+      - name: Test (cli)
+        if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
+        run: cargo test -p ssconverter-cli --verbose -- --test-threads=1
+        shell: bash
+
