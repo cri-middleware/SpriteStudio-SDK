@@ -103,12 +103,16 @@ pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const 
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             unsafe {
-                *out_data = ssab_buf.as_ptr() as *mut c_uchar;
-                *out_len = ssab_buf.len();
+                if !out_data.is_null() {
+                    *out_data = ssab_buf.as_ptr() as *mut c_uchar;
+                }
+                if !out_len.is_null() {
+                    *out_len = ssab_buf.len();
+                }
             }
         } else {
             ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
@@ -160,14 +164,18 @@ pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const 
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.last_error = 0;
         match ffi_context.ctx.get_frame_data(frame_no) {
             Ok(ret) => {
                 unsafe {
-                    *out_data = ret.as_ptr() as *mut c_uchar;
-                    *out_len = ret.len();
+                    if !out_data.is_null() {
+                        *out_data = ret.as_ptr() as *mut c_uchar;
+                    }
+                    if !out_len.is_null() {
+                        *out_len = ret.len();
+                    }
                 }
             },
             Err(e) => {
