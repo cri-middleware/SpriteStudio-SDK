@@ -98,7 +98,7 @@ mod tests {
     fn parse_ssce() {
         ["tests/overall/sequence.ssqe"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssqe(&p.as_path());
+            load_ssqe(p.as_path());
         });
     }
 }

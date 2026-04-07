@@ -12,6 +12,12 @@ pub struct Context {
     handler: Option<JoinHandle<Result<(), crate::ConverterError>>>,
     should_stop: Arc<AtomicBool>,
 }
+impl Default for Context {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Context {
     pub fn new() -> Self {
         Self {
@@ -90,11 +96,10 @@ pub extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, o
         let c = config.clone();
         let handler = std::thread::spawn(move || {
             let on_log = |msg: &str| {
-                if let Some(cb) = callback {
-                    if let Ok(c_msg) = CString::new(msg) {
+                if let Some(cb) = callback
+                    && let Ok(c_msg) = CString::new(msg) {
                         cb(c_msg.as_ptr());
                     }
-                }
             };
             let result = catch_unwind(AssertUnwindSafe(|| {
                 crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
@@ -134,7 +139,7 @@ pub extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_char, out
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
     let context = unsafe { &mut *ctx };
-    context.handler.as_ref().map_or(false, |h| !h.is_finished())
+    context.handler.as_ref().is_some_and(|h| !h.is_finished())
 }
 
 #[unsafe(no_mangle)]

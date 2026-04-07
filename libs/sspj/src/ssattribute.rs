@@ -600,7 +600,7 @@ where
         .map(|idx| {
             let offset = 1 + (idx * 3) as usize;
             SsDeformValue {
-                x_index: items[offset + 0],
+                x_index: items[offset],
                 x: items[offset + 1],
                 y: items[offset + 2],
             }
@@ -1001,9 +1001,7 @@ impl<'de> Deserialize<'de> for SsAttributeKind {
                         }
                     };
                 }
-                Err(serde::de::Error::custom(format!(
-                    "expected `type` attribute"
-                )))
+                Err(serde::de::Error::custom("expected `type` attribute".to_string()))
             }
         }
         deserializer

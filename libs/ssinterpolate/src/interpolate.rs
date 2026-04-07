@@ -104,7 +104,7 @@ pub fn bezier_batch_f32x4(
             + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
             + (area_now * area_now_pow2 * value_end_x);
             
-        range_now = range_now * half;
+        range_now *= half;
         
         let m_lt = frame.simd_lt(frame_temp);
         

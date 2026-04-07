@@ -12,7 +12,7 @@ fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::ss::format::CellT {
     cell_t
 }
 fn convert_cellt_list(cells: &[sspj::ssce::SsCell]) -> Vec<ssab::ssab::ss::format::CellT> {
-    let mut v = cells.iter().map(|cell| convert_cellt(cell)).collect::<Vec<ssab::ssab::ss::format::CellT>>();
+    let mut v = cells.iter().map(convert_cellt).collect::<Vec<ssab::ssab::ss::format::CellT>>();
     v.sort_by_key(|cell| cell.name_hash);
     v
 }
@@ -23,7 +23,7 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProjec
     cell_map_t.name = if cellmap.name.is_empty() { None } else { Some(cellmap.name.to_string()) };
 
     let path = std::path::PathBuf::from(&sspj.settings.image_base_directory).join(&cellmap.image_path);
-    let r = asset_provider.validate_asset(&path.as_path().to_str().unwrap());
+    let r = asset_provider.validate_asset(path.as_path().to_str().unwrap());
     match r {
         Ok(_) => (),
         Err(e) => return Err(e),

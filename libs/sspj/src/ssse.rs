@@ -78,6 +78,6 @@ mod tests {
     #[test]
     fn parse_ssse() {
         let p = get_test_base_path().join("tests/overall/soundlist.ssse");
-        load_ssse(&p.as_path());
+        load_ssse(p.as_path());
     }
 }

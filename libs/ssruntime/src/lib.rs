@@ -69,6 +69,12 @@ pub struct Context<'a> {
     buffers: ContextBuffers<'a>,
 }
 
+impl<'a> Default for Context<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> Context<'a> {
     pub fn new() -> Self {
         Context {
@@ -330,7 +336,7 @@ impl<'a> Context<'a> {
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
-    use ssconverter;
+    
     use super::*;
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
@@ -373,7 +379,7 @@ mod tests {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
-            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap());
             for entry in ssab_dir.read_dir().unwrap() {
                 let f = entry.unwrap().path();
                 if !f.is_file() || f.extension().unwrap() != "ssab" { continue; }
@@ -386,9 +392,9 @@ mod tests {
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
                 println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("  parts");
-                ssab.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {
+                if let Some(parts) = ssab.parts() { parts.iter().enumerate().for_each(|(idx, part)| {
                     println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
-                }));
+                }) }
 
                 println!();
             }
@@ -485,13 +491,13 @@ mod tests {
         let frame_0_buf = context.get_frame_data(0).unwrap();
         let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
         let hide_state_0 = frame_0.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
-        assert_eq!(hide_state_0.hide(), false);
+        assert!(!hide_state_0.hide());
 
         // Frame 2: Hidden
         let frame_2_buf = context.get_frame_data(2).unwrap();
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
-        assert_eq!(hide_state_2.hide(), true);
+        assert!(hide_state_2.hide());
     }
 
     #[test]
@@ -509,8 +515,8 @@ mod tests {
         
         // Find a part that has deform animation
         let mut deform_part_idx = -1;
-        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.key_compare_with_value("anime_1") == ::core::cmp::Ordering::Equal)) {
-            if let Some(parts_anime) = animation.parts_animation_data() {
+        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.key_compare_with_value("anime_1") == ::core::cmp::Ordering::Equal))
+            && let Some(parts_anime) = animation.parts_animation_data() {
                 for (idx, p_anime) in parts_anime.iter().enumerate() {
                     if p_anime.deform_array().is_some() {
                         deform_part_idx = idx as i32;
@@ -518,7 +524,6 @@ mod tests {
                     }
                 }
             }
-        }
         assert!(deform_part_idx >= 0, "No part with deform animation found in anime_1");
 
         // Test frame 0

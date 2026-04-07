@@ -41,7 +41,7 @@ impl AssetProvider for FileSystemAssetProvider {
         let r = std::fs::copy(src_path.as_path(), dst_path.as_path());
         match r {
             Ok(_) => Ok(()),
-            Err(e) => Err(std::io::Error::new(ErrorKind::Other, format!("copy_asset: {:?}", e)))
+            Err(e) => Err(std::io::Error::other(format!("copy_asset: {:?}", e)))
         }
     }
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
@@ -160,8 +160,8 @@ pub fn create_asset_provider(path: &std::path::Path) -> Result<Box<dyn AssetProv
     if !path.exists() {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Path does not exist: {:?}", path))));
     }
-    if path.extension().map_or(false, |ext| ext == "zip") {
-        let data = std::fs::read(path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(e))?;
+    if path.extension().is_some_and(|ext| ext == "zip") {
+        let data = std::fs::read(path).map_err(crate::converter::converter_error::ConverterError::IoError)?;
         let file_name = path.file_name().unwrap().to_str().unwrap();
         Ok(Box::new(ZipAssetProvider::new(file_name, &data)?))
     } else {

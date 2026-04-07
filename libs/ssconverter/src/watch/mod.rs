@@ -39,8 +39,8 @@ pub fn watch_sspj_project(
                 match res {
                     Ok(events) => {
                         let ret = events.iter().find(|event| is_relevant_file(&event.path));
-                        if let Some(_) = ret {
-                            let r = crate::converter::converter::convert_sspj_to_ssab_files(sspj, &config, &|msg| println!("{}", msg));
+                        if ret.is_some() {
+                            let r = crate::converter::converter::convert_sspj_to_ssab_files(sspj, config, &|msg| println!("{}", msg));
                             match r {
                                 Ok(_) => println!("convert success"),
                                 Err(e) => {

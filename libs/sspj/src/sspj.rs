@@ -151,7 +151,7 @@ impl crate::ssloader::SsLoader for SsProject {
                             || {
                                 sspj.charmap_names.par_iter().map(|charmap_name| {
                                     let path = parent_path_buf.join(charmap_name);
-                                    let charmap_data = crate::sscharmap::SsCharMap::load_from_file(&path).map_err(|e| e)?;
+                                    let charmap_data = crate::sscharmap::SsCharMap::load_from_file(&path)?;
                                     Ok((charmap_name.to_string(), charmap_data))
                                 }).collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()
                             }
@@ -201,12 +201,12 @@ impl crate::ssloader::SsLoader for SsProject {
         let Some(xml_data) = maps.get(name) else {
             return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to read a file: {:?}", name))));
         };
-        let mut sspj = quick_xml::de::from_str::<SsProject>(&xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
+        let mut sspj = quick_xml::de::from_str::<SsProject>(xml_data).map_err(crate::sspj_error::SspjError::XmlParseError)?;
 
         sspj.sound_list = sspj.audiopack_names.par_iter().map(|audiopack| { crate::ssse::SsAudioPack::load_from_maps(audiopack, maps)  }).collect::<Result<Vec<crate::ssse::SsAudioPack>, crate::sspj_error::SspjError>>()?;
         sspj.sequence_list = sspj.sequencepack_names.par_iter().map(|sequence_name| { crate::ssqe::SsSequencePack::load_from_maps(sequence_name, maps)  }).collect::<Result<Vec<crate::ssqe::SsSequencePack>, crate::sspj_error::SspjError>>()?;
         sspj.charmap_dic = sspj.charmap_names.par_iter().map(|charmap_name| {
-            let charmap_data = crate::sscharmap::SsCharMap::load_from_maps(charmap_name, maps).map_err(|e| e)?;
+            let charmap_data = crate::sscharmap::SsCharMap::load_from_maps(charmap_name, maps)?;
             Ok((charmap_name.to_string(), charmap_data))
         }).collect::<Result<HashMap<String, crate::sscharmap::SsCharMap>, crate::sspj_error::SspjError>>()?;
         sspj.cellmap_list = sspj.cellmap_names.par_iter().map(|cellmap_name| { crate::ssce::SsCellMap::load_from_maps(cellmap_name, maps)  }).collect::<Result<Vec<crate::ssce::SsCellMap>, crate::sspj_error::SspjError>>()?;
@@ -260,7 +260,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_sspj(&p.as_path());
+            load_sspj(p.as_path());
         });
     }
 }

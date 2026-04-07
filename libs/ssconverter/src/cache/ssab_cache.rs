@@ -167,7 +167,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataFloatValueT> for PartAnimati
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataFloatValueT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: ordered_float::OrderedFloat(value.value),
         }
     }
@@ -180,7 +180,7 @@ pub struct PartAnimationDataFloatValueVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataFloatValueT]> for PartAnimationDataFloatValueVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataFloatValueT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataFloatValueKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataFloatValueKey::from).collect(),
         }
     }
 }
@@ -195,7 +195,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataIntValueT> for PartAnimation
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataIntValueT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value,
         }
     }
@@ -208,7 +208,7 @@ pub struct PartAnimationDataIntValueVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataIntValueT]> for PartAnimationDataIntValueVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataIntValueT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataIntValueKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataIntValueKey::from).collect(),
         }
     }
 }
@@ -223,7 +223,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataUIntValueT> for PartAnimatio
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataUIntValueT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value,
         }
     }
@@ -236,7 +236,7 @@ pub struct PartAnimationDataUIntValueVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataUIntValueT]> for PartAnimationDataUIntValueVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataUIntValueT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataUIntValueKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataUIntValueKey::from).collect(),
         }
     }
 }
@@ -263,7 +263,7 @@ pub struct PartAnimationDataBoolValueVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataBoolValueT]> for PartAnimationDataBoolValueVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataBoolValueT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataBoolValueKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataBoolValueKey::from).collect(),
         }
     }
 }
@@ -289,7 +289,7 @@ pub struct PartAnimationDataCellValueVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataCellValueT]> for PartAnimationDataCellValueVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataCellValueT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataCellValueKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataCellValueKey::from).collect(),
         }
     }
 }
@@ -304,7 +304,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataPartColorT> for PartAnimatio
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataPartColorT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value.as_ref().map(|v| PartAttributePartColorKey::from(v.as_ref())),
         }
     }
@@ -317,7 +317,7 @@ pub struct PartAnimationDataPartColorVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataPartColorT]> for PartAnimationDataPartColorVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataPartColorT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataPartColorKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataPartColorKey::from).collect(),
         }
     }
 }
@@ -332,7 +332,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataShaderT> for PartAnimationDa
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataShaderT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value.as_ref().map(|v| PartAttributeShaderKey::from(v.as_ref())),
         }
     }
@@ -345,7 +345,7 @@ pub struct PartAnimationDataShaderVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataShaderT]> for PartAnimationDataShaderVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataShaderT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataShaderKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataShaderKey::from).collect(),
         }
     }
 }
@@ -360,7 +360,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataVertexT> for PartAnimationDa
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataVertexT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value.as_ref().map(|v| PartAttributeVertexKey::from(v.as_ref())),
         }
     }
@@ -373,7 +373,7 @@ pub struct PartAnimationDataVertexVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataVertexT]> for PartAnimationDataVertexVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataVertexT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataVertexKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataVertexKey::from).collect(),
         }
     }
 }
@@ -388,7 +388,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataVec2T> for PartAnimationData
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataVec2T) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value.as_ref().map(|v| Vec2Key::from(v.as_ref())),
         }
     }
@@ -401,7 +401,7 @@ pub struct PartAnimationDataVec2VecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataVec2T]> for PartAnimationDataVec2VecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataVec2T]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataVec2Key::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataVec2Key::from).collect(),
         }
     }
 }
@@ -416,7 +416,7 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataDeformT> for PartAnimationDa
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataDeformT) -> Self {
         Self {
             index: value.index,
-            interpolation: ssab::ssab::ss::format::InterpolationType::from(value.interpolation),
+            interpolation: value.interpolation,
             value: value.value.as_ref().map(|v| PartAttributeDeformKey::from(v.as_ref())),
         }
     }
@@ -430,7 +430,7 @@ pub struct PartAnimationDataDeformVecKey {
 impl From<&[ssab::ssab::ss::format::PartAnimationDataDeformT]> for PartAnimationDataDeformVecKey {
     fn from(value: &[ssab::ssab::ss::format::PartAnimationDataDeformT]) -> Self {
         Self {
-            v: value.iter().map(|v| PartAnimationDataDeformKey::from(v)).collect(),
+            v: value.iter().map(PartAnimationDataDeformKey::from).collect(),
         }
     }
 }
@@ -462,7 +462,7 @@ pub struct InitialEventsVecKey {
 impl From<&[ssab::ssab::ss::format::InitialEventsT]> for InitialEventsVecKey {
     fn from(value: &[ssab::ssab::ss::format::InitialEventsT]) -> Self {
         Self {
-            v: value.iter().map(|v| InitialEventsKey::from(v)).collect(),
+            v: value.iter().map(InitialEventsKey::from).collect(),
         }
     }
 }
@@ -572,8 +572,8 @@ impl From<&ssab::ssab::ss::format::CellT> for CellKey {
             rectangle: value.rectangle.as_ref().map(|r| RectKey::from(r.as_ref())),
             pivot: value.pivot.as_ref().map(|p| Vec2Key::from(p.as_ref())),
             rotated: value.rotated,
-            table_coordinate: value.table_coordinate.as_ref().map(|t| t.iter().map(|v| Vec2Key::from(v)).collect::<Vec<Vec2Key>>()),
-            table_index_vertex: value.table_index_vertex.as_ref().map(|t| t.iter().map(|v| *v).collect::<Vec<u16>>()),
+            table_coordinate: value.table_coordinate.as_ref().map(|t| t.iter().map(Vec2Key::from).collect::<Vec<Vec2Key>>()),
+            table_index_vertex: value.table_index_vertex.as_ref().map(|t| t.to_vec()),
         }
     }
 }
@@ -706,8 +706,8 @@ pub struct PartAttributeDeformKey {
 impl From<&ssab::ssab::ss::format::PartAttributeDeformT> for PartAttributeDeformKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeDeformT) -> Self {
         Self {
-            coordinate: value.coordinate.as_ref().map(|c| c.iter().map(|v| Vec2Key::from(v)).collect()),
-            index: value.index.as_ref().map(|i| i.iter().map(|v| *v as i16).collect()),
+            coordinate: value.coordinate.as_ref().map(|c| c.iter().map(Vec2Key::from).collect()),
+            index: value.index.as_ref().map(|i| i.iter().copied().collect()),
         }
     }
 }
@@ -807,7 +807,7 @@ pub struct PartAttributesVecKey {
 impl From<&Vec<ssab::ssab::ss::format::InitialPartAttributesT>> for PartAttributesVecKey {
     fn from(value: &Vec<ssab::ssab::ss::format::InitialPartAttributesT>) -> Self {
         Self {
-            v: value.iter().map(|v| PartAttributesKey::from(v)).collect(),
+            v: value.iter().map(PartAttributesKey::from).collect(),
         }
     }
 }
@@ -905,7 +905,7 @@ impl From<&ssab::ssab::ss::format::PartAttributeSignalT> for PartAttributeSignal
         Self {
             active: value.active,
             command_id: value.command_id.clone(),
-            params: value.params.as_ref().map(|p| p.iter().map(|v| SignalCommandParamKey::from(v)).collect()),
+            params: value.params.as_ref().map(|p| p.iter().map(SignalCommandParamKey::from).collect()),
         }
     }
 }
@@ -1581,7 +1581,7 @@ impl<'a> SsabCache<'a> {
             let vec = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<_>>();
             fb.create_vector(&vec)
         });
-        args.table_index_vertex = cell.table_index_vertex.as_ref().map(|p| fb.create_vector(&p));
+        args.table_index_vertex = cell.table_index_vertex.as_ref().map(|p| fb.create_vector(p));
 
         let offset = ssab::ssab::ss::format::Cell::create(fb, &args);
         self.cell_cache.insert(key, offset);
@@ -1659,7 +1659,7 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::PartAttributeShaderArgs::default();
-        args.id = part_attribute_shader.id.as_ref().map(|id| fb.create_shared_string(&id));
+        args.id = part_attribute_shader.id.as_ref().map(|id| fb.create_shared_string(id));
         args.id_hash = part_attribute_shader.id_hash;
         args.param0 = part_attribute_shader.param0;
         args.param1 = part_attribute_shader.param1;
@@ -1707,7 +1707,7 @@ impl<'a> SsabCache<'a> {
             let v = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<_>>();
             fb.create_vector(&v)
         });
-        args.index = part_attribute_deform.index.as_ref().map(|p| fb.create_vector(&p));
+        args.index = part_attribute_deform.index.as_ref().map(|p| fb.create_vector(p));
 
         let offset = ssab::ssab::ss::format::PartAttributeDeform::create(fb, &args);
         self.part_attribute_deform_cache.insert(key, offset);
@@ -1833,27 +1833,27 @@ impl<'a> SsabCache<'a> {
                 p_args.type_ = param.type_;
                 p_args.value = match &param.value {
                     ssab::ssab::ss::format::SignalCommandParamValueT::Bool(v) => {
-                        let offset = self.create_shared_bool_value_table(fb, &v);
+                        let offset = self.create_shared_bool_value_table(fb, v);
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::Bool;
                         Some(offset.as_union_value())
                     },
                     ssab::ssab::ss::format::SignalCommandParamValueT::Index(v) => {
-                        let offset = self.create_shared_int_value_table(fb, &v);
+                        let offset = self.create_shared_int_value_table(fb, v);
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::Index;
                         Some(offset.as_union_value())
                     },
                     ssab::ssab::ss::format::SignalCommandParamValueT::Integer(v) => {
-                        let offset = self.create_shared_int_value_table(fb, &v);
+                        let offset = self.create_shared_int_value_table(fb, v);
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::Integer;
                         Some(offset.as_union_value())
                     },
                     ssab::ssab::ss::format::SignalCommandParamValueT::Floating(v) => {
-                        let offset = self.create_shared_float_value_table(fb, &v);
+                        let offset = self.create_shared_float_value_table(fb, v);
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::Floating;
                         Some(offset.as_union_value())
                     },
                     ssab::ssab::ss::format::SignalCommandParamValueT::Text(v) => {
-                        let offset = self.create_shared_string_value_table(fb, &v);
+                        let offset = self.create_shared_string_value_table(fb, v);
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::Text;
                         Some(offset.as_union_value())
                     },
@@ -1916,8 +1916,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::InitialEventsArgs::default();
-        args.user = initial_events.user.as_ref().map(|user| self.create_shared_user_data(fb, &user));
-        args.signal = initial_events.signal.as_ref().map(|signal| self.create_shared_signal(fb, &signal));
+        args.user = initial_events.user.as_ref().map(|user| self.create_shared_user_data(fb, user));
+        args.signal = initial_events.signal.as_ref().map(|signal| self.create_shared_signal(fb, signal));
         args.audio = initial_events.audio.as_ref().map(|audio| self.create_shared_audio(fb, audio));
         args.instance = initial_events.instance.as_ref().map(|instance| self.create_shared_part_instance(fb, instance));
         args.effect = initial_events.effect.as_ref().map(|effect| self.create_shared_effect(fb, effect));
@@ -2178,8 +2178,8 @@ impl<'a> SsabCache<'a> {
             },
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementRotation(v) => {
                 let mut w_args = ssab::ssab::ss::format::EffectParticleElementRotationArgs::default();
-                w_args.rotation_value = v.rotation_value.as_ref().map(|rotation_value| self.create_shared_vec2(fb, &rotation_value));
-                w_args.rotation_add_value = v.rotation_add_value.as_ref().map(|rotation_add_value| self.create_shared_vec2(fb, &rotation_add_value));
+                w_args.rotation_value = v.rotation_value.as_ref().map(|rotation_value| self.create_shared_vec2(fb, rotation_value));
+                w_args.rotation_add_value = v.rotation_add_value.as_ref().map(|rotation_add_value| self.create_shared_vec2(fb, rotation_add_value));
                 let offset = ssab::ssab::ss::format::EffectParticleElementRotation::create(fb, &w_args);
                 Some(offset.as_union_value())
             },
@@ -2195,14 +2195,14 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementSize(v) => {
                 let mut w_args = ssab::ssab::ss::format::RectAndVec2ValueTableArgs::default();
                 w_args.size = v.size.as_ref().map(|size| self.create_shared_rect(fb, size));
-                w_args.scale_factor_value = v.scale_factor_value.as_ref().map(|scale_factor_value| self.create_shared_vec2(fb, &scale_factor_value));
+                w_args.scale_factor_value = v.scale_factor_value.as_ref().map(|scale_factor_value| self.create_shared_vec2(fb, scale_factor_value));
                 let offset = ssab::ssab::ss::format::RectAndVec2ValueTable::create(fb, &w_args);
                 Some(offset.as_union_value())
             },
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransSize(v) => {
                 let mut w_args = ssab::ssab::ss::format::RectAndVec2ValueTableArgs::default();
                 w_args.size = v.size.as_ref().map(|size| self.create_shared_rect(fb, size));
-                w_args.scale_factor_value = v.scale_factor_value.as_ref().map(|scale_factor_value| self.create_shared_vec2(fb, &scale_factor_value));
+                w_args.scale_factor_value = v.scale_factor_value.as_ref().map(|scale_factor_value| self.create_shared_vec2(fb, scale_factor_value));
                 let offset = ssab::ssab::ss::format::RectAndVec2ValueTable::create(fb, &w_args);
                 Some(offset.as_union_value())
             },
@@ -2252,7 +2252,7 @@ impl<'a> SsabCache<'a> {
             args.is_lock_rand_seed = effect_t.is_lock_rand_seed;
             args.lock_rand_seed = effect_t.lock_rand_seed;
             args.layout_scale = effect_t.layout_scale.as_ref().map(|v| self.create_shared_vec2(fb, v));
-            args.effect_node = effect_t.effect_node.as_ref().map(|nodes| self.create_shared_effect_nodes(fb, &nodes));
+            args.effect_node = effect_t.effect_node.as_ref().map(|nodes| self.create_shared_effect_nodes(fb, nodes));
 
             ssab::ssab::ss::format::Effect::create(fb, &args)
         }).collect::<Vec<_>>();
@@ -2344,7 +2344,7 @@ impl<'a> SsabCache<'a> {
                 let mut args = ssab::ssab::ss::format::EmbeddedAssetArgs::default();
                 args.name_hash = s.name_hash;
                 args.name = s.name.as_ref().map(|name| fb.create_shared_string(name));
-                args.data = s.data.as_ref().map(|data| fb.create_vector(&data));
+                args.data = s.data.as_ref().map(|data| fb.create_vector(data));
                 ssab::ssab::ss::format::EmbeddedAsset::create(fb, &args)
             }).collect::<Vec<_>>();
             fb.create_vector(&vec)

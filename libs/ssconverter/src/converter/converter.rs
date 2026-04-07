@@ -31,7 +31,7 @@ where
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
     let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, asset_provider, config.embedded)).collect::<Result<Vec<ssab::ssab::ss::format::SsAnimeBinaryT>, _>>()?;
 
-    let ssqb_model_list = sspj.sequence_list.par_iter().map(|sequence| ssqb_converter::convert_ss_sequence_binary_t(sequence)).collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
+    let ssqb_model_list = sspj.sequence_list.par_iter().map(ssqb_converter::convert_ss_sequence_binary_t).collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {
@@ -72,17 +72,10 @@ where
 }
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct ConverterConfig {
     pub convert_config: ConvertConfig,
     pub output: Option<OsString>,
-}
-impl Default for ConverterConfig {
-    fn default() -> Self {
-        Self {
-            convert_config: ConvertConfig::default(),
-            output: None,
-        }
-    }
 }
 
 pub fn convert_sspj_to_ssab_files<F>(path: &std::path::Path, config: &ConverterConfig, on_log: &F) -> Result<(), crate::converter::converter_error::ConverterError>
@@ -107,7 +100,7 @@ where
         let options = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         for (name, data) in convert_result.iter() {
-            zip_writer.start_file(name, options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::Other, format!("zip start_file: {:?}", e))))?;
+            zip_writer.start_file(name, options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip start_file: {:?}", e))))?;
             zip_writer.write_all(data).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("zip write: {:?}", e))))?;
         }
 
@@ -115,12 +108,12 @@ where
             let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
             for (dst_rel_path, src_rel_path) in assets {
                 let data = asset_provider.read_asset(&src_rel_path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
-                zip_writer.start_file(dst_rel_path.clone(), options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::Other, format!("zip start_file: {:?}", e))))?;
+                zip_writer.start_file(dst_rel_path.clone(), options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip start_file: {:?}", e))))?;
                 zip_writer.write_all(&data).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("zip write: {:?}", e))))?;
             }
         }
 
-        zip_writer.finish().map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::Other, format!("zip finish: {:?}", e))))?;
+        zip_writer.finish().map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip finish: {:?}", e))))?;
 
     } else {
         if !outdir_path.exists() {
@@ -135,7 +128,7 @@ where
             let output_path = outdir_path.join(name);
             match std::fs::write(output_path.as_path(), data) {
                 Ok(_) => Ok(()),
-                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("write: {}: {:?}", output_path.as_os_str().to_string_lossy(), e)))),
+                Err(e) => Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("write: {}: {:?}", output_path.as_os_str().to_string_lossy(), e)))),
             }
         })?;
 

@@ -90,6 +90,12 @@ impl PlaybackController {
     }
 }
 
+impl Default for PlaybackController {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PlaybackController {
     pub fn new() -> Self {
         Self {
@@ -235,8 +241,8 @@ impl PlaybackController {
                         (self.end_frame, self.start_frame)
                     };
 
-                    if frame_no == end_limit {
-                        if self.remain_loops != -1 {
+                    if frame_no == end_limit
+                        && self.remain_loops != -1 {
                             match &self.playback_style {
                                 PlaybackStyle::Normal => {
                                     self.end_frame_reached = true;
@@ -252,7 +258,6 @@ impl PlaybackController {
                                 },
                             }
                         }
-                    }
 
                     let is_reached = if self.playback_forward > 0 {
                         frame_no > end_limit

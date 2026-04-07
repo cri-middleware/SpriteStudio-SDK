@@ -154,7 +154,7 @@ fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab:
                                 e_frame_0
                             });
 
-                            if let None = events_per_frame_0.instances.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index) {
+                            if events_per_frame_0.instances.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
                                 let instance_t_frame_0 = instance_t.clone();
 
                                 let mut i_args_frame_0 = ssab::ssab::ss::format::EventInstanceT::default();
@@ -202,7 +202,7 @@ fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab:
                                 e_frame_0
                             });
 
-                            if let None = events_per_frame_0.effects.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index) {
+                            if events_per_frame_0.effects.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
                                 let effect_t_frame_0 = effect_t.clone();
 
                                 let mut e_args_frame_0 = ssab::ssab::ss::format::EventEffectT::default();
@@ -288,8 +288,8 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map));
     anime_data_t.parts_mesh_data = None;
-    anime_data_t.initial_events = convert_parts_initial_events(&setup_animation, parts_map);
-    anime_data_t.events = convert_events_per_frames(&anime_data, &setup_animation, parts_map);
+    anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map);
+    anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
@@ -533,8 +533,8 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         // Skew
                         match &_key.value.skew {
                             None => {
-                                p_args.skew_x = 0.0 as f32;
-                                p_args.skew_y = 0.0 as f32;
+                                p_args.skew_x = 0.0_f32;
+                                p_args.skew_y = 0.0_f32;
                             }
                             Some(_skew) => {
                                 p_args.skew_x = _skew.x;
@@ -580,8 +580,8 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         p_args.vertex = Some(Box::new(value));
                         p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeVertex;
 
-                        p_args.skew_x = 0.0 as f32; // mutually exclusive with "Skew"
-                        p_args.skew_y = 0.0 as f32;
+                        p_args.skew_x = 0.0_f32; // mutually exclusive with "Skew"
+                        p_args.skew_y = 0.0_f32;
                     }
                 });
             },
@@ -738,8 +738,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::forma
                 });
             },
             sspj::ssattribute::SsAttributeKind::Signal(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
-                    _key.value.commands.iter().for_each(|command| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) { _key.value.commands.iter().for_each(|command| {
                         let mut value = ssab::ssab::ss::format::PartAttributeSignalT::default();
                         value.active = command.active;
                         value.command_id = Some(command.command_id.to_string());
@@ -796,8 +795,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::forma
 
                         initial_event_t.signal = Some(Box::new(value));
                         flag_exist_event = true;
-                    });
-                });
+                    }); }
             },
             sspj::ssattribute::SsAttributeKind::Instance(v) => {
                 v.keys.iter().find(|key| key.time == 0).map(|_key| {
@@ -913,7 +911,7 @@ fn convert_part_animation_data_expand_get_rate(interpolation:&sspj::sstypes::SsI
     let rate = ssinterpolate::interpolate::rate_linear(frame_now as f32, frame_start as f32, frame_end as f32);
     match interpolation {
         sspj::sstypes::SsInterpolationType::None => {
-            0.0 as f32
+            0.0_f32
         },
         sspj::sstypes::SsInterpolationType::Linear => {
             rate
@@ -985,7 +983,7 @@ fn convert_part_animation_data_expand_get_rate(interpolation:&sspj::sstypes::SsI
             ssinterpolate::interpolate::rate_ease_back_inout(rate)
         },
         _ => {
-            0.0 as f32
+            0.0_f32
         },
     }
 }
@@ -1891,7 +1889,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], &part_anime);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime);
     }
 
     for part_anime in &anime_data.part_animes {
@@ -1901,8 +1899,8 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], &part_anime);
-        modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, &part_anime);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime);
+        modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, part_anime);
     }
 
     parts_animation_data_t
@@ -1940,8 +1938,8 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         };
         part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
         part_data_t.part_type = match &part.part_type {
-            sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Normal => ssab::ssab::ss::format::PartTypeT::PartTypeNormal(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::default()),
+            sspj::sstypes::SsPartType::Normal => ssab::ssab::ss::format::PartTypeT::PartTypeNormal(Box::default()),
             sspj::sstypes::SsPartType::Shape => {
                 let mut part_type = ssab::ssab::ss::format::PartTypeShapeT::default();
                 part_type.shape_type = match &part.shape_type {
@@ -1999,21 +1997,21 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 part_type.ref_anime_hash = crate::utils::fnv1a_hash_str(&part.ref_anime);
                 ssab::ssab::ss::format::PartTypeT::PartTypeInstance(Box::new(part_type))
             },
-            sspj::sstypes::SsPartType::Armature => ssab::ssab::ss::format::PartTypeT::PartTypeArmature(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Armature => ssab::ssab::ss::format::PartTypeT::PartTypeArmature(Box::default()),
             sspj::sstypes::SsPartType::Effect => {
                 let mut part_type = ssab::ssab::ss::format::PartTypeEffectT::default();
                 part_type.ref_effect_name_hash = crate::utils::fnv1a_hash_str(&part.ref_effect_name);
                 ssab::ssab::ss::format::PartTypeT::PartTypeEffect(Box::new(part_type))
             },
-            sspj::sstypes::SsPartType::Mesh => ssab::ssab::ss::format::PartTypeT::PartTypeMesh(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Movenode => ssab::ssab::ss::format::PartTypeT::PartTypeMovenode(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Constraint => ssab::ssab::ss::format::PartTypeT::PartTypeConstraint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Mask => ssab::ssab::ss::format::PartTypeT::PartTypeMask(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Joint => ssab::ssab::ss::format::PartTypeT::PartTypeJoint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Bonepoint => ssab::ssab::ss::format::PartTypeT::PartTypeBonepoint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::TransformConstraint => ssab::ssab::ss::format::PartTypeT::PartTypeTransformConstraint(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Camera => ssab::ssab::ss::format::PartTypeT::PartTypeCamera(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
-            sspj::sstypes::SsPartType::Audio => ssab::ssab::ss::format::PartTypeT::PartTypeAudio(Box::new(ssab::ssab::ss::format::NoneValueEntryT::default())),
+            sspj::sstypes::SsPartType::Mesh => ssab::ssab::ss::format::PartTypeT::PartTypeMesh(Box::default()),
+            sspj::sstypes::SsPartType::Movenode => ssab::ssab::ss::format::PartTypeT::PartTypeMovenode(Box::default()),
+            sspj::sstypes::SsPartType::Constraint => ssab::ssab::ss::format::PartTypeT::PartTypeConstraint(Box::default()),
+            sspj::sstypes::SsPartType::Mask => ssab::ssab::ss::format::PartTypeT::PartTypeMask(Box::default()),
+            sspj::sstypes::SsPartType::Joint => ssab::ssab::ss::format::PartTypeT::PartTypeJoint(Box::default()),
+            sspj::sstypes::SsPartType::Bonepoint => ssab::ssab::ss::format::PartTypeT::PartTypeBonepoint(Box::default()),
+            sspj::sstypes::SsPartType::TransformConstraint => ssab::ssab::ss::format::PartTypeT::PartTypeTransformConstraint(Box::default()),
+            sspj::sstypes::SsPartType::Camera => ssab::ssab::ss::format::PartTypeT::PartTypeCamera(Box::default()),
+            sspj::sstypes::SsPartType::Audio => ssab::ssab::ss::format::PartTypeT::PartTypeAudio(Box::default()),
         };
 
         part_data_t
@@ -2120,15 +2118,15 @@ mod tests {
             },
         };
         let result_hermite = convert_part_animation_data_expand_key_float(&start_key_hermite, &end_key, 5);
-        assert!(result_hermite >= 0.0 && result_hermite <= 10.0);
+        assert!((0.0..=10.0).contains(&result_hermite));
     }
 
     #[test]
     fn test_optimize_part_animation_data_value_changing_range() {
-        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::Linear), false);
-        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::Hermite), true);
-        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::Bezier), true);
-        assert_eq!(optimize_part_animation_data_value_changing_range(&InterpolationType::None), false);
+        assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::Linear));
+        assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Hermite));
+        assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Bezier));
+        assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::None));
     }
 
     #[test]

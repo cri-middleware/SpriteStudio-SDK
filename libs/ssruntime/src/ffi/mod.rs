@@ -11,6 +11,12 @@ pub struct FfiContext {
     pub ctx: crate::Context<'static>,
     pub last_error: i32,
 }
+impl<'a> Default for FfiContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> FfiContext {
     pub fn new() -> Self {
         Self { ctx: crate::Context::new(), last_error: 0 }
