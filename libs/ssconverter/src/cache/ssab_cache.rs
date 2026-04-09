@@ -714,6 +714,7 @@ impl From<&ssab::ssab::ss::format::PartAttributeDeformT> for PartAttributeDeform
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributesKey {
+    pub update_flag: u64,
     pub cell: Option<PartAttributeCellKey>,
     pub position_x: ordered_float::OrderedFloat<f32>,
     pub position_y: ordered_float::OrderedFloat<f32>,
@@ -757,6 +758,7 @@ pub struct PartAttributesKey {
 impl From<&ssab::ssab::ss::format::InitialPartAttributesT> for PartAttributesKey {
     fn from(value: &ssab::ssab::ss::format::InitialPartAttributesT) -> Self {
         Self {
+            update_flag: value.update_flag.bits(),
             cell: value.cell.as_ref().map(|c| PartAttributeCellKey::from(c.as_ref())),
             position_x: ordered_float::OrderedFloat(value.position_x),
             position_y: ordered_float::OrderedFloat(value.position_y),
@@ -1721,6 +1723,7 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::InitialPartAttributesArgs::default();
+        args.update_flag = part_attributes.update_flag;
         args.cell = part_attributes.cell.as_ref().map(|cell| { self.create_shared_part_attribute_cell(fb, cell) });
         args.position_x = part_attributes.position_x;
         args.position_y = part_attributes.position_y;
@@ -1857,9 +1860,8 @@ impl<'a> SsabCache<'a> {
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::Text;
                         Some(offset.as_union_value())
                     },
-                    ssab::ssab::ss::format::SignalCommandParamValueT::None(_) => {
-                        let args = ssab::ssab::ss::format::NoneValueEntryArgs::default();
-                        let offset = ssab::ssab::ss::format::NoneValueEntry::create(fb, &args);
+                    ssab::ssab::ss::format::SignalCommandParamValueT::None(v) => {
+                        let offset = self.create_shared_none_value_entry(fb, v);
                         p_args.value_type = ssab::ssab::ss::format::SignalCommandParamValue::None;
                         Some(offset.as_union_value())
                     },
