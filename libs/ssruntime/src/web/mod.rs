@@ -1,9 +1,13 @@
 use wasm_bindgen::prelude::*;
 use crate::Context;
+use alloc::boxed::Box;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 #[wasm_bindgen]
 pub struct SSRuntimeContext {
-    resource: crate::AnimationResource<'static>,
+    data: Box<crate::SsabData>,
+    resource: Option<crate::AnimationResource<'static>>,
     inner: Context<'static>,
 }
 
@@ -11,25 +15,25 @@ pub struct SSRuntimeContext {
 impl SSRuntimeContext {
     #[wasm_bindgen(constructor)]
     pub fn new(data: &[u8]) -> Result<SSRuntimeContext, JsValue> {
-        match crate::AnimationResource::load_copy(data) {
-            Ok(resource) => {
-                let mut inner = Context::new();
-                // Safety: We use transmute to make the reference 'static.
-                // This is safe because SSRuntimeContext owns the resource and inner.
-                // When SSRuntimeContext is dropped, both are dropped.
-                let resource_static: &'static crate::AnimationResource<'static> = unsafe { core::mem::transmute(&resource) };
-                inner.bind_resource(resource_static);
-                Ok(SSRuntimeContext {
-                    resource,
-                    inner,
-                })
-            },
-            Err(e) => Err(JsValue::from_str(&e.to_string())),
-        }
+        let ssab_data = Box::new(crate::SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?);
+        let data_ptr = ssab_data.as_slice() as *const [u8];
+        let resource = crate::AnimationResource::new(unsafe { &*data_ptr }).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        
+        let mut ctx = SSRuntimeContext {
+            data: ssab_data,
+            resource: Some(resource),
+            inner: Context::new(),
+        };
+        
+        let res_ref = ctx.resource.as_ref().unwrap();
+        let res_ptr = res_ref as *const crate::AnimationResource<'static>;
+        ctx.inner.bind_resource(unsafe { &*res_ptr });
+        
+        Ok(ctx)
     }
 
     pub fn get_animation_names(&self) -> Vec<String> {
-        self.resource.get_animation_names()
+        self.resource.as_ref().unwrap().get_animation_names()
     }
 
     pub fn setup_animation(&mut self, name: &str) -> bool {
@@ -107,7 +111,7 @@ impl SSRuntimeContext {
     }
 
     pub fn update(&mut self, delta: f32) -> i32 {
-        let (frame, decimal) = self.inner.update(delta);
+        let (frame, _decimal) = self.inner.update(delta);
         frame
     }
 

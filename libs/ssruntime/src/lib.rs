@@ -43,24 +43,33 @@ pub struct AnimationMetadata<'a> {
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
 }
 
-pub struct AnimationResource<'a> {
+pub struct SsabData {
     storage: SsabStorage,
-    animations: Vec<AnimationMetadata<'a>>,
 }
 
-impl<'a> AnimationResource<'a> {
+impl SsabData {
     pub fn load_copy(ssab_data: &[u8]) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Owned(ssab_data.to_vec());
-        Self::new(storage)
+        Ok(Self { storage })
     }
 
     pub unsafe fn load_borrow(ptr: *const u8, len: usize) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Borrowed { ptr, len };
-        Self::new(storage)
+        Ok(Self { storage })
     }
 
-    fn new(storage: SsabStorage) -> Result<Self, error::SSRuntimeError> {
-        let data = storage.as_slice();
+    pub fn as_slice(&self) -> &[u8] {
+        self.storage.as_slice()
+    }
+}
+
+pub struct AnimationResource<'a> {
+    data: &'a [u8],
+    animations: Vec<AnimationMetadata<'a>>,
+}
+
+impl<'a> AnimationResource<'a> {
+    pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
         // Validate
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
@@ -70,14 +79,8 @@ impl<'a> AnimationResource<'a> {
             });
         }
 
-        // Pre-parse all animations
-        // Note: We use unsafe to extend the lifetime of the slice to 'a.
-        // This is safe as long as AnimationResource is not moved or storage is not modified.
-        let data_static: &'a [u8] = unsafe { ::core::mem::transmute(data) };
-        let ssab_static = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data_static) };
-        
         let mut animations = Vec::new();
-        if let Some(fb_animations) = ssab_static.animations() {
+        if let Some(fb_animations) = ssab.animations() {
             for anim in fb_animations {
                 let mut cached_parts = Vec::new();
                 if let Some(parts) = anim.parts_animation_data() {
@@ -96,17 +99,17 @@ impl<'a> AnimationResource<'a> {
         }
 
         Ok(Self {
-            storage,
+            data,
             animations,
         })
     }
 
-    pub fn get_ssab_data(&self) -> &[u8] {
-        self.storage.as_slice()
+    pub fn get_ssab_data(&self) -> &'a [u8] {
+        self.data
     }
 
     pub fn get_animation_names(&self) -> Vec<alloc::string::String> {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.storage.as_slice()) };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
         let mut names = Vec::new();
         if let Some(animations) = ssab.animations() {
             for anim in animations {
@@ -117,7 +120,7 @@ impl<'a> AnimationResource<'a> {
     }
 
     pub fn find_animation_index(&self, name: &str) -> Option<usize> {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.storage.as_slice()) };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
         ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find_map(|(i, anim)| {
                 if anim.name() == name {
