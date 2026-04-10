@@ -2,18 +2,27 @@
 
 Player の基本機能の実装において、初期化時に行うべき処理と、メモリ管理の戦略について記載します。
 
-## 1. libssruntime の初期化
-まず、libssruntime の各機能を利用するためのコンテキストを作成します。通常、1 つの Player インスタンス（または 1 つのアニメーションオブジェクト）につき 1 つ의 コンテキストを保持します。
+## 1. libssruntime の初期化 (Resource と Context の分離)
+最新のアーキテクチャでは、パース済みの読み取り専用メタデータ(`AnimationResource`)と、再生状態・計算バッファ(`Context`)が分離されています。
+同一アニメーションを複数キャラクターで再生する場合、リソースは 1 つだけ作成し、キャラクターごとにコンテキストを作成してリソースをバインド(`bind_resource`)することでパフォーマンスが向上します。
 
 ```cpp
 #include "runtime/ssruntime.h"
 
-// コンストラクタ等でコンテキストの作成
-void* runtime_ctx = ss_runtime_create();
+// 1. リソース（パース済みデータ）の作成
+// ss_resource_create_borrow または ss_resource_create_copy を使用
+void* resource = ss_resource_create_borrow(ssab_data_ptr, ssab_data_len);
 
-// デストラクタ等でコンテキストの破棄
-ss_runtime_destroy(runtime_ctx);
+// 2. コンテキスト（再生状態）の作成
+void* context = ss_runtime_create();
+
+// 3. リソースをコンテキストにバインド
+ss_runtime_bind_resource(context, resource);
 ```
+
+### ⚠️ 重要な警告 (メモリ管理とライフタイム)
+**必ず Context を破棄してから Resource を破棄してください。**
+C/C++ 等の Player 実装において、コンテキストより先にリソースを破棄（またはガベージコレクションによって回収）してしまうと、コンテキスト内で保持しているリソースへの参照がダングリングポインタ（Use-after-free）となりクラッシュの原因となります。
 
 ## 2. ssab ファイルのロードと libssruntime への渡し方
 ネイティブライブラリである libssruntime へ ssab データを渡す方法は、利用するプログラミング言語のポインタ操作能力に応じて 3 つの運用パターンがあります。
@@ -21,14 +30,13 @@ ss_runtime_destroy(runtime_ctx);
 ### パターン A：ポインタを直接渡せる場合（推奨）
 - **対象言語:** C++, C# (unsafe) など
 - **運用:** ssab データのオーナー（メモリ管理責任者）は Player 側になります。ゲームエンジン側のアセット管理（Godot の Resource や Unity の ScriptableObject 等）でバイナリを保持し続ける場合に最適です。
-- **実装:** `ss_runtime_load_ssab_borrow` を使用します。
+- **実装:** `ss_resource_create_borrow` を使用します。
 - **メリット:** メモリコピーが発生せず、最も効率的です。
 
 ```cpp
 // Godot (C++) での実装例
 // Resource として保持している PackedByteArray からポインタを取得して渡す
-bool loaded = ss_runtime_load_ssab_borrow(
-    runtime_ctx, 
+void* resource = ss_resource_create_borrow(
     ssab_resource->get_data_ptr(), 
     ssab_resource->get_data_size()
 );
@@ -38,14 +46,15 @@ bool loaded = ss_runtime_load_ssab_borrow(
 - **対象言語:** Kotlin, TypeScript(JavaScript) など
 - **運用:** ssab データのオーナーを libssruntime 側に移譲します。Player はライブラリが所有するデータを参照して利用します。
 - **実装:** 
-    1. `ss_runtime_load_ssab_copy` を実行してデータをライブラリ側にコピーします。
+    1. `ss_resource_create_copy` を実行してデータをライブラリ側にコピーします。
     2. コピー完了後、Player 側の元のデータは解放します。
-    3. `ss_runtime_get_ssab(context, &ptr, &len)` を実行し、ライブラリ側が管理しているポインタとデータ長を取得して、パース等に利用します。
+
+*(※ 従来の後方互換用APIとして `ss_runtime_load_ssab_borrow` や `ss_runtime_load_ssab_copy` も引き続き利用可能ですが、新規実装では Resource と Context を明示的に分けることを推奨します。)*
 
 ### パターン C：ポインタの受け渡しが困難な場合
 - **対象言語:** 一部の高レベル言語
 - **運用:** Player 側と libssruntime の両方が ssab データのコピーを保持します。
-- **実装:** `ss_runtime_load_ssab_copy` を実行し、Player 側でも同じデータを保持し続けます。
+- **実装:** `ss_resource_create_copy` を実行し、Player 側でも同じデータを保持し続けます。
 - **デメリット:** メモリ消費が 2 倍になるため、可能な限り避けてください。
 
 ## 3. アセット（テクスチャ）のロードと紐付け
@@ -96,9 +105,12 @@ if (ss_anime_binary->animations()) {
 ```
 
 ## 5. 後処理（インスタンス破棄時）
-メモリリークを防ぐため、Player の破棄時には必ずコンテキストを解放してください。
+メモリリークやクラッシュ（Use-after-free）を防ぐため、Player の破棄時には**必ず Context を先に破棄し、その後に Resource を破棄**してください。
 
 ```cpp
-// コンテキストの破棄
-ss_runtime_destroy(runtime_ctx);
+// 1. 必ず先にコンテキスト（再生状態）を破棄する
+ss_runtime_destroy(context);
+
+// 2. その後、誰も参照しなくなったリソースを破棄する
+ss_resource_destroy(resource);
 ```

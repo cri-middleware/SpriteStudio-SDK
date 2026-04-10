@@ -432,9 +432,7 @@ impl<'de> Deserialize<'de> for SsEffectFunctionType {
                         }
                     };
                 }
-                Err(serde::de::Error::custom(format!(
-                    "expected `type` attribute"
-                )))
+                Err(serde::de::Error::custom("expected `type` attribute".to_string()))
             }
         }
         deserializer.deserialize_map(SsEffectFunctionTypeVisitor)
@@ -646,7 +644,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssee(&p.as_path());
+            load_ssee(p.as_path());
         });
     }
 
@@ -659,7 +657,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssee(&p.as_path());
+            load_ssee(p.as_path());
         });
     }
 
@@ -672,7 +670,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssee(&p.as_path());
+            load_ssee(p.as_path());
         });
     }
 }

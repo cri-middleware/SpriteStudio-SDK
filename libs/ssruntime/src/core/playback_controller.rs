@@ -57,7 +57,7 @@ impl PlaybackController {
         self.is_pausing
     }
 
-    pub fn get_skip_frames(&mut self) -> bool {
+    pub fn get_skip_frames(&self) -> bool {
         self.is_skip_frames
     }
 
@@ -69,11 +69,11 @@ impl PlaybackController {
         self.playback_style
     }
 
-    pub fn get_loops(&mut self) -> i32 {
+    pub fn get_loops(&self) -> i32 {
         self.loops
     }
 
-    pub fn get_remain_loops(&mut self) -> i32 {
+    pub fn get_remain_loops(&self) -> i32 {
         self.remain_loops
     }
 
@@ -87,6 +87,12 @@ impl PlaybackController {
 
     pub fn get_fps(&self) -> i32 {
         self.fps
+    }
+}
+
+impl Default for PlaybackController {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -177,7 +183,7 @@ impl PlaybackController {
      * n: loop n times
      */
     pub fn set_loops(&mut self, loops: i32) {
-        self.loops = if loops > 0 {loops} else {-1};
+        self.loops = if loops >= 0 {loops} else {-1};
         self.remain_loops = loops;
     }
 
@@ -235,8 +241,8 @@ impl PlaybackController {
                         (self.end_frame, self.start_frame)
                     };
 
-                    if frame_no == end_limit {
-                        if self.remain_loops != -1 {
+                    if frame_no == end_limit
+                        && self.remain_loops != -1 {
                             match &self.playback_style {
                                 PlaybackStyle::Normal => {
                                     self.end_frame_reached = true;
@@ -252,7 +258,6 @@ impl PlaybackController {
                                 },
                             }
                         }
-                    }
 
                     let is_reached = if self.playback_forward > 0 {
                         frame_no > end_limit

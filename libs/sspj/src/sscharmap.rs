@@ -68,7 +68,7 @@ impl CharMapLoader for SsCharMapPage {
         let id = get_parse!(parts, "id");
         let file = parts.get("file").ok_or_else(|| SspjError::FntParseError("Missing key: file".to_string()))?.trim_matches('"');
         Ok(SsCharMapPage {
-            id: id,
+            id,
             file: file.to_string(),
         })
     }
@@ -272,7 +272,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssfnt(&p.as_path());
+            load_ssfnt(p.as_path());
         });
     }
 }

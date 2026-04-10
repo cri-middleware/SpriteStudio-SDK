@@ -251,7 +251,7 @@ impl FromStr for SsMeshBind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let items = s.split(",").collect::<Vec<&str>>();
-        if items.len() == 0 {
+        if items.is_empty() {
             return Ok(Self::default());
         }
         let ss_mesh_bind_vec = items
@@ -437,7 +437,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssae(&p.as_path());
+            load_ssae(p.as_path());
         });
     }
 
@@ -488,7 +488,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssae(&p.as_path());
+            load_ssae(p.as_path());
         });
     }
 
@@ -539,7 +539,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssae(&p.as_path());
+            load_ssae(p.as_path());
         });
     }
 }

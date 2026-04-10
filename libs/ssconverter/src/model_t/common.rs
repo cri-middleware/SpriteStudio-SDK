@@ -5,7 +5,7 @@ pub fn convert_vec2t(point2: &sspj::sstypes::SsPoint2) -> ssab::ssab::ss::format
     vec
 }
 pub fn convert_vec2t_list(point2_list: &[sspj::sstypes::SsPoint2]) -> Vec<ssab::ssab::ss::format::Vec2T> {
-    point2_list.iter().map(|point2| convert_vec2t(point2)).collect::<Vec<ssab::ssab::ss::format::Vec2T>>()
+    point2_list.iter().map(convert_vec2t).collect::<Vec<ssab::ssab::ss::format::Vec2T>>()
 }
 
 pub fn convert_flat_list_from_vec3t_list(point3_list: &[sspj::sstypes::SsPoint3]) -> Vec<u16> {

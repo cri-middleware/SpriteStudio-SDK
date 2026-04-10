@@ -1,4 +1,3 @@
-use ssconverter;
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -106,9 +105,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
     for h in handlers {
         match h.join() {
             Ok(result) => {
-                if let Err(e) = result {
-                    return Err(e);
-                }
+                result?
             }
             Err(_) => {
                 eprintln!("Thread panic occurred");
@@ -122,7 +119,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
     use rayon::prelude::*;
     use std::path::{Path, PathBuf};
 
@@ -147,7 +144,7 @@ mod tests {
             let p = Path::new(f);
             let config = ssconverter::ConverterConfig::default();
             let r = ssconverter::convert_sspj_to_ssab_files(
-                &get_test_base_path().join(p).as_path(),
+                get_test_base_path().join(p).as_path(),
                 &config,
                 &|msg: &str| println!("{}", msg)
             );

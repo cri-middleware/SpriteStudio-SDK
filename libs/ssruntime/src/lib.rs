@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), not(test)))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
     loop {}
@@ -22,55 +22,156 @@ pub mod ffi;
 #[cfg(feature = "web")]
 pub mod web;
 
-enum SsabStorage {
+pub enum SsabStorage {
     Owned(Vec<u8>),
     Borrowed { ptr: *const u8, len: usize},
 }
 impl SsabStorage {
-     fn as_slice(&self) -> &[u8] {
-        unsafe {
-            match self {
-                SsabStorage::Owned(vec) => vec.as_slice(),
-                SsabStorage::Borrowed { ptr, len } => ::core::slice::from_raw_parts(*ptr, *len),
+     pub fn as_slice(&self) -> &[u8] {
+         match self {
+             SsabStorage::Owned(vec) => vec.as_slice(),
+             SsabStorage::Borrowed { ptr, len } => unsafe { ::core::slice::from_raw_parts(*ptr, *len) },
+         }
+    }
+}
+
+pub struct AnimationMetadata<'a> {
+    pub name_hash: u32,
+    pub start_frame: i32,
+    pub end_frame: i32,
+    pub fps: i32,
+    pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
+}
+
+pub struct AnimationResource<'a> {
+    storage: SsabStorage,
+    animations: Vec<AnimationMetadata<'a>>,
+}
+
+impl<'a> AnimationResource<'a> {
+    pub fn load_copy(ssab_data: &[u8]) -> Result<Self, error::SSRuntimeError> {
+        let storage = SsabStorage::Owned(ssab_data.to_vec());
+        Self::new(storage)
+    }
+
+    pub unsafe fn load_borrow(ptr: *const u8, len: usize) -> Result<Self, error::SSRuntimeError> {
+        let storage = SsabStorage::Borrowed { ptr, len };
+        Self::new(storage)
+    }
+
+    fn new(storage: SsabStorage) -> Result<Self, error::SSRuntimeError> {
+        let data = storage.as_slice();
+        // Validate
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
+        if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
+            return Err(error::SSRuntimeError::InvalidVersion {
+                expected: ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version,
+                got: ssab.version(),
+            });
+        }
+
+        // Pre-parse all animations
+        // Note: We use unsafe to extend the lifetime of the slice to 'a.
+        // This is safe as long as AnimationResource is not moved or storage is not modified.
+        let data_static: &'a [u8] = unsafe { ::core::mem::transmute(data) };
+        let ssab_static = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data_static) };
+        
+        let mut animations = Vec::new();
+        if let Some(fb_animations) = ssab_static.animations() {
+            for anim in fb_animations {
+                let mut cached_parts = Vec::new();
+                if let Some(parts) = anim.parts_animation_data() {
+                    for (i, p) in parts.iter().enumerate() {
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16));
+                    }
+                }
+                animations.push(AnimationMetadata {
+                    name_hash: anim.name_hash(),
+                    start_frame: anim.start_frame() as i32,
+                    end_frame: anim.end_frame() as i32,
+                    fps: anim.fps() as i32,
+                    cached_parts,
+                });
             }
         }
+
+        Ok(Self {
+            storage,
+            animations,
+        })
+    }
+
+    pub fn get_ssab_data(&self) -> &[u8] {
+        self.storage.as_slice()
+    }
+
+    pub fn get_animation_names(&self) -> Vec<alloc::string::String> {
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.storage.as_slice()) };
+        let mut names = Vec::new();
+        if let Some(animations) = ssab.animations() {
+            for anim in animations {
+                names.push(alloc::string::String::from(anim.name()));
+            }
+        }
+        names
+    }
+
+    pub fn find_animation_index(&self, name: &str) -> Option<usize> {
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.storage.as_slice()) };
+        ssab.animations().and_then(|animations| {
+            animations.iter().enumerate().find_map(|(i, anim)| {
+                if anim.name() == name {
+                    Some(i)
+                } else {
+                    None
+                }
+            })
+        })
     }
 }
 
 struct ContextBuffers<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
-    parts_colo_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    parts_color_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    cursors: Vec<usize>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
         Self {
-            parts_vec: Vec::with_capacity(32),
-            cell_vec: Vec::with_capacity(32),
-            parts_colo_vec: Vec::with_capacity(32),
-            shader_vec: Vec::with_capacity(32),
-            vertice_vec: Vec::with_capacity(32),
-            deform_vec: Vec::with_capacity(32),
+            parts_vec: Vec::new(),
+            cell_vec: Vec::new(),
+            parts_color_vec: Vec::new(),
+            shader_vec: Vec::new(),
+            vertice_vec: Vec::new(),
+            deform_vec: Vec::new(),
+            cursors: Vec::new(),
         }
     }
 }
 
 pub struct Context<'a> {
-    ssab_data: Option<SsabStorage>,
+    resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
     buffers: ContextBuffers<'a>,
 }
 
+impl<'a> Default for Context<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> Context<'a> {
     pub fn new() -> Self {
         Context {
-            ssab_data: None,
+            resource: None,
             fb: flatbuffers::FlatBufferBuilder::new(),
             controller: core::playback_controller::PlaybackController::new(),
             animation_idx: -1,
@@ -79,88 +180,96 @@ impl<'a> Context<'a> {
     }
 
     pub fn reset(&mut self) {
-        self.ssab_data = None;
+        self.resource = None;
         self.controller.reset_setup();
         self.fb.reset();
         self.animation_idx = -1;
+        self.buffers.cursors.clear();
     }
 
-    fn validate_ssab_data(&self, buf: &[u8]) -> Result<(), error::SSRuntimeError> {
-        // validate ssab version
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
-        if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
-            // invalid ssab version
-            return Err(error::SSRuntimeError::InvalidVersion {
-                expected: ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version,
-                got: ssab.version(),
-            });
-        }
-        Ok(())
-    }
-
-    pub fn load_copy(&mut self, ssab_data: &[u8]) -> Result<(), error::SSRuntimeError> {
-        self.ssab_data = Some(SsabStorage::Owned(ssab_data.to_vec()));
-        let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
-            return Err(error::SSRuntimeError::EmptyData);
-        };
-        self.validate_ssab_data(data)
-    }
-
-    pub unsafe fn load_borrow(&mut self, ptr: *const u8, len: usize) -> Result<(), error::SSRuntimeError> {
-        self.ssab_data = Some(SsabStorage::Borrowed { ptr, len });
-        let Some(data) = self.ssab_data.as_ref().map(|d| d.as_slice()) else {
-            return Err(error::SSRuntimeError::EmptyData);
-        };
-        self.validate_ssab_data(data)
+    pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
+        self.reset();
+        self.resource = Some(resource);
     }
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
-        self.ssab_data.as_ref().map(|d| d.as_slice())
+        self.resource.map(|r| r.get_ssab_data())
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
-        let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
+        let Some(resource) = self.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-        let Some((index, animation)) = ssab.animations().and_then(|animations| {
-            animations.iter().enumerate().find(|(_i, en)| { en.key_compare_with_value(name) == ::core::cmp::Ordering::Equal })
-        }) else {
+        
+        let Some(index) = resource.find_animation_index(name) else {
             return Err(error::SSRuntimeError::AnimationNotFound);
         };
-        self.controller.setup(animation.start_frame() as i32, animation.end_frame() as i32, animation.fps() as i32);
+        
+        let metadata = &resource.animations[index];
+        self.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
         self.animation_idx = index as i32;
+
+        let num_parts = metadata.cached_parts.len();
+
+        let mut cell_c = 0;
+        let mut color_c = 0;
+        let mut shader_c = 0;
+        let mut vertex_c = 0;
+        let mut deform_c = 0;
+
+        for p in &metadata.cached_parts {
+            if p.cell_array.is_some() { cell_c += 1; }
+            if p.part_color_array.is_some() { color_c += 1; }
+            if p.shader_array.is_some() { shader_c += 1; }
+            if p.vertex_array.is_some() { vertex_c += 1; }
+            if p.deform_array.is_some() { deform_c += 1; }
+        }
+
+        self.buffers.parts_vec.clear();
+        self.buffers.parts_vec.reserve(num_parts);
+        self.buffers.cell_vec.clear();
+        self.buffers.cell_vec.reserve(cell_c);
+        self.buffers.parts_color_vec.clear();
+        self.buffers.parts_color_vec.reserve(color_c);
+        self.buffers.shader_vec.clear();
+        self.buffers.shader_vec.reserve(shader_c);
+        self.buffers.vertice_vec.clear();
+        self.buffers.vertice_vec.reserve(vertex_c);
+        self.buffers.deform_vec.clear();
+        self.buffers.deform_vec.reserve(deform_c);
+
+        self.buffers.cursors.clear();
+        self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+
         Ok(())
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
-        let Some(ssab_buf) = self.ssab_data.as_ref().map(|ssab_data| ssab_data.as_slice()) else {
+        let Some(resource) = self.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
         
         if self.animation_idx < 0 {
             return Err(error::SSRuntimeError::AnimationNotFound);
         }
 
-        let Some(animation) =  ssab.animations().map(|animations| animations.get(self.animation_idx as usize)) else {
-            return Err(error::SSRuntimeError::AnimationNotFound);
-        };
-        if !(animation.start_frame() as i32 <= frame_no && frame_no <= animation.end_frame() as i32) {
-            // invalid frame_no
+        let metadata = &resource.animations[self.animation_idx as usize];
+        if !(metadata.start_frame <= frame_no && frame_no <= metadata.end_frame) {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
+
         self.fb.reset();
         let offset = core::framedata::get_frame_data(
             &mut self.fb,
-            &animation,
+            &metadata.cached_parts,
             frame_no,
             &mut self.buffers.parts_vec,
             &mut self.buffers.cell_vec,
-            &mut self.buffers.parts_colo_vec,
+            &mut self.buffers.parts_color_vec,
             &mut self.buffers.shader_vec,
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
+            &mut self.buffers.cursors,
         );
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
@@ -189,7 +298,7 @@ impl<'a> Context<'a> {
         self.controller.is_pausing()
     }
 
-    pub fn get_skip_frames(&mut self) -> bool {
+    pub fn get_skip_frames(&self) -> bool {
         self.controller.get_skip_frames()
     }
 
@@ -201,11 +310,11 @@ impl<'a> Context<'a> {
         self.controller.get_playback_style()
     }
 
-    pub fn get_loops(&mut self) -> i32 {
+    pub fn get_loops(&self) -> i32 {
         self.controller.get_loops()
     }
 
-    pub fn get_remain_loops(&mut self) -> i32 {
+    pub fn get_remain_loops(&self) -> i32 {
         self.controller.get_remain_loops()
     }
 
@@ -286,7 +395,7 @@ impl<'a> Context<'a> {
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
-    use ssconverter;
+    
     use super::*;
 
     static TARGET_SSPJ_FILES: [&str; 4] = [
@@ -319,7 +428,7 @@ mod tests {
             if !ssab_dir.exists() {
                 let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
                 let config = ssconverter::ConverterConfig::default();
-                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|msg: &str| { });
+                let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|_msg: &str| { });
             }
         });
     }
@@ -329,22 +438,23 @@ mod tests {
         prepare();
         TARGET_SSPAB_DIRS.iter().for_each(|&dir| {
             let ssab_dir = get_test_base_path().join(dir);
-            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap().to_string());
+            println!("{}: ", ssab_dir.file_name().unwrap().to_str().unwrap());
             for entry in ssab_dir.read_dir().unwrap() {
                 let f = entry.unwrap().path();
                 if !f.is_file() || f.extension().unwrap() != "ssab" { continue; }
 
                 let input_buf =  std::fs::read(&f).unwrap();
+                let resource = AnimationResource::load_copy(&input_buf).unwrap();
                 let mut context = Context::new();
-                context.load_copy(&input_buf).unwrap();
+                context.bind_resource(&resource);
 
                 let ssab_buf = context.get_ssab_data().unwrap();
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
                 println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("  parts");
-                ssab.parts().map(|parts| parts.iter().enumerate().for_each(|(idx, part)| {
+                if let Some(parts) = ssab.parts() { parts.iter().enumerate().for_each(|(idx, part)| {
                     println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
-                }));
+                }) }
 
                 println!();
             }
@@ -357,8 +467,9 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
         
+        let resource = AnimationResource::load_copy(&input_buf).expect("Failed to load resource");
         let mut context = Context::new();
-        context.load_copy(&input_buf).expect("Failed to load ssab");
+        context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
 
         // Find part index for "POS_XYZ"
@@ -377,6 +488,17 @@ mod tests {
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 0.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        }
+
+        // Test frame 5 (interpolating)
+        {
+            let frame_data_buf = context.get_frame_data(5).expect("Failed to get frame data at frame 5");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 16.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
 
         // Test frame 10
@@ -386,6 +508,18 @@ mod tests {
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        }
+
+        // Test frame 11 (not interpolating, no key)
+        {
+            let frame_data_buf = context.get_frame_data(11).expect("Failed to get frame data at frame 11");
+            let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+            let parts = frame_data.parts().expect("No parts in frame data");
+            let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
+            assert_eq!(part_state.position_x(), 32.0);
+            // Should NOT contain AttributePosX update flag because it's not a keyframe and no interpolation
+            assert!(!part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
     }
 
@@ -395,8 +529,9 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
         
+        let resource = AnimationResource::load_copy(&input_buf).expect("Failed to load resource");
         let mut context = Context::new();
-        context.load_copy(&input_buf).expect("Failed to load ssab");
+        context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
 
         let ssab_buf = context.get_ssab_data().unwrap();
@@ -418,12 +553,73 @@ mod tests {
         let frame_0_buf = context.get_frame_data(0).unwrap();
         let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
         let hide_state_0 = frame_0.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
-        assert_eq!(hide_state_0.hide(), false);
+        assert!(!hide_state_0.hide());
 
         // Frame 2: Hidden
         let frame_2_buf = context.get_frame_data(2).unwrap();
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
-        assert_eq!(hide_state_2.hide(), true);
+        assert!(hide_state_2.hide());
     }
+
+    #[test]
+    fn test_deform_animation() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7_ssab/deform.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
+        
+        let resource = AnimationResource::load_copy(&input_buf).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        
+        // Find a part that has deform animation
+        let mut deform_part_idx = -1;
+        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.key_compare_with_value("anime_1") == ::core::cmp::Ordering::Equal))
+            && let Some(parts_anime) = animation.parts_animation_data() {
+                for (idx, p_anime) in parts_anime.iter().enumerate() {
+                    if p_anime.deform_array().is_some() {
+                        deform_part_idx = idx as i32;
+                        break;
+                    }
+                }
+            }
+        assert!(deform_part_idx >= 0, "No part with deform animation found in anime_1");
+
+        // Test frame 0
+        {
+            let frame_0_buf = context.get_frame_data(0).unwrap();
+            let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
+            let parts = frame_0.parts().unwrap();
+            let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 0");
+            
+            if deform_state.deform() >= 0 {
+                let deforms = frame_0.deforms().unwrap();
+                let deform_attr = deforms.get(deform_state.deform() as usize);
+                if let Some(coords) = deform_attr.coordinate() {
+                    println!("Frame 0 Deform found with {} coordinates", coords.len());
+                }
+            }
+        }
+
+        // Test frame 10: Interpolated deform
+        {
+            let frame_10_buf = context.get_frame_data(10).unwrap();
+            let frame_10 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_10_buf) };
+            let parts = frame_10.parts().unwrap();
+            let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 10");
+            
+            println!("Frame 10 Deform index: {}", deform_state.deform());
+            if deform_state.deform() >= 0 {
+                let deforms = frame_10.deforms().unwrap();
+                let deform_attr = deforms.get(deform_state.deform() as usize);
+                println!("Frame 10 Coordinates: {:?}", deform_attr.coordinate().map(|c| c.len()));
+                println!("Frame 10 Vertex Indices: {:?}", deform_attr.index().map(|i| i.len()));
+            }
+        }
+    }
+
 }

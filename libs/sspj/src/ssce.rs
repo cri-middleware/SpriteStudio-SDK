@@ -141,7 +141,7 @@ mod tests {
         .par_iter()
         .for_each(|&f| {
             let p = get_test_base_path().join(f);
-            load_ssce(&p.as_path());
+            load_ssce(p.as_path());
         });
     }
 }

@@ -104,7 +104,7 @@ pub fn bezier_batch_f32x4(
             + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
             + (area_now * area_now_pow2 * value_end_x);
             
-        range_now = range_now * half;
+        range_now *= half;
         
         let m_lt = frame.simd_lt(frame_temp);
         
@@ -528,6 +528,7 @@ pub fn hermite<T: SsFloat>(value_start: T, value_end: T, rate: T, speed_start: T
         + ((rate_pow3 - rate_pow2) * (speed_end - value_end))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn bezier<T: SsFloat>(
     value_start_x: T, value_start_y: T,
     value_end_x: T, value_end_y: T,

@@ -4,10 +4,7 @@ use walkdir::WalkDir;
 
 pub fn parse_args(args: &[PathBuf]) -> Vec<PathBuf> {
     args.iter()
-        .filter_map(|arg| {
-            arg.exists().then(|| collect_sspj_files(arg))
-        })
-        .flatten()
+        .filter(|&arg| arg.exists()).flat_map(|arg| collect_sspj_files(arg))
         .collect::<HashSet<_>>()
         .into_iter()
         .collect::<Vec<PathBuf>>()
@@ -34,9 +31,9 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
 }
 
 fn is_sspj_file(path: &Path) -> bool {
-    path.is_file() && path.extension().and_then(|ext| ext.to_str()).map_or(false, |ext| ext == "sspj")
+    path.is_file() && (path.extension().and_then(|ext| ext.to_str()) == Some("sspj"))
 }
 
 fn is_zip_file(path: &Path) -> bool {
-    path.is_file() && path.extension().and_then(|ext| ext.to_str()).map_or(false, |ext| ext == "zip")
+    path.is_file() && (path.extension().and_then(|ext| ext.to_str()) == Some("zip"))
 }

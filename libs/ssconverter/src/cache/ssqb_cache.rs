@@ -24,7 +24,7 @@ impl SsqbCache {
                 s_args.name = Some(fb.create_shared_string(&sequence.name));
                 s_args.index = sequence.index;
                 s_args.type_ = sequence.type_;
-                s_args.list = sequence.list.as_ref().map(|list| self.create_shared_sequence_item_list(fb, &list));
+                s_args.list = sequence.list.as_ref().map(|list| self.create_shared_sequence_item_list(fb, list));
 
                 ssab::ssqb::ss::format::Sequence::create(fb, &s_args)
             }).collect::<Vec<_>>();
