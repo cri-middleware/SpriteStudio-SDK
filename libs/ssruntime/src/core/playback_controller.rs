@@ -218,14 +218,23 @@ impl PlaybackController {
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
         let to_next_frame = self.is_playing && !self.is_pausing;
         if to_next_frame && self.update_interval != 0.0 {
-            self.next_frame_time += delta;
-            if self.next_frame_time >= self.update_interval {
+            let s = if self.is_skip_frames {
+                // Timed Animation: Advance by the exact elapsed time (can skip frames)
+                (delta / self.update_interval) * self.playback_forward as f32
+            } else {
+                // Fixed Animation: Accumulate time and advance by exactly one frame at a time
+                self.next_frame_time += delta;
+                if self.next_frame_time >= self.update_interval {
+                    self.next_frame_time -= self.update_interval;
+                    self.playback_forward as f32
+                } else {
+                    0.0
+                }
+            };
+
+            if s != 0.0 {
                 self.end_frame_reached = false;
 
-                // skip frames
-                let step = libm::floorf(self.next_frame_time / self.update_interval);
-                self.next_frame_time -= self.update_interval * step;
-                let s = if self.is_skip_frames { step * self.playback_forward as f32 } else { self.playback_forward as f32 };
                 let next: f32 = self.current_frame + s;
                 let next_frame_no = libm::floorf(next) as i32;
                 let mut next_frame_decimal = next - next_frame_no as f32;
@@ -310,13 +319,20 @@ impl PlaybackController {
                                     }
                                 } else {
                                     next_frame_decimal = 1.0 - next_frame_decimal;
+                                    if next_frame_decimal >= 1.0 {
+                                        next_frame_decimal = 0.0;
+                                    }
                                 }
                             }
                         }
                     }
                     current_frame_no = frame_no;
                 }
-                self.current_frame = current_frame_no as f32 + next_frame_decimal;
+                if self.is_playing {
+                    self.current_frame = current_frame_no as f32 + next_frame_decimal;
+                } else {
+                    self.current_frame = current_frame_no as f32;
+                }
             }
 
             (libm::floorf(self.current_frame) as i32, self.current_frame - libm::floorf(self.current_frame))
@@ -387,125 +403,291 @@ impl PlaybackController {
 mod tests {
     use super::*;
 
-    fn play(t: &mut PlaybackController, delta: f32, loop_num: i32) {
-        println!("INIT frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", t.get_frame_no(), t.get_frame_no_decimal(), t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
-        for _ in 0..loop_num {
-            let (frame_no, decimal) = t.update(delta);
-            println!("frame_no: {}, frame_no_decimal: {:}, remain_loops: {}, is_playing: {}, end_frame_reached: {}", frame_no, decimal, t.get_remain_loops(), t.is_playing(), t.is_end_frame_reached());
+    #[test]
+    fn test_normal_playback_no_loop() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Frames 0 to 9
+        for i in 1..=10 {
+            let (frame, _) = t.update(interval);
+            assert_eq!(frame, i, "Failed at step {} (Forward)", i);
+            assert!(t.is_playing());
         }
+
+        // At frame 10, end_frame_reached should be true
+        assert!(t.is_end_frame_reached(), "end_frame_reached should be true at frame 10");
+
+        // Next update should stop playback
+        let (frame, _) = t.update(interval);
+        assert_eq!(frame, 10, "Should remain at end frame when stopped");
+        assert!(!t.is_playing(), "Should stop playing after 1 loop");
     }
 
     #[test]
-    fn infinitive_loops() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
+    fn test_normal_playback_loops() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_loops(2);
+        t.set_skip_frames(false);
         t.play();
-        play(t, 16.7, 500);
+
+        let interval = 1000.0 / 30.0;
+
+        // First loop: 0 -> 10
+        for _ in 1..=10 { t.update(interval); }
+        assert!(t.is_end_frame_reached(), "end_frame_reached should be true after first loop");
+        assert_eq!(t.get_frame_no(), 10);
+        assert_eq!(t.get_remain_loops(), 2);
+
+        // Transition to second loop (shows frame 0)
+        let (frame, _) = t.update(interval);
+        assert_eq!(frame, 0, "Should jump back to start frame");
+        assert_eq!(t.get_remain_loops(), 1);
+        assert!(!t.is_end_frame_reached(), "end_frame_reached should reset at start of new loop");
+
+        // Second loop: 0 -> 10
+        for _ in 1..=10 { t.update(interval); }
+        assert!(t.is_end_frame_reached());
+
+        // Final update stops
+        t.update(interval);
+        assert!(!t.is_playing(), "Should stop playing after 2 loops");
+        assert_eq!(t.get_remain_loops(), 0);
     }
 
     #[test]
-    fn infinitive_loops_reverse() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.play();
-        play(t, 16.7, 500);
-    }
-
-    #[test]
-    fn no_loops() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_loops(1);
-        t.play();
-        play(t, 16.7, 500);
-    }
-
-    #[test]
-    fn no_loops_reverse() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.set_loops(1);
-        t.play();
-        play(t, 16.7, 500);
-    }
-
-    #[test]
-    fn loops() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_loops(3);
-        t.play();
-        play(t, 16.7, 500);
-    }
-
-    #[test]
-    fn loops_reverse() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.set_loops(3);
-        t.play();
-        play(t, 16.7, 500);
-    }
-
-
-    #[test]
-    fn infinitive_loops_pingpong() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.play();
-        play(t, 16.7, 700);
-    }
-
-    #[test]
-    fn infinitive_loops_pingpong_reverse() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
-        t.play();
-        play(t, 16.7, 700);
-    }
-
-    #[test]
-    fn loops_pingpong() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.set_loops(3);
-        t.play();
-        play(t, 16.7, 700);
-    }
-
-    #[test]
-    fn loops_pingpong_reverse() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
-        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
-        t.set_loops(3);
-        t.play();
-        play(t, 16.7, 700);
-    }
-
-    #[test]
-    fn no_loops_pingpong() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
+    fn test_pingpong_playback() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
         t.set_loops(1);
+        t.set_skip_frames(false);
         t.play();
-        play(t, 16.7, 700);
+
+        let interval = 1000.0 / 30.0;
+
+        // Forward: 0 -> 10
+        for i in 1..=10 {
+            let (frame, _) = t.update(interval);
+            assert_eq!(frame, i, "Forward failed at step {}", i);
+        }
+        
+        // At 10, it should NOT have reached end yet in PingPong (need to return to 0)
+        assert!(!t.is_end_frame_reached(), "end_frame_reached should not be true at far end in PingPong");
+
+        // Backward: 10 -> 0
+        for i in (0..=9).rev() {
+            let (frame, _) = t.update(interval);
+            assert_eq!(frame, i, "Backward failed at step {}", i);
+        }
+
+        // Back at 0, now end_frame_reached should be true
+        assert!(t.is_end_frame_reached(), "end_frame_reached should be true after full PingPong cycle");
+
+        // Final update stops
+        t.update(interval);
+        assert!(!t.is_playing(), "Should stop playing after 1 PingPong loop");
     }
 
     #[test]
-    fn no_loops_pingpong_reverse() {
-        let t = &mut PlaybackController::new();
-        t.setup(0, 99, 30);
+    fn test_smooth_interpolation() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_skip_frames(true);
+        t.play();
+
+        let delta = 1000.0 / 60.0; // Half a frame
+        
+        let (frame, decimal) = t.update(delta);
+        assert_eq!(frame, 0);
+        assert!(decimal > 0.4 && decimal < 0.6, "Expected around 0.5, got {}", decimal);
+
+        let (frame, decimal) = t.update(delta);
+        assert_eq!(frame, 1);
+        assert!(decimal >= 0.0 && decimal < 0.1, "Expected around 0.0, got {}", decimal);
+    }
+
+    #[test]
+    fn test_infinite_loop() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_loops(-1);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        for _ in 0..100 {
+            t.update(interval);
+        }
+        
+        assert!(t.is_playing(), "Infinite loop should never stop");
+        assert_eq!(t.get_remain_loops(), -1);
+    }
+
+    #[test]
+    fn test_fixed_animation_no_skip() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_skip_frames(false); // Fixed Animation mode
+        t.play();
+
+        // 30 FPS, interval = 33.33ms
+        // Supply a very large delta (e.g., 500ms = 15 frames worth of time)
+        let delta = 500.0;
+        
+        let (frame, _) = t.update(delta);
+        
+        // In Fixed mode, it should ONLY advance by 1 frame, no matter how large delta is.
+        assert_eq!(frame, 1, "Fixed animation should only advance by 1 frame at a time");
+        
+        // The remaining time (500 - 33.33) should be stored in next_frame_time.
+        // Calling update with 0 delta should continue to advance frames until the buffer is empty.
+        let (frame, _) = t.update(0.0);
+        assert_eq!(frame, 2, "Should use buffered time to advance even with 0 delta");
+    }
+
+    #[test]
+    fn test_reverse_playback_no_loop() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Starts at 10, goes down to 1
+        for i in (0..=9).rev() {
+            let (frame, _) = t.update(interval);
+            assert_eq!(frame, i, "Reverse failed at step {}", i);
+        }
+
+        assert!(t.is_end_frame_reached(), "end_frame_reached should be true at frame 0 (start_frame for reverse)");
+        t.update(interval);
+        assert!(!t.is_playing(), "Should stop after 1 reverse loop");
+    }
+
+    #[test]
+    fn test_reverse_playback_loops() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        t.set_loops(2);
+        t.set_skip_frames(false);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // First loop: 10 -> 0
+        for _ in 0..10 { t.update(interval); }
+        assert!(t.is_end_frame_reached());
+        assert_eq!(t.get_frame_no(), 0);
+
+        // Transition to second loop (jumps to 10)
+        let (frame, _) = t.update(interval);
+        assert_eq!(frame, 10);
+        assert!(!t.is_end_frame_reached());
+
+        // Second loop: 10 -> 0
+        for _ in 0..10 { t.update(interval); }
+        assert!(t.is_end_frame_reached());
+
+        t.update(interval);
+        assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn test_reverse_pingpong_playback() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
         t.set_loops(1);
+        t.set_skip_frames(false);
         t.play();
-        play(t, 16.7, 700);
+
+        let interval = 1000.0 / 30.0;
+
+        // Backward first: 10 -> 0
+        for i in (0..=9).rev() {
+            let (frame, _) = t.update(interval);
+            assert_eq!(frame, i, "Initial backward failed at step {}", i);
+        }
+        
+        assert!(!t.is_end_frame_reached());
+
+        // Then Forward: 0 -> 10
+        for i in 1..=10 {
+            let (frame, _) = t.update(interval);
+            assert_eq!(frame, i, "Return forward failed at step {}", i);
+        }
+
+        assert!(t.is_end_frame_reached());
+        t.update(interval);
+        assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn test_skip_frames_multi_step() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_skip_frames(true);
+        t.play();
+
+        // 30 FPS, interval = 33.33ms
+        // Skip 2.5 frames at once (33.33 * 2.5 = 83.33ms)
+        let delta = (1000.0 / 30.0) * 2.5;
+        
+        let (frame, decimal) = t.update(delta);
+        assert_eq!(frame, 2, "Should jump to frame 2");
+        assert!(decimal > 0.4 && decimal < 0.6, "Decimal should be around 0.5, got {}", decimal);
+
+        // Update another 1.0 frame
+        let (frame, decimal) = t.update(1000.0 / 30.0);
+        assert_eq!(frame, 3);
+        assert!(decimal > 0.4 && decimal < 0.6, "Decimal should stay around 0.5, got {}", decimal);
+    }
+
+    #[test]
+    fn test_skip_frames_loop_boundary() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_loops(2);
+        t.set_skip_frames(true);
+        t.play();
+
+        // Advance by 11.5 frames. 
+        // 0.0 -> 10.0 (end frame) -> 0.0 (start of next loop) -> 0.5 (decimal)
+        let delta = (1000.0 / 30.0) * 11.5;
+        
+        let (frame, decimal) = t.update(delta);
+        
+        assert_eq!(frame, 0, "Should have looped back to start frame");
+        assert!(decimal > 0.4 && decimal < 0.6, "Should have 0.5 decimal after loop, got {}", decimal);
+        assert_eq!(t.get_remain_loops(), 1, "Should have 1 loop remaining");
+    }
+
+    #[test]
+    fn test_skip_frames_pingpong_boundary() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_skip_frames(true);
+        t.play();
+
+        // Currently at 0.0.
+        // Advance by 12.0 frames. 
+        // 0.0 -> 10.0 (hit end) -> (12.0 - 10.0 = 2.0 frames backwards) -> 8.0
+        let delta = (1000.0 / 30.0) * 12.0;
+        
+        let (frame, decimal) = t.update(delta);
+        assert_eq!(frame, 8, "Should have bounced back to frame 8");
+        assert!(decimal >= 0.0 && decimal < 0.001, "Decimal should be exactly 0.0, got {}", decimal);
     }
 }
