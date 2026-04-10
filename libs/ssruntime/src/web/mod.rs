@@ -3,47 +3,44 @@ use crate::Context;
 
 #[wasm_bindgen]
 pub struct SSRuntimeContext {
-    _source_data: Vec<u8>,
-    inner: Context,
+    resource: crate::AnimationResource<'static>,
+    inner: Context<'static>,
 }
 
 #[wasm_bindgen]
 impl SSRuntimeContext {
     #[wasm_bindgen(constructor)]
     pub fn new(data: &[u8]) -> Result<SSRuntimeContext, JsValue> {
-        let source_data = data.to_vec();
-
-        let slice_ptr = source_data.as_slice();
-        let static_slice: &'static [u8] = unsafe { ::core::mem::transmute(slice_ptr) };
-
-        match Context::new(static_slice) {
-            Ok(ctx) => Ok(SSRuntimeContext {
-                _source_data: source_data,
-                inner: ctx,
-            }),
+        match crate::AnimationResource::load_copy(data) {
+            Ok(resource) => {
+                let mut inner = Context::new();
+                // Safety: We use transmute to make the reference 'static.
+                // This is safe because SSRuntimeContext owns the resource and inner.
+                // When SSRuntimeContext is dropped, both are dropped.
+                let resource_static: &'static crate::AnimationResource<'static> = unsafe { core::mem::transmute(&resource) };
+                inner.bind_resource(resource_static);
+                Ok(SSRuntimeContext {
+                    resource,
+                    inner,
+                })
+            },
             Err(e) => Err(JsValue::from_str(&e.to_string())),
         }
     }
 
-    pub fn get_initialize_data(&mut self) -> Vec<u8> {
-        self.inner.get_initialize_data().to_vec()
+    pub fn get_animation_names(&self) -> Vec<String> {
+        self.resource.get_animation_names()
     }
 
-    pub fn get_animation_names(&mut self) -> Vec<String> {
-        self.inner
-            .get_animation_names()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect()
-    }
-
-    pub fn setup_animation(&mut self, name: &str) -> Option<Vec<u8>> {
-        self.inner.setup_animation(name).map(|s| s.to_vec())
+    pub fn setup_animation(&mut self, name: &str) -> bool {
+        match self.inner.setup_animation(name) {
+            Ok(_) => true,
+            Err(_) => false,
+        }
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Option<Vec<u8>> {
-        self.inner.get_frame_data(frame_no).map(|s| s.to_vec())
+        self.inner.get_frame_data(frame_no).ok().map(|s| s.to_vec())
     }
 
     // Frame Number getter functions

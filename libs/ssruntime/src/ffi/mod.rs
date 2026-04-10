@@ -7,8 +7,14 @@ macro_rules! eprintln {
     ($($arg:tt)*) => {};
 }
 
+pub struct FfiResource {
+    pub resource: crate::AnimationResource<'static>,
+}
+
 pub struct FfiContext {
     pub ctx: crate::Context<'static>,
+    // We hold the resource here for backward compatibility with ss_runtime_load_ssab_*
+    pub bound_resource: Option<Box<FfiResource>>,
     pub last_error: i32,
 }
 impl<'a> Default for FfiContext {
@@ -19,7 +25,7 @@ impl<'a> Default for FfiContext {
 
 impl<'a> FfiContext {
     pub fn new() -> Self {
-        Self { ctx: crate::Context::new(), last_error: 0 }
+        Self { ctx: crate::Context::new(), bound_resource: None, last_error: 0 }
     }
 }
 
@@ -29,6 +35,48 @@ fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
         return None;
     }
     unsafe { Some(&mut *(ptr as *mut FfiContext)) }
+}
+
+#[inline(always)]
+fn get_resource<'a>(ptr: *mut c_void) -> Option<&'a mut FfiResource> {
+    if ptr.is_null() {
+        return None;
+    }
+    unsafe { Some(&mut *(ptr as *mut FfiResource)) }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize) -> *mut c_void {
+    if ptr.is_null() { return core::ptr::null_mut(); }
+    let data = unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) };
+    match crate::AnimationResource::load_copy(data) {
+        Ok(resource) => {
+            let r = Box::new(FfiResource { resource });
+            Box::into_raw(r) as *mut c_void
+        },
+        Err(_) => core::ptr::null_mut()
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usize) -> *mut c_void {
+    if ptr.is_null() { return core::ptr::null_mut(); }
+    match unsafe { crate::AnimationResource::load_borrow(ptr as *const u8, len) } {
+        Ok(resource) => {
+            let r = Box::new(FfiResource { resource });
+            Box::into_raw(r) as *mut c_void
+        },
+        Err(_) => core::ptr::null_mut()
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_resource_destroy(resource: *mut c_void) {
+    if let Some(r) = get_resource(resource) {
+        unsafe {
+            let _ = Box::from_raw(r as *mut FfiResource);
+        }
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -50,8 +98,23 @@ pub extern "C" fn ss_runtime_destroy(context: *mut c_void) {
 pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.reset();
+        ffi_context.bound_resource = None;
         ffi_context.last_error = 0;
     }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut c_void) -> bool {
+    let Some(ffi_context) = get_context(context) else { return false; };
+    let Some(ffi_resource) = get_resource(resource) else { return false; };
+    
+    // Safety: In FFI, we use 'static lifetime for the reference, which means the caller 
+    // MUST ensure the resource outlives the context if they manage it externally.
+    // However, if we want to be safe, we'd need Arc.
+    // Since we are in no_std/alloc, we can't easily use Arc without more setup.
+    // For now, we assume the user manages the lifetime.
+    ffi_context.ctx.bind_resource(unsafe { &*( &ffi_resource.resource as *const _) });
+    true
 }
 
 #[unsafe(no_mangle)]
@@ -71,12 +134,16 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
         return false;
     }
 
-    let r = ffi_context.ctx.load_copy( unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) } );
-    match r {
-        Ok(_) => true,
-        Err(_e) => {
-            ffi_context.last_error = _e.as_code();
-            eprintln!("SSRuntime Error: {}", _e);
+    let data = unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) };
+    match crate::AnimationResource::load_copy(data) {
+        Ok(resource) => {
+            let ffi_res = Box::new(FfiResource { resource });
+            ffi_context.ctx.bind_resource(unsafe { &*( &ffi_res.resource as *const _) });
+            ffi_context.bound_resource = Some(ffi_res);
+            true
+        },
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
             false
         }
     }
@@ -91,12 +158,15 @@ pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const 
         return false;
     }
 
-    let r = unsafe { ffi_context.ctx.load_borrow(ptr as *const u8, len) };
-    match r {
-        Ok(_) => true,
-        Err(_e) => {
-            ffi_context.last_error = _e.as_code();
-            eprintln!("SSRuntime Error: {}", _e);
+    match unsafe { crate::AnimationResource::load_borrow(ptr as *const u8, len) } {
+        Ok(resource) => {
+            let ffi_res = Box::new(FfiResource { resource });
+            ffi_context.ctx.bind_resource(unsafe { &*( &ffi_res.resource as *const _) });
+            ffi_context.bound_resource = Some(ffi_res);
+            true
+        },
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
             false
         }
     }
