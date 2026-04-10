@@ -528,6 +528,7 @@ pub fn hermite<T: SsFloat>(value_start: T, value_end: T, rate: T, speed_start: T
         + ((rate_pow3 - rate_pow2) * (speed_end - value_end))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn bezier<T: SsFloat>(
     value_start_x: T, value_start_y: T,
     value_end_x: T, value_end_y: T,
