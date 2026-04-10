@@ -3,13 +3,16 @@
 Player の基本機能の実装において、初期化時に行うべき処理と、メモリ管理の戦略について記載します。
 
 ## 1. libssruntime の初期化 (Resource と Context の分離)
-最新のアーキテクチャでは、パース済みの読み取り専用メタデータ(`AnimationResource`)と、再生状態・計算バッファ(`Context`)が分離されています。
+最新のアーキテクチャでは、バイナリデータの所有権(`SsabData`)と、パース済みの読み取り専用メタデータ(`AnimationResource`)、および再生状態・計算バッファ(`Context`)が安全に分離されています。
 同一アニメーションを複数キャラクターで再生する場合、リソースは 1 つだけ作成し、キャラクターごとにコンテキストを作成してリソースをバインド(`bind_resource`)することでパフォーマンスが向上します。
+
+### C-API (C/C++) を使用する場合
+C-API では `SsabData` と `AnimationResource` は内部的に `FfiResource` として隠蔽されているため、以下の2ステップで初期化します。
 
 ```cpp
 #include "runtime/ssruntime.h"
 
-// 1. リソース（パース済みデータ）の作成
+// 1. リソース（データの所有権とパース済みメタデータ）の作成
 // ss_resource_create_borrow または ss_resource_create_copy を使用
 void* resource = ss_resource_create_borrow(ssab_data_ptr, ssab_data_len);
 
@@ -18,6 +21,21 @@ void* context = ss_runtime_create();
 
 // 3. リソースをコンテキストにバインド
 ss_runtime_bind_resource(context, resource);
+```
+
+### Rust を直接使用する場合
+Rust のエコシステム（Bevy や Amethyst など）から直接利用する場合は、ライフタイムを安全に管理するため明示的な 3 ステップになります。
+
+```rust
+// 1. データの所有権 (SsabData) の確立
+let ssab_data = ssruntime::SsabData::load_copy(ssab_data_ptr).unwrap();
+
+// 2. メタデータ (AnimationResource) の作成
+let resource = ssruntime::AnimationResource::new(ssab_data.as_slice()).unwrap();
+
+// 3. コンテキストの作成とバインド
+let mut context = ssruntime::Context::new();
+context.bind_resource(&resource);
 ```
 
 ### ⚠️ 重要な警告 (メモリ管理とライフタイム)

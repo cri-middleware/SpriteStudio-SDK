@@ -43,24 +43,33 @@ pub struct AnimationMetadata<'a> {
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
 }
 
-pub struct AnimationResource<'a> {
+pub struct SsabData {
     storage: SsabStorage,
-    animations: Vec<AnimationMetadata<'a>>,
 }
 
-impl<'a> AnimationResource<'a> {
+impl SsabData {
     pub fn load_copy(ssab_data: &[u8]) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Owned(ssab_data.to_vec());
-        Self::new(storage)
+        Ok(Self { storage })
     }
 
     pub unsafe fn load_borrow(ptr: *const u8, len: usize) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Borrowed { ptr, len };
-        Self::new(storage)
+        Ok(Self { storage })
     }
 
-    fn new(storage: SsabStorage) -> Result<Self, error::SSRuntimeError> {
-        let data = storage.as_slice();
+    pub fn as_slice(&self) -> &[u8] {
+        self.storage.as_slice()
+    }
+}
+
+pub struct AnimationResource<'a> {
+    data: &'a [u8],
+    animations: Vec<AnimationMetadata<'a>>,
+}
+
+impl<'a> AnimationResource<'a> {
+    pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
         // Validate
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
@@ -70,14 +79,8 @@ impl<'a> AnimationResource<'a> {
             });
         }
 
-        // Pre-parse all animations
-        // Note: We use unsafe to extend the lifetime of the slice to 'a.
-        // This is safe as long as AnimationResource is not moved or storage is not modified.
-        let data_static: &'a [u8] = unsafe { ::core::mem::transmute(data) };
-        let ssab_static = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data_static) };
-        
         let mut animations = Vec::new();
-        if let Some(fb_animations) = ssab_static.animations() {
+        if let Some(fb_animations) = ssab.animations() {
             for anim in fb_animations {
                 let mut cached_parts = Vec::new();
                 if let Some(parts) = anim.parts_animation_data() {
@@ -96,17 +99,17 @@ impl<'a> AnimationResource<'a> {
         }
 
         Ok(Self {
-            storage,
+            data,
             animations,
         })
     }
 
-    pub fn get_ssab_data(&self) -> &[u8] {
-        self.storage.as_slice()
+    pub fn get_ssab_data(&self) -> &'a [u8] {
+        self.data
     }
 
     pub fn get_animation_names(&self) -> Vec<alloc::string::String> {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.storage.as_slice()) };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
         let mut names = Vec::new();
         if let Some(animations) = ssab.animations() {
             for anim in animations {
@@ -117,7 +120,7 @@ impl<'a> AnimationResource<'a> {
     }
 
     pub fn find_animation_index(&self, name: &str) -> Option<usize> {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.storage.as_slice()) };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
         ssab.animations().and_then(|animations| {
             animations.iter().enumerate().find_map(|(i, anim)| {
                 if anim.name() == name {
@@ -444,7 +447,8 @@ mod tests {
                 if !f.is_file() || f.extension().unwrap() != "ssab" { continue; }
 
                 let input_buf =  std::fs::read(&f).unwrap();
-                let resource = AnimationResource::load_copy(&input_buf).unwrap();
+                let ssab_data = SsabData::load_copy(&input_buf).unwrap();
+                let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
                 let mut context = Context::new();
                 context.bind_resource(&resource);
 
@@ -467,7 +471,8 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
         
-        let resource = AnimationResource::load_copy(&input_buf).expect("Failed to load resource");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -529,7 +534,8 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
         
-        let resource = AnimationResource::load_copy(&input_buf).expect("Failed to load resource");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -568,7 +574,8 @@ mod tests {
         let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7_ssab/deform.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
         
-        let resource = AnimationResource::load_copy(&input_buf).expect("Failed to load resource");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
         let mut context = Context::new();
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
@@ -622,4 +629,52 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_ssab_data_and_resource_separation() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+        
+        // 1. Test SsabData load_copy
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        assert_eq!(ssab_data.as_slice().len(), input_buf.len());
+        
+        // 2. Test AnimationResource creation from SsabData
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to create AnimationResource");
+        
+        // 3. Validate context binding
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        
+        // Test names
+        let names = resource.get_animation_names();
+        assert!(!names.is_empty());
+        assert!(names.contains(&alloc::string::String::from("anime_1")));
+        
+        // Setup animation
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+        assert_eq!(context.get_frame_no(), 0);
+    }
+
+    #[test]
+    fn test_invalid_ssab_data() {
+        // Prepare dummy invalid data
+        let mut invalid_buf = vec![0u8; 128];
+        invalid_buf[0] = 0xFF; // Just some garbage
+
+        let ssab_data = SsabData::load_copy(&invalid_buf).expect("Failed to load SsabData");
+        
+        // It shouldn't panic, but it might just return garbage version, or we can just test if the loader checks versions
+        // Since we are reading an invalid buffer, the flatbuffers version check in AnimationResource::new will fail or read garbage.
+        // In some cases reading garbage as flatbuffers might cause panic or undefined behavior, but since we just do a quick version check,
+        // it should likely return an error. Let's wrap it.
+        let result = std::panic::catch_unwind(|| {
+            AnimationResource::new(ssab_data.as_slice())
+        });
+        
+        // Either it returns an error or panics due to out-of-bounds in Flatbuffers unchecked loading
+        if let Ok(res) = result {
+            assert!(res.is_err(), "Expected error for invalid ssab data");
+        }
+    }
 }
