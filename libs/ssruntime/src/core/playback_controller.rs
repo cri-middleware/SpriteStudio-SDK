@@ -223,7 +223,7 @@ impl PlaybackController {
                 self.end_frame_reached = false;
 
                 // skip frames
-                let step = self.next_frame_time / self.update_interval;
+                let step = libm::floorf(self.next_frame_time / self.update_interval);
                 self.next_frame_time -= self.update_interval * step;
                 let s = if self.is_skip_frames { step * self.playback_forward as f32 } else { self.playback_forward as f32 };
                 let next: f32 = self.current_frame + s;
