@@ -707,7 +707,7 @@ impl From<&ssab::ssab::ss::format::PartAttributeDeformT> for PartAttributeDeform
     fn from(value: &ssab::ssab::ss::format::PartAttributeDeformT) -> Self {
         Self {
             coordinate: value.coordinate.as_ref().map(|c| c.iter().map(Vec2Key::from).collect()),
-            index: value.index.as_ref().map(|i| i.iter().copied().collect()),
+            index: value.index.as_ref().map(|i| i.to_vec()),
         }
     }
 }

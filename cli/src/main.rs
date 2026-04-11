@@ -150,9 +150,8 @@ mod tests {
             );
             match r {
                 Ok(_) => {
-                    assert!(true)
                 }
-                Err(e) => assert!(false, "{:?}", e),
+                Err(e) => panic!("{:?}", e),
             }
         });
     }

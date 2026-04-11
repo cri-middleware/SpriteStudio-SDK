@@ -18,13 +18,13 @@ pub struct FfiContext {
     pub bound_resource: Option<Box<FfiResource>>,
     pub last_error: i32,
 }
-impl<'a> Default for FfiContext {
+impl Default for FfiContext {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a> FfiContext {
+impl FfiContext {
     pub fn new() -> Self {
         Self { ctx: crate::Context::new(), bound_resource: None, last_error: 0 }
     }
@@ -62,9 +62,13 @@ fn create_ffi_resource(data: crate::SsabData) -> *mut c_void {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize) -> *mut c_void {
+/// # Safety
+///
+/// This function is unsafe because it dereferences a raw pointer.
+/// The caller must ensure the pointer is valid and points to a valid memory block.
+pub unsafe extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize) -> *mut c_void {
     if ptr.is_null() { return core::ptr::null_mut(); }
-    let data = unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) };
+    let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
         Ok(ssab_data) => create_ffi_resource(ssab_data),
         Err(_) => core::ptr::null_mut()
@@ -72,9 +76,13 @@ pub extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize) -> *m
 }
 
 #[unsafe(no_mangle)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences a raw pointer.
+/// The caller must ensure the pointer is valid and points to a valid memory block.
 pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usize) -> *mut c_void {
     if ptr.is_null() { return core::ptr::null_mut(); }
-    match unsafe { crate::SsabData::load_borrow(ptr as *const u8, len) } {
+    match unsafe { crate::SsabData::load_borrow(ptr, len) } {
         Ok(ssab_data) => create_ffi_resource(ssab_data),
         Err(_) => core::ptr::null_mut()
     }
@@ -132,15 +140,11 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        return ffi_context.last_error;
-    }
-    0
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
+/// # Safety
+///
+/// This function is unsafe because it dereferences a raw pointer.
+/// The caller must ensure the pointer is valid and points to a valid memory block.
+pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let Some(ffi_context) = get_context(context) else { return false; };
     ffi_context.last_error = 0;
     if ptr.is_null() {
@@ -148,7 +152,7 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
         return false;
     }
 
-    let data = unsafe { ::core::slice::from_raw_parts(ptr as *const u8, len) };
+    let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
         Ok(ssab_data) => {
             let mut ffi_res = Box::new(FfiResource { data: ssab_data, resource: None });
@@ -176,7 +180,11 @@ pub extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *const c_
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
+/// # Safety
+///
+/// This function is unsafe because it dereferences a raw pointer.
+/// The caller must ensure the pointer is valid and points to a valid memory block.
+pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const c_uchar, len: usize) -> bool {
     let Some(ffi_context) = get_context(context) else { return false; };
     ffi_context.last_error = 0;
     if ptr.is_null() {
@@ -184,7 +192,7 @@ pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const 
         return false;
     }
 
-    match unsafe { crate::SsabData::load_borrow(ptr as *const u8, len) } {
+    match unsafe { crate::SsabData::load_borrow(ptr, len) } {
         Ok(ssab_data) => {
             let mut ffi_res = Box::new(FfiResource { data: ssab_data, resource: None });
             let data_ptr = ffi_res.data.as_slice() as *const [u8];
@@ -210,6 +218,10 @@ pub extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: *const 
 }
 
 #[unsafe(no_mangle)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
@@ -252,7 +264,11 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
+/// # Safety
+///
+/// This function is unsafe because it dereferences the `name` raw pointer.
+/// The caller must ensure that `name` points to a valid, null-terminated C string.
+pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
     let Some(ffi_context) = get_context(context) else { return false; };
     ffi_context.last_error = 0;
     if name.is_null() {
@@ -271,6 +287,10 @@ pub extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const 
 }
 
 #[unsafe(no_mangle)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.last_error = 0;

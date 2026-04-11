@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::model_t;
 
-pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, asset_provider: &Box<dyn crate::asset_provider::AssetProvider>, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
+pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, asset_provider: &dyn crate::asset_provider::AssetProvider, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| {
         if part.part_type == sspj::sstypes::SsPartType::Effect {
@@ -28,9 +28,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         if part.text_bitmap { Some(part.text_char_map.to_string()) } else { None }
     }).collect::<HashSet<String>>();
     let using_fnt_bitmaps = using_font_bitmap_names.iter().filter_map(|name| {
-        let Some(charmap) = sspj.charmap_dic.get(name) else {
-            return None;
-        };
+        let charmap = sspj.charmap_dic.get(name)?;
         Some((name.to_string(), charmap))
     }).collect::<HashMap<String, &sspj::sscharmap::SsCharMap>>();
     

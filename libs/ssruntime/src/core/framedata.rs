@@ -407,6 +407,7 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     } else { *deforms_off = None; }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
                           cached_parts: &[CachedPartData<'a>],
                           frame_no: i32,

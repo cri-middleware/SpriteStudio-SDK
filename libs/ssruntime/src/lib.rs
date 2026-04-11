@@ -53,6 +53,11 @@ impl SsabData {
         Ok(Self { storage })
     }
 
+    /// # Safety
+    ///
+    /// This function is unsafe because it creates a slice from a raw pointer and length.
+    /// The caller must ensure that `ptr` points to a valid memory block of at least `len` bytes
+    /// and that the memory remains valid for the lifetime of the returned `SsabData`.
     pub unsafe fn load_borrow(ptr: *const u8, len: usize) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Borrowed { ptr, len };
         Ok(Self { storage })

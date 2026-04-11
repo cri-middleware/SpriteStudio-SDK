@@ -510,7 +510,7 @@ mod tests {
 
         let (frame, decimal) = t.update(delta);
         assert_eq!(frame, 1);
-        assert!(decimal >= 0.0 && decimal < 0.1, "Expected around 0.0, got {}", decimal);
+        assert!((0.0..0.1).contains(&decimal), "Expected around 0.0, got {}", decimal);
     }
 
     #[test]
@@ -688,6 +688,6 @@ mod tests {
         
         let (frame, decimal) = t.update(delta);
         assert_eq!(frame, 8, "Should have bounced back to frame 8");
-        assert!(decimal >= 0.0 && decimal < 0.001, "Decimal should be exactly 0.0, got {}", decimal);
+        assert!((0.0..0.001).contains(&decimal), "Decimal should be exactly 0.0, got {}", decimal);
     }
 }
