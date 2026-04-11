@@ -12,12 +12,15 @@ This tool wraps [libssconverter](../libs/ssconverter) and provides easy access t
 
 ## Single Mode
 
-Converts a single `.sspj` project file.
+Converts a single `.sspj` project file or a `.zip` file containing a project.
 In this mode, you can specify an output directory and enable file watching.
 
 ```bash
 # Convert a single project
 $ ssconverter-cli project.sspj
+
+# Convert a zipped project
+$ ssconverter-cli project.zip
 
 # Convert and specify output directory
 $ ssconverter-cli project.sspj -o ./output_folder
@@ -26,7 +29,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 ### Options (Single Mode)
 - `-e`, `--embedded`: Embed referenced assets (images, etc.) directly into the generated `.ssab` file.
 - `-o`, `--out-dir <directory>`: Specify the output directory for generated files.
-- `-w`, `--watcher`: Watch the project directory for changes and automatically re-convert when files are modified.
+- `-w`, `--watch`: Watch the project directory for changes and automatically re-convert when files are modified.
 - `-h`, `--help`: Print help information.
 
 ## Batch Mode
@@ -47,7 +50,16 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 - `-e`, `--embedded`: Embed referenced assets directly into the generated `.ssab` files.
 - `-h`, `--help`: Print help information.
 
-_Note: The `--out-dir` and `--watcher` options are not available in batch mode._
+_Note: The `--out-dir` and `--watch` options are not available in batch mode._
+
+# Installation
+
+To install `ssconverter-cli` on your system, you can use `cargo install`:
+
+```bash
+# From the repository root
+$ cargo install --path cli
+```
 
 # Examples
 

@@ -35,6 +35,14 @@ ssab = { path = "libs/ssab" }
 ssab = { path = "libs/ssab" }
 ```
 
+## `no_std` サポート
+`libssab` は `no_std` 環境と互換性があります。`no_std` で使用する場合は、デフォルト機能を無効にします：
+
+```toml
+[dependencies]
+ssab = { path = "libs/ssab", default-features = false }
+```
+
 ## `converter`
 データの生成や編集を行うツール向けのモードです。
 FlatBuffers の Object API (`--gen-object-api`) が有効になり、Rust の構造体としてデータを操作し、バイナリへの書き出しが可能になります。

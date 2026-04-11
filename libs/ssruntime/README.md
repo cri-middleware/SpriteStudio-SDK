@@ -18,6 +18,19 @@ It loads binary data (`.ssab`, `.ssqb`) and provides core logic such as animatio
 - **Instance Feature**: Supports calling other animations from parent parts.
 - **Random Seed Management**: Seed control to ensure reproducibility for particle effects, etc.
 
+# `no_std` Support
+
+`libssruntime` is designed to be compatible with `no_std` environments, making it suitable for embedded systems or custom game engine cores.
+
+To use it in a `no_std` environment, disable the default features in your `Cargo.toml`:
+
+```toml
+[dependencies]
+ssruntime = { path = "libs/ssruntime", default-features = false }
+```
+
+*Note: In `no_std` mode, an allocator (`alloc` crate) is still required for managing animation state and metadata.*
+
 # Architecture
 
 This library outputs the calculation results as "Part States".
@@ -40,11 +53,49 @@ It exposes Rust functionality through a C language interface.
 
 ## Usage Flow
 
-1.  **Create Context**: Create a context to manage the library state.
-2.  **Load Data**: Pass binary data (`.ssab`) in memory to load it.
-3.  **Create Player**: Generate a player instance from the loaded data.
-4.  **Update Loop**: Call `update(dt)` every frame to advance internal time.
-5.  **Get Rendering Info**: Retrieve updated part information and pass it to the rendering engine.
+1.  **Create Context**: Create a context to manage the playback state (`ss_runtime_create`).
+2.  **Load Resource**: Load binary data (`.ssab`) into a resource object (`ss_resource_create_copy`).
+3.  **Bind Resource**: Bind the resource to the context (`ss_runtime_bind_resource`).
+4.  **Setup Animation**: Specify which animation to play by its name (`ss_runtime_setup_animation`).
+5.  **Update Loop**: Call `ss_runtime_update(ctx, dt)` every frame to advance internal time.
+6.  **Get Rendering Info**: Retrieve updated part information (`ss_runtime_get_frame_data`) and pass it to the rendering engine.
+
+## Example C++ Usage
+
+```cpp
+#include "ssruntime.h"
+
+void play_animation(const uint8_t* ssab_data, size_t size) {
+    // 1. Create Context
+    void* ctx = ss_runtime_create();
+    
+    // 2. Load Resource (copying binary data into internal storage)
+    void* res = ss_resource_create_copy(ssab_data, size);
+    
+    // 3. Bind Resource to Context
+    ss_runtime_bind_resource(ctx, res);
+    
+    // 4. Setup Animation
+    ss_runtime_setup_animation(ctx, "Wait");
+    ss_runtime_play(ctx);
+
+    // 5. Update Loop
+    float dt = 1.0f / 60.0f;
+    while (ss_runtime_is_playing(ctx)) {
+        int frame = ss_runtime_update(ctx, dt);
+        
+        // 6. Get Rendering Info
+        uint8_t* data;
+        size_t len;
+        ss_runtime_get_frame_data(ctx, frame, &data, &len);
+        
+        // render_parts(data, len);
+    }
+
+    ss_resource_destroy(res);
+    ss_runtime_destroy(ctx);
+}
+```
 
 ## Header File
 

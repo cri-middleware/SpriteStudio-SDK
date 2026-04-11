@@ -18,6 +18,19 @@ SpriteStudio 7 のアニメーションデータを再生するためのラン�
 - **インスタンス機能**: 親パーツから別のアニメーションを呼び出す機能のサポート。
 - **乱数シード管理**: パーティクルエフェクトなどの再現性を保つためのシード制御。
 
+# `no_std` サポート
+
+`libssruntime` は `no_std` 環境と互換性があるように設計されており、組み込みシステムやカスタムゲームエンジンのコアでの利用に適しています。
+
+`no_std` 環境で使用する場合は、`Cargo.toml` でデフォルト機能を無効にします：
+
+```toml
+[dependencies]
+ssruntime = { path = "libs/ssruntime", default-features = false }
+```
+
+*注意: `no_std` モードでも、アニメーションの状態やメタデータを管理するためにアロケータ (`alloc` クレート) は必要です。*
+
 # アーキテクチャ
 
 このライブラリは、計算結果を「パーツの状態 (State)」として出力します。
@@ -40,11 +53,50 @@ Rust の機能を C 言語インターフェースを通じて公開していま
 
 ## 利用フロー
 
-1. **Context の作成**: ライブラリの状態を管理するコンテキストを生成します。
-2. **データのロード**: メモリ上のバイナリデータ (`.ssab`) を渡してロードします。
-3. **Player の作成**: ロードしたデータからプレイヤーインスタンスを生成します。
-4. **更新ループ (Update)**: 毎フレーム `update(dt)` を呼び出し、内部時間を進めます。
-5. **描画情報の取得**: 更新後のパーツ情報を取得し、レンダリングエンジンに渡します。
+1. **Context の作成**: 再生状態を管理するコンテキストを生成します (`ss_runtime_create`)。
+2. **Resource のロード**: メモリ上のバイナリデータ (`.ssab`) をリソースオブジェクトとしてロードします (`ss_resource_create_copy`)。
+3. **Resource のバインド**: ロードしたリソースをコンテキストに紐付けます (`ss_runtime_bind_resource`)。
+4. **アニメーションの設定**: 再生したいアニメーション名を指定します (`ss_runtime_setup_animation`)。
+5. **更新ループ (Update)**: 毎フレーム `ss_runtime_update(ctx, dt)` を呼び出し、内部時間を進めます。
+6. **描画情報の取得**: 更新後のパーツ情報を取得し (`ss_runtime_get_frame_data`)、レンダリングエンジンに渡します。
+
+## C++ での利用例
+
+```cpp
+#include "ssruntime.h"
+
+void play_animation(const uint8_t* ssab_data, size_t size) {
+    // 1. Context の作成
+    void* ctx = ss_runtime_create();
+    
+    // 2. Resource のロード (バイナリデータを内部ストレージにコピー)
+    void* res = ss_resource_create_copy(ssab_data, size);
+    
+    // 3. Resource を Context にバインド
+    ss_runtime_bind_resource(ctx, res);
+    
+    // 4. アニメーションの設定と再生開始
+    ss_runtime_setup_animation(ctx, "Wait");
+    ss_runtime_play(ctx);
+
+    // 5. 更新ループ
+    float dt = 1.0f / 60.0f;
+    while (ss_runtime_is_playing(ctx)) {
+        int frame = ss_runtime_update(ctx, dt);
+        
+        // 6. 描画情報の取得
+        uint8_t* data;
+        size_t len;
+        ss_runtime_get_frame_data(ctx, frame, &data, &len);
+        
+        // render_parts(data, len);
+    }
+
+    // リソースとコンテキストの破棄
+    ss_resource_destroy(res);
+    ss_runtime_destroy(ctx);
+}
+```
 
 ## ヘッダファイル
 
