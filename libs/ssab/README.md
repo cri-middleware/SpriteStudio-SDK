@@ -36,6 +36,14 @@ Suitable for game runtimes or players that only need to playback data.
 ssab = { path = "libs/ssab" }
 ```
 
+## `no_std` Support
+`libssab` is compatible with `no_std` environments. To use it, disable the default features:
+
+```toml
+[dependencies]
+ssab = { path = "libs/ssab", default-features = false }
+```
+
 ## `converter`
 Mode for tools that generate or edit data.
 Enables FlatBuffers Object API (`--gen-object-api`), allowing manipulation of data as Rust structs and writing back to binary.

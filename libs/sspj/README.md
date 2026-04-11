@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 let path = Path::new("path/to/project.sspj");
 
     // Load the project and all referenced files
-    let project = SsProject::load_from_file(&path)?;
+    let project = SsProject::load_from_file(path)?;
 
     println!("Project Name: {}", project.name);
     println!("Version: {}", project.version);

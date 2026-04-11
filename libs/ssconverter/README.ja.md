@@ -9,7 +9,7 @@ SpriteStudio 7 のプロジェクトファイル (`.sspj`) を、ランタイム
 # 主な機能
 
 - **プロジェクト変換**: `.sspj` (プロジェクト) を `.ssab` (アニメーション) に、`.ssqe` (シーケンス) を `.ssqb` に変換します。
-- **最適化**: FlatBuffers のシリアライズ時に、座標、色、文字列などのデータ構造を重複排除 (Deduplication) し、バイナリサイズを最小化します。
+- **最適化**: FlatBuffers のシリアライズ時に、座標、色、文字列などのデータ構造を重複排除 (Deduplication) します。これにより、バイナリサイズを大幅に削減（複雑なアニメーションでは 50% 以上削減されることもあります）し、実行時のキャッシュ効率を向上させます。
 - **埋め込みモード**: 参照されているアセット（画像など）をバイナリ内に直接埋め込むオプションをサポートしています。
 - **ファイル監視**: プロジェクトディレクトリの変更を監視し、自動的に再変換を行う機能を備えています。
 - **C-API / FFI**: C++ など他の言語から利用するための C 互換インターフェースを提供します。
@@ -38,11 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             embedded: false,  // テクスチャを埋め込まない
             ..Default::default()
         },
-        out_dir: None, // デフォルトの出力先 (例: project_ssab/) を使用
+        output: None, // デフォルトの出力先 (例: project_ssab/) を使用
     };
 
-    // 変換を実行してファイルを保存
-    convert_sspj_to_ssab_files(sspj_path, &config)?;
+    // 変換を実行してファイルを保存 (ログ出力用コールバックを指定)
+    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
     
     Ok(())
 }
@@ -62,10 +62,11 @@ void convert() {
     ss_converter_context* ctx = ss_converter_create();
     
     // バックグラウンドスレッドで変換を開始
-    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir");
+    // ログが不要な場合はコールバックに nullptr を渡します
+    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", nullptr);
     
     // 完了を待機
-    while (!ss_converter_is_finished(ctx)) {
+    while (ss_converter_is_running(ctx)) {
         // sleep or update progress
     }
     
@@ -75,7 +76,7 @@ void convert() {
         char* err_msg;
         size_t len;
         ss_converter_get_error(ctx, &err_msg, &len);
-        printf("Error: %s\n", err_msg);
+        printf("Error: %.*s\n", (int)len, err_msg);
     }
     
     ss_converter_destroy(ctx);

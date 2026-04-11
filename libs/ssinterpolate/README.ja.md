@@ -20,8 +20,11 @@ let start = 0.0f32;
 let end = 100.0f32;
 let rate = 0.5f32;
 
-// 線形補間
+// 線形補間 (f32)
 let value = linear(start, end, rate);
+
+// f64 にも対応
+let value_f64 = linear(0.0f64, 100.0f64, 0.5f64);
 
 // イージング
 let eased_rate = rate_ease_in(rate, 2.0);

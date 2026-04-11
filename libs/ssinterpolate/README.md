@@ -20,8 +20,11 @@ let start = 0.0f32;
 let end = 100.0f32;
 let rate = 0.5f32;
 
-// Linear interpolation
+// Linear interpolation (f32)
 let value = linear(start, end, rate);
+
+// Generic support for f64
+let value_f64 = linear(0.0f64, 100.0f64, 0.5f64);
 
 // Easing
 let eased_rate = rate_ease_in(rate, 2.0);

@@ -9,7 +9,7 @@ It utilizes `sspj` to parse the project and `ssab` to generate FlatBuffers binar
 # Features
 
 - **Project Conversion**: Converts `.sspj` (project) to `.ssab` (animation) and `.ssqe` (sequence) to `.ssqb`.
-- **Optimization**: Deduplicates data structures (like coordinates, colors, strings) during FlatBuffers serialization to minimize binary size.
+- **Optimization**: Deduplicates data structures (like coordinates, colors, strings) during FlatBuffers serialization. This can significantly reduce the binary size (often by 50% or more for complex animations) and improves cache efficiency during runtime playback.
 - **Embedded Mode**: Optionally embeds referenced assets (images, etc.) directly into the binary.
 - **File Watching**: Monitors the project directory for changes and automatically re-converts files.
 - **C-API / FFI**: Provides C-compatible interfaces for integration with other languages (C++, etc.).
@@ -38,11 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             embedded: false,  // Do not embed textures
             ..Default::default()
         },
-        out_dir: None, // Use default output directory (e.g. project_ssab/)
+        output: None, // Use default output directory (e.g. project_ssab/)
     };
 
-    // Convert and save files
-    convert_sspj_to_ssab_files(sspj_path, &config)?;
+    // Convert and save files (with a logging callback)
+    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
     
     Ok(())
 }
@@ -62,10 +62,11 @@ void convert() {
     ss_converter_context* ctx = ss_converter_create();
     
     // Start conversion in a background thread
-    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir");
+    // Pass nullptr for the logging callback if not needed
+    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", nullptr);
     
     // Wait for finish
-    while (!ss_converter_is_finished(ctx)) {
+    while (ss_converter_is_running(ctx)) {
         // sleep or update progress
     }
     
@@ -75,7 +76,7 @@ void convert() {
         char* err_msg;
         size_t len;
         ss_converter_get_error(ctx, &err_msg, &len);
-        printf("Error: %s\n", err_msg);
+        printf("Error: %.*s\n", (int)len, err_msg);
     }
     
     ss_converter_destroy(ctx);
