@@ -1656,13 +1656,13 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.lt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lt = Some(Box::new(c));
+                        if let Some(p) = k.value.lt.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.lt = Some(Box::new(c));
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.rt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rt = Some(Box::new(c));
+                        if let Some(p) = k.value.rt.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.rt = Some(Box::new(c));
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.lb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lb = Some(Box::new(c));
+                        if let Some(p) = k.value.lb.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.lb = Some(Box::new(c));
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.rb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rb = Some(Box::new(c));
+                        if let Some(p) = k.value.rb.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.rb = Some(Box::new(c));
                         Some(Box::new(value))
                     }, convert_part_animation_data_expand_key_vertex);
                 }
