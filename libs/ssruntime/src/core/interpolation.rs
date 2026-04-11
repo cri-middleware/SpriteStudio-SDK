@@ -182,7 +182,7 @@ where
     *hint = res_idx;
 
     if left == 0 {
-        Some(array.get(0))
+        None
     } else {
         Some(array.get(left - 1))
     }
@@ -633,11 +633,148 @@ pub fn evaluate_texture(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ssab::ssab::ss::format::{PartAnimationDataBoolValue, PartAnimationDataBoolValueArgs};
+    use ssab::ssab::ss::format::{PartAnimationDataUIntValue, PartAnimationDataUIntValueArgs};
 
     #[test]
     fn test_linear_interpolation() {
         assert_eq!(linear(0.0, 10.0, 0.5), 5.0);
         assert_eq!(linear(10.0, 20.0, 0.0), 10.0);
         assert_eq!(linear(10.0, 20.0, 1.0), 20.0);
+    }
+
+    #[test]
+    fn test_evaluate_bool() {
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+        
+        let v0 = PartAnimationDataBoolValue::create(&mut builder, &PartAnimationDataBoolValueArgs {
+            index: 0,
+            value: true,
+        });
+        let v10 = PartAnimationDataBoolValue::create(&mut builder, &PartAnimationDataBoolValueArgs {
+            index: 10,
+            value: false,
+        });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+        
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataBoolValue>>>(buf).unwrap();
+
+        let mut hint = 0;
+        // Exact match
+        assert_eq!(evaluate_bool(vector, 0, &mut hint), Some(true));
+        // Interpolated (should use prev)
+        assert_eq!(evaluate_bool(vector, 5, &mut hint), Some(true));
+        // Exact match
+        assert_eq!(evaluate_bool(vector, 10, &mut hint), Some(false));
+        // Beyond last key
+        assert_eq!(evaluate_bool(vector, 15, &mut hint), Some(false));
+        // Before first key
+        assert_eq!(evaluate_bool(vector, -1, &mut hint), None);
+    }
+
+    #[test]
+    fn test_evaluate_texture() {
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+        
+        let v0 = PartAnimationDataUIntValue::create(&mut builder, &PartAnimationDataUIntValueArgs {
+            index: 0,
+            value: 100,
+            interpolation: InterpolationType::None,
+        });
+        let v10 = PartAnimationDataUIntValue::create(&mut builder, &PartAnimationDataUIntValueArgs {
+            index: 10,
+            value: 200,
+            interpolation: InterpolationType::None,
+        });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+        
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>(buf).unwrap();
+
+        let mut hint = 0;
+        assert_eq!(evaluate_texture(vector, 0, &mut hint), Some(100));
+        assert_eq!(evaluate_texture(vector, 5, &mut hint), Some(100));
+        assert_eq!(evaluate_texture(vector, 10, &mut hint), Some(200));
+        assert_eq!(evaluate_texture(vector, 15, &mut hint), Some(200));
+    }
+
+    #[test]
+    fn test_evaluate_int_no_interpolation() {
+        use ssab::ssab::ss::format::{PartAnimationDataIntValue, PartAnimationDataIntValueArgs};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+        
+        let v0 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs {
+            index: 0,
+            value: 100,
+            interpolation: InterpolationType::None,
+        });
+        let v10 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs {
+            index: 10,
+            value: 200,
+            interpolation: InterpolationType::None,
+        });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+        
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>(buf).unwrap();
+
+        let mut hint = 0;
+        // At frame 0, should be ON and 100
+        let (val, flags) = evaluate_int(vector, 0, &mut hint).unwrap();
+        assert_eq!(val, 100);
+        assert!(!flags.is_empty());
+
+        // At frame 5, should be OFF (inherited) and 100
+        let (val, flags) = evaluate_int(vector, 5, &mut hint).unwrap();
+        assert_eq!(val, 100);
+        assert!(flags.is_empty());
+
+        // At frame 10, should be ON and 200
+        let (val, flags) = evaluate_int(vector, 10, &mut hint).unwrap();
+        assert_eq!(val, 200);
+        assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_evaluate_cell() {
+        use ssab::ssab::ss::format::{PartAnimationDataCellValue, PartAnimationDataCellValueArgs, PartAttributeCell, PartAttributeCellArgs};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+        
+        let cell_a = PartAttributeCell::create(&mut builder, &PartAttributeCellArgs {
+            map_id: 1,
+            name_hash: 111,
+        });
+        let v0 = PartAnimationDataCellValue::create(&mut builder, &PartAnimationDataCellValueArgs {
+            index: 0,
+            value: Some(cell_a),
+        });
+        
+        let cell_b = PartAttributeCell::create(&mut builder, &PartAttributeCellArgs {
+            map_id: 2,
+            name_hash: 222,
+        });
+        let v10 = PartAnimationDataCellValue::create(&mut builder, &PartAnimationDataCellValueArgs {
+            index: 10,
+            value: Some(cell_b),
+        });
+        
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+        
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataCellValue>>>(buf).unwrap();
+
+        let mut hint = 0;
+        let res = evaluate_cell(vector, 5, &mut hint).unwrap();
+        assert_eq!(res.map_id(), 1);
+        assert_eq!(res.name_hash(), 111);
+
+        let res = evaluate_cell(vector, 10, &mut hint).unwrap();
+        assert_eq!(res.map_id(), 2);
+        assert_eq!(res.name_hash(), 222);
     }
 }
