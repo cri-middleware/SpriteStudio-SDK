@@ -23,6 +23,13 @@ default = ["ffi"]
 ffi = []
 web = ["wasm-bindgen"]
 
+[lints.clippy]
+field_reassign_with_default = "allow"
+missing_safety_doc = "allow"
+module_inception = "allow"
+no_effect = "allow"
+unnecessary_get_then_check = "allow"
+
 [build-dependencies]
 cbindgen = { workspace = true }
 vergen-gitcl = { workspace = true }

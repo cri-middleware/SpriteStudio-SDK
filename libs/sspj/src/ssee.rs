@@ -552,10 +552,9 @@ mod tests {
         match r {
             Ok(ss_effect_file) => {
                 println!("{:?}", ss_effect_file);
-                assert!(true);
             }
             Err(e) => {
-                assert!(false, "{:?}", e);
+                panic!("{:?}", e);
             }
         }
     }

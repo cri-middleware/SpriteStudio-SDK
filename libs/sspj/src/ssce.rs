@@ -113,10 +113,9 @@ mod tests {
         match r {
             Ok(ss_cell_map) => {
                 println!("{:?}", ss_cell_map);
-                assert!(true)
             }
             Err(e) => {
-                assert!(false, "{:?}", e);
+                panic!("{:?}", e);
             }
         }
     }

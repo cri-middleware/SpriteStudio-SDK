@@ -11,3 +11,6 @@ default = ["std"]
 std = ["flatbuffers/std"]
 converter = ["std"]
 
+[lints.clippy]
+all = "allow"
+pedantic = "allow"

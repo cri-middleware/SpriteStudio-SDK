@@ -77,6 +77,7 @@ pub fn rate_linear_batch_f32x4(value_now: f32x4, value_start: f32x4, value_end: 
 }
 
 #[inline]
+#[allow(clippy::too_many_arguments)]
 pub fn bezier_batch_f32x4(
     value_start_x: f32x4, value_start_y: f32x4,
     value_end_x: f32x4, value_end_y: f32x4,
@@ -889,8 +890,8 @@ mod tests {
         let end = [1.0; 16];
         let mut out = [0.0; 16];
         interpolate_color_linear(&start, &end, 0.5, &mut out);
-        for i in 0..16 {
-            assert_near(out[i], 0.5);
+        for val in out {
+            assert_near(val, 0.5);
         }
     }
 
@@ -902,9 +903,10 @@ mod tests {
         let actual_in = res_in.to_array();
         let actual_out = res_out.to_array();
         
-        for i in 0..4 {
-            assert_near(actual_in[i], rate_ease_back_in(rate_v.to_array()[i]));
-            assert_near(actual_out[i], rate_ease_back_out(rate_v.to_array()[i]));
+        let rates = rate_v.to_array();
+        for (i, &rate) in rates.iter().enumerate() {
+            assert_near(actual_in[i], rate_ease_back_in(rate));
+            assert_near(actual_out[i], rate_ease_back_out(rate));
         }
     }
 
@@ -977,8 +979,8 @@ mod tests {
         let res_in = rate_elastic_in_batch_f32x4(rate_v, p_v);
         let actual_in = res_in.to_array();
         
-        for i in 0..4 {
-            let v = rate_v.to_array()[i];
+        let rates = rate_v.to_array();
+        for (i, &v) in rates.iter().enumerate() {
             // Since it's an approximation, we check if it's broadly correct
             // For production quality, higher order polynomials are needed.
             let expected = rate_ease_elastic_in(v, 0.3);

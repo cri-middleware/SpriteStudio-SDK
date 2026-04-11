@@ -707,7 +707,7 @@ impl From<&ssab::ssab::ss::format::PartAttributeDeformT> for PartAttributeDeform
     fn from(value: &ssab::ssab::ss::format::PartAttributeDeformT) -> Self {
         Self {
             coordinate: value.coordinate.as_ref().map(|c| c.iter().map(Vec2Key::from).collect()),
-            index: value.index.as_ref().map(|i| i.iter().copied().collect()),
+            index: value.index.as_ref().map(|i| i.to_vec()),
         }
     }
 }
@@ -1060,9 +1060,10 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.vec2_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::Vec2Args::default();
-        args.v1 = vec2t.v1;
-        args.v2 = vec2t.v2;
+        let args = ssab::ssab::ss::format::Vec2Args {
+            v1: vec2t.v1,
+            v2: vec2t.v2,
+        };
         let offset = ssab::ssab::ss::format::Vec2::create(fb, &args);
         self.vec2_cache.insert(key, offset);
         offset
@@ -1073,11 +1074,12 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.rect_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::RectArgs::default();
-        args.x1 = rectt.x1;
-        args.y1 = rectt.y1;
-        args.x2 = rectt.x2;
-        args.y2 = rectt.y2;
+        let args = ssab::ssab::ss::format::RectArgs {
+            x1: rectt.x1,
+            y1: rectt.y1,
+            x2: rectt.x2,
+            y2: rectt.y2,
+        };
         let offset = ssab::ssab::ss::format::Rect::create(fb, &args);
         self.rect_cache.insert(key, offset);
         offset
@@ -1088,11 +1090,12 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.u8rect_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::U8RectArgs::default();
-        args.a = u8rectt.a;
-        args.r = u8rectt.r;
-        args.g = u8rectt.g;
-        args.b = u8rectt.b;
+        let args = ssab::ssab::ss::format::U8RectArgs {
+            a: u8rectt.a,
+            r: u8rectt.r,
+            g: u8rectt.g,
+            b: u8rectt.b,
+        };
         let offset = ssab::ssab::ss::format::U8Rect::create(fb, &args);
         self.u8rect_cache.insert(key, offset);
         offset
@@ -1114,8 +1117,9 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.bool_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::BoolValueEntryArgs::default();
-        args.value = bool_value_tablet.value;
+        let args = ssab::ssab::ss::format::BoolValueEntryArgs {
+            value: bool_value_tablet.value,
+        };
         let offset = ssab::ssab::ss::format::BoolValueEntry::create(fb, &args);
         self.bool_value_table_cache.insert(key, offset);
         offset
@@ -1126,8 +1130,9 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.int_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::IntValueEntryArgs::default();
-        args.value = int_value_table_t.value;
+        let args = ssab::ssab::ss::format::IntValueEntryArgs {
+            value: int_value_table_t.value,
+        };
         let offset = ssab::ssab::ss::format::IntValueEntry::create(fb, &args);
         self.int_value_table_cache.insert(key, offset);
         offset
@@ -1138,8 +1143,9 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.float_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::FloatValueEntryArgs::default();
-        args.value = float_value_table_t.value;
+        let args = ssab::ssab::ss::format::FloatValueEntryArgs {
+            value: float_value_table_t.value,
+        };
         let offset = ssab::ssab::ss::format::FloatValueEntry::create(fb, &args);
         self.float_value_table_cache.insert(key, offset);
         offset
@@ -1150,8 +1156,9 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.string_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::StringValueEntryArgs::default();
-        args.value = string_value_table_t.value.as_ref().map(|s| fb.create_shared_string(s));
+        let args = ssab::ssab::ss::format::StringValueEntryArgs {
+            value: string_value_table_t.value.as_ref().map(|s| fb.create_shared_string(s)),
+        };
         let offset = ssab::ssab::ss::format::StringValueEntry::create(fb, &args);
         self.string_value_table_cache.insert(key, offset);
         offset
@@ -1162,10 +1169,9 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.vec2_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::Vec2ValueEntryArgs::default();
-        if let Some(v) = vec2_value_table_t.value.as_ref() {
-            args.value = Some(self.create_shared_vec2(fb, v));
-        }
+        let args = ssab::ssab::ss::format::Vec2ValueEntryArgs {
+            value: vec2_value_table_t.value.as_ref().map(|v| self.create_shared_vec2(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::Vec2ValueEntry::create(fb, &args);
         self.vec2_value_table_cache.insert(key, offset);
         offset
@@ -1176,10 +1182,9 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.rect_value_table_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::RectValueEntryArgs::default();
-        if let Some(v) = rect_value_table_t.value.as_ref() {
-            args.value = Some(self.create_shared_rect(fb, v));
-        }
+        let args = ssab::ssab::ss::format::RectValueEntryArgs {
+            value: rect_value_table_t.value.as_ref().map(|v| self.create_shared_rect(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::RectValueEntry::create(fb, &args);
         self.rect_value_table_cache.insert(key, offset);
         offset
@@ -1190,10 +1195,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_float_value_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs::default();
-        args.index = part_animation_data_float_value_t.index;
-        args.interpolation = part_animation_data_float_value_t.interpolation;
-        args.value = part_animation_data_float_value_t.value;
+        let args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs {
+            index: part_animation_data_float_value_t.index,
+            interpolation: part_animation_data_float_value_t.interpolation,
+            value: part_animation_data_float_value_t.value,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataFloatValue::create(fb, &args);
         self.part_animation_data_float_value_cache.insert(key, offset);
         offset
@@ -1216,10 +1222,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_int_value_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs::default();
-        args.index = part_animation_data_int_value_t.index;
-        args.interpolation = part_animation_data_int_value_t.interpolation;
-        args.value = part_animation_data_int_value_t.value;
+        let args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs {
+            index: part_animation_data_int_value_t.index,
+            interpolation: part_animation_data_int_value_t.interpolation,
+            value: part_animation_data_int_value_t.value,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataIntValue::create(fb, &args);
         self.part_animation_data_int_value_cache.insert(key, offset);
         offset
@@ -1241,10 +1248,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_uint_value_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataUIntValueArgs::default();
-        args.index = part_animation_data_uint_value_t.index;
-        args.interpolation = part_animation_data_uint_value_t.interpolation;
-        args.value = part_animation_data_uint_value_t.value;
+        let args = ssab::ssab::ss::format::PartAnimationDataUIntValueArgs {
+            index: part_animation_data_uint_value_t.index,
+            interpolation: part_animation_data_uint_value_t.interpolation,
+            value: part_animation_data_uint_value_t.value,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataUIntValue::create(fb, &args);
         self.part_animation_data_uint_value_cache.insert(key, offset);
         offset
@@ -1266,9 +1274,10 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_bool_value_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataBoolValueArgs::default();
-        args.index = part_animation_data_bool_value_t.index;
-        args.value = part_animation_data_bool_value_t.value;
+        let args = ssab::ssab::ss::format::PartAnimationDataBoolValueArgs {
+            index: part_animation_data_bool_value_t.index,
+            value: part_animation_data_bool_value_t.value,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataBoolValue::create(fb, &args);
         self.part_animation_data_bool_value_cache.insert(key, offset);
         offset
@@ -1290,9 +1299,10 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_cell_value_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataCellValueArgs::default();
-        args.index = part_animation_data_cell_value_t.index;
-        args.value = part_animation_data_cell_value_t.value.as_ref().map(|v| self.create_shared_part_attribute_cell(fb, v));
+        let args = ssab::ssab::ss::format::PartAnimationDataCellValueArgs {
+            index: part_animation_data_cell_value_t.index,
+            value: part_animation_data_cell_value_t.value.as_ref().map(|v| self.create_shared_part_attribute_cell(fb, v)),
+        };
 
         let offset = ssab::ssab::ss::format::PartAnimationDataCellValue::create(fb, &args);
         self.part_animation_data_cell_value_cache.insert(key, offset);
@@ -1315,10 +1325,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_part_color_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataPartColorArgs::default();
-        args.index = part_animation_data_part_color.index;
-        args.interpolation = part_animation_data_part_color.interpolation;
-        args.value = part_animation_data_part_color.value.as_ref().map(|v| self.create_shared_part_attribute_part_color(fb, v));
+        let args = ssab::ssab::ss::format::PartAnimationDataPartColorArgs {
+            index: part_animation_data_part_color.index,
+            interpolation: part_animation_data_part_color.interpolation,
+            value: part_animation_data_part_color.value.as_ref().map(|v| self.create_shared_part_attribute_part_color(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataPartColor::create(fb, &args);
         self.part_animation_data_part_color_cache.insert(key, offset);
         offset
@@ -1340,10 +1351,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_shader_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataShaderArgs::default();
-        args.index = part_animation_data_shader.index;
-        args.interpolation = part_animation_data_shader.interpolation;
-        args.value = part_animation_data_shader.value.as_ref().map(|v| self.create_shared_part_attribute_shader(fb, v));
+        let args = ssab::ssab::ss::format::PartAnimationDataShaderArgs {
+            index: part_animation_data_shader.index,
+            interpolation: part_animation_data_shader.interpolation,
+            value: part_animation_data_shader.value.as_ref().map(|v| self.create_shared_part_attribute_shader(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataShader::create(fb, &args);
         self.part_animation_data_shader_cache.insert(key, offset);
         offset
@@ -1365,10 +1377,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_vertex_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataVertexArgs::default();
-        args.index = part_animation_data_vertex.index;
-        args.interpolation = part_animation_data_vertex.interpolation;
-        args.value = part_animation_data_vertex.value.as_ref().map(|v| self.create_shared_part_attribute_vertex(fb, v));
+        let args = ssab::ssab::ss::format::PartAnimationDataVertexArgs {
+            index: part_animation_data_vertex.index,
+            interpolation: part_animation_data_vertex.interpolation,
+            value: part_animation_data_vertex.value.as_ref().map(|v| self.create_shared_part_attribute_vertex(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataVertex::create(fb, &args);
         self.part_animation_data_vertex_cache.insert(key, offset);
         offset
@@ -1390,10 +1403,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_vec2_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataVec2Args::default();
-        args.index = part_animation_data_vec2.index;
-        args.interpolation = part_animation_data_vec2.interpolation;
-        args.value = part_animation_data_vec2.value.as_ref().map(|v| self.create_shared_vec2(fb, v));
+        let args = ssab::ssab::ss::format::PartAnimationDataVec2Args {
+            index: part_animation_data_vec2.index,
+            interpolation: part_animation_data_vec2.interpolation,
+            value: part_animation_data_vec2.value.as_ref().map(|v| self.create_shared_vec2(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataVec2::create(fb, &args);
         self.part_animation_data_vec2_cache.insert(key, offset);
         offset
@@ -1415,10 +1429,11 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_deform_cache.get(&key) {
             return offset;
         }
-        let mut args = ssab::ssab::ss::format::PartAnimationDataDeformArgs::default();
-        args.index = part_animation_data_deform.index;
-        args.interpolation = part_animation_data_deform.interpolation;
-        args.value = part_animation_data_deform.value.as_ref().map(|v| self.create_shared_part_attribute_deform(fb, v));
+        let args = ssab::ssab::ss::format::PartAnimationDataDeformArgs {
+            index: part_animation_data_deform.index,
+            interpolation: part_animation_data_deform.interpolation,
+            value: part_animation_data_deform.value.as_ref().map(|v| self.create_shared_part_attribute_deform(fb, v)),
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataDeform::create(fb, &args);
         self.part_animation_data_deform_cache.insert(key, offset);
         offset

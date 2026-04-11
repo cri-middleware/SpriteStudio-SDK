@@ -124,19 +124,15 @@ impl ZipAssetProvider {
 impl AssetProvider for ZipAssetProvider {
     fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError> {
         // let asset_path = std::path::PathBuf::from(&self.sspj_dir).join(path).as_path().to_str().unwrap().to_string();
-        let r = self.sspj_map.get(&path.to_string());
-        if r.is_some() { return Ok(()); }
-        let r = self.binary_map.get(&path.to_string());
-        if r.is_some() { return Ok(()); };
+        if self.sspj_map.get(path).is_some() { return Ok(()); }
+        if self.binary_map.get(path).is_some() { return Ok(()); };
         Err(crate::ConverterError::ConversionFailed(format!("Asset not found in zip: {}", path)))
     }
 
     fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error> {
         // let asset_path = std::path::PathBuf::from(&self.sspj_dir).join(path).as_path().to_str().unwrap().to_string();
-        let r = self.sspj_map.get(&path.to_string());
-        if r.is_some() { return Ok(r.unwrap().as_bytes().to_vec()); }
-        let r = self.binary_map.get(&path.to_string());
-        if r.is_some() { return Ok(r.unwrap().clone()); }
+        if let Some(r) = self.sspj_map.get(path) { return Ok(r.as_bytes().to_vec()); }
+        if let Some(r) = self.binary_map.get(path) { return Ok(r.clone()); }
         Err(std::io::Error::new(ErrorKind::NotFound, format!("Asset not found in zip: {}", path)))
     }
 

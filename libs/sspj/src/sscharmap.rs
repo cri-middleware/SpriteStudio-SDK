@@ -246,10 +246,9 @@ mod tests {
         match &r {
             Ok(ss_char_map) => {
                 println!("{:?}", ss_char_map);
-                assert!(true);
             }
             Err(e) => {
-                assert!(false, "{:?}", e);
+                panic!("{:?}", e);
             }
         }
     }

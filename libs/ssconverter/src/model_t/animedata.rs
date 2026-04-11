@@ -343,113 +343,113 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
 //        p_args.update_flag = 0;
         match attribute {
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeCellT::default();
                     value.map_id = _key.value.map_id;
                     value.name_hash = crate::utils::fnv1a_hash_str(&_key.value.name);
                     p_args.cell = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeCell;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.position_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::PosY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.position_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::PosZ(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.position_z = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosZ;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::RotX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.rotation_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeRotX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::RotY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.rotation_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeRotY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::RotZ(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.rotation_z = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeRotZ;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::SclX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.scale_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeSclX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::SclY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.scale_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeSclY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::LosclX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.local_scale_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeLosclX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::LosclY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.local_scale_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeLosclY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Alpha(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.alpha = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeAlpha;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.local_alpha = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeLoAlpha;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     // TODO: When Z-sort, priority must be based on  spatially transformed Z-values. Yuzu.
                     p_args.priority = _key.value as f32;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePrio;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.flip_h = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeFlipH;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::FlipV(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.flip_v = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeFlipV;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Hide(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.hide = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeHide;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value =  ssab::ssab::ss::format::PartAttributePartColorT::default();
                     value.blend_type = convert_alpha_blend_type(&_key.value.blend_type);
 
@@ -498,13 +498,13 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
 
                     p_args.part_color = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePartColor;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Color => {
                 /* MEMO: Not Supported (Feature prior to Ver.6.0) */
             },
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
                     value.id = Some(_key.value.id.clone());
                     value.id_hash = crate::utils::fnv1a_hash_str(&_key.value.id);
@@ -525,10 +525,10 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
 
                     p_args.shader = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeShader;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     if _key.value.use_skew.unwrap_or(false) {
                         // Skew
                         match &_key.value.skew {
@@ -550,31 +550,31 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         let mut coordinate = ssab::ssab::ss::format::Vec2T::default();
 
 //                       coordinate = ssab::ssab::ss::format::Vec2T::default();
-                        _key.value.lt.as_ref().map(|_lt| {
+                        if let Some(_lt) = _key.value.lt.as_ref() {
                             coordinate.v1 = _lt.x;
                             coordinate.v2 = _lt.y;
-                        });
+                        }
                         value.lt = Some(Box::new(coordinate));
 
                         coordinate = ssab::ssab::ss::format::Vec2T::default();
-                        _key.value.rt.as_ref().map(|_rt| {
+                        if let Some(_rt) = _key.value.rt.as_ref() {
                             coordinate.v1 = _rt.x;
                             coordinate.v2 = _rt.y;
-                        });
+                        }
                         value.rt = Some(Box::new(coordinate));
 
                         coordinate = ssab::ssab::ss::format::Vec2T::default();
-                        _key.value.lb.as_ref().map(|_lb| {
+                        if let Some(_lb) = _key.value.lb.as_ref() {
                             coordinate.v1 = _lb.x;
                             coordinate.v2 = _lb.y;
-                        });
+                        }
                         value.lb = Some(Box::new(coordinate));
 
                         coordinate = ssab::ssab::ss::format::Vec2T::default();
-                        _key.value.rb.as_ref().map(|_rb| {
+                        if let Some(_rb) = _key.value.rb.as_ref() {
                             coordinate.v1 = _rb.x;
                             coordinate.v2 = _rb.y;
-                        });
+                        }
                         value.rb = Some(Box::new(coordinate));
 
                         p_args.vertex = Some(Box::new(value));
@@ -583,101 +583,101 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         p_args.skew_x = 0.0_f32; // mutually exclusive with "Skew"
                         p_args.skew_y = 0.0_f32;
                     }
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::PivotX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.pivot_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePivotX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::PivotY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.pivot_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePivotY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.anchor_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeAnchorX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.anchor_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeAnchorY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::SizeX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.size_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeSizeX;
-               });
+               }
             },
             sspj::ssattribute::SsAttributeKind::SizeY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.size_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeSizeY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.img_flip_h = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeImgFlipH;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.img_flip_v = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeImgFlipV;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.uv_translation_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUvtX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::UvtY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.uv_translation_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUvtY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     /* MEMO: (Preliminary) "rotation" is set to "move.z". */
                     p_args.uv_rotation_z = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUvrZ;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::UvsX(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.uv_scale_x = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUvsX;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::UvsY(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.uv_scale_y = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeUvsY;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.bounding_radius = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeBoundr;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Mask(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     p_args.mask = _key.value;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeMask;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
 
                     let mut coordinate = Vec::new();
@@ -694,7 +694,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     value.index = Some(index);
                     p_args.deform = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeDeform;
-                });
+                }
             },
             _ => {
                 // Empty.
@@ -703,14 +703,14 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
     });
 }
 
-fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::format::InitialEventsT>, part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::InitialEventsT], part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
     let mut initial_event_t = ssab::ssab::ss::format::InitialEventsT::default();
     let mut flag_exist_event = false;
 
     setup_attributes.iter().for_each(|attribute| {
         match attribute {
             sspj::ssattribute::SsAttributeKind::User(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeUserDataT::default();
                     value.integer = _key.value.integer.as_ref().map(|v| {
                         let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
@@ -735,7 +735,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::forma
 
                     initial_event_t.user = Some(Box::new(value));
                     flag_exist_event = true;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Signal(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) { _key.value.commands.iter().for_each(|command| {
@@ -798,7 +798,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::forma
                     }); }
             },
             sspj::ssattribute::SsAttributeKind::Instance(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeInstanceT::default();
                     value.pingpong = _key.value.pingpong;
                     value.independent = _key.value.independent;
@@ -811,22 +811,20 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::forma
 
                     initial_event_t.instance = Some(Box::new(value));
                     flag_exist_event = true;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Effect(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeEffectT::default();
-                    value.cur_keyframe;
                     value.start_time = _key.value.start_time;
                     value.speed = _key.value.speed;
-                    value.loopflag;
 
                     initial_event_t.effect = Some(Box::new(value));
                     flag_exist_event = true;
-                });
+                }
             },
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
-                v.keys.iter().find(|key| key.time == 0).map(|_key| {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeAudioT::default();
                     value.sound_list_id = _key.value.sound_list_id;
                     value.sound_name = Some(_key.value.sound_name.to_string());
@@ -834,7 +832,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut Vec<ssab::ssab::ss::forma
 
                     initial_event_t.audio = Some(Box::new(value));
                     flag_exist_event = true;
-                });
+                }
             },
             _ => {
                 // Empty.
@@ -1302,60 +1300,60 @@ fn convert_part_animation_data_expand_key_vertex(value_start:&sspj::ssattribute:
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
     coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    value_start.value.lt.as_ref().map(|c| {
+    if let Some(c) = value_start.value.lt.as_ref() {
         coordinate_start.v1 = c.x;
         coordinate_start.v2 = c.y;
-    });
+    }
     coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    value_end.value.lt.as_ref().map(|c| {
+    if let Some(c) = value_end.value.lt.as_ref() {
         coordinate_end.v1 = c.x;
         coordinate_end.v2 = c.y;
-    });
+    }
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
     coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.lt = Some(Box::new(coordinate));
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
     coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    value_start.value.rt.as_ref().map(|c| {
+    if let Some(c) = value_start.value.rt.as_ref() {
         coordinate_start.v1 = c.x;
         coordinate_start.v2 = c.y;
-    });
+    }
     coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    value_end.value.rt.as_ref().map(|c| {
+    if let Some(c) = value_end.value.rt.as_ref() {
         coordinate_end.v1 = c.x;
         coordinate_end.v2 = c.y;
-    });
+    }
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
     coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.rt = Some(Box::new(coordinate));
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
     coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    value_start.value.lb.as_ref().map(|c| {
+    if let Some(c) = value_start.value.lb.as_ref() {
         coordinate_start.v1 = c.x;
         coordinate_start.v2 = c.y;
-    });
+    }
     coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    value_end.value.lb.as_ref().map(|c| {
+    if let Some(c) = value_end.value.lb.as_ref() {
         coordinate_end.v1 = c.x;
         coordinate_end.v2 = c.y;
-    });
+    }
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
     coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.lb = Some(Box::new(coordinate));
 
     coordinate = ssab::ssab::ss::format::Vec2T::default();
     coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    value_start.value.rb.as_ref().map(|c| {
+    if let Some(c) = value_start.value.rb.as_ref() {
         coordinate_start.v1 = c.x;
         coordinate_start.v2 = c.y;
-    });
+    }
     coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    value_end.value.rb.as_ref().map(|c| {
+    if let Some(c) = value_end.value.rb.as_ref() {
         coordinate_end.v1 = c.x;
         coordinate_end.v2 = c.y;
-    });
+    }
     coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
     coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
     result.rb = Some(Box::new(coordinate));
@@ -1371,15 +1369,15 @@ fn convert_part_animation_data_expand_key_skew(value_start:&sspj::ssattribute::S
 
     result = ssab::ssab::ss::format::Vec2T::default();
     coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    value_start.value.skew.as_ref().map(|c| {
+    if let Some(c) = value_start.value.skew.as_ref() {
         coordinate_start.v1 = c.x;
         coordinate_start.v2 = c.y;
-    });
+    }
     coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    value_end.value.skew.as_ref().map(|c| {
+    if let Some(c) = value_end.value.skew.as_ref() {
         coordinate_end.v1 = c.x;
         coordinate_end.v2 = c.y;
-    });
+    }
     result.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
     result.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
 
@@ -1656,13 +1654,13 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                     process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.lt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lt = Some(Box::new(c));
+                        if let Some(p) = k.value.lt.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.lt = Some(Box::new(c));
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.rt.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rt = Some(Box::new(c));
+                        if let Some(p) = k.value.rt.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.rt = Some(Box::new(c));
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.lb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.lb = Some(Box::new(c));
+                        if let Some(p) = k.value.lb.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.lb = Some(Box::new(c));
                         let mut c = ssab::ssab::ss::format::Vec2T::default();
-                        k.value.rb.as_ref().map(|p| { c.v1 = p.x; c.v2 = p.y; }); value.rb = Some(Box::new(c));
+                        if let Some(p) = k.value.rb.as_ref() { c.v1 = p.x; c.v2 = p.y; } value.rb = Some(Box::new(c));
                         Some(Box::new(value))
                     }, convert_part_animation_data_expand_key_vertex);
                 }

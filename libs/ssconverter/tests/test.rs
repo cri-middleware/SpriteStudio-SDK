@@ -40,9 +40,8 @@ mod tests {
             let r = convert_sspj_to_ssab_files(&sspj_path, &config, &|_msg: &str| {});
             match r {
                 Ok(_) => {
-                    assert!(true)
                 }
-                Err(e) => assert!(false, "{:?}", e),
+                Err(e) => panic!("{:?}", e),
             }
         });
     }
