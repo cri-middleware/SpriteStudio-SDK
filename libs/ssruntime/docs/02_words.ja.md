@@ -23,6 +23,7 @@
     - ssab は 1つの ssae ファイルとその ssae が利用する ssce, ssee, ssse, charmap の情報を含んでいます。
 - ssqb
     - シーケンス再生用バイナリファイルです。
+    - ssqe の情報を含んでいます。
 
 ## SpriteStudio 固有の概念
 - セル (Cell)
