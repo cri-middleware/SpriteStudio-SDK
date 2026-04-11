@@ -393,10 +393,9 @@ mod tests {
         match r {
             Ok(ss_anime_pack) => {
                 println!("{:?}", ss_anime_pack);
-                assert!(true);
             }
             Err(e) => {
-                assert!(false, "{:?}", e)
+                panic!("{:?}", e)
             }
         }
     }

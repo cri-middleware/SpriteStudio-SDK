@@ -232,10 +232,9 @@ mod tests {
         match r {
             Ok(sspj) => {
                 println!("{:?}", sspj);
-                assert!(true)
             }
             Err(e) => {
-                assert!(false, "{:?}", e);
+                panic!("{:?}", e);
             }
         }
     }

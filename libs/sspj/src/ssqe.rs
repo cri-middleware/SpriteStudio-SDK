@@ -77,10 +77,9 @@ mod tests {
         match r {
             Ok(ss_sequence_pack) => {
                 println!("{:?}", ss_sequence_pack);
-                assert!(true)
             }
             Err(e) => {
-                assert!(false, "{:?}", e);
+                panic!("{:?}", e);
             }
         }
     }
