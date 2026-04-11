@@ -27,8 +27,11 @@ ss_runtime_bind_resource(context, resource);
 Rust のエコシステム（Bevy や Amethyst など）から直接利用する場合は、ライフタイムを安全に管理するため明示的な 3 ステップになります。
 
 ```rust
-// 1. データの所有権 (SsabData) の確立
-let ssab_data = ssruntime::SsabData::load_copy(ssab_data_ptr).unwrap();
+// 1. データの参照 (SsabData) の確立
+// ssab_data_ptr: *const u8, ssab_data_len: usize
+let ssab_data = unsafe { 
+    ssruntime::SsabData::load_borrow(ssab_data_ptr, ssab_data_len).unwrap() 
+};
 
 // 2. メタデータ (AnimationResource) の作成
 let resource = ssruntime::AnimationResource::new(ssab_data.as_slice()).unwrap();

@@ -54,7 +54,7 @@ Rust の機能を C 言語インターフェースを通じて公開していま
 ## 利用フロー
 
 1. **Context の作成**: 再生状態を管理するコンテキストを生成します (`ss_runtime_create`)。
-2. **Resource のロード**: メモリ上のバイナリデータ (`.ssab`) をリソースオブジェクトとしてロードします (`ss_resource_create_copy`)。
+2. **Resource のロード**: メモリ上のバイナリデータ (`.ssab`) をリソースオブジェクトとしてロードします (`ss_resource_create_borrow`)。
 3. **Resource のバインド**: ロードしたリソースをコンテキストに紐付けます (`ss_runtime_bind_resource`)。
 4. **アニメーションの設定**: 再生したいアニメーション名を指定します (`ss_runtime_setup_animation`)。
 5. **更新ループ (Update)**: 毎フレーム `ss_runtime_update(ctx, dt)` を呼び出し、内部時間を進めます。
@@ -69,8 +69,9 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
     // 1. Context の作成
     void* ctx = ss_runtime_create();
     
-    // 2. Resource のロード (バイナリデータを内部ストレージにコピー)
-    void* res = ss_resource_create_copy(ssab_data, size);
+    // 2. Resource のロード (外部メモリの参照。コピーを避け最も効率的)
+    // 注意: resource を破棄するまで、元の ssab_data がメモリ上に維持されている必要があります。
+    void* res = ss_resource_create_borrow(ssab_data, size);
     
     // 3. Resource を Context にバインド
     ss_runtime_bind_resource(ctx, res);

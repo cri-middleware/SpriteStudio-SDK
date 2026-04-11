@@ -54,7 +54,7 @@ It exposes Rust functionality through a C language interface.
 ## Usage Flow
 
 1.  **Create Context**: Create a context to manage the playback state (`ss_runtime_create`).
-2.  **Load Resource**: Load binary data (`.ssab`) into a resource object (`ss_resource_create_copy`).
+2.  **Load Resource**: Load binary data (`.ssab`) into a resource object (`ss_resource_create_borrow`).
 3.  **Bind Resource**: Bind the resource to the context (`ss_runtime_bind_resource`).
 4.  **Setup Animation**: Specify which animation to play by its name (`ss_runtime_setup_animation`).
 5.  **Update Loop**: Call `ss_runtime_update(ctx, dt)` every frame to advance internal time.
@@ -69,8 +69,9 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
     // 1. Create Context
     void* ctx = ss_runtime_create();
     
-    // 2. Load Resource (copying binary data into internal storage)
-    void* res = ss_resource_create_copy(ssab_data, size);
+    // 2. Load Resource (Reference to external memory. Most efficient, avoiding copies)
+    // Note: The original ssab_data MUST remain in memory until the resource is destroyed.
+    void* res = ss_resource_create_borrow(ssab_data, size);
     
     // 3. Bind Resource to Context
     ss_runtime_bind_resource(ctx, res);
