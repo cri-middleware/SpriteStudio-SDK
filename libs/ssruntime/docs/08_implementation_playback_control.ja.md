@@ -5,15 +5,19 @@
 ## 1. 再生コントロールメソッド
 Player の API として、以下のメソッドを用意することを推奨します。これらは内部で libssruntime の対応する関数を呼び出します。
 
-- **Play**: `ss_runtime_play(context)`
-- **Pause**: `ss_runtime_pause(context)`
-- **Stop**: `ss_runtime_stop(context)`（フレームをリセットして停止）
+- **play(name, loop, startFrame)**: `ss_runtime_play(context)`
+- **pause()**: `ss_runtime_pause(context)`
+- **resume()**: `ss_runtime_resume(context)`（一時停止から復帰）
+- **stop()**: `ss_runtime_stop(context)`（フレームをリセットして停止）
+- **isPlaying()**: `ss_runtime_is_playing(context)`（再生中か）
 
 ## 2. 再生設定と取得
 アニメーションの挙動をカスタマイズするための設定項目です。
 
 ### 基本設定
-- **再生速度**: `ss_runtime_set_animation_speed(context, speed)` / `1.0f` が等倍。
+- **setSpeed(speed) / getSpeed()**: `ss_runtime_set_animation_speed(context, speed)` / `1.0f` が等倍。
+- **setFrame(frame) / getFrame()**: `ss_runtime_set_frame_no(context, frame)` / `ss_runtime_get_frame_no(context)`
+- **getTotalFrames()**: `ss_runtime_get_total_frames(context)`
 - **フレームレート**: `ss_runtime_set_frame_rate(context, fps)` / ssab のデフォルト値以外を使いたい場合に設定。
 - **再生範囲**: `ss_runtime_set_animation_section(context, start, end)`
 

@@ -55,7 +55,13 @@ void updateEvents(int from_frame, int to_frame) {
 SE（効果音）の再生指示です。
 - **用途**: 指定したフレームでの SE 再生。Player 側でエンジンのオーディオ管理システムと連携させて再生を実行します。
 
-## 4. この段階での動作確認 (Validation)
+## 4. イベント通知 API (コールバック)
+Player は、利用者がこれらのイベントを検知できるように、以下のコールバック API を提供することを推奨します。
+
+- **setAnimationFinishedCallback(callback)**: アニメーションの再生が終了（またはループの終端に到達）した際の通知を受け取ります。
+- **setUserDataCallback(callback)**: タイムライン上のユーザーデータ（UserData）を検出した際の通知を受け取ります。
+
+## 5. この段階での動作確認 (Validation)
 時間経過に伴うイベントの取得が正しいかを確認します。
 
 - **確認対象**: `UserData.ssae`

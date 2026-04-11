@@ -24,7 +24,12 @@ SpriteStudio7 には多くのパーツ種別とアトリビュートが存在し
 ### ボーン・関連パーツ
 - **PartTypeArmature**, **PartTypeJoint**, **PartTypeMovenode**, **PartTypeConstraint**, **PartTypeBonepoint**, **PartTypeTransformConstraint**
 
-## 2. 利用するアトリビュート
+## 2. パーツ操作 API
+Player は、データによる指定とは別に、プログラムからパーツの状態を制御する API を提供することを推奨します。
+
+- **setPartVisible(partName, visible)**: 指定したパーツの表示・非表示を強制的に切り替えます。データ上の `AttributeHide` よりも優先して制御したい場合に使用します。
+
+## 3. 利用するアトリビュート
 
 ### すべてのパーツ（Null を含む）
 - **AttributePosX, AttributePosY, AttributePosZ**: 座標。
