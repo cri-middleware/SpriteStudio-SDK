@@ -1,8 +1,8 @@
-use wasm_bindgen::prelude::*;
 use crate::Context;
 use alloc::boxed::Box;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct SSRuntimeContext {
@@ -19,17 +19,13 @@ impl SSRuntimeContext {
         let ssab_data = Box::new(crate::SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?);
         let data_ptr = ssab_data.as_slice() as *const [u8];
         let resource = crate::AnimationResource::new(unsafe { &*data_ptr }).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        
-        let mut ctx = SSRuntimeContext {
-            data: ssab_data,
-            resource: Some(resource),
-            inner: Context::new(),
-        };
-        
+
+        let mut ctx = SSRuntimeContext { data: ssab_data, resource: Some(resource), inner: Context::new() };
+
         let res_ref = ctx.resource.as_ref().unwrap();
         let res_ptr = res_ref as *const crate::AnimationResource<'static>;
         ctx.inner.bind_resource(unsafe { &*res_ptr });
-        
+
         Ok(ctx)
     }
 

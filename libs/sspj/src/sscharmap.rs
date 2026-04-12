@@ -1,8 +1,8 @@
 use crate::ssloader::SsLoader;
+use crate::sspj_error::SspjError;
 use crate::sstypes::{SsIRect, SsPoint2};
 use serde::Deserialize;
 use std::collections::HashMap;
-use crate::sspj_error::SspjError;
 
 pub trait CharMapLoader {
     type Output;
@@ -19,11 +19,7 @@ impl CharMapLoader for SsCharMapInfo {
     type Output = SsCharMapInfo;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(SsCharMapInfo {
-            face: parts["face"].trim_matches('"').to_string(),
-            unicode: parts["unicode"].as_str() == "1",
-            smooth: parts["smooth"].as_str() == "1",
-        })
+        Ok(SsCharMapInfo { face: parts["face"].trim_matches('"').to_string(), unicode: parts["unicode"].as_str() == "1", smooth: parts["smooth"].as_str() == "1" })
     }
 }
 
@@ -67,10 +63,7 @@ impl CharMapLoader for SsCharMapPage {
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
         let id = get_parse!(parts, "id");
         let file = parts.get("file").ok_or_else(|| SspjError::FntParseError("Missing key: file".to_string()))?.trim_matches('"');
-        Ok(SsCharMapPage {
-            id,
-            file: file.to_string(),
-        })
+        Ok(SsCharMapPage { id, file: file.to_string() })
     }
 }
 
@@ -88,16 +81,8 @@ impl CharMapLoader for SsCharMapChar {
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
         Ok(SsCharMapChar {
             id: get_parse!(parts, "id"),
-            src_rect: SsIRect {
-                x1: get_parse!(parts, "x"),
-                y1: get_parse!(parts, "y"),
-                x2: get_parse!(parts, "width"),
-                y2: get_parse!(parts, "height"),
-            },
-            offset: SsPoint2 {
-                x: get_parse!(parts, "xoffset"),
-                y: get_parse!(parts, "yoffset"),
-            },
+            src_rect: SsIRect { x1: get_parse!(parts, "x"), y1: get_parse!(parts, "y"), x2: get_parse!(parts, "width"), y2: get_parse!(parts, "height") },
+            offset: SsPoint2 { x: get_parse!(parts, "xoffset"), y: get_parse!(parts, "yoffset") },
             xadvance: get_parse!(parts, "xadvance"),
             page: get_parse!(parts, "page"),
         })
@@ -112,9 +97,7 @@ impl CharMapLoader for SsCharMapKerning {
     type Output = SsCharMapKerning;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(SsCharMapKerning {
-            id: get_parse!(parts, "id"),
-        })
+        Ok(SsCharMapKerning { id: get_parse!(parts, "id") })
     }
 }
 
@@ -185,18 +168,10 @@ impl SsLoader for SsCharMap {
         }
         // validation
         if chars_count != ss_char_map.chars.len() {
-            return Err(SspjError::FntParseError(format!(
-                "Invalid number of chars count={} chars.len()={}",
-                chars_count,
-                ss_char_map.chars.len()
-            )));
+            return Err(SspjError::FntParseError(format!("Invalid number of chars count={} chars.len()={}", chars_count, ss_char_map.chars.len())));
         }
         if kernings_count != ss_char_map.kernings.len() {
-            return Err(SspjError::FntParseError(format!(
-                "Invalid number of kernings count={} kernings.len()={}",
-                kernings_count,
-                ss_char_map.kernings.len()
-            )));
+            return Err(SspjError::FntParseError(format!("Invalid number of kernings count={} kernings.len()={}", kernings_count, ss_char_map.kernings.len())));
         }
 
         Ok(ss_char_map)
@@ -254,22 +229,12 @@ mod tests {
     }
 
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .ancestors()
-            .nth(2)
-            .expect("Failed to get the base directory")
-            .to_path_buf()
+        std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
     }
 
     #[test]
     fn parse_ssfnt() {
-        [
-            "tests/overall/font/RoundedMPlus.fnt",
-            "tests/allPartsV7/font/Sample_PixelMplus12.fnt",
-        ]
-        .par_iter()
-        .for_each(|&f| {
+        ["tests/overall/font/RoundedMPlus.fnt", "tests/allPartsV7/font/Sample_PixelMplus12.fnt"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssfnt(p.as_path());
         });

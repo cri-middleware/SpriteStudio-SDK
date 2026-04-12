@@ -1,7 +1,7 @@
 use crate::ssloader::SsLoader;
+use crate::sspj_error::SspjError;
 use crate::sstypes::*;
 use serde::Deserialize;
-use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Clone, Default, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -121,24 +121,12 @@ mod tests {
     }
 
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .ancestors()
-            .nth(2)
-            .expect("Failed to get the base directory")
-            .to_path_buf()
+        std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
     }
 
     #[test]
     fn parse_ssce() {
-        [
-            "tests/overall/9slice_64tile.ssce",
-            "tests/overall/box_00_00.ssce",
-            "tests/overall/common.ssce",
-            "tests/ParticleEffect/ss_effect.ssce",
-        ]
-        .par_iter()
-        .for_each(|&f| {
+        ["tests/overall/9slice_64tile.ssce", "tests/overall/box_00_00.ssce", "tests/overall/common.ssce", "tests/ParticleEffect/ss_effect.ssce"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssce(p.as_path());
         });

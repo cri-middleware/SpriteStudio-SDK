@@ -1,7 +1,7 @@
 use crate::ssloader::SsLoader;
+use crate::sspj_error::SspjError;
 use crate::sstypes::SsSequenceType;
 use serde::Deserialize;
-use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -85,12 +85,7 @@ mod tests {
     }
 
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .ancestors()
-            .nth(2)
-            .expect("Failed to get the base directory")
-            .to_path_buf()
+        std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
     }
 
     #[test]

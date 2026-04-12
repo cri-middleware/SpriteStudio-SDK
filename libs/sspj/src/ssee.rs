@@ -1,10 +1,10 @@
 use crate::ssloader::SsLoader;
+use crate::sspj_error::SspjError;
 use crate::sstypes::*;
 use serde::Deserialize;
 use serde::de::value::MapAccessDeserializer;
 use serde::de::{MapAccess, Visitor};
 use std::fmt::Formatter;
-use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Default, Clone, Debug)]
 pub struct VarianceValue<T> {
@@ -37,14 +37,8 @@ impl Default for ParticleElementBasic {
             maximum_particle: 50,
             attime_create: 1,
             interval: 1,
-            speed: VarianceValue {
-                value: 5.0,
-                subvalue: 5.0,
-            },
-            lifespan: VarianceValue {
-                value: 30,
-                subvalue: 30,
-            },
+            speed: VarianceValue { value: 5.0, subvalue: 5.0 },
+            lifespan: VarianceValue { value: 30, subvalue: 30 },
             angle: 0.0,
             angle_variance: 45.0,
             lifetime: 30,
@@ -74,9 +68,7 @@ pub struct ParticleElementGravity {
 }
 impl Default for ParticleElementGravity {
     fn default() -> Self {
-        Self {
-            gravity: SsPoint2 { x: 0.0, y: -3.0 },
-        }
+        Self { gravity: SsPoint2 { x: 0.0, y: -3.0 } }
     }
 }
 
@@ -135,22 +127,7 @@ pub struct ParticleElementInitColor {
 }
 impl Default for ParticleElementInitColor {
     fn default() -> Self {
-        ParticleElementInitColor {
-            color: VarianceValue::<SsU8Color> {
-                value: SsU8Color {
-                    a: 255,
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                },
-                subvalue: SsU8Color {
-                    a: 255,
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                },
-            },
-        }
+        ParticleElementInitColor { color: VarianceValue::<SsU8Color> { value: SsU8Color { a: 255, r: 255, g: 255, b: 255 }, subvalue: SsU8Color { a: 255, r: 255, g: 255, b: 255 } } }
     }
 }
 
@@ -162,22 +139,7 @@ pub struct ParticleElementTransColor {
 }
 impl Default for ParticleElementTransColor {
     fn default() -> Self {
-        ParticleElementTransColor {
-            color: VarianceValue::<SsU8Color> {
-                value: SsU8Color {
-                    a: 255,
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                },
-                subvalue: SsU8Color {
-                    a: 255,
-                    r: 255,
-                    g: 255,
-                    b: 255,
-                },
-            },
-        }
+        ParticleElementTransColor { color: VarianceValue::<SsU8Color> { value: SsU8Color { a: 255, r: 255, g: 255, b: 255 }, subvalue: SsU8Color { a: 255, r: 255, g: 255, b: 255 } } }
     }
 }
 
@@ -188,12 +150,7 @@ pub struct ParticleElementAlphaFade {
 }
 impl Default for ParticleElementAlphaFade {
     fn default() -> Self {
-        ParticleElementAlphaFade {
-            disprange: VarianceValue::<f32> {
-                value: 25.0,
-                subvalue: 75.0,
-            },
-        }
+        ParticleElementAlphaFade { disprange: VarianceValue::<f32> { value: 25.0, subvalue: 75.0 } }
     }
 }
 
@@ -208,18 +165,9 @@ pub struct ParticleElementSize {
 impl Default for ParticleElementSize {
     fn default() -> Self {
         ParticleElementSize {
-            size_x: VarianceValue::<f32> {
-                value: 1.0,
-                subvalue: 1.0,
-            },
-            size_y: VarianceValue::<f32> {
-                value: 1.0,
-                subvalue: 1.0,
-            },
-            scale_factor: VarianceValue::<f32> {
-                value: 1.0,
-                subvalue: 1.0,
-            },
+            size_x: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
+            size_y: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
+            scale_factor: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
         }
     }
 }
@@ -235,18 +183,9 @@ pub struct ParticleElementTransSize {
 impl Default for ParticleElementTransSize {
     fn default() -> Self {
         ParticleElementTransSize {
-            size_x: VarianceValue::<f32> {
-                value: 1.0,
-                subvalue: 1.0,
-            },
-            size_y: VarianceValue::<f32> {
-                value: 1.0,
-                subvalue: 1.0,
-            },
-            scale_factor: VarianceValue::<f32> {
-                value: 1.0,
-                subvalue: 1.0,
-            },
+            size_x: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
+            size_y: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
+            scale_factor: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
         }
     }
 }
@@ -316,119 +255,79 @@ impl<'de> Deserialize<'de> for SsEffectFunctionType {
                         "@name" => match value.as_str() {
                             // "Base",
                             "Basic" => {
-                                let f = ParticleElementBasic::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementBasic::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Basic(f))
                             }
                             "OverWriteSeed" => {
-                                let f = ParticleElementRndSeedChange::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementRndSeedChange::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::RndSeedChange(f))
                             }
                             "Delay" => {
-                                let f = ParticleElementDelay::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementDelay::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Delay(f))
                             }
                             "Gravity" => {
-                                let f = ParticleElementGravity::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementGravity::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Gravity(f))
                             }
                             "init_position" => {
-                                let f = ParticleElementPosition::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementPosition::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Position(f))
                             }
                             "init_rotation" => {
-                                let f = ParticleElementRotation::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementRotation::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Rotation(f))
                             }
                             "trans_rotation" => {
-                                let f = ParticleElementRotationTrans::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementRotationTrans::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::TransRotation(f))
                             }
                             "trans_speed" => {
-                                let f = ParticleElementTransSpeed::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementTransSpeed::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::TransSpeed(f))
                             }
                             "add_tangentiala" => {
-                                let f = ParticleElementTangentialAcceleration::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementTangentialAcceleration::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::TangentialAcceleration(f))
                             }
                             "init_vertexcolor" => {
-                                let f = ParticleElementInitColor::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementInitColor::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::InitColor(f))
                             }
                             "trans_vertexcolor" => {
-                                let f = ParticleElementTransColor::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementTransColor::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::TransColor(f))
                             }
                             "trans_colorfade" => {
-                                let f = ParticleElementAlphaFade::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementAlphaFade::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::AlphaFade(f))
                             }
                             "init_size" => {
-                                let f = ParticleElementSize::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementSize::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::Size(f))
                             }
                             "trans_size" => {
-                                let f = ParticleElementTransSize::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleElementTransSize::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::TransSize(f))
                             }
                             "add_pointgravity" => {
-                                let f = ParticlePointGravity::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticlePointGravity::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::PointGravity(f))
                             }
                             "TurnToDirection" => {
-                                let f = ParticleTurnToDirectionEnabled::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleTurnToDirectionEnabled::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::TurnToDirectionEnabled(f))
                             }
                             "InfiniteEmit" => {
-                                let f = ParticleInfiniteEmitEnabled::deserialize(
-                                    MapAccessDeserializer::new(map),
-                                )?;
+                                let f = ParticleInfiniteEmitEnabled::deserialize(MapAccessDeserializer::new(map))?;
                                 Ok(SsEffectFunctionType::InfiniteEmitEnabled(f))
                             }
                             _ => {
-                                return Err(serde::de::Error::custom(format!(
-                                    "unknown type: {}",
-                                    value
-                                )));
+                                return Err(serde::de::Error::custom(format!("unknown type: {}", value)));
                             }
                         },
                         _ => {
-                            return Err(serde::de::Error::custom(format!(
-                                "expected @name attribute, found: {}",
-                                key
-                            )));
+                            return Err(serde::de::Error::custom(format!("expected @name attribute, found: {}", key)));
                         }
                     };
                 }
@@ -525,8 +424,7 @@ impl SsLoader for SsEffectFile {
     type Output = SsEffectFile;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        let mut ssee =
-            quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
+        let mut ssee = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
         ssee.effect_data.effect_name = ssee.name.clone();
         if ssee.effect_data.layout_scale_x == 0 {
             ssee.effect_data.layout_scale_x = 100;
@@ -560,12 +458,7 @@ mod tests {
     }
 
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .ancestors()
-            .nth(2)
-            .expect("Failed to get the base directory")
-            .to_path_buf()
+        std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
     }
 
     #[test]
@@ -649,12 +542,7 @@ mod tests {
 
     #[test]
     fn parse_ssee2() {
-        [
-            "tests/allAttributeV7/NewEffect.ssee",
-            "tests/allPartsV7/NewEffect.ssee",
-        ]
-        .par_iter()
-        .for_each(|&f| {
+        ["tests/allAttributeV7/NewEffect.ssee", "tests/allPartsV7/NewEffect.ssee"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssee(p.as_path());
         });
@@ -662,12 +550,7 @@ mod tests {
 
     #[test]
     fn parse_ssee3() {
-        [
-            "tests/overall/effect.ssee",
-            "tests/overall/effect_checker.ssee",
-        ]
-        .par_iter()
-        .for_each(|&f| {
+        ["tests/overall/effect.ssee", "tests/overall/effect_checker.ssee"].par_iter().for_each(|&f| {
             let p = get_test_base_path().join(f);
             load_ssee(p.as_path());
         });

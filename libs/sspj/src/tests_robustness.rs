@@ -5,7 +5,8 @@ mod tests {
     use crate::sspj_error::SspjError;
 
     fn get_minimal_ssae_xml(part_xml: &str) -> String {
-        format!(r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+        format!(
+            r#"<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <SpriteStudioAnimePack version="2.00.00">
     <settings>
         <fps>30</fps>
@@ -41,7 +42,9 @@ mod tests {
             <labels />
         </anime>
     </animeList>
-</SpriteStudioAnimePack>"#, part_xml)
+</SpriteStudioAnimePack>"#,
+            part_xml
+        )
     }
 
     #[test]
@@ -117,7 +120,7 @@ mod tests {
             </value>"#;
         let xml = get_minimal_ssae_xml(part_xml);
         let result = SsAnimePack::load(&xml);
-        
+
         if result.is_err() {
             println!("Note: 'locked' field is mandatory in current implementation.");
         }

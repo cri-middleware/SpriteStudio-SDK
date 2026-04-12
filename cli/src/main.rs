@@ -1,15 +1,11 @@
+use clap::{CommandFactory, Parser};
 use std::ffi::OsString;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::thread::JoinHandle;
-use clap::{CommandFactory, Parser};
 
-const VERSION: &str = concat!(
-env!("CARGO_PKG_VERSION"),
-"+",
-env!("VERGEN_GIT_SHA")
-);
+const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_SHA"));
 #[derive(Parser, Debug)]
 #[command(
     name = "ssconverter-cli",
@@ -29,7 +25,7 @@ env!("VERGEN_GIT_SHA")
 )]
 struct Cli {
     #[arg(
-        required = true, 
+        required = true,
         value_name = "PATHS", 
         help = "Paths to .sspj files, zip archives, or directories containing projects",
         num_args = 1..
@@ -65,15 +61,11 @@ fn main() -> Result<(), ssconverter::ConverterError> {
         std::process::exit(1);
     }
 
-
     println!("{} {}", cmd.get_name(), VERSION);
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
-        config.convert_config = ssconverter::ConvertConfig {
-            embedded: args.embedded,
-            ..Default::default()
-        };
+        config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
         config.output = args.out_dir;
         if args.watch {
             // watch mode
@@ -82,7 +74,8 @@ fn main() -> Result<(), ssconverter::ConverterError> {
             ctrlc::set_handler(move || {
                 s.store(true, std::sync::atomic::Ordering::Relaxed);
                 println!("\nStopping watcher...");
-            }).expect("Error setting Ctrl-C handler");
+            })
+            .expect("Error setting Ctrl-C handler");
 
             println!("Watching for changes in {:?}... (Press Ctrl+C to stop)", sspj_paths[0].as_path());
             ssconverter::watch::watch_sspj_project(sspj_paths[0].as_path(), &config, should_stop)?;
@@ -90,10 +83,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
         }
     } else {
         // batch mode
-        config.convert_config = ssconverter::ConvertConfig {
-            embedded: args.embedded,
-            ..Default::default()
-        };
+        config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
         config.output = None; // batch mode does not support out_dir
     }
 
@@ -103,16 +93,12 @@ fn main() -> Result<(), ssconverter::ConverterError> {
         handlers.push({
             let p = path_buf.clone();
             let c = config.clone();
-            std::thread::spawn(move || {
-                ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c, &|msg| println!("{}", msg))
-            })
+            std::thread::spawn(move || ssconverter::convert_sspj_to_ssab_files(p.as_path(), &c, &|msg| println!("{}", msg)))
         })
     });
     for h in handlers {
         match h.join() {
-            Ok(result) => {
-                result?
-            }
+            Ok(result) => result?,
             Err(_) => {
                 eprintln!("Thread panic occurred");
                 panic!("A thread has panicked during execution");
@@ -126,23 +112,14 @@ fn main() -> Result<(), ssconverter::ConverterError> {
 
 #[cfg(test)]
 mod tests {
-    
+
     use rayon::prelude::*;
     use std::path::{Path, PathBuf};
 
-    static TARGET_SSPJ_FILES: [&str; 4] = [
-        "tests/ParticleEffect/ParticleEffect.sspj",
-        "tests/allAttributeV7/allAttributeV7.sspj",
-        "tests/allPartsV7/allPartsV7.sspj",
-        "tests/overall/overall.sspj",
-    ];
+    static TARGET_SSPJ_FILES: [&str; 4] = ["tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/overall/overall.sspj"];
 
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .parent()
-            .expect("Failed to get the base directory")
-            .to_path_buf()
+        std::env::current_dir().expect("Failed to get the current directory").parent().expect("Failed to get the base directory").to_path_buf()
     }
 
     #[test]
@@ -150,14 +127,9 @@ mod tests {
         TARGET_SSPJ_FILES.par_iter().for_each(|&f| {
             let p = Path::new(f);
             let config = ssconverter::ConverterConfig::default();
-            let r = ssconverter::convert_sspj_to_ssab_files(
-                get_test_base_path().join(p).as_path(),
-                &config,
-                &|msg: &str| println!("{}", msg)
-            );
+            let r = ssconverter::convert_sspj_to_ssab_files(get_test_base_path().join(p).as_path(), &config, &|msg: &str| println!("{}", msg));
             match r {
-                Ok(_) => {
-                }
+                Ok(_) => {}
                 Err(e) => panic!("{:?}", e),
             }
         });

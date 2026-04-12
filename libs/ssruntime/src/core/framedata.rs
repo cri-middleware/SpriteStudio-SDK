@@ -1,5 +1,5 @@
-use crate::runtime;
 use crate::core::interpolation::*;
+use crate::runtime;
 use alloc::vec::Vec;
 
 pub const NUM_PART_ATTRIBUTES: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::all().bits().count_ones() as usize;
@@ -141,26 +141,17 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-fn evaluate_part(cached_part: &CachedPartData,
-                frame_no: i32,
-                part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
+fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
-    let mut result = PartEvaluationResult {
-        state: runtime::framedata::ss::runtime::PartState::default(),
-        cell: None,
-        part_color: None,
-        shader: None,
-        vertex: None,
-        deform: None,
-    };
+    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, part_color: None, shader: None, vertex: None, deform: None };
 
     part_state.set_part_index(cached_part.part_index);
 
-    // Note: Calling `clone()` on `flatbuffers::Vector` here is extremely cheap and does NOT cause 
-    // memory fragmentation or heap allocation. `flatbuffers::Vector` is just a lightweight view 
-    // (a pointer and a length) into the underlying byte buffer. This shallow copy is necessary 
+    // Note: Calling `clone()` on `flatbuffers::Vector` here is extremely cheap and does NOT cause
+    // memory fragmentation or heap allocation. `flatbuffers::Vector` is just a lightweight view
+    // (a pointer and a length) into the underlying byte buffer. This shallow copy is necessary
     // to satisfy Rust's ownership rules when consuming the `Option` via `and_then` from a reference.
     if let Some(value) = cached_part.cell_array.and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])) {
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
@@ -328,21 +319,22 @@ fn evaluate_part(cached_part: &CachedPartData,
 }
 
 #[allow(clippy::too_many_arguments)]
-fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                 cached_parts: &[CachedPartData<'a>],
-                 frame_no: i32,
-                 parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
-                 cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
-                 parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
-                 shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
-                 vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
-                 deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-                 cells_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
-                 parts_color_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
-                 shaders_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
-                 vertices_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
-                 deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
-                 cursors: &mut [usize]
+fn get_parts<'a>(
+    fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+    cached_parts: &[CachedPartData<'a>],
+    frame_no: i32,
+    parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
+    cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+    parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+    vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    cells_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
+    parts_color_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
+    shaders_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
+    vertices_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
+    deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
+    cursors: &mut [usize],
 ) {
     parts_vec.clear();
     cell_vec.clear();
@@ -352,7 +344,7 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     deform_vec.clear();
 
     for (i, part) in cached_parts.iter().enumerate() {
-        let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES .. (i + 1) * NUM_PART_ATTRIBUTES];
+        let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
         if let Some(mut result) = evaluate_part(part, frame_no, part_cursors) {
             if let Some(cell) = result.cell {
                 cell_vec.push(cell);
@@ -388,36 +380,47 @@ fn get_parts<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
 
     if !cell_vec.is_empty() {
         *cells_off = Some(fb.create_vector(cell_vec));
-    } else { *cells_off = None; }
+    } else {
+        *cells_off = None;
+    }
 
     if !parts_color_vec.is_empty() {
         *parts_color_off = Some(fb.create_vector(parts_color_vec));
-    } else { *parts_color_off = None; }
+    } else {
+        *parts_color_off = None;
+    }
 
     if !shader_vec.is_empty() {
         *shaders_off = Some(fb.create_vector(shader_vec));
-    } else { *shaders_off = None; }
+    } else {
+        *shaders_off = None;
+    }
 
     if !vertice_vec.is_empty() {
         *vertices_off = Some(fb.create_vector(vertice_vec));
-    } else { *vertices_off = None; }
+    } else {
+        *vertices_off = None;
+    }
 
     if !deform_vec.is_empty() {
         *deforms_off = Some(fb.create_vector(deform_vec));
-    } else { *deforms_off = None; }
+    } else {
+        *deforms_off = None;
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-                          cached_parts: &[CachedPartData<'a>],
-                          frame_no: i32,
-                          parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
-                          cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
-                          parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
-                          shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
-                          vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
-                          deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-                          cursors: &mut [usize]
+pub fn get_frame_data<'a>(
+    fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+    cached_parts: &[CachedPartData<'a>],
+    frame_no: i32,
+    parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
+    cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+    parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
+    shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
+    vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    cursors: &mut [usize],
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -426,7 +429,23 @@ pub fn get_frame_data<'a>(fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
     let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors);
+    get_parts(
+        fb,
+        cached_parts,
+        frame_no,
+        parts_vec,
+        cell_vec,
+        parts_color_vec,
+        shader_vec,
+        vertice_vec,
+        deform_vec,
+        &mut cells_off,
+        &mut parts_color_off,
+        &mut shaders_off,
+        &mut vertices_off,
+        &mut deforms_off,
+        cursors,
+    );
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
     }
@@ -508,16 +527,9 @@ mod tests {
     fn test_part_evaluation_result_init() {
         let mut part_state = runtime::framedata::ss::runtime::PartState::default();
         part_state.set_part_index(5);
-        
-        let result = PartEvaluationResult {
-            state: part_state,
-            cell: None,
-            part_color: None,
-            shader: None,
-            vertex: None,
-            deform: None,
-        };
-        
+
+        let result = PartEvaluationResult { state: part_state, cell: None, part_color: None, shader: None, vertex: None, deform: None };
+
         assert_eq!(result.state.part_index(), 5);
         assert!(result.cell.is_none());
         assert!(result.part_color.is_none());

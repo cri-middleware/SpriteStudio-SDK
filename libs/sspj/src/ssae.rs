@@ -1,11 +1,11 @@
 use crate::ssattribute::SsAttributeKind;
 use crate::ssloader::SsLoader;
+use crate::sspj_error::SspjError;
 use crate::sstypes::*;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
 use std::str::FromStr;
-use crate::sspj_error::SspjError;
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -74,7 +74,6 @@ pub struct SsPart {
     #[serde(rename = "IKRotationArrow", default)]
     pub ik_rotation_arrow: SsIkRotationArrow,
     // m_pPartValueInfo // TODO:
-
     #[serde(default)]
     pub shape_type: SsShapeType,
     #[serde(default)]
@@ -115,7 +114,6 @@ pub struct SsPart {
     pub nines_fill_mode: i32,
     #[serde(default)]
     pub nines_mask: bool,
-
 }
 
 #[derive(Deserialize, PartialEq, Debug)]
@@ -193,10 +191,7 @@ impl FromStr for SsMeshBindInfo {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let array: Vec<f32> = s
-            .split_whitespace()
-            .filter_map(|sub| sub.parse::<f32>().ok())
-            .collect();
+        let array: Vec<f32> = s.split_whitespace().filter_map(|sub| sub.parse::<f32>().ok()).collect();
         if array.is_empty() {
             return Err("SsMeshBindInfo::from_str: array.len() <= 1".to_string());
         }
@@ -218,12 +213,7 @@ impl FromStr for SsMeshBindInfo {
             bone_index_vec.push(bone_index);
             offset_vec.push(SsPoint2 { x, y });
         }
-        Ok(SsMeshBindInfo {
-            weight: weight_vec,
-            bone_index: bone_index_vec,
-            offset: offset_vec,
-            bind_bone_num: num,
-        })
+        Ok(SsMeshBindInfo { weight: weight_vec, bone_index: bone_index_vec, offset: offset_vec, bind_bone_num: num })
     }
 }
 impl<'de> Deserialize<'de> for SsMeshBindInfo {
@@ -232,13 +222,7 @@ impl<'de> Deserialize<'de> for SsMeshBindInfo {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Err(D::Error::custom(
-                "SsMeshBindInfo::deserialize: s.is_empty()",
-            ))
-        } else {
-            Self::from_str(&s).map_err(serde::de::Error::custom)
-        }
+        if s.is_empty() { Err(D::Error::custom("SsMeshBindInfo::deserialize: s.is_empty()")) } else { Self::from_str(&s).map_err(serde::de::Error::custom) }
     }
 }
 
@@ -266,9 +250,7 @@ impl FromStr for SsMeshBind {
                 Some(r)
             })
             .collect::<Vec<SsMeshBindInfo>>();
-        Ok(SsMeshBind {
-            mesh_vertices_bind_array: ss_mesh_bind_vec,
-        })
+        Ok(SsMeshBind { mesh_vertices_bind_array: ss_mesh_bind_vec })
     }
 }
 
@@ -278,11 +260,7 @@ impl<'de> Deserialize<'de> for SsMeshBind {
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(Self::default())
-        } else {
-            Self::from_str(&s).map_err(serde::de::Error::custom)
-        }
+        if s.is_empty() { Ok(Self::default()) } else { Self::from_str(&s).map_err(serde::de::Error::custom) }
     }
 }
 
@@ -343,11 +321,8 @@ impl SsLoader for SsAnimePack {
     type Output = SsAnimePack;
 
     fn load(s: &str) -> Result<Self::Output, SspjError> {
-        let mut ssae =
-            quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
-        let r = ssae
-            .anime_list
-            .binary_search_by(|anime| anime.is_setup.cmp(&true));
+        let mut ssae = quick_xml::de::from_str::<Self::Output>(s).map_err(SspjError::XmlParseError)?;
+        let r = ssae.anime_list.binary_search_by(|anime| anime.is_setup.cmp(&true));
         match r {
             Ok(idx) => {
                 ssae.model.ref_setup_anime_pack = ssae.name.clone();
@@ -400,12 +375,7 @@ mod tests {
         }
     }
     fn get_test_base_path() -> PathBuf {
-        std::env::current_dir()
-            .expect("Failed to get the current directory")
-            .ancestors()
-            .nth(2)
-            .expect("Failed to get the base directory")
-            .to_path_buf()
+        std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
     }
 
     #[test]

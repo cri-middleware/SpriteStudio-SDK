@@ -1,14 +1,15 @@
-use notify_debouncer_mini::{
-    new_debouncer,
-    notify::RecursiveMode,
+use notify_debouncer_mini::{new_debouncer, notify::RecursiveMode};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+    mpsc::RecvTimeoutError,
 };
 use std::{path::Path, sync::mpsc::channel, time::Duration};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}, mpsc::RecvTimeoutError};
 
 pub fn watch_sspj_project(
-    sspj: &Path, 
+    sspj: &Path,
     config: &crate::converter::converter::ConverterConfig,
-    should_stop: Arc<AtomicBool> 
+    should_stop: Arc<AtomicBool>,
 ) -> std::result::Result<(), crate::converter::converter_error::ConverterError> {
     if !(sspj.exists() && sspj.extension().unwrap_or(std::ffi::OsStr::new("")) == "sspj") {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "Invalid SSPJ file path")));
@@ -22,9 +23,7 @@ pub fn watch_sspj_project(
     let Ok(mut debouncer) = new_debouncer(Duration::from_secs(1), tx) else {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "Failed to create debouncer")));
     };
-    let ret = debouncer
-        .watcher()
-        .watch(parent_dir, RecursiveMode::Recursive);
+    let ret = debouncer.watcher().watch(parent_dir, RecursiveMode::Recursive);
     if ret.is_err() {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "Failed to watch directory")));
     };
@@ -49,13 +48,13 @@ pub fn watch_sspj_project(
                                 }
                             }
                         }
-                    },
+                    }
                     Err(e) => eprintln!("watch error: {:?}", e),
                 }
-            },
+            }
             Err(RecvTimeoutError::Timeout) => {
                 continue;
-            },
+            }
             Err(RecvTimeoutError::Disconnected) => {
                 break;
             }

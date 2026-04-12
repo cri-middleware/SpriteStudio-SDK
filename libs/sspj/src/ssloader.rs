@@ -8,7 +8,7 @@ pub trait SsLoader {
     }
     fn load_from_maps(name: &str, maps: &std::collections::HashMap<String, String>) -> Result<Self::Output, crate::sspj_error::SspjError> {
         let Some(xml_data) = maps.get(name) else {
-            return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to get a xml data: {:?}", name))))
+            return Err(crate::sspj_error::SspjError::FileError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Failed to get a xml data: {:?}", name))));
         };
         Self::load(xml_data)
     }

@@ -1,20 +1,7 @@
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A trait to abstract floating-point operations for generic interpolation.
-pub trait SsFloat:
-    Sized
-    + Copy
-    + PartialEq
-    + PartialOrd
-    + Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
-    + Div<Output = Self>
-    + AddAssign
-    + SubAssign
-    + MulAssign
-    + DivAssign
-{
+pub trait SsFloat: Sized + Copy + PartialEq + PartialOrd + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Div<Output = Self> + AddAssign + SubAssign + MulAssign + DivAssign {
     fn from_f32(v: f32) -> Self;
     fn to_i32(self) -> i32;
     fn powf(self, n: Self) -> Self;
@@ -24,21 +11,57 @@ pub trait SsFloat:
 }
 
 impl SsFloat for f32 {
-    #[inline] fn from_f32(v: f32) -> Self { v }
-    #[inline] fn to_i32(self) -> i32 { self as i32 }
-    #[inline] fn powf(self, n: Self) -> Self { libm::powf(self, n) }
-    #[inline] fn sin(self) -> Self { libm::sinf(self) }
-    #[inline] fn cos(self) -> Self { libm::cosf(self) }
-    #[inline] fn pi() -> Self { core::f32::consts::PI }
+    #[inline]
+    fn from_f32(v: f32) -> Self {
+        v
+    }
+    #[inline]
+    fn to_i32(self) -> i32 {
+        self as i32
+    }
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        libm::powf(self, n)
+    }
+    #[inline]
+    fn sin(self) -> Self {
+        libm::sinf(self)
+    }
+    #[inline]
+    fn cos(self) -> Self {
+        libm::cosf(self)
+    }
+    #[inline]
+    fn pi() -> Self {
+        core::f32::consts::PI
+    }
 }
 
 impl SsFloat for f64 {
-    #[inline] fn from_f32(v: f32) -> Self { v as f64 }
-    #[inline] fn to_i32(self) -> i32 { self as i32 }
-    #[inline] fn powf(self, n: Self) -> Self { libm::pow(self, n) }
-    #[inline] fn sin(self) -> Self { libm::sin(self) }
-    #[inline] fn cos(self) -> Self { libm::cos(self) }
-    #[inline] fn pi() -> Self { core::f64::consts::PI }
+    #[inline]
+    fn from_f32(v: f32) -> Self {
+        v as f64
+    }
+    #[inline]
+    fn to_i32(self) -> i32 {
+        self as i32
+    }
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        libm::pow(self, n)
+    }
+    #[inline]
+    fn sin(self) -> Self {
+        libm::sin(self)
+    }
+    #[inline]
+    fn cos(self) -> Self {
+        libm::cos(self)
+    }
+    #[inline]
+    fn pi() -> Self {
+        core::f64::consts::PI
+    }
 }
 
 // --- Core Generic Implementations ---
@@ -47,7 +70,7 @@ fn bounce_time<T: SsFloat>(rate: T) -> T {
     let div_2_75 = T::from_f32(1.0 / 2.75);
     let div_2_0_2_75 = T::from_f32(2.0 / 2.75);
     let div_2_5_2_75 = T::from_f32(2.5 / 2.75);
-    
+
     let mul_7_5625 = T::from_f32(7.5625);
 
     if rate < div_2_75 {
@@ -79,17 +102,21 @@ pub fn rate_linear_batch_f32x4(value_now: f32x4, value_start: f32x4, value_end: 
 #[inline]
 #[allow(clippy::too_many_arguments)]
 pub fn bezier_batch_f32x4(
-    value_start_x: f32x4, value_start_y: f32x4,
-    value_end_x: f32x4, value_end_y: f32x4,
+    value_start_x: f32x4,
+    value_start_y: f32x4,
+    value_end_x: f32x4,
+    value_end_y: f32x4,
     rate: f32x4,
-    vector_start_x: f32x4, vector_start_y: f32x4,
-    vector_end_x: f32x4, vector_end_y: f32x4
+    vector_start_x: f32x4,
+    vector_start_y: f32x4,
+    vector_end_x: f32x4,
+    vector_end_y: f32x4,
 ) -> f32x4 {
     let frame = linear_batch_f32x4(value_start_x, value_end_x, rate);
 
     let mut area_now = f32x4::splat(0.5);
     let mut range_now = f32x4::splat(0.5);
-    
+
     let one = f32x4::splat(1.0);
     let three = f32x4::splat(3.0);
     let half = f32x4::splat(0.5);
@@ -99,19 +126,19 @@ pub fn bezier_batch_f32x4(
         let base_now_pow2 = base_now * base_now;
         let base_now_pow3 = base_now_pow2 * base_now;
         let area_now_pow2 = area_now * area_now;
-        
+
         let frame_temp = (base_now_pow3 * value_start_x)
             + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x))
             + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
             + (area_now * area_now_pow2 * value_end_x);
-            
+
         range_now *= half;
-        
+
         let m_lt = frame.simd_lt(frame_temp);
-        
+
         let area_sub = area_now - range_now;
         let area_add = area_now + range_now;
-        
+
         area_now = m_lt.blend(area_sub, area_add);
     }
 
@@ -119,7 +146,7 @@ pub fn bezier_batch_f32x4(
     let base_now = one - area_now;
     let base_now_pow2 = base_now * base_now;
     let base_now_pow3 = base_now_pow2 * base_now;
-    
+
     (base_now_pow3 * value_start_y)
         + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y))
         + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y))
@@ -127,14 +154,10 @@ pub fn bezier_batch_f32x4(
 }
 
 #[inline]
-pub fn hermite_batch_f32x4(
-    v_start: f32x4, v_end: f32x4,
-    rate: f32x4,
-    s_start: f32x4, s_end: f32x4
-) -> f32x4 {
+pub fn hermite_batch_f32x4(v_start: f32x4, v_end: f32x4, rate: f32x4, s_start: f32x4, s_end: f32x4) -> f32x4 {
     let rate_pow2 = rate * rate;
     let rate_pow3 = rate_pow2 * rate;
-    
+
     let two = f32x4::splat(2.0);
     let three = f32x4::splat(3.0);
     let one = f32x4::splat(1.0);
@@ -150,7 +173,7 @@ pub fn hermite_batch_f32x4(
 /// Batch linear interpolation for arrays (e.g. Deform attributes).
 pub fn interpolate_array_linear(start: &[f32], end: &[f32], rate: f32, out: &mut [f32]) {
     let rate_v = f32x4::splat(rate);
-    
+
     let mut start_chunks = start.chunks_exact(4);
     let mut end_chunks = end.chunks_exact(4);
     let mut out_chunks = out.chunks_exact_mut(4);
@@ -161,7 +184,7 @@ pub fn interpolate_array_linear(start: &[f32], end: &[f32], rate: f32, out: &mut
         let res = linear_batch_f32x4(s_v, e_v, rate_v);
         o.copy_from_slice(&res.to_array());
     }
-    
+
     let start_rem = start_chunks.remainder();
     let end_rem = end_chunks.remainder();
     let out_rem = out_chunks.into_remainder();
@@ -172,14 +195,9 @@ pub fn interpolate_array_linear(start: &[f32], end: &[f32], rate: f32, out: &mut
 }
 
 /// Batch Hermite interpolation for arrays (e.g. Deform attributes).
-pub fn interpolate_array_hermite(
-    v_start: &[f32], v_end: &[f32],
-    rate: f32,
-    s_start: &[f32], s_end: &[f32],
-    out: &mut [f32]
-) {
+pub fn interpolate_array_hermite(v_start: &[f32], v_end: &[f32], rate: f32, s_start: &[f32], s_end: &[f32], out: &mut [f32]) {
     let rate_v = f32x4::splat(rate);
-    
+
     let mut vs_chunks = v_start.chunks_exact(4);
     let mut ve_chunks = v_end.chunks_exact(4);
     let mut ss_chunks = s_start.chunks_exact(4);
@@ -195,11 +213,11 @@ pub fn interpolate_array_hermite(
         let ve_v = f32x4::from([ve[0], ve[1], ve[2], ve[3]]);
         let ss_v = f32x4::from([ss[0], ss[1], ss[2], ss[3]]);
         let se_v = f32x4::from([se[0], se[1], se[2], se[3]]);
-        
+
         let res = hermite_batch_f32x4(vs_v, ve_v, rate_v, ss_v, se_v);
         o.copy_from_slice(&res.to_array());
     }
-    
+
     let vs_rem = vs_chunks.remainder();
     let ve_rem = ve_chunks.remainder();
     let ss_rem = ss_chunks.remainder();
@@ -272,23 +290,23 @@ fn bounce_time_batch_f32x4(rate: f32x4) -> f32x4 {
     let mul_7_5625 = f32x4::splat(7.5625);
 
     let res1 = mul_7_5625 * rate * rate;
-    
+
     let r2 = rate - f32x4::splat(1.5 / 2.75);
     let res2 = r2.mul_add(mul_7_5625 * r2, f32x4::splat(0.75));
-    
+
     let r3 = rate - f32x4::splat(2.25 / 2.75);
     let res3 = r3.mul_add(mul_7_5625 * r3, f32x4::splat(0.9375));
-    
+
     let r4 = rate - f32x4::splat(2.625 / 2.75);
     let res4 = r4.mul_add(mul_7_5625 * r4, f32x4::splat(0.984375));
 
     // Using explicit trait calls with simd_lt
     let m3 = rate.simd_lt(div_2_5_2_75);
     let s3 = m3.blend(res3, res4);
-    
+
     let m2 = rate.simd_lt(div_2_0_2_75);
     let s2 = m2.blend(res2, s3);
-    
+
     let m1 = rate.simd_lt(div_2_75);
     m1.blend(res1, s2)
 }
@@ -350,10 +368,10 @@ pub fn rate_bounce_inout_batch_f32x4(rate: f32x4) -> f32x4 {
 
     let m_lt = rate.simd_lt(half);
     let rate_mul_2 = rate * two;
-    
+
     let res_lt = (one - bounce_time_batch_f32x4(one - rate_mul_2)) * half;
     let res_ge = bounce_time_batch_f32x4(rate_mul_2 - one).mul_add(half, half);
-    
+
     m_lt.blend(res_lt, res_ge)
 }
 
@@ -463,7 +481,7 @@ pub fn rate_sine_in_batch_f32x4(rate: f32x4) -> f32x4 {
 pub fn rate_sine_out_batch_f32x4(rate: f32x4) -> f32x4 {
     let pi = f32x4::splat(core::f32::consts::PI);
     let x = rate * f32x4::splat(core::f32::consts::PI * 0.5); // x in [0, pi/2]
-    
+
     let num = (f32x4::splat(16.0) * x) * (pi - x);
     let den = f32x4::splat(5.0) * pi * pi - (f32x4::splat(4.0) * x) * (pi - x);
     num / den
@@ -475,19 +493,19 @@ pub fn rate_sine_inout_batch_f32x4(rate: f32x4) -> f32x4 {
     let half = f32x4::splat(0.5);
     let one = f32x4::splat(1.0);
     let pi = f32x4::splat(core::f32::consts::PI);
-    
+
     // InOut(t) = 0.5 * (1 - cos(t * pi))
     let x = rate * pi;
-    
+
     // cos(t * pi) = sin(pi/2 - t * pi)
     let angle = f32x4::splat(core::f32::consts::PI * 0.5) - x;
     let abs_angle = angle.abs();
-    
+
     // Bhaskara I sin(x) approx for abs_angle in [0, pi]
     let num_b = f32x4::splat(16.0) * abs_angle * (pi - abs_angle);
     let den_b = f32x4::splat(5.0) * pi * pi - f32x4::splat(4.0) * abs_angle * (pi - abs_angle);
     let cos_approx = num_b / den_b;
-    
+
     // Handle sign for angle in [-pi/2, pi/2]
     let sign = f32x4::splat(1.0).copysign(angle);
     half * (one - (cos_approx * sign))
@@ -518,7 +536,7 @@ pub fn rate_decelerate<T: SsFloat>(rate: T) -> T {
 pub fn hermite<T: SsFloat>(value_start: T, value_end: T, rate: T, speed_start: T, speed_end: T) -> T {
     let rate_pow2 = rate * rate;
     let rate_pow3 = rate_pow2 * rate;
-    
+
     let two = T::from_f32(2.0);
     let three = T::from_f32(3.0);
     let one = T::from_f32(1.0);
@@ -530,13 +548,7 @@ pub fn hermite<T: SsFloat>(value_start: T, value_end: T, rate: T, speed_start: T
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn bezier<T: SsFloat>(
-    value_start_x: T, value_start_y: T,
-    value_end_x: T, value_end_y: T,
-    rate: T,
-    vector_start_x: T, vector_start_y: T,
-    vector_end_x: T, vector_end_y: T
-) -> T {
+pub fn bezier<T: SsFloat>(value_start_x: T, value_start_y: T, value_end_x: T, value_end_y: T, rate: T, vector_start_x: T, vector_start_y: T, vector_end_x: T, vector_end_y: T) -> T {
     let frame = linear(value_start_x, value_end_x, rate);
 
     let mut area_now = T::from_f32(0.5);
@@ -545,7 +557,7 @@ pub fn bezier<T: SsFloat>(
     let mut base_now_pow2;
     let mut base_now_pow3;
     let mut area_now_pow2;
-    
+
     let one = T::from_f32(1.0);
     let three = T::from_f32(3.0);
     let half = T::from_f32(0.5);
@@ -555,12 +567,12 @@ pub fn bezier<T: SsFloat>(
         base_now_pow2 = base_now * base_now;
         base_now_pow3 = base_now_pow2 * base_now;
         area_now_pow2 = area_now * area_now;
-        
+
         let frame_temp = (base_now_pow3 * value_start_x)
             + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x))
             + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
             + (area_now * area_now_pow2 * value_end_x);
-            
+
         range_now *= half;
         if frame_temp > frame {
             area_now -= range_now;
@@ -573,7 +585,7 @@ pub fn bezier<T: SsFloat>(
     base_now = one - area_now;
     base_now_pow2 = base_now * base_now;
     base_now_pow3 = base_now_pow2 * base_now;
-    
+
     (base_now_pow3 * value_start_y)
         + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y))
         + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y))
@@ -590,32 +602,24 @@ pub fn rate_ease_out<T: SsFloat>(rate: T, power_easing: T) -> T {
 
 pub fn rate_ease_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
     let rate_mul_2 = rate * T::from_f32(2.0);
-    if rate_mul_2 < T::from_f32(1.0) {
-        T::from_f32(0.5) * rate_mul_2.powf(power_easing)
-    } else {
-        T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate_mul_2).powf(power_easing))
-    }
+    if rate_mul_2 < T::from_f32(1.0) { T::from_f32(0.5) * rate_mul_2.powf(power_easing) } else { T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate_mul_2).powf(power_easing)) }
 }
 
 pub fn rate_ease_exponential_in<T: SsFloat>(rate: T) -> T {
-    if rate <= T::from_f32(0.0) {
-        T::from_f32(0.0)
-    } else {
-        T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0)))
-    }
+    if rate <= T::from_f32(0.0) { T::from_f32(0.0) } else { T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0))) }
 }
 
 pub fn rate_ease_exponential_out<T: SsFloat>(rate: T) -> T {
-    if rate >= T::from_f32(1.0) {
-        T::from_f32(1.0)
-    } else {
-        T::from_f32(1.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * rate)
-    }
+    if rate >= T::from_f32(1.0) { T::from_f32(1.0) } else { T::from_f32(1.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) }
 }
 
 pub fn rate_ease_exponential_inout<T: SsFloat>(rate: T) -> T {
-    if rate <= T::from_f32(0.0) { return T::from_f32(0.0); }
-    if rate >= T::from_f32(1.0) { return T::from_f32(1.0); }
+    if rate <= T::from_f32(0.0) {
+        return T::from_f32(0.0);
+    }
+    if rate >= T::from_f32(1.0) {
+        return T::from_f32(1.0);
+    }
     let rate_mul_2 = rate * T::from_f32(2.0);
     if rate_mul_2 < T::from_f32(1.0) {
         T::from_f32(0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * (rate_mul_2 - T::from_f32(1.0)))
@@ -864,9 +868,9 @@ mod tests {
         let s_start = [0.0, 0.0, 0.0, 0.0, 0.0];
         let s_end = [10.0, 10.0, 10.0, 10.0, 10.0];
         let mut out = [0.0; 5];
-        
+
         interpolate_array_hermite(&v_start, &v_end, 0.5, &s_start, &s_end, &mut out);
-        
+
         for i in 0..5 {
             let expected = hermite(v_start[i], v_end[i], 0.5, s_start[i], s_end[i]);
             assert_near(out[i], expected);
@@ -902,7 +906,7 @@ mod tests {
         let res_out = rate_back_out_batch_f32x4(rate_v);
         let actual_in = res_in.to_array();
         let actual_out = res_out.to_array();
-        
+
         let rates = rate_v.to_array();
         for (i, &rate) in rates.iter().enumerate() {
             assert_near(actual_in[i], rate_ease_back_in(rate));
@@ -915,17 +919,19 @@ mod tests {
         let test_cases = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0];
         for chunk in test_cases.chunks(4) {
             let mut input = [0.0; 4];
-            for (i, &v) in chunk.iter().enumerate() { input[i] = v; }
+            for (i, &v) in chunk.iter().enumerate() {
+                input[i] = v;
+            }
             let rate_v = f32x4::from(input);
-            
+
             let res_in = rate_sine_in_batch_f32x4(rate_v);
             let res_out = rate_sine_out_batch_f32x4(rate_v);
             let res_inout = rate_sine_inout_batch_f32x4(rate_v);
-            
+
             let actual_in = res_in.to_array();
             let actual_out = res_out.to_array();
             let actual_inout = res_inout.to_array();
-            
+
             for i in 0..chunk.len() {
                 let v = chunk[i];
                 assert_near(actual_in[i], rate_ease_sine_in(v));
@@ -942,7 +948,7 @@ mod tests {
         let res_dec = rate_decelerate_batch_f32x4(rate_v);
         let actual_acc = res_acc.to_array();
         let actual_dec = res_dec.to_array();
-        
+
         for i in 0..4 {
             let v = rate_v.to_array()[i];
             assert_near(actual_acc[i], rate_accelerate(v));
@@ -955,15 +961,17 @@ mod tests {
         let test_cases = [0.0, 0.25, 0.5, 0.75, 0.9, 1.0];
         for chunk in test_cases.chunks(4) {
             let mut input = [0.0; 4];
-            for (i, &v) in chunk.iter().enumerate() { input[i] = v; }
+            for (i, &v) in chunk.iter().enumerate() {
+                input[i] = v;
+            }
             let rate_v = f32x4::from(input);
-            
+
             let res_in = rate_bounce_in_batch_f32x4(rate_v);
             let res_out = rate_bounce_out_batch_f32x4(rate_v);
-            
+
             let actual_in = res_in.to_array();
             let actual_out = res_out.to_array();
-            
+
             for i in 0..chunk.len() {
                 let v = chunk[i];
                 assert_near(actual_in[i], rate_ease_bounce_in(v));
@@ -978,7 +986,7 @@ mod tests {
         let p_v = f32x4::splat(0.3); // default power_easing
         let res_in = rate_elastic_in_batch_f32x4(rate_v, p_v);
         let actual_in = res_in.to_array();
-        
+
         let rates = rate_v.to_array();
         for (i, &v) in rates.iter().enumerate() {
             // Since it's an approximation, we check if it's broadly correct
@@ -1007,15 +1015,11 @@ mod tests {
         let rate = f32x4::from([0.0, 1.0, 0.5, 0.5]);
         let s_start = f32x4::from([0.0, 0.0, 0.0, 0.0]);
         let s_end = f32x4::from([1.0, 1.0, 10.0, 10.0]);
-        
+
         let res = super::hermite_batch_f32x4(v_start, v_end, rate, s_start, s_end);
         for i in 0..4 {
             let actual = res.to_array()[i];
-            let expected = super::hermite(
-                v_start.to_array()[i], v_end.to_array()[i],
-                rate.to_array()[i],
-                s_start.to_array()[i], s_end.to_array()[i]
-            );
+            let expected = super::hermite(v_start.to_array()[i], v_end.to_array()[i], rate.to_array()[i], s_start.to_array()[i], s_end.to_array()[i]);
             assert_near(actual, expected);
         }
     }
@@ -1025,7 +1029,7 @@ mod tests {
         let rate_v = f32x4::from([0.0, 0.25, 0.5, 1.0]);
         let p_v = f32x4::splat(0.3);
         let res = super::rate_elastic_out_batch_f32x4(rate_v, p_v);
-        
+
         for i in 0..4 {
             let v = rate_v.to_array()[i];
             assert_near(res.to_array()[i], super::rate_ease_elastic_out(v, 0.3));
@@ -1037,7 +1041,7 @@ mod tests {
         let rate_v = f32x4::from([0.0, 0.25, 0.5, 1.0]);
         let p_v = f32x4::splat(0.3);
         let res = super::rate_elastic_inout_batch_f32x4(rate_v, p_v);
-        
+
         for i in 0..4 {
             let v = rate_v.to_array()[i];
             assert_near(res.to_array()[i], super::rate_ease_elastic_inout(v, 0.3));
@@ -1051,7 +1055,7 @@ mod tests {
         let res_in = super::rate_ease_in_batch_f32x4(rate_v, p_v);
         let res_out = super::rate_ease_out_batch_f32x4(rate_v, p_v);
         let res_inout = super::rate_ease_inout_batch_f32x4(rate_v, p_v);
-        
+
         for i in 0..4 {
             let v = rate_v.to_array()[i];
             assert_near(res_in.to_array()[i], super::rate_ease_in(v, 2.0));
@@ -1066,7 +1070,7 @@ mod tests {
         let res_in = super::rate_exponential_in_batch_f32x4(rate_v);
         let res_out = super::rate_exponential_out_batch_f32x4(rate_v);
         let res_inout = super::rate_exponential_inout_batch_f32x4(rate_v);
-        
+
         for i in 0..4 {
             let v = rate_v.to_array()[i];
             assert_near(res_in.to_array()[i], super::rate_ease_exponential_in(v));
@@ -1084,7 +1088,7 @@ mod tests {
             assert_near(res.to_array()[i], super::rate_ease_back_inout(v));
         }
     }
-    
+
     #[test]
     fn test_rate_bounce_inout_batch() {
         let rate_v = f32x4::from([0.0, 0.25, 0.75, 1.0]);
@@ -1106,7 +1110,7 @@ mod tests {
         let vec_sy = f32x4::splat(0.0);
         let vec_ex = f32x4::splat(0.0);
         let vec_ey = f32x4::splat(0.0);
-        
+
         let res = super::bezier_batch_f32x4(vx, vy, ex, ey, rate, vec_sx, vec_sy, vec_ex, vec_ey);
         for i in 0..4 {
             assert_near(res.to_array()[i], super::bezier(vx.to_array()[i], vy.to_array()[i], ex.to_array()[i], ey.to_array()[i], rate.to_array()[i], 0.0, 0.0, 0.0, 0.0));
