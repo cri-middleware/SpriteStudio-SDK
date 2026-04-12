@@ -1,8 +1,8 @@
-use rayon::prelude::*;
 use crate::cache::{ssab_cache, ssqb_cache};
+use crate::converter::{ssab_converter, ssqb_converter};
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::ffi::OsString;
-use crate::converter::{ssab_converter, ssqb_converter};
 
 #[derive(Debug, Clone)]
 pub struct ConvertConfig {
@@ -13,12 +13,7 @@ pub struct ConvertConfig {
 }
 impl Default for ConvertConfig {
     fn default() -> Self {
-        Self {
-            embedded: false,
-            debug: false,
-            split: false,
-            optimize: true,
-        }
+        Self { embedded: false, debug: false, split: false, optimize: true }
     }
 }
 
@@ -34,45 +29,61 @@ where
     let ssqb_model_list = sspj.sequence_list.par_iter().map(ssqb_converter::convert_ss_sequence_binary_t).collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
     // convert ssab structures to binary data
-    let mut ssab_bin_map = ssab_model_list.par_iter().zip(sspj.animepack_names.par_iter()).map(|(anime_binary_t, f)| {
-        let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = if config.optimize {
-            let mut ssab_cache = ssab_cache::SsabCache::new();
-            ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t)
-        } else {
-            anime_binary_t.pack(&mut fb)
-        };
-        ssab::ssab::ss::format::finish_ss_anime_binary_buffer(&mut fb, offset);
-        let buf = fb.finished_data();
-        let file_stem = std::path::PathBuf::from(f).file_stem().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?.to_string();
-        let output_file = [file_stem, ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION.to_string()].join(".");
-        Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
-    }).collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
+    let mut ssab_bin_map = ssab_model_list
+        .par_iter()
+        .zip(sspj.animepack_names.par_iter())
+        .map(|(anime_binary_t, f)| {
+            let mut fb = flatbuffers::FlatBufferBuilder::new();
+            let offset = if config.optimize {
+                let mut ssab_cache = ssab_cache::SsabCache::new();
+                ssab_cache.create_shared_anime_binary(&mut fb, anime_binary_t)
+            } else {
+                anime_binary_t.pack(&mut fb)
+            };
+            ssab::ssab::ss::format::finish_ss_anime_binary_buffer(&mut fb, offset);
+            let buf = fb.finished_data();
+            let file_stem = std::path::PathBuf::from(f)
+                .file_stem()
+                .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?
+                .to_str()
+                .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?
+                .to_string();
+            let output_file = [file_stem, ssab::ssab::ss::format::SS_ANIME_BINARY_EXTENSION.to_string()].join(".");
+            Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+        })
+        .collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
 
     // convert ssqb structures to binary data
-    let ssqb_bin_map = ssqb_model_list.par_iter().zip(sspj.sequencepack_names.par_iter()).map(|(sequence_binary_t, f)| {
-        let mut fb = flatbuffers::FlatBufferBuilder::new();
-        let offset = if config.optimize {
-            let mut ssqb_cache = ssqb_cache::SsqbCache::new();
-            ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t)
-        } else {
-            sequence_binary_t.pack(&mut fb)
-        };
-        ssab::ssqb::ss::format::finish_ss_sequence_binary_buffer(&mut fb, offset);
-        let buf = fb.finished_data();
+    let ssqb_bin_map = ssqb_model_list
+        .par_iter()
+        .zip(sspj.sequencepack_names.par_iter())
+        .map(|(sequence_binary_t, f)| {
+            let mut fb = flatbuffers::FlatBufferBuilder::new();
+            let offset = if config.optimize {
+                let mut ssqb_cache = ssqb_cache::SsqbCache::new();
+                ssqb_cache.create_shared_sequence_binary(&mut fb, sequence_binary_t)
+            } else {
+                sequence_binary_t.pack(&mut fb)
+            };
+            ssab::ssqb::ss::format::finish_ss_sequence_binary_buffer(&mut fb, offset);
+            let buf = fb.finished_data();
 
-        let file_stem = std::path::PathBuf::from(f).file_stem().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?.to_string();
-        let output_file = [file_stem, ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION.to_string()].join(".");
-        Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
-    }).collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
-
+            let file_stem = std::path::PathBuf::from(f)
+                .file_stem()
+                .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?
+                .to_str()
+                .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid UTF-8 in file stem".into()))?
+                .to_string();
+            let output_file = [file_stem, ssab::ssqb::ss::format::SS_SEQUENCE_BINARY_EXTENSION.to_string()].join(".");
+            Ok::<_, crate::converter::converter_error::ConverterError>((output_file, buf.to_vec()))
+        })
+        .collect::<Result<HashMap<String, Vec<u8>>, _>>()?;
 
     ssab_bin_map.extend(ssqb_bin_map);
     Ok((sspj, ssab_bin_map))
 }
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ConverterConfig {
     pub convert_config: ConvertConfig,
     pub output: Option<OsString>,
@@ -87,7 +98,7 @@ where
 
     let outdir_path = match &config.output {
         Some(out_dir) => std::path::PathBuf::from(&out_dir),
-        None => crate::utils::get_ssab_output_directory(path, config.convert_config.embedded)?
+        None => crate::utils::get_ssab_output_directory(path, config.convert_config.embedded)?,
     };
 
     if asset_provider.is_zip() {
@@ -114,13 +125,14 @@ where
         }
 
         zip_writer.finish().map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip finish: {:?}", e))))?;
-
     } else {
         if !outdir_path.exists() {
             let r = std::fs::create_dir_all(outdir_path.as_path());
             match r {
                 Ok(_) => (),
-                Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", outdir_path.as_os_str().to_string_lossy(), e)))),
+                Err(e) => {
+                    return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", outdir_path.as_os_str().to_string_lossy(), e))));
+                }
             }
         }
 
@@ -134,25 +146,32 @@ where
 
         if !config.convert_config.embedded {
             let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
-            assets.iter().map(|(dst_rel_path, src_rel_path)| {
-                let dst = outdir_path.join(dst_rel_path);
-                let dst_parent = dst.parent().unwrap();
-                if !dst_parent.exists() {
-                    let r = std::fs::create_dir_all(dst_parent);
+            assets
+                .iter()
+                .map(|(dst_rel_path, src_rel_path)| {
+                    let dst = outdir_path.join(dst_rel_path);
+                    let dst_parent = dst.parent().unwrap();
+                    if !dst_parent.exists() {
+                        let r = std::fs::create_dir_all(dst_parent);
+                        match r {
+                            Ok(_) => (),
+                            Err(e) => {
+                                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", dst_parent.as_os_str().to_string_lossy(), e))));
+                            }
+                        };
+                    }
+                    //let data = asset_provider.read_asset(src_rel_path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
+                    //let r = std::fs::write(&dst, data);
+                    let r = asset_provider.copy_asset(src_rel_path, dst.as_os_str().to_str().unwrap());
                     match r {
                         Ok(_) => (),
-                        Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", dst_parent.as_os_str().to_string_lossy(), e)))),
-                    };
-                }
-                //let data = asset_provider.read_asset(src_rel_path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
-                //let r = std::fs::write(&dst, data);
-                let r = asset_provider.copy_asset(src_rel_path, dst.as_os_str().to_str().unwrap());
-                match r {
-                    Ok(_) => (),
-                    Err(e) => return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("write: dest:{} {:?}", dst.as_os_str().to_string_lossy(), e)))),
-                }
-                Ok(())
-            }).collect::<Result<Vec<_>, _>>()?;
+                        Err(e) => {
+                            return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("write: dest:{} {:?}", dst.as_os_str().to_string_lossy(), e))));
+                        }
+                    }
+                    Ok(())
+                })
+                .collect::<Result<Vec<_>, _>>()?;
         }
     }
 

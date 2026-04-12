@@ -3,11 +3,7 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 pub fn parse_args(args: &[PathBuf]) -> Vec<PathBuf> {
-    args.iter()
-        .filter(|&arg| arg.exists()).flat_map(|arg| collect_sspj_files(arg))
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<PathBuf>>()
+    args.iter().filter(|&arg| arg.exists()).flat_map(|arg| collect_sspj_files(arg)).collect::<HashSet<_>>().into_iter().collect::<Vec<PathBuf>>()
 }
 
 fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
@@ -16,7 +12,8 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
     }
 
     if path.is_dir() {
-        return WalkDir::new(path).into_iter()
+        return WalkDir::new(path)
+            .into_iter()
             .filter_entry(|entry| {
                 let name = entry.file_name();
                 !name.to_string_lossy().starts_with(".git")

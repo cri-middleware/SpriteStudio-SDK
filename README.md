@@ -30,7 +30,6 @@ graph LR
 ```
 
 - Libraries
-...
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
     - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
     - [libssinterpolate](./libs/ssinterpolate/README.md): a platform-agnostic math library for animation interpolations.
@@ -39,7 +38,7 @@ graph LR
 - Tool
     - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
-# Quick Start
+## Quick Start
 
 Follow these steps to convert a sample project and see the SDK in action.
 
@@ -64,38 +63,39 @@ The converted `.ssab` files will be generated in the `tests/overall/overall_ssab
 ### 3. Integrate into Your Engine
 Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions on how to load and play these `.ssab` files in your own game engine or application.
 
-## Sample Data
+### Sample Data
 
 This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio 7:
 
 - `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features (recommended for initial testing).
 - `tests/allAttributeV7/allAttributeV7.sspj`: Verifies all animation attributes.
+- `tests/allPartsV7/allPartsV7.sspj`: Verifies all part types.
 - `tests/ParticleEffect/ParticleEffect.sspj`: Verifies particle effects.
 
 You can use these projects as references when implementing your own player or verifying the SDK's behavior.
 
-# Tools Usage
-## ssconverter-cli
+## Tools Usage
+### ssconverter-cli
 reference: [ssconverter-cli](./cli/README.md)
 
-# For SDK Developers
-## Prepare
+## For SDK Developers
+### Prepare
 install [rustup](https://rustup.rs/)
 
-## Build
+### Build
 
 ```bash
 cargo build --release
 ```
 
-## Test
-### Unit tests
+### Test
+#### Unit tests
 
 ```bash
 cargo test
 ```
 
-### tests for converting from sspj files to ssab files
+#### tests for converting from sspj files to ssab files
 
 ```bash
 ./target/release/ssconverter-cli ./

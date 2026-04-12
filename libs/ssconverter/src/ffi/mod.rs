@@ -1,9 +1,9 @@
-use std::ffi::{c_char, CStr, OsString, CString};
+use crate::{ConverterConfig, ConverterError};
+use std::ffi::{CStr, CString, OsString, c_char};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::thread::JoinHandle;
-use crate::{ConverterConfig, ConverterError};
-use std::panic::{catch_unwind, AssertUnwindSafe};
 
 // #[repr(C)]
 pub struct Context {
@@ -20,11 +20,7 @@ impl Default for Context {
 
 impl Context {
     pub fn new() -> Self {
-        Self {
-            error: None,
-            handler: None,
-            should_stop: Arc::new(AtomicBool::new(false)),
-        }
+        Self { error: None, handler: None, should_stop: Arc::new(AtomicBool::new(false)) }
     }
 }
 
@@ -65,10 +61,8 @@ pub extern "C" fn ss_converter_create() -> *mut Context {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_destroy(context: *mut Context) {
-    let _ = catch_unwind(AssertUnwindSafe(|| {
-        unsafe {
-            let _ = Box::from_raw(context);
-        }
+    let _ = catch_unwind(AssertUnwindSafe(|| unsafe {
+        let _ = Box::from_raw(context);
     }));
 }
 
@@ -79,7 +73,9 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
 
-        if sspj.is_null() || output_dir.is_null() { return; }
+        if sspj.is_null() || output_dir.is_null() {
+            return;
+        }
         let sspj_buf = unsafe { CStr::from_ptr(sspj) };
         let sspj_str = sspj_buf.to_string_lossy().into_owned();
         let sspj_path = std::path::PathBuf::from(&sspj_str);
@@ -89,7 +85,7 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
         let mut config = ConverterConfig::default();
         config.output = output_dir_str;
 
-        if let Some(prev_handler)  = context.handler.take() {
+        if let Some(prev_handler) = context.handler.take() {
             // ignore previous handler result
             let _ = prev_handler.join();
         }
@@ -97,13 +93,12 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
         let handler = std::thread::spawn(move || {
             let on_log = |msg: &str| {
                 if let Some(cb) = callback
-                    && let Ok(c_msg) = CString::new(msg) {
-                        cb(c_msg.as_ptr());
-                    }
+                    && let Ok(c_msg) = CString::new(msg)
+                {
+                    cb(c_msg.as_ptr());
+                }
             };
-            let result = catch_unwind(AssertUnwindSafe(|| {
-                crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)
-            }));
+            let result = catch_unwind(AssertUnwindSafe(|| crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)));
             match result {
                 Ok(res) => res,
                 Err(_) => Err(crate::ConverterError::ConversionFailed("Rust thread panicked".into())),
@@ -118,7 +113,9 @@ pub unsafe extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_ch
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
 
-        if sspj.is_null() || output_dir.is_null() { return; }
+        if sspj.is_null() || output_dir.is_null() {
+            return;
+        }
 
         let sspj_buf = unsafe { CStr::from_ptr(sspj) };
         let sspj_str = sspj_buf.to_string_lossy().into_owned();
@@ -133,9 +130,7 @@ pub unsafe extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_ch
         let should_stop_clone = context.should_stop.clone();
 
         let c = config.clone();
-        let handler = std::thread::spawn(move || {
-            crate::watch::watch_sspj_project(sspj_path.as_path(), &c, should_stop_clone)
-        });
+        let handler = std::thread::spawn(move || crate::watch::watch_sspj_project(sspj_path.as_path(), &c, should_stop_clone));
         context.handler = Some(handler);
     }));
 }
@@ -168,19 +163,17 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
 
         if let Some(h) = context.handler.take() {
             match h.join() {
-                Ok(result) => {
-                    match result {
-                        Ok(_) => CConverterError::Success,
-                        Err(e) => {
-                            context.error = Some(e.to_string());
-                            match e {
-                                ConverterError::IoError(_) => CConverterError::ErrorIo,
-                                ConverterError::SspjError(_) => CConverterError::ErrorSspj,
-                                ConverterError::ConversionFailed(_) => CConverterError::ErrorConversion,
-                            }
-                        },
+                Ok(result) => match result {
+                    Ok(_) => CConverterError::Success,
+                    Err(e) => {
+                        context.error = Some(e.to_string());
+                        match e {
+                            ConverterError::IoError(_) => CConverterError::ErrorIo,
+                            ConverterError::SspjError(_) => CConverterError::ErrorSspj,
+                            ConverterError::ConversionFailed(_) => CConverterError::ErrorConversion,
+                        }
                     }
-                }
+                },
                 Err(_) => {
                     context.error = Some("Converter thread panicked".to_string());
                     CConverterError::ErrorUnknown

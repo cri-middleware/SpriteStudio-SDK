@@ -23,5 +23,5 @@ pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::ss::form
 }
 
 pub fn convert_color(c: &sspj::sstypes::SsU8Color) -> u32 {
-    ((c.a as u32) << 24) | ((c.r as u32) << 16) | ((c.g as u32)<< 8) | (c.b as u32)
+    ((c.a as u32) << 24) | ((c.r as u32) << 16) | ((c.g as u32) << 8) | (c.b as u32)
 }

@@ -12,22 +12,9 @@ impl FromStr for SsPoint2 {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<f32> = s
-            .split_whitespace()
-            .filter_map(|sub| sub.parse::<f32>().ok())
-            .collect();
+        let parts: Vec<f32> = s.split_whitespace().filter_map(|sub| sub.parse::<f32>().ok()).collect();
 
-        if parts.len() == 2 {
-            Ok(SsPoint2 {
-                x: parts[0],
-                y: parts[1],
-            })
-        } else {
-            Err(format!(
-                "Expected a string with two space-separated integers, but got '{}'",
-                s
-            ))
-        }
+        if parts.len() == 2 { Ok(SsPoint2 { x: parts[0], y: parts[1] }) } else { Err(format!("Expected a string with two space-separated integers, but got '{}'", s)) }
     }
 }
 impl<'de> Deserialize<'de> for SsPoint2 {
@@ -36,11 +23,7 @@ impl<'de> Deserialize<'de> for SsPoint2 {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(SsPoint2::default())
-        } else {
-            Self::from_str(&s).map_err(serde::de::Error::custom)
-        }
+        if s.is_empty() { Ok(SsPoint2::default()) } else { Self::from_str(&s).map_err(serde::de::Error::custom) }
     }
 }
 
@@ -54,23 +37,9 @@ impl FromStr for SsPoint3 {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<f32> = s
-            .split_whitespace()
-            .filter_map(|sub| sub.parse::<f32>().ok())
-            .collect();
+        let parts: Vec<f32> = s.split_whitespace().filter_map(|sub| sub.parse::<f32>().ok()).collect();
 
-        if parts.len() == 3 {
-            Ok(SsPoint3 {
-                x: parts[0],
-                y: parts[1],
-                z: parts[2],
-            })
-        } else {
-            Err(format!(
-                "Expected a string with three space-separated integers, but got '{}'",
-                s
-            ))
-        }
+        if parts.len() == 3 { Ok(SsPoint3 { x: parts[0], y: parts[1], z: parts[2] }) } else { Err(format!("Expected a string with three space-separated integers, but got '{}'", s)) }
     }
 }
 impl<'de> Deserialize<'de> for SsPoint3 {
@@ -79,11 +48,7 @@ impl<'de> Deserialize<'de> for SsPoint3 {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(Self::default())
-        } else {
-            Self::from_str(&s).map_err(serde::de::Error::custom)
-        }
+        if s.is_empty() { Ok(Self::default()) } else { Self::from_str(&s).map_err(serde::de::Error::custom) }
     }
 }
 
@@ -101,12 +66,7 @@ impl FromStr for SsU8Color {
         let Ok(num) = u32::from_str_radix(s, 16) else {
             return Err(format!("Invalid hexadecimal color format: {}", s));
         };
-        Ok(SsU8Color {
-            a: (num >> 24) as u8,
-            r: ((num >> 16) & 0xff) as u8,
-            g: ((num >> 8) & 0xff) as u8,
-            b: num as u8,
-        })
+        Ok(SsU8Color { a: (num >> 24) as u8, r: ((num >> 16) & 0xff) as u8, g: ((num >> 8) & 0xff) as u8, b: num as u8 })
     }
 }
 impl<'de> Deserialize<'de> for SsU8Color {
@@ -115,11 +75,7 @@ impl<'de> Deserialize<'de> for SsU8Color {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(Self::default())
-        } else {
-            Self::from_str(&s).map_err(serde::de::Error::custom)
-        }
+        if s.is_empty() { Ok(Self::default()) } else { Self::from_str(&s).map_err(serde::de::Error::custom) }
     }
 }
 
@@ -134,24 +90,9 @@ impl FromStr for SsIRect {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<i32> = s
-            .split_whitespace()
-            .filter_map(|sub| sub.parse::<i32>().ok())
-            .collect();
+        let parts: Vec<i32> = s.split_whitespace().filter_map(|sub| sub.parse::<i32>().ok()).collect();
 
-        if parts.len() == 4 {
-            Ok(SsIRect {
-                x1: parts[0],
-                y1: parts[1],
-                x2: parts[2],
-                y2: parts[3],
-            })
-        } else {
-            Err(format!(
-                "Expected a string with four space-separated integers, but got '{}'",
-                s
-            ))
-        }
+        if parts.len() == 4 { Ok(SsIRect { x1: parts[0], y1: parts[1], x2: parts[2], y2: parts[3] }) } else { Err(format!("Expected a string with four space-separated integers, but got '{}'", s)) }
     }
 }
 impl<'de> Deserialize<'de> for SsIRect {
@@ -160,11 +101,7 @@ impl<'de> Deserialize<'de> for SsIRect {
         D: serde::Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        if s.is_empty() {
-            Ok(Self::default())
-        } else {
-            Self::from_str(&s).map_err(serde::de::Error::custom)
-        }
+        if s.is_empty() { Ok(Self::default()) } else { Self::from_str(&s).map_err(serde::de::Error::custom) }
     }
 }
 
@@ -285,7 +222,6 @@ pub enum SsShapeType {
     Star,
 }
 
-
 #[derive(PartialEq, Debug, Clone, Default)]
 pub struct SsCurve {
     pub start_time: f32,
@@ -323,15 +259,9 @@ impl<'de> Deserialize<'de> for SsCurve {
                             sync_start_end = value == "1" || value.to_lowercase() == "true";
                         }
                         "$text" => {
-                            nums = value
-                                .split_whitespace()
-                                .filter_map(|s| s.parse::<f32>().ok())
-                                .collect();
+                            nums = value.split_whitespace().filter_map(|s| s.parse::<f32>().ok()).collect();
                             if nums.len() != 4 {
-                                return Err(serde::de::Error::custom(format!(
-                                    "Expected 4 space-separated numbers, but got '{}'",
-                                    value
-                                )));
+                                return Err(serde::de::Error::custom(format!("Expected 4 space-separated numbers, but got '{}'", value)));
                             }
                         }
                         _ => {
@@ -340,15 +270,7 @@ impl<'de> Deserialize<'de> for SsCurve {
                     }
                 }
 
-                Ok(SsCurve {
-                    start_time: nums[0],
-                    start_value: nums[1],
-                    end_time: nums[2],
-                    end_value: nums[3],
-                    start_key_time: 0.0,
-                    end_key_time: 0.0,
-                    sync_start_end,
-                })
+                Ok(SsCurve { start_time: nums[0], start_value: nums[1], end_time: nums[2], end_value: nums[3], start_key_time: 0.0, end_key_time: 0.0, sync_start_end })
             }
         }
         deserializer.deserialize_map(SsCurveVisitor)
