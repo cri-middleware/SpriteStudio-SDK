@@ -38,7 +38,7 @@ graph LR
 - ツール
     - [ssconverter-cli](./cli/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
 
-# クイックスタート
+## クイックスタート
 
 まずは、同梱されているサンプルプロジェクトを変換して SDK の動作を確認してみましょう。
 
@@ -63,38 +63,39 @@ graph LR
 ### 3. エンジンへの組み込み
 生成された `.ssab` ファイルを自分のゲームエンジンやアプリで読み込んで再生する方法については、[libssruntime の README](./libs/ssruntime/README.ja.md) を参照してください。
 
-## サンプルデータについて
+### サンプルデータについて
 
 このリポジトリの `tests/` ディレクトリには、SpriteStudio 7 の各種機能を検証するためのサンプルプロジェクトが含まれています：
 
 - `tests/overall/overall.sspj`: 基本から応用までを網羅した包括的なプロジェクト（最初のテストにおすすめです）。
 - `tests/allAttributeV7/allAttributeV7.sspj`: 全てのアニメーションアトリビュートを網羅しています。
+- `tests/allPartsV7/allPartsV7.sspj`: 全てのパーツ種別の検証用プロジェクトです。
 - `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。
 
 これらは Player の実装時や動作確認の際の参照用データとして自由にご利用いただけます。
 
-# ツールの使用方法
-## ssconverter-cli
+## ツールの使用方法
+### ssconverter-cli
 [ssconverter-cli](./cli/README.md) を参考してください。
 
-# SDK 開発者向け
-## 準備
+## SDK 開発者向け
+### 準備
 [rustup](https://rustup.rs/) をインストールしてください。
 
-## ビルド
+### ビルド
 
 ```bash
 cargo build --release
 ```
 
-## テスト
-### ユニットテスト
+### テスト
+#### ユニットテスト
 
 ```bash
 cargo test
 ```
 
-### sspj から ssab への変換テスト
+#### sspj から ssab への変換テスト
 
 ```bash
 ./target/release/ssconverter-cli ./

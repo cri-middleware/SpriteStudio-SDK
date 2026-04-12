@@ -108,3 +108,12 @@ jobs:
         run: cargo test --workspace --verbose -- --test-threads=1
         shell: bash
 
+      - name: Format check
+        if: matrix.platform == 'linux'
+        run: cargo fmt --all -- --check
+        shell: bash
+
+      - name: Clippy (workspace)
+        if: matrix.platform == 'linux'
+        run: cargo clippy --workspace -- -D warnings
+        shell: bash
