@@ -31,6 +31,19 @@ ssruntime = { path = "libs/ssruntime", default-features = false }
 
 *Note: In `no_std` mode, an allocator (`alloc` crate) is still required for managing animation state and metadata.*
 
+# ⚠️ Limitations and Security Notes
+
+When integrating this library into a Player (game engine), please pay close attention to the following specifications:
+
+1. **No Data Validation**
+   - To maximize performance and minimize binary size (especially for embedded/WebAssembly targets), `libssruntime` **does not perform structural validation** on the input `.ssab` data.
+   - Loading maliciously crafted or corrupted `.ssab` files can cause undefined behavior or crashes (e.g., out-of-bounds memory access).
+   - **Mitigation:** In environments that accept dynamic input from networks or users, the Player MUST validate the data integrity beforehand or ensure that only trusted, safe assets are loaded.
+
+2. **Resource Sharing and Lifetimes (FFI)**
+   - To optimize memory usage, a single animation resource (`AnimationResource`) can be shared across multiple playback instances (`Context`).
+   - After binding a resource to a context using `ss_runtime_bind_resource`, **you must not destroy the resource before the context is destroyed or bound to another resource**. Doing so will result in a dangling pointer (use-after-free) and lead to crashes.
+
 # Architecture
 
 This library outputs the calculation results as "Part States".
