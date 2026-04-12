@@ -39,6 +39,41 @@ graph LR
 - ツール
     - [ssconverter-cli](./cli/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
 
+# クイックスタート
+
+まずは、同梱されているサンプルプロジェクトを変換して SDK の動作を確認してみましょう。
+
+### 1. コンバーターをダウンロードする
+[GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) ページから、お使いのプラットフォームに合わせた `ssconverter-cli` の最新版をダウンロードしてください。**Windows**、**macOS**、**Linux** 用の実行ファイルが用意されています。
+
+### 2. サンプルプロジェクトをコンバートする
+ダウンロードしたツールを実行して、同梱のテスト用プロジェクトをバイナリ形式 (`.ssab`) に変換します：
+
+**Windows:**
+```powershell
+.\ssconverter-cli.exe tests\overall\overall.sspj
+```
+
+**macOS / Linux:**
+```bash
+./ssconverter-cli tests/overall/overall.sspj
+```
+
+変換された `.ssab` ファイルは、`tests/overall/overall_ssab/` ディレクトリ内に生成されます。
+
+### 3. エンジンへの組み込み
+生成された `.ssab` ファイルを自分のゲームエンジンやアプリで読み込んで再生する方法については、[libssruntime の README](./libs/ssruntime/README.ja.md) を参照してください。
+
+## サンプルデータについて
+
+このリポジトリの `tests/` ディレクトリには、SpriteStudio 7 の各種機能を検証するためのサンプルプロジェクトが含まれています：
+
+- `tests/overall/overall.sspj`: 基本から応用までを網羅した包括的なプロジェクト（最初のテストにおすすめです）。
+- `tests/allAttributeV7/allAttributeV7.sspj`: 全てのアニメーションアトリビュートを網羅しています。
+- `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。
+
+これらは Player の実装時や動作確認の際の参照用データとして自由にご利用いただけます。
+
 # ツールの使用方法
 ## ssconverter-cli
 [ssconverter-cli](./cli/README.md) を参考してください。
