@@ -14,6 +14,7 @@ env!("VERGEN_GIT_SHA")
 #[command(
     name = "ssconverter-cli",
     version = VERSION,
+    about = "Converts SpriteStudio 7 projects (.sspj) to optimized binary files (.ssab)",
     override_usage = "
   single mode: convert a single sspj project or a single sspj project zip file
   usage:
@@ -27,7 +28,12 @@ env!("VERGEN_GIT_SHA")
 "
 )]
 struct Cli {
-    #[arg(required = true, value_names = &["sspj_files", "sspj_zip_file", "directories"], num_args = 1..)]
+    #[arg(
+        required = true, 
+        value_name = "PATHS", 
+        help = "Paths to .sspj files, zip archives, or directories containing projects",
+        num_args = 1..
+    )]
     files: Vec<PathBuf>,
 
     #[arg(short, long, help = "embed assets into a ssab file")]
@@ -54,9 +60,9 @@ fn main() -> Result<(), ssconverter::ConverterError> {
 
     let sspj_paths = ssconverter::utility::parse_args(&args.files);
     if sspj_paths.is_empty() {
-        eprintln!("sspj files not found.");
+        eprintln!("Error: No SpriteStudio project files found at the specified paths.");
         eprintln!("{}", cmd.render_usage());
-        return Ok(());
+        std::process::exit(1);
     }
 
 
@@ -93,7 +99,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
 
     let mut handlers: Vec<JoinHandle<Result<(), ssconverter::ConverterError>>> = vec![];
     sspj_paths.iter().for_each(|path_buf| {
-        println!("convert {:?}", path_buf.display());
+        println!("Converting {:?}...", path_buf.display());
         handlers.push({
             let p = path_buf.clone();
             let c = config.clone();
@@ -114,6 +120,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
         }
     }
 
+    println!("All conversions completed successfully.");
     Ok(())
 }
 
