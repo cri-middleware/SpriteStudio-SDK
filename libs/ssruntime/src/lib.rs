@@ -145,9 +145,24 @@ impl<'a> AnimationResource<'a> {
     }
 
     pub fn find_animation_index(&self, name: &str) -> Option<usize> {
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
-        ssab.animations().and_then(|animations| animations.iter().enumerate().find_map(|(i, anim)| if anim.name() == name { Some(i) } else { None }))
+        let hash = fnv1a_hash_str(name);
+        self.find_animation_index_by_hash(hash)
     }
+
+    pub fn find_animation_index_by_hash(&self, hash: u32) -> Option<usize> {
+        self.animations.iter().position(|anim| anim.name_hash == hash)
+    }
+}
+
+pub fn fnv1a_hash_str(text: &str) -> u32 {
+    let mut hash: u32 = 2166136261;
+    let prime: u32 = 16777619;
+
+    for b in text.bytes() {
+        hash ^= b as u32;
+        hash = hash.wrapping_mul(prime);
+    }
+    hash
 }
 
 struct ContextBuffers<'a> {
@@ -203,11 +218,16 @@ impl<'a> Context<'a> {
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
+        let hash = fnv1a_hash_str(name);
+        self.setup_animation_by_hash(hash)
+    }
+
+    pub fn setup_animation_by_hash(&mut self, hash: u32) -> Result<(), error::SSRuntimeError> {
         let Some(resource) = self.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
 
-        let Some(index) = resource.find_animation_index(name) else {
+        let Some(index) = resource.find_animation_index_by_hash(hash) else {
             return Err(error::SSRuntimeError::AnimationNotFound);
         };
 

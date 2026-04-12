@@ -59,6 +59,13 @@ fn create_ffi_resource(data: crate::SsabData) -> *mut c_void {
 }
 
 #[unsafe(no_mangle)]
+/// Creates an AnimationResource by copying the provided data.
+///
+/// # Security and Validation
+/// To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
+/// Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
+/// The caller MUST ensure the data is trusted or validated before passing it to this function.
+///
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
@@ -75,10 +82,18 @@ pub unsafe extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize
 }
 
 #[unsafe(no_mangle)]
+/// Creates an AnimationResource by borrowing the provided data.
+///
+/// # Security and Validation
+/// To maximize performance and minimize binary size, `libssruntime` **does not validate** the input `.ssab` data.
+/// Passing corrupted or maliciously crafted data will cause undefined behavior (e.g., out-of-bounds reads).
+/// The caller MUST ensure the data is trusted or validated before passing it to this function.
+///
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
-/// The caller must ensure the pointer is valid and points to a valid memory block.
+/// The caller must ensure the pointer is valid and points to a valid memory block of at least `len` bytes,
+/// AND the memory must remain valid and unmodified until this resource is destroyed.
 pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usize) -> *mut c_void {
     if ptr.is_null() {
         return core::ptr::null_mut();
@@ -122,6 +137,12 @@ pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
     }
 }
 
+/// Binds an AnimationResource to a Context.
+///
+/// # Safety and Lifetimes
+/// - To save memory, a single Resource can be bound to multiple Contexts.
+/// - **CRITICAL:** The caller MUST ensure that the `resource` is NOT destroyed (via `ss_resource_destroy`)
+///   while ANY `context` is still bound to it. Doing so will result in a dangling pointer and undefined behavior.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut c_void) -> bool {
     let Some(ffi_context) = get_context(context) else {

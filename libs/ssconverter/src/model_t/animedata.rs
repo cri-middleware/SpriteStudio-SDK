@@ -294,6 +294,7 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
+    anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
     anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map));
     anime_data_t.parts_mesh_data = None;
