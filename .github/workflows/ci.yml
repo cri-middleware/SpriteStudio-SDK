@@ -57,6 +57,11 @@ jobs:
             platform: web
             arch: wasm32
 
+          - name: ⚙️ no_std (build verification)
+            os: ubuntu-latest
+            platform: no_std
+            arch: x86_64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -91,6 +96,8 @@ jobs:
             cargo build --target aarch64-apple-ios --verbose -p ssruntime
           elif [ "${{ matrix.platform }}" == "web" ]; then
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime
+          elif [ "${{ matrix.platform }}" == "no_std" ]; then
+            cargo build --verbose -p ssruntime --no-default-features --features "ffi libc_alloc"
           else
             cargo build --verbose
           fi

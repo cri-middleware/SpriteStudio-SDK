@@ -9,12 +9,14 @@ ssab = { workspace = true }
 ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
+libc = { version = "0.2", optional = true }
 
 [features]
 default = ["ffi", "std"]
 ffi = []
 web = ["wasm-bindgen"]
 std = ["flatbuffers/std", "ssab/std"]
+libc_alloc = ["dep:libc"]
 
 [lints.clippy]
 missing_safety_doc = "allow"
