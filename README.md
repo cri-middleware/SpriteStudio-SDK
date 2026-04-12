@@ -30,7 +30,6 @@ graph LR
 ```
 
 - Libraries
-...
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
     - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
     - [libssinterpolate](./libs/ssinterpolate/README.md): a platform-agnostic math library for animation interpolations.

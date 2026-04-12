@@ -611,3 +611,7 @@ FodyWeavers.xsd
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# AI assistant configuration
+GEMINI.md
+.gemini/
