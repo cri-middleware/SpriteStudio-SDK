@@ -1,0 +1,24 @@
+name: Question / 質問
+description: Ask a question about how to use the SDK. / SDK の使い方について質問する
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for asking! / ご質問ありがとうございます！
+        Please search existing issues before asking. / 質問の前に、同様の内容が既に報告されていないか、既存の Issue を検索してください。
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question / 質問内容
+      description: What are you trying to do, and where are you stuck? / 何をしようとして、どこで困っていますか？
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context / 補足情報
+      description: Add any other context or code snippets here. / その他、質問に関する補足情報やコードスニペットがあれば記載してください。

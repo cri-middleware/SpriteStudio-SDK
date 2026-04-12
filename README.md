@@ -39,6 +39,41 @@ graph LR
 - Tool
     - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
+# Quick Start
+
+Follow these steps to convert a sample project and see the SDK in action.
+
+### 1. Download the Converter
+Download the latest version of `ssconverter-cli` for your platform from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page. Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
+
+### 2. Convert a Sample Project
+Run the downloaded tool to convert one of the bundled test projects into the binary `.ssab` format:
+
+**Windows:**
+```powershell
+.\ssconverter-cli.exe tests\overall\overall.sspj
+```
+
+**macOS / Linux:**
+```bash
+./ssconverter-cli tests/overall/overall.sspj
+```
+
+The converted `.ssab` files will be generated in the `tests/overall/overall_ssab/` directory.
+
+### 3. Integrate into Your Engine
+Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions on how to load and play these `.ssab` files in your own game engine or application.
+
+## Sample Data
+
+This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio 7:
+
+- `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features (recommended for initial testing).
+- `tests/allAttributeV7/allAttributeV7.sspj`: Verifies all animation attributes.
+- `tests/ParticleEffect/ParticleEffect.sspj`: Verifies particle effects.
+
+You can use these projects as references when implementing your own player or verifying the SDK's behavior.
+
 # Tools Usage
 ## ssconverter-cli
 reference: [ssconverter-cli](./cli/README.md)

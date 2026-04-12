@@ -1,0 +1,59 @@
+name: Bug Report / バグ報告
+description: Create a report to help us improve SpriteStudio7-SDK. / 不具合の報告
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! / 不具合の報告ありがとうございます！
+        Please provide as much information as possible to help us investigate. / 調査をスムーズに行うため、可能な限り詳細な情報を提供してください。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description / 不具合の内容
+      description: A clear and concise description of what the bug is. / どのような不具合が発生しているか、簡潔に説明してください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce / 再現手順
+      description: Steps to reproduce the behavior. / 不具合を再現させるための手順を詳しく書いてください。
+      placeholder: |
+        1. Open '...'
+        2. Run '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior / 期待される動作
+      description: A clear and concise description of what you expected to happen. / 本来どのような動作を期待していたか説明してください。
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment / 実行環境
+      description: OS version, Rust version, target platform, etc. / OS バージョン、Rust のバージョン、ターゲットプラットフォームなど。
+      placeholder: e.g. macOS Sonoma, Rust 1.77, target wasm32
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context / 補足情報
+      description: Add any other context about the problem here. / その他、不具合に関する補足情報があれば記載してください。
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        **Note:** If possible, please attach a sample project (.sspj) or reproduction data to help us investigate faster. / 可能であれば、調査を早めるためにサンプルプロジェクト (.sspj) や再現データを添付してください。
