@@ -6,6 +6,7 @@ use alloc::vec::Vec;
 
 #[wasm_bindgen]
 pub struct SSRuntimeContext {
+    #[allow(dead_code)]
     data: Box<crate::SsabData>,
     resource: Option<crate::AnimationResource<'static>>,
     inner: Context<'static>,
@@ -37,10 +38,7 @@ impl SSRuntimeContext {
     }
 
     pub fn setup_animation(&mut self, name: &str) -> bool {
-        match self.inner.setup_animation(name) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        self.inner.setup_animation(name).is_ok()
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Option<Vec<u8>> {
