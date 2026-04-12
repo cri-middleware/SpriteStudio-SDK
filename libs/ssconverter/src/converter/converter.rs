@@ -42,6 +42,8 @@ where
             };
             ssab::ssab::ss::format::finish_ss_anime_binary_buffer(&mut fb, offset);
             let buf = fb.finished_data();
+            // note: In SpriteStudio, ssae files must be placed in a single directory specified in sspj.
+            // Therefore, name collisions between different directories do not occur.
             let file_stem = std::path::PathBuf::from(f)
                 .file_stem()
                 .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("No file stem".into()))?
@@ -150,7 +152,7 @@ where
                 .iter()
                 .map(|(dst_rel_path, src_rel_path)| {
                     let dst = outdir_path.join(dst_rel_path);
-                    let dst_parent = dst.parent().unwrap();
+                    let dst_parent = dst.parent().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid output path")))?;
                     if !dst_parent.exists() {
                         let r = std::fs::create_dir_all(dst_parent);
                         match r {
@@ -162,7 +164,8 @@ where
                     }
                     //let data = asset_provider.read_asset(src_rel_path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
                     //let r = std::fs::write(&dst, data);
-                    let r = asset_provider.copy_asset(src_rel_path, dst.as_os_str().to_str().unwrap());
+                    let dst_str = dst.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Non-UTF8 output path")))?;
+                    let r = asset_provider.copy_asset(src_rel_path, dst_str);
                     match r {
                         Ok(_) => (),
                         Err(e) => {
