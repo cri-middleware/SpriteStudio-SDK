@@ -8,9 +8,14 @@ members = [
     "libs/ssruntime",
     "libs/ssinterpolate",
 ]
-
 [workspace.package]
 edition = "2024"
+authors = ["CRI Middleware Co., Ltd."]
+license-file = "LICENSE.md"
+repository = "https://github.com/SpriteStudio/SpriteStudio7-SDK"
+homepage = "https://www.webtech.co.jp/eng/spritestudio/"
+description = "Software development kit for OPTPiX SpriteStudio 7 projects"
+
 
 [workspace.dependencies]
 sspj = { path = "libs/sspj" }
