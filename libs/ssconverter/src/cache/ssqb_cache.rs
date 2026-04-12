@@ -22,11 +22,7 @@ impl SsqbCache {
 
         fb.create_vector(&v)
     }
-    pub fn create_shared_sequence_binary<'a>(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        sequence_binary_t: &ssab::ssqb::ss::format::SsSequenceBinaryT,
-    ) -> flatbuffers::WIPOffset<ssab::ssqb::ss::format::SsSequenceBinary<'a>> {
+    pub fn create_shared_sequence_binary<'a>(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, sequence_binary_t: &ssab::ssqb::ss::format::SsSequenceBinaryT) -> flatbuffers::WIPOffset<ssab::ssqb::ss::format::SsSequenceBinary<'a>> {
         let mut args = ssab::ssqb::ss::format::SsSequenceBinaryArgs::default();
         args.sequence_list = sequence_binary_t.sequence_list.as_ref().map(|sequence_list| {
             let v = sequence_list

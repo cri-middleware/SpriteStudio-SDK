@@ -180,11 +180,7 @@ where
 }
 
 #[inline]
-pub fn evaluate_float(
-    array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'_>>>,
-    frame_no: i32,
-    hint: &mut usize,
-) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'_>>>, frame_no: i32, hint: &mut usize) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32;
@@ -207,11 +203,7 @@ pub fn evaluate_float(
 }
 
 #[inline]
-pub fn evaluate_int(
-    array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'_>>>,
-    frame_no: i32,
-    hint: &mut usize,
-) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'_>>>, frame_no: i32, hint: &mut usize) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32;
@@ -253,11 +245,7 @@ pub fn evaluate_partcolor(
             let next_index = next.index() as i32;
             let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
 
-            fn interpolate_color(
-                color_start: &Option<SsAttributePartColorKeyValueColor>,
-                color_end: &Option<SsAttributePartColorKeyValueColor>,
-                rate: f32,
-            ) -> runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
+            fn interpolate_color(color_start: &Option<SsAttributePartColorKeyValueColor>, color_end: &Option<SsAttributePartColorKeyValueColor>, rate: f32) -> runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
                 let s = color_start.as_ref().unwrap();
                 let e = color_end.as_ref().unwrap();
                 let s_rgba = s.rgba().unwrap();
@@ -383,21 +371,7 @@ pub fn evaluate_shader(
 #[inline]
 fn transfer_shader(source: &Option<ssab::ssab::ss::format::PartAttributeShader>) -> runtime::framedata::ss::runtime::PartAttributeShader {
     if let Some(s) = source {
-        runtime::framedata::ss::runtime::PartAttributeShader::new(
-            s.id_hash(),
-            s.param0(),
-            s.param1(),
-            s.param2(),
-            s.param3(),
-            s.param4(),
-            s.param5(),
-            s.param6(),
-            s.param7(),
-            s.map0_id(),
-            s.map0_name_hash(),
-            s.map1_id(),
-            s.map1_name_hash(),
-        )
+        runtime::framedata::ss::runtime::PartAttributeShader::new(s.id_hash(), s.param0(), s.param1(), s.param2(), s.param3(), s.param4(), s.param5(), s.param6(), s.param7(), s.map0_id(), s.map0_name_hash(), s.map1_id(), s.map1_name_hash())
     } else {
         runtime::framedata::ss::runtime::PartAttributeShader::default()
     }
@@ -423,11 +397,7 @@ pub fn evaluate_vertex(
             let next_index = next.index() as i32;
             let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
 
-            fn interpolate_coordinate(
-                coordinate_start: &Option<ssab::ssab::ss::format::Vec2>,
-                coordinate_end: &Option<ssab::ssab::ss::format::Vec2>,
-                rate: f32,
-            ) -> runtime::framedata::ss::runtime::Vec2 {
+            fn interpolate_coordinate(coordinate_start: &Option<ssab::ssab::ss::format::Vec2>, coordinate_end: &Option<ssab::ssab::ss::format::Vec2>, rate: f32) -> runtime::framedata::ss::runtime::Vec2 {
                 let s = coordinate_start.as_ref().unwrap();
                 let e = coordinate_end.as_ref().unwrap();
                 runtime::framedata::ss::runtime::Vec2::new(linear(s.v1(), e.v1(), rate), linear(s.v2(), e.v2(), rate))
@@ -465,11 +435,7 @@ fn transfer_vertex(source: &Option<ssab::ssab::ss::format::PartAttributeVertex>)
 }
 
 #[inline]
-pub fn evaluate_skew(
-    array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>,
-    frame_no: i32,
-    hint: &mut usize,
-) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>, frame_no: i32, hint: &mut usize) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_value = prev.value().unwrap();
@@ -529,10 +495,7 @@ pub fn evaluate_deform(
                 current.coordinate.reserve(length_full);
                 let length = core::cmp::min(length_full, next_coodinate.len());
                 for i in 0..length {
-                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(
-                        linear(prev_coodinate.get(i).v1(), next_coodinate.get(i).v1(), rate),
-                        linear(prev_coodinate.get(i).v2(), next_coodinate.get(i).v2(), rate),
-                    ));
+                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(linear(prev_coodinate.get(i).v1(), next_coodinate.get(i).v1(), rate), linear(prev_coodinate.get(i).v2(), next_coodinate.get(i).v2(), rate)));
                 }
                 // Overrun use the value of `prev` as is.
                 for i in length..length_full {
@@ -574,11 +537,7 @@ pub fn evaluate_bool(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
 }
 
 #[inline]
-pub fn evaluate_cell<'a>(
-    array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>,
-    frame_no: i32,
-    hint: &mut usize,
-) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
+pub fn evaluate_cell<'a>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>, frame_no: i32, hint: &mut usize) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
     search_prev(array, frame_no, |v| v.index() as i32, hint).and_then(|prev| prev.value())
 }
 

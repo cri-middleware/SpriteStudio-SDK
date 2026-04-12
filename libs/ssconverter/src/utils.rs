@@ -95,12 +95,7 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
     let ssab_data = ssab_pair.1;
     let anime = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data) };
 
-    let images = anime
-        .cellmaps()
-        .iter()
-        .flatten()
-        .flat_map(|cellmap| cellmap.image_path().map(|s| (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string())))
-        .collect::<HashMap<_, _>>();
+    let images = anime.cellmaps().iter().flatten().flat_map(|cellmap| cellmap.image_path().map(|s| (s.to_string(), std::path::PathBuf::from(&sspj.settings.image_base_directory).join(s).to_string_lossy().to_string()))).collect::<HashMap<_, _>>();
 
     let external_textures = anime
         .external_textures()

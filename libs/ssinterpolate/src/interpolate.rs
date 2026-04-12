@@ -101,17 +101,7 @@ pub fn rate_linear_batch_f32x4(value_now: f32x4, value_start: f32x4, value_end: 
 
 #[inline]
 #[allow(clippy::too_many_arguments)]
-pub fn bezier_batch_f32x4(
-    value_start_x: f32x4,
-    value_start_y: f32x4,
-    value_end_x: f32x4,
-    value_end_y: f32x4,
-    rate: f32x4,
-    vector_start_x: f32x4,
-    vector_start_y: f32x4,
-    vector_end_x: f32x4,
-    vector_end_y: f32x4,
-) -> f32x4 {
+pub fn bezier_batch_f32x4(value_start_x: f32x4, value_start_y: f32x4, value_end_x: f32x4, value_end_y: f32x4, rate: f32x4, vector_start_x: f32x4, vector_start_y: f32x4, vector_end_x: f32x4, vector_end_y: f32x4) -> f32x4 {
     let frame = linear_batch_f32x4(value_start_x, value_end_x, rate);
 
     let mut area_now = f32x4::splat(0.5);
@@ -127,10 +117,7 @@ pub fn bezier_batch_f32x4(
         let base_now_pow3 = base_now_pow2 * base_now;
         let area_now_pow2 = area_now * area_now;
 
-        let frame_temp = (base_now_pow3 * value_start_x)
-            + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x))
-            + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
-            + (area_now * area_now_pow2 * value_end_x);
+        let frame_temp = (base_now_pow3 * value_start_x) + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x)) + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x)) + (area_now * area_now_pow2 * value_end_x);
 
         range_now *= half;
 
@@ -147,10 +134,7 @@ pub fn bezier_batch_f32x4(
     let base_now_pow2 = base_now * base_now;
     let base_now_pow3 = base_now_pow2 * base_now;
 
-    (base_now_pow3 * value_start_y)
-        + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y))
-        + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y))
-        + (area_now * area_now_pow2 * value_end_y)
+    (base_now_pow3 * value_start_y) + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y)) + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y)) + (area_now * area_now_pow2 * value_end_y)
 }
 
 #[inline]
@@ -541,10 +525,7 @@ pub fn hermite<T: SsFloat>(value_start: T, value_end: T, rate: T, speed_start: T
     let three = T::from_f32(3.0);
     let one = T::from_f32(1.0);
 
-    (((two * rate_pow3) - (three * rate_pow2) + one) * value_start)
-        + (((three * rate_pow2) - (two * rate_pow3)) * value_end)
-        + ((rate_pow3 - (two * rate_pow2) + rate) * (speed_start - value_start))
-        + ((rate_pow3 - rate_pow2) * (speed_end - value_end))
+    (((two * rate_pow3) - (three * rate_pow2) + one) * value_start) + (((three * rate_pow2) - (two * rate_pow3)) * value_end) + ((rate_pow3 - (two * rate_pow2) + rate) * (speed_start - value_start)) + ((rate_pow3 - rate_pow2) * (speed_end - value_end))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -568,10 +549,7 @@ pub fn bezier<T: SsFloat>(value_start_x: T, value_start_y: T, value_end_x: T, va
         base_now_pow3 = base_now_pow2 * base_now;
         area_now_pow2 = area_now * area_now;
 
-        let frame_temp = (base_now_pow3 * value_start_x)
-            + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x))
-            + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x))
-            + (area_now * area_now_pow2 * value_end_x);
+        let frame_temp = (base_now_pow3 * value_start_x) + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x)) + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x)) + (area_now * area_now_pow2 * value_end_x);
 
         range_now *= half;
         if frame_temp > frame {
@@ -586,10 +564,7 @@ pub fn bezier<T: SsFloat>(value_start_x: T, value_start_y: T, value_end_x: T, va
     base_now_pow2 = base_now * base_now;
     base_now_pow3 = base_now_pow2 * base_now;
 
-    (base_now_pow3 * value_start_y)
-        + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y))
-        + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y))
-        + (area_now * area_now_pow2 * value_end_y)
+    (base_now_pow3 * value_start_y) + (three * base_now_pow2 * area_now * (vector_start_y + value_start_y)) + (three * base_now * area_now_pow2 * (vector_end_y + value_end_y)) + (area_now * area_now_pow2 * value_end_y)
 }
 
 pub fn rate_ease_in<T: SsFloat>(rate: T, power_easing: T) -> T {
@@ -694,11 +669,7 @@ pub fn rate_ease_bounce_out<T: SsFloat>(rate: T) -> T {
 }
 
 pub fn rate_ease_bounce_inout<T: SsFloat>(rate: T) -> T {
-    if rate < T::from_f32(0.5) {
-        (T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate))) * T::from_f32(0.5)
-    } else {
-        bounce_time(rate * T::from_f32(2.0) - T::from_f32(1.0)) * T::from_f32(0.5) + T::from_f32(0.5)
-    }
+    if rate < T::from_f32(0.5) { (T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate))) * T::from_f32(0.5) } else { bounce_time(rate * T::from_f32(2.0) - T::from_f32(1.0)) * T::from_f32(0.5) + T::from_f32(0.5) }
 }
 
 pub fn rate_ease_back_in<T: SsFloat>(rate: T) -> T {

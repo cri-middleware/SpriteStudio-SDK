@@ -42,13 +42,7 @@ impl CharMapLoader for SsCharMapCommon {
     type Output = SsCharMapCommon;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(SsCharMapCommon {
-            line_height: get_parse!(parts, "lineHeight"),
-            base: get_parse!(parts, "base"),
-            scale_w: get_parse!(parts, "scaleW"),
-            scale_h: get_parse!(parts, "scaleH"),
-            pages: get_parse!(parts, "pages"),
-        })
+        Ok(SsCharMapCommon { line_height: get_parse!(parts, "lineHeight"), base: get_parse!(parts, "base"), scale_w: get_parse!(parts, "scaleW"), scale_h: get_parse!(parts, "scaleH"), pages: get_parse!(parts, "pages") })
     }
 }
 

@@ -1,8 +1,4 @@
-fn convert_sound_file_list(
-    _sspj: &sspj::sspj::SsProject,
-    sssound_list: &sspj::ssse::SsSoundFileList,
-    asset_provider: &dyn crate::asset_provider::AssetProvider,
-) -> Result<Vec<ssab::ssab::ss::format::SoundFileT>, crate::ConverterError> {
+fn convert_sound_file_list(_sspj: &sspj::sspj::SsProject, sssound_list: &sspj::ssse::SsSoundFileList, asset_provider: &dyn crate::asset_provider::AssetProvider) -> Result<Vec<ssab::ssab::ss::format::SoundFileT>, crate::ConverterError> {
     let mut v = sssound_list
         .sounds
         .iter()
@@ -29,11 +25,7 @@ fn convert_sound_file_list(
     Ok(v)
 }
 
-pub fn convert_sound_list(
-    sspj: &sspj::sspj::SsProject,
-    sound_list: &[&sspj::ssse::SsAudioPack],
-    asset_provider: &dyn crate::asset_provider::AssetProvider,
-) -> Result<Vec<ssab::ssab::ss::format::SoundListT>, crate::ConverterError> {
+pub fn convert_sound_list(sspj: &sspj::sspj::SsProject, sound_list: &[&sspj::ssse::SsAudioPack], asset_provider: &dyn crate::asset_provider::AssetProvider) -> Result<Vec<ssab::ssab::ss::format::SoundListT>, crate::ConverterError> {
     let mut v = sound_list
         .iter()
         .map(|sssound_pack| {

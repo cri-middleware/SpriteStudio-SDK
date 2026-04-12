@@ -56,8 +56,7 @@ pub struct ZipAssetProvider {
 impl ZipAssetProvider {
     pub fn new(_zip_name: &str, zip_content: &[u8]) -> Result<Self, crate::converter::converter_error::ConverterError> {
         let cursor = Cursor::new(zip_content);
-        let mut archive =
-            zip::ZipArchive::new(cursor).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::InvalidData, format!("Zip error: {:?}", e))))?;
+        let mut archive = zip::ZipArchive::new(cursor).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::InvalidData, format!("Zip error: {:?}", e))))?;
 
         // find sspj file
         let mut sspj_name = "".to_string();
@@ -91,14 +90,7 @@ impl ZipAssetProvider {
             let path_key = file.name().to_string();
             let file_path = path_buf.strip_prefix(&sspj_dir).unwrap();
 
-            if path_key.ends_with(".sspj")
-                || path_key.ends_with(".ssae")
-                || path_key.ends_with(".ssce")
-                || path_key.ends_with(".ssee")
-                || path_key.ends_with(".ssqe")
-                || path_key.ends_with(".ssse")
-                || path_key.ends_with(".fnt")
-            {
+            if path_key.ends_with(".sspj") || path_key.ends_with(".ssae") || path_key.ends_with(".ssce") || path_key.ends_with(".ssee") || path_key.ends_with(".ssqe") || path_key.ends_with(".ssse") || path_key.ends_with(".fnt") {
                 let mut s = String::new();
                 use std::io::Read;
                 file.read_to_string(&mut s).unwrap();

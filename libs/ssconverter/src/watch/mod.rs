@@ -6,11 +6,7 @@ use std::sync::{
 };
 use std::{path::Path, sync::mpsc::channel, time::Duration};
 
-pub fn watch_sspj_project(
-    sspj: &Path,
-    config: &crate::converter::converter::ConverterConfig,
-    should_stop: Arc<AtomicBool>,
-) -> std::result::Result<(), crate::converter::converter_error::ConverterError> {
+pub fn watch_sspj_project(sspj: &Path, config: &crate::converter::converter::ConverterConfig, should_stop: Arc<AtomicBool>) -> std::result::Result<(), crate::converter::converter_error::ConverterError> {
     if !(sspj.exists() && sspj.extension().unwrap_or(std::ffi::OsStr::new("")) == "sspj") {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "Invalid SSPJ file path")));
     }

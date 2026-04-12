@@ -429,23 +429,7 @@ pub fn get_frame_data<'a>(
     let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
     let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    get_parts(
-        fb,
-        cached_parts,
-        frame_no,
-        parts_vec,
-        cell_vec,
-        parts_color_vec,
-        shader_vec,
-        vertice_vec,
-        deform_vec,
-        &mut cells_off,
-        &mut parts_color_off,
-        &mut shaders_off,
-        &mut vertices_off,
-        &mut deforms_off,
-        cursors,
-    );
+    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors);
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
     }

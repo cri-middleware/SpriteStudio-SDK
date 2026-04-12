@@ -17,22 +17,14 @@ impl Default for ConvertConfig {
     }
 }
 
-pub fn convert_sspj_to_ssab_data<F>(
-    asset_provider: &dyn crate::asset_provider::AssetProvider,
-    config: &ConvertConfig,
-    _on_log: &F,
-) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+pub fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, _on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
 where
     F: Fn(&str) + Sync + Send,
 {
     let sspj = asset_provider.load_sspj()?;
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let ssab_model_list = sspj
-        .anime_list
-        .par_iter()
-        .map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, asset_provider, config.embedded))
-        .collect::<Result<Vec<ssab::ssab::ss::format::SsAnimeBinaryT>, _>>()?;
+    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, asset_provider, config.embedded)).collect::<Result<Vec<ssab::ssab::ss::format::SsAnimeBinaryT>, _>>()?;
 
     let ssqb_model_list = sspj.sequence_list.par_iter().map(ssqb_converter::convert_ss_sequence_binary_t).collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
@@ -126,12 +118,8 @@ where
         if !config.convert_config.embedded {
             let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
             for (dst_rel_path, src_rel_path) in assets {
-                let data = asset_provider
-                    .read_asset(&src_rel_path)
-                    .map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
-                zip_writer
-                    .start_file(dst_rel_path.clone(), options)
-                    .map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip start_file: {:?}", e))))?;
+                let data = asset_provider.read_asset(&src_rel_path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
+                zip_writer.start_file(dst_rel_path.clone(), options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip start_file: {:?}", e))))?;
                 zip_writer.write_all(&data).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("zip write: {:?}", e))))?;
             }
         }
@@ -143,10 +131,7 @@ where
             match r {
                 Ok(_) => (),
                 Err(e) => {
-                    return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(
-                        e.kind(),
-                        format!("create_dir_all: {}: {:?}", outdir_path.as_os_str().to_string_lossy(), e),
-                    )));
+                    return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", outdir_path.as_os_str().to_string_lossy(), e))));
                 }
             }
         }
@@ -171,10 +156,7 @@ where
                         match r {
                             Ok(_) => (),
                             Err(e) => {
-                                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(
-                                    e.kind(),
-                                    format!("create_dir_all: {}: {:?}", dst_parent.as_os_str().to_string_lossy(), e),
-                                )));
+                                return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("create_dir_all: {}: {:?}", dst_parent.as_os_str().to_string_lossy(), e))));
                             }
                         };
                     }

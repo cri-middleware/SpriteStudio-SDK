@@ -55,31 +55,11 @@ pub extern "C" fn ss_interpolate_rate_bezier_accuracy(value_start_x: f64, value_
     ss_interpolate_bezier_accuracy(value_start_x, 0.0_f64, value_end_x, 1.0_f64, rate, vector_start_x, vector_start_y, vector_end_x, vector_end_y)
 }
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_bezier(
-    value_start_x: f32,
-    value_start_y: f32,
-    value_end_x: f32,
-    value_end_y: f32,
-    rate: f32,
-    vector_start_x: f32,
-    vector_start_y: f32,
-    vector_end_x: f32,
-    vector_end_y: f32,
-) -> f32 {
+pub extern "C" fn ss_interpolate_bezier(value_start_x: f32, value_start_y: f32, value_end_x: f32, value_end_y: f32, rate: f32, vector_start_x: f32, vector_start_y: f32, vector_end_x: f32, vector_end_y: f32) -> f32 {
     bezier(value_start_x, value_start_y, value_end_x, value_end_y, rate, vector_start_x, vector_start_y, vector_end_x, vector_end_y)
 }
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_interpolate_bezier_accuracy(
-    value_start_x: f64,
-    value_start_y: f64,
-    value_end_x: f64,
-    value_end_y: f64,
-    rate: f64,
-    vector_start_x: f64,
-    vector_start_y: f64,
-    vector_end_x: f64,
-    vector_end_y: f64,
-) -> f64 {
+pub extern "C" fn ss_interpolate_bezier_accuracy(value_start_x: f64, value_start_y: f64, value_end_x: f64, value_end_y: f64, rate: f64, vector_start_x: f64, vector_start_y: f64, vector_end_x: f64, vector_end_y: f64) -> f64 {
     bezier(value_start_x, value_start_y, value_end_x, value_end_y, rate, vector_start_x, vector_start_y, vector_end_x, vector_end_y)
 }
 

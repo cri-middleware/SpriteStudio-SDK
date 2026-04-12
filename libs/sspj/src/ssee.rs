@@ -164,11 +164,7 @@ pub struct ParticleElementSize {
 }
 impl Default for ParticleElementSize {
     fn default() -> Self {
-        ParticleElementSize {
-            size_x: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
-            size_y: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
-            scale_factor: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
-        }
+        ParticleElementSize { size_x: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 }, size_y: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 }, scale_factor: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 } }
     }
 }
 
@@ -182,11 +178,7 @@ pub struct ParticleElementTransSize {
 }
 impl Default for ParticleElementTransSize {
     fn default() -> Self {
-        ParticleElementTransSize {
-            size_x: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
-            size_y: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
-            scale_factor: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 },
-        }
+        ParticleElementTransSize { size_x: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 }, size_y: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 }, scale_factor: VarianceValue::<f32> { value: 1.0, subvalue: 1.0 } }
     }
 }
 
