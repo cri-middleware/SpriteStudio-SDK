@@ -1,6 +1,7 @@
 use ssab::ssab::ss::format::{InterpolationType, SsAttributePartColorKeyValueColor};
 use ssinterpolate::interpolate::*;
 use crate::runtime;
+use alloc::vec::Vec;
 
 const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::all();
 const UPDATE_FLAG_OFF: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();

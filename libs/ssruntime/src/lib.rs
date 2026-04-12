@@ -3,7 +3,36 @@
 #[cfg(all(not(feature = "std"), not(test)))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
+    #[cfg(feature = "libc_alloc")]
+    unsafe { libc::abort() }
+    
+    #[cfg(not(feature = "libc_alloc"))]
     loop {}
+}
+
+#[cfg(all(not(feature = "std"), not(test), unix))]
+#[unsafe(no_mangle)]
+pub extern "C" fn rust_eh_personality() {}
+
+#[cfg(all(not(feature = "std"), feature = "libc_alloc"))]
+mod allocator {
+    #[cfg(unix)]
+    #[link(name = "c")]
+    unsafe extern "C" {}
+
+    struct LibcAlloc;
+    
+    #[global_allocator]
+    static ALLOCATOR: LibcAlloc = LibcAlloc;
+
+    unsafe impl alloc::alloc::GlobalAlloc for LibcAlloc {
+        unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
+            unsafe { libc::malloc(layout.size()) as *mut u8 }
+        }
+        unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
+            unsafe { libc::free(ptr as *mut libc::c_void) };
+        }
+    }
 }
 
 extern crate libm;
