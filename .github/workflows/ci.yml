@@ -97,7 +97,7 @@ jobs:
           elif [ "${{ matrix.platform }}" == "web" ]; then
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime
           elif [ "${{ matrix.platform }}" == "no_std" ]; then
-            cargo build --verbose -p ssruntime --no-default-features --features "ffi libc_alloc"
+            cargo build --release --verbose -p ssruntime --no-default-features --features "ffi libc_alloc"
           else
             cargo build --verbose
           fi
