@@ -103,13 +103,13 @@ impl ZipAssetProvider {
             if path_key.ends_with(".sspj") || path_key.ends_with(".ssae") || path_key.ends_with(".ssce") || path_key.ends_with(".ssee") || path_key.ends_with(".ssqe") || path_key.ends_with(".ssse") || path_key.ends_with(".fnt") {
                 let mut s = String::new();
                 use std::io::Read;
-                file.read_to_string(&mut s).map_err(|e| crate::converter::converter_error::ConverterError::IoError(e))?;
+                file.read_to_string(&mut s).map_err(crate::converter::converter_error::ConverterError::IoError)?;
 
                 sspj_map.insert(file_path.to_string_lossy().to_string(), s);
             } else {
                 let mut buf = Vec::new();
                 use std::io::Read;
-                file.read_to_end(&mut buf).map_err(|e| crate::converter::converter_error::ConverterError::IoError(e))?;
+                file.read_to_end(&mut buf).map_err(crate::converter::converter_error::ConverterError::IoError)?;
                 binary_map.insert(file_path.to_string_lossy().to_string(), buf);
             }
         }
@@ -141,9 +141,15 @@ impl AssetProvider for ZipAssetProvider {
         Err(std::io::Error::new(ErrorKind::NotFound, format!("Asset not found in zip: {}", path)))
     }
 
-    fn copy_asset(&self, _src_path: &str, _dst_path: &str) -> Result<(), std::io::Error> {
-        // TODO: impl
-        Ok(())
+    fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error> {
+        let data = self.read_asset(src_path)?;
+        let dst_path_buf = std::path::PathBuf::from(dst_path);
+        
+        if let Some(parent) = dst_path_buf.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        
+        std::fs::write(dst_path_buf.as_path(), data).map_err(|e| std::io::Error::other(format!("copy_asset: {:?}", e)))
     }
 
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
