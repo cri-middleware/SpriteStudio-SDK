@@ -144,11 +144,11 @@ impl AssetProvider for ZipAssetProvider {
     fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error> {
         let data = self.read_asset(src_path)?;
         let dst_path_buf = std::path::PathBuf::from(dst_path);
-        
+
         if let Some(parent) = dst_path_buf.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        
+
         std::fs::write(dst_path_buf.as_path(), data).map_err(|e| std::io::Error::other(format!("copy_asset: {:?}", e)))
     }
 

@@ -1,6 +1,6 @@
 use ssconverter::{ConverterConfig, convert_sspj_to_ssab_files};
-use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
 fn get_test_base_path() -> PathBuf {
     std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
@@ -29,7 +29,7 @@ fn create_zip_fixture(src_dir: &Path, zip_path: &Path) {
 fn test_convert_ssab_zip() {
     let src_dir = get_test_base_path().join("tests/allAttributeV7");
     let zip_path = get_test_base_path().join("target").join("allAttributeV7.zip");
-    
+
     // 1. Create a zip file
     create_zip_fixture(&src_dir, &zip_path);
 
