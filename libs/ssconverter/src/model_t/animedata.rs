@@ -704,6 +704,12 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeDeform;
                 }
             }
+            sspj::ssattribute::SsAttributeKind::Texchange(v) => {
+                if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
+                    p_args.texture = crate::utils::fnv1a_hash_str(&_key.value.texture_name);
+                    p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeTexture;
+                }
+            }
             _ => {
                 // Empty.
             }

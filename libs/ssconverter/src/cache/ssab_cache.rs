@@ -2135,9 +2135,9 @@ impl<'a> SsabCache<'a> {
     fn create_shared_effect_list(
         &mut self,
         fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        effet_list_t_vec: &[ssab::ssab::ss::format::EffectT],
+        effect_list_t_vec: &[ssab::ssab::ss::format::EffectT],
     ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::Effect<'a>>>> {
-        let sound_list = effet_list_t_vec
+        let effect_list = effect_list_t_vec
             .iter()
             .map(|effect_t| {
                 let mut args = ssab::ssab::ss::format::EffectArgs::default();
@@ -2153,7 +2153,7 @@ impl<'a> SsabCache<'a> {
             })
             .collect::<Vec<_>>();
 
-        fb.create_vector(&sound_list)
+        fb.create_vector(&effect_list)
     }
 
     fn create_shared_sound_list(
