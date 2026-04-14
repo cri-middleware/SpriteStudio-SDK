@@ -214,3 +214,52 @@ impl Default for ParticleDrawState {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vector2_new() {
+        let v = Vector2::new(1.5, -2.0);
+        assert_eq!(v.x, 1.5);
+        assert_eq!(v.y, -2.0);
+    }
+
+    #[test]
+    fn test_color_new() {
+        let c = Color::new(255, 128, 64, 32);
+        assert_eq!(c.a, 255);
+        assert_eq!(c.r, 128);
+        assert_eq!(c.g, 64);
+        assert_eq!(c.b, 32);
+    }
+
+    #[test]
+    fn test_emitter_parameter_default() {
+        let ep = EmitterParameter::default();
+        assert_eq!(ep.life, 15);
+        assert_eq!(ep.emitnum, 2);
+        assert_eq!(ep.emitmax, 32);
+        assert!(!ep.is_infinite);
+    }
+
+    #[test]
+    fn test_particle_parameter_default() {
+        let pp = ParticleParameter::default();
+        assert_eq!(pp.scale.x, 1.0);
+        assert_eq!(pp.scale.y, 1.0);
+        assert_eq!(pp.startcolor.a, 255);
+        assert_eq!(pp.speed, 0.0);
+        assert!(!pp.use_gravity);
+    }
+
+    #[test]
+    fn test_particle_draw_state_default() {
+        let pds = ParticleDrawState::default();
+        assert_eq!(pds.x, 0.0);
+        assert_eq!(pds.y, 0.0);
+        assert_eq!(pds.scale_x, 1.0);
+        assert_eq!(pds.color.a, 255);
+    }
+}

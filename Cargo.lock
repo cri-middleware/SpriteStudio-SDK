@@ -1186,6 +1186,7 @@ dependencies = [
  "ssconverter",
  "ssinterpolate",
  "wasm-bindgen",
+ "wide",
 ]
 
 [[package]]
