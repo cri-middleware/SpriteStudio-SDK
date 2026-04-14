@@ -24,37 +24,7 @@ fn blend_float(a: f32, b: f32, rate: f32) -> f32 {
 }
 
 // Vectorized PRNG using wide
-pub struct XorShift32x4 {
-    state: [u32; 4],
-}
-
-impl XorShift32x4 {
-    pub fn new(seeds: [u32; 4]) -> Self {
-        Self { state: seeds }
-    }
-
-    pub fn gen_float(&mut self) -> f32x4 {
-        let mut x0 = self.state[0];
-        let mut x1 = self.state[1];
-        let mut x2 = self.state[2];
-        let mut x3 = self.state[3];
-
-        x0 ^= x0 << 13; x0 ^= x0 >> 17; x0 ^= x0 << 5;
-        x1 ^= x1 << 13; x1 ^= x1 >> 17; x1 ^= x1 << 5;
-        x2 ^= x2 << 13; x2 ^= x2 >> 17; x2 ^= x2 << 5;
-        x3 ^= x3 << 13; x3 ^= x3 >> 17; x3 ^= x3 << 5;
-
-        self.state = [x0, x1, x2, x3];
-
-        // Convert [0, u32::MAX] to [0.0, 1.0)
-        let f0 = (x0 as f32) / core::u32::MAX as f32;
-        let f1 = (x1 as f32) / core::u32::MAX as f32;
-        let f2 = (x2 as f32) / core::u32::MAX as f32;
-        let f3 = (x3 as f32) / core::u32::MAX as f32;
-
-        f32x4::from([f0, f1, f2, f3])
-    }
-}
+pub use super::prng::XorShift32x4;
 
 pub struct EffectSimulator;
 
