@@ -177,6 +177,11 @@ impl SsabResource {
 
 impl<'a> AnimationResource<'a> {
     pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
+        // Validate minimally to prevent process panic on unchecked read
+        if !ssab::ssab::ss::format::ss_anime_binary_buffer_has_identifier(data) {
+            return Err(error::SSRuntimeError::InvalidData);
+        }
+
         // Use unchecked for performance, but we still check the version.
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
@@ -786,16 +791,9 @@ mod tests {
 
         let ssab_data = SsabData::load_copy(&invalid_buf).expect("Failed to load SsabData");
 
-        // It shouldn't panic, but it might just return garbage version, or we can just test if the loader checks versions
-        // Since we are reading an invalid buffer, the flatbuffers version check in AnimationResource::new will fail or read garbage.
-        // In some cases reading garbage as flatbuffers might cause panic or undefined behavior, but since we just do a quick version check,
-        // it should likely return an error. Let's wrap it.
-        let result = std::panic::catch_unwind(|| AnimationResource::new(ssab_data.as_slice()));
-
-        // Either it returns an error or panics due to out-of-bounds in Flatbuffers unchecked loading
-        if let Ok(res) = result {
-            assert!(res.is_err(), "Expected error for invalid ssab data");
-        }
+        // Now we use safe verification, so it should return Err(InvalidData) instead of panicking
+        let result = AnimationResource::new(ssab_data.as_slice());
+        assert_eq!(result.err(), Some(error::SSRuntimeError::InvalidData));
     }
 
     #[test]
