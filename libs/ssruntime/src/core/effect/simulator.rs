@@ -345,7 +345,7 @@ impl EffectSimulator {
     }
 
     /// SIMD batch calculation for 4 particles simultaneously.
-    /// This drastically improves performance on supported CPU architectures.
+    /// Currently acts as a batch wrapper. Full SIMD logic is planned for future optimization.
     pub fn calculate_state_batch(
         current_time: f32,
         stimes: [i32; 4],
@@ -359,54 +359,10 @@ impl EffectSimulator {
         emitter_pos: Vector2,
         pids: [i32; 4],
     ) -> [ParticleDrawState; 4] {
-        let seed_table_len = seed_list.len();
-        
-        let mut seeds = [0u32; 4];
-        for i in 0..4 {
-            let pseed = seed_list[particle_ids[i] as usize % seed_table_len];
-            seeds[i] = (pseed as u64 + emitter_seed as u64 + pids[i] as u64 + seed_offset as u64) as u32;
-        }
-
-        // Initialize Vectorized PRNG
-        let mut rand_vec = XorShift32x4::new(seeds);
-
-        // Vectorized Time and Life
-        let t_vec = f32x4::new([
-            current_time - stimes[0] as f32,
-            current_time - stimes[1] as f32,
-            current_time - stimes[2] as f32,
-            current_time - stimes[3] as f32,
-        ]);
-        
-        let life_vec = f32x4::new([
-            (endtimes[0] - stimes[0]) as f32,
-            (endtimes[1] - stimes[1]) as f32,
-            (endtimes[2] - stimes[2]) as f32,
-            (endtimes[3] - stimes[3]) as f32,
-        ]);
-
-        let _lifeper_vec = t_vec / life_vec;
-
-        // 1. Position and Speed
-        let rand1 = rand_vec.gen_float();
-        let _angle_vec = f32x4::splat(particle_params.angle) + 
-            (rand1 * f32x4::splat(particle_params.angle_variance) - f32x4::splat(particle_params.angle_variance / 2.0));
-        
-        let rand2 = rand_vec.gen_float();
-        let _speed_vec = f32x4::splat(particle_params.speed) + (f32x4::splat(particle_params.speed2) * rand2);
-
-        // 2. Offsets (Vectorized)
-        if particle_params.use_offset {
-            let _ox = f32x4::splat(particle_params.offset.x) + (f32x4::splat(particle_params.offset2.x) * rand_vec.gen_float());
-            let _oy = f32x4::splat(particle_params.offset.y) + (f32x4::splat(particle_params.offset2.y) * rand_vec.gen_float());
-        }
-
-        // Partially fallback to scalar for complex branches or transcendentals
-        // For a true 100% SIMD we'd need a fast-math library for wide vectors, but this mixed approach still gives a huge speedup for PRNG and basic arithmetic.
-        
         let mut results = [ParticleDrawState::default(); 4];
         for i in 0..4 {
-            if life_vec.to_array()[i] == 0.0 {
+            let life = (endtimes[i] - stimes[i]) as f32;
+            if life == 0.0 {
                 continue;
             }
             results[i] = Self::calculate_state(
