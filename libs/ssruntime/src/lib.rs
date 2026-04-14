@@ -766,3 +766,18 @@ mod tests {
         }
     }
 }
+
+pub struct EffectResource<'a> {
+    data: &'a [u8],
+}
+
+impl<'a> EffectResource<'a> {
+    pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
+        // Basic validation could be added here
+        Ok(Self { data })
+    }
+
+    pub fn get_model(&self) -> crate::runtime::effect::ss::runtime::EffectModel<'a> {
+        unsafe { crate::runtime::effect::ss::runtime::root_as_effect_model_unchecked(self.data) }
+    }
+}
