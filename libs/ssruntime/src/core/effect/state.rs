@@ -1,4 +1,5 @@
 use super::types::*;
+use alloc::vec::Vec;
 
 #[derive(Clone, Debug, Default)]
 pub struct ParticleStateSoA {
