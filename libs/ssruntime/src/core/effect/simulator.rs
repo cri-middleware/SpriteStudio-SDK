@@ -25,8 +25,6 @@ fn blend_float(a: f32, b: f32, rate: f32) -> f32 {
 pub struct EffectSimulator;
 
 impl EffectSimulator {
-    /// エミッターの初期化・事前計算ロジック
-    /// C++の precalculate2 に相当。放出パターンとオフセットを生成する。
     pub fn precalculate_emitter(
         emitter_params: &EmitterParameter,
         particle_params: &ParticleParameter,
@@ -43,11 +41,7 @@ impl EffectSimulator {
         let mut emit_patterns = Vec::new();
         let mut offset_patterns = Vec::new();
 
-        if emitter_params.emitnum < 1 {
-            // 安全策。本来はデータバリデーションで弾くべき
-        }
         let emitnum = if emitter_params.emitnum < 1 { 1 } else { emitter_params.emitnum };
-
         let cycle = ((emitter_params.emitmax * emitter_params.interval) as f32 / emitnum as f32 + 0.5) as i32;
         
         let mut extendsize = emitter_params.emitmax * LIFE_EXTEND_SCALE;
@@ -62,7 +56,7 @@ impl EffectSimulator {
                 shot = 0;
                 offset += emitter_params.interval;
             }
-            offset_patterns.push_back(offset);
+            offset_patterns.push(offset);
             shot += 1;
         }
 
@@ -79,7 +73,6 @@ impl EffectSimulator {
             });
         }
 
-        // シードテーブルの作成
         let seed_table_len = (emitter_params.emitmax as usize) * 3;
         let mut seed_list = Vec::with_capacity(seed_table_len);
         for _ in 0..seed_table_len {
@@ -92,8 +85,6 @@ impl EffectSimulator {
         (emit_patterns, offset_patterns, seed_list)
     }
 
-    /// 毎フレームのエミッター更新
-    /// 現在の時間に基づいてパーティクルの生存状態を計算し、SoA構造体に書き込む
     pub fn update_emitter(
         state: &mut EmitterState,
         emitter_params: &EmitterParameter,
@@ -102,13 +93,12 @@ impl EffectSimulator {
         current_time: f32,
         slide: i32,
     ) {
-        let onum = offset_patterns.len();
         let pnum = emit_patterns.len();
         if pnum == 0 { return; }
 
         let slide_offset = slide * SEED_MAGIC;
 
-        for i in 0..onum {
+        for i in 0..offset_patterns.len() {
             let slide_num = (i as i32 + slide_offset).rem_euclid(pnum as i32) as usize;
             let target_ep = &emit_patterns[slide_num];
             let t = current_time - offset_patterns[i] as f32;
@@ -153,13 +143,12 @@ impl EffectSimulator {
         }
     }
 
-    /// パーティクル単体の描画状態計算
     pub fn calculate_state(
         current_time: f32,
         particle_stime: i32,
         particle_endtime: i32,
         particle_id: i32,
-        emitter_params: &EmitterParameter,
+        _emitter_params: &EmitterParameter,
         particle_params: &ParticleParameter,
         emitter_seed: i32,
         seed_offset: i32,
@@ -171,10 +160,7 @@ impl EffectSimulator {
         let life = (particle_endtime - particle_stime) as f32;
 
         if life == 0.0 {
-            return ParticleDrawState {
-                x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0, direction: 0.0,
-                color: Color::new(255, 255, 255, 255),
-            };
+            return ParticleDrawState::default();
         }
 
         let lifeper = t / life;
@@ -182,7 +168,6 @@ impl EffectSimulator {
         let pseed = seed_list[particle_id as usize % seed_table_len];
         let seed = (pseed as u64 + emitter_seed as u64 + pid as u64 + seed_offset as u64) as u32;
 
-        // XorShift32 (Rust実装)
         let mut rand_state = seed;
         let mut gen_rand = || {
             rand_state ^= rand_state << 13;
@@ -191,9 +176,8 @@ impl EffectSimulator {
             (rand_state as f32) / core::u32::MAX as f32
         };
 
-        // 1. Position and Speed
-        let mut out_x = 0.0;
-        let mut out_y = 0.0;
+        let out_x;
+        let out_y;
         {
             let rad = particle_params.angle + (gen_rand() * particle_params.angle_variance - particle_params.angle_variance / 2.0);
             let speed = particle_params.speed + (particle_params.speed2 * gen_rand());
@@ -231,7 +215,6 @@ impl EffectSimulator {
             out_y = y;
         }
 
-        // 2. Offset
         let mut ox = 0.0;
         let mut oy = 0.0;
         if particle_params.use_offset {
@@ -239,7 +222,6 @@ impl EffectSimulator {
             oy = particle_params.offset.y + (particle_params.offset2.y * gen_rand());
         }
 
-        // 3. Rotation
         let mut rotation = 0.0;
         if particle_params.use_rotation {
             let rot = particle_params.rotation + (gen_rand() * particle_params.rotation2);
@@ -264,7 +246,6 @@ impl EffectSimulator {
             }
         }
 
-        // 4. Color
         let mut color = Color::new(255, 255, 255, 255);
         if particle_params.use_color {
             color.a = (particle_params.init_color.a as f32 + (gen_rand() * particle_params.init_color2.a as f32)) as u8;
@@ -302,7 +283,6 @@ impl EffectSimulator {
             }
         }
 
-        // 5. Scale
         let mut scale_x = 1.0;
         let mut scale_y = 1.0;
         let mut scalefactor = 1.0;
@@ -322,7 +302,6 @@ impl EffectSimulator {
         let out_scale_x = scale_x * scalefactor;
         let out_scale_y = scale_y * scalefactor;
 
-        // 6. Final World Position
         let mut final_x = out_x + ox + emitter_pos.x;
         let mut final_y = out_y + oy + emitter_pos.y;
 
@@ -350,17 +329,177 @@ impl EffectSimulator {
             }
         }
 
-        // 7. Turn to Direction
-        let direction = 0.0;
-
         ParticleDrawState {
             x: final_x,
             y: final_y,
             scale_x: out_scale_x,
             scale_y: out_scale_y,
             rotation,
-            direction,
+            direction: 0.0,
             color,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_base_params() -> (EmitterParameter, ParticleParameter) {
+        let mut emitter_params = EmitterParameter::default();
+        emitter_params.life = 30;
+        emitter_params.emitmax = 10;
+        emitter_params.particle_life = 15;
+        emitter_params.interval = 1;
+        emitter_params.emitnum = 1;
+
+        let mut particle_params = ParticleParameter::default();
+        particle_params.speed = 5.0;
+        
+        (emitter_params, particle_params)
+    }
+
+    #[test]
+    fn test_precalculate_emitter_basic() {
+        let (emitter_params, particle_params) = create_base_params();
+        let emitter_seed = 12345;
+        
+        let (emit_patterns, offset_patterns, seed_list) = 
+            EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
+        
+        assert_eq!(offset_patterns.len(), 10);
+        assert_eq!(emit_patterns.len(), 10 * LIFE_EXTEND_SCALE as usize);
+        assert_eq!(seed_list.len(), 30); // emitmax * 3
+
+        // Delay is 0, interval is 1, emitnum is 1
+        // Expected offsets: 0, 1, 2, ... 9
+        for i in 0..10 {
+            assert_eq!(offset_patterns[i], i as i32);
+        }
+    }
+
+    #[test]
+    fn test_update_emitter_lifecycle() {
+        let (emitter_params, particle_params) = create_base_params();
+        let emitter_seed = 12345;
+        
+        let (emit_patterns, offset_patterns, _) = 
+            EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
+        
+        let mut state = EmitterState::new(10);
+        
+        // Time = 0: Only first particle should be born
+        EffectSimulator::update_emitter(&mut state, &emitter_params, &emit_patterns, &offset_patterns, 0.0, 0);
+        assert!(state.particle_state.born[0]);
+        assert!(state.particle_state.exist[0]);
+        assert!(!state.particle_state.born[1]);
+
+        // Time = 5.0: Particles 0 to 5 should be born/exist
+        EffectSimulator::update_emitter(&mut state, &emitter_params, &emit_patterns, &offset_patterns, 5.0, 0);
+        for i in 0..=5 {
+            assert!(state.particle_state.exist[i]);
+        }
+        assert!(!state.particle_state.exist[6]);
+
+        // Time = 30.0 (Emitter end): No new particles, existing ones continue if life allows
+        // Emitter life is 30, particle_life is 15.
+        // Particle 0 stime is 0, endtime is 15. By t=30, it is dead.
+        EffectSimulator::update_emitter(&mut state, &emitter_params, &emit_patterns, &offset_patterns, 60.0, 0);
+        assert!(!state.particle_state.exist[0]);
+    }
+
+    #[test]
+    fn test_calculate_state_color_fade() {
+        let (emitter_params, mut particle_params) = create_base_params();
+        particle_params.use_color = true;
+        particle_params.init_color = Color::new(255, 255, 0, 0); // Solid Red
+        particle_params.init_color2 = Color::new(0, 0, 0, 0);
+
+        particle_params.use_trans_color = true;
+        particle_params.trans_color = Color::new(255, 0, 0, 255); // Solid Blue
+        particle_params.trans_color2 = Color::new(0, 0, 0, 0);
+
+        let seed_list = vec![1, 2, 3];
+        
+        // Mid-life: color should be blended between red and blue
+        let draw_state = EffectSimulator::calculate_state(
+            7.5, // current time
+            0,   // particle_stime
+            15,  // particle_endtime
+            0,   // particle_id
+            &emitter_params,
+            &particle_params,
+            12345,
+            0,
+            &seed_list,
+            Vector2::new(0.0, 0.0),
+            0
+        );
+
+        assert_eq!(draw_state.color.a, 255);
+        assert!(draw_state.color.r < 255 && draw_state.color.r > 0);
+        assert_eq!(draw_state.color.g, 0);
+        assert!(draw_state.color.b > 0 && draw_state.color.b < 255);
+    }
+
+    #[test]
+    fn test_calculate_state_gravity() {
+        let (emitter_params, mut particle_params) = create_base_params();
+        particle_params.speed = 0.0;
+        particle_params.speed2 = 0.0;
+        particle_params.use_gravity = true;
+        particle_params.gravity = Vector2::new(0.0, -9.8);
+
+        let seed_list = vec![1, 2, 3];
+        
+        let draw_state = EffectSimulator::calculate_state(
+            1.0, // current time
+            0,
+            15,
+            0,
+            &emitter_params,
+            &particle_params,
+            12345,
+            0,
+            &seed_list,
+            Vector2::new(0.0, 0.0),
+            0
+        );
+
+        assert_eq!(draw_state.x, 0.0);
+        assert!(draw_state.y < 0.0); // Gravity pushed it down
+        // Gravity formula: y += 0.5 * gravity.y * t^2
+        // y = 0.5 * -9.8 * 1.0 = -4.9
+        assert!((draw_state.y - (-4.9)).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_calculate_state_point_gravity() {
+        let (emitter_params, mut particle_params) = create_base_params();
+        particle_params.speed = 0.0;
+        particle_params.speed2 = 0.0;
+        particle_params.use_p_gravity = true;
+        particle_params.gravity_pos = Vector2::new(10.0, 0.0);
+        particle_params.gravity_power = 2.0;
+
+        let seed_list = vec![1, 2, 3];
+        
+        let draw_state = EffectSimulator::calculate_state(
+            1.0, // current time
+            0,
+            15,
+            0,
+            &emitter_params,
+            &particle_params,
+            12345,
+            0,
+            &seed_list,
+            Vector2::new(0.0, 0.0),
+            0
+        );
+
+        // Particle is at (0,0), point gravity is at (10,0). Should be pulled towards positive x.
+        assert!(draw_state.x > 0.0);
+        assert_eq!(draw_state.y, 0.0);
     }
 }
