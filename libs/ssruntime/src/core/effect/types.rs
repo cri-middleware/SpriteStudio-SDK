@@ -52,19 +52,7 @@ pub struct EmitterParameter {
 
 impl Default for EmitterParameter {
     fn default() -> Self {
-        Self {
-            life: 15,
-            interval: 1,
-            emitnum: 2,
-            emitmax: 32,
-            particle_life: 15,
-            particle_life2: 15,
-            is_infinite: false,
-            loop_start: 0,
-            loop_end: 0,
-            loop_len: 0,
-            loop_gen: 0,
-        }
+        Self { life: 15, interval: 1, emitnum: 2, emitmax: 32, particle_life: 15, particle_life2: 15, is_infinite: false, loop_start: 0, loop_end: 0, loop_len: 0, loop_gen: 0 }
     }
 }
 
@@ -203,15 +191,7 @@ pub struct ParticleDrawState {
 
 impl Default for ParticleDrawState {
     fn default() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            scale_x: 1.0,
-            scale_y: 1.0,
-            rotation: 0.0,
-            direction: 0.0,
-            color: Color::new(255, 255, 255, 255),
-        }
+        Self { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0, direction: 0.0, color: Color::new(255, 255, 255, 255) }
     }
 }
 

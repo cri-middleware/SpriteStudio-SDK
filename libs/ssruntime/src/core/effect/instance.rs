@@ -1,8 +1,8 @@
-use alloc::vec::Vec;
-use crate::runtime::effect::ss::runtime as fbs;
-use super::types::*;
-use super::state::*;
 use super::simulator::*;
+use super::state::*;
+use super::types::*;
+use crate::runtime::effect::ss::runtime as fbs;
+use alloc::vec::Vec;
 
 pub struct EffectEmitterInstance {
     pub emitter_params: EmitterParameter,
@@ -39,18 +39,8 @@ impl EffectEmitterInstance {
 
         let particle_params = ParticleParameter {
             scale: Vector2::new(fbs_particle.scale_x(), fbs_particle.scale_y()),
-            startcolor: Color::new(
-                fbs_particle.start_color().a(),
-                fbs_particle.start_color().r(),
-                fbs_particle.start_color().g(),
-                fbs_particle.start_color().b(),
-            ),
-            endcolor: Color::new(
-                fbs_particle.end_color().a(),
-                fbs_particle.end_color().r(),
-                fbs_particle.end_color().g(),
-                fbs_particle.end_color().b(),
-            ),
+            startcolor: Color::new(fbs_particle.start_color().a(), fbs_particle.start_color().r(), fbs_particle.start_color().g(), fbs_particle.start_color().b()),
+            endcolor: Color::new(fbs_particle.end_color().a(), fbs_particle.end_color().r(), fbs_particle.end_color().g(), fbs_particle.end_color().b()),
             speed: fbs_particle.speed(),
             speed2: fbs_particle.speed2(),
             angle: fbs_particle.angle(),
@@ -72,31 +62,11 @@ impl EffectEmitterInstance {
             tangential_accel: fbs_particle.tangential_accel(),
             tangential_accel2: fbs_particle.tangential_accel2(),
             use_color: fbs_particle.use_color(),
-            init_color: Color::new(
-                fbs_particle.init_color().a(),
-                fbs_particle.init_color().r(),
-                fbs_particle.init_color().g(),
-                fbs_particle.init_color().b(),
-            ),
-            init_color2: Color::new(
-                fbs_particle.init_color2().a(),
-                fbs_particle.init_color2().r(),
-                fbs_particle.init_color2().g(),
-                fbs_particle.init_color2().b(),
-            ),
+            init_color: Color::new(fbs_particle.init_color().a(), fbs_particle.init_color().r(), fbs_particle.init_color().g(), fbs_particle.init_color().b()),
+            init_color2: Color::new(fbs_particle.init_color2().a(), fbs_particle.init_color2().r(), fbs_particle.init_color2().g(), fbs_particle.init_color2().b()),
             use_trans_color: fbs_particle.use_trans_color(),
-            trans_color: Color::new(
-                fbs_particle.trans_color().a(),
-                fbs_particle.trans_color().r(),
-                fbs_particle.trans_color().g(),
-                fbs_particle.trans_color().b(),
-            ),
-            trans_color2: Color::new(
-                fbs_particle.trans_color2().a(),
-                fbs_particle.trans_color2().r(),
-                fbs_particle.trans_color2().g(),
-                fbs_particle.trans_color2().b(),
-            ),
+            trans_color: Color::new(fbs_particle.trans_color().a(), fbs_particle.trans_color().r(), fbs_particle.trans_color().g(), fbs_particle.trans_color().b()),
+            trans_color2: Color::new(fbs_particle.trans_color2().a(), fbs_particle.trans_color2().r(), fbs_particle.trans_color2().g(), fbs_particle.trans_color2().b()),
             use_init_scale: fbs_particle.use_init_scale(),
             scale_range: Vector2::new(fbs_particle.scale_range_x(), fbs_particle.scale_range_y()),
             scale_factor: fbs_particle.scale_factor(),
@@ -122,14 +92,9 @@ impl EffectEmitterInstance {
             override_r_seed: fbs_particle.override_r_seed(),
         };
 
-        let emitter_seed = if particle_params.user_override_r_seed {
-            particle_params.override_r_seed
-        } else {
-            my_seed as i32
-        };
+        let emitter_seed = if particle_params.user_override_r_seed { particle_params.override_r_seed } else { my_seed as i32 };
 
-        let (emit_patterns, offset_patterns, seed_list) = 
-            EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
+        let (emit_patterns, offset_patterns, seed_list) = EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
 
         Self {
             emitter_params,
@@ -163,7 +128,7 @@ pub struct EffectInstance {
     pub layout_scale: Vector2,
     pub effect_time_length: i32,
     pub fps: i32,
-    
+
     pub draw_commands: Vec<EmitterDrawCommand>,
     pub draw_particles: Vec<ParticleDrawState>,
 }
@@ -180,9 +145,9 @@ impl EffectInstance {
         for (i, node) in nodes.iter().enumerate() {
             let mut instance = EffectEmitterInstance::from_fbs(node, my_seed);
             instance.uid = i as i32;
-            
+
             let emitter_state = EmitterState::new(instance.emitter_params.emitmax);
-            
+
             let my_length = instance.emitter_params.life + instance.emitter_params.particle_life + instance.emitter_params.particle_life2;
             let pi = instance.parent_index;
             let global_time = if pi >= 0 && (pi as usize) < i {
@@ -205,11 +170,7 @@ impl EffectInstance {
 
         Self {
             emitters,
-            state: RenderState {
-                emitter_states,
-                is_playing: true,
-                ..Default::default()
-            },
+            state: RenderState { emitter_states, is_playing: true, ..Default::default() },
             is_infinite,
             layout_scale: Vector2::new(model.layout_scale_x() as f32 / 100.0, model.layout_scale_y() as f32 / 100.0),
             effect_time_length,
@@ -238,9 +199,9 @@ impl EffectInstance {
     pub fn get_draw_commands(&mut self) -> (&[EmitterDrawCommand], &[ParticleDrawState]) {
         self.draw_commands.clear();
         self.draw_particles.clear();
-        
-        if self.state.current_frame < 0.0 { 
-            return (&self.draw_commands, &self.draw_particles); 
+
+        if self.state.current_frame < 0.0 {
+            return (&self.draw_commands, &self.draw_particles);
         }
 
         let num_emitters = self.emitters.len();
@@ -263,7 +224,7 @@ impl EffectInstance {
                     }
                     info
                 };
-                
+
                 for (parent_particle_id, p_ptime) in parent_born_info {
                     self.collect_emitter_particles(i, p_ptime, pi, parent_particle_id);
                 }
@@ -274,13 +235,7 @@ impl EffectInstance {
             let end_idx = self.draw_particles.len();
             if end_idx > start_idx {
                 let e = &self.emitters[i];
-                self.draw_commands.push(EmitterDrawCommand {
-                    cell_map_name_hash: e.cell_map_name_hash,
-                    cell_name_hash: e.cell_name_hash,
-                    blend_type: e.blend_type,
-                    particle_start: start_idx,
-                    particle_end: end_idx,
-                });
+                self.draw_commands.push(EmitterDrawCommand { cell_map_name_hash: e.cell_map_name_hash, cell_name_hash: e.cell_name_hash, blend_type: e.blend_type, particle_start: start_idx, particle_end: end_idx });
             }
         }
 
@@ -306,19 +261,9 @@ impl EffectInstance {
         let mut chunks = active_indices.chunks_exact(4);
         for chunk in &mut chunks {
             let pids = [chunk[0] as i32, chunk[1] as i32, chunk[2] as i32, chunk[3] as i32];
-            let stimes = [
-                emitter_state.particle_state.stime[chunk[0]],
-                emitter_state.particle_state.stime[chunk[1]],
-                emitter_state.particle_state.stime[chunk[2]],
-                emitter_state.particle_state.stime[chunk[3]],
-            ];
-            let endtimes = [
-                emitter_state.particle_state.endtime[chunk[0]],
-                emitter_state.particle_state.endtime[chunk[1]],
-                emitter_state.particle_state.endtime[chunk[2]],
-                emitter_state.particle_state.endtime[chunk[3]],
-            ];
-            
+            let stimes = [emitter_state.particle_state.stime[chunk[0]], emitter_state.particle_state.stime[chunk[1]], emitter_state.particle_state.stime[chunk[2]], emitter_state.particle_state.stime[chunk[3]]];
+            let endtimes = [emitter_state.particle_state.endtime[chunk[0]], emitter_state.particle_state.endtime[chunk[1]], emitter_state.particle_state.endtime[chunk[2]], emitter_state.particle_state.endtime[chunk[3]]];
+
             let mut ds_batch = EffectSimulator::calculate_state_batch(
                 time,
                 stimes,
