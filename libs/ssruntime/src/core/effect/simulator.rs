@@ -1,5 +1,5 @@
-use super::types::*;
 use super::state::*;
+use super::types::*;
 use wide::f32x4;
 
 pub fn out_quad(t: f32, total_time: f32, max: f32, min: f32) -> f32 {
@@ -29,11 +29,7 @@ pub use super::prng::XorShift32x4;
 pub struct EffectSimulator;
 
 impl EffectSimulator {
-    pub fn precalculate_emitter(
-        emitter_params: &EmitterParameter,
-        particle_params: &ParticleParameter,
-        emitter_seed: i32,
-    ) -> (Vec<EmitPattern>, Vec<i32>, Vec<u32>) {
+    pub fn precalculate_emitter(emitter_params: &EmitterParameter, particle_params: &ParticleParameter, emitter_seed: i32) -> (Vec<EmitPattern>, Vec<i32>, Vec<u32>) {
         let mut rand_state = emitter_seed as u32;
         let mut gen_rand = || {
             rand_state ^= rand_state << 13;
@@ -47,7 +43,7 @@ impl EffectSimulator {
 
         let emitnum = if emitter_params.emitnum < 1 { 1 } else { emitter_params.emitnum };
         let cycle = ((emitter_params.emitmax * emitter_params.interval) as f32 / emitnum as f32 + 0.5) as i32;
-        
+
         let mut extendsize = emitter_params.emitmax * LIFE_EXTEND_SCALE;
         if extendsize < LIFE_EXTEND_MIN {
             extendsize = LIFE_EXTEND_MIN;
@@ -70,11 +66,7 @@ impl EffectSimulator {
             if life > cycle {
                 p_cycle = life;
             }
-            emit_patterns.push(EmitPattern {
-                uid: i,
-                life,
-                cycle: p_cycle,
-            });
+            emit_patterns.push(EmitPattern { uid: i, life, cycle: p_cycle });
         }
 
         let seed_table_len = (emitter_params.emitmax as usize) * 3;
@@ -89,16 +81,11 @@ impl EffectSimulator {
         (emit_patterns, offset_patterns, seed_list)
     }
 
-    pub fn update_emitter(
-        state: &mut EmitterState,
-        emitter_params: &EmitterParameter,
-        emit_patterns: &[EmitPattern],
-        offset_patterns: &[i32],
-        current_time: f32,
-        slide: i32,
-    ) {
+    pub fn update_emitter(state: &mut EmitterState, emitter_params: &EmitterParameter, emit_patterns: &[EmitPattern], offset_patterns: &[i32], current_time: f32, slide: i32) {
         let pnum = emit_patterns.len();
-        if pnum == 0 { return; }
+        if pnum == 0 {
+            return;
+        }
 
         let slide_offset = slide * SEED_MAGIC;
 
@@ -333,15 +320,7 @@ impl EffectSimulator {
             }
         }
 
-        ParticleDrawState {
-            x: final_x,
-            y: final_y,
-            scale_x: out_scale_x,
-            scale_y: out_scale_y,
-            rotation,
-            direction: 0.0,
-            color,
-        }
+        ParticleDrawState { x: final_x, y: final_y, scale_x: out_scale_x, scale_y: out_scale_y, rotation, direction: 0.0, color }
     }
 
     /// SIMD batch calculation for 4 particles simultaneously.
@@ -365,9 +344,7 @@ impl EffectSimulator {
             if life == 0.0 {
                 continue;
             }
-            results[i] = Self::calculate_state(
-                current_time, stimes[i], endtimes[i], particle_ids[i], _emitter_params, particle_params, emitter_seed, seed_offset, seed_list, emitter_pos, pids[i]
-            );
+            results[i] = Self::calculate_state(current_time, stimes[i], endtimes[i], particle_ids[i], _emitter_params, particle_params, emitter_seed, seed_offset, seed_list, emitter_pos, pids[i]);
         }
 
         results
@@ -388,7 +365,7 @@ mod tests {
 
         let mut particle_params = ParticleParameter::default();
         particle_params.speed = 5.0;
-        
+
         (emitter_params, particle_params)
     }
 
@@ -396,10 +373,9 @@ mod tests {
     fn test_precalculate_emitter_basic() {
         let (emitter_params, particle_params) = create_base_params();
         let emitter_seed = 12345;
-        
-        let (emit_patterns, offset_patterns, seed_list) = 
-            EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
-        
+
+        let (emit_patterns, offset_patterns, seed_list) = EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
+
         assert_eq!(offset_patterns.len(), 10);
         assert_eq!(emit_patterns.len(), 10 * LIFE_EXTEND_SCALE as usize);
         assert_eq!(seed_list.len(), 30); // emitmax * 3
@@ -413,12 +389,11 @@ mod tests {
     fn test_update_emitter_lifecycle() {
         let (emitter_params, particle_params) = create_base_params();
         let emitter_seed = 12345;
-        
-        let (emit_patterns, offset_patterns, _) = 
-            EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
-        
+
+        let (emit_patterns, offset_patterns, _) = EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
+
         let mut state = EmitterState::new(10);
-        
+
         EffectSimulator::update_emitter(&mut state, &emitter_params, &emit_patterns, &offset_patterns, 0.0, 0);
         assert!(state.particle_state.born[0]);
         assert!(state.particle_state.exist[0]);
@@ -438,18 +413,16 @@ mod tests {
     fn test_calculate_state_color_fade() {
         let (emitter_params, mut particle_params) = create_base_params();
         particle_params.use_color = true;
-        particle_params.init_color = Color::new(255, 255, 0, 0); 
+        particle_params.init_color = Color::new(255, 255, 0, 0);
         particle_params.init_color2 = Color::new(0, 0, 0, 0);
 
         particle_params.use_trans_color = true;
-        particle_params.trans_color = Color::new(255, 0, 0, 255); 
+        particle_params.trans_color = Color::new(255, 0, 0, 255);
         particle_params.trans_color2 = Color::new(0, 0, 0, 0);
 
         let seed_list = vec![1, 2, 3];
-        
-        let draw_state = EffectSimulator::calculate_state(
-            7.5, 0, 15, 0, &emitter_params, &particle_params, 12345, 0, &seed_list, Vector2::new(0.0, 0.0), 0
-        );
+
+        let draw_state = EffectSimulator::calculate_state(7.5, 0, 15, 0, &emitter_params, &particle_params, 12345, 0, &seed_list, Vector2::new(0.0, 0.0), 0);
 
         assert_eq!(draw_state.color.a, 255);
         assert!(draw_state.color.r < 255 && draw_state.color.r > 0);
@@ -466,13 +439,11 @@ mod tests {
         particle_params.gravity = Vector2::new(0.0, -9.8);
 
         let seed_list = vec![1, 2, 3];
-        
-        let draw_state = EffectSimulator::calculate_state(
-            1.0, 0, 15, 0, &emitter_params, &particle_params, 12345, 0, &seed_list, Vector2::new(0.0, 0.0), 0
-        );
+
+        let draw_state = EffectSimulator::calculate_state(1.0, 0, 15, 0, &emitter_params, &particle_params, 12345, 0, &seed_list, Vector2::new(0.0, 0.0), 0);
 
         assert_eq!(draw_state.x, 0.0);
-        assert!(draw_state.y < 0.0); 
+        assert!(draw_state.y < 0.0);
         assert!((draw_state.y - (-4.9)).abs() < 0.001);
     }
 
@@ -486,10 +457,8 @@ mod tests {
         particle_params.gravity_power = 2.0;
 
         let seed_list = vec![1, 2, 3];
-        
-        let draw_state = EffectSimulator::calculate_state(
-            1.0, 0, 15, 0, &emitter_params, &particle_params, 12345, 0, &seed_list, Vector2::new(0.0, 0.0), 0
-        );
+
+        let draw_state = EffectSimulator::calculate_state(1.0, 0, 15, 0, &emitter_params, &particle_params, 12345, 0, &seed_list, Vector2::new(0.0, 0.0), 0);
 
         assert!(draw_state.x > 0.0);
         assert_eq!(draw_state.y, 0.0);
@@ -499,7 +468,7 @@ mod tests {
     fn test_xorshift32x4_simd() {
         let mut prng = XorShift32x4::new([123, 456, 789, 101112]);
         let rand_vals = prng.gen_float().to_array();
-        
+
         for i in 0..4 {
             assert!(rand_vals[i] >= 0.0 && rand_vals[i] <= 1.0);
         }

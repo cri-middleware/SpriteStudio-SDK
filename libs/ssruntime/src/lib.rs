@@ -474,7 +474,6 @@ impl<'a> Context<'a> {
             effect.update(f);
         }
         res
-
     }
 
     pub fn play(&mut self) {
