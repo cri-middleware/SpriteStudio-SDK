@@ -1,4 +1,5 @@
 use super::types::*;
+use super::state::*;
 
 pub fn out_quad(t: f32, total_time: f32, max: f32, min: f32) -> f32 {
     if total_time == 0.0 {
@@ -24,6 +25,135 @@ fn blend_float(a: f32, b: f32, rate: f32) -> f32 {
 pub struct EffectSimulator;
 
 impl EffectSimulator {
+    /// エミッターの初期化・事前計算ロジック
+    /// C++の precalculate2 に相当。放出パターンとオフセットを生成する。
+    pub fn precalculate_emitter(
+        emitter_params: &EmitterParameter,
+        particle_params: &ParticleParameter,
+        emitter_seed: i32,
+    ) -> (Vec<EmitPattern>, Vec<i32>, Vec<u32>) {
+        let mut rand_state = emitter_seed as u32;
+        let mut gen_rand = || {
+            rand_state ^= rand_state << 13;
+            rand_state ^= rand_state >> 17;
+            rand_state ^= rand_state << 5;
+            (rand_state as f32) / core::u32::MAX as f32
+        };
+
+        let mut emit_patterns = Vec::new();
+        let mut offset_patterns = Vec::new();
+
+        if emitter_params.emitnum < 1 {
+            // 安全策。本来はデータバリデーションで弾くべき
+        }
+        let emitnum = if emitter_params.emitnum < 1 { 1 } else { emitter_params.emitnum };
+
+        let cycle = ((emitter_params.emitmax * emitter_params.interval) as f32 / emitnum as f32 + 0.5) as i32;
+        
+        let mut extendsize = emitter_params.emitmax * LIFE_EXTEND_SCALE;
+        if extendsize < LIFE_EXTEND_MIN {
+            extendsize = LIFE_EXTEND_MIN;
+        }
+
+        let mut shot = 0;
+        let mut offset = particle_params.delay as i32;
+        for _ in 0..emitter_params.emitmax {
+            if shot >= emitnum {
+                shot = 0;
+                offset += emitter_params.interval;
+            }
+            offset_patterns.push_back(offset);
+            shot += 1;
+        }
+
+        for i in 0..extendsize {
+            let life = emitter_params.particle_life + (emitter_params.particle_life2 as f32 * gen_rand()) as i32;
+            let mut p_cycle = cycle;
+            if life > cycle {
+                p_cycle = life;
+            }
+            emit_patterns.push(EmitPattern {
+                uid: i,
+                life,
+                cycle: p_cycle,
+            });
+        }
+
+        // シードテーブルの作成
+        let seed_table_len = (emitter_params.emitmax as usize) * 3;
+        let mut seed_list = Vec::with_capacity(seed_table_len);
+        for _ in 0..seed_table_len {
+            rand_state ^= rand_state << 13;
+            rand_state ^= rand_state >> 17;
+            rand_state ^= rand_state << 5;
+            seed_list.push(rand_state);
+        }
+
+        (emit_patterns, offset_patterns, seed_list)
+    }
+
+    /// 毎フレームのエミッター更新
+    /// 現在の時間に基づいてパーティクルの生存状態を計算し、SoA構造体に書き込む
+    pub fn update_emitter(
+        state: &mut EmitterState,
+        emitter_params: &EmitterParameter,
+        emit_patterns: &[EmitPattern],
+        offset_patterns: &[i32],
+        current_time: f32,
+        slide: i32,
+    ) {
+        let onum = offset_patterns.len();
+        let pnum = emit_patterns.len();
+        if pnum == 0 { return; }
+
+        let slide_offset = slide * SEED_MAGIC;
+
+        for i in 0..onum {
+            let slide_num = (i as i32 + slide_offset).rem_euclid(pnum as i32) as usize;
+            let target_ep = &emit_patterns[slide_num];
+            let t = current_time - offset_patterns[i] as f32;
+
+            state.particle_state.exist[i] = false;
+            state.particle_state.born[i] = false;
+
+            if target_ep.cycle != 0 {
+                let loopnum = libm::floorf(t / target_ep.cycle as f32) as i32;
+                let cycle_top = loopnum * target_ep.cycle;
+
+                state.particle_state.cycle[i] = loopnum;
+                state.particle_state.stime[i] = cycle_top + offset_patterns[i];
+                state.particle_state.endtime[i] = state.particle_state.stime[i] + target_ep.life;
+
+                if state.particle_state.stime[i] as f32 <= current_time && (state.particle_state.endtime[i] as f32) > current_time {
+                    state.particle_state.exist[i] = true;
+                    state.particle_state.born[i] = true;
+                }
+
+                if !emitter_params.is_infinite {
+                    if state.particle_state.stime[i] >= emitter_params.life {
+                        state.particle_state.exist[i] = false;
+
+                        let t_limit = emitter_params.life - offset_patterns[i];
+                        let loopnum_limit = t_limit / target_ep.cycle;
+                        let cycle_top_limit = loopnum_limit * target_ep.cycle;
+
+                        state.particle_state.stime[i] = cycle_top_limit + offset_patterns[i];
+                        state.particle_state.endtime[i] = state.particle_state.stime[i] + target_ep.life;
+                        state.particle_state.born[i] = false;
+                    } else {
+                        state.particle_state.born[i] = true;
+                    }
+                }
+
+                if t < 0.0 {
+                    state.particle_state.exist[i] = false;
+                    state.particle_state.born[i] = false;
+                }
+            }
+        }
+    }
+
+    /// パーティクル単体の描画状態計算
     pub fn calculate_state(
         current_time: f32,
         particle_stime: i32,
