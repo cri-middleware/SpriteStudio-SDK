@@ -147,7 +147,6 @@ impl EffectEmitterInstance {
     }
 }
 
-/// 描画命令：アロケーションを防ぐためのバッチ参照情報
 #[derive(Clone, Debug)]
 pub struct EmitterDrawCommand {
     pub cell_map_name_hash: u32,
@@ -236,7 +235,6 @@ impl EffectInstance {
         }
     }
 
-    /// 各パーティクルの計算を行い、アロケーションなしで描画コマンドリスト（バッチ）として返す
     pub fn get_draw_commands(&mut self) -> (&[EmitterDrawCommand], &[ParticleDrawState]) {
         self.draw_commands.clear();
         self.draw_particles.clear();
@@ -252,11 +250,10 @@ impl EffectInstance {
             let start_idx = self.draw_particles.len();
 
             if pi >= 0 && (pi as usize) < i {
-                // 親の生存情報を事前に収集（借用エラー回避のため）
                 let parent_born_info: Vec<(i32, f32)> = {
                     let parent = &self.emitters[pi as usize];
                     let parent_state = &self.state.emitter_states[pi as usize];
-                    let mut info = Vec::new(); // TODO: ここも将来的には事前確保可能
+                    let mut info = Vec::new();
                     for n in 0..parent.offset_patterns.len() {
                         if parent_state.particle_state.born[n] {
                             let p_stime = parent_state.particle_state.stime[n];
@@ -298,14 +295,57 @@ impl EffectInstance {
 
         EffectSimulator::update_emitter(emitter_state, &e.emitter_params, &e.emit_patterns, &e.offset_patterns, time, slide);
 
+        let mut active_indices = Vec::with_capacity(e.offset_patterns.len());
         for id in 0..e.offset_patterns.len() {
-            let idx = id as usize;
-            if !emitter_state.particle_state.exist[idx] { continue; }
+            if emitter_state.particle_state.exist[id] {
+                active_indices.push(id);
+            }
+        }
 
+        // SIMD batch processing
+        let mut chunks = active_indices.chunks_exact(4);
+        for chunk in &mut chunks {
+            let pids = [chunk[0] as i32, chunk[1] as i32, chunk[2] as i32, chunk[3] as i32];
+            let stimes = [
+                emitter_state.particle_state.stime[chunk[0]],
+                emitter_state.particle_state.stime[chunk[1]],
+                emitter_state.particle_state.stime[chunk[2]],
+                emitter_state.particle_state.stime[chunk[3]],
+            ];
+            let endtimes = [
+                emitter_state.particle_state.endtime[chunk[0]],
+                emitter_state.particle_state.endtime[chunk[1]],
+                emitter_state.particle_state.endtime[chunk[2]],
+                emitter_state.particle_state.endtime[chunk[3]],
+            ];
+            
+            let mut ds_batch = EffectSimulator::calculate_state_batch(
+                time,
+                stimes,
+                endtimes,
+                pids,
+                &e.emitter_params,
+                &e.particle_params,
+                e.emitter_seed,
+                self.state.seed_offset,
+                &e.seed_list,
+                emitter_state.position,
+                if parent_idx >= 0 { [parent_particle_id; 4] } else { [0; 4] },
+            );
+
+            for ds in &mut ds_batch {
+                ds.x *= self.layout_scale.x;
+                ds.y *= self.layout_scale.y;
+                self.draw_particles.push(*ds);
+            }
+        }
+
+        // Remainder processing
+        for &id in chunks.remainder() {
             let mut ds = EffectSimulator::calculate_state(
                 time,
-                emitter_state.particle_state.stime[idx],
-                emitter_state.particle_state.endtime[idx],
+                emitter_state.particle_state.stime[id],
+                emitter_state.particle_state.endtime[id],
                 id as i32,
                 &e.emitter_params,
                 &e.particle_params,
