@@ -1,0 +1,128 @@
+namespace ss.runtime;
+
+struct EffectVec2 {
+    x: float;
+    y: float;
+}
+
+struct EffectColor {
+    a: uint8;
+    r: uint8;
+    g: uint8;
+    b: uint8;
+}
+
+struct EmitterParameter {
+    life: int;
+    interval: int;
+    emitnum: int;
+    emitmax: int;
+    particle_life: int;
+    particle_life2: int;
+    is_infinite: bool;
+    loop_start: int;
+    loop_end: int;
+    loop_len: int;
+    loop_gen: int;
+}
+
+struct ParticleParameter {
+    scale_x: float;
+    scale_y: float;
+    scale_range_x: float;
+    scale_range_y: float;
+    
+    start_color: EffectColor;
+    end_color: EffectColor;
+    
+    speed: float;
+    speed2: float;
+    
+    angle: float;
+    angle_variance: float;
+    
+    use_gravity: bool;
+    gravity_x: float;
+    gravity_y: float;
+    
+    use_offset: bool;
+    offset_x: float;
+    offset_y: float;
+    offset2_x: float;
+    offset2_y: float;
+    
+    use_rotation: bool;
+    rotation: float;
+    rotation2: float;
+    rotation_add: float;
+    rotation_add2: float;
+    
+    use_rotation_trans: bool;
+    rotation_factor: float;
+    end_life_time_per: float;
+    
+    use_tan_accel: bool;
+    tangential_accel: float;
+    tangential_accel2: float;
+    
+    use_color: bool;
+    init_color: EffectColor;
+    init_color2: EffectColor;
+    
+    use_trans_color: bool;
+    trans_color: EffectColor;
+    trans_color2: EffectColor;
+    
+    use_init_scale: bool;
+    scale_factor: float;
+    scale_factor2: float;
+    
+    use_trans_scale: bool;
+    trans_scale_x: float;
+    trans_scale_y: float;
+    trans_scale_range_x: float;
+    trans_scale_range_y: float;
+    trans_scale_factor: float;
+    trans_scale_factor2: float;
+    
+    delay: float;
+    
+    use_p_gravity: bool;
+    gravity_pos_x: float;
+    gravity_pos_y: float;
+    gravity_power: float;
+    
+    use_alpha_fade: bool;
+    alpha_fade: float;
+    alpha_fade2: float;
+    
+    use_trans_speed: bool;
+    trans_speed: float;
+    trans_speed2: float;
+    
+    use_turn_direc: bool;
+    direc_rot_add: float;
+    
+    user_override_r_seed: bool;
+    override_r_seed: int;
+}
+
+struct EffectNode {
+    parent_index: int;
+    emitter: EmitterParameter;
+    particle: ParticleParameter;
+    cell_map_name_hash: uint32;
+    cell_name_hash: uint32;
+    blend_type: int; 
+}
+
+table EffectModel {
+    nodes: [EffectNode];
+    is_lock_rand_seed: bool;
+    lock_rand_seed: int;
+    layout_scale_x: int;
+    layout_scale_y: int;
+    fps: int;
+}
+
+root_type EffectModel;

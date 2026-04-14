@@ -1,3 +1,7 @@
+pub const SEED_MAGIC: i32 = 7573;
+pub const LIFE_EXTEND_SCALE: i32 = 8;
+pub const LIFE_EXTEND_MIN: i32 = 64;
+
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vector2 {
     pub x: f32,
@@ -179,7 +183,7 @@ impl Default for ParticleParameter {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct EmitPattern {
     pub uid: i32,
     pub life: i32,
@@ -195,4 +199,18 @@ pub struct ParticleDrawState {
     pub rotation: f32,
     pub direction: f32,
     pub color: Color,
+}
+
+impl Default for ParticleDrawState {
+    fn default() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            scale_x: 1.0,
+            scale_y: 1.0,
+            rotation: 0.0,
+            direction: 0.0,
+            color: Color::new(255, 255, 255, 255),
+        }
+    }
 }
