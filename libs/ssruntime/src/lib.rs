@@ -251,7 +251,6 @@ impl<'a> ContextBuffers<'a> {
 }
 
 pub struct Context<'a> {
-    effect_resource: Option<&'a EffectResource<'a>>,
     effect_instance: Option<crate::core::effect::instance::EffectInstance>,
     resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
@@ -268,11 +267,10 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context { resource: None, effect_resource: None, effect_instance: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
+        Context { resource: None, effect_instance: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
     }
 
     pub fn reset(&mut self) {
-        self.effect_resource = None;
         self.effect_instance = None;
         self.resource = None;
         self.controller.reset_setup();
@@ -776,36 +774,56 @@ mod tests {
     }
 }
 
-pub struct EffectResource<'a> {
-    data: &'a [u8],
-}
-
-impl<'a> EffectResource<'a> {
-    pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
-        // Basic validation could be added here
-        Ok(Self { data })
-    }
-
-    pub fn get_model(&self) -> crate::runtime::effect::ss::runtime::EffectModel<'a> {
-        unsafe { crate::runtime::effect::ss::runtime::root_as_effect_model_unchecked(self.data) }
-    }
-}
-
 impl<'a> Context<'a> {
-    pub fn bind_effect_resource(&mut self, resource: &'a EffectResource<'a>) {
-        self.effect_resource = Some(resource);
-    }
-
-    pub fn setup_effect(&mut self, seed: u32) -> Result<(), error::SSRuntimeError> {
-        let Some(resource) = self.effect_resource else {
+    pub fn setup_effect(&mut self, name: &str, seed: u32) -> Result<(), error::SSRuntimeError> {
+        let Some(resource) = self.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
-        let model = resource.get_model();
-        self.effect_instance = Some(crate::core::effect::instance::EffectInstance::from_fbs(&model, seed));
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
+        let Some(effects) = ssab.effects() else {
+            return Err(error::SSRuntimeError::NotLoaded);
+        };
+        
+        let hash = fnv1a_hash_str(name);
+        let effect = effects.iter().find(|e| e.name_hash() == hash).ok_or(error::SSRuntimeError::NotLoaded)?;
+        
+        self.effect_instance = Some(crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
         Ok(())
     }
 
-    pub fn get_effect_draw_commands(&mut self) -> Option<(&[crate::core::effect::instance::EmitterDrawCommand], &[crate::core::effect::types::ParticleDrawState])> {
-        self.effect_instance.as_mut().map(|instance| instance.get_draw_commands())
+    pub fn get_effect_state(&mut self) -> Result<&[u8], error::SSRuntimeError> {
+        let (draw_commands, draw_particles) = match self.effect_instance.as_mut() {
+            Some(instance) => instance.get_draw_commands(),
+            None => return Err(error::SSRuntimeError::NotLoaded),
+        };
+
+        self.fb.reset();
+        
+        let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
+        for cmd in draw_commands {
+            let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
+            for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
+                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(
+                    p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction,
+                    p.color.a, p.color.r, p.color.g, p.color.b
+                ));
+            }
+            let particles_offset = self.fb.create_vector(&fbs_particles);
+            
+            let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
+            builder.add_cell_index(cmd.cell_index);
+            builder.add_blend_type(cmd.blend_type);
+            builder.add_particles(particles_offset);
+            fbs_emitters.push(builder.finish());
+        }
+        
+        let emitters_offset = self.fb.create_vector(&fbs_emitters);
+        
+        let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
+        builder.add_emitters(emitters_offset);
+        let root = builder.finish();
+        
+        self.fb.finish_minimal(root);
+        Ok(self.fb.finished_data())
     }
 }
