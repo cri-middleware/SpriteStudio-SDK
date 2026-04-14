@@ -2,6 +2,8 @@
 pub enum SSRuntimeError {
     /// データの読み込みに失敗（空データなど）
     EmptyData,
+    /// データ形式が不正
+    InvalidData,
     /// SSAB のバージョンが不一致
     InvalidVersion { expected: u32, got: u32 },
     /// アニメーションが見つからない
@@ -20,10 +22,11 @@ impl SSRuntimeError {
     pub fn as_code(&self) -> i32 {
         match self {
             SSRuntimeError::EmptyData => 1,
-            SSRuntimeError::InvalidVersion { .. } => 2,
-            SSRuntimeError::AnimationNotFound => 3,
-            SSRuntimeError::NotLoaded => 4,
-            SSRuntimeError::InvalidParameter => 5,
+            SSRuntimeError::InvalidData => 2,
+            SSRuntimeError::InvalidVersion { .. } => 3,
+            SSRuntimeError::AnimationNotFound => 4,
+            SSRuntimeError::NotLoaded => 5,
+            SSRuntimeError::InvalidParameter => 6,
             SSRuntimeError::MemoryError => 7,
             SSRuntimeError::Unknown => 99,
         }
@@ -34,6 +37,7 @@ impl core::fmt::Display for SSRuntimeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             SSRuntimeError::EmptyData => write!(f, "SSAB data is empty"),
+            SSRuntimeError::InvalidData => write!(f, "Invalid SSAB data format"),
             SSRuntimeError::InvalidVersion { expected, got } => {
                 write!(f, "Invalid SSAB version. expected: {}, got: {}", expected, got)
             }
