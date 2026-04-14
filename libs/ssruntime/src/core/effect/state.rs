@@ -76,7 +76,7 @@ mod tests {
     fn test_particle_state_soa_cleanup() {
         let mut state = ParticleStateSoA::default();
         state.resize(2);
-        
+
         // Modify index 1
         state.id[1] = 42;
         state.cycle[1] = 1;

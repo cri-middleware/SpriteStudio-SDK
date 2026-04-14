@@ -13,9 +13,7 @@ impl XorShift32x4 {
                 *s = 1;
             }
         }
-        Self {
-            state: u32x4::new(safe_seeds),
-        }
+        Self { state: u32x4::new(safe_seeds) }
     }
 
     pub fn gen_float(&mut self) -> f32x4 {
@@ -29,11 +27,11 @@ impl XorShift32x4 {
         let mask = u32x4::splat(0x007F_FFFF);
         let exp = u32x4::splat(0x3F80_0000);
         let bits = (x & mask) | exp;
-        
+
         // SAFETY: Both u32x4 and f32x4 have the same size and alignment (16 bytes).
         // Transmuting from an array of bits representing IEEE-754 floats to SIMD floats is safe.
         let f: f32x4 = unsafe { core::mem::transmute(bits) };
-        
+
         // Return float in range [0.0, 1.0)
         f - f32x4::splat(1.0)
     }
@@ -48,11 +46,11 @@ mod tests {
         let mut rng = XorShift32x4::new([0, 0, 0, 0]);
         let val1 = rng.gen_float();
         let val2 = rng.gen_float();
-        
+
         // Ensure values are not identical over time (stuck at 0 for example)
         let vals1 = val1.to_array();
         let vals2 = val2.to_array();
-        
+
         assert_ne!(vals1, vals2);
     }
 
@@ -73,7 +71,7 @@ mod tests {
         let mut rng = XorShift32x4::new([12345, 67890, 13579, 24680]);
         let val1 = rng.gen_float().to_array();
         let val2 = rng.gen_float().to_array();
-        
+
         // Elements should not be identically correlated
         assert_ne!(val1[0], val1[1]);
         assert_ne!(val1[2], val1[3]);
