@@ -251,6 +251,8 @@ impl<'a> ContextBuffers<'a> {
 }
 
 pub struct Context<'a> {
+    effect_resource: Option<&'a EffectResource<'a>>,
+    effect_instance: Option<crate::core::effect::instance::EffectInstance>,
     resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
@@ -266,10 +268,12 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context { resource: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
+        Context { resource: None, effect_resource: None, effect_instance: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
     }
 
     pub fn reset(&mut self) {
+        self.effect_resource = None;
+        self.effect_instance = None;
         self.resource = None;
         self.controller.reset_setup();
         self.fb.reset();
@@ -464,7 +468,13 @@ impl<'a> Context<'a> {
     // Playback control
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
-        self.controller.update(delta)
+        let res = self.controller.update(delta);
+        let f = self.get_frame_no() as f32 + self.get_frame_no_decimal();
+        if let Some(effect) = self.effect_instance.as_mut() {
+            effect.update(f);
+        }
+        res
+
     }
 
     pub fn play(&mut self) {
@@ -779,5 +789,24 @@ impl<'a> EffectResource<'a> {
 
     pub fn get_model(&self) -> crate::runtime::effect::ss::runtime::EffectModel<'a> {
         unsafe { crate::runtime::effect::ss::runtime::root_as_effect_model_unchecked(self.data) }
+    }
+}
+
+impl<'a> Context<'a> {
+    pub fn bind_effect_resource(&mut self, resource: &'a EffectResource<'a>) {
+        self.effect_resource = Some(resource);
+    }
+
+    pub fn setup_effect(&mut self, seed: u32) -> Result<(), error::SSRuntimeError> {
+        let Some(resource) = self.effect_resource else {
+            return Err(error::SSRuntimeError::NotLoaded);
+        };
+        let model = resource.get_model();
+        self.effect_instance = Some(crate::core::effect::instance::EffectInstance::from_fbs(&model, seed));
+        Ok(())
+    }
+
+    pub fn get_effect_draw_commands(&mut self) -> Option<(&[crate::core::effect::instance::EmitterDrawCommand], &[crate::core::effect::types::ParticleDrawState])> {
+        self.effect_instance.as_mut().map(|instance| instance.get_draw_commands())
     }
 }
