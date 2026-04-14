@@ -22,7 +22,6 @@ description = "Software development kit for OPTPiX SpriteStudio 7 projects"
 sspj = { path = "libs/sspj" }
 ssconverter = { path = "libs/ssconverter" }
 ssab = { path = "libs/ssab", default-features = false }
-ssruntime = { path = "libs/ssruntime" }
 ssinterpolate = { path = "libs/ssinterpolate" }
 flatbuffers = { version = "25.12.19", default-features = false }
 libm = "0.2.16"

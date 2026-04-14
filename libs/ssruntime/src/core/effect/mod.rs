@@ -6,3 +6,4 @@ pub use types::*;
 pub use state::*;
 pub use simulator::*;
 pub mod instance;
+pub mod prng;

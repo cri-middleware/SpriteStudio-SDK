@@ -55,3 +55,56 @@ pub struct RenderState {
     pub is_loop: bool,
     pub emitter_states: Vec<EmitterState>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_particle_state_soa_resize() {
+        let mut state = ParticleStateSoA::default();
+        state.resize(5);
+        assert_eq!(state.id.len(), 5);
+        assert_eq!(state.cycle.len(), 5);
+        assert_eq!(state.exist.len(), 5);
+        assert_eq!(state.born.len(), 5);
+        assert_eq!(state.stime.len(), 5);
+        assert_eq!(state.endtime.len(), 5);
+    }
+
+    #[test]
+    fn test_particle_state_soa_cleanup() {
+        let mut state = ParticleStateSoA::default();
+        state.resize(2);
+        
+        // Modify index 1
+        state.id[1] = 42;
+        state.cycle[1] = 1;
+        state.exist[1] = true;
+        state.born[1] = true;
+        state.stime[1] = 10;
+        state.endtime[1] = 20;
+
+        // Cleanup index 1
+        state.cleanup(1);
+
+        // Verify index 1 is reset
+        assert_eq!(state.id[1], 0);
+        assert_eq!(state.cycle[1], 0);
+        assert_eq!(state.exist[1], false);
+        assert_eq!(state.born[1], false);
+        assert_eq!(state.stime[1], 0);
+        assert_eq!(state.endtime[1], 0);
+
+        // Ensure index 0 is unaffected
+        assert_eq!(state.id[0], 0);
+        assert_eq!(state.exist[0], false);
+    }
+
+    #[test]
+    fn test_emitter_state_new() {
+        let state = EmitterState::new(10);
+        assert_eq!(state.particle_state.id.len(), 10);
+        assert_eq!(state.seed_offset, 0);
+    }
+}
