@@ -147,13 +147,14 @@ impl EffectEmitterInstance {
     }
 }
 
-/// 描画命令：1つのエミッター（同じテクスチャ・ブレンド）ごとにバッチ化されたパーティクルリスト
+/// 描画命令：アロケーションを防ぐためのバッチ参照情報
 #[derive(Clone, Debug)]
 pub struct EmitterDrawCommand {
     pub cell_map_name_hash: u32,
     pub cell_name_hash: u32,
     pub blend_type: i32,
-    pub particles: Vec<ParticleDrawState>,
+    pub particle_start: usize,
+    pub particle_end: usize,
 }
 
 pub struct EffectInstance {
@@ -163,6 +164,9 @@ pub struct EffectInstance {
     pub layout_scale: Vector2,
     pub effect_time_length: i32,
     pub fps: i32,
+    
+    pub draw_commands: Vec<EmitterDrawCommand>,
+    pub draw_particles: Vec<ParticleDrawState>,
 }
 
 impl EffectInstance {
@@ -211,6 +215,8 @@ impl EffectInstance {
             layout_scale: Vector2::new(model.layout_scale_x() as f32 / 100.0, model.layout_scale_y() as f32 / 100.0),
             effect_time_length,
             fps: if model.fps() == 0 { 30 } else { model.fps() },
+            draw_commands: Vec::new(),
+            draw_particles: Vec::new(),
         }
     }
 
@@ -230,24 +236,27 @@ impl EffectInstance {
         }
     }
 
-    /// 各パーティクルの計算を行い、エミッターごとの描画コマンドリスト（バッチ）として返す
-    /// Player側はこれを受け取り、任意のレンダラ（WGPU, OpenGL等）で一括描画を行う
-    pub fn get_draw_commands(&mut self) -> Vec<EmitterDrawCommand> {
-        if self.state.current_frame < 0.0 { return Vec::new(); }
+    /// 各パーティクルの計算を行い、アロケーションなしで描画コマンドリスト（バッチ）として返す
+    pub fn get_draw_commands(&mut self) -> (&[EmitterDrawCommand], &[ParticleDrawState]) {
+        self.draw_commands.clear();
+        self.draw_particles.clear();
+        
+        if self.state.current_frame < 0.0 { 
+            return (&self.draw_commands, &self.draw_particles); 
+        }
 
-        let mut commands = Vec::new();
         let num_emitters = self.emitters.len();
 
         for i in 0..num_emitters {
             let pi = self.emitters[i].parent_index;
-            let mut particles = Vec::new();
+            let start_idx = self.draw_particles.len();
 
             if pi >= 0 && (pi as usize) < i {
                 // 親の生存情報を事前に収集（借用エラー回避のため）
                 let parent_born_info: Vec<(i32, f32)> = {
                     let parent = &self.emitters[pi as usize];
                     let parent_state = &self.state.emitter_states[pi as usize];
-                    let mut info = Vec::new();
+                    let mut info = Vec::new(); // TODO: ここも将来的には事前確保可能
                     for n in 0..parent.offset_patterns.len() {
                         if parent_state.particle_state.born[n] {
                             let p_stime = parent_state.particle_state.stime[n];
@@ -259,27 +268,29 @@ impl EffectInstance {
                 };
                 
                 for (parent_particle_id, p_ptime) in parent_born_info {
-                    self.collect_emitter_particles(i, p_ptime, pi, parent_particle_id, &mut particles);
+                    self.collect_emitter_particles(i, p_ptime, pi, parent_particle_id);
                 }
             } else {
-                self.collect_emitter_particles(i, self.state.target_frame, -1, 0, &mut particles);
+                self.collect_emitter_particles(i, self.state.target_frame, -1, 0);
             }
 
-            if !particles.is_empty() {
+            let end_idx = self.draw_particles.len();
+            if end_idx > start_idx {
                 let e = &self.emitters[i];
-                commands.push(EmitterDrawCommand {
+                self.draw_commands.push(EmitterDrawCommand {
                     cell_map_name_hash: e.cell_map_name_hash,
                     cell_name_hash: e.cell_name_hash,
                     blend_type: e.blend_type,
-                    particles,
+                    particle_start: start_idx,
+                    particle_end: end_idx,
                 });
             }
         }
 
-        commands
+        (&self.draw_commands, &self.draw_particles)
     }
 
-    fn collect_emitter_particles(&mut self, emitter_idx: usize, time: f32, parent_idx: i32, parent_particle_id: i32, particles: &mut Vec<ParticleDrawState>) {
+    fn collect_emitter_particles(&mut self, emitter_idx: usize, time: f32, parent_idx: i32, parent_particle_id: i32) {
         let e = &self.emitters[emitter_idx];
         let emitter_state = &mut self.state.emitter_states[emitter_idx];
 
@@ -308,7 +319,7 @@ impl EffectInstance {
             ds.x *= self.layout_scale.x;
             ds.y *= self.layout_scale.y;
 
-            particles.push(ds);
+            self.draw_particles.push(ds);
         }
     }
 }
