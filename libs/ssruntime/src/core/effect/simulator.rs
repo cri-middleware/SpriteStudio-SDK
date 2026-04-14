@@ -1,5 +1,6 @@
 use super::state::*;
 use super::types::*;
+use alloc::vec::Vec;
 use wide::f32x4;
 
 pub fn out_quad(t: f32, total_time: f32, max: f32, min: f32) -> f32 {
