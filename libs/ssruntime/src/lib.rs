@@ -84,6 +84,7 @@ mod allocator {
 extern crate alloc;
 extern crate libm;
 
+use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 #[rustfmt::skip]
@@ -251,7 +252,8 @@ impl<'a> ContextBuffers<'a> {
 }
 
 pub struct Context<'a> {
-    effect_instance: Option<crate::core::effect::instance::EffectInstance>,
+    effect_instances: BTreeMap<u32, crate::core::effect::instance::EffectInstance>,
+    next_effect_seed: u32,
     resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
@@ -267,11 +269,12 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context { resource: None, effect_instance: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
+        Context { resource: None, effect_instances: BTreeMap::new(), next_effect_seed: 123456, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
     }
 
     pub fn reset(&mut self) {
-        self.effect_instance = None;
+        self.effect_instances.clear();
+        self.next_effect_seed = 123456;
         self.resource = None;
         self.controller.reset_setup();
         self.fb.reset();
@@ -347,6 +350,28 @@ impl<'a> Context<'a> {
 
         self.buffers.cursors.clear();
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+
+        // Automatic effect setup for effect parts
+        self.effect_instances.clear();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
+        if let Some(parts) = ssab.parts() {
+            for (i, p) in parts.iter().enumerate() {
+                if p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeEffect {
+                    if let Some(effect_part) = p.part_type_as_part_type_effect() {
+                        let hash = effect_part.ref_effect_name_hash();
+                        if let Some(effects) = ssab.effects() {
+                            if let Some(effect) = effects.iter().find(|e| e.name_hash() == hash) {
+                                // Diversify seeds for each effect instance
+                                let seed = self.next_effect_seed;
+                                self.next_effect_seed = self.next_effect_seed.wrapping_add(1);
+                                
+                                self.effect_instances.insert(i as u32, crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         Ok(())
     }
@@ -468,7 +493,7 @@ impl<'a> Context<'a> {
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
         let res = self.controller.update(delta);
         let f = self.get_frame_no() as f32 + self.get_frame_no_decimal();
-        if let Some(effect) = self.effect_instance.as_mut() {
+        for effect in self.effect_instances.values_mut() {
             effect.update(f);
         }
         res
@@ -772,27 +797,48 @@ mod tests {
             assert!(res.is_err(), "Expected error for invalid ssab data");
         }
     }
+
+    #[test]
+    fn test_automatic_effect_setup() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Effect.ssab");
+        let data = std::fs::read(ssab_path).unwrap();
+        let resource = AnimationResource::new(&data).unwrap();
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+
+        // Setup an animation that likely contains effect parts
+        let anim_name = resource.get_animation_names().first().cloned().unwrap();
+        context.setup_animation(&anim_name).unwrap();
+
+        // Verify that effect instances were created
+        assert!(!context.effect_instances.is_empty(), "Effect instances should be automatically created for effect parts");
+
+        // Check the number of effect parts in ssab to match
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(&data) };
+        let mut expected_count = 0;
+        if let Some(parts) = ssab.parts() {
+            for p in parts {
+                if p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeEffect {
+                    expected_count += 1;
+                }
+            }
+        }
+        assert_eq!(context.effect_instances.len(), expected_count, "Number of effect instances should match PartType::Effect count");
+
+        // Verify next_effect_seed was incremented
+        assert!(context.next_effect_seed > 123456, "next_effect_seed should have been incremented");
+        
+        // Ensure we can get state for the first effect part
+        let first_part_idx = *context.effect_instances.keys().next().unwrap();
+        let state_res = context.get_effect_state(first_part_idx);
+        assert!(state_res.is_ok(), "Should be able to get effect state for the automatically created instance");
+    }
 }
 
 impl<'a> Context<'a> {
-    pub fn setup_effect(&mut self, name: &str, seed: u32) -> Result<(), error::SSRuntimeError> {
-        let Some(resource) = self.resource else {
-            return Err(error::SSRuntimeError::NotLoaded);
-        };
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-        let Some(effects) = ssab.effects() else {
-            return Err(error::SSRuntimeError::NotLoaded);
-        };
-        
-        let hash = fnv1a_hash_str(name);
-        let effect = effects.iter().find(|e| e.name_hash() == hash).ok_or(error::SSRuntimeError::NotLoaded)?;
-        
-        self.effect_instance = Some(crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
-        Ok(())
-    }
-
-    pub fn get_effect_state(&mut self) -> Result<&[u8], error::SSRuntimeError> {
-        let (draw_commands, draw_particles) = match self.effect_instance.as_mut() {
+    pub fn get_effect_state(&mut self, part_index: u32) -> Result<&[u8], error::SSRuntimeError> {
+        let (draw_commands, draw_particles) = match self.effect_instances.get_mut(&part_index) {
             Some(instance) => instance.get_draw_commands(),
             None => return Err(error::SSRuntimeError::NotLoaded),
         };
