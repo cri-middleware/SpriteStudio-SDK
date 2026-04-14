@@ -330,6 +330,31 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
+/// This function is unsafe because it dereferences the `name` raw pointer.
+/// The caller must ensure that `name` points to a valid, null-terminated C string.
+pub unsafe extern "C" fn ss_runtime_setup_effect(context: *mut c_void, name: *const c_char, seed: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    if name.is_null() {
+        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        return false;
+    }
+    let c_buf = unsafe { CStr::from_ptr(name) };
+    let a = alloc::string::String::from_utf8_lossy(c_buf.to_bytes()).into_owned();
+    match ffi_context.ctx.setup_effect(&a, seed) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// # Safety
+///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
@@ -556,3 +581,28 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
         ffi_context.ctx.prev_frame();
     }
 }
+
+#[unsafe(no_mangle)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_effect_state(context: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        match ffi_context.ctx.get_effect_state() {
+            Ok(ret) => unsafe {
+                if !out_data.is_null() {
+                    *out_data = ret.as_ptr() as *mut c_uchar;
+                }
+                if !out_len.is_null() {
+                    *out_len = ret.len();
+                }
+            },
+            Err(e) => {
+                ffi_context.last_error = e.as_code();
+            }
+        }
+    }
+}
+

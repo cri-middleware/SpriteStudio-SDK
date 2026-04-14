@@ -1,5 +1,30 @@
 use wide::{f32x4, u32x4};
 
+pub struct XorShift32 {
+    state: u32,
+}
+
+impl XorShift32 {
+    pub fn new(seed: u32) -> Self {
+        Self { state: if seed == 0 { 1 } else { seed } }
+    }
+
+    pub fn gen_u32(&mut self) -> u32 {
+        let mut x = self.state;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        self.state = x;
+        x
+    }
+
+    pub fn gen_float(&mut self) -> f32 {
+        let x = self.gen_u32();
+        let bits = (x & 0x007F_FFFF) | 0x3F80_0000;
+        f32::from_bits(bits) - 1.0
+    }
+}
+
 pub struct XorShift32x4 {
     state: u32x4,
 }
@@ -16,12 +41,17 @@ impl XorShift32x4 {
         Self { state: u32x4::new(safe_seeds) }
     }
 
-    pub fn gen_float(&mut self) -> f32x4 {
+    pub fn gen_u32(&mut self) -> u32x4 {
         let mut x = self.state;
         x = x ^ (x << 13);
         x = x ^ (x >> 17);
         x = x ^ (x << 5);
         self.state = x;
+        x
+    }
+
+    pub fn gen_float(&mut self) -> f32x4 {
+        let x = self.gen_u32();
 
         // Generate float in range [1.0, 2.0)
         let mask = u32x4::splat(0x007F_FFFF);
