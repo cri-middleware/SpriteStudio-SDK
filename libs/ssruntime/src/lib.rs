@@ -361,18 +361,18 @@ impl<'a> Context<'a> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         if let Some(parts) = ssab.parts() {
             for (i, p) in parts.iter().enumerate() {
-                if p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeEffect {
-                    if let Some(effect_part) = p.part_type_as_part_type_effect() {
-                        let hash = effect_part.ref_effect_name_hash();
-                        if let Some(effects) = ssab.effects() {
-                            if let Some(effect) = effects.iter().find(|e| e.name_hash() == hash) {
-                                // Diversify seeds for each effect instance
-                                let seed = self.next_effect_seed;
-                                self.next_effect_seed = self.next_effect_seed.wrapping_add(1);
+                if p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeEffect
+                    && let Some(effect_part) = p.part_type_as_part_type_effect()
+                {
+                    let hash = effect_part.ref_effect_name_hash();
+                    if let Some(effects) = ssab.effects()
+                        && let Some(effect) = effects.iter().find(|e| e.name_hash() == hash)
+                    {
+                        // Diversify seeds for each effect instance
+                        let seed = self.next_effect_seed;
+                        self.next_effect_seed = self.next_effect_seed.wrapping_add(1);
 
-                                self.effect_instances.insert(i as u32, crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
-                            }
-                        }
+                        self.effect_instances.insert(i as u32, crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
                     }
                 }
             }
@@ -530,6 +530,41 @@ impl<'a> Context<'a> {
 
     pub fn prev_frame(&mut self) {
         self.controller.prev_frame();
+    }
+}
+
+impl<'a> Context<'a> {
+    pub fn get_effect_state(&mut self, part_index: u32) -> Result<&[u8], error::SSRuntimeError> {
+        let (draw_commands, draw_particles) = match self.effect_instances.get_mut(&part_index) {
+            Some(instance) => instance.get_draw_commands(),
+            None => return Err(error::SSRuntimeError::NotLoaded),
+        };
+
+        self.fb.reset();
+
+        let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
+        for cmd in draw_commands {
+            let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
+            for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
+                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
+            }
+            let particles_offset = self.fb.create_vector(&fbs_particles);
+
+            let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
+            builder.add_cell_index(cmd.cell_index);
+            builder.add_blend_type(cmd.blend_type);
+            builder.add_particles(particles_offset);
+            fbs_emitters.push(builder.finish());
+        }
+
+        let emitters_offset = self.fb.create_vector(&fbs_emitters);
+
+        let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
+        builder.add_emitters(emitters_offset);
+        let root = builder.finish();
+
+        self.fb.finish_minimal(root);
+        Ok(self.fb.finished_data())
     }
 }
 
@@ -831,40 +866,5 @@ mod tests {
         let first_part_idx = *context.effect_instances.keys().next().unwrap();
         let state_res = context.get_effect_state(first_part_idx);
         assert!(state_res.is_ok(), "Should be able to get effect state for the automatically created instance");
-    }
-}
-
-impl<'a> Context<'a> {
-    pub fn get_effect_state(&mut self, part_index: u32) -> Result<&[u8], error::SSRuntimeError> {
-        let (draw_commands, draw_particles) = match self.effect_instances.get_mut(&part_index) {
-            Some(instance) => instance.get_draw_commands(),
-            None => return Err(error::SSRuntimeError::NotLoaded),
-        };
-
-        self.fb.reset();
-
-        let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
-        for cmd in draw_commands {
-            let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
-            for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
-                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
-            }
-            let particles_offset = self.fb.create_vector(&fbs_particles);
-
-            let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
-            builder.add_cell_index(cmd.cell_index);
-            builder.add_blend_type(cmd.blend_type);
-            builder.add_particles(particles_offset);
-            fbs_emitters.push(builder.finish());
-        }
-
-        let emitters_offset = self.fb.create_vector(&fbs_emitters);
-
-        let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
-        builder.add_emitters(emitters_offset);
-        let root = builder.finish();
-
-        self.fb.finish_minimal(root);
-        Ok(self.fb.finished_data())
     }
 }
