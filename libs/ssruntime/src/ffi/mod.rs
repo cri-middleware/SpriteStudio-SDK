@@ -580,4 +580,3 @@ pub unsafe extern "C" fn ss_runtime_get_effect_state(context: *mut c_void, part_
         }
     }
 }
-

@@ -20,11 +20,11 @@ pub fn out_quad_simd(t: f32x4, total_time: f32x4, max: f32x4, min: f32x4) -> f32
     let mut t = t;
     let t_gt_total = t.simd_gt(total_time);
     t = t_gt_total.blend(total_time, t);
-    
+
     let range = max - min;
     let t_norm = t / total_time;
     let res = -range * t_norm * (t_norm - f32x4::splat(2.0)) + min;
-    
+
     let total_time_zero = total_time.simd_eq(f32x4::splat(0.0));
     total_time_zero.blend(f32x4::splat(0.0), res)
 }
@@ -423,12 +423,12 @@ impl EffectSimulator {
         let endtimes_f = f32x4::from([endtimes[0] as f32, endtimes[1] as f32, endtimes[2] as f32, endtimes[3] as f32]);
         let t = f32x4::splat(current_time) - stimes_f;
         let life = endtimes_f - stimes_f;
-        
+
         let life_zero = life.simd_eq(f32x4::splat(0.0));
         let life_safe = life_zero.blend(f32x4::splat(1.0), life);
-        
+
         let lifeper = t / life_safe;
-        
+
         let seed_table_len = seed_list.len();
         let pseeds = [seed_list[particle_ids[0] as usize % seed_table_len], seed_list[particle_ids[1] as usize % seed_table_len], seed_list[particle_ids[2] as usize % seed_table_len], seed_list[particle_ids[3] as usize % seed_table_len]];
         let seeds = [
@@ -495,10 +495,10 @@ impl EffectSimulator {
 
             if particle_params.use_rotation_trans {
                 let lastt = life_safe * f32x4::splat(particle_params.end_life_time_per);
-                
+
                 let lastt_zero = lastt.simd_eq(f32x4::splat(0.0));
                 let res_zero = rot + (add * f32x4::splat(particle_params.rotation_factor)) * t;
-                
+
                 let addf = (add * f32x4::splat(particle_params.rotation_factor) - add) / lastt;
                 let mod_t = t.simd_gt(lastt).blend(t - lastt, f32x4::splat(0.0));
                 let nowt = t.simd_lt(lastt).blend(t, lastt);
@@ -507,7 +507,7 @@ impl EffectSimulator {
                 addrf -= add;
                 addrf += mod_t * final_soul;
                 let res_normal = rot + addrf;
-                
+
                 rotation = lastt_zero.blend(res_zero, res_normal);
             } else {
                 rotation = rot + (add * t);
@@ -518,7 +518,7 @@ impl EffectSimulator {
         let mut color_r = f32x4::splat(255.0);
         let mut color_g = f32x4::splat(255.0);
         let mut color_b = f32x4::splat(255.0);
-        
+
         if particle_params.use_color {
             color_a = (f32x4::splat(particle_params.init_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.a as f32))).trunc_int().round_float();
             color_r = (f32x4::splat(particle_params.init_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.r as f32))).trunc_int().round_float();
@@ -542,16 +542,16 @@ impl EffectSimulator {
             let start = f32x4::splat(particle_params.alpha_fade);
             let end = f32x4::splat(particle_params.alpha_fade2);
             let per = lifeper * f32x4::splat(100.0);
-            
+
             let cond_start = per.simd_lt(start) & start.simd_gt(f32x4::splat(0.0));
             let alpha_start = (start - per) / start;
             let color_a_start = color_a * (f32x4::splat(1.0) - alpha_start);
-            
+
             let cond_end = per.simd_gt(end);
             let end_ge_100 = end.simd_ge(f32x4::splat(100.0));
             let alpha_end = ((per - end) / (f32x4::splat(100.0) - end)).min(f32x4::splat(1.0));
             let color_a_end = end_ge_100.blend(f32x4::splat(0.0), color_a * (f32x4::splat(1.0) - alpha_end));
-            
+
             color_a = cond_start.blend(color_a_start, cond_end.blend(color_a_end, color_a)).trunc_int().round_float();
         }
 
@@ -590,7 +590,7 @@ impl EffectSimulator {
 
             let gp = f32x4::splat(particle_params.gravity_power);
             let gp_gt_zero = gp.simd_gt(f32x4::splat(0.0));
-            
+
             // gp > 0 case
             let len = dist.max(f32x4::splat(0.1));
             let et = (len / gp) * f32x4::splat(0.90);
@@ -600,11 +600,11 @@ impl EffectSimulator {
             let blend = out_quad_simd(gt, et, f32x4::splat(0.9), f32x4::splat(0.0)) + (t / life_safe * f32x4::splat(0.1));
             let final_x_gt = blend_float_simd(res_pos_x_gt, f32x4::splat(particle_params.gravity_pos.x), blend);
             let final_y_gt = blend_float_simd(res_pos_y_gt, f32x4::splat(particle_params.gravity_pos.y), blend);
-            
+
             // gp <= 0 case
             let final_x_le = final_x + nvx * gp * t;
             let final_y_le = final_y + nvy * gp * t;
-            
+
             final_x = gp_gt_zero.blend(final_x_gt, final_x_le);
             final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
         }
@@ -855,7 +855,7 @@ mod tests {
     #[test]
     fn test_calculate_state_simd_vs_scalar_equivalence() {
         let (emitter_params, mut particle_params) = create_base_params();
-        
+
         // Enable various parameters to ensure all branches of SIMD calculation are tested
         particle_params.use_color = true;
         particle_params.init_color = Color::new(255, 100, 150, 200);
@@ -906,7 +906,7 @@ mod tests {
             assert!((s.scale_x - v.scale_x).abs() < epsilon, "Scale X mismatch at index {}", i);
             assert!((s.scale_y - v.scale_y).abs() < epsilon, "Scale Y mismatch at index {}", i);
             assert!((s.rotation - v.rotation).abs() < epsilon, "Rotation mismatch at index {}", i);
-            
+
             assert_eq!(s.color.a, v.color.a, "Color A mismatch at index {}", i);
             assert_eq!(s.color.r, v.color.r, "Color R mismatch at index {}", i);
             assert_eq!(s.color.g, v.color.g, "Color G mismatch at index {}", i);
