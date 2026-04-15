@@ -369,7 +369,7 @@ impl<'a> Context<'a> {
                                 // Diversify seeds for each effect instance
                                 let seed = self.next_effect_seed;
                                 self.next_effect_seed = self.next_effect_seed.wrapping_add(1);
-                                
+
                                 self.effect_instances.insert(i as u32, crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
                             }
                         }
@@ -826,7 +826,7 @@ mod tests {
 
         // Verify next_effect_seed was incremented
         assert!(context.next_effect_seed > 123456, "next_effect_seed should have been incremented");
-        
+
         // Ensure we can get state for the first effect part
         let first_part_idx = *context.effect_instances.keys().next().unwrap();
         let state_res = context.get_effect_state(first_part_idx);
@@ -842,7 +842,7 @@ impl<'a> Context<'a> {
         };
 
         self.fb.reset();
-        
+
         let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
         for cmd in draw_commands {
             let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
@@ -850,20 +850,20 @@ impl<'a> Context<'a> {
                 fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
             }
             let particles_offset = self.fb.create_vector(&fbs_particles);
-            
+
             let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
             builder.add_cell_index(cmd.cell_index);
             builder.add_blend_type(cmd.blend_type);
             builder.add_particles(particles_offset);
             fbs_emitters.push(builder.finish());
         }
-        
+
         let emitters_offset = self.fb.create_vector(&fbs_emitters);
-        
+
         let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
         builder.add_emitters(emitters_offset);
         let root = builder.finish();
-        
+
         self.fb.finish_minimal(root);
         Ok(self.fb.finished_data())
     }
