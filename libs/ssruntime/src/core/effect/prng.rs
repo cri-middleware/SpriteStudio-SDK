@@ -91,7 +91,7 @@ mod tests {
             let val = rng.gen_float();
             let arr = val.to_array();
             for &f in arr.iter() {
-                assert!(f >= 0.0 && f < 1.0, "Value out of range: {}", f);
+                assert!((0.0..1.0).contains(&f), "Value out of range: {}", f);
             }
         }
     }
