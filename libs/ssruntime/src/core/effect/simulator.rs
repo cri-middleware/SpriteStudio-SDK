@@ -1,7 +1,7 @@
 use super::state::*;
 use super::types::*;
 use alloc::vec::Vec;
-use wide::{f32x4, CmpEq, CmpGe, CmpGt, CmpLe, CmpLt};
+use wide::{CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, f32x4};
 
 pub fn out_quad(t: f32, total_time: f32, max: f32, min: f32) -> f32 {
     if total_time == 0.0 {
@@ -110,6 +110,8 @@ impl EffectSimulator {
                 let loopnum = libm::floorf(t / target_ep.cycle as f32) as i32;
                 let cycle_top = loopnum * target_ep.cycle;
 
+                state.particle_state.id[i] = target_ep.uid;
+                state.particle_state.pid[i] = slide;
                 state.particle_state.cycle[i] = loopnum;
                 state.particle_state.stime[i] = cycle_top + offset_patterns[i];
                 state.particle_state.endtime[i] = state.particle_state.stime[i] + target_ep.life;
@@ -324,7 +326,83 @@ impl EffectSimulator {
             }
         }
 
-        ParticleDrawState { x: final_x, y: final_y, scale_x: out_scale_x, scale_y: out_scale_y, rotation, direction: 0.0, color }
+        let mut direction = 0.0;
+        if particle_params.use_turn_direc {
+            let next_t = t + 1.0;
+            let mut rng_next = XorShift32::new(seed);
+            let mut gen_rand_next = || rng_next.gen_float();
+
+            let rad = particle_params.angle + (gen_rand_next() * particle_params.angle_variance - particle_params.angle_variance / 2.0);
+            let speed = particle_params.speed + (particle_params.speed2 * gen_rand_next());
+
+            let mut addr = 0.0;
+            if particle_params.use_tan_accel {
+                let accel = particle_params.tangential_accel + (gen_rand_next() * particle_params.tangential_accel2);
+                let _speed = if speed <= 0.0 { 0.1 } else { speed };
+                let l = life * _speed * 0.2;
+                let c = core::f32::consts::PI * l;
+                addr = (accel / c) * next_t;
+            }
+
+            let mut x = libm::cosf(rad + addr) * speed * next_t;
+            let mut y = libm::sinf(rad + addr) * speed * next_t;
+
+            if particle_params.use_trans_speed {
+                let transspeed = particle_params.trans_speed + (particle_params.trans_speed2 * gen_rand_next());
+                let speedadd = transspeed / life;
+                let addtx = libm::cosf(rad + addr) * speed;
+                let addtx_trans = libm::cosf(rad + addr) * speedadd;
+                x = ((addtx_trans * next_t) + addtx) * (next_t + 1.0) / 2.0;
+
+                let addty = libm::sinf(rad + addr) * speed;
+                let addty_trans = libm::sinf(rad + addr) * speedadd;
+                y = ((addty_trans * next_t) + addty) * (next_t + 1.0) / 2.0;
+            }
+
+            if particle_params.use_gravity {
+                let t2 = next_t * next_t;
+                x += 0.5 * particle_params.gravity.x * t2;
+                y += 0.5 * particle_params.gravity.y * t2;
+            }
+
+            let mut ox = 0.0;
+            let mut oy = 0.0;
+            if particle_params.use_offset {
+                ox = particle_params.offset.x + (particle_params.offset2.x * gen_rand_next());
+                oy = particle_params.offset.y + (particle_params.offset2.y * gen_rand_next());
+            }
+
+            let mut next_final_x = x + ox + emitter_pos.x;
+            let mut next_final_y = y + oy + emitter_pos.y;
+
+            if particle_params.use_p_gravity {
+                let vx = particle_params.gravity_pos.x - (ox + emitter_pos.x);
+                let vy = particle_params.gravity_pos.y - (oy + emitter_pos.y);
+                let dist = libm::sqrtf(vx * vx + vy * vy);
+                let inv_dist = if dist == 0.0 { 0.0 } else { 1.0 / dist };
+                let nvx = vx * inv_dist;
+                let nvy = vy * inv_dist;
+
+                let gp = particle_params.gravity_power;
+                if gp > 0.0 {
+                    let len = if dist > 0.1 { dist } else { 0.1 };
+                    let et = (len / gp) * 0.90;
+                    let gt = if next_t < et * 0.90 { next_t } else { et * 0.90 };
+                    next_final_x += nvx * gp * gt;
+                    next_final_y += nvy * gp * gt;
+                    let blend = out_quad(gt, et, 0.9, 0.0) + (next_t / life * 0.1);
+                    next_final_x = blend_float(next_final_x, particle_params.gravity_pos.x, blend);
+                    next_final_y = blend_float(next_final_y, particle_params.gravity_pos.y, blend);
+                } else {
+                    next_final_x += nvx * gp * next_t;
+                    next_final_y += nvy * gp * next_t;
+                }
+            }
+
+            direction = libm::atan2f(next_final_y - final_y, next_final_x - final_x) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
+        }
+
+        ParticleDrawState { x: final_x, y: final_y, scale_x: out_scale_x, scale_y: out_scale_y, rotation, direction, color }
     }
 
     /// SIMD batch calculation for 4 particles simultaneously.
@@ -338,7 +416,7 @@ impl EffectSimulator {
         emitter_seed: i32,
         seed_offset: i32,
         seed_list: &[u32],
-        emitter_pos: Vector2,
+        emitter_pos: [Vector2; 4],
         pids: [i32; 4],
     ) -> [ParticleDrawState; 4] {
         let stimes_f = f32x4::from([stimes[0] as f32, stimes[1] as f32, stimes[2] as f32, stimes[3] as f32]);
@@ -352,12 +430,7 @@ impl EffectSimulator {
         let lifeper = t / life_safe;
         
         let seed_table_len = seed_list.len();
-        let pseeds = [
-            seed_list[particle_ids[0] as usize % seed_table_len],
-            seed_list[particle_ids[1] as usize % seed_table_len],
-            seed_list[particle_ids[2] as usize % seed_table_len],
-            seed_list[particle_ids[3] as usize % seed_table_len],
-        ];
+        let pseeds = [seed_list[particle_ids[0] as usize % seed_table_len], seed_list[particle_ids[1] as usize % seed_table_len], seed_list[particle_ids[2] as usize % seed_table_len], seed_list[particle_ids[3] as usize % seed_table_len]];
         let seeds = [
             (pseeds[0] as u64 + emitter_seed as u64 + pids[0] as u64 + seed_offset as u64) as u32,
             (pseeds[1] as u64 + emitter_seed as u64 + pids[1] as u64 + seed_offset as u64) as u32,
@@ -501,12 +574,15 @@ impl EffectSimulator {
         let out_scale_x = scale_x * scalefactor;
         let out_scale_y = scale_y * scalefactor;
 
-        let mut final_x = out_x + ox + f32x4::splat(emitter_pos.x);
-        let mut final_y = out_y + oy + f32x4::splat(emitter_pos.y);
+        let emitter_pos_x = f32x4::from([emitter_pos[0].x, emitter_pos[1].x, emitter_pos[2].x, emitter_pos[3].x]);
+        let emitter_pos_y = f32x4::from([emitter_pos[0].y, emitter_pos[1].y, emitter_pos[2].y, emitter_pos[3].y]);
+
+        let mut final_x = out_x + ox + emitter_pos_x;
+        let mut final_y = out_y + oy + emitter_pos_y;
 
         if particle_params.use_p_gravity {
-            let vx = f32x4::splat(particle_params.gravity_pos.x) - (ox + f32x4::splat(emitter_pos.x));
-            let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + f32x4::splat(emitter_pos.y));
+            let vx = f32x4::splat(particle_params.gravity_pos.x) - (ox + emitter_pos_x);
+            let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + emitter_pos_y);
             let dist = (vx * vx + vy * vy).sqrt();
             let inv_dist = dist.simd_eq(f32x4::splat(0.0)).blend(f32x4::splat(0.0), f32x4::splat(1.0) / dist);
             let nvx = vx * inv_dist;
@@ -533,6 +609,95 @@ impl EffectSimulator {
             final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
         }
 
+        let mut direction = [0.0; 4];
+        if particle_params.use_turn_direc {
+            let next_t = t + f32x4::splat(1.0);
+            let mut rng_next = XorShift32x4::new(seeds);
+            let mut gen_rand_next = || rng_next.gen_float();
+
+            let rad = f32x4::splat(particle_params.angle) + (gen_rand_next() * f32x4::splat(particle_params.angle_variance) - f32x4::splat(particle_params.angle_variance / 2.0));
+            let speed = f32x4::splat(particle_params.speed) + (f32x4::splat(particle_params.speed2) * gen_rand_next());
+
+            let mut addr = f32x4::splat(0.0);
+            if particle_params.use_tan_accel {
+                let accel = f32x4::splat(particle_params.tangential_accel) + (gen_rand_next() * f32x4::splat(particle_params.tangential_accel2));
+                let speed_safe = speed.simd_le(f32x4::splat(0.0)).blend(f32x4::splat(0.1), speed);
+                let l = life_safe * speed_safe * f32x4::splat(0.2);
+                let c = f32x4::splat(core::f32::consts::PI) * l;
+                addr = (accel / c) * next_t;
+            }
+
+            let rad_addr = rad + addr;
+            let mut x = rad_addr.cos() * speed * next_t;
+            let mut y = rad_addr.sin() * speed * next_t;
+
+            if particle_params.use_trans_speed {
+                let transspeed = f32x4::splat(particle_params.trans_speed) + (f32x4::splat(particle_params.trans_speed2) * gen_rand_next());
+                let speedadd = transspeed / life_safe;
+                let cos_rad_addr = rad_addr.cos();
+                let sin_rad_addr = rad_addr.sin();
+                let addtx = cos_rad_addr * speed;
+                let addtx_trans = cos_rad_addr * speedadd;
+                x = ((addtx_trans * next_t) + addtx) * (next_t + f32x4::splat(1.0)) / f32x4::splat(2.0);
+
+                let addty = sin_rad_addr * speed;
+                let addty_trans = sin_rad_addr * speedadd;
+                y = ((addty_trans * next_t) + addty) * (next_t + f32x4::splat(1.0)) / f32x4::splat(2.0);
+            }
+
+            if particle_params.use_gravity {
+                let t2 = next_t * next_t;
+                x += f32x4::splat(0.5 * particle_params.gravity.x) * t2;
+                y += f32x4::splat(0.5 * particle_params.gravity.y) * t2;
+            }
+
+            let mut ox = f32x4::splat(0.0);
+            let mut oy = f32x4::splat(0.0);
+            if particle_params.use_offset {
+                ox = f32x4::splat(particle_params.offset.x) + (f32x4::splat(particle_params.offset2.x) * gen_rand_next());
+                oy = f32x4::splat(particle_params.offset.y) + (f32x4::splat(particle_params.offset2.y) * gen_rand_next());
+            }
+
+            let mut next_final_x = x + ox + emitter_pos_x;
+            let mut next_final_y = y + oy + emitter_pos_y;
+
+            if particle_params.use_p_gravity {
+                let vx = f32x4::splat(particle_params.gravity_pos.x) - (ox + emitter_pos_x);
+                let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + emitter_pos_y);
+                let dist = (vx * vx + vy * vy).sqrt();
+                let inv_dist = dist.simd_eq(f32x4::splat(0.0)).blend(f32x4::splat(0.0), f32x4::splat(1.0) / dist);
+                let nvx = vx * inv_dist;
+                let nvy = vy * inv_dist;
+
+                let gp = f32x4::splat(particle_params.gravity_power);
+                let gp_gt_zero = gp.simd_gt(f32x4::splat(0.0));
+
+                let len = dist.max(f32x4::splat(0.1));
+                let et = (len / gp) * f32x4::splat(0.90);
+                let gt = next_t.min(et * f32x4::splat(0.90));
+                let res_pos_x_gt = next_final_x + nvx * gp * gt;
+                let res_pos_y_gt = next_final_y + nvy * gp * gt;
+                let blend = out_quad_simd(gt, et, f32x4::splat(0.9), f32x4::splat(0.0)) + (next_t / life_safe * f32x4::splat(0.1));
+                let final_x_gt = blend_float_simd(res_pos_x_gt, f32x4::splat(particle_params.gravity_pos.x), blend);
+                let final_y_gt = blend_float_simd(res_pos_y_gt, f32x4::splat(particle_params.gravity_pos.y), blend);
+
+                let final_x_le = next_final_x + nvx * gp * next_t;
+                let final_y_le = next_final_y + nvy * gp * next_t;
+
+                next_final_x = gp_gt_zero.blend(final_x_gt, final_x_le);
+                next_final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
+            }
+
+            let next_x_arr = next_final_x.to_array();
+            let next_y_arr = next_final_y.to_array();
+            let final_x_arr = final_x.to_array();
+            let final_y_arr = final_y.to_array();
+
+            for i in 0..4 {
+                direction[i] = libm::atan2f(next_y_arr[i] - final_y_arr[i], next_x_arr[i] - final_x_arr[i]) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
+            }
+        }
+
         let out_x_arr = final_x.to_array();
         let out_y_arr = final_y.to_array();
         let scale_x_arr = out_scale_x.to_array();
@@ -556,7 +721,7 @@ impl EffectSimulator {
                 scale_x: scale_x_arr[i],
                 scale_y: scale_y_arr[i],
                 rotation: rot_arr[i],
-                direction: 0.0,
+                direction: direction[i],
                 color: Color::new(col_a_arr[i] as u8, col_r_arr[i] as u8, col_g_arr[i] as u8, col_b_arr[i] as u8),
             };
         }
@@ -721,19 +886,11 @@ mod tests {
         // 1. Calculate using scalar fallback
         let mut scalar_results = [ParticleDrawState::default(); 4];
         for i in 0..4 {
-            scalar_results[i] = EffectSimulator::calculate_state(
-                current_time, stimes[i], endtimes[i], particle_ids[i],
-                &emitter_params, &particle_params, emitter_seed, seed_offset,
-                &seed_list, emitter_pos, pids[i]
-            );
+            scalar_results[i] = EffectSimulator::calculate_state(current_time, stimes[i], endtimes[i], particle_ids[i], &emitter_params, &particle_params, emitter_seed, seed_offset, &seed_list, emitter_pos, pids[i]);
         }
 
         // 2. Calculate using SIMD batch
-        let simd_results = EffectSimulator::calculate_state_batch(
-            current_time, stimes, endtimes, particle_ids,
-            &emitter_params, &particle_params, emitter_seed, seed_offset,
-            &seed_list, emitter_pos, pids
-        );
+        let simd_results = EffectSimulator::calculate_state_batch(current_time, stimes, endtimes, particle_ids, &emitter_params, &particle_params, emitter_seed, seed_offset, &seed_list, [emitter_pos; 4], pids);
 
         // 3. Verify equivalence
         for i in 0..4 {
