@@ -98,10 +98,10 @@ impl EffectSimulator {
 
         let slide_offset = slide * SEED_MAGIC;
 
-        for i in 0..offset_patterns.len() {
+        for (i, &offset) in offset_patterns.iter().enumerate() {
             let slide_num = (i as i32 + slide_offset).rem_euclid(pnum as i32) as usize;
             let target_ep = &emit_patterns[slide_num];
-            let t = current_time - offset_patterns[i] as f32;
+            let t = current_time - offset as f32;
 
             state.particle_state.exist[i] = false;
             state.particle_state.born[i] = false;
@@ -113,7 +113,7 @@ impl EffectSimulator {
                 state.particle_state.id[i] = target_ep.uid;
                 state.particle_state.pid[i] = slide;
                 state.particle_state.cycle[i] = loopnum;
-                state.particle_state.stime[i] = cycle_top + offset_patterns[i];
+                state.particle_state.stime[i] = cycle_top + offset;
                 state.particle_state.endtime[i] = state.particle_state.stime[i] + target_ep.life;
 
                 if state.particle_state.stime[i] as f32 <= current_time && (state.particle_state.endtime[i] as f32) > current_time {
@@ -734,15 +734,9 @@ mod tests {
     use super::*;
 
     fn create_base_params() -> (EmitterParameter, ParticleParameter) {
-        let mut emitter_params = EmitterParameter::default();
-        emitter_params.life = 30;
-        emitter_params.emitmax = 10;
-        emitter_params.particle_life = 15;
-        emitter_params.interval = 1;
-        emitter_params.emitnum = 1;
+        let emitter_params = EmitterParameter { life: 30, emitmax: 10, particle_life: 15, interval: 1, emitnum: 1, ..Default::default() };
 
-        let mut particle_params = ParticleParameter::default();
-        particle_params.speed = 5.0;
+        let particle_params = ParticleParameter { speed: 5.0, ..Default::default() };
 
         (emitter_params, particle_params)
     }
@@ -758,8 +752,8 @@ mod tests {
         assert_eq!(emit_patterns.len(), 10 * LIFE_EXTEND_SCALE as usize);
         assert_eq!(seed_list.len(), 30); // emitmax * 3
 
-        for i in 0..10 {
-            assert_eq!(offset_patterns[i], i as i32);
+        for (i, &offset) in offset_patterns.iter().enumerate().take(10) {
+            assert_eq!(offset, i as i32);
         }
     }
 
@@ -847,8 +841,8 @@ mod tests {
         let mut prng = XorShift32x4::new([123, 456, 789, 101112]);
         let rand_vals = prng.gen_float().to_array();
 
-        for i in 0..4 {
-            assert!(rand_vals[i] >= 0.0 && rand_vals[i] <= 1.0);
+        for &val in &rand_vals {
+            assert!((0.0..=1.0).contains(&val));
         }
     }
 
