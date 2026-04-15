@@ -269,11 +269,9 @@ impl EffectInstance {
         self.state.current_frame = frame;
         self.state.target_frame = frame;
 
-        if !self.is_infinite && self.state.is_loop && self.effect_time_length > 0 {
-            if self.state.current_frame > self.effect_time_length as f32 {
-                self.state.target_frame = libm::fmodf(self.state.current_frame, self.effect_time_length as f32);
-                self.state.seed_offset = (self.state.current_frame / self.effect_time_length as f32) as i32;
-            }
+        if !self.is_infinite && self.state.is_loop && self.effect_time_length > 0 && self.state.current_frame > self.effect_time_length as f32 {
+            self.state.target_frame = libm::fmodf(self.state.current_frame, self.effect_time_length as f32);
+            self.state.seed_offset = (self.state.current_frame / self.effect_time_length as f32) as i32;
         }
     }
 

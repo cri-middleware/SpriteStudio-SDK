@@ -95,14 +95,14 @@ mod tests {
         // Verify index 1 is reset
         assert_eq!(state.id[1], 0);
         assert_eq!(state.cycle[1], 0);
-        assert_eq!(state.exist[1], false);
-        assert_eq!(state.born[1], false);
+        assert!(!state.exist[1]);
+        assert!(!state.born[1]);
         assert_eq!(state.stime[1], 0);
         assert_eq!(state.endtime[1], 0);
 
         // Ensure index 0 is unaffected
         assert_eq!(state.id[0], 0);
-        assert_eq!(state.exist[0], false);
+        assert!(!state.exist[0]);
     }
 
     #[test]
