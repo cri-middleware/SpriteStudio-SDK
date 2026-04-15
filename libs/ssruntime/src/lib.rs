@@ -847,10 +847,7 @@ impl<'a> Context<'a> {
         for cmd in draw_commands {
             let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
             for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
-                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(
-                    p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction,
-                    p.color.a, p.color.r, p.color.g, p.color.b
-                ));
+                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
             }
             let particles_offset = self.fb.create_vector(&fbs_particles);
             

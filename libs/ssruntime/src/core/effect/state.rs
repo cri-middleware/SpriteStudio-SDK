@@ -4,6 +4,7 @@ use alloc::vec::Vec;
 #[derive(Clone, Debug, Default)]
 pub struct ParticleStateSoA {
     pub id: Vec<i32>,
+    pub pid: Vec<i32>,
     pub cycle: Vec<i32>,
     pub exist: Vec<bool>,
     pub born: Vec<bool>,
@@ -14,6 +15,7 @@ pub struct ParticleStateSoA {
 impl ParticleStateSoA {
     pub fn resize(&mut self, size: usize) {
         self.id.resize(size, 0);
+        self.pid.resize(size, 0);
         self.cycle.resize(size, 0);
         self.exist.resize(size, false);
         self.born.resize(size, false);
@@ -23,6 +25,7 @@ impl ParticleStateSoA {
 
     pub fn cleanup(&mut self, index: usize) {
         self.id[index] = 0;
+        self.pid[index] = 0;
         self.cycle[index] = 0;
         self.exist[index] = false;
         self.born[index] = false;
