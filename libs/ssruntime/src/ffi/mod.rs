@@ -392,10 +392,7 @@ pub extern "C" fn ss_runtime_get_skip_frames(context: *mut c_void) -> bool {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_playback_direction(context: *mut c_void) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_playback_direction() as i32;
-    }
-    0
+    if let Some(ffi_context) = get_context(context) { if ffi_context.ctx.get_playback_direction() == crate::core::playback_controller::PlaybackDirection::Forward { 0 } else { 1 } } else { 0 }
 }
 
 #[unsafe(no_mangle)]
