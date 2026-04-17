@@ -91,13 +91,13 @@ jobs:
       - name: Build
         run: |
           if [ "${{ matrix.platform }}" == "android" ]; then
-            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime
+            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "ios" ]; then
-            cargo build --target aarch64-apple-ios --verbose -p ssruntime
+            cargo build --target aarch64-apple-ios --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "web" ]; then
-            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
           elif [ "${{ matrix.platform }}" == "no_std" ]; then
-            cargo build --release --verbose -p ssruntime --no-default-features --features "ffi libc_alloc"
+            cargo build --release --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
           else
             cargo build --verbose
           fi
@@ -105,7 +105,7 @@ jobs:
 
       - name: Test (workspace)
         if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
-        run: cargo test --workspace --verbose -- --test-threads=1
+        run: cargo test --workspace --all-features --verbose -- --test-threads=1
         shell: bash
 
       - name: Format check

@@ -30,6 +30,9 @@ rayon = "1.11.0"
 cbindgen = "0.29.2"
 vergen-gitcl = { version = "9.1.0", features = ["build"] }
 
+[profile.dev]
+panic = "abort"
+
 [profile.release]
 lto = true
 opt-level = 3

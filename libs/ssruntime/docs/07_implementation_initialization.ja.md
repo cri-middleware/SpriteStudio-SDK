@@ -6,6 +6,28 @@ Player の基本機能の実装において、初期化時に行うべき処理�
 最新のアーキテクチャでは、バイナリデータの所有権(`SsabData`)と、パース済みの読み取り専用メタデータ(`AnimationResource`)、および再生状態・計算バッファ(`Context`)が安全に分離されています。
 同一アニメーションを複数キャラクターで再生する場合、リソースは 1 つだけ作成し、キャラクターごとにコンテキストを作成してリソースをバインド(`bind_resource`)することでパフォーマンスが向上します。
 
+### 1.5. libssruntime の no_std 対応とメモリ管理
+`libssruntime` はフットプリント削減とポータビリティ向上のため、Rust の標準ライブラリ (`std`) に依存しない `no_std` 環境を完全にサポートしています。
+デスクトップでのビルド安定性を考慮し、デフォルトでは `std` が有効になっていますが、iOS/Android 向けのリリースビルドや組み込み環境向けには `no_std` 構成（`--no-default-features`）でビルドされます。
+
+C-API (`cdylib` / `staticlib`) を `no_std` でビルドする際は、内部の動的メモリ確保 (ヒープアロケーション) を行うためにグローバルアロケータが必要です。SDK では `libc` の `malloc` / `free` を利用する `libc_alloc` 機能を用意しています。
+
+#### デバッグログ出力の移譲
+`no_std` 環境では標準出力 (`println!`, `eprintln!`) が利用できません。libssruntime 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
+
+```cpp
+#include "runtime/ssruntime.h"
+
+// ログを受け取るコールバック関数
+void my_log_callback(int level, const char* message) {
+    // 例: printf("libssruntime [%d]: %s\n", level, message);
+    // ゲームエンジンのログ出力関数 (UE_LOG, Debug.Log, print_line など) に渡す
+}
+
+// 初期化の最初にコールバックを登録する
+ss_runtime_set_log_callback(my_log_callback);
+```
+
 ### C-API (C/C++) を使用する場合
 C-API では `SsabData` と `AnimationResource` は内部的に `FfiResource` として隠蔽されているため、以下の2ステップで初期化します。
 

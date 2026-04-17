@@ -1,16 +1,57 @@
 # SpriteStudio7-SDK: `no_std` 統合ガイド
 
-`libs/ssruntime` は、ファイルシステムやスレッド機構を持たない組み込み環境、ゲームコンソール (PS5 / Nintendo Switch など)、あるいは独自のメモリアロケータを採用しているゲームエンジン向けに **`#![no_std]` を完全サポート** しています。
+`libs/ssruntime` は、ファイルシステムやスレッド機構を持たない組み込み環境、ゲームコンソール (PS5 / Nintendo Switch など)、あるいは独自のメモリアロケータを採用しているゲームエンジン向けに **`#![no_std]` を完全サポートしています**。
 
-このドキュメントでは、`no_std` 環境下で本 SDK (特に `ssruntime`) をプロジェクトに統合するための 3 つのアプローチを解説します。
+開発の利便性とデスクトップツールとの互換性を考慮し、デフォルト設定では `std` が有効になっていますが、以下の手順で簡単に `no_std` ライブラリとしてビルド・統合することが可能です。
 
 ---
 
-## 1. Rust ネイティブでの利用 (最も簡単)
+## 1. C/C++ での利用 (コンソール向け / `no_std`)
 
-自作の Rust 製ゲームエンジン（`no_std` アプリケーション）から `ssruntime` を呼び出す場合、アロケータの手配は上位の実行バイナリ (Executable) が担うため、ライブラリ側での追加設定は不要です。
+C/C++ 製のゲームエンジンから FFI を経由して `ssruntime` を呼び出す際、Rust の標準ライブラリ（`std`）によるオーバーヘッドや未サポートAPIエラーを避けることができます。
 
-`Cargo.toml` に以下のように追加するだけで、純粋な `no_std` ライブラリ (`rlib`) として利用可能です。
+「`std` は使えないが、C言語の標準ライブラリ（`malloc` / `free`）は利用できる」という環境（一般的なコンソールゲーム機やモバイル環境）向けにビルドするには、デフォルト機能を無効化してビルドします。
+
+### ビルド手順
+
+以下のコマンドを実行することで、`no_std` を維持しつつ、メモリアロケーションを C 言語の `malloc` にフォールバックさせ、パニックハンドラを注入した静的ライブラリ (`.a` または `.lib`) を生成できます。
+
+```bash
+cargo build -p ssruntime --release --no-default-features --features "ffi,libc_alloc,panic-handler"
+```
+
+これにより、`no_std` なバイナリサイズの大幅な削減と、ネイティブ環境での安定したメモリ確保が両立できます。
+パニック発生時は `libc::abort()` が呼ばれて安全にプロセスが終了（またはデバッガにブレーク）するよう調整されています。
+
+---
+
+## 2. デバッグログ出力の移譲 (Log Callback)
+
+`no_std` 環境では、Rust の標準出力 (`println!`, `eprintln!`) が利用できません。
+そのため、`ssruntime` 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
+
+```cpp
+#include "runtime/ssruntime.h"
+
+// ログを受け取るコールバック関数
+void my_log_callback(int level, const char* message) {
+    // 例: printf("libssruntime [%d]: %s\n", level, message);
+    // ゲームエンジンのログ出力関数 (UE_LOG, Debug.Log, print_line など) に渡す
+}
+
+// 初期化の最初にコールバックを登録する
+ss_runtime_set_log_callback(my_log_callback);
+```
+
+これにより、Rust 内部でパースエラーや警告が発生した際に、ホスト側 (C/C++ や C#) にメッセージが転送されます。
+
+---
+
+## 3. Rust ネイティブでの利用
+
+自作の Rust 製ゲームエンジン（`no_std` アプリケーション）から `ssruntime` を呼び出す場合、アロケータやパニックハンドラの手配は上位の実行バイナリ (Executable) が担うのが一般的です。
+
+`Cargo.toml` に以下のように追加し、`default-features = false` にすることで、`libc_alloc` を無効化した純粋な `no_std` ライブラリ (`rlib`) として利用可能です。
 
 ```toml
 [dependencies]
@@ -18,32 +59,11 @@ ssruntime = { version = "7.0", default-features = false }
 ```
 
 > [!NOTE]
-> 必須機能である `Vec` などは内部的に `alloc` クレートを利用して動作します。最終的なターゲットバイナリで何らかの `#[global_allocator]` が提供されている必要があります。
+> 必須機能である `Vec` などは内部的に `alloc` クレートを利用して動作します。最終的なターゲットバイナリで何らかの `#[global_allocator]` と `#[panic_handler]` が提供されている必要があります。
 
 ---
 
-## 2. C/C++ での手軽な利用 (コンソール向け / `libc_alloc`)
-
-C/C++ 製のゲームエンジンから FFI を経由して `ssruntime` を呼び出す際、Rust の標準ライブラリ（`std`）によるオーバーヘッドや未サポートAPIエラーを避けたい場合があります。
-
-「`std` は使えないが、C言語の標準ライブラリ（`malloc` / `free`）は利用できる」という環境（一般的なコンソールゲーム機など）向けに、**`libc_alloc` フューチャー** を用意しています。
-
-### ビルド手順
-
-以下のコマンドを実行することで、`no_std` を維持しつつ、メモリアロケーションを C 言語の `malloc` にフォールバックさせた静的ライブラリ (`.a` または `.lib`) を生成できます。
-
-```bash
-cargo build -p ssruntime --release --no-default-features --features "ffi libc_alloc"
-```
-
-生成された静的ライブラリ (`target/release/libssruntime.a`) を、C++ プロジェクトでリンクしてください。これにより、`no_std` なバイナリサイズの大幅な削減と、ネイティブ環境での安定したメモリ確保が両立できます。
-
-> [!TIP]
-> パニック発生時は `libc::abort()` が呼ばれて安全にプロセスが終了（またはデバッガにブレーク）するよう調整されています。
-
----
-
-## 3. 完全な独自のカスタムアロケータの利用 (Unreal Engine 等)
+## 4. 完全な独自のカスタムアロケータの利用 (Unreal Engine 等)
 
 「Cの標準の `malloc` も使わず、ゲームエンジンが提供する専用のメモリ確保関数 (例: Unreal Engine の `FMalloc` やメモリプール) のみを使いたい」という場合、SDK 内部のアロケータには依存せず、ユーザー側で FFI 用のラッパークレート (wrapper crate) を作成して独自の `#[global_allocator]` を注入するのがベストプラクティスです。
 
