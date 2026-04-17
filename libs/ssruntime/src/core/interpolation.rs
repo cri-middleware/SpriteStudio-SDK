@@ -588,6 +588,11 @@ pub fn evaluate_texture(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOff
     search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
 }
 
+#[inline]
+pub fn evaluate_instance<'a>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataInstance<'a>>>, frame_no: i32, hint: &mut usize) -> Option<ssab::ssab::ss::format::PartAttributeInstance<'a>> {
+    search_prev(array, frame_no, |v| v.index() as i32, hint).and_then(|prev| prev.value())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
