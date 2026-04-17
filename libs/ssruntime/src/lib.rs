@@ -40,6 +40,7 @@ mod allocator {
 extern crate alloc;
 extern crate libm;
 
+use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 #[rustfmt::skip]
@@ -172,12 +173,13 @@ struct ContextBuffers<'a> {
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    instance_states: BTreeMap<u16, core::instance::InstancePartState>,
     cursors: Vec<usize>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new() }
+        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), instance_states: BTreeMap::new(), cursors: Vec::new() }
     }
 }
 
@@ -205,6 +207,7 @@ impl<'a> Context<'a> {
         self.controller.reset_setup();
         self.fb.reset();
         self.animation_idx = -1;
+        self.buffers.instance_states.clear();
         self.buffers.cursors.clear();
     }
 
@@ -215,6 +218,41 @@ impl<'a> Context<'a> {
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.resource.map(|r| r.get_ssab_data())
+    }
+
+    fn update_instance(&mut self, frame_no: i32, delta_time: f32) {
+        let Some(resource) = self.resource else {
+            return;
+        };
+        if self.animation_idx < 0 {
+            return;
+        }
+
+        let metadata = &resource.animations[self.animation_idx as usize];
+
+        // We need to check which parts are instances and update their accumulated time if they are independent.
+        // For simplicity in this iteration, we iterate all cached parts.
+        // In a more optimized version, we could have a list of instance part indices.
+        for (i, cached_part) in metadata.cached_parts.iter().enumerate() {
+            if let Some(instance_array) = cached_part.instance_array {
+                let part_index = cached_part.part_index as u16;
+                // Use the cursor for this part's instance attribute
+                let mut cursor = self.buffers.cursors[i * crate::core::framedata::NUM_PART_ATTRIBUTES + crate::core::framedata::IDX_ATTRIBUTEINSTANCE];
+                if let Some(attr) = crate::core::interpolation::evaluate_instance(instance_array, frame_no, &mut cursor) {
+                    if attr.independent() {
+                        let state = self.buffers.instance_states.entry(part_index).or_default();
+                        if state.last_update_frame != frame_no {
+                            state.accumulated_time += delta_time;
+                            state.last_update_frame = frame_no;
+                        }
+                    } else {
+                        // If not independent, we don't necessarily need to keep state here,
+                        // but we might want to clear it if it was previously independent.
+                        self.buffers.instance_states.remove(&part_index);
+                    }
+                }
+            }
+        }
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -280,6 +318,12 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
+    pub fn update_animation(&mut self, delta_time: f32) {
+        self.controller.update(delta_time);
+        let frame_no = self.controller.get_frame_no();
+        self.update_instance(frame_no, delta_time);
+    }
+
     pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(resource) = self.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
@@ -305,6 +349,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.shader_vec,
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
+            &self.buffers.instance_states,
             &mut self.buffers.cursors,
         );
         self.fb.finish_minimal(offset);

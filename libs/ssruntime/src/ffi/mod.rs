@@ -500,6 +500,15 @@ pub extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> i32 {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_update_animation(context: *mut c_void, delta: f32) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.update_animation(delta);
+        return ffi_context.ctx.get_frame_no();
+    }
+    0
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_play(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.play();

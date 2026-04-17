@@ -5,11 +5,9 @@ extern crate alloc;
 
 #[allow(unused_imports, dead_code)]
 pub mod ss {
-  extern crate alloc;
 
 #[allow(unused_imports, dead_code)]
 pub mod runtime {
-  extern crate alloc;
 
 
 #[deprecated(since = "2.0.0", note = "Use associated constants instead. This will no longer be generated in 2021.")]
@@ -179,6 +177,7 @@ mod bitflags_update_attribute_flags {
       const AttributeSkew = 34359738368;
       const AttributeDeform = 68719476736;
       const AttributeTexture = 137438953472;
+      const AttributeInstance = 274877906944;
     }
   }
 }
@@ -1540,10 +1539,10 @@ impl<'a> PartAttributeShader {
 // struct PartState, aligned to 8
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct PartState(pub [u8; 144]);
+pub struct PartState(pub [u8; 184]);
 impl Default for PartState { 
   fn default() -> Self { 
-    Self([0; 144])
+    Self([0; 184])
   }
 }
 impl ::core::fmt::Debug for PartState {
@@ -1579,6 +1578,16 @@ impl ::core::fmt::Debug for PartState {
       .field("skew_x", &self.skew_x())
       .field("skew_y", &self.skew_y())
       .field("texture", &self.texture())
+      .field("instance_anime_hash", &self.instance_anime_hash())
+      .field("instance_frame", &self.instance_frame())
+      .field("instance_pingpong", &self.instance_pingpong())
+      .field("instance_independent", &self.instance_independent())
+      .field("instance_loop_num", &self.instance_loop_num())
+      .field("instance_start_label_hash", &self.instance_start_label_hash())
+      .field("instance_start_offset", &self.instance_start_offset())
+      .field("instance_end_label_hash", &self.instance_end_label_hash())
+      .field("instance_end_offset", &self.instance_end_offset())
+      .field("instance_speed", &self.instance_speed())
       .field("part_index", &self.part_index())
       .field("cell", &self.cell())
       .field("part_color", &self.part_color())
@@ -1664,6 +1673,16 @@ impl<'a> PartState {
     skew_x: f32,
     skew_y: f32,
     texture: u32,
+    instance_anime_hash: u32,
+    instance_frame: f32,
+    instance_pingpong: bool,
+    instance_independent: bool,
+    instance_loop_num: i32,
+    instance_start_label_hash: u32,
+    instance_start_offset: i32,
+    instance_end_label_hash: u32,
+    instance_end_offset: i32,
+    instance_speed: f32,
     part_index: i16,
     cell: i16,
     part_color: i16,
@@ -1676,7 +1695,7 @@ impl<'a> PartState {
     img_flip_h: bool,
     img_flip_v: bool,
   ) -> Self {
-    let mut s = Self([0; 144]);
+    let mut s = Self([0; 184]);
     s.set_update_flag(update_flag);
     s.set_position_x(position_x);
     s.set_position_y(position_y);
@@ -1707,6 +1726,16 @@ impl<'a> PartState {
     s.set_skew_x(skew_x);
     s.set_skew_y(skew_y);
     s.set_texture(texture);
+    s.set_instance_anime_hash(instance_anime_hash);
+    s.set_instance_frame(instance_frame);
+    s.set_instance_pingpong(instance_pingpong);
+    s.set_instance_independent(instance_independent);
+    s.set_instance_loop_num(instance_loop_num);
+    s.set_instance_start_label_hash(instance_start_label_hash);
+    s.set_instance_start_offset(instance_start_offset);
+    s.set_instance_end_label_hash(instance_end_label_hash);
+    s.set_instance_end_offset(instance_end_offset);
+    s.set_instance_speed(instance_speed);
     s.set_part_index(part_index);
     s.set_cell(cell);
     s.set_part_color(part_color);
@@ -2591,6 +2620,296 @@ impl<'a> PartState {
     }
   }
 
+  pub fn instance_anime_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[124..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_anime_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[124..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_frame(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[128..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_frame(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[128..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_pingpong(&self) -> bool {
+    let mut mem = ::core::mem::MaybeUninit::<<bool as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[132..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_pingpong(&mut self, x: bool) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[132..].as_mut_ptr(),
+        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_independent(&self) -> bool {
+    let mut mem = ::core::mem::MaybeUninit::<<bool as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[133..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_independent(&mut self, x: bool) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[133..].as_mut_ptr(),
+        ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_loop_num(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[136..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_loop_num(&mut self, x: i32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[136..].as_mut_ptr(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_start_label_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[140..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_start_label_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[140..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_start_offset(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[144..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_start_offset(&mut self, x: i32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[144..].as_mut_ptr(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_end_label_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[148..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_end_label_hash(&mut self, x: u32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[148..].as_mut_ptr(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_end_offset(&self) -> i32 {
+    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[152..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_end_offset(&mut self, x: i32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[152..].as_mut_ptr(),
+        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
+  pub fn instance_speed(&self) -> f32 {
+    let mut mem = ::core::mem::MaybeUninit::<<f32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        self.0[156..].as_ptr(),
+        mem.as_mut_ptr() as *mut u8,
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+      mem.assume_init()
+    })
+  }
+
+  pub fn set_instance_speed(&mut self, x: f32) {
+    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid value in this slot
+    unsafe {
+      ::core::ptr::copy_nonoverlapping(
+        &x_le as *const _ as *const u8,
+        self.0[156..].as_mut_ptr(),
+        ::core::mem::size_of::<<f32 as ::flatbuffers::EndianScalar>::Scalar>(),
+      );
+    }
+  }
+
   pub fn part_index(&self) -> i16 {
     let mut mem = ::core::mem::MaybeUninit::<<i16 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
     // Safety:
@@ -2598,7 +2917,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[124..].as_ptr(),
+        self.0[160..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2614,7 +2933,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[124..].as_mut_ptr(),
+        self.0[160..].as_mut_ptr(),
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2627,7 +2946,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[126..].as_ptr(),
+        self.0[162..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2643,7 +2962,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[126..].as_mut_ptr(),
+        self.0[162..].as_mut_ptr(),
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2656,7 +2975,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[128..].as_ptr(),
+        self.0[164..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2672,7 +2991,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[128..].as_mut_ptr(),
+        self.0[164..].as_mut_ptr(),
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2685,7 +3004,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[130..].as_ptr(),
+        self.0[166..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2701,7 +3020,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[130..].as_mut_ptr(),
+        self.0[166..].as_mut_ptr(),
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2714,7 +3033,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[132..].as_ptr(),
+        self.0[168..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2730,7 +3049,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[132..].as_mut_ptr(),
+        self.0[168..].as_mut_ptr(),
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2743,7 +3062,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[134..].as_ptr(),
+        self.0[170..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2759,7 +3078,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[134..].as_mut_ptr(),
+        self.0[170..].as_mut_ptr(),
         ::core::mem::size_of::<<i16 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2772,7 +3091,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[136..].as_ptr(),
+        self.0[172..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2788,7 +3107,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[136..].as_mut_ptr(),
+        self.0[172..].as_mut_ptr(),
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2801,7 +3120,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[137..].as_ptr(),
+        self.0[173..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2817,7 +3136,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[137..].as_mut_ptr(),
+        self.0[173..].as_mut_ptr(),
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2830,7 +3149,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[138..].as_ptr(),
+        self.0[174..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2846,7 +3165,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[138..].as_mut_ptr(),
+        self.0[174..].as_mut_ptr(),
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2859,7 +3178,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[139..].as_ptr(),
+        self.0[175..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2875,7 +3194,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[139..].as_mut_ptr(),
+        self.0[175..].as_mut_ptr(),
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
@@ -2888,7 +3207,7 @@ impl<'a> PartState {
     // Which contains a valid value in this slot
     ::flatbuffers::EndianScalar::from_little_endian(unsafe {
       ::core::ptr::copy_nonoverlapping(
-        self.0[140..].as_ptr(),
+        self.0[176..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
@@ -2904,7 +3223,7 @@ impl<'a> PartState {
     unsafe {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
-        self.0[140..].as_mut_ptr(),
+        self.0[176..].as_mut_ptr(),
         ::core::mem::size_of::<<bool as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }

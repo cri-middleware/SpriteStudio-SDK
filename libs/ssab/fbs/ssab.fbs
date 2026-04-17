@@ -360,6 +360,7 @@ table PartAttributeVertex {
 }
 
 table PartAttributeInstance {
+  anime_hash: uint32;
   pingpong: bool;
   independent: bool;
   loop_num: int;
@@ -753,6 +754,7 @@ table PartAnimationData {
   skew_array: [PartAnimationDataVec2];
   deform_array: [PartAnimationDataDeform];
   texture_array: [PartAnimationDataUIntValue];
+  instance_array: [PartAnimationDataInstance];
 }
 
 table PartMeshData {
