@@ -16,10 +16,10 @@ C/C++ 製のゲームエンジンから FFI を経由して `ssruntime` を呼�
 
 以下のコマンドを実行することで、`no_std` を維持しつつ、メモリアロケーションを C 言語の `malloc` にフォールバックさせた静的ライブラリ (`.a` または `.lib`) または動的ライブラリ (`.so`, `.dll`, `.dylib`) を生成できます。
 
-ビルド時には、C-API として独立して機能させるため、ライブラリ内にパニック時の処理を含める **`custom-panic-handler`** フィーチャーを有効化してください。
+`ssruntime` は、標準ライブラリ (`std`) が無効なビルドにおいて、自動的に適切なパニックハンドラ (`libc::abort` への転送) を含めるように設計されているため、追加のフラグ指定なしでそのままビルド可能です。
 
 ```bash
-cargo build -p ssruntime --release --features "custom-panic-handler"
+cargo build -p ssruntime --release
 ```
 
 これにより、`no_std` なバイナリサイズの大幅な削減と、ネイティブ環境での安定したメモリ確保が両立できます。

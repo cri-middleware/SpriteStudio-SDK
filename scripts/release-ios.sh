@@ -12,8 +12,8 @@ ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
 pushd ${ROOTDIR} > /dev/null
-cargo build --target aarch64-apple-ios -p ssruntime --release --features custom-panic-handler
-cargo build --target x86_64-apple-ios -p ssruntime --release --features custom-panic-handler
+cargo build --target aarch64-apple-ios -p ssruntime --release
+cargo build --target x86_64-apple-ios -p ssruntime --release
 
 OUTPUT=target/universal-apple-ios
 /bin/mkdir -p ${OUTPUT}

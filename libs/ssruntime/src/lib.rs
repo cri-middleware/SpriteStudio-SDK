@@ -1,18 +1,17 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[cfg(all(not(feature = "std"), not(test), feature = "custom-panic-handler"))]
+#[cfg(all(not(feature = "std"), not(test), feature = "panic-handler"))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
     #[cfg(feature = "libc_alloc")]
     unsafe {
-        libc::abort()
+        libc::abort();
     }
-
     #[cfg(not(feature = "libc_alloc"))]
     loop {}
 }
 
-#[cfg(all(not(feature = "std"), not(test), unix, feature = "custom-panic-handler"))]
+#[cfg(all(not(feature = "std"), not(test), unix, feature = "panic-handler"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn rust_eh_personality() {}
 

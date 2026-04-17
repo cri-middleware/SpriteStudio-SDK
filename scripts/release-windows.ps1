@@ -10,9 +10,9 @@ $baseDirectory = Split-Path -Parent $PSCommandPath
 $rootDirectory = Split-Path -Parent $baseDirectory
 
 pushd $rootDirectory
-cargo build --target x86_64-pc-windows-msvc --release
-cargo build -p ssruntime --target x86_64-pc-windows-msvc --release --features custom-panic-handler
-# cargo build --target i686-pc-windows-msvc --release
-# cargo build -p ssruntime --target i686-pc-windows-msvc --release --features custom-panic-handler
+cargo build -p ssconverter-cli -p ssconverter --target x86_64-pc-windows-msvc --release
+cargo build -p ssruntime --features panic-handler --target x86_64-pc-windows-msvc --release
+# cargo build -p ssconverter-cli -p ssconverter --target i686-pc-windows-msvc --release
+# cargo build -p ssruntime --features panic-handler --target i686-pc-windows-msvc --release
 
 popd

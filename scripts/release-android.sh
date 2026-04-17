@@ -13,7 +13,7 @@ ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
 pushd ${ROOTDIR} > /dev/null
-cargo ndk --target aarch64-linux-android build -p ssruntime --release --features custom-panic-handler
-cargo ndk --target armv7-linux-androideabi build -p ssruntime --release --features custom-panic-handler
-cargo ndk --target x86_64-linux-android build -p ssruntime --release --features custom-panic-handler
+cargo ndk --target aarch64-linux-android build -p ssruntime --no-default-features --features ffi,libc_alloc,panic-handler --release
+cargo ndk --target armv7-linux-androideabi build -p ssruntime --no-default-features --features ffi,libc_alloc,panic-handler --release
+cargo ndk --target x86_64-linux-android build -p ssruntime --no-default-features --features ffi,libc_alloc,panic-handler --release
 popd > /dev/null
