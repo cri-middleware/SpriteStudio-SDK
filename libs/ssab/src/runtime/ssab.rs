@@ -7276,14 +7276,15 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeInstance<'a> {
 }
 
 impl<'a> PartAttributeInstance<'a> {
-  pub const VT_PINGPONG: ::flatbuffers::VOffsetT = 4;
-  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 6;
-  pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 8;
-  pub const VT_START_LABEL_HASH: ::flatbuffers::VOffsetT = 10;
-  pub const VT_START_OFFSET: ::flatbuffers::VOffsetT = 12;
-  pub const VT_END_LABEL_HASH: ::flatbuffers::VOffsetT = 14;
-  pub const VT_END_OFFSET: ::flatbuffers::VOffsetT = 16;
-  pub const VT_SPEED: ::flatbuffers::VOffsetT = 18;
+  pub const VT_ANIME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_PINGPONG: ::flatbuffers::VOffsetT = 6;
+  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 8;
+  pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 10;
+  pub const VT_START_LABEL_HASH: ::flatbuffers::VOffsetT = 12;
+  pub const VT_START_OFFSET: ::flatbuffers::VOffsetT = 14;
+  pub const VT_END_LABEL_HASH: ::flatbuffers::VOffsetT = 16;
+  pub const VT_END_OFFSET: ::flatbuffers::VOffsetT = 18;
+  pub const VT_SPEED: ::flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -7301,12 +7302,20 @@ impl<'a> PartAttributeInstance<'a> {
     builder.add_start_offset(args.start_offset);
     builder.add_start_label_hash(args.start_label_hash);
     builder.add_loop_num(args.loop_num);
+    builder.add_anime_hash(args.anime_hash);
     builder.add_independent(args.independent);
     builder.add_pingpong(args.pingpong);
     builder.finish()
   }
 
 
+  #[inline]
+  pub fn anime_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(PartAttributeInstance::VT_ANIME_HASH, Some(0)).unwrap()}
+  }
   #[inline]
   pub fn pingpong(&self) -> bool {
     // Safety:
@@ -7371,6 +7380,7 @@ impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
+     .visit_field::<u32>("anime_hash", Self::VT_ANIME_HASH, false)?
      .visit_field::<bool>("pingpong", Self::VT_PINGPONG, false)?
      .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
      .visit_field::<i32>("loop_num", Self::VT_LOOP_NUM, false)?
@@ -7384,6 +7394,7 @@ impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
   }
 }
 pub struct PartAttributeInstanceArgs {
+    pub anime_hash: u32,
     pub pingpong: bool,
     pub independent: bool,
     pub loop_num: i32,
@@ -7397,6 +7408,7 @@ impl<'a> Default for PartAttributeInstanceArgs {
   #[inline]
   fn default() -> Self {
     PartAttributeInstanceArgs {
+      anime_hash: 0,
       pingpong: false,
       independent: false,
       loop_num: 0,
@@ -7414,6 +7426,10 @@ pub struct PartAttributeInstanceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator 
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeInstanceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_anime_hash(&mut self, anime_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeInstance::VT_ANIME_HASH, anime_hash, 0);
+  }
   #[inline]
   pub fn add_pingpong(&mut self, pingpong: bool) {
     self.fbb_.push_slot::<bool>(PartAttributeInstance::VT_PINGPONG, pingpong, false);
@@ -7464,6 +7480,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeInstanceBuilder<
 impl ::core::fmt::Debug for PartAttributeInstance<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeInstance");
+      ds.field("anime_hash", &self.anime_hash());
       ds.field("pingpong", &self.pingpong());
       ds.field("independent", &self.independent());
       ds.field("loop_num", &self.loop_num());
@@ -12813,6 +12830,7 @@ impl<'a> PartAnimationData<'a> {
   pub const VT_SKEW_ARRAY: ::flatbuffers::VOffsetT = 74;
   pub const VT_DEFORM_ARRAY: ::flatbuffers::VOffsetT = 76;
   pub const VT_TEXTURE_ARRAY: ::flatbuffers::VOffsetT = 78;
+  pub const VT_INSTANCE_ARRAY: ::flatbuffers::VOffsetT = 80;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12824,6 +12842,7 @@ impl<'a> PartAnimationData<'a> {
     args: &'args PartAnimationDataArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationData<'bldr>> {
     let mut builder = PartAnimationDataBuilder::new(_fbb);
+    if let Some(x) = args.instance_array { builder.add_instance_array(x); }
     if let Some(x) = args.texture_array { builder.add_texture_array(x); }
     if let Some(x) = args.deform_array { builder.add_deform_array(x); }
     if let Some(x) = args.skew_array { builder.add_skew_array(x); }
@@ -13132,6 +13151,13 @@ impl<'a> PartAnimationData<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>>(PartAnimationData::VT_TEXTURE_ARRAY, None)}
   }
+  #[inline]
+  pub fn instance_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance<'a>>>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance>>>>(PartAnimationData::VT_INSTANCE_ARRAY, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
@@ -13178,6 +13204,7 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2>>>>("skew_array", Self::VT_SKEW_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>>("deform_array", Self::VT_DEFORM_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>>("texture_array", Self::VT_TEXTURE_ARRAY, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance>>>>("instance_array", Self::VT_INSTANCE_ARRAY, false)?
      .finish();
     Ok(())
   }
@@ -13221,6 +13248,7 @@ pub struct PartAnimationDataArgs<'a> {
     pub skew_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2<'a>>>>>,
     pub deform_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform<'a>>>>>,
     pub texture_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue<'a>>>>>,
+    pub instance_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance<'a>>>>>,
 }
 impl<'a> Default for PartAnimationDataArgs<'a> {
   #[inline]
@@ -13264,6 +13292,7 @@ impl<'a> Default for PartAnimationDataArgs<'a> {
       skew_array: None,
       deform_array: None,
       texture_array: None,
+      instance_array: None,
     }
   }
 }
@@ -13426,6 +13455,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_TEXTURE_ARRAY, texture_array);
   }
   #[inline]
+  pub fn add_instance_array(&mut self, instance_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance<'b >>>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_INSTANCE_ARRAY, instance_array);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataBuilder {
@@ -13481,6 +13514,7 @@ impl ::core::fmt::Debug for PartAnimationData<'_> {
       ds.field("skew_array", &self.skew_array());
       ds.field("deform_array", &self.deform_array());
       ds.field("texture_array", &self.texture_array());
+      ds.field("instance_array", &self.instance_array());
       ds.finish()
   }
 }
