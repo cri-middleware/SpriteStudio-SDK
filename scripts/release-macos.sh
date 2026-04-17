@@ -13,7 +13,9 @@ ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
 pushd ${ROOTDIR} > /dev/null
 cargo build --target aarch64-apple-darwin --release
+cargo build -p ssruntime --target aarch64-apple-darwin --release --features custom-panic-handler
 cargo build --target x86_64-apple-darwin --release
+cargo build -p ssruntime --target x86_64-apple-darwin --release --features custom-panic-handler
 
 OUTPUT=target/universal-apple-darwin
 /bin/mkdir -p ${OUTPUT}

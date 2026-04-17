@@ -4,7 +4,33 @@ use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
 // Placeholder for eprintln! in no_std
 #[allow(unused_macros)]
 macro_rules! eprintln {
-    ($($arg:tt)*) => {};
+    ($($arg:tt)*) => {
+        $crate::ffi::ss_log!(3, $($arg)*)
+    };
+}
+
+pub type SsLogCallback = extern "C" fn(level: core::ffi::c_int, message: *const core::ffi::c_char);
+#[doc(hidden)]
+pub static mut LOG_CALLBACK: Option<SsLogCallback> = None;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_log_callback(callback: SsLogCallback) {
+    unsafe {
+        LOG_CALLBACK = Some(callback);
+    }
+}
+
+#[macro_export]
+macro_rules! ss_log {
+    ($level:expr, $($arg:tt)*) => {
+        unsafe {
+            if let Some(cb) = $crate::ffi::LOG_CALLBACK {
+                if let Ok(s) = alloc::ffi::CString::new(alloc::format!($($arg)*)) {
+                    cb($level, s.as_ptr());
+                }
+            }
+        }
+    };
 }
 
 pub struct FfiResource {

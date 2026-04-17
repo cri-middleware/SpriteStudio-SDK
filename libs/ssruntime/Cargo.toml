@@ -17,11 +17,12 @@ wasm-bindgen = { workspace = true, optional = true }
 libc = { version = "0.2", optional = true }
 
 [features]
-default = ["ffi", "std"]
+default = ["ffi", "libc_alloc"]
 ffi = []
 web = ["wasm-bindgen"]
 std = ["flatbuffers/std", "ssab/std"]
 libc_alloc = ["dep:libc"]
+custom-panic-handler = []
 
 [lints.clippy]
 missing_safety_doc = "allow"
