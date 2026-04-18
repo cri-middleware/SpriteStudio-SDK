@@ -580,3 +580,145 @@ pub unsafe extern "C" fn ss_runtime_get_effect_state(context: *mut c_void, part_
         }
     }
 }
+
+// --- Matrix V2 FFI (Primitive-based) ---
+
+#[unsafe(no_mangle)]
+/// out_m must be a pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_identity(out_m: *mut f32) {
+    if !out_m.is_null() {
+        let identity = crate::core::SsMatrix4x4::identity();
+        unsafe {
+            core::ptr::copy_nonoverlapping(identity.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m, lhs, rhs must be pointers to float arrays of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_multiply(out_m: *mut f32, lhs: *const f32, rhs: *const f32) {
+    if !out_m.is_null() && !lhs.is_null() && !rhs.is_null() {
+        let mut lhs_arr = [0.0f32; 16];
+        let mut rhs_arr = [0.0f32; 16];
+        unsafe {
+            core::ptr::copy_nonoverlapping(lhs, lhs_arr.as_mut_ptr(), 16);
+            core::ptr::copy_nonoverlapping(rhs, rhs_arr.as_mut_ptr(), 16);
+        }
+        let lhs_m = crate::core::SsMatrix4x4::from_array(lhs_arr);
+        let rhs_m = crate::core::SsMatrix4x4::from_array(rhs_arr);
+        let res = lhs_m.multiply(&rhs_m);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m, in_m must be pointers to float arrays of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_inverse(out_m: *mut f32, in_m: *const f32) {
+    if !out_m.is_null() && !in_m.is_null() {
+        let mut in_arr = [0.0f32; 16];
+        unsafe {
+            core::ptr::copy_nonoverlapping(in_m, in_arr.as_mut_ptr(), 16);
+        }
+        let mat = crate::core::SsMatrix4x4::from_array(in_arr);
+        let res = mat.inverse();
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_x, out_y, out_z: output pointers for transformed vector.
+/// mat: pointer to a float array of size 16.
+/// x, y, z: input vector components.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_transform_vector3(out_x: *mut f32, out_y: *mut f32, out_z: *mut f32, mat: *const f32, x: f32, y: f32, z: f32) {
+    if !out_x.is_null() && !out_y.is_null() && !out_z.is_null() && !mat.is_null() {
+        let mut mat_arr = [0.0f32; 16];
+        unsafe {
+            core::ptr::copy_nonoverlapping(mat, mat_arr.as_mut_ptr(), 16);
+        }
+        let mat_m = crate::core::SsMatrix4x4::from_array(mat_arr);
+        let v = crate::core::SsVector3::new(x, y, z);
+        let res = mat_m.transform(&v);
+        unsafe {
+            *out_x = res.x;
+            *out_y = res.y;
+            *out_z = res.z;
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_scale(out_m: *mut f32, x: f32, y: f32, z: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_scale(x, y, z);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_translation(out_m: *mut f32, x: f32, y: f32, z: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_translation(x, y, z);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_rotation_x(out_m: *mut f32, radians: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_rotation_x(radians);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_rotation_y(out_m: *mut f32, radians: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_rotation_y(radians);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_rotation_z(out_m: *mut f32, radians: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_rotation_z(radians);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
