@@ -1,6 +1,6 @@
 use crate::{Context, SsabData, SsabResource};
-use alloc::sync::Arc;
 use alloc::string::{String, ToString};
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 use wasm_bindgen::prelude::*;
 

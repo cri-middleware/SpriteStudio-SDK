@@ -164,7 +164,8 @@ impl SsabResource {
     pub fn new(data: SsabData) -> alloc::sync::Arc<Self> {
         let res = Self { data, resource: None };
         let mut arc = alloc::sync::Arc::new(res);
-        if let Some(mut_res) = alloc::sync::Arc::get_mut(&mut arc) {            let data_ptr = mut_res.data.as_slice() as *const [u8];
+        if let Some(mut_res) = alloc::sync::Arc::get_mut(&mut arc) {
+            let data_ptr = mut_res.data.as_slice() as *const [u8];
             if let Ok(resource) = AnimationResource::new(unsafe { &*data_ptr }) {
                 mut_res.resource = Some(resource);
             }
