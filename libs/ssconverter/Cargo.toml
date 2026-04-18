@@ -1,6 +1,6 @@
 [package]
 name = "ssconverter"
-version = "7.0.0"
+version.workspace = true
 authors.workspace = true
 edition.workspace = true
 license-file.workspace = true
