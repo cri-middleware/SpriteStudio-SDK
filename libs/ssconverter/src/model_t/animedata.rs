@@ -26,121 +26,117 @@ fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab:
 
         part_anime.attributes.iter().for_each(|attribute| {
             match attribute {
-                sspj::ssattribute::SsAttributeKind::User(v) => {
-                    if is_timeline {
-                        // MEMO: "UserData" set in setup-animation is not adopted in the timeline.
-                        // MEMO: "UserData" does not backfill-complement.
-                        v.keys.iter().for_each(|key| {
-                            let mut u_args = ssab::ssab::ss::format::EventUserDataT::default();
-                            u_args.part_index = part_index;
-                            let mut userdata = ssab::ssab::ss::format::PartAttributeUserDataT::default();
-                            userdata.integer = key.value.integer.as_ref().map(|v| {
-                                let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
-                                i.value = *v;
-                                Box::new(i)
-                            });
-                            userdata.rect = key.value.rect.as_ref().map(|v| {
-                                let mut r = ssab::ssab::ss::format::RectT::default();
-                                r.x1 = v.x1 as f32;
-                                r.x2 = v.x2 as f32;
-                                r.y1 = v.y1 as f32;
-                                r.y2 = v.y2 as f32;
-                                Box::new(r)
-                            });
-                            userdata.point = key.value.point.as_ref().map(|v| {
-                                let mut p = ssab::ssab::ss::format::Vec2T::default();
-                                p.v1 = v.x;
-                                p.v2 = v.y;
-                                Box::new(p)
-                            });
-                            userdata.str = key.value.user_string.as_ref().map(|v| v.to_string());
-                            u_args.value = Some(Box::new(userdata));
+                sspj::ssattribute::SsAttributeKind::User(v) if is_timeline => {
+                    // MEMO: "UserData" set in setup-animation is not adopted in the timeline.
+                    // MEMO: "UserData" does not backfill-complement.
+                    v.keys.iter().for_each(|key| {
+                        let mut u_args = ssab::ssab::ss::format::EventUserDataT::default();
+                        u_args.part_index = part_index;
+                        let mut userdata = ssab::ssab::ss::format::PartAttributeUserDataT::default();
+                        userdata.integer = key.value.integer.as_ref().map(|v| {
+                            let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                            i.value = *v;
+                            Box::new(i)
+                        });
+                        userdata.rect = key.value.rect.as_ref().map(|v| {
+                            let mut r = ssab::ssab::ss::format::RectT::default();
+                            r.x1 = v.x1 as f32;
+                            r.x2 = v.x2 as f32;
+                            r.y1 = v.y1 as f32;
+                            r.y2 = v.y2 as f32;
+                            Box::new(r)
+                        });
+                        userdata.point = key.value.point.as_ref().map(|v| {
+                            let mut p = ssab::ssab::ss::format::Vec2T::default();
+                            p.v1 = v.x;
+                            p.v2 = v.y;
+                            Box::new(p)
+                        });
+                        userdata.str = key.value.user_string.as_ref().map(|v| v.to_string());
+                        u_args.value = Some(Box::new(userdata));
+
+                        let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
+                            let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
+                            e.frame_index = key.time as u16;
+                            e
+                        });
+                        events_per_frame.users.get_or_insert_with(Vec::new).push(u_args);
+                    });
+                }
+                sspj::ssattribute::SsAttributeKind::Signal(v) if is_timeline => {
+                    // MEMO: "Signal" set in setup-animation is not adopted in the timeline.
+                    // MEMO: "Signal" does not backfill-complement.
+                    v.keys.iter().for_each(|key| {
+                        key.value.commands.iter().for_each(|command| {
+                            let mut s_args = ssab::ssab::ss::format::EventSignalT::default();
+                            s_args.part_index = part_index;
+                            let mut s = ssab::ssab::ss::format::PartAttributeSignalT::default();
+                            s.active = command.active;
+                            s.command_id = Some(command.command_id.to_string());
+                            s.params = if command.params.is_empty() {
+                                None
+                            } else {
+                                let v = command
+                                    .params
+                                    .iter()
+                                    .map(|v| {
+                                        let mut command_param_t = ssab::ssab::ss::format::SignalCommandParamT::default();
+                                        command_param_t.param_id = Some(v.param_id.to_string());
+                                        command_param_t.type_ = match &v.param_type {
+                                            sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::ss::format::SignalCommandParamType::Bool,
+                                            sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::ss::format::SignalCommandParamType::Index,
+                                            sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::ss::format::SignalCommandParamType::Integer,
+                                            sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::ss::format::SignalCommandParamType::Floating,
+                                            sspj::ssattribute::SsAttributeSignalCommandParamType::Text => ssab::ssab::ss::format::SignalCommandParamType::Text,
+                                            sspj::ssattribute::SsAttributeSignalCommandParamType::None => ssab::ssab::ss::format::SignalCommandParamType::None,
+                                        };
+                                        command_param_t.value = match &v.value {
+                                            sspj::ssattribute::SsAttributeSignalCommandParamValue::Bool(v) => {
+                                                let mut b = ssab::ssab::ss::format::BoolValueEntryT::default();
+                                                b.value = *v;
+                                                ssab::ssab::ss::format::SignalCommandParamValueT::Bool(Box::new(b))
+                                            }
+                                            sspj::ssattribute::SsAttributeSignalCommandParamValue::Index(v) => {
+                                                let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                                                i.value = *v;
+                                                ssab::ssab::ss::format::SignalCommandParamValueT::Index(Box::new(i))
+                                            }
+                                            sspj::ssattribute::SsAttributeSignalCommandParamValue::Integer(v) => {
+                                                let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
+                                                i.value = *v;
+                                                ssab::ssab::ss::format::SignalCommandParamValueT::Integer(Box::new(i))
+                                            }
+                                            sspj::ssattribute::SsAttributeSignalCommandParamValue::Floating(v) => {
+                                                let mut f = ssab::ssab::ss::format::FloatValueEntryT::default();
+                                                f.value = *v;
+                                                ssab::ssab::ss::format::SignalCommandParamValueT::Floating(Box::new(f))
+                                            }
+                                            sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
+                                                let mut s = ssab::ssab::ss::format::StringValueEntryT::default();
+                                                s.value = Some(v.to_string());
+                                                ssab::ssab::ss::format::SignalCommandParamValueT::Text(Box::new(s))
+                                            }
+                                            sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
+                                                let n = ssab::ssab::ss::format::NoneValueEntryT::default();
+                                                ssab::ssab::ss::format::SignalCommandParamValueT::None(Box::new(n))
+                                            }
+                                        };
+
+                                        command_param_t
+                                    })
+                                    .collect::<Vec<_>>();
+                                Some(v)
+                            };
+                            s_args.value = Some(Box::new(s));
 
                             let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
                                 let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
                                 e.frame_index = key.time as u16;
                                 e
                             });
-                            events_per_frame.users.get_or_insert_with(Vec::new).push(u_args);
+                            events_per_frame.signals.get_or_insert_with(Vec::new).push(s_args);
                         });
-                    }
-                }
-                sspj::ssattribute::SsAttributeKind::Signal(v) => {
-                    if is_timeline {
-                        // MEMO: "Signal" set in setup-animation is not adopted in the timeline.
-                        // MEMO: "Signal" does not backfill-complement.
-                        v.keys.iter().for_each(|key| {
-                            key.value.commands.iter().for_each(|command| {
-                                let mut s_args = ssab::ssab::ss::format::EventSignalT::default();
-                                s_args.part_index = part_index;
-                                let mut s = ssab::ssab::ss::format::PartAttributeSignalT::default();
-                                s.active = command.active;
-                                s.command_id = Some(command.command_id.to_string());
-                                s.params = if command.params.is_empty() {
-                                    None
-                                } else {
-                                    let v = command
-                                        .params
-                                        .iter()
-                                        .map(|v| {
-                                            let mut command_param_t = ssab::ssab::ss::format::SignalCommandParamT::default();
-                                            command_param_t.param_id = Some(v.param_id.to_string());
-                                            command_param_t.type_ = match &v.param_type {
-                                                sspj::ssattribute::SsAttributeSignalCommandParamType::Bool => ssab::ssab::ss::format::SignalCommandParamType::Bool,
-                                                sspj::ssattribute::SsAttributeSignalCommandParamType::Index => ssab::ssab::ss::format::SignalCommandParamType::Index,
-                                                sspj::ssattribute::SsAttributeSignalCommandParamType::Integer => ssab::ssab::ss::format::SignalCommandParamType::Integer,
-                                                sspj::ssattribute::SsAttributeSignalCommandParamType::Floating => ssab::ssab::ss::format::SignalCommandParamType::Floating,
-                                                sspj::ssattribute::SsAttributeSignalCommandParamType::Text => ssab::ssab::ss::format::SignalCommandParamType::Text,
-                                                sspj::ssattribute::SsAttributeSignalCommandParamType::None => ssab::ssab::ss::format::SignalCommandParamType::None,
-                                            };
-                                            command_param_t.value = match &v.value {
-                                                sspj::ssattribute::SsAttributeSignalCommandParamValue::Bool(v) => {
-                                                    let mut b = ssab::ssab::ss::format::BoolValueEntryT::default();
-                                                    b.value = *v;
-                                                    ssab::ssab::ss::format::SignalCommandParamValueT::Bool(Box::new(b))
-                                                }
-                                                sspj::ssattribute::SsAttributeSignalCommandParamValue::Index(v) => {
-                                                    let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
-                                                    i.value = *v;
-                                                    ssab::ssab::ss::format::SignalCommandParamValueT::Index(Box::new(i))
-                                                }
-                                                sspj::ssattribute::SsAttributeSignalCommandParamValue::Integer(v) => {
-                                                    let mut i = ssab::ssab::ss::format::IntValueEntryT::default();
-                                                    i.value = *v;
-                                                    ssab::ssab::ss::format::SignalCommandParamValueT::Integer(Box::new(i))
-                                                }
-                                                sspj::ssattribute::SsAttributeSignalCommandParamValue::Floating(v) => {
-                                                    let mut f = ssab::ssab::ss::format::FloatValueEntryT::default();
-                                                    f.value = *v;
-                                                    ssab::ssab::ss::format::SignalCommandParamValueT::Floating(Box::new(f))
-                                                }
-                                                sspj::ssattribute::SsAttributeSignalCommandParamValue::Text(v) => {
-                                                    let mut s = ssab::ssab::ss::format::StringValueEntryT::default();
-                                                    s.value = Some(v.to_string());
-                                                    ssab::ssab::ss::format::SignalCommandParamValueT::Text(Box::new(s))
-                                                }
-                                                sspj::ssattribute::SsAttributeSignalCommandParamValue::None => {
-                                                    let n = ssab::ssab::ss::format::NoneValueEntryT::default();
-                                                    ssab::ssab::ss::format::SignalCommandParamValueT::None(Box::new(n))
-                                                }
-                                            };
-
-                                            command_param_t
-                                        })
-                                        .collect::<Vec<_>>();
-                                    Some(v)
-                                };
-                                s_args.value = Some(Box::new(s));
-
-                                let events_per_frame = map_events_per_frames.entry(key.time).or_insert_with(|| {
-                                    let mut e = ssab::ssab::ss::format::EventsPerFrameT::default();
-                                    e.frame_index = key.time as u16;
-                                    e
-                                });
-                                events_per_frame.signals.get_or_insert_with(Vec::new).push(s_args);
-                            });
-                        });
-                    }
+                    });
                 }
                 sspj::ssattribute::SsAttributeKind::Instance(v) => {
                     // MEMO: "Instance" is complemented by backfilling.
@@ -286,7 +282,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, setup_animati
         None
     } else {
         let mut vec_map: Vec<(i32, ssab::ssab::ss::format::EventsPerFrameT)> = map_events_per_frames.into_iter().collect();
-        vec_map.sort_by(|a, b| a.0.cmp(&b.0));
+        vec_map.sort_by_key(|a| a.0);
         Some(vec_map.into_iter().map(|(_, v)| v).collect::<Vec<ssab::ssab::ss::format::EventsPerFrameT>>())
     }
 }
