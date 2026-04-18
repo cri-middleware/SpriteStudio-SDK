@@ -1,3 +1,5 @@
+SPDX-License-Identifier: MIT OR Apache-2.0
+
 # License
 
 This project is dual-licensed under the [Apache License, Version 2.0](LICENSE-APACHE) or the [MIT License](LICENSE-MIT) at your option.
