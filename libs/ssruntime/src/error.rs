@@ -10,6 +10,8 @@ pub enum SSRuntimeError {
     NotLoaded,
     /// パラメータが不正（フレーム番号が範囲外など）
     InvalidParameter,
+    /// メモリ確保に失敗
+    MemoryError,
     /// その他のエラー（将来的な拡張用）
     Unknown,
 }
@@ -22,6 +24,7 @@ impl SSRuntimeError {
             SSRuntimeError::AnimationNotFound => 3,
             SSRuntimeError::NotLoaded => 4,
             SSRuntimeError::InvalidParameter => 5,
+            SSRuntimeError::MemoryError => 7,
             SSRuntimeError::Unknown => 99,
         }
     }
@@ -37,6 +40,7 @@ impl core::fmt::Display for SSRuntimeError {
             SSRuntimeError::AnimationNotFound => write!(f, "Animation not found"),
             SSRuntimeError::NotLoaded => write!(f, "SSAB data is not loaded"),
             SSRuntimeError::InvalidParameter => write!(f, "Invalid parameter"),
+            SSRuntimeError::MemoryError => write!(f, "Memory allocation failed"),
             SSRuntimeError::Unknown => write!(f, "Unknown error occurred"),
         }
     }

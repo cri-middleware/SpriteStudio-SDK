@@ -1,5 +1,7 @@
 use alloc::boxed::Box;
+use alloc::sync::Arc;
 use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
+use core::sync::atomic::{AtomicPtr, Ordering};
 
 // Placeholder for eprintln! in no_std
 #[allow(unused_macros)]
@@ -11,20 +13,20 @@ macro_rules! eprintln {
 
 pub type SsLogCallback = extern "C" fn(level: core::ffi::c_int, message: *const core::ffi::c_char);
 #[doc(hidden)]
-pub static mut LOG_CALLBACK: Option<SsLogCallback> = None;
+pub static LOG_CALLBACK: AtomicPtr<c_void> = AtomicPtr::new(core::ptr::null_mut());
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_set_log_callback(callback: SsLogCallback) {
-    unsafe {
-        LOG_CALLBACK = Some(callback);
-    }
+    LOG_CALLBACK.store(callback as *mut c_void, Ordering::Relaxed);
 }
 
 #[macro_export]
 macro_rules! ss_log {
     ($level:expr, $($arg:tt)*) => {
         unsafe {
-            if let Some(cb) = $crate::ffi::LOG_CALLBACK {
+            let cb_ptr = $crate::ffi::LOG_CALLBACK.load(core::sync::atomic::Ordering::Relaxed);
+            if !cb_ptr.is_null() {
+                let cb: $crate::ffi::SsLogCallback = core::mem::transmute(cb_ptr);
                 if let Ok(s) = alloc::ffi::CString::new(alloc::format!($($arg)*)) {
                     cb($level, s.as_ptr());
                 }
@@ -33,15 +35,12 @@ macro_rules! ss_log {
     };
 }
 
-pub struct FfiResource {
-    pub data: crate::SsabData,
-    pub resource: Option<crate::AnimationResource<'static>>,
-}
+use crate::SsabResource;
 
 pub struct FfiContext {
     pub ctx: crate::Context<'static>,
-    // We hold the resource here for backward compatibility with ss_runtime_load_ssab_*
-    pub bound_resource: Option<Box<FfiResource>>,
+    // We hold the resource here to keep it alive
+    pub bound_resource: Option<Arc<SsabResource>>,
     pub last_error: i32,
 }
 impl Default for FfiContext {
@@ -64,27 +63,16 @@ fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
     unsafe { Some(&mut *(ptr as *mut FfiContext)) }
 }
 
-#[inline(always)]
-fn get_resource<'a>(ptr: *mut c_void) -> Option<&'a mut FfiResource> {
-    if ptr.is_null() {
-        return None;
-    }
-    unsafe { Some(&mut *(ptr as *mut FfiResource)) }
-}
-
 fn create_ffi_resource(data: crate::SsabData) -> *mut c_void {
-    let mut r = Box::new(FfiResource { data, resource: None });
-    let data_ptr = r.data.as_slice() as *const [u8];
-    match crate::AnimationResource::new(unsafe { &*data_ptr }) {
-        Ok(resource) => {
-            r.resource = Some(resource);
-            Box::into_raw(r) as *mut c_void
-        }
-        Err(_) => core::ptr::null_mut(),
+    let arc = SsabResource::new(data);
+    if arc.resource.is_none() {
+        return core::ptr::null_mut();
     }
+    Arc::into_raw(arc) as *mut c_void
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Creates an AnimationResource by copying the provided data.
 ///
 /// # Security and Validation
@@ -108,6 +96,7 @@ pub unsafe extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Creates an AnimationResource by borrowing the provided data.
 ///
 /// # Security and Validation
@@ -132,10 +121,11 @@ pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usi
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_resource_destroy(resource: *mut c_void) {
-    if let Some(r) = get_resource(resource) {
-        unsafe {
-            let _ = Box::from_raw(r as *mut FfiResource);
-        }
+    if resource.is_null() {
+        return;
+    }
+    unsafe {
+        let _ = Arc::from_raw(resource as *mut SsabResource);
     }
 }
 
@@ -167,24 +157,27 @@ pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
 ///
 /// # Safety and Lifetimes
 /// - To save memory, a single Resource can be bound to multiple Contexts.
-/// - **CRITICAL:** The caller MUST ensure that the `resource` is NOT destroyed (via `ss_resource_destroy`)
-///   while ANY `context` is still bound to it. Doing so will result in a dangling pointer and undefined behavior.
+/// - **Lifetime Safety:** This implementation uses `Arc` for internal reference counting.
+///   It is safe to destroy the `resource` (via `ss_resource_destroy`) even if it is still bound
+///   to contexts; the memory will be kept alive until all bound contexts are also destroyed or reset.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut c_void) -> bool {
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    let Some(ffi_resource) = get_resource(resource) else {
+    if resource.is_null() {
         return false;
-    };
+    }
 
-    // Safety: In FFI, we use 'static lifetime for the reference, which means the caller
-    // MUST ensure the resource outlives the context if they manage it externally.
-    // However, if we want to be safe, we'd need Arc.
-    // Since we are in no_std/alloc, we can't easily use Arc without more setup.
-    // For now, we assume the user manages the lifetime.
-    if let Some(res) = &ffi_resource.resource {
+    // Safety: Increment refcount by cloning from the raw pointer.
+    let arc = unsafe { Arc::from_raw(resource as *mut SsabResource) };
+    let arc_clone = arc.clone();
+    let _ = Arc::into_raw(arc); // Keep original pointer valid
+
+    if let Some(res) = &arc_clone.resource {
+        // Safe because arc_clone will be owned by ffi_context.bound_resource
         ffi_context.ctx.bind_resource(unsafe { &*(res as *const _) });
+        ffi_context.bound_resource = Some(arc_clone);
         true
     } else {
         false
@@ -192,6 +185,7 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
@@ -209,22 +203,14 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
     let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
         Ok(ssab_data) => {
-            let mut ffi_res = Box::new(FfiResource { data: ssab_data, resource: None });
-            let data_ptr = ffi_res.data.as_slice() as *const [u8];
-            match crate::AnimationResource::new(unsafe { &*data_ptr }) {
-                Ok(resource) => {
-                    ffi_res.resource = Some(resource);
-                    // Use a raw pointer to bind to bypass borrow checker
-                    let res_ptr = ffi_res.resource.as_ref().unwrap() as *const _;
-                    ffi_context.ctx.bind_resource(unsafe { &*res_ptr });
-                    ffi_context.bound_resource = Some(ffi_res);
-                    true
-                }
-                Err(e) => {
-                    ffi_context.last_error = e.as_code();
-                    false
-                }
+            let res_ptr = create_ffi_resource(ssab_data);
+            if res_ptr.is_null() {
+                ffi_context.last_error = crate::error::SSRuntimeError::MemoryError.as_code();
+                return false;
             }
+            let success = ss_runtime_bind_resource(context, res_ptr);
+            ss_resource_destroy(res_ptr);
+            success
         }
         Err(e) => {
             ffi_context.last_error = e.as_code();
@@ -234,6 +220,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences a raw pointer.
@@ -250,21 +237,14 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 
     match unsafe { crate::SsabData::load_borrow(ptr, len) } {
         Ok(ssab_data) => {
-            let mut ffi_res = Box::new(FfiResource { data: ssab_data, resource: None });
-            let data_ptr = ffi_res.data.as_slice() as *const [u8];
-            match crate::AnimationResource::new(unsafe { &*data_ptr }) {
-                Ok(resource) => {
-                    ffi_res.resource = Some(resource);
-                    let res_ptr = ffi_res.resource.as_ref().unwrap() as *const _;
-                    ffi_context.ctx.bind_resource(unsafe { &*res_ptr });
-                    ffi_context.bound_resource = Some(ffi_res);
-                    true
-                }
-                Err(e) => {
-                    ffi_context.last_error = e.as_code();
-                    false
-                }
+            let res_ptr = create_ffi_resource(ssab_data);
+            if res_ptr.is_null() {
+                ffi_context.last_error = crate::error::SSRuntimeError::MemoryError.as_code();
+                return false;
             }
+            let success = ss_runtime_bind_resource(context, res_ptr);
+            ss_resource_destroy(res_ptr);
+            success
         }
         Err(e) => {
             ffi_context.last_error = e.as_code();
@@ -274,6 +254,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
@@ -320,10 +301,11 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
-/// This function is unsafe because it dereferences the `name` raw pointer.
-/// The caller must ensure that `name` points to a valid, null-terminated C string.
+/// This function is unsafe because it dereferences a raw pointer.
+/// The caller must ensure the pointer is valid and points to a valid null-terminated string.
 pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: *const c_char) -> bool {
     let Some(ffi_context) = get_context(context) else {
         return false;
@@ -345,6 +327,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.

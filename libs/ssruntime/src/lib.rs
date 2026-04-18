@@ -28,10 +28,55 @@ mod allocator {
 
     unsafe impl alloc::alloc::GlobalAlloc for LibcAlloc {
         unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
-            unsafe { libc::malloc(layout.size()) as *mut u8 }
+            let size = layout.size();
+            let align = layout.align();
+
+            // Most libc malloc implementations provide at least 8-byte alignment.
+            if align <= 8 {
+                return unsafe { libc::malloc(size) as *mut u8 };
+            }
+
+            // Over-allocate to ensure we can find an aligned block.
+            // We need space for: requested size + alignment + space to store the original pointer.
+            let extra = align + core::mem::size_of::<usize>();
+            let total_size = match size.checked_add(extra) {
+                Some(s) => s,
+                None => return core::ptr::null_mut(),
+            };
+
+            let raw_ptr = unsafe { libc::malloc(total_size) as *mut u8 };
+            if raw_ptr.is_null() {
+                return core::ptr::null_mut();
+            }
+
+            // Calculate aligned pointer.
+            // We must have at least size_of::<usize>() before the aligned_ptr to store raw_ptr.
+            let aligned_ptr = ((raw_ptr as usize + core::mem::size_of::<usize>() + align - 1) & !(align - 1)) as *mut u8;
+
+            // Store the original pointer right before the aligned pointer.
+            unsafe {
+                let original_ptr_ptr = (aligned_ptr as *mut usize).offset(-1);
+                *original_ptr_ptr = raw_ptr as usize;
+            }
+
+            aligned_ptr
         }
-        unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
-            unsafe { libc::free(ptr as *mut libc::c_void) };
+
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
+            if ptr.is_null() {
+                return;
+            }
+
+            let align = layout.align();
+            if align <= 8 {
+                unsafe { libc::free(ptr as *mut libc::c_void) };
+            } else {
+                unsafe {
+                    let original_ptr_ptr = (ptr as *mut usize).offset(-1);
+                    let original_ptr = *original_ptr_ptr as *mut libc::c_void;
+                    libc::free(original_ptr);
+                }
+            }
         }
     }
 }
@@ -78,6 +123,11 @@ pub struct SsabData {
     storage: SsabStorage,
 }
 
+// Safety: SsabData only holds a read-only buffer. For Borrowed variant,
+// the caller is responsible for ensuring the memory remains valid and unmodified.
+unsafe impl Send for SsabData {}
+unsafe impl Sync for SsabData {}
+
 impl SsabData {
     pub fn load_copy(ssab_data: &[u8]) -> Result<Self, error::SSRuntimeError> {
         let storage = SsabStorage::Owned(ssab_data.to_vec());
@@ -104,9 +154,28 @@ pub struct AnimationResource<'a> {
     animations: Vec<AnimationMetadata<'a>>,
 }
 
+/// A thread-safe, shared resource containing SSAB data and its parsed metadata.
+pub struct SsabResource {
+    pub data: SsabData,
+    pub resource: Option<AnimationResource<'static>>,
+}
+
+impl SsabResource {
+    pub fn new(data: SsabData) -> alloc::sync::Arc<Self> {
+        let res = Self { data, resource: None };
+        let mut arc = alloc::sync::Arc::new(res);
+        if let Some(mut_res) = alloc::sync::Arc::get_mut(&mut arc) {            let data_ptr = mut_res.data.as_slice() as *const [u8];
+            if let Ok(resource) = AnimationResource::new(unsafe { &*data_ptr }) {
+                mut_res.resource = Some(resource);
+            }
+        }
+        arc
+    }
+}
+
 impl<'a> AnimationResource<'a> {
     pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
-        // Validate
+        // Use unchecked for performance, but we still check the version.
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
             return Err(error::SSRuntimeError::InvalidVersion { expected: ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version, got: ssab.version() });

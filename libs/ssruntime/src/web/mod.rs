@@ -1,37 +1,36 @@
-use crate::Context;
-use alloc::boxed::Box;
+use crate::{Context, SsabData, SsabResource};
+use alloc::sync::Arc;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct SSRuntimeResource {
-    #[allow(dead_code)]
-    data: Box<crate::SsabData>,
-    pub(crate) resource: crate::AnimationResource<'static>,
+    pub(crate) inner: Arc<SsabResource>,
 }
 
 #[wasm_bindgen]
 impl SSRuntimeResource {
     #[wasm_bindgen(constructor)]
     pub fn new(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
-        let ssab_data = Box::new(crate::SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?);
-        let data_ptr = ssab_data.as_slice() as *const [u8];
-        let resource = crate::AnimationResource::new(unsafe { &*data_ptr }).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        Ok(SSRuntimeResource { data: ssab_data, resource })
+        let ssab_data = SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let inner = SsabResource::new(ssab_data);
+        if inner.resource.is_none() {
+            return Err(JsValue::from_str("Failed to parse SSAB data"));
+        }
+        Ok(SSRuntimeResource { inner })
     }
 
     pub fn get_animation_names(&self) -> Vec<String> {
-        self.resource.get_animation_names()
+        self.inner.resource.as_ref().map(|r| r.get_animation_names()).unwrap_or_default()
     }
 }
 
 #[wasm_bindgen]
 pub struct SSRuntimeContext {
     inner: Context<'static>,
-    // For backward compatibility, we can hold a resource if created via old constructor
-    #[allow(dead_code)]
-    bound_resource: Option<SSRuntimeResource>,
+    // Hold the resource to keep it alive
+    bound_resource: Option<Arc<SsabResource>>,
 }
 
 #[wasm_bindgen]
@@ -42,14 +41,17 @@ impl SSRuntimeContext {
         if let Some(d) = data {
             let res = SSRuntimeResource::new(&d)?;
             ctx.bind_resource(&res);
-            ctx.bound_resource = Some(res);
         }
         Ok(ctx)
     }
 
     pub fn bind_resource(&mut self, resource: &SSRuntimeResource) {
-        let res_ptr = &resource.resource as *const crate::AnimationResource<'static>;
-        self.inner.bind_resource(unsafe { &*res_ptr });
+        if let Some(res) = &resource.inner.resource {
+            // Safety: We hold the Arc in bound_resource, so the reference stays valid.
+            let res_ptr = res as *const crate::AnimationResource<'static>;
+            self.inner.bind_resource(unsafe { &*res_ptr });
+            self.bound_resource = Some(resource.inner.clone());
+        }
     }
 
     pub fn get_animation_names(&self) -> Result<Vec<String>, JsValue> {
