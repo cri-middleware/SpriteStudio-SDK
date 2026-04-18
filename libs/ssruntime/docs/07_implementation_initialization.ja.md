@@ -28,6 +28,11 @@ void my_log_callback(int level, const char* message) {
 ss_runtime_set_log_callback(my_log_callback);
 ```
 
+### 1.6. データバリデーション (Player 側の責任)
+パフォーマンスとバイナリサイズの最適化のため、`libssruntime` は入力された `.ssab` データの構造的なバリデーション（FlatBuffers の境界チェック等）を行いません。
+不正なデータや破損したデータを `ss_resource_create_*` や `ss_runtime_load_ssab_*` に渡すと、未定義動作（Out-of-bounds Read によるクラッシュ等）を引き起こす可能性があります。
+Player の実装者は、入力データが信頼できるソースからのものであることを保証するか、必要に応じて事前にデータ検証（チェックサムや FlatBuffers バリデータ等）を行う責任があります。
+
 ### C-API (C/C++) を使用する場合
 C-API では `SsabData` と `AnimationResource` は内部的に `FfiResource` として隠蔽されているため、以下の2ステップで初期化します。
 
@@ -63,9 +68,10 @@ let mut context = ssruntime::Context::new();
 context.bind_resource(&resource);
 ```
 
-### ⚠️ 重要な警告 (メモリ管理とライフタイム)
-**必ず Context を破棄してから Resource を破棄してください。**
-C/C++ 等の Player 実装において、コンテキストより先にリソースを破棄（またはガベージコレクションによって回収）してしまうと、コンテキスト内で保持しているリソースへの参照がダングリングポインタ（Use-after-free）となりクラッシュの原因となります。
+### 💡 メモリ管理とライフタイム (Reference Counting)
+最新の `libssruntime` では、Resource の内部管理に参照カウント (`Arc`) が導入されています。
+C-API (`ss_runtime_bind_resource`) を使用して Resource を Context にバインドすると、Context 内部で Resource への参照が保持されます。
+そのため、Player 側で `ss_resource_destroy` を呼び出して Resource を破棄しても、それにバインドされている Context が存在する限り、内部メモリは安全に保持されます（Use-after-free は発生しません）。全ての Context が破棄された時点で、メモリは自動的に解放されます。
 
 ## 2. ssab ファイルのロードと libssruntime への渡し方
 ネイティブライブラリである libssruntime へ ssab データを渡す方法は、利用するプログラミング言語のポインタ操作能力に応じて 3 つの運用パターンがあります。
@@ -148,12 +154,13 @@ if (ss_anime_binary->animations()) {
 ```
 
 ## 5. 後処理（インスタンス破棄時）
-メモリリークやクラッシュ（Use-after-free）を防ぐため、Player の破棄時には**必ず Context を先に破棄し、その後に Resource を破棄**してください。
+Player の破棄時には、使用していた Context と Resource を破棄してメモリを解放します。
+前述の通り内部で参照カウントを利用しているため、破棄の順序（Context が先か、Resource が先か）によるクラッシュの危険性はありませんが、明示的なリソース管理のために両方を適切に破棄してください。
 
 ```cpp
-// 1. 必ず先にコンテキスト（再生状態）を破棄する
+// コンテキスト（再生状態）を破棄する
 ss_runtime_destroy(context);
 
-// 2. その後、誰も参照しなくなったリソースを破棄する
+// リソース（メタデータ）を破棄する
 ss_resource_destroy(resource);
 ```

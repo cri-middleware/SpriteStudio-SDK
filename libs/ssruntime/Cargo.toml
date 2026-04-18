@@ -25,9 +25,7 @@ libc_alloc = ["dep:libc"]
 panic-handler = []
 
 [lints.clippy]
-missing_safety_doc = "allow"
 too_many_arguments = "allow"
-not_unsafe_ptr_arg_deref = "allow"
 
 [dev-dependencies]
 ssconverter = { workspace = true }
