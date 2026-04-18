@@ -10,7 +10,14 @@ fn main() {
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let output_file = PathBuf::from(&crate_dir).join("target").join("ssruntime.h");
 
-    let config = match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::Cxx).generate() {
+    let header = "/*\n * Copyright (c) 2024-2026 CRI Middleware Co., Ltd.\n *\n * This project is dual-licensed under the MIT License and the Apache License, Version 2.0.\n * See LICENSE-MIT and LICENSE-APACHE for details.\n */";
+
+    let config = match cbindgen::Builder::new()
+        .with_crate(&crate_dir)
+        .with_language(cbindgen::Language::Cxx)
+        .with_header(header)
+        .generate()
+    {
         Ok(bindings) => bindings,
         Err(e) => {
             eprintln!("Error generating C++ bindings: {:?}", e);

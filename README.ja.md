@@ -146,3 +146,7 @@ cargo test
 ```bash
 ./target/release/ssconverter-cli ./
 ```
+
+## ライセンス
+
+本プロジェクトは MIT ライセンスと Apache License, Version 2.0 のデュアルライセンスの下で提供されています。詳細は [LICENSE.md](LICENSE.md) を参照してください。
