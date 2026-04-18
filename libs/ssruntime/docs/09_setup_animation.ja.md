@@ -53,3 +53,6 @@ bool is_playing = ss_runtime_is_playing(context);
 // 最終フレームに到達したか？
 bool is_end = ss_runtime_is_end_frame_reached(context);
 ```
+
+---
+[目次に戻る](./README.ja.md)

@@ -61,7 +61,7 @@ graph LR
 変換された `.ssab` ファイルは、`tests/overall/overall_ssab/` ディレクトリ内に生成されます。
 
 ### 3. エンジンへの組み込み
-生成された `.ssab` ファイルを自分のゲームエンジンやアプリで読み込んで再生する方法については、[libssruntime の README](./libs/ssruntime/README.ja.md) を参照してください。
+生成された `.ssab` ファイルを自分のゲームエンジンやアプリで読み込んで再生する方法については、[libssruntime の README](./libs/ssruntime/README.ja.md) を参照してください。実装の詳細については、[Player 移植ガイド](./libs/ssruntime/docs/README.ja.md) を参照してください。
 
 ### サンプルデータについて
 

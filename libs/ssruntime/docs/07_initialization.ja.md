@@ -164,3 +164,5 @@ ss_runtime_destroy(context);
 // リソース（メタデータ）を破棄する
 ss_resource_destroy(resource);
 ```
+---
+[目次に戻る](./README.ja.md)

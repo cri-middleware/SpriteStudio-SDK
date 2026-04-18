@@ -37,3 +37,6 @@ flatc --cpp -o ./src/gen/ libs/ssruntime/fbs/ssab.fbs
 
 # 動作確認：ビルドが通ること
 この段階で、`ss_runtime_create()` などの API が呼び出せ、エラーなくビルド・実行ができることを確認してください。
+
+---
+[目次に戻る](./README.ja.md)
