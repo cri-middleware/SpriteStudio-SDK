@@ -9,6 +9,7 @@ members = [
     "libs/ssinterpolate",
 ]
 [workspace.package]
+version = "7.0.0-alpha01"
 edition = "2024"
 authors = ["CRI Middleware Co., Ltd."]
 license-file = "LICENSE.md"
