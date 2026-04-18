@@ -24,6 +24,7 @@ ssconverter = { path = "libs/ssconverter" }
 ssab = { path = "libs/ssab", default-features = false }
 ssinterpolate = { path = "libs/ssinterpolate" }
 flatbuffers = { version = "25.12.19", default-features = false }
+wide = { version = "1.3.0", default-features = false }
 libm = "0.2.16"
 wasm-bindgen = "0.2.117"
 rayon = "1.11.0"
