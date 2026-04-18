@@ -6,13 +6,19 @@ use libm::{cosf, fabsf, sinf};
 
 #[cfg(feature = "std")]
 #[inline]
-fn cosf(f: f32) -> f32 { f.cos() }
+fn cosf(f: f32) -> f32 {
+    f.cos()
+}
 #[cfg(feature = "std")]
 #[inline]
-fn sinf(f: f32) -> f32 { f.sin() }
+fn sinf(f: f32) -> f32 {
+    f.sin()
+}
 #[cfg(feature = "std")]
 #[inline]
-fn fabsf(f: f32) -> f32 { f.abs() }
+fn fabsf(f: f32) -> f32 {
+    f.abs()
+}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -136,14 +142,7 @@ pub struct SsMatrix4x4 {
 }
 
 impl SsMatrix4x4 {
-    pub const IDENTITY: Self = Self {
-        m: [
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0,
-        ],
-    };
+    pub const IDENTITY: Self = Self { m: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0] };
 
     #[inline]
     #[must_use]
@@ -220,7 +219,7 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn multiply(&self, rhs: &Self) -> Self {
         let mut res = [0.0f32; 16];
-        
+
         // Load LHS columns as SIMD vectors safely
         let a_col0 = f32x4::from([self.m[0], self.m[1], self.m[2], self.m[3]]);
         let a_col1 = f32x4::from([self.m[4], self.m[5], self.m[6], self.m[7]]);
@@ -257,11 +256,7 @@ impl SsMatrix4x4 {
         let res_vec = (a_col0 * vx) + (a_col1 * vy) + (a_col2 * vz) + (a_col3 * vw);
         let res_arr: [f32; 4] = res_vec.into();
 
-        SsVector3 {
-            x: res_arr[0],
-            y: res_arr[1],
-            z: res_arr[2],
-        }
+        SsVector3 { x: res_arr[0], y: res_arr[1], z: res_arr[2] }
     }
 
     #[must_use]
@@ -569,14 +564,14 @@ mod tests {
     fn test_matrix_multiplication() {
         let t = SsMatrix4x4::create_translation(1.0, 2.0, 3.0);
         let s = SsMatrix4x4::create_scale(2.0, 2.0, 2.0);
-        
+
         // Scale then Translate (T * S)
         // Vector v will be scaled by 2, then translated by (1, 2, 3)
         let ts = t * s;
-        
+
         let v = SsVector3::new(1.0, 1.0, 1.0);
         let res = ts * v;
-        
+
         // (1*2)+1 = 3, (1*2)+2 = 4, (1*2)+3 = 5
         assert_vec3_eq(res, SsVector3::new(3.0, 4.0, 5.0));
     }
@@ -585,7 +580,7 @@ mod tests {
     fn test_matrix_transform_vector() {
         let t = SsMatrix4x4::create_translation(5.0, -2.0, 1.0);
         let v = SsVector3::new(1.0, 1.0, 1.0);
-        
+
         let transformed = t.transform(&v);
         assert_vec3_eq(transformed, SsVector3::new(6.0, -1.0, 2.0));
 
@@ -616,7 +611,7 @@ mod tests {
         // T * S inverse
         let ts = t * s;
         let ts_inv = ts.inverse();
-        
+
         // A * A^-1 = I
         let identity_check = ts * ts_inv;
         assert_mat4_eq(&identity_check, &SsMatrix4x4::identity());
