@@ -19,8 +19,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: 💅 Lint & Format
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: setup for SpriteStudio7-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: linux
+          os: ubuntu-latest
+
+      - name: Format
+        run: cargo fmt --all
+        shell: bash
+
+      - name: Commit formatting changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: apply cargo fmt"
+          commit_author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+
+      - name: Clippy (workspace)
+        run: cargo clippy --workspace -- -D warnings
+        shell: bash
+
   ci:
     name: ${{ matrix.name }}
+    needs: lint
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
@@ -106,14 +138,4 @@ jobs:
       - name: Test (workspace)
         if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
         run: cargo test --workspace --all-features --verbose -- --test-threads=1
-        shell: bash
-
-      - name: Format check
-        if: matrix.platform == 'linux'
-        run: cargo fmt --all -- --check
-        shell: bash
-
-      - name: Clippy (workspace)
-        if: matrix.platform == 'linux'
-        run: cargo clippy --workspace -- -D warnings
         shell: bash
