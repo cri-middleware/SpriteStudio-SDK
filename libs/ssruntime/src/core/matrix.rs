@@ -228,7 +228,7 @@ impl SsMatrix4x4 {
 
         for j in 0..4 {
             let offset = j * 4;
-            let b0j = f32x4::splat(rhs.m[offset + 0]);
+            let b0j = f32x4::splat(rhs.m[offset]);
             let b1j = f32x4::splat(rhs.m[offset + 1]);
             let b2j = f32x4::splat(rhs.m[offset + 2]);
             let b3j = f32x4::splat(rhs.m[offset + 3]);
