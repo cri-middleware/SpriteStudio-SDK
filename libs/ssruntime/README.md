@@ -118,4 +118,9 @@ Please refer to it for API signatures and struct definitions.
 
 # For Player Implementers
 
-T.B.D.
+If you are planning to implement a SpriteStudio 7 player for a new game engine or platform, please refer to the following documentation:
+
+- [**Player Implementation Guide (Japanese)**](./docs/README.ja.md)
+
+This guide covers everything from basic architecture to advanced features like mesh deformation, instance animations, and `no_std` integration.
+

@@ -110,3 +110,6 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 ```
 
 このラッパークレートを `cdylib` または `staticlib` としてビルドすることで、外部 C++ エンジンのメモリ管理機構と完全に一体化した `ssruntime` アセットができあがります。
+
+---
+[目次に戻る](./README.ja.md)
