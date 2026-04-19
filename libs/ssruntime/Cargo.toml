@@ -33,6 +33,9 @@ ssconverter = { workspace = true }
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [build-dependencies]
 cbindgen = { workspace = true }
 csbindgen = "1.9.7"

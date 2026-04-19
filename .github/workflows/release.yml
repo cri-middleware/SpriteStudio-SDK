@@ -184,9 +184,13 @@ jobs:
         run: |
           rustup target add wasm32-unknown-unknown
           ./scripts/release-wasm.sh
+          # Use faster binary installer for wasm-pack
+          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          ./scripts/release-web.sh
           mkdir -p lib
           cp target/wasm32-unknown-unknown/release/*.a lib/
           cp target/wasm32-unknown-unknown/release/*.wasm lib/
+          cp -r pkg/web lib/js
 
       - name: Upload artifact ssconverter-cli
         if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'
@@ -313,6 +317,9 @@ jobs:
           mkdir -p release-dist
           zip -r release-dist/spritestudio7-sdk-static-libs.zip output/static
           zip -r release-dist/spritestudio7-sdk-dynamic-libs.zip output/dynamic
+          
+          # Create web specific package (JS/TS glue code and WASM)
+          zip -rj release-dist/spritestudio7-sdk-web.zip artifacts/spritestudio7-sdk-libraries-web/js/*
           
           for dir in artifacts/ssconverter-cli-*; do
             if [ -d "$dir" ]; then
