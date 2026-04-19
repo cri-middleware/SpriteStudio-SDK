@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub enum PlaybackStyle {
     Normal = 0,
@@ -34,6 +36,9 @@ pub struct PlaybackController {
     next_frame_time: f32,
     remain_loops: i32,
     end_frame_reached: bool,
+
+    passed_frames: Vec<i32>,
+    needs_evaluation: bool,
 }
 
 impl PlaybackController {
@@ -88,6 +93,10 @@ impl PlaybackController {
     pub fn get_fps(&self) -> i32 {
         self.fps
     }
+
+    pub fn get_passed_frames(&self) -> &[i32] {
+        &self.passed_frames
+    }
 }
 
 impl Default for PlaybackController {
@@ -122,6 +131,9 @@ impl PlaybackController {
             loops: -1,
             remain_loops: -1,
             end_frame_reached: false,
+
+            passed_frames: Vec::new(),
+            needs_evaluation: false,
         }
     }
 
@@ -140,12 +152,15 @@ impl PlaybackController {
         self.fps_rate = 1.0;
 
         self.update_interval = 0.0;
+        self.passed_frames.clear();
     }
 
     fn reset_state(&mut self) {
         self.next_frame_time = 0.0;
         self.current_frame = 0.0;
         self.end_frame_reached = false;
+        self.passed_frames.clear();
+        self.needs_evaluation = false;
     }
 
     pub fn setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
@@ -170,6 +185,8 @@ impl PlaybackController {
         self.playback_direction = PlaybackDirection::Forward;
         self.playback_forward = 1;
         self.update_interval = 1000.0 / (self.anime_data_fps as f32 * self.fps_rate);
+        self.passed_frames.clear();
+        self.needs_evaluation = false;
     }
 
     pub fn set_skip_frames(&mut self, skip: bool) {
@@ -216,6 +233,13 @@ impl PlaybackController {
     }
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
+        self.passed_frames.clear();
+
+        if self.needs_evaluation {
+            self.passed_frames.push(libm::floorf(self.current_frame) as i32);
+            self.needs_evaluation = false;
+        }
+
         let to_next_frame = self.is_playing && !self.is_pausing;
         if to_next_frame && self.update_interval != 0.0 {
             let s = if self.is_skip_frames {
@@ -280,6 +304,7 @@ impl PlaybackController {
                                         frame_no = end_limit;
                                         current_frame_no = frame_no;
                                         next_frame_decimal = 0.0;
+                                        self.passed_frames.push(frame_no);
                                         break;
                                     } else {
                                         // continue to play the animation
@@ -305,6 +330,7 @@ impl PlaybackController {
                                             frame_no = if self.playback_direction == PlaybackDirection::Forward { self.start_frame } else { self.end_frame };
                                             current_frame_no = frame_no;
                                             next_frame_decimal = 0.0;
+                                            self.passed_frames.push(frame_no);
                                             break;
                                         }
                                     }
@@ -318,6 +344,7 @@ impl PlaybackController {
                         }
                     }
                     current_frame_no = frame_no;
+                    self.passed_frames.push(current_frame_no);
                 }
                 if self.is_playing {
                     self.current_frame = current_frame_no as f32 + next_frame_decimal;
@@ -351,6 +378,7 @@ impl PlaybackController {
             current_frame = frame_no;
         }
         self.current_frame = current_frame as f32;
+        self.needs_evaluation = true;
     }
 
     pub fn pause(&mut self) {
@@ -363,6 +391,7 @@ impl PlaybackController {
 
     pub fn set_frame_no(&mut self, frame: i32) {
         self.current_frame = frame as f32;
+        self.needs_evaluation = true;
     }
 
     /**
@@ -673,6 +702,70 @@ mod tests {
     }
 
     #[test]
+    fn test_passed_frames_recording() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_skip_frames(true);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // 1. Advance by 2.5 frames (0.0 -> 2.5)
+        // Should pass frames 0, 1, and 2. (0 is the start frame, handled by needs_evaluation)
+        t.update(interval * 2.5);
+        assert_eq!(t.get_passed_frames(), &[0, 1, 2]);
+
+        // 2. Advance by another 1.0 frame (2.5 -> 3.5)
+        // Should pass frame 3.
+        t.update(interval);
+        assert_eq!(t.get_passed_frames(), &[3]);
+
+        // 3. Large skip (3.5 -> 8.5)
+        // Should pass 4, 5, 6, 7, 8.
+        t.update(interval * 5.0);
+        assert_eq!(t.get_passed_frames(), &[4, 5, 6, 7, 8]);
+    }
+
+    #[test]
+    fn test_passed_frames_looping() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 5, 30); // 0 to 5
+        t.set_loops(2);
+        t.set_skip_frames(true);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Currently at 0.0. Skip to 2.5.
+        // Should pass 0 (start), 1, 2
+        t.update(interval * 2.5);
+        assert_eq!(t.get_passed_frames(), &[0, 1, 2]);
+
+        // Skip across loop boundary: 2.5 -> 7.5
+        // Frame sequence: 3, 4, 5 (hit end), 0 (loop), 1
+        t.update(interval * 5.0);
+        assert_eq!(t.get_passed_frames(), &[3, 4, 5, 0, 1]);
+    }
+
+    #[test]
+    fn test_passed_frames_start_frame() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Advance by 0.5 frames. We are still on frame 0, but since this is the very
+        // first update after play(), frame 0 should be considered "passed/reached".
+        t.update(interval * 0.5);
+        assert_eq!(t.get_passed_frames(), &[0], "Start frame must be collected on first update");
+
+        // Advance by another 0.5 frames. We reach frame 1.
+        t.update(interval * 0.5);
+        assert_eq!(t.get_passed_frames(), &[1], "Should collect frame 1");
+    }
+
+    #[test]
     fn test_skip_frames_pingpong_boundary() {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
@@ -688,5 +781,8 @@ mod tests {
         let (frame, decimal) = t.update(delta);
         assert_eq!(frame, 8, "Should have bounced back to frame 8");
         assert!((0.0..0.001).contains(&decimal), "Decimal should be exactly 0.0, got {}", decimal);
+        
+        // Check passed_frames for pingpong boundary
+        assert_eq!(t.get_passed_frames(), &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8]);
     }
 }
