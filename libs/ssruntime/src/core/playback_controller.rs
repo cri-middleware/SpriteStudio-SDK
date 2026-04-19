@@ -781,7 +781,7 @@ mod tests {
         let (frame, decimal) = t.update(delta);
         assert_eq!(frame, 8, "Should have bounced back to frame 8");
         assert!((0.0..0.001).contains(&decimal), "Decimal should be exactly 0.0, got {}", decimal);
-        
+
         // Check passed_frames for pingpong boundary
         assert_eq!(t.get_passed_frames(), &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8]);
     }

@@ -1021,7 +1021,7 @@ mod tests {
 
         let mut ctx = Context::new();
         ctx.bind_resource(&resource);
-        
+
         let anim_name = resource.get_animation_names().first().cloned().expect("No animations found in SSAB");
         ctx.setup_animation(&anim_name).unwrap();
         ctx.play();
@@ -1038,7 +1038,7 @@ mod tests {
         ctx.update(interval * 100.0);
         let events = ctx.get_passed_events();
         // println!("All collected events at frames: {:?}", events.iter().map(|e| e.frame_no).collect::<Vec<_>>());
-        
+
         // Let's check for any event that is not at frame 0 (setup)
         assert!(events.iter().any(|e| e.frame_no > 0), "Should have collected at least one event at a frame > 0");
     }
