@@ -83,8 +83,10 @@ Player 実装において、利用者がアニメーションを制御するた�
 - **setPartVisible(partName, visible)**: パーツ名を指定して表示・非表示を切り替える。
 
 ### イベント通知
+Player は内部的に `libssruntime` からイベントをポーリングし、ゲーム側のスクリプトやシステムが受け取れるように以下のコールバックやイベント機構（C# の delegate や Godot の signal など）を提供することを推奨します。
 - **setAnimationFinishedCallback(callback)**: アニメーション再生終了時の通知を受け取る。
 - **setUserDataCallback(callback)**: タイムライン上のユーザーデータを検出した際の通知を受け取る。
+- **setSignalCallback(callback)**: シグナルコマンドを検出した際の通知を受け取る。
 
 ---
 [目次に戻る](./README.ja.md)
