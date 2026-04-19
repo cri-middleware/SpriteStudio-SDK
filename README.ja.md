@@ -42,8 +42,10 @@ graph LR
 
 まずは、同梱されているサンプルプロジェクトを変換して SDK の動作を確認してみましょう。
 
-### 1. コンバーターをダウンロードする
-[GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) ページから、お使いのプラットフォームに合わせた `ssconverter-cli` の最新版をダウンロードしてください。**Windows**、**macOS**、**Linux** 用の実行ファイルが用意されています。
+### 1. ツール・ライブラリをダウンロードする
+[GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) ページから、各プラットフォーム向けの最新版をダウンロードしてください。
+- **ssconverter-cli**: **Windows**、**macOS**、**Linux** 用の実行ファイルが用意されています。
+- **Web (WASM)**: 直接 JavaScript/TypeScript から利用可能なパッケージが `spritestudio7-sdk-web.zip` として用意されています。
 
 ### 2. サンプルプロジェクトをコンバートする
 ダウンロードしたツールを実行して、同梱のテスト用プロジェクトをバイナリ形式 (`.ssab`) に変換します：
