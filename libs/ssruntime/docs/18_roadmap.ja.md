@@ -38,10 +38,11 @@ Player の実装が正しく行われているかを確認するために、テ�
 
 ## ステップ 4：インタラクティブ機能（UserData / Signal / Bounding）
 ゲーム連携に不可欠な機能を確認します。
+**※UserData, Signal, Sound 等のイベント収集機能は `ssruntime` 側に実装済みです。**
 
 - **確認対象**: `UserData.ssae`, `Signal.ssae`, `Bounding.ssae`
 - **チェックポイント**:
-    - **UserData**: 指定フレームで文字列や数値のイベントが発火するか。
+    - **UserData**: 指定フレームで文字列や数値のイベントがポーリングで取得できるか。
     - **Signal**: シグナルコマンドが受信できているか。
     - **Bounding**: 当たり判定用の形状（円や矩形）のデータが取得できているか。
 
