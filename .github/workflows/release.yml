@@ -1,4 +1,4 @@
-name: release 
+name: release
 on:
   push:
     tags:
@@ -194,14 +194,14 @@ jobs:
 
       - name: Upload artifact ssconverter-cli
         if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ssconverter-cli-${{ matrix.platform }}
           path: bin
           if-no-files-found: error
 
       - name: Upload artifact libraries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: spritestudio7-sdk-libraries-${{ matrix.platform }}
           path: lib
@@ -221,7 +221,7 @@ jobs:
           path: artifacts
 
       - id: commit
-        uses: pr-mpt/actions-commit-hash@v3
+        uses: prompt/actions-commit-hash@v4
 
       - name: Zip all artifacts
         run: |
@@ -301,13 +301,13 @@ jobs:
           mv dynamic ../output/
 
       - name: Upload final release package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: spritestudio7-sdk-static-libs
           path: output/static
 
       - name: Upload final release package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: spritestudio7-sdk-dynamic-libs
           path: output/dynamic
@@ -317,10 +317,10 @@ jobs:
           mkdir -p release-dist
           zip -r release-dist/spritestudio7-sdk-static-libs.zip output/static
           zip -r release-dist/spritestudio7-sdk-dynamic-libs.zip output/dynamic
-          
+
           # Create web specific package (JS/TS glue code and WASM)
           zip -rj release-dist/spritestudio7-sdk-web.zip artifacts/spritestudio7-sdk-libraries-web/js/*
-          
+
           for dir in artifacts/ssconverter-cli-*; do
             if [ -d "$dir" ]; then
               platform=${dir#artifacts/ssconverter-cli-}
@@ -332,7 +332,7 @@ jobs:
         if: |
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.upload_release == 'true')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             release-dist/*.zip
