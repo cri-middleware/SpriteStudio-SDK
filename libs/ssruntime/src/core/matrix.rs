@@ -215,6 +215,42 @@ impl SsMatrix4x4 {
         res
     }
 
+    /// Calculates the world matrix for inheritance and the local matrix for drawing.
+    /// Returns `(inheritance_matrix, drawing_matrix)`.
+    #[inline]
+    #[must_use]
+    pub fn compute_world_matrix(state: &crate::runtime::framedata::ss::runtime::PartState, parent_world_matrix: Option<&Self>, parent_size: Option<(f32, f32)>) -> (Self, Self) {
+        let mut pos_x = state.position_x();
+        let mut pos_y = state.position_y();
+
+        if let Some((parent_size_x, parent_size_y)) = parent_size {
+            pos_x += parent_size_x * state.anchor_x();
+            pos_y += parent_size_y * state.anchor_y();
+        }
+
+        let mut m = parent_world_matrix.copied().unwrap_or(Self::IDENTITY);
+        m = m * Self::create_translation(pos_x, pos_y, state.position_z());
+
+        let rx = state.rotation_x() * core::f32::consts::PI / 180.0;
+        let ry = state.rotation_y() * core::f32::consts::PI / 180.0;
+        let rz = state.rotation_z() * core::f32::consts::PI / 180.0;
+
+        if rx != 0.0 {
+            m = m * Self::create_rotation_x(rx);
+        }
+        if ry != 0.0 {
+            m = m * Self::create_rotation_y(ry);
+        }
+        if rz != 0.0 {
+            m = m * Self::create_rotation_z(rz);
+        }
+
+        let inheritance_matrix = m * Self::create_scale(state.scale_x(), state.scale_y(), 1.0);
+        let drawing_matrix = m * Self::create_scale(state.scale_x() * state.local_scale_x(), state.scale_y() * state.local_scale_y(), 1.0);
+
+        (inheritance_matrix, drawing_matrix)
+    }
+
     #[inline]
     #[must_use]
     pub fn multiply(&self, rhs: &Self) -> Self {
@@ -615,6 +651,40 @@ mod tests {
         // A * A^-1 = I
         let identity_check = ts * ts_inv;
         assert_mat4_eq(&identity_check, &SsMatrix4x4::identity());
+    }
+
+    #[test]
+    fn test_compute_world_matrix() {
+        let mut state = crate::runtime::framedata::ss::runtime::PartState::default();
+        state.set_position_x(10.0);
+        state.set_position_y(20.0);
+        state.set_scale_x(2.0);
+        state.set_scale_y(3.0);
+        state.set_local_scale_x(0.5);
+        state.set_local_scale_y(2.0);
+
+        // No parent
+        let (inh, draw) = SsMatrix4x4::compute_world_matrix(&state, None, None);
+
+        let expected_inh = SsMatrix4x4::create_translation(10.0, 20.0, 0.0) * SsMatrix4x4::create_scale(2.0, 3.0, 1.0);
+        let expected_draw = SsMatrix4x4::create_translation(10.0, 20.0, 0.0) * SsMatrix4x4::create_scale(1.0, 6.0, 1.0); // 2*0.5, 3*2
+
+        assert_mat4_eq(&inh, &expected_inh);
+        assert_mat4_eq(&draw, &expected_draw);
+
+        // With Parent and Anchor
+        state.set_anchor_x(0.5);
+        state.set_anchor_y(0.5);
+        let parent_mat = SsMatrix4x4::create_translation(100.0, 100.0, 0.0);
+
+        let (inh2, draw2) = SsMatrix4x4::compute_world_matrix(&state, Some(&parent_mat), Some((50.0, 50.0)));
+
+        // Final translation: parent(100,100) + pos(10,20) + anchor(25,25) = (135, 145)
+        let expected_inh2 = parent_mat * SsMatrix4x4::create_translation(35.0, 45.0, 0.0) * SsMatrix4x4::create_scale(2.0, 3.0, 1.0);
+        let expected_draw2 = parent_mat * SsMatrix4x4::create_translation(35.0, 45.0, 0.0) * SsMatrix4x4::create_scale(1.0, 6.0, 1.0);
+
+        assert_mat4_eq(&inh2, &expected_inh2);
+        assert_mat4_eq(&draw2, &expected_draw2);
     }
 
     #[test]
