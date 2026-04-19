@@ -229,20 +229,20 @@ impl SsMatrix4x4 {
         }
 
         let mut m = parent_world_matrix.copied().unwrap_or(Self::IDENTITY);
-        m = m * Self::create_translation(pos_x, pos_y, state.position_z());
+        m *= Self::create_translation(pos_x, pos_y, state.position_z());
 
         let rx = state.rotation_x() * core::f32::consts::PI / 180.0;
         let ry = state.rotation_y() * core::f32::consts::PI / 180.0;
         let rz = state.rotation_z() * core::f32::consts::PI / 180.0;
 
         if rx != 0.0 {
-            m = m * Self::create_rotation_x(rx);
+            m *= Self::create_rotation_x(rx);
         }
         if ry != 0.0 {
-            m = m * Self::create_rotation_y(ry);
+            m *= Self::create_rotation_y(ry);
         }
         if rz != 0.0 {
-            m = m * Self::create_rotation_z(rz);
+            m *= Self::create_rotation_z(rz);
         }
 
         let inheritance_matrix = m * Self::create_scale(state.scale_x(), state.scale_y(), 1.0);

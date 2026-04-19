@@ -781,46 +781,46 @@ pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_type(context: *mut c_void, index: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        if let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize) {
-            return match event.data {
-                crate::PassedEventData::UserData(_) => 0,
-                crate::PassedEventData::Signal(_) => 1,
-                crate::PassedEventData::Audio(_) => 2,
-                crate::PassedEventData::Instance(_) => 3,
-                crate::PassedEventData::Effect(_) => 4,
-            };
-        }
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return match event.data {
+            crate::PassedEventData::UserData(_) => 0,
+            crate::PassedEventData::Signal(_) => 1,
+            crate::PassedEventData::Audio(_) => 2,
+            crate::PassedEventData::Instance(_) => 3,
+            crate::PassedEventData::Effect(_) => 4,
+        };
     }
     -1
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_frame_no(context: *mut c_void, index: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        if let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize) {
-            return event.frame_no;
-        }
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return event.frame_no;
     }
     -1
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_part_index(context: *mut c_void, index: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        if let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize) {
-            return event.part_index as i32;
-        }
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return event.part_index as i32;
     }
     -1
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        if let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize) {
-            return event.event_index;
-        }
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return event.event_index;
     }
     -1
 }
