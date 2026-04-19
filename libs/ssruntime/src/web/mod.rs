@@ -1,8 +1,7 @@
 use crate::{Context, SsabData, SsabResource};
 use alloc::boxed::Box;
-use alloc::string::{String, ToString};
+use alloc::string::ToString;
 use alloc::sync::Arc;
-use alloc::vec::Vec;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -78,8 +77,13 @@ impl SSRuntimeResource {
         Ok(SSRuntimeResource { inner })
     }
 
-    pub fn get_animation_names(&self) -> Vec<String> {
-        self.inner.resource.as_ref().map(|r| r.get_animation_names()).unwrap_or_default()
+    pub fn create_borrow(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
+        let ssab_data = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) }.map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let inner = SsabResource::new(ssab_data);
+        if inner.resource.is_none() {
+            return Err(JsValue::from_str("Failed to parse SSAB data"));
+        }
+        Ok(SSRuntimeResource { inner })
     }
 }
 
@@ -102,6 +106,11 @@ impl SSRuntimeContext {
         Ok(ctx)
     }
 
+    pub fn reset(&mut self) {
+        self.inner.reset();
+        self.bound_resource = None;
+    }
+
     pub fn bind_resource(&mut self, resource: &SSRuntimeResource) {
         if let Some(res) = &resource.inner.resource {
             // Safety: We hold the Arc in bound_resource, so the reference stays valid.
@@ -111,23 +120,34 @@ impl SSRuntimeContext {
         }
     }
 
-    pub fn get_animation_names(&self) -> Result<Vec<String>, JsValue> {
-        self.inner.resource.map(|r| r.get_animation_names()).ok_or_else(|| JsValue::from_str("Resource not bound"))
+    pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
+        if let Ok(ssab_data) = SsabData::load_copy(data) {
+            let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
+            if res.inner.resource.is_some() {
+                self.bind_resource(&res);
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn load_ssab_borrow(&mut self, data: &[u8]) -> bool {
+        if let Ok(ssab_data) = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) } {
+            let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
+            if res.inner.resource.is_some() {
+                self.bind_resource(&res);
+                return true;
+            }
+        }
+        false
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {
         self.inner.setup_animation(name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    // Conventional getter (Allocates / Copies)
-    pub fn get_frame_data(&mut self, frame_no: i32) -> Result<Vec<u8>, JsValue> {
-        self.inner.get_frame_data(frame_no)
-            .map(|s| s.to_vec())
-            .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
     // Zero-copy getters
-    pub fn get_frame_data_ptr(&mut self, frame_no: i32) -> Result<*const u8, JsValue> {
+    pub fn get_frame_data_buf(&mut self, frame_no: i32) -> Result<*const u8, JsValue> {
         self.inner.get_frame_data(frame_no)
             .map(|s| s.as_ptr())
             .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
@@ -139,19 +159,13 @@ impl SSRuntimeContext {
             .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    pub fn get_ssab_data(&self) -> Result<Vec<u8>, JsValue> {
-        self.inner.get_ssab_data()
-            .map(|s| s.to_vec())
-            .ok_or_else(|| JsValue::from_str("SSAB data not found"))
-    }
-
-    pub fn get_ssab_data_ptr(&self) -> Result<*const u8, JsValue> {
+    pub fn get_ssab_buf(&self) -> Result<*const u8, JsValue> {
         self.inner.get_ssab_data()
             .map(|s| s.as_ptr())
             .ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }
 
-    pub fn get_ssab_data_len(&self) -> Result<usize, JsValue> {
+    pub fn get_ssab_len(&self) -> Result<usize, JsValue> {
         self.inner.get_ssab_data()
             .map(|s| s.len())
             .ok_or_else(|| JsValue::from_str("SSAB data not found"))
@@ -269,3 +283,4 @@ impl SSRuntimeContext {
         self.inner.prev_frame();
     }
 }
+
