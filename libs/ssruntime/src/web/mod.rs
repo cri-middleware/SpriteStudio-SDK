@@ -121,40 +121,28 @@ impl SSRuntimeContext {
 
     // Conventional getter (Allocates / Copies)
     pub fn get_frame_data(&mut self, frame_no: i32) -> Result<Vec<u8>, JsValue> {
-        self.inner.get_frame_data(frame_no)
-            .map(|s| s.to_vec())
-            .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.get_frame_data(frame_no).map(|s| s.to_vec()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
     // Zero-copy getters
     pub fn get_frame_data_ptr(&mut self, frame_no: i32) -> Result<*const u8, JsValue> {
-        self.inner.get_frame_data(frame_no)
-            .map(|s| s.as_ptr())
-            .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.get_frame_data(frame_no).map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
     pub fn get_frame_data_len(&mut self, frame_no: i32) -> Result<usize, JsValue> {
-        self.inner.get_frame_data(frame_no)
-            .map(|s| s.len())
-            .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
     pub fn get_ssab_data(&self) -> Result<Vec<u8>, JsValue> {
-        self.inner.get_ssab_data()
-            .map(|s| s.to_vec())
-            .ok_or_else(|| JsValue::from_str("SSAB data not found"))
+        self.inner.get_ssab_data().map(|s| s.to_vec()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }
 
     pub fn get_ssab_data_ptr(&self) -> Result<*const u8, JsValue> {
-        self.inner.get_ssab_data()
-            .map(|s| s.as_ptr())
-            .ok_or_else(|| JsValue::from_str("SSAB data not found"))
+        self.inner.get_ssab_data().map(|s| s.as_ptr()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }
 
     pub fn get_ssab_data_len(&self) -> Result<usize, JsValue> {
-        self.inner.get_ssab_data()
-            .map(|s| s.len())
-            .ok_or_else(|| JsValue::from_str("SSAB data not found"))
+        self.inner.get_ssab_data().map(|s| s.len()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }
 
     // Frame Number getter functions
