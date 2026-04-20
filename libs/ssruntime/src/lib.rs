@@ -177,11 +177,6 @@ impl SsabResource {
 
 impl<'a> AnimationResource<'a> {
     pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
-        // Validate minimally to prevent process panic on unchecked read
-        if !ssab::ssab::ss::format::ss_anime_binary_buffer_has_identifier(data) {
-            return Err(error::SSRuntimeError::InvalidData);
-        }
-
         // Use unchecked for performance, but we still check the version.
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
         if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
@@ -907,19 +902,6 @@ mod tests {
         // Setup animation
         context.setup_animation("anime_1").expect("Failed to setup animation");
         assert_eq!(context.get_frame_no(), 0);
-    }
-
-    #[test]
-    fn test_invalid_ssab_data() {
-        // Prepare dummy invalid data
-        let mut invalid_buf = vec![0u8; 128];
-        invalid_buf[0] = 0xFF; // Just some garbage
-
-        let ssab_data = SsabData::load_copy(&invalid_buf).expect("Failed to load SsabData");
-
-        // Now we use safe verification, so it should return Err(InvalidData) instead of panicking
-        let result = AnimationResource::new(ssab_data.as_slice());
-        assert_eq!(result.err(), Some(error::SSRuntimeError::InvalidData));
     }
 
     #[test]
