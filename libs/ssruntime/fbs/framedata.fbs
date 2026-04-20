@@ -113,7 +113,6 @@ enum UpdateAttributeFlags: ulong (bit_flags) {
   AttributeSkew,
   AttributeDeform,
   AttributeTexture,
-  AttributeInstance,
 }
 
 struct PartState {
@@ -155,17 +154,6 @@ struct PartState {
   skew_y: float;
 
   texture: uint32;
-
-  instance_anime_hash: uint32;
-  instance_frame: float;
-  instance_pingpong: bool;
-  instance_independent: bool;
-  instance_loop_num: int;
-  instance_start_label_hash: uint32;
-  instance_start_offset: int;
-  instance_end_label_hash: uint32;
-  instance_end_offset: int;
-  instance_speed: float;
 
   part_index: short;
   cell: short;

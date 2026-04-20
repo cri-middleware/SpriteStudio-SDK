@@ -1,7 +1,5 @@
-use crate::core::instance::InstancePartState;
 use crate::core::interpolation::*;
 use crate::runtime;
-use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 pub const NUM_PART_ATTRIBUTES: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::all().bits().count_ones() as usize;
@@ -44,7 +42,6 @@ const IDX_ATTRIBUTEMASK: usize = crate::runtime::framedata::ss::runtime::UpdateA
 const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew.bits().trailing_zeros() as usize;
 pub const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
 pub const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
-pub const IDX_ATTRIBUTEINSTANCE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeInstance.bits().trailing_zeros() as usize;
 
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
@@ -146,7 +143,7 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, instance_states: &BTreeMap<u16, InstancePartState>, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
+fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
@@ -315,41 +312,6 @@ fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, instance_states: &
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture;
     }
 
-    if let Some(val) = cached_part.instance_array.and_then(|arr| evaluate_instance(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEINSTANCE])) {
-        let part_index = cached_part.part_index as u16;
-        let mut inst_frame = 0.0;
-
-        if val.independent() {
-            if let Some(state) = instance_states.get(&part_index) {
-                // F_child = T_accum * Speed + F_start
-                inst_frame = state.accumulated_time * val.speed() + val.start_offset() as f32;
-                // TODO: Handle loop_num and pingpong if needed for the calculated frame.
-                // For now, we provide the raw accumulated frame.
-            } else {
-                inst_frame = val.start_offset() as f32;
-            }
-        } else {
-            // F_child = (F_parent - F_key) * Speed + F_start
-            // Search for the key to get F_key
-            if let Some(prev) = search_prev(cached_part.instance_array.unwrap(), frame_no, |v| v.index() as i32, &mut part_cursors[IDX_ATTRIBUTEINSTANCE]) {
-                inst_frame = (frame_no - prev.index() as i32) as f32 * val.speed() + val.start_offset() as f32;
-            }
-        }
-
-        part_state.set_instance_anime_hash(val.anime_hash());
-        part_state.set_instance_frame(inst_frame);
-        part_state.set_instance_speed(val.speed());
-        part_state.set_instance_independent(val.independent());
-        part_state.set_instance_loop_num(val.loop_num());
-        part_state.set_instance_pingpong(val.pingpong());
-        part_state.set_instance_start_label_hash(val.start_label_hash());
-        part_state.set_instance_start_offset(val.start_offset());
-        part_state.set_instance_end_label_hash(val.end_label_hash());
-        part_state.set_instance_end_offset(val.end_offset());
-
-        update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeInstance;
-    }
-
     if update_flag.is_empty() {
         return None;
     }
@@ -374,7 +336,6 @@ fn get_parts<'a>(
     shaders_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
     vertices_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
     deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
-    instance_states: &BTreeMap<u16, InstancePartState>,
     cursors: &mut [usize],
 ) {
     parts_vec.clear();
@@ -386,7 +347,7 @@ fn get_parts<'a>(
 
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
-        if let Some(mut result) = evaluate_part(part, frame_no, instance_states, part_cursors) {
+        if let Some(mut result) = evaluate_part(part, frame_no, part_cursors) {
             if let Some(cell) = result.cell {
                 cell_vec.push(cell);
                 result.state.set_cell((cell_vec.len() - 1) as i16);
@@ -461,7 +422,6 @@ pub fn get_frame_data<'a>(
     shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-    instance_states: &BTreeMap<u16, InstancePartState>,
     cursors: &mut [usize],
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
@@ -471,7 +431,7 @@ pub fn get_frame_data<'a>(
     let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
     let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, instance_states, cursors);
+    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors);
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
     }
@@ -531,7 +491,6 @@ mod tests {
         assert_eq!(IDX_ATTRIBUTESKEW, UpdateAttributeFlags::AttributeSkew.bits().trailing_zeros() as usize);
         assert_eq!(IDX_ATTRIBUTEDEFORM, UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize);
         assert_eq!(IDX_ATTRIBUTETEXTURE, UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize);
-        assert_eq!(IDX_ATTRIBUTEINSTANCE, UpdateAttributeFlags::AttributeInstance.bits().trailing_zeros() as usize);
     }
 
     #[test]

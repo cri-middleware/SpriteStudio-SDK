@@ -19,3 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-platform release pipeline with static and dynamic library outputs.
 - Bilingual documentation (English / Japanese) for all components.
 - Player implementation guidelines in `libs/ssruntime/docs/`.
+
+### Known Limitations
+- **Particle Effect (SSEE)**: Effect tree construction and cell index resolution are not yet implemented. Effect attributes (`cur_keyframe`, `loopflag`) are partially converted.
+- **Font Bitmap**: Font bitmap conversion is a stub; character map properties (face, size, padding, texture, etc.) are not yet populated.
+- **Z-sort Priority**: Priority values do not account for spatially transformed Z-values during Z-sort ordering.
+- **Mesh Bind Info**: Deform vertex change (`vchg`) does not convert `SsMeshBindInfo` from string representation.
+- **macOS / iOS Code Signing**: Release binaries are not yet code-signed or notarized.

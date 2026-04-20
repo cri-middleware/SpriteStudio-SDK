@@ -84,7 +84,6 @@ mod allocator {
 extern crate alloc;
 extern crate libm;
 
-use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
 
 #[rustfmt::skip]
@@ -265,20 +264,17 @@ struct ContextBuffers<'a> {
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-    instance_states: BTreeMap<u16, core::instance::InstancePartState>,
     cursors: Vec<usize>,
     collected_events: Vec<PassedEvent<'a>>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), instance_states: BTreeMap::new(), cursors: Vec::new(), collected_events: Vec::new() }
+        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_events: Vec::new() }
     }
 }
 
 pub struct Context<'a> {
-    effect_instances: BTreeMap<u32, crate::core::effect::instance::EffectInstance>,
-    next_effect_seed: u32,
     resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
     controller: core::playback_controller::PlaybackController,
@@ -294,17 +290,14 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context { resource: None, effect_instances: BTreeMap::new(), next_effect_seed: 123456, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
+        Context { resource: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
     }
 
     pub fn reset(&mut self) {
-        self.effect_instances.clear();
-        self.next_effect_seed = 123456;
         self.resource = None;
         self.controller.reset_setup();
         self.fb.reset();
         self.animation_idx = -1;
-        self.buffers.instance_states.clear();
         self.buffers.cursors.clear();
     }
 
@@ -315,41 +308,6 @@ impl<'a> Context<'a> {
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.resource.map(|r| r.get_ssab_data())
-    }
-
-    fn update_instance(&mut self, frame_no: i32, delta_time: f32) {
-        let Some(resource) = self.resource else {
-            return;
-        };
-        if self.animation_idx < 0 {
-            return;
-        }
-
-        let metadata = &resource.animations[self.animation_idx as usize];
-
-        // We need to check which parts are instances and update their accumulated time if they are independent.
-        // For simplicity in this iteration, we iterate all cached parts.
-        // In a more optimized version, we could have a list of instance part indices.
-        for (i, cached_part) in metadata.cached_parts.iter().enumerate() {
-            if let Some(instance_array) = cached_part.instance_array {
-                let part_index = cached_part.part_index as u16;
-                // Use the cursor for this part's instance attribute
-                let mut cursor = self.buffers.cursors[i * crate::core::framedata::NUM_PART_ATTRIBUTES + crate::core::framedata::IDX_ATTRIBUTEINSTANCE];
-                if let Some(attr) = crate::core::interpolation::evaluate_instance(instance_array, frame_no, &mut cursor) {
-                    if attr.independent() {
-                        let state = self.buffers.instance_states.entry(part_index).or_default();
-                        if state.last_update_frame != frame_no {
-                            state.accumulated_time += delta_time;
-                            state.last_update_frame = frame_no;
-                        }
-                    } else {
-                        // If not independent, we don't necessarily need to keep state here,
-                        // but we might want to clear it if it was previously independent.
-                        self.buffers.instance_states.remove(&part_index);
-                    }
-                }
-            }
-        }
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -412,35 +370,11 @@ impl<'a> Context<'a> {
         self.buffers.cursors.clear();
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
-        // Automatic effect setup for effect parts
-        self.effect_instances.clear();
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-        if let Some(parts) = ssab.parts() {
-            for (i, p) in parts.iter().enumerate() {
-                if p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeEffect
-                    && let Some(effect_part) = p.part_type_as_part_type_effect()
-                {
-                    let hash = effect_part.ref_effect_name_hash();
-                    if let Some(effects) = ssab.effects()
-                        && let Some(effect) = effects.iter().find(|e| e.name_hash() == hash)
-                    {
-                        // Diversify seeds for each effect instance
-                        let seed = self.next_effect_seed;
-                        self.next_effect_seed = self.next_effect_seed.wrapping_add(1);
-
-                        self.effect_instances.insert(i as u32, crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed));
-                    }
-                }
-            }
-        }
-
         Ok(())
     }
 
     pub fn update_animation(&mut self, delta_time: f32) {
         self.controller.update(delta_time);
-        let frame_no = self.controller.get_frame_no();
-        self.update_instance(frame_no, delta_time);
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
@@ -468,7 +402,6 @@ impl<'a> Context<'a> {
             &mut self.buffers.shader_vec,
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
-            &self.buffers.instance_states,
             &mut self.buffers.cursors,
         );
         self.fb.finish_minimal(offset);
@@ -560,10 +493,6 @@ impl<'a> Context<'a> {
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
         let res = self.controller.update(delta);
-        let f = self.get_frame_no() as f32 + self.get_frame_no_decimal();
-        for effect in self.effect_instances.values_mut() {
-            effect.update(f);
-        }
 
         self.collect_events();
 
@@ -673,11 +602,34 @@ impl<'a> Context<'a> {
 }
 
 impl<'a> Context<'a> {
-    pub fn get_effect_state(&mut self, part_index: u32) -> Result<&[u8], error::SSRuntimeError> {
-        let (draw_commands, draw_particles) = match self.effect_instances.get_mut(&part_index) {
-            Some(instance) => instance.get_draw_commands(),
-            None => return Err(error::SSRuntimeError::NotLoaded),
-        };
+}
+
+pub struct EffectContext<'a> {
+    pub instance: crate::core::effect::instance::EffectInstance,
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+}
+
+impl<'a> EffectContext<'a> {
+    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
+        if let Some(effects) = ssab.effects() {
+            if let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash) {
+                let instance = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed);
+                return Ok(Self {
+                    instance,
+                    fb: flatbuffers::FlatBufferBuilder::new(),
+                });
+            }
+        }
+        Err(error::SSRuntimeError::AnimationNotFound)
+    }
+
+    pub fn update(&mut self, frame: f32) {
+        self.instance.update(frame);
+    }
+
+    pub fn get_state(&mut self) -> Result<&[u8], error::SSRuntimeError> {
+        let (draw_commands, draw_particles) = self.instance.get_draw_commands();
 
         self.fb.reset();
 
@@ -968,43 +920,6 @@ mod tests {
         // Now we use safe verification, so it should return Err(InvalidData) instead of panicking
         let result = AnimationResource::new(ssab_data.as_slice());
         assert_eq!(result.err(), Some(error::SSRuntimeError::InvalidData));
-    }
-
-    #[test]
-    fn test_automatic_effect_setup() {
-        prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Effect.ssab");
-        let data = std::fs::read(ssab_path).unwrap();
-        let resource = AnimationResource::new(&data).unwrap();
-        let mut context = Context::new();
-        context.bind_resource(&resource);
-
-        // Setup an animation that likely contains effect parts
-        let anim_name = resource.get_animation_names().first().cloned().unwrap();
-        context.setup_animation(&anim_name).unwrap();
-
-        // Verify that effect instances were created
-        assert!(!context.effect_instances.is_empty(), "Effect instances should be automatically created for effect parts");
-
-        // Check the number of effect parts in ssab to match
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(&data) };
-        let mut expected_count = 0;
-        if let Some(parts) = ssab.parts() {
-            for p in parts {
-                if p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeEffect {
-                    expected_count += 1;
-                }
-            }
-        }
-        assert_eq!(context.effect_instances.len(), expected_count, "Number of effect instances should match PartType::Effect count");
-
-        // Verify next_effect_seed was incremented
-        assert!(context.next_effect_seed > 123456, "next_effect_seed should have been incremented");
-
-        // Ensure we can get state for the first effect part
-        let first_part_idx = *context.effect_instances.keys().next().unwrap();
-        let state_res = context.get_effect_state(first_part_idx);
-        assert!(state_res.is_ok(), "Should be able to get effect state for the automatically created instance");
     }
 
     #[test]
