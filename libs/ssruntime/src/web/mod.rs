@@ -1,8 +1,64 @@
 use crate::{Context, SsabData, SsabResource};
-use alloc::string::{String, ToString};
+use alloc::boxed::Box;
+use alloc::string::ToString;
 use alloc::sync::Arc;
-use alloc::vec::Vec;
 use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebPlaybackDirection {
+    Forward = 0,
+    Backward = 1,
+}
+
+impl From<crate::core::playback_controller::PlaybackDirection> for WebPlaybackDirection {
+    fn from(dir: crate::core::playback_controller::PlaybackDirection) -> Self {
+        match dir {
+            crate::core::playback_controller::PlaybackDirection::Forward => WebPlaybackDirection::Forward,
+            crate::core::playback_controller::PlaybackDirection::Backward => WebPlaybackDirection::Backward,
+        }
+    }
+}
+
+impl From<WebPlaybackDirection> for crate::core::playback_controller::PlaybackDirection {
+    fn from(dir: WebPlaybackDirection) -> Self {
+        match dir {
+            WebPlaybackDirection::Forward => crate::core::playback_controller::PlaybackDirection::Forward,
+            WebPlaybackDirection::Backward => crate::core::playback_controller::PlaybackDirection::Backward,
+        }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebPlaybackStyle {
+    Normal = 0,
+    PingPong = 1,
+}
+
+impl From<crate::core::playback_controller::PlaybackStyle> for WebPlaybackStyle {
+    fn from(style: crate::core::playback_controller::PlaybackStyle) -> Self {
+        match style {
+            crate::core::playback_controller::PlaybackStyle::Normal => WebPlaybackStyle::Normal,
+            crate::core::playback_controller::PlaybackStyle::PingPong => WebPlaybackStyle::PingPong,
+        }
+    }
+}
+
+impl From<WebPlaybackStyle> for crate::core::playback_controller::PlaybackStyle {
+    fn from(style: WebPlaybackStyle) -> Self {
+        match style {
+            WebPlaybackStyle::Normal => crate::core::playback_controller::PlaybackStyle::Normal,
+            WebPlaybackStyle::PingPong => crate::core::playback_controller::PlaybackStyle::PingPong,
+        }
+    }
+}
+
+#[wasm_bindgen]
+pub struct UpdateResult {
+    pub frame: i32,
+    pub decimal: f32,
+}
 
 #[wasm_bindgen]
 pub struct SSRuntimeResource {
@@ -21,8 +77,13 @@ impl SSRuntimeResource {
         Ok(SSRuntimeResource { inner })
     }
 
-    pub fn get_animation_names(&self) -> Vec<String> {
-        self.inner.resource.as_ref().map(|r| r.get_animation_names()).unwrap_or_default()
+    pub fn create_borrow(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
+        let ssab_data = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) }.map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let inner = SsabResource::new(ssab_data);
+        if inner.resource.is_none() {
+            return Err(JsValue::from_str("Failed to parse SSAB data"));
+        }
+        Ok(SSRuntimeResource { inner })
     }
 }
 
@@ -45,6 +106,11 @@ impl SSRuntimeContext {
         Ok(ctx)
     }
 
+    pub fn reset(&mut self) {
+        self.inner.reset();
+        self.bound_resource = None;
+    }
+
     pub fn bind_resource(&mut self, resource: &SSRuntimeResource) {
         if let Some(res) = &resource.inner.resource {
             // Safety: We hold the Arc in bound_resource, so the reference stays valid.
@@ -54,20 +120,55 @@ impl SSRuntimeContext {
         }
     }
 
-    pub fn get_animation_names(&self) -> Result<Vec<String>, JsValue> {
-        self.inner.resource.map(|r| r.get_animation_names()).ok_or_else(|| JsValue::from_str("Resource not bound"))
+    pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
+        if let Ok(ssab_data) = SsabData::load_copy(data) {
+            let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
+            if res.inner.resource.is_some() {
+                self.bind_resource(&res);
+                return true;
+            }
+        }
+        false
     }
 
-    pub fn setup_animation(&mut self, name: &str) -> bool {
-        self.inner.setup_animation(name).is_ok()
+    pub fn load_ssab_borrow(&mut self, data: &[u8]) -> bool {
+        if let Ok(ssab_data) = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) } {
+            let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
+            if res.inner.resource.is_some() {
+                self.bind_resource(&res);
+                return true;
+            }
+        }
+        false
     }
 
-    pub fn get_frame_data(&mut self, frame_no: i32) -> Option<Vec<u8>> {
-        self.inner.get_frame_data(frame_no).ok().map(|s| s.to_vec())
+    pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {
+        self.inner.setup_animation(name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    pub fn get_ssab_data(&self) -> Option<Vec<u8>> {
-        self.inner.get_ssab_data().map(|s| s.to_vec())
+    // Zero-copy getters
+    pub fn get_frame_data_buf(&mut self, frame_no: i32) -> Result<*const u8, JsValue> {
+        self.inner.get_frame_data(frame_no)
+            .map(|s| s.as_ptr())
+            .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn get_frame_data_len(&mut self, frame_no: i32) -> Result<usize, JsValue> {
+        self.inner.get_frame_data(frame_no)
+            .map(|s| s.len())
+            .map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn get_ssab_buf(&self) -> Result<*const u8, JsValue> {
+        self.inner.get_ssab_data()
+            .map(|s| s.as_ptr())
+            .ok_or_else(|| JsValue::from_str("SSAB data not found"))
+    }
+
+    pub fn get_ssab_len(&self) -> Result<usize, JsValue> {
+        self.inner.get_ssab_data()
+            .map(|s| s.len())
+            .ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }
 
     // Frame Number getter functions
@@ -96,12 +197,12 @@ impl SSRuntimeContext {
         self.inner.get_skip_frames()
     }
 
-    pub fn get_playback_direction(&self) -> i32 {
-        if self.inner.get_playback_direction() == crate::core::playback_controller::PlaybackDirection::Forward { 0 } else { 1 }
+    pub fn get_playback_direction(&self) -> WebPlaybackDirection {
+        self.inner.get_playback_direction().into()
     }
 
-    pub fn get_playback_style(&self) -> i32 {
-        self.inner.get_playback_style() as i32
+    pub fn get_playback_style(&self) -> WebPlaybackStyle {
+        self.inner.get_playback_style().into()
     }
 
     pub fn get_loops(&self) -> i32 {
@@ -137,10 +238,8 @@ impl SSRuntimeContext {
         self.inner.set_frame_rate(fps);
     }
 
-    pub fn set_playback_direction(&mut self, direction: i32, style: i32) {
-        let d = if direction == 0 { crate::core::playback_controller::PlaybackDirection::Forward } else { crate::core::playback_controller::PlaybackDirection::Backward };
-        let s = if style == 0 { crate::core::playback_controller::PlaybackStyle::Normal } else { crate::core::playback_controller::PlaybackStyle::PingPong };
-        self.inner.set_playback_direction(d, s);
+    pub fn set_playback_direction(&mut self, direction: WebPlaybackDirection, style: WebPlaybackStyle) {
+        self.inner.set_playback_direction(direction.into(), style.into());
     }
 
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
@@ -151,9 +250,9 @@ impl SSRuntimeContext {
         self.inner.set_animation_section(start_frame, end_frame);
     }
 
-    pub fn update(&mut self, delta: f32) -> i32 {
-        let (frame, _decimal) = self.inner.update(delta);
-        frame
+    pub fn update(&mut self, delta: f32) -> UpdateResult {
+        let (frame, decimal) = self.inner.update(delta);
+        UpdateResult { frame, decimal }
     }
 
     pub fn play(&mut self) {
@@ -184,3 +283,4 @@ impl SSRuntimeContext {
         self.inner.prev_frame();
     }
 }
+

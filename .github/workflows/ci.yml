@@ -128,6 +128,7 @@ jobs:
             cargo build --target aarch64-apple-ios --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "web" ]; then
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
           elif [ "${{ matrix.platform }}" == "no_std" ]; then
             cargo build --release --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
           else

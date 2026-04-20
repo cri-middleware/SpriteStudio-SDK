@@ -42,8 +42,10 @@ graph LR
 
 Follow these steps to convert a sample project and see the SDK in action.
 
-### 1. Download the Converter
-Download the latest version of `ssconverter-cli` for your platform from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page. Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
+### 1. Download the Tools or Libraries
+Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page.
+- **ssconverter-cli**: Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
+- **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio7-sdk-web.zip`.
 
 ### 2. Convert a Sample Project
 Run the downloaded tool to convert one of the bundled test projects into the binary `.ssab` format:
