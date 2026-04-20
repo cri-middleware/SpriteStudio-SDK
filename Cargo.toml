@@ -22,12 +22,13 @@ description = "Software development kit for OPTPiX SpriteStudio 7 projects"
 sspj = { path = "libs/sspj" }
 ssconverter = { path = "libs/ssconverter" }
 ssab = { path = "libs/ssab", default-features = false }
+ssruntime = { path = "libs/ssruntime" }
 ssinterpolate = { path = "libs/ssinterpolate" }
 flatbuffers = { version = "25.12.19", default-features = false }
 wide = { version = "1.3.0", default-features = false }
 libm = "0.2.16"
-wasm-bindgen = "0.2.117"
-rayon = "1.11.0"
+wasm-bindgen = "0.2.118"
+rayon = "1.12.0"
 cbindgen = "0.29.2"
 vergen-gitcl = { version = "9.1.0", features = ["build"] }
 

@@ -14,4 +14,4 @@ ffi = []
 
 [dependencies]
 libm = { workspace = true }
-wide = { version = "1.2.0", default-features = false }
+wide = { workspace = true }
