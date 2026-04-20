@@ -14,13 +14,13 @@
     *   **SSConverter**: Converts XML-based `.sspj` projects to optimized `.ssab` files.
     *   **Player-Runtime Split**: `libssruntime` acts as the "Brain" (calculations), while the "Player" acts as the "Body" (rendering and engine integration).
 
-## Strategic Competitive Advantage (vs. Spine/Rive)
+## Strategic Architectural Advantages
 
-To compete with industry standards like Spine and Rive, SpriteStudio7-SDK focuses on the following architectural and functional strengths:
+SpriteStudio7-SDK is designed to provide professional-grade animation capabilities with a focus on the following architectural and functional strengths:
 
 *   **Data-Oriented "Brain" Architecture**: Unlike monolithic runtimes that force a specific object-oriented structure, SS7-SDK provides a pure, stateless calculation engine. This allows seamless integration into modern **ECS (Entity Component System)** and Job Systems, providing the flexibility that professional engine developers crave.
 *   **Zero-copy & SIMD Performance**: By utilizing **FlatBuffers** for zero-deserialization overhead and Rust's **SIMD** capabilities for batch interpolation, SS7-SDK delivers superior performance in high-density scenarios (e.g., thousands of characters) where traditional runtimes hit CPU and GC bottlenecks.
-*   **Specialization in Cel-Animation & Effects**: While competitors focus heavily on skeletal mesh deformation, SS7-SDK excels in high-fidelity **cel-animation** and integrated **particle simulation (SSEE)**. This "All-in-one" package is optimized for the "ケレン味" (stylized aesthetics) of Japanese animation.
+*   **Specialization in Cel-Animation & Effects**: While many 2D animation tools focus heavily on skeletal mesh deformation, SS7-SDK excels in high-fidelity **cel-animation** and integrated **particle simulation (SSEE)**. This "All-in-one" package is optimized for the "ケレン味" (stylized aesthetics) of Japanese animation.
 *   **Cross-Platform Determinism**: A single Rust core ensures **100% bit-identical results** across all platforms (Mobile, Console, Web/Wasm). This eliminates platform-specific animation bugs and significantly reduces QA and maintenance costs for multi-platform projects.
 
 ### Roadmap (Ongoing & Future)
