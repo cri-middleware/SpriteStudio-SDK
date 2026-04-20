@@ -1,5 +1,12 @@
 # SpriteStudio7-SDK
 
+## Minimal operating rules
+
+* Keep changes scoped to the requested task.
+* Do not commit unless the user explicitly asks.
+* Before editing, read files in full, especially if the read tool truncates them.
+* Follow existing code style in touched files (naming, type usage, control flow, and error handling patterns).
+
 ## Project Overview
 
 **SpriteStudio7-SDK** is a software development kit designed to work with [OPTPiX SpriteStudio 7](https://www.webtech.co.jp/eng/spritestudio/) projects. It provides a suite of tools and libraries for parsing project files (`.sspj`), converting them into an optimized binary format (`.ssab`), and playing back animations at runtime.
