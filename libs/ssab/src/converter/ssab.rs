@@ -17567,7 +17567,6 @@ impl<'a> PartAnimationData<'a> {
   pub const VT_SKEW_ARRAY: ::flatbuffers::VOffsetT = 74;
   pub const VT_DEFORM_ARRAY: ::flatbuffers::VOffsetT = 76;
   pub const VT_TEXTURE_ARRAY: ::flatbuffers::VOffsetT = 78;
-  pub const VT_INSTANCE_ARRAY: ::flatbuffers::VOffsetT = 80;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -17579,7 +17578,6 @@ impl<'a> PartAnimationData<'a> {
     args: &'args PartAnimationDataArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationData<'bldr>> {
     let mut builder = PartAnimationDataBuilder::new(_fbb);
-    if let Some(x) = args.instance_array { builder.add_instance_array(x); }
     if let Some(x) = args.texture_array { builder.add_texture_array(x); }
     if let Some(x) = args.deform_array { builder.add_deform_array(x); }
     if let Some(x) = args.skew_array { builder.add_skew_array(x); }
@@ -17736,9 +17734,6 @@ impl<'a> PartAnimationData<'a> {
     let texture_array = self.texture_array().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
-    let instance_array = self.instance_array().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
-    });
     PartAnimationDataT {
       cell_array,
       position_x_array,
@@ -17778,7 +17773,6 @@ impl<'a> PartAnimationData<'a> {
       skew_array,
       deform_array,
       texture_array,
-      instance_array,
     }
   }
 
@@ -18048,13 +18042,6 @@ impl<'a> PartAnimationData<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>>(PartAnimationData::VT_TEXTURE_ARRAY, None)}
   }
-  #[inline]
-  pub fn instance_array(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance>>>>(PartAnimationData::VT_INSTANCE_ARRAY, None)}
-  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
@@ -18101,7 +18088,6 @@ impl ::flatbuffers::Verifiable for PartAnimationData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2>>>>("skew_array", Self::VT_SKEW_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>>("deform_array", Self::VT_DEFORM_ARRAY, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>>("texture_array", Self::VT_TEXTURE_ARRAY, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance>>>>("instance_array", Self::VT_INSTANCE_ARRAY, false)?
      .finish();
     Ok(())
   }
@@ -18145,7 +18131,6 @@ pub struct PartAnimationDataArgs<'a> {
     pub skew_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataVec2<'a>>>>>,
     pub deform_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataDeform<'a>>>>>,
     pub texture_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue<'a>>>>>,
-    pub instance_array: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance<'a>>>>>,
 }
 impl<'a> Default for PartAnimationDataArgs<'a> {
   #[inline]
@@ -18189,7 +18174,6 @@ impl<'a> Default for PartAnimationDataArgs<'a> {
       skew_array: None,
       deform_array: None,
       texture_array: None,
-      instance_array: None,
     }
   }
 }
@@ -18352,10 +18336,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataBuilder<'a, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_TEXTURE_ARRAY, texture_array);
   }
   #[inline]
-  pub fn add_instance_array(&mut self, instance_array: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationDataInstance<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAnimationData::VT_INSTANCE_ARRAY, instance_array);
-  }
-  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataBuilder {
@@ -18411,7 +18391,6 @@ impl ::core::fmt::Debug for PartAnimationData<'_> {
       ds.field("skew_array", &self.skew_array());
       ds.field("deform_array", &self.deform_array());
       ds.field("texture_array", &self.texture_array());
-      ds.field("instance_array", &self.instance_array());
       ds.finish()
   }
 }
@@ -18456,7 +18435,6 @@ pub struct PartAnimationDataT {
   pub skew_array: Option<alloc::vec::Vec<PartAnimationDataVec2T>>,
   pub deform_array: Option<alloc::vec::Vec<PartAnimationDataDeformT>>,
   pub texture_array: Option<alloc::vec::Vec<PartAnimationDataUIntValueT>>,
-  pub instance_array: Option<alloc::vec::Vec<PartAnimationDataInstanceT>>,
 }
 impl Default for PartAnimationDataT {
   fn default() -> Self {
@@ -18499,7 +18477,6 @@ impl Default for PartAnimationDataT {
       skew_array: None,
       deform_array: None,
       texture_array: None,
-      instance_array: None,
     }
   }
 }
@@ -18622,9 +18599,6 @@ impl PartAnimationDataT {
     let texture_array = self.texture_array.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
-    let instance_array = self.instance_array.as_ref().map(|x|{
-      let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
-    });
     PartAnimationData::create(_fbb, &PartAnimationDataArgs{
       cell_array,
       position_x_array,
@@ -18664,7 +18638,6 @@ impl PartAnimationDataT {
       skew_array,
       deform_array,
       texture_array,
-      instance_array,
     })
   }
 }

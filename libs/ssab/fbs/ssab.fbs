@@ -754,7 +754,6 @@ table PartAnimationData {
   skew_array: [PartAnimationDataVec2];
   deform_array: [PartAnimationDataDeform];
   texture_array: [PartAnimationDataUIntValue];
-  instance_array: [PartAnimationDataInstance];
 }
 
 table PartMeshData {

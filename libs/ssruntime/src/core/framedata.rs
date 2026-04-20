@@ -84,7 +84,6 @@ pub struct CachedPartData<'a> {
     pub skew_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'a>>>>,
     pub deform_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>>,
     pub texture_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>>>>,
-    pub instance_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataInstance<'a>>>>,
 }
 
 impl<'a> CachedPartData<'a> {
@@ -129,7 +128,6 @@ impl<'a> CachedPartData<'a> {
             skew_array: part.skew_array(),
             deform_array: part.deform_array(),
             texture_array: part.texture_array(),
-            instance_array: part.instance_array(),
         }
     }
 }
