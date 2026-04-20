@@ -76,7 +76,7 @@ Since this SDK provides C-compatible interfaces (`ssruntime`, `ssconverter`), pl
 - **Memory Management**: Clearly document who owns the memory across the FFI boundary.
 
 ---
-By contributing to this project, you agree that your contributions will be licensed under the project's [LICENSE.md](./LICENSE.md).
+By contributing to this project, you agree that your contributions will be dual-licensed under both the MIT License and Apache License, Version 2.0, as described in [LICENSE.md](./LICENSE.md).
 
 <br>
 <br>
@@ -161,4 +161,4 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 - **メモリ管理**: FFI 境界を越えてデータをやり取りする場合、メモリの所有権を明確にドキュメント化してください。
 
 ---
-本プロジェクトへの貢献は、プロジェクトの [LICENSE.md](./LICENSE.md) に同意したものとみなされます。
+本プロジェクトへの貢献は、プロジェクトの [LICENSE.md](./LICENSE.md) に記載の通り、MIT ライセンスおよび Apache License, Version 2.0 のデュアルライセンスの下で提供されることに同意したものとみなされます。
