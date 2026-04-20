@@ -12,6 +12,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+
     - name: Setup Android dependencies
       if: inputs.platform == 'android'
       uses: nttld/setup-ndk@v1
