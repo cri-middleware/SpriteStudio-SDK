@@ -276,33 +276,11 @@ impl SSRuntimeContext {
     }
 
     pub fn get_passed_event_count(&self) -> i32 {
-        self.inner.get_passed_events().len() as i32
-    }
-
-    pub fn get_passed_event_type(&self, index: i32) -> i32 {
-        self.inner
-            .get_passed_events()
-            .get(index as usize)
-            .map(|e| match e.data {
-                crate::PassedEventData::UserData(_) => 0,
-                crate::PassedEventData::Signal(_) => 1,
-                crate::PassedEventData::Audio(_) => 2,
-                crate::PassedEventData::Instance(_) => 3,
-                crate::PassedEventData::Effect(_) => 4,
-            })
-            .unwrap_or(-1)
+        self.inner.get_passed_event_frames().len() as i32
     }
 
     pub fn get_passed_event_frame_no(&self, index: i32) -> i32 {
-        self.inner.get_passed_events().get(index as usize).map(|e| e.frame_no).unwrap_or(-1)
-    }
-
-    pub fn get_passed_event_index(&self, index: i32) -> i32 {
-        self.inner.get_passed_events().get(index as usize).map(|e| e.event_index).unwrap_or(-1)
-    }
-
-    pub fn get_passed_event_part_index(&self, index: i32) -> i32 {
-        self.inner.get_passed_events().get(index as usize).map(|e| e.part_index as i32).unwrap_or(-1)
+        self.inner.get_passed_event_frames().get(index as usize).copied().unwrap_or(-1)
     }
 }
 

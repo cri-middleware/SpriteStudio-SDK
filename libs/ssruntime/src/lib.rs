@@ -194,7 +194,8 @@ impl<'a> AnimationResource<'a> {
                         cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index));
                     }
                 }
-                animations.push(AnimationMetadata { name_hash: anim.name_hash(), start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, cached_parts, events: anim.events() });
+                let name_hash = anim.name_hash();
+                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, cached_parts, events: anim.events() });
             }
         }
 
@@ -237,23 +238,6 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
-#[derive(Clone)]
-pub enum PassedEventData<'a> {
-    UserData(ssab::ssab::ss::format::PartAttributeUserData<'a>),
-    Signal(ssab::ssab::ss::format::PartAttributeSignal<'a>),
-    Audio(ssab::ssab::ss::format::PartAttributeAudio<'a>),
-    Instance(ssab::ssab::ss::format::PartAttributeInstance<'a>),
-    Effect(ssab::ssab::ss::format::PartAttributeEffect<'a>),
-}
-
-#[derive(Clone)]
-pub struct PassedEvent<'a> {
-    pub frame_no: i32,
-    pub part_index: i16,
-    pub data: PassedEventData<'a>,
-    pub event_index: i32,
-}
-
 struct ContextBuffers<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -262,12 +246,12 @@ struct ContextBuffers<'a> {
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
-    collected_events: Vec<PassedEvent<'a>>,
+    collected_event_frames: Vec<i32>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_events: Vec::new() }
+        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_event_frames: Vec::new() }
     }
 }
 
@@ -505,7 +489,7 @@ impl<'a> Context<'a> {
     }
 
     fn collect_events(&mut self) {
-        self.buffers.collected_events.clear();
+        self.buffers.collected_event_frames.clear();
         let Some(resource) = self.resource else {
             return;
         };
@@ -536,45 +520,14 @@ impl<'a> Context<'a> {
                 }
             }
 
-            if let Some(idx) = found_idx {
-                let events_per_frame = events_vec.get(idx);
-
-                if let Some(users) = events_per_frame.users() {
-                    for (i, user) in users.iter().enumerate() {
-                        let val = user.value().unwrap();
-                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: user.part_index() as i16, data: PassedEventData::UserData(val), event_index: i as i32 });
-                    }
-                }
-                if let Some(signals) = events_per_frame.signals() {
-                    for (i, signal) in signals.iter().enumerate() {
-                        let val = signal.value().unwrap();
-                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: signal.part_index() as i16, data: PassedEventData::Signal(val), event_index: i as i32 });
-                    }
-                }
-                if let Some(audios) = events_per_frame.audios() {
-                    for (i, audio) in audios.iter().enumerate() {
-                        let val = audio.value().unwrap();
-                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: audio.part_index() as i16, data: PassedEventData::Audio(val), event_index: i as i32 });
-                    }
-                }
-                if let Some(instances) = events_per_frame.instances() {
-                    for (i, instance) in instances.iter().enumerate() {
-                        let val = instance.value().unwrap();
-                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: instance.part_index() as i16, data: PassedEventData::Instance(val), event_index: i as i32 });
-                    }
-                }
-                if let Some(effects) = events_per_frame.effects() {
-                    for (i, effect) in effects.iter().enumerate() {
-                        let val = effect.value().unwrap();
-                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: effect.part_index() as i16, data: PassedEventData::Effect(val), event_index: i as i32 });
-                    }
-                }
+            if let Some(_) = found_idx {
+                self.buffers.collected_event_frames.push(frame_no);
             }
         }
     }
 
-    pub fn get_passed_events(&self) -> &[PassedEvent<'a>] {
-        &self.buffers.collected_events
+    pub fn get_passed_event_frames(&self) -> &[i32] {
+        &self.buffers.collected_event_frames
     }
 
     pub fn play(&mut self) {
@@ -945,16 +898,16 @@ mod tests {
         let interval = 1000.0 / 30.0;
         ctx.update(interval * 15.0);
 
-        let events = ctx.get_passed_events();
-        // println!("Collected events at frames: {:?}", events.iter().map(|e| e.frame_no).collect::<Vec<_>>());
+        let events = ctx.get_passed_event_frames();
+        // println!("Collected events at frames: {:?}", events);
         assert!(!events.is_empty(), "Should have collected at least one event");
 
         // Advance further to cover the whole animation
         ctx.update(interval * 100.0);
-        let events = ctx.get_passed_events();
-        // println!("All collected events at frames: {:?}", events.iter().map(|e| e.frame_no).collect::<Vec<_>>());
+        let events = ctx.get_passed_event_frames();
+        // println!("All collected events at frames: {:?}", events);
 
         // Let's check for any event that is not at frame 0 (setup)
-        assert!(events.iter().any(|e| e.frame_no > 0), "Should have collected at least one event at a frame > 0");
+        assert!(events.iter().any(|&e| e > 0), "Should have collected at least one event at a frame > 0");
     }
 }
