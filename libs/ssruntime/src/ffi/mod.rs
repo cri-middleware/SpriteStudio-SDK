@@ -569,62 +569,73 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
     let res = unsafe { &*(resource as *const crate::SsabResource) };
-    if let Some(r) = &res.resource {
-        if let Ok(effect_ctx) = crate::EffectContext::new(r, effect_name_hash, seed) {
-            return Box::into_raw(Box::new(effect_ctx)) as *mut c_void;
-        }
+    if let Some(r) = &res.resource
+        && let Ok(effect_ctx) = crate::EffectContext::new(r, effect_name_hash, seed)
+    {
+        return Box::into_raw(Box::new(effect_ctx)) as *mut c_void;
     }
     core::ptr::null_mut()
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_update(effect_ctx: *mut c_void, frame: f32) {
-    if effect_ctx.is_null() { return; }
+    if effect_ctx.is_null() {
+        return;
+    }
     let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
     ctx.update(frame);
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_reset(effect_ctx: *mut c_void) {
-    if effect_ctx.is_null() { return; }
+    if effect_ctx.is_null() {
+        return;
+    }
     let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
     ctx.reset();
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_get_lifetime(effect_ctx: *mut c_void) -> i32 {
-    if effect_ctx.is_null() { return 0; }
+    if effect_ctx.is_null() {
+        return 0;
+    }
     let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
     ctx.get_lifetime()
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_is_infinite(effect_ctx: *mut c_void) -> bool {
-    if effect_ctx.is_null() { return false; }
+    if effect_ctx.is_null() {
+        return false;
+    }
     let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
     ctx.is_infinite()
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_effect_get_state(effect_ctx: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
-    if effect_ctx.is_null() { return; }
+    if effect_ctx.is_null() {
+        return;
+    }
     let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    match ctx.get_state() {
-        Ok(ret) => unsafe {
+    if let Ok(ret) = ctx.get_state() {
+        unsafe {
             if !out_data.is_null() {
                 *out_data = ret.as_ptr() as *mut c_uchar;
             }
             if !out_len.is_null() {
                 *out_len = ret.len();
             }
-        },
-        Err(_) => {}
+        }
     }
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_destroy(effect_ctx: *mut c_void) {
-    if effect_ctx.is_null() { return; }
+    if effect_ctx.is_null() {
+        return;
+    }
     unsafe {
         let _ = Box::from_raw(effect_ctx as *mut crate::EffectContext);
     }
@@ -634,38 +645,25 @@ pub extern "C" fn ss_effect_destroy(effect_ctx: *mut c_void) {
 
 #[unsafe(no_mangle)]
 /// Calculate the target frame for a child instance animation.
-pub extern "C" fn ss_util_calculate_instance_frame(
-    parent_frame: f32,
-    key_frame: i32,
-    start_offset: i32,
-    speed: f32,
-    independent: bool,
-    accumulated_time: f32,
-) -> f32 {
+pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
     crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
 }
 
 #[unsafe(no_mangle)]
 /// Compute world matrix for a specific part by traversing its ancestors.
 /// out_m: pointer to float array of size 16.
-pub unsafe extern "C" fn ss_util_get_part_world_matrix(
-    context: *mut c_void,
-    part_index: u16,
-    frame_no: i32,
-    out_m: *mut f32,
-) -> bool {
-    if let Some(ffi_context) = get_context(context) {
-        if let Some(resource) = ffi_context.ctx.get_resource() {
-            if let Some(idx) = ffi_context.ctx.get_animation_idx() {
-                let metadata = &resource.animations[idx as usize];
+pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, part_index: u16, frame_no: i32, out_m: *mut f32) -> bool {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(resource) = ffi_context.ctx.get_resource()
+        && let Some(idx) = ffi_context.ctx.get_animation_idx()
+    {
+        let metadata = &resource.animations[idx as usize];
 
-                if let Some(res_m) = crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no) {
-                    unsafe {
-                        core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
-                    }
-                    return true;
-                }
+        if let Some(res_m) = crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no) {
+            unsafe {
+                core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
             }
+            return true;
         }
     }
     false
@@ -677,12 +675,7 @@ pub unsafe extern "C" fn ss_util_get_part_world_matrix(
 /// particles_ptr: pointer to ParticleState array from ss_effect_get_state.
 /// count: number of particles.
 /// out_pos_ptr: pointer to float array (x, y, x, y, ...) to store transformed 2D coordinates.
-pub unsafe extern "C" fn ss_effect_transform_particles(
-    matrix_ptr: *const f32,
-    particles_ptr: *const c_void,
-    count: i32,
-    out_pos_ptr: *mut f32,
-) {
+pub unsafe extern "C" fn ss_effect_transform_particles(matrix_ptr: *const f32, particles_ptr: *const c_void, count: i32, out_pos_ptr: *mut f32) {
     if matrix_ptr.is_null() || particles_ptr.is_null() || out_pos_ptr.is_null() {
         return;
     }

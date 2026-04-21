@@ -1,4 +1,4 @@
-use crate::core::framedata::{evaluate_part, CachedPartData, NUM_PART_ATTRIBUTES};
+use crate::core::framedata::{CachedPartData, NUM_PART_ATTRIBUTES, evaluate_part};
 use crate::core::matrix::SsMatrix4x4;
 use crate::core::matrix::SsVector3;
 use alloc::vec;
@@ -6,27 +6,12 @@ use alloc::vec::Vec;
 use wide::f32x4;
 
 /// Calculate the target frame for a child instance animation.
-pub fn calculate_instance_frame(
-    parent_frame: f32,
-    key_frame: i32,
-    start_offset: i32,
-    speed: f32,
-    independent: bool,
-    accumulated_time: f32,
-) -> f32 {
-    if independent {
-        accumulated_time * speed + start_offset as f32
-    } else {
-        (parent_frame - key_frame as f32) * speed + start_offset as f32
-    }
+pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
+    if independent { accumulated_time * speed + start_offset as f32 } else { (parent_frame - key_frame as f32) * speed + start_offset as f32 }
 }
 
 /// Compute world matrix for a specific part by traversing its ancestors.
-pub fn get_part_world_matrix(
-    parts: &[CachedPartData],
-    part_index: u16,
-    frame_no: i32,
-) -> Option<SsMatrix4x4> {
+pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no: i32) -> Option<SsMatrix4x4> {
     if (part_index as usize) >= parts.len() {
         return None;
     }
@@ -35,13 +20,7 @@ pub fn get_part_world_matrix(
     // We use a fresh cursor set to avoid side-effects on the main context's cursors.
     let mut temp_cursors = vec![0usize; parts.len() * NUM_PART_ATTRIBUTES];
 
-    fn compute_recursive(
-        target_idx: u16,
-        frame: i32,
-        parts: &[CachedPartData],
-        cursors: &mut [usize],
-        is_drawing: bool,
-    ) -> SsMatrix4x4 {
+    fn compute_recursive(target_idx: u16, frame: i32, parts: &[CachedPartData], cursors: &mut [usize], is_drawing: bool) -> SsMatrix4x4 {
         let part = &parts[target_idx as usize];
         let part_cursors = &mut cursors[target_idx as usize * NUM_PART_ATTRIBUTES..(target_idx as usize + 1) * NUM_PART_ATTRIBUTES];
 
@@ -62,7 +41,7 @@ pub fn get_part_world_matrix(
 /// Transform multiple particle positions by a matrix using SIMD (wide::f32x4).
 /// particles_raw: Raw byte slice of ParticleState array from ss_effect_get_state.
 pub fn transform_particles(matrix: &SsMatrix4x4, particles_raw: &[u8]) -> Vec<(f32, f32)> {
-    // Layout from effect_state.fbs: 
+    // Layout from effect_state.fbs:
     // x:0(4), y:4(4), scale_x:8(4), scale_y:12(4), rotation:16(4), direction:20(4), color:24(4) = 28 bytes per particle
     let stride = 28;
     let count = particles_raw.len() / stride;
@@ -94,7 +73,7 @@ pub fn transform_particles(matrix: &SsMatrix4x4, particles_raw: &[u8]) -> Vec<(f
         // We use SIMD for the core calculation, then push the results.
         let res_x: [f32; 4] = (f32x4::splat(matrix.m[0]) * vx + f32x4::splat(matrix.m[4]) * vy + f32x4::splat(matrix.m[12])).into();
         let res_y: [f32; 4] = (f32x4::splat(matrix.m[1]) * vx + f32x4::splat(matrix.m[5]) * vy + f32x4::splat(matrix.m[13])).into();
-        
+
         result.push((res_x[0], res_y[0]));
         result.push((res_x[1], res_y[1]));
         result.push((res_x[2], res_y[2]));
@@ -128,11 +107,11 @@ mod tests {
         assert_eq!(calculate_instance_frame(10.0, 2, 5, 2.0, false, 0.0), 21.0);
         // Independent case: 100.0 * 0.5 + 10 = 60.0
         assert_eq!(calculate_instance_frame(10.0, 2, 10, 0.5, true, 100.0), 60.0);
-        
+
         // Negative speed (reverse playback)
         // (20 - 10) * -1.0 + 30 = 20.0
         assert_eq!(calculate_instance_frame(20.0, 10, 30, -1.0, false, 0.0), 20.0);
-        
+
         // Zero parent frame
         assert_eq!(calculate_instance_frame(0.0, 0, 0, 1.0, false, 0.0), 0.0);
     }
@@ -145,8 +124,8 @@ mod tests {
     #[test]
     #[cfg(feature = "std")]
     fn test_get_part_world_matrix_with_real_data() {
+        use crate::{AnimationResource, SsabData};
         use std::path::PathBuf;
-        use crate::{SsabData, AnimationResource};
 
         fn get_test_base_path() -> PathBuf {
             std::env::current_dir().unwrap().ancestors().nth(2).unwrap().to_path_buf()
@@ -175,4 +154,3 @@ mod tests {
         assert!((res_m.m[0] - 1.0).abs() < 1e-5, "Scale X: {} != 1.0", res_m.m[0]);
     }
 }
-

@@ -145,7 +145,7 @@ pub struct PartEvaluationResult {
 
 pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
-    
+
     // Set SpriteStudio default values
     part_state.set_alpha(1.0);
     part_state.set_local_alpha(1.0);

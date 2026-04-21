@@ -606,8 +606,7 @@ impl<'a> Context<'a> {
     }
 }
 
-impl<'a> Context<'a> {
-}
+impl<'a> Context<'a> {}
 
 pub struct EffectContext<'a> {
     pub instance: crate::core::effect::instance::EffectInstance,
@@ -617,14 +616,11 @@ pub struct EffectContext<'a> {
 impl<'a> EffectContext<'a> {
     pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-        if let Some(effects) = ssab.effects() {
-            if let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash) {
-                let instance = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed);
-                return Ok(Self {
-                    instance,
-                    fb: flatbuffers::FlatBufferBuilder::new(),
-                });
-            }
+        if let Some(effects) = ssab.effects()
+            && let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash)
+        {
+            let instance = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed);
+            return Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new() });
         }
         Err(error::SSRuntimeError::AnimationNotFound)
     }
@@ -962,4 +958,3 @@ mod tests {
         assert!(events.iter().any(|e| e.frame_no > 0), "Should have collected at least one event at a frame > 0");
     }
 }
-
