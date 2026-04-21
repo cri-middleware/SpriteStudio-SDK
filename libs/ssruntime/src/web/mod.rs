@@ -280,13 +280,17 @@ impl SSRuntimeContext {
     }
 
     pub fn get_passed_event_type(&self, index: i32) -> i32 {
-        self.inner.get_passed_events().get(index as usize).map(|e| match e.data {
-            crate::PassedEventData::UserData(_) => 0,
-            crate::PassedEventData::Signal(_) => 1,
-            crate::PassedEventData::Audio(_) => 2,
-            crate::PassedEventData::Instance(_) => 3,
-            crate::PassedEventData::Effect(_) => 4,
-        }).unwrap_or(-1)
+        self.inner
+            .get_passed_events()
+            .get(index as usize)
+            .map(|e| match e.data {
+                crate::PassedEventData::UserData(_) => 0,
+                crate::PassedEventData::Signal(_) => 1,
+                crate::PassedEventData::Audio(_) => 2,
+                crate::PassedEventData::Instance(_) => 3,
+                crate::PassedEventData::Effect(_) => 4,
+            })
+            .unwrap_or(-1)
     }
 
     pub fn get_passed_event_frame_no(&self, index: i32) -> i32 {
@@ -316,10 +320,7 @@ impl SSRuntimeEffectContext {
             // Safety: We hold the Arc in resource_handle, so the reference stays valid.
             let res_ptr = res as *const crate::AnimationResource<'static>;
             match crate::EffectContext::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-                Ok(inner) => Ok(SSRuntimeEffectContext {
-                    inner,
-                    resource_handle: resource.inner.clone(),
-                }),
+                Ok(inner) => Ok(SSRuntimeEffectContext { inner, resource_handle: resource.inner.clone() }),
                 Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
             }
         } else {
@@ -357,22 +358,11 @@ pub struct SSRuntimeUtils;
 
 #[wasm_bindgen]
 impl SSRuntimeUtils {
-    pub fn calculate_instance_frame(
-        parent_frame: f32,
-        key_frame: i32,
-        start_offset: i32,
-        speed: f32,
-        independent: bool,
-        accumulated_time: f32,
-    ) -> f32 {
+    pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
         crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
     }
 
-    pub fn get_part_world_matrix(
-        context: &SSRuntimeContext,
-        part_index: u16,
-        frame_no: i32,
-    ) -> Option<Box<[f32]>> {
+    pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
         if let Some(res) = context.inner.get_resource() {
             if let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no) {
                 return Some(Box::new(res_m.m));
@@ -381,11 +371,7 @@ impl SSRuntimeUtils {
         None
     }
 
-    pub fn transform_particles(
-        matrix_arr: &[f32],
-        particles_ptr: *const u8,
-        count: i32,
-    ) -> Result<Box<[f32]>, JsValue> {
+    pub fn transform_particles(matrix_arr: &[f32], particles_ptr: *const u8, count: i32) -> Result<Box<[f32]>, JsValue> {
         if matrix_arr.len() < 16 {
             return Err(JsValue::from_str("Invalid matrix size"));
         }
@@ -405,4 +391,3 @@ impl SSRuntimeUtils {
         Ok(result.into_boxed_slice())
     }
 }
-
