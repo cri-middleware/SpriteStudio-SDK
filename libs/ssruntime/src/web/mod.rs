@@ -341,10 +341,10 @@ impl SSRuntimeUtils {
     }
 
     pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
-        if let Some(res) = context.inner.get_resource() {
-            if let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no) {
-                return Some(Box::new(res_m.m));
-            }
+        if let Some(res) = context.inner.get_resource()
+            && let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no)
+        {
+            return Some(Box::new(res_m.m));
         }
         None
     }
