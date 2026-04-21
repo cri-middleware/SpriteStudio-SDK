@@ -99,18 +99,24 @@ use ssab::ssab::ss::format::{SsAnimeBinary, SsAnimeBinaryT};
 }
 ```
 
-# Development & Code Generation
+# Development & Code Generation (Updating fbs files)
 
-If you modify the `fbs` files, you need to regenerate the Rust code.
+If you modify or update the `.fbs` files in the `fbs` folder, you need to regenerate the Rust code.
 Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
 
-## Windows (PowerShell)
+## Update Procedure
+
+1. Install `flatc` (Google FlatBuffers Compiler).
+2. Update or modify the `.fbs` files in the `fbs/` folder.
+3. Run the following script to regenerate the Rust code.
+
+### Windows (PowerShell)
 
 ```powershell
 ./scripts/generate.ps1
 ```
 
-## macOS / Linux (Bash)
+### macOS / Linux (Bash)
 
 ```bash
 ./scripts/generate.sh
