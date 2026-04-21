@@ -520,7 +520,7 @@ impl<'a> Context<'a> {
                 }
             }
 
-            if let Some(_) = found_idx {
+            if found_idx.is_some() {
                 self.buffers.collected_event_frames.push(frame_no);
             }
         }

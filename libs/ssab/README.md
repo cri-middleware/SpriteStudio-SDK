@@ -7,7 +7,7 @@ It uses Google FlatBuffers for serialization and deserialization.
 
 # Supported Formats
 
-This library supports the following two format definitions (`fbs`):
+This library supports the following two format definitions (`fbs`). For detailed design specifications, see the [**Schema Documentation**](./SCHEMA.md).
 
 - **SSAB ([ssab.fbs](./fbs/ssab.fbs))**: Animation data (`SsAnimeBinary`)
 - **SSQB ([ssqb.fbs](./fbs/ssqb.fbs))**: Sequence data (`SsSequenceBinary`)
