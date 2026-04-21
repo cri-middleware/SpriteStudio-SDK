@@ -849,15 +849,7 @@ pub unsafe extern "C" fn ss_matrix_create_rotation_z(out_m: *mut f32, radians: f
 /// parent_matrix: pointer to a float array of size 16, or null.
 /// # Safety
 /// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_matrix_compute_world(
-    out_inheritance_m: *mut f32,
-    out_drawing_m: *mut f32,
-    state: *const core::ffi::c_void,
-    parent_matrix: *const f32,
-    has_parent_size: bool,
-    parent_size_x: f32,
-    parent_size_y: f32,
-) {
+pub unsafe extern "C" fn ss_matrix_compute_world(out_inheritance_m: *mut f32, out_drawing_m: *mut f32, state: *const core::ffi::c_void, parent_matrix: *const f32, has_parent_size: bool, parent_size_x: f32, parent_size_y: f32) {
     if !out_inheritance_m.is_null() && !out_drawing_m.is_null() && !state.is_null() {
         let p_state = unsafe { &*(state as *const crate::runtime::framedata::ss::runtime::PartState) };
 
