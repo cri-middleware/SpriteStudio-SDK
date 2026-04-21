@@ -38,65 +38,73 @@ pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no
     Some(compute_recursive(part_index, frame_no, parts, &mut temp_cursors, true))
 }
 
-/// Transform multiple particle positions by a matrix using SIMD (wide::f32x4).
-/// particles_raw: Raw byte slice of ParticleState array from ss_effect_get_state.
-pub fn transform_particles(matrix: &SsMatrix4x4, particles_raw: &[u8]) -> Vec<(f32, f32)> {
-    // Layout from effect_state.fbs:
-    // x:0(4), y:4(4), scale_x:8(4), scale_y:12(4), rotation:16(4), direction:20(4), color:24(4) = 28 bytes per particle
-    let stride = 28;
-    let count = particles_raw.len() / stride;
-    let mut result = Vec::with_capacity(count);
+/// Transform multiple 2D points (x, y, x, y...) by a matrix using SIMD (wide::f32x4).
+pub fn transform_vec2s(matrix: &SsMatrix4x4, input: &[f32]) -> Vec<f32> {
+    let count = input.len() / 2;
+    let mut result = Vec::with_capacity(input.len());
+
+    let m0 = f32x4::splat(matrix.m[0]);
+    let m1 = f32x4::splat(matrix.m[1]);
+    let m4 = f32x4::splat(matrix.m[4]);
+    let m5 = f32x4::splat(matrix.m[5]);
+    let m12 = f32x4::splat(matrix.m[12]);
+    let m13 = f32x4::splat(matrix.m[13]);
 
     let mut i = 0;
-    // Process 4 particles at a time
     while i + 3 < count {
-        let b0 = i * stride;
-        let b1 = (i + 1) * stride;
-        let b2 = (i + 2) * stride;
-        let b3 = (i + 3) * stride;
+        let base = i * 2;
+        // Rearrange to SoA: vx = [x0, x1, x2, x3], vy = [y0, y1, y2, y3]
+        // This makes the math easier with wide crate.
+        let vx = f32x4::from([input[base], input[base+2], input[base+4], input[base+6]]);
+        let vy = f32x4::from([input[base+1], input[base+3], input[base+5], input[base+7]]);
 
-        // Load 4 X and 4 Y coordinates
-        let vx = f32x4::from([
-            f32::from_le_bytes(particles_raw[b0..b0 + 4].try_into().unwrap()),
-            f32::from_le_bytes(particles_raw[b1..b1 + 4].try_into().unwrap()),
-            f32::from_le_bytes(particles_raw[b2..b2 + 4].try_into().unwrap()),
-            f32::from_le_bytes(particles_raw[b3..b3 + 4].try_into().unwrap()),
-        ]);
-        let vy = f32x4::from([
-            f32::from_le_bytes(particles_raw[b0 + 4..b0 + 8].try_into().unwrap()),
-            f32::from_le_bytes(particles_raw[b1 + 4..b1 + 8].try_into().unwrap()),
-            f32::from_le_bytes(particles_raw[b2 + 4..b2 + 8].try_into().unwrap()),
-            f32::from_le_bytes(particles_raw[b3 + 4..b3 + 8].try_into().unwrap()),
-        ]);
+        let res_x: [f32; 4] = (m0 * vx + m4 * vy + m12).into();
+        let res_y: [f32; 4] = (m1 * vx + m5 * vy + m13).into();
 
-        // Transform: Res = col0*vx + col1*vy + col3 (simplified 2D transform as Z is assumed 0)
-        // We use SIMD for the core calculation, then push the results.
-        let res_x: [f32; 4] = (f32x4::splat(matrix.m[0]) * vx + f32x4::splat(matrix.m[4]) * vy + f32x4::splat(matrix.m[12])).into();
-        let res_y: [f32; 4] = (f32x4::splat(matrix.m[1]) * vx + f32x4::splat(matrix.m[5]) * vy + f32x4::splat(matrix.m[13])).into();
-
-        result.push((res_x[0], res_y[0]));
-        result.push((res_x[1], res_y[1]));
-        result.push((res_x[2], res_y[2]));
-        result.push((res_x[3], res_y[3]));
-
+        for k in 0..4 {
+            result.push(res_x[k]);
+            result.push(res_y[k]);
+        }
         i += 4;
     }
 
-    // Remaining particles
     while i < count {
-        let base = i * stride;
-        let px = f32::from_le_bytes(particles_raw[base..base + 4].try_into().unwrap());
-        let py = f32::from_le_bytes(particles_raw[base + 4..base + 8].try_into().unwrap());
-
-        let vec = SsVector3::new(px, py, 0.0);
-        let transformed = matrix.transform(&vec);
-        result.push((transformed.x, transformed.y));
+        let base = i * 2;
+        let vx = input[base];
+        let vy = input[base + 1];
+        result.push(matrix.m[0] * vx + matrix.m[4] * vy + matrix.m[12]);
+        result.push(matrix.m[1] * vx + matrix.m[5] * vy + matrix.m[13]);
         i += 1;
     }
 
     result
 }
 
+/// Transform multiple particle positions by a matrix using SIMD (wide::f32x4).
+/// particles_raw: Raw byte slice of ParticleState array from ss_effect_get_state.
+pub fn transform_particles(matrix: &SsMatrix4x4, particles_raw: &[u8]) -> Vec<(f32, f32)> {
+    // Layout from effect_state.fbs: 
+    // x:0(4), y:4(4), scale_x:8(4), scale_y:12(4), rotation:16(4), direction:20(4), color:24(4) = 28 bytes per particle
+    let stride = 28;
+    let count = particles_raw.len() / stride;
+
+    // For particles, we extract x, y and then use the general transformer.
+    // This is slightly less efficient due to extraction, but cleaner and still SIMD.
+    // For extreme performance, we'd keep the specialized stride-aware loop.
+    let mut extracted = Vec::with_capacity(count * 2);
+    for i in 0..count {
+        let base = i * stride;
+        extracted.push(f32::from_le_bytes(particles_raw[base..base+4].try_into().unwrap()));
+        extracted.push(f32::from_le_bytes(particles_raw[base+4..base+8].try_into().unwrap()));
+    }
+
+    let transformed = transform_vec2s(matrix, &extracted);
+    let mut result = Vec::with_capacity(count);
+    for i in 0..count {
+        result.push((transformed[i * 2], transformed[i * 2 + 1]));
+    }
+    result
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -114,6 +122,35 @@ mod tests {
 
         // Zero parent frame
         assert_eq!(calculate_instance_frame(0.0, 0, 0, 1.0, false, 0.0), 0.0);
+    }
+
+    #[test]
+    fn test_transform_vec2s() {
+        let matrix = SsMatrix4x4::create_translation(100.0, -50.0, 0.0);
+        
+        // 5 points (10 floats) to test SIMD (4) + Remainder (1)
+        let input = vec![
+            0.0, 0.0,   // p0
+            10.0, 10.0, // p1
+            -5.0, 20.0, // p2
+            30.0, -5.0, // p3
+            1.0, 1.0    // p4 (remainder)
+        ];
+        
+        let output = transform_vec2s(&matrix, &input);
+        assert_eq!(output.len(), 10);
+        
+        let expected = [
+            100.0, -50.0,
+            110.0, -40.0,
+            95.0, -30.0,
+            130.0, -55.0,
+            101.0, -49.0
+        ];
+        
+        for i in 0..10 {
+            assert!((output[i] - expected[i]).abs() < 1e-5, "Idx {}: {} != {}", i, output[i], expected[i]);
+        }
     }
 
     #[test]
