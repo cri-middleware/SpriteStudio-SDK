@@ -15,7 +15,13 @@ impl SsqbCache {
                 let ref_anime_pack = sequence_item_t.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
                 let ref_anime = sequence_item_t.ref_anime.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
 
-                let sequence_item_arg = ssab::ssqb::ss::format::SequenceItemArgs { ref_anime_pack, ref_anime, repeat_count: sequence_item_t.repeat_count };
+                let sequence_item_arg = ssab::ssqb::ss::format::SequenceItemArgs {
+                    ref_anime_pack,
+                    ref_anime_pack_hash: sequence_item_t.ref_anime_pack_hash,
+                    ref_anime,
+                    ref_anime_hash: sequence_item_t.ref_anime_hash,
+                    repeat_count: sequence_item_t.repeat_count,
+                };
                 ssab::ssqb::ss::format::SequenceItem::create(fb, &sequence_item_arg)
             })
             .collect::<Vec<_>>();
@@ -30,6 +36,7 @@ impl SsqbCache {
                 .map(|sequence| {
                     let mut s_args = ssab::ssqb::ss::format::SequenceArgs::default();
                     s_args.name = Some(fb.create_shared_string(&sequence.name));
+                    s_args.name_hash = sequence.name_hash;
                     s_args.index = sequence.index;
                     s_args.type_ = sequence.type_;
                     s_args.list = sequence.list.as_ref().map(|list| self.create_shared_sequence_item_list(fb, list));

@@ -8,12 +8,15 @@ enum SequenceType: ubyte {
 
 table SequenceItem {
   ref_anime_pack: string;
+  ref_anime_pack_hash: uint32;
   ref_anime: string;
+  ref_anime_hash: uint32;
   repeat_count: int;
 }
 
 table Sequence {
   name: string (key);
+  name_hash: uint32;
   index: int;
   type: SequenceType;
   list: [SequenceItem];
