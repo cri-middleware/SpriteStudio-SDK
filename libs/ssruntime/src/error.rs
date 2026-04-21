@@ -20,11 +20,11 @@ impl SSRuntimeError {
     pub fn as_code(&self) -> i32 {
         match self {
             SSRuntimeError::EmptyData => 1,
-            SSRuntimeError::InvalidVersion { .. } => 3,
-            SSRuntimeError::AnimationNotFound => 4,
-            SSRuntimeError::NotLoaded => 5,
-            SSRuntimeError::InvalidParameter => 6,
-            SSRuntimeError::MemoryError => 7,
+            SSRuntimeError::InvalidVersion { .. } => 2,
+            SSRuntimeError::AnimationNotFound => 3,
+            SSRuntimeError::NotLoaded => 4,
+            SSRuntimeError::InvalidParameter => 5,
+            SSRuntimeError::MemoryError => 6,
             SSRuntimeError::Unknown => 99,
         }
     }
