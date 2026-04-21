@@ -19,49 +19,40 @@ Player 側は、`ss_runtime_update` を呼び出した直後にイベント総�
 // 1. アニメーションの更新
 int frame_no = ss_runtime_update(runtime_ctx, delta_time);
 
-// 2. 今回の更新で発生したイベント数を取得
-int event_count = ss_runtime_get_passed_event_count(runtime_ctx);
+// 2. 今回の更新でイベントが発生したフレーム数を取得
+int event_frame_count = ss_runtime_get_passed_event_count(runtime_ctx);
 
-// 3. イベントのポーリング処理
-for (int i = 0; i < event_count; i++) {
-    int type = ss_runtime_get_passed_event_type(runtime_ctx, i);
+// 3. イベントが発生したフレームごとのポーリング処理
+for (int i = 0; i < event_frame_count; i++) {
     int frame = ss_runtime_get_passed_event_frame_no(runtime_ctx, i);
-    int event_idx = ss_runtime_get_passed_event_index(runtime_ctx, i); // 配列内のインデックス
-    int part_idx = ss_runtime_get_passed_event_part_index(runtime_ctx, i);
 
     // 自分の保持している AnimationData から対象フレームのイベントを検索
     auto events_per_frame = _currentAnimationData->events()->LookupByKey(frame);
     if (!events_per_frame) continue;
 
-    switch (type) {
-        case 0: // UserData
-        {
-            auto data = events_per_frame->users()->Get(event_idx);
-            // 推奨：UserData 用のコールバックを発火
-            emit_user_data_event(part_idx, data);
-            break;
-        }
-        case 1: // Signal
-        {
-            auto signal = events_per_frame->signals()->Get(event_idx);
-            // 推奨：シグナルコマンドの処理
-            handle_signal_event(part_idx, signal);
-            break;
-        }
-        case 2: // Audio
-        {
-            auto audio = events_per_frame->audios()->Get(event_idx);
-            // 推奨：音声再生トリガー
-            play_audio(audio);
-            break;
-        }
-        case 3: // Instance
-        case 4: // Effect
-        {
-            // 必要に応じて開始タイミングなどを処理
-            break;
+    // ユーザーデータ (UserData)
+    if (auto users = events_per_frame->users()) {
+        for (auto user : *users) {
+            emit_user_data_event(user->part_index(), user->value());
         }
     }
+
+    // シグナル (Signal)
+    if (auto signals = events_per_frame->signals()) {
+        for (auto signal : *signals) {
+            emit_signal_event(signal->part_index(), signal->value());
+        }
+    }
+
+    // 音声 (Audio)
+    if (auto audios = events_per_frame->audios()) {
+        for (auto audio : *audios) {
+            emit_audio_event(audio->part_index(), audio->value());
+        }
+    }
+
+    // エフェクト等、その他のイベントも同様に処理
+    // ...
 }
 ```
 
@@ -121,7 +112,6 @@ Player は、利用者がこれらのイベントを容易に検知できるよ�
 
 - **発火順序**: イベントは時間軸に沿った正しい順序（順再生なら昇順、逆再生なら降順、ループなら終端→開始の順）で格納されています。
 - **同一フレーム内の複数イベント**: 同じフレームに複数のパーツがイベントを持っている場合、それらもすべてリストに含まれます。`part_idx` を参照して、どのパーツからのイベントかを確認してください。
-- **データの有効性**: `ss_runtime_get_passed_event_index` で返されるインデックスは、必ずそのフレームの該当配列の範囲内にあることが保証されます。
 
 ## この段階での動作確認 (Validation)
 
