@@ -261,6 +261,12 @@ impl EffectInstance {
         }
     }
 
+    pub fn reset(&mut self) {
+        self.state.reset();
+        self.draw_commands.clear();
+        self.draw_particles.clear();
+    }
+
     pub fn update(&mut self, frame: f32) {
         if !self.state.is_playing || self.state.is_pausing {
             return;

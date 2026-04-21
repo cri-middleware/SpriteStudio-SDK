@@ -23,6 +23,16 @@ impl ParticleStateSoA {
         self.endtime.resize(size, 0);
     }
 
+    pub fn reset(&mut self) {
+        self.id.fill(0);
+        self.pid.fill(0);
+        self.cycle.fill(0);
+        self.exist.fill(false);
+        self.born.fill(false);
+        self.stime.fill(0);
+        self.endtime.fill(0);
+    }
+
     pub fn cleanup(&mut self, index: usize) {
         self.id[index] = 0;
         self.pid[index] = 0;
@@ -47,6 +57,12 @@ impl EmitterState {
         state.particle_state.resize(emitmax as usize);
         state
     }
+
+    pub fn reset(&mut self) {
+        self.seed_offset = 0;
+        self.position = Vector2::default();
+        self.particle_state.reset();
+    }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -58,6 +74,20 @@ pub struct RenderState {
     pub is_pausing: bool,
     pub is_loop: bool,
     pub emitter_states: Vec<EmitterState>,
+}
+
+impl RenderState {
+    pub fn reset(&mut self) {
+        self.current_frame = 0.0;
+        self.target_frame = 0.0;
+        self.seed_offset = 0;
+        self.is_playing = true;
+        self.is_pausing = false;
+        self.is_loop = false;
+        for s in &mut self.emitter_states {
+            s.reset();
+        }
+    }
 }
 
 #[cfg(test)]

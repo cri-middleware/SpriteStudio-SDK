@@ -688,16 +688,29 @@ mod tests {
     }
 
     #[test]
-    fn test_matrix_indexing_and_conversions() {
-        let mut m = SsMatrix4x4::identity();
-        m[0] = 5.0;
-        assert_f32_eq(m.m[0], 5.0);
-        assert_f32_eq(m[0], 5.0);
+    fn test_matrix_multiplication_consistency() {
+        let mut m1 = SsMatrix4x4::identity();
+        m1.m[0] = 2.0; m1.m[5] = 3.0; m1.m[10] = 4.0;
+        m1.m[12] = 10.0; m1.m[13] = 20.0; m1.m[14] = 30.0;
 
-        let arr: [f32; 16] = m.into();
-        assert_f32_eq(arr[0], 5.0);
+        let mut m2 = SsMatrix4x4::identity();
+        m2.m[0] = 0.5; m2.m[5] = 0.5; m2.m[10] = 0.5;
+        m2.m[12] = -5.0; m2.m[13] = -10.0; m2.m[14] = -15.0;
 
-        let m2: SsMatrix4x4 = arr.into();
-        assert_f32_eq(m2[0], 5.0);
+        let res = m1 * m2;
+
+        // Manual calculation check for Column-Major
+        // res[0] = m1[0]*m2[0] + m1[4]*m2[1] + m1[8]*m2[2] + m1[12]*m2[3]
+        //        = 2.0 * 0.5 + 0 + 0 + 10 * 0 = 1.0
+        assert_f32_eq(res.m[0], 1.0);
+        assert_f32_eq(res.m[5], 1.5);
+        assert_f32_eq(res.m[10], 2.0);
+        
+        // Translation X: res[12] = m1[0]*m2[12] + m1[4]*m2[13] + m1[8]*m2[14] + m1[12]*m2[15]
+        //                        = 2.0 * -5.0 + 0 + 0 + 10.0 * 1.0 = -10 + 10 = 0
+        assert_f32_eq(res.m[12], 0.0);
+        // Translation Y: res[13] = m1[1]*m2[12] + m1[5]*m2[13] + m1[9]*m2[14] + m1[13]*m2[15]
+        //                        = 0 + 3.0 * -10.0 + 0 + 20.0 * 1.0 = -10.0
+        assert_f32_eq(res.m[13], -10.0);
     }
 }

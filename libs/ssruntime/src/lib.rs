@@ -188,8 +188,10 @@ impl<'a> AnimationResource<'a> {
             for anim in fb_animations {
                 let mut cached_parts = Vec::new();
                 if let Some(parts) = anim.parts_animation_data() {
+                    let fb_parts = ssab.parts();
                     for (i, p) in parts.iter().enumerate() {
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16));
+                        let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index));
                     }
                 }
                 animations.push(AnimationMetadata { name_hash: anim.name_hash(), start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, cached_parts, events: anim.events() });
@@ -303,6 +305,14 @@ impl<'a> Context<'a> {
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.resource.map(|r| r.get_ssab_data())
+    }
+
+    pub(crate) fn get_resource(&self) -> Option<&'a AnimationResource<'a>> {
+        self.resource
+    }
+
+    pub(crate) fn get_animation_idx(&self) -> Option<i32> {
+        if self.animation_idx >= 0 { Some(self.animation_idx) } else { None }
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -617,6 +627,18 @@ impl<'a> EffectContext<'a> {
             }
         }
         Err(error::SSRuntimeError::AnimationNotFound)
+    }
+
+    pub fn reset(&mut self) {
+        self.instance.reset();
+    }
+
+    pub fn get_lifetime(&self) -> i32 {
+        self.instance.effect_time_length
+    }
+
+    pub fn is_infinite(&self) -> bool {
+        self.instance.is_infinite
     }
 
     pub fn update(&mut self, frame: f32) {
@@ -940,3 +962,4 @@ mod tests {
         assert!(events.iter().any(|e| e.frame_no > 0), "Should have collected at least one event at a frame > 0");
     }
 }
+
