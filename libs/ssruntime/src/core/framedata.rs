@@ -40,12 +40,13 @@ const IDX_ATTRIBUTEUVSY: usize = crate::runtime::framedata::ss::runtime::UpdateA
 const IDX_ATTRIBUTEBOUNDR: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeBoundr.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTEMASK: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeMask.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew.bits().trailing_zeros() as usize;
-const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
-const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
+pub const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
+pub const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
 
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
     pub part_index: i16,
+    pub parent_index: i16,
     pub cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
     pub position_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
     pub position_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
@@ -87,9 +88,10 @@ pub struct CachedPartData<'a> {
 }
 
 impl<'a> CachedPartData<'a> {
-    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16) -> Self {
+    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16, parent_index: i16) -> Self {
         Self {
             part_index,
+            parent_index,
             cell_array: part.cell_array(),
             position_x_array: part.position_x_array(),
             position_y_array: part.position_y_array(),
@@ -141,8 +143,17 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
+pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
+
+    // Set SpriteStudio default values
+    part_state.set_alpha(1.0);
+    part_state.set_local_alpha(1.0);
+    part_state.set_scale_x(1.0);
+    part_state.set_scale_y(1.0);
+    part_state.set_local_scale_x(1.0);
+    part_state.set_local_scale_y(1.0);
+
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
     let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, part_color: None, shader: None, vertex: None, deform: None };

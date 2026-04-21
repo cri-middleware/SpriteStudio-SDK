@@ -24,7 +24,7 @@ impl SSRuntimeError {
             SSRuntimeError::AnimationNotFound => 3,
             SSRuntimeError::NotLoaded => 4,
             SSRuntimeError::InvalidParameter => 5,
-            SSRuntimeError::MemoryError => 7,
+            SSRuntimeError::MemoryError => 6,
             SSRuntimeError::Unknown => 99,
         }
     }

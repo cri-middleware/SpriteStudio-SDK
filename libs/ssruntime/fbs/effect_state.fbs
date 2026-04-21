@@ -1,0 +1,26 @@
+namespace ss.runtime;
+
+struct ParticleState {
+    x: float;
+    y: float;
+    scale_x: float;
+    scale_y: float;
+    rotation: float;
+    direction: float;
+    a: ubyte;
+    r: ubyte;
+    g: ubyte;
+    b: ubyte;
+}
+
+table EmitterState {
+    cell_index: short;
+    blend_type: int;
+    particles: [ParticleState];
+}
+
+table EffectState {
+    emitters: [EmitterState];
+}
+
+root_type EffectState;

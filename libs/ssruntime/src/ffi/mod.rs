@@ -509,6 +509,15 @@ pub extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> i32 {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_update_animation(context: *mut c_void, delta: f32) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.update_animation(delta);
+        return ffi_context.ctx.get_frame_no();
+    }
+    0
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_play(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.play();
@@ -555,4 +564,374 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.prev_frame();
     }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
+    let res = unsafe { &*(resource as *const crate::SsabResource) };
+    if let Some(r) = &res.resource
+        && let Ok(effect_ctx) = crate::EffectContext::new(r, effect_name_hash, seed)
+    {
+        return Box::into_raw(Box::new(effect_ctx)) as *mut c_void;
+    }
+    core::ptr::null_mut()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_update(effect_ctx: *mut c_void, frame: f32) {
+    if effect_ctx.is_null() {
+        return;
+    }
+    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
+    ctx.update(frame);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_reset(effect_ctx: *mut c_void) {
+    if effect_ctx.is_null() {
+        return;
+    }
+    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
+    ctx.reset();
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_get_lifetime(effect_ctx: *mut c_void) -> i32 {
+    if effect_ctx.is_null() {
+        return 0;
+    }
+    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
+    ctx.get_lifetime()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_is_infinite(effect_ctx: *mut c_void) -> bool {
+    if effect_ctx.is_null() {
+        return false;
+    }
+    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
+    ctx.is_infinite()
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_effect_get_state(effect_ctx: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+    if effect_ctx.is_null() {
+        return;
+    }
+    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
+    if let Ok(ret) = ctx.get_state() {
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ret.as_ptr() as *mut c_uchar;
+            }
+            if !out_len.is_null() {
+                *out_len = ret.len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_destroy(effect_ctx: *mut c_void) {
+    if effect_ctx.is_null() {
+        return;
+    }
+    unsafe {
+        let _ = Box::from_raw(effect_ctx as *mut crate::EffectContext);
+    }
+}
+
+// --- Utilities ---
+
+#[unsafe(no_mangle)]
+/// Calculate the target frame for a child instance animation.
+pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
+    crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
+}
+
+#[unsafe(no_mangle)]
+/// Compute world matrix for a specific part by traversing its ancestors.
+/// out_m: pointer to float array of size 16.
+pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, part_index: u16, frame_no: i32, out_m: *mut f32) -> bool {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(resource) = ffi_context.ctx.get_resource()
+        && let Some(idx) = ffi_context.ctx.get_animation_idx()
+    {
+        let metadata = &resource.animations[idx as usize];
+
+        if let Some(res_m) = crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no) {
+            unsafe {
+                core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
+            }
+            return true;
+        }
+    }
+    false
+}
+
+#[unsafe(no_mangle)]
+/// Transform multiple particle positions by a matrix.
+/// matrix_ptr: pointer to float array of size 16.
+/// particles_ptr: pointer to ParticleState array from ss_effect_get_state.
+/// count: number of particles.
+/// out_pos_ptr: pointer to float array (x, y, x, y, ...) to store transformed 2D coordinates.
+pub unsafe extern "C" fn ss_effect_transform_particles(matrix_ptr: *const f32, particles_ptr: *const c_void, count: i32, out_pos_ptr: *mut f32) {
+    if matrix_ptr.is_null() || particles_ptr.is_null() || out_pos_ptr.is_null() {
+        return;
+    }
+
+    let mut m_arr = [0.0f32; 16];
+    unsafe {
+        core::ptr::copy_nonoverlapping(matrix_ptr, m_arr.as_mut_ptr(), 16);
+    }
+    let matrix = crate::core::SsMatrix4x4::from_array(m_arr);
+
+    // particles_ptr is a pointer to [ParticleState; count]
+    // Layout from effect_state.fbs: stride = 28
+    let len = (count as usize) * 28;
+    let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr as *const u8, len) };
+
+    let transformed = crate::core::util::transform_particles(&matrix, particles_raw);
+
+    for (i, (tx, ty)) in transformed.into_iter().enumerate() {
+        unsafe {
+            *(out_pos_ptr.add(i * 2)) = tx;
+            *(out_pos_ptr.add(i * 2 + 1)) = ty;
+        }
+    }
+}
+
+// --- Matrix V2 FFI (Primitive-based) ---
+
+#[unsafe(no_mangle)]
+/// out_m must be a pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_identity(out_m: *mut f32) {
+    if !out_m.is_null() {
+        let identity = crate::core::SsMatrix4x4::identity();
+        unsafe {
+            core::ptr::copy_nonoverlapping(identity.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m, lhs, rhs must be pointers to float arrays of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_multiply(out_m: *mut f32, lhs: *const f32, rhs: *const f32) {
+    if !out_m.is_null() && !lhs.is_null() && !rhs.is_null() {
+        let mut lhs_arr = [0.0f32; 16];
+        let mut rhs_arr = [0.0f32; 16];
+        unsafe {
+            core::ptr::copy_nonoverlapping(lhs, lhs_arr.as_mut_ptr(), 16);
+            core::ptr::copy_nonoverlapping(rhs, rhs_arr.as_mut_ptr(), 16);
+        }
+        let lhs_m = crate::core::SsMatrix4x4::from_array(lhs_arr);
+        let rhs_m = crate::core::SsMatrix4x4::from_array(rhs_arr);
+        let res = lhs_m.multiply(&rhs_m);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m, in_m must be pointers to float arrays of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_inverse(out_m: *mut f32, in_m: *const f32) {
+    if !out_m.is_null() && !in_m.is_null() {
+        let mut in_arr = [0.0f32; 16];
+        unsafe {
+            core::ptr::copy_nonoverlapping(in_m, in_arr.as_mut_ptr(), 16);
+        }
+        let mat = crate::core::SsMatrix4x4::from_array(in_arr);
+        let res = mat.inverse();
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_x, out_y, out_z: output pointers for transformed vector.
+/// mat: pointer to a float array of size 16.
+/// x, y, z: input vector components.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_transform_vector3(out_x: *mut f32, out_y: *mut f32, out_z: *mut f32, mat: *const f32, x: f32, y: f32, z: f32) {
+    if !out_x.is_null() && !out_y.is_null() && !out_z.is_null() && !mat.is_null() {
+        let mut mat_arr = [0.0f32; 16];
+        unsafe {
+            core::ptr::copy_nonoverlapping(mat, mat_arr.as_mut_ptr(), 16);
+        }
+        let mat_m = crate::core::SsMatrix4x4::from_array(mat_arr);
+        let v = crate::core::SsVector3::new(x, y, z);
+        let res = mat_m.transform(&v);
+        unsafe {
+            *out_x = res.x;
+            *out_y = res.y;
+            *out_z = res.z;
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_scale(out_m: *mut f32, x: f32, y: f32, z: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_scale(x, y, z);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_translation(out_m: *mut f32, x: f32, y: f32, z: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_translation(x, y, z);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_rotation_x(out_m: *mut f32, radians: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_rotation_x(radians);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_rotation_y(out_m: *mut f32, radians: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_rotation_y(radians);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_m: pointer to a float array of size 16.
+/// # Safety
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_matrix_create_rotation_z(out_m: *mut f32, radians: f32) {
+    if !out_m.is_null() {
+        let res = crate::core::SsMatrix4x4::create_rotation_z(radians);
+        unsafe {
+            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+/// out_inheritance_m, out_drawing_m: pointers to float arrays of size 16.
+/// state: pointer to PartState
+/// parent_matrix: pointer to a float array of size 16, or null.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_matrix_compute_world(
+    out_inheritance_m: *mut f32,
+    out_drawing_m: *mut f32,
+    state: *const crate::runtime::framedata::ss::runtime::PartState,
+    parent_matrix: *const f32,
+    has_parent_size: bool,
+    parent_size_x: f32,
+    parent_size_y: f32,
+) {
+    if !out_inheritance_m.is_null() && !out_drawing_m.is_null() && !state.is_null() {
+        let p_state = unsafe { &*state };
+
+        let p_mat_opt = if parent_matrix.is_null() {
+            None
+        } else {
+            let mut arr = [0.0f32; 16];
+            unsafe {
+                core::ptr::copy_nonoverlapping(parent_matrix, arr.as_mut_ptr(), 16);
+            }
+            Some(crate::core::SsMatrix4x4::from_array(arr))
+        };
+
+        let p_size_opt = if has_parent_size { Some((parent_size_x, parent_size_y)) } else { None };
+
+        let (inh, draw) = crate::core::SsMatrix4x4::compute_world_matrix(p_state, p_mat_opt.as_ref(), p_size_opt);
+
+        unsafe {
+            core::ptr::copy_nonoverlapping(inh.m.as_ptr(), out_inheritance_m, 16);
+            core::ptr::copy_nonoverlapping(draw.m.as_ptr(), out_drawing_m, 16);
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.get_passed_events().len() as i32;
+    }
+    0
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_type(context: *mut c_void, index: i32) -> i32 {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return match event.data {
+            crate::PassedEventData::UserData(_) => 0,
+            crate::PassedEventData::Signal(_) => 1,
+            crate::PassedEventData::Audio(_) => 2,
+            crate::PassedEventData::Instance(_) => 3,
+            crate::PassedEventData::Effect(_) => 4,
+        };
+    }
+    -1
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_frame_no(context: *mut c_void, index: i32) -> i32 {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return event.frame_no;
+    }
+    -1
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_part_index(context: *mut c_void, index: i32) -> i32 {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return event.part_index as i32;
+    }
+    -1
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index: i32) -> i32 {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(event) = ffi_context.ctx.get_passed_events().get(index as usize)
+    {
+        return event.event_index;
+    }
+    -1
 }

@@ -117,6 +117,7 @@ pub struct AnimationMetadata<'a> {
     pub end_frame: i32,
     pub fps: i32,
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
+    pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
 }
 
 pub struct SsabData {
@@ -187,11 +188,13 @@ impl<'a> AnimationResource<'a> {
             for anim in fb_animations {
                 let mut cached_parts = Vec::new();
                 if let Some(parts) = anim.parts_animation_data() {
+                    let fb_parts = ssab.parts();
                     for (i, p) in parts.iter().enumerate() {
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16));
+                        let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index));
                     }
                 }
-                animations.push(AnimationMetadata { name_hash: anim.name_hash(), start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, cached_parts });
+                animations.push(AnimationMetadata { name_hash: anim.name_hash(), start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, cached_parts, events: anim.events() });
             }
         }
 
@@ -234,6 +237,23 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
+#[derive(Clone)]
+pub enum PassedEventData<'a> {
+    UserData(ssab::ssab::ss::format::PartAttributeUserData<'a>),
+    Signal(ssab::ssab::ss::format::PartAttributeSignal<'a>),
+    Audio(ssab::ssab::ss::format::PartAttributeAudio<'a>),
+    Instance(ssab::ssab::ss::format::PartAttributeInstance<'a>),
+    Effect(ssab::ssab::ss::format::PartAttributeEffect<'a>),
+}
+
+#[derive(Clone)]
+pub struct PassedEvent<'a> {
+    pub frame_no: i32,
+    pub part_index: i16,
+    pub data: PassedEventData<'a>,
+    pub event_index: i32,
+}
+
 struct ContextBuffers<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
@@ -242,11 +262,12 @@ struct ContextBuffers<'a> {
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
+    collected_events: Vec<PassedEvent<'a>>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new() }
+        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_events: Vec::new() }
     }
 }
 
@@ -284,6 +305,14 @@ impl<'a> Context<'a> {
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.resource.map(|r| r.get_ssab_data())
+    }
+
+    pub(crate) fn get_resource(&self) -> Option<&'a AnimationResource<'a>> {
+        self.resource
+    }
+
+    pub(crate) fn get_animation_idx(&self) -> Option<i32> {
+        if self.animation_idx >= 0 { Some(self.animation_idx) } else { None }
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -347,6 +376,10 @@ impl<'a> Context<'a> {
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
         Ok(())
+    }
+
+    pub fn update_animation(&mut self, delta_time: f32) {
+        self.controller.update(delta_time);
     }
 
     pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
@@ -464,7 +497,84 @@ impl<'a> Context<'a> {
     // Playback control
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
-        self.controller.update(delta)
+        let res = self.controller.update(delta);
+
+        self.collect_events();
+
+        res
+    }
+
+    fn collect_events(&mut self) {
+        self.buffers.collected_events.clear();
+        let Some(resource) = self.resource else {
+            return;
+        };
+        if self.animation_idx < 0 {
+            return;
+        }
+        let metadata = &resource.animations[self.animation_idx as usize];
+        let Some(events_vec) = metadata.events else {
+            return;
+        };
+
+        for &frame_no in self.controller.get_passed_frames() {
+            // Find events for this frame using binary search
+            let mut low = 0;
+            let mut high = events_vec.len();
+            let mut found_idx = None;
+
+            while low < high {
+                let mid = low + (high - low) / 2;
+                let mid_frame = events_vec.get(mid).frame_index() as i32;
+                if mid_frame == frame_no {
+                    found_idx = Some(mid);
+                    break;
+                } else if mid_frame < frame_no {
+                    low = mid + 1;
+                } else {
+                    high = mid;
+                }
+            }
+
+            if let Some(idx) = found_idx {
+                let events_per_frame = events_vec.get(idx);
+
+                if let Some(users) = events_per_frame.users() {
+                    for (i, user) in users.iter().enumerate() {
+                        let val = user.value().unwrap();
+                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: user.part_index() as i16, data: PassedEventData::UserData(val), event_index: i as i32 });
+                    }
+                }
+                if let Some(signals) = events_per_frame.signals() {
+                    for (i, signal) in signals.iter().enumerate() {
+                        let val = signal.value().unwrap();
+                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: signal.part_index() as i16, data: PassedEventData::Signal(val), event_index: i as i32 });
+                    }
+                }
+                if let Some(audios) = events_per_frame.audios() {
+                    for (i, audio) in audios.iter().enumerate() {
+                        let val = audio.value().unwrap();
+                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: audio.part_index() as i16, data: PassedEventData::Audio(val), event_index: i as i32 });
+                    }
+                }
+                if let Some(instances) = events_per_frame.instances() {
+                    for (i, instance) in instances.iter().enumerate() {
+                        let val = instance.value().unwrap();
+                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: instance.part_index() as i16, data: PassedEventData::Instance(val), event_index: i as i32 });
+                    }
+                }
+                if let Some(effects) = events_per_frame.effects() {
+                    for (i, effect) in effects.iter().enumerate() {
+                        let val = effect.value().unwrap();
+                        self.buffers.collected_events.push(PassedEvent { frame_no, part_index: effect.part_index() as i16, data: PassedEventData::Effect(val), event_index: i as i32 });
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn get_passed_events(&self) -> &[PassedEvent<'a>] {
+        &self.buffers.collected_events
     }
 
     pub fn play(&mut self) {
@@ -493,6 +603,72 @@ impl<'a> Context<'a> {
 
     pub fn prev_frame(&mut self) {
         self.controller.prev_frame();
+    }
+}
+
+impl<'a> Context<'a> {}
+
+pub struct EffectContext<'a> {
+    pub instance: crate::core::effect::instance::EffectInstance,
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+}
+
+impl<'a> EffectContext<'a> {
+    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
+        if let Some(effects) = ssab.effects()
+            && let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash)
+        {
+            let instance = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed);
+            return Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new() });
+        }
+        Err(error::SSRuntimeError::AnimationNotFound)
+    }
+
+    pub fn reset(&mut self) {
+        self.instance.reset();
+    }
+
+    pub fn get_lifetime(&self) -> i32 {
+        self.instance.effect_time_length
+    }
+
+    pub fn is_infinite(&self) -> bool {
+        self.instance.is_infinite
+    }
+
+    pub fn update(&mut self, frame: f32) {
+        self.instance.update(frame);
+    }
+
+    pub fn get_state(&mut self) -> Result<&[u8], error::SSRuntimeError> {
+        let (draw_commands, draw_particles) = self.instance.get_draw_commands();
+
+        self.fb.reset();
+
+        let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
+        for cmd in draw_commands {
+            let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
+            for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
+                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
+            }
+            let particles_offset = self.fb.create_vector(&fbs_particles);
+
+            let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
+            builder.add_cell_index(cmd.cell_index);
+            builder.add_blend_type(cmd.blend_type);
+            builder.add_particles(particles_offset);
+            fbs_emitters.push(builder.finish());
+        }
+
+        let emitters_offset = self.fb.create_vector(&fbs_emitters);
+
+        let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
+        builder.add_emitters(emitters_offset);
+        let root = builder.finish();
+
+        self.fb.finish_minimal(root);
+        Ok(self.fb.finished_data())
     }
 }
 
@@ -747,22 +923,38 @@ mod tests {
     }
 
     #[test]
-    fn test_invalid_ssab_data() {
-        // Prepare dummy invalid data
-        let mut invalid_buf = vec![0u8; 128];
-        invalid_buf[0] = 0xFF; // Just some garbage
+    fn test_event_collection_integration() {
+        prepare();
+        let mut base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        base.pop();
+        base.pop();
+        let path = base.join("tests/overall/overall_ssab/UserData.ssab");
+        let data = std::fs::read(path).expect("Failed to read test ssab file");
 
-        let ssab_data = SsabData::load_copy(&invalid_buf).expect("Failed to load SsabData");
+        let ssab_data = SsabData::load_copy(&data).unwrap();
+        let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
 
-        // It shouldn't panic, but it might just return garbage version, or we can just test if the loader checks versions
-        // Since we are reading an invalid buffer, the flatbuffers version check in AnimationResource::new will fail or read garbage.
-        // In some cases reading garbage as flatbuffers might cause panic or undefined behavior, but since we just do a quick version check,
-        // it should likely return an error. Let's wrap it.
-        let result = std::panic::catch_unwind(|| AnimationResource::new(ssab_data.as_slice()));
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
 
-        // Either it returns an error or panics due to out-of-bounds in Flatbuffers unchecked loading
-        if let Ok(res) = result {
-            assert!(res.is_err(), "Expected error for invalid ssab data");
-        }
+        let anim_name = resource.get_animation_names().first().cloned().expect("No animations found in SSAB");
+        ctx.setup_animation(&anim_name).unwrap();
+        ctx.play();
+
+        // Advance by 15 frames (0 -> 15)
+        let interval = 1000.0 / 30.0;
+        ctx.update(interval * 15.0);
+
+        let events = ctx.get_passed_events();
+        // println!("Collected events at frames: {:?}", events.iter().map(|e| e.frame_no).collect::<Vec<_>>());
+        assert!(!events.is_empty(), "Should have collected at least one event");
+
+        // Advance further to cover the whole animation
+        ctx.update(interval * 100.0);
+        let events = ctx.get_passed_events();
+        // println!("All collected events at frames: {:?}", events.iter().map(|e| e.frame_no).collect::<Vec<_>>());
+
+        // Let's check for any event that is not at frame 0 (setup)
+        assert!(events.iter().any(|e| e.frame_no > 0), "Should have collected at least one event at a frame > 0");
     }
 }

@@ -15,6 +15,7 @@ ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 libc = { version = "0.2", optional = true }
+wide = { workspace = true }
 
 [features]
 default = ["ffi", "std"]

@@ -358,7 +358,6 @@ table PartAttributeVertex {
   lb: Vec2;
   rb: Vec2;
 }
-
 table PartAttributeInstance {
   pingpong: bool;
   independent: bool;
