@@ -358,9 +358,7 @@ table PartAttributeVertex {
   lb: Vec2;
   rb: Vec2;
 }
-
 table PartAttributeInstance {
-  anime_hash: uint32;
   pingpong: bool;
   independent: bool;
   loop_num: int;

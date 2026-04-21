@@ -10197,15 +10197,14 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeInstance<'a> {
 }
 
 impl<'a> PartAttributeInstance<'a> {
-  pub const VT_ANIME_HASH: ::flatbuffers::VOffsetT = 4;
-  pub const VT_PINGPONG: ::flatbuffers::VOffsetT = 6;
-  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 8;
-  pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 10;
-  pub const VT_START_LABEL_HASH: ::flatbuffers::VOffsetT = 12;
-  pub const VT_START_OFFSET: ::flatbuffers::VOffsetT = 14;
-  pub const VT_END_LABEL_HASH: ::flatbuffers::VOffsetT = 16;
-  pub const VT_END_OFFSET: ::flatbuffers::VOffsetT = 18;
-  pub const VT_SPEED: ::flatbuffers::VOffsetT = 20;
+  pub const VT_PINGPONG: ::flatbuffers::VOffsetT = 4;
+  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 6;
+  pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 8;
+  pub const VT_START_LABEL_HASH: ::flatbuffers::VOffsetT = 10;
+  pub const VT_START_OFFSET: ::flatbuffers::VOffsetT = 12;
+  pub const VT_END_LABEL_HASH: ::flatbuffers::VOffsetT = 14;
+  pub const VT_END_OFFSET: ::flatbuffers::VOffsetT = 16;
+  pub const VT_SPEED: ::flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -10223,14 +10222,12 @@ impl<'a> PartAttributeInstance<'a> {
     builder.add_start_offset(args.start_offset);
     builder.add_start_label_hash(args.start_label_hash);
     builder.add_loop_num(args.loop_num);
-    builder.add_anime_hash(args.anime_hash);
     builder.add_independent(args.independent);
     builder.add_pingpong(args.pingpong);
     builder.finish()
   }
 
   pub fn unpack(&self) -> PartAttributeInstanceT {
-    let anime_hash = self.anime_hash();
     let pingpong = self.pingpong();
     let independent = self.independent();
     let loop_num = self.loop_num();
@@ -10240,7 +10237,6 @@ impl<'a> PartAttributeInstance<'a> {
     let end_offset = self.end_offset();
     let speed = self.speed();
     PartAttributeInstanceT {
-      anime_hash,
       pingpong,
       independent,
       loop_num,
@@ -10252,13 +10248,6 @@ impl<'a> PartAttributeInstance<'a> {
     }
   }
 
-  #[inline]
-  pub fn anime_hash(&self) -> u32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(PartAttributeInstance::VT_ANIME_HASH, Some(0)).unwrap()}
-  }
   #[inline]
   pub fn pingpong(&self) -> bool {
     // Safety:
@@ -10323,7 +10312,6 @@ impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<u32>("anime_hash", Self::VT_ANIME_HASH, false)?
      .visit_field::<bool>("pingpong", Self::VT_PINGPONG, false)?
      .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
      .visit_field::<i32>("loop_num", Self::VT_LOOP_NUM, false)?
@@ -10337,7 +10325,6 @@ impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
   }
 }
 pub struct PartAttributeInstanceArgs {
-    pub anime_hash: u32,
     pub pingpong: bool,
     pub independent: bool,
     pub loop_num: i32,
@@ -10351,7 +10338,6 @@ impl<'a> Default for PartAttributeInstanceArgs {
   #[inline]
   fn default() -> Self {
     PartAttributeInstanceArgs {
-      anime_hash: 0,
       pingpong: false,
       independent: false,
       loop_num: 0,
@@ -10369,10 +10355,6 @@ pub struct PartAttributeInstanceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator 
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeInstanceBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_anime_hash(&mut self, anime_hash: u32) {
-    self.fbb_.push_slot::<u32>(PartAttributeInstance::VT_ANIME_HASH, anime_hash, 0);
-  }
   #[inline]
   pub fn add_pingpong(&mut self, pingpong: bool) {
     self.fbb_.push_slot::<bool>(PartAttributeInstance::VT_PINGPONG, pingpong, false);
@@ -10423,7 +10405,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeInstanceBuilder<
 impl ::core::fmt::Debug for PartAttributeInstance<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeInstance");
-      ds.field("anime_hash", &self.anime_hash());
       ds.field("pingpong", &self.pingpong());
       ds.field("independent", &self.independent());
       ds.field("loop_num", &self.loop_num());
@@ -10438,7 +10419,6 @@ impl ::core::fmt::Debug for PartAttributeInstance<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributeInstanceT {
-  pub anime_hash: u32,
   pub pingpong: bool,
   pub independent: bool,
   pub loop_num: i32,
@@ -10451,7 +10431,6 @@ pub struct PartAttributeInstanceT {
 impl Default for PartAttributeInstanceT {
   fn default() -> Self {
     Self {
-      anime_hash: 0,
       pingpong: false,
       independent: false,
       loop_num: 0,
@@ -10468,7 +10447,6 @@ impl PartAttributeInstanceT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<PartAttributeInstance<'b>> {
-    let anime_hash = self.anime_hash;
     let pingpong = self.pingpong;
     let independent = self.independent;
     let loop_num = self.loop_num;
@@ -10478,7 +10456,6 @@ impl PartAttributeInstanceT {
     let end_offset = self.end_offset;
     let speed = self.speed;
     PartAttributeInstance::create(_fbb, &PartAttributeInstanceArgs{
-      anime_hash,
       pingpong,
       independent,
       loop_num,
