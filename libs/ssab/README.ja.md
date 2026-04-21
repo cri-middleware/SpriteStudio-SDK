@@ -7,7 +7,7 @@ Google FlatBuffers を使用してシリアライズ/デシリアライズを行
 
 # 対応フォーマット
 
-このライブラリは以下の2つのフォーマット定義 (`fbs`) をサポートしています。
+このライブラリは以下の2つのフォーマット定義 (`fbs`) をサポートしています。詳細な設計仕様については、[**スキーマドキュメント**](./SCHEMA.ja.md) を参照してください。
 
 - **SSAB ([ssab.fbs](./fbs/ssab.fbs))**: アニメーションデータ (`SsAnimeBinary`)
 - **SSQB ([ssqb.fbs](./fbs/ssqb.fbs))**: シーケンスデータ (`SsSequenceBinary`)
