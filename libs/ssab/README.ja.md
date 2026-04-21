@@ -97,18 +97,24 @@ use ssab::ssab::ss::format::{SsAnimeBinary, SsAnimeBinaryT};
 }
 ```
 
-# 開発・コード生成
+# 開発・コード生成 (fbsファイルの更新)
 
-`fbs` ファイルを変更した場合、Rust コードを再生成する必要があります。
+`fbs` フォルダ内の `.fbs` ファイルを変更・更新した場合、Rust コードを再生成する必要があります。
 再生成には `flatc` コマンド (Google FlatBuffers Compiler) がインストールされている必要があります。
 
-## Windows (PowerShell)
+## 更新手順
+
+1. `flatc` (Google FlatBuffers Compiler) をインストールします。
+2. `fbs/` フォルダ内の `.fbs` ファイルを更新・編集します。
+3. 以下のスクリプトを実行し、Rust コードを再生成します。
+
+### Windows (PowerShell)
 
 ```powershell
 ./scripts/generate.ps1
 ```
 
-## macOS / Linux (Bash)
+### macOS / Linux (Bash)
 
 ```bash
 ./scripts/generate.sh

@@ -125,3 +125,27 @@ API のシグネチャや構造体の定義はそちらを参照してくださ�
 
 このガイドでは、基本アーキテクチャから、メッシュ変形、インスタンスアニメーション、`no_std` 統合などの高度な機能まで網羅しています。
 
+# 開発・コード生成 (fbsファイルの更新)
+
+`fbs` フォルダ内の `.fbs` ファイルを変更・更新した場合、Rust コードを再生成する必要があります。
+再生成には `flatc` コマンド (Google FlatBuffers Compiler) がインストールされている必要があります。
+
+## 更新手順
+
+1. `flatc` (Google FlatBuffers Compiler) をインストールします。
+2. `fbs/` フォルダ内の `.fbs` ファイルを更新・編集します。
+3. 以下のスクリプトを実行し、Rust コードを再生成します。
+
+### Windows (PowerShell)
+
+```powershell
+./scripts/generate.ps1
+```
+
+### macOS / Linux (Bash)
+
+```bash
+./scripts/generate.sh
+```
+
+

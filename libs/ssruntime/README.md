@@ -124,3 +124,27 @@ If you are planning to implement a SpriteStudio 7 player for a new game engine o
 
 This guide covers everything from basic architecture to advanced features like mesh deformation, instance animations, and `no_std` integration.
 
+# Development & Code Generation (Updating fbs files)
+
+If you modify or update the `.fbs` files in the `fbs` folder, you need to regenerate the Rust code.
+Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
+
+## Update Procedure
+
+1. Install `flatc` (Google FlatBuffers Compiler).
+2. Update or modify the `.fbs` files in the `fbs/` folder.
+3. Run the following script to regenerate the Rust code.
+
+### Windows (PowerShell)
+
+```powershell
+./scripts/generate.ps1
+```
+
+### macOS / Linux (Bash)
+
+```bash
+./scripts/generate.sh
+```
+
+

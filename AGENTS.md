@@ -67,10 +67,15 @@ SpriteStudio7-SDK is designed to provide professional-grade animation capabiliti
 
 When modifying code in this repository, you MUST adhere to the following rules:
 
+*   **Automated Formatting & Linting:** AFTER editing any `.rs` files, you MUST run the following commands to ensure formatting and static analysis fixes are applied automatically:
+    ```bash
+    cargo clippy --workspace --all-targets --fix --allow-dirty --allow-staged -- -D warnings
+    cargo fmt
+    ```
+    *(Note: `--allow-dirty` and `--allow-staged` are often needed for `cargo fix` when running in uncommitted workspaces).*
 *   **no_std strictness:** `libssruntime` must remain `#![no_std]` compatible. NEVER introduce `std` dependencies or standard library calls (like `std::time`, `std::fs`, or `std::collections` that require `std`) into the runtime core. Use `alloc` or `core` instead.
 *   **FFI Boundaries:** When modifying the C-API in `ssruntime` or `ssconverter`, you must ensure that memory safety is preserved across the FFI boundary. Avoid exposing Rust-specific structures directly.
 *   **Serialization/FlatBuffers:** If you modify anything related to `.ssab` parsing, be aware that it relies on FlatBuffers zero-copy deserialization. Do not introduce allocations during the playback loop unless explicitly necessary.
-*   **Linting & Formatting:** Before proposing changes, ensure that `cargo fmt` and `cargo clippy --workspace --all-targets` have been considered or executed.
 
 ## SpriteStudio Terminology (Glossary)
 
@@ -107,7 +112,24 @@ Run these commands to verify your changes:
 *   **Linting:** `cargo clippy --workspace --all-targets -- -D warnings`
 *   **Formatting:** `cargo fmt --all -- --check`
 *   **Testing (All):** `cargo test --workspace`
-*   **Testing (no_std explicitly):** `cargo build -p ssruntime --no-default-features`
+*   **Testing (no_std explicitly):** `cargo build -p ssruntime --no-default-features --features ffi,libc_alloc,panic-handler`
+
+### Updating `.fbs` Files (Code Generation)
+
+If you modify or update the `.fbs` files in `libs/ssab/fbs/` or `libs/ssruntime/fbs/`, you MUST regenerate the Rust code.
+Regeneration requires the `flatc` command (Google FlatBuffers Compiler) to be installed.
+
+Run the corresponding script for your platform from the respective library directory:
+
+**Windows (PowerShell):**
+```powershell
+./scripts/generate.ps1
+```
+
+**macOS / Linux (Bash):**
+```bash
+./scripts/generate.sh
+```
 
 ### Release Scripts
 
