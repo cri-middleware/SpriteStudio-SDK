@@ -1,6 +1,5 @@
 use crate::core::framedata::{CachedPartData, NUM_PART_ATTRIBUTES, evaluate_part};
 use crate::core::matrix::SsMatrix4x4;
-use crate::core::matrix::SsVector3;
 use alloc::vec;
 use alloc::vec::Vec;
 use wide::f32x4;
@@ -55,8 +54,8 @@ pub fn transform_vec2s(matrix: &SsMatrix4x4, input: &[f32]) -> Vec<f32> {
         let base = i * 2;
         // Rearrange to SoA: vx = [x0, x1, x2, x3], vy = [y0, y1, y2, y3]
         // This makes the math easier with wide crate.
-        let vx = f32x4::from([input[base], input[base+2], input[base+4], input[base+6]]);
-        let vy = f32x4::from([input[base+1], input[base+3], input[base+5], input[base+7]]);
+        let vx = f32x4::from([input[base], input[base + 2], input[base + 4], input[base + 6]]);
+        let vy = f32x4::from([input[base + 1], input[base + 3], input[base + 5], input[base + 7]]);
 
         let res_x: [f32; 4] = (m0 * vx + m4 * vy + m12).into();
         let res_y: [f32; 4] = (m1 * vx + m5 * vy + m13).into();
@@ -83,7 +82,7 @@ pub fn transform_vec2s(matrix: &SsMatrix4x4, input: &[f32]) -> Vec<f32> {
 /// Transform multiple particle positions by a matrix using SIMD (wide::f32x4).
 /// particles_raw: Raw byte slice of ParticleState array from ss_effect_get_state.
 pub fn transform_particles(matrix: &SsMatrix4x4, particles_raw: &[u8]) -> Vec<(f32, f32)> {
-    // Layout from effect_state.fbs: 
+    // Layout from effect_state.fbs:
     // x:0(4), y:4(4), scale_x:8(4), scale_y:12(4), rotation:16(4), direction:20(4), color:24(4) = 28 bytes per particle
     let stride = 28;
     let count = particles_raw.len() / stride;
@@ -94,8 +93,8 @@ pub fn transform_particles(matrix: &SsMatrix4x4, particles_raw: &[u8]) -> Vec<(f
     let mut extracted = Vec::with_capacity(count * 2);
     for i in 0..count {
         let base = i * stride;
-        extracted.push(f32::from_le_bytes(particles_raw[base..base+4].try_into().unwrap()));
-        extracted.push(f32::from_le_bytes(particles_raw[base+4..base+8].try_into().unwrap()));
+        extracted.push(f32::from_le_bytes(particles_raw[base..base + 4].try_into().unwrap()));
+        extracted.push(f32::from_le_bytes(particles_raw[base + 4..base + 8].try_into().unwrap()));
     }
 
     let transformed = transform_vec2s(matrix, &extracted);
@@ -127,27 +126,21 @@ mod tests {
     #[test]
     fn test_transform_vec2s() {
         let matrix = SsMatrix4x4::create_translation(100.0, -50.0, 0.0);
-        
+
         // 5 points (10 floats) to test SIMD (4) + Remainder (1)
         let input = vec![
-            0.0, 0.0,   // p0
+            0.0, 0.0, // p0
             10.0, 10.0, // p1
             -5.0, 20.0, // p2
             30.0, -5.0, // p3
-            1.0, 1.0    // p4 (remainder)
+            1.0, 1.0, // p4 (remainder)
         ];
-        
+
         let output = transform_vec2s(&matrix, &input);
         assert_eq!(output.len(), 10);
-        
-        let expected = [
-            100.0, -50.0,
-            110.0, -40.0,
-            95.0, -30.0,
-            130.0, -55.0,
-            101.0, -49.0
-        ];
-        
+
+        let expected = [100.0, -50.0, 110.0, -40.0, 95.0, -30.0, 130.0, -55.0, 101.0, -49.0];
+
         for i in 0..10 {
             assert!((output[i] - expected[i]).abs() < 1e-5, "Idx {}: {} != {}", i, output[i], expected[i]);
         }
