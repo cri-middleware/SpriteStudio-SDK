@@ -309,8 +309,12 @@ impl<'a> Context<'a> {
 
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
-        self.reset();
         self.resource = Some(resource);
+        self.controller.reset_setup();
+        self.fb.reset();
+        self.animation_idx = -1;
+        self.buffers.cursors.clear();
+        // Configuration (coordinate_system, origin, unit) is preserved.
     }
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
