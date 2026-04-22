@@ -650,6 +650,75 @@ pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame:
 }
 
 #[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_context_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
+    if let Some(ffi_context) = get_context(context) {
+        let cs = match coordinate_system {
+            1 => crate::core::SsCoordinateSystem::YDown,
+            _ => crate::core::SsCoordinateSystem::YUp,
+        };
+        ffi_context.ctx.set_coordinate_system(cs);
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_context_get_coordinate_system(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        match ffi_context.ctx.get_coordinate_system() {
+            crate::core::SsCoordinateSystem::YDown => 1,
+            crate::core::SsCoordinateSystem::YUp => 0,
+        }
+    } else {
+        0
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_context_set_origin(context: *mut c_void, origin: i32) {
+    if let Some(ffi_context) = get_context(context) {
+        let o = match origin {
+            1 => crate::core::SsOrigin::TopLeft,
+            _ => crate::core::SsOrigin::Center,
+        };
+        ffi_context.ctx.set_origin(o);
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_context_get_origin(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        match ffi_context.ctx.get_origin() {
+            crate::core::SsOrigin::TopLeft => 1,
+            crate::core::SsOrigin::Center => 0,
+        }
+    } else {
+        0
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_context_set_unit(context: *mut c_void, unit: i32) {
+    if let Some(ffi_context) = get_context(context) {
+        let u = match unit {
+            1 => crate::core::SsUnit::Normalized,
+            _ => crate::core::SsUnit::Pixel,
+        };
+        ffi_context.ctx.set_unit(u);
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_context_get_unit(context: *mut c_void) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        match ffi_context.ctx.get_unit() {
+            crate::core::SsUnit::Normalized => 1,
+            crate::core::SsUnit::Pixel => 0,
+        }
+    } else {
+        0
+    }
+}
+
+#[unsafe(no_mangle)]
 /// Compute world matrix for a specific part by traversing its ancestors.
 /// out_m: pointer to float array of size 16.
 pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, part_index: u16, frame_no: i32, out_m: *mut f32) -> bool {
@@ -659,7 +728,9 @@ pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, par
     {
         let metadata = &resource.animations[idx as usize];
 
-        if let Some(res_m) = crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no) {
+        if let Some(res_m) =
+            crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, ffi_context.ctx.get_coordinate_system(), ffi_context.ctx.get_origin(), ffi_context.ctx.get_unit(), metadata.canvas_width, metadata.canvas_height)
+        {
             unsafe {
                 core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
             }

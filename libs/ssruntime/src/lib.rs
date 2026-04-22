@@ -92,6 +92,8 @@ mod runtime;
 pub mod core;
 pub mod error;
 
+pub use crate::core::SsCoordinateSystem;
+
 #[cfg(feature = "ffi")]
 pub mod ffi;
 
@@ -116,6 +118,8 @@ pub struct AnimationMetadata<'a> {
     pub start_frame: i32,
     pub end_frame: i32,
     pub fps: i32,
+    pub canvas_width: f32,
+    pub canvas_height: f32,
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
 }
@@ -195,7 +199,8 @@ impl<'a> AnimationResource<'a> {
                     }
                 }
                 let name_hash = anim.name_hash();
-                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, cached_parts, events: anim.events() });
+                let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
+                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events() });
             }
         }
 
@@ -261,6 +266,9 @@ pub struct Context<'a> {
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
     buffers: ContextBuffers<'a>,
+    coordinate_system: crate::core::SsCoordinateSystem,
+    origin: crate::core::SsOrigin,
+    unit: crate::core::SsUnit,
 }
 
 impl<'a> Default for Context<'a> {
@@ -271,7 +279,16 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context { resource: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
+        Context {
+            resource: None,
+            fb: flatbuffers::FlatBufferBuilder::new(),
+            controller: core::playback_controller::PlaybackController::new(),
+            animation_idx: -1,
+            buffers: ContextBuffers::new(),
+            coordinate_system: crate::core::SsCoordinateSystem::default(),
+            origin: crate::core::SsOrigin::default(),
+            unit: crate::core::SsUnit::default(),
+        }
     }
 
     pub fn reset(&mut self) {
@@ -280,11 +297,18 @@ impl<'a> Context<'a> {
         self.fb.reset();
         self.animation_idx = -1;
         self.buffers.cursors.clear();
+        self.coordinate_system = crate::core::SsCoordinateSystem::default();
+        self.origin = crate::core::SsOrigin::default();
+        self.unit = crate::core::SsUnit::default();
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
-        self.reset();
         self.resource = Some(resource);
+        self.controller.reset_setup();
+        self.fb.reset();
+        self.animation_idx = -1;
+        self.buffers.cursors.clear();
+        // Configuration (coordinate_system, origin, unit) is preserved.
     }
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
@@ -392,6 +416,11 @@ impl<'a> Context<'a> {
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
             &mut self.buffers.cursors,
+            self.coordinate_system,
+            self.origin,
+            self.unit,
+            metadata.canvas_width,
+            metadata.canvas_height,
         );
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
@@ -476,6 +505,30 @@ impl<'a> Context<'a> {
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
         self.controller.set_animation_section(start_frame, end_frame);
+    }
+
+    pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
+        self.coordinate_system = coordinate_system;
+    }
+
+    pub fn get_coordinate_system(&self) -> crate::core::SsCoordinateSystem {
+        self.coordinate_system
+    }
+
+    pub fn set_origin(&mut self, origin: crate::core::SsOrigin) {
+        self.origin = origin;
+    }
+
+    pub fn get_origin(&self) -> crate::core::SsOrigin {
+        self.origin
+    }
+
+    pub fn set_unit(&mut self, unit: crate::core::SsUnit) {
+        self.unit = unit;
+    }
+
+    pub fn get_unit(&self) -> crate::core::SsUnit {
+        self.unit
     }
 
     // Playback control

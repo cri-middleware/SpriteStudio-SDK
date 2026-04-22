@@ -6,6 +6,81 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebCoordinateSystem {
+    YUp = 0,
+    YDown = 1,
+}
+
+impl From<crate::core::SsCoordinateSystem> for WebCoordinateSystem {
+    fn from(cs: crate::core::SsCoordinateSystem) -> Self {
+        match cs {
+            crate::core::SsCoordinateSystem::YUp => WebCoordinateSystem::YUp,
+            crate::core::SsCoordinateSystem::YDown => WebCoordinateSystem::YDown,
+        }
+    }
+}
+
+impl From<WebCoordinateSystem> for crate::core::SsCoordinateSystem {
+    fn from(cs: WebCoordinateSystem) -> Self {
+        match cs {
+            WebCoordinateSystem::YUp => crate::core::SsCoordinateSystem::YUp,
+            WebCoordinateSystem::YDown => crate::core::SsCoordinateSystem::YDown,
+        }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebOrigin {
+    Center = 0,
+    TopLeft = 1,
+}
+
+impl From<crate::core::SsOrigin> for WebOrigin {
+    fn from(origin: crate::core::SsOrigin) -> Self {
+        match origin {
+            crate::core::SsOrigin::Center => WebOrigin::Center,
+            crate::core::SsOrigin::TopLeft => WebOrigin::TopLeft,
+        }
+    }
+}
+
+impl From<WebOrigin> for crate::core::SsOrigin {
+    fn from(origin: WebOrigin) -> Self {
+        match origin {
+            WebOrigin::Center => crate::core::SsOrigin::Center,
+            WebOrigin::TopLeft => crate::core::SsOrigin::TopLeft,
+        }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebUnit {
+    Pixel = 0,
+    Normalized = 1,
+}
+
+impl From<crate::core::SsUnit> for WebUnit {
+    fn from(unit: crate::core::SsUnit) -> Self {
+        match unit {
+            crate::core::SsUnit::Pixel => WebUnit::Pixel,
+            crate::core::SsUnit::Normalized => WebUnit::Normalized,
+        }
+    }
+}
+
+impl From<WebUnit> for crate::core::SsUnit {
+    fn from(unit: WebUnit) -> Self {
+        match unit {
+            WebUnit::Pixel => crate::core::SsUnit::Pixel,
+            WebUnit::Normalized => crate::core::SsUnit::Normalized,
+        }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WebPlaybackDirection {
     Forward = 0,
     Backward = 1,
@@ -242,6 +317,30 @@ impl SSRuntimeContext {
         self.inner.set_animation_section(start_frame, end_frame);
     }
 
+    pub fn set_coordinate_system(&mut self, coordinate_system: WebCoordinateSystem) {
+        self.inner.set_coordinate_system(coordinate_system.into());
+    }
+
+    pub fn get_coordinate_system(&self) -> WebCoordinateSystem {
+        self.inner.get_coordinate_system().into()
+    }
+
+    pub fn set_origin(&mut self, origin: WebOrigin) {
+        self.inner.set_origin(origin.into());
+    }
+
+    pub fn get_origin(&self) -> WebOrigin {
+        self.inner.get_origin().into()
+    }
+
+    pub fn set_unit(&mut self, unit: WebUnit) {
+        self.inner.set_unit(unit.into());
+    }
+
+    pub fn get_unit(&self) -> WebUnit {
+        self.inner.get_unit().into()
+    }
+
     pub fn update(&mut self, delta: f32) -> UpdateResult {
         let (frame, decimal) = self.inner.update(delta);
         UpdateResult { frame, decimal }
@@ -346,9 +445,14 @@ impl SSRuntimeUtils {
 
     pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
         if let Some(res) = context.inner.get_resource()
-            && let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no)
+            && let Some(idx) = context.inner.get_animation_idx()
         {
-            return Some(Box::new(res_m.m));
+            let metadata = &res.animations[idx as usize];
+            if let Some(res_m) =
+                crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, context.inner.get_coordinate_system(), context.inner.get_origin(), context.inner.get_unit(), metadata.canvas_width, metadata.canvas_height)
+            {
+                return Some(Box::new(res_m.m));
+            }
         }
         None
     }
