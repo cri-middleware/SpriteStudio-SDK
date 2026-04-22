@@ -69,9 +69,33 @@ context.bind_resource(&resource);
 ```
 
 ### 💡 メモリ管理とライフタイム (Reference Counting)
-最新の `libssruntime` では、Resource の内部管理に参照カウント (`Arc`) が導入されています。
-C-API (`ss_runtime_bind_resource`) を使用して Resource を Context にバインドすると、Context 内部で Resource への参照が保持されます。
-そのため、Player 側で `ss_resource_destroy` を呼び出して Resource を破棄しても、それにバインドされている Context が存在する限り、内部メモリは安全に保持されます（Use-after-free は発生しません）。全ての Context が破棄された時点で、メモリは自動的に解放されます。
+最新の `libssruntime` では、Resource の内部管理に参照カウント (`Arc`) が導入されており、Player 側でのメモリ管理の負担を軽減しています。
+
+#### 所有権と破棄のルール
+| オブジェクト | 所有権の持ち方 | 破棄の影響 |
+| :--- | :--- | :--- |
+| **SsabData (バイナリ)** | **Player 側** (Borrow 時) または **Library 側** (Copy 時) | Borrow の場合、Resource 破棄まで維持が必要。 |
+| **Resource (メタデータ)** | **Library 側** (参照カウント管理) | `ss_resource_destroy` でカウント減。Context があれば存続。 |
+| **Context (再生状態)** | **Player 側** (明示的に破棄が必要) | `ss_runtime_destroy` で Context 本身と参照先リソースを解放。 |
+
+#### オブジェクトの相関図
+```mermaid
+graph TD
+    Data[ssab Binary Data] -- (A) Borrow / (B) Copy --> Res[AnimationResource]
+    Res -- (C) Bind --> Ctx1[Context A]
+    Res -- (C) Bind --> Ctx2[Context B]
+    
+    subgraph "Player Side"
+        PData[Memory Data]
+    end
+
+    style PData fill:#f9f,stroke:#333,stroke-width:2px
+```
+
+1. **バインド後の安全性**: `ss_runtime_bind_resource` を実行した後は、`ss_resource_destroy` を呼び出しても、そのリソースを参照している Context が存在し続ける限りメモリは解放されません。
+2. **安全な破棄の順序**: 
+    - 基本的には **Context → Resource** の順で破棄することを推奨しますが、ライブラリ内部で参照カウントを管理しているため、逆の順序（Resource → Context）で破棄しても Use-after-free は発生しません。
+    - ただし、`ss_resource_create_borrow` を使用した場合は、**Resource が完全に解放される（全ての Context が破棄される）まで、元のバイナリデータ（`ssab_data_ptr`）のメモリを解放しないでください**。
 
 ## 2. ssab ファイルのロードと libssruntime への渡し方
 ネイティブライブラリである libssruntime へ ssab データを渡す方法は、利用するプログラミング言語のポインタ操作能力に応じて 3 つの運用パターンがあります。
@@ -164,5 +188,6 @@ ss_runtime_destroy(context);
 // リソース（メタデータ）を破棄する
 ss_resource_destroy(resource);
 ```
+
 ---
 [目次に戻る](./README.ja.md)
