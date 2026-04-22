@@ -92,6 +92,8 @@ mod runtime;
 pub mod core;
 pub mod error;
 
+pub use crate::core::SsCoordinateSystem;
+
 #[cfg(feature = "ffi")]
 pub mod ffi;
 
@@ -261,6 +263,7 @@ pub struct Context<'a> {
     controller: core::playback_controller::PlaybackController,
     animation_idx: i32,
     buffers: ContextBuffers<'a>,
+    coordinate_system: SsCoordinateSystem,
 }
 
 impl<'a> Default for Context<'a> {
@@ -271,7 +274,7 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context { resource: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new() }
+        Context { resource: None, fb: flatbuffers::FlatBufferBuilder::new(), controller: core::playback_controller::PlaybackController::new(), animation_idx: -1, buffers: ContextBuffers::new(), coordinate_system: SsCoordinateSystem::default() }
     }
 
     pub fn reset(&mut self) {
@@ -280,6 +283,7 @@ impl<'a> Context<'a> {
         self.fb.reset();
         self.animation_idx = -1;
         self.buffers.cursors.clear();
+        self.coordinate_system = SsCoordinateSystem::default();
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
@@ -392,6 +396,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
             &mut self.buffers.cursors,
+            self.coordinate_system,
         );
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
@@ -476,6 +481,14 @@ impl<'a> Context<'a> {
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
         self.controller.set_animation_section(start_frame, end_frame);
+    }
+
+    pub fn set_coordinate_system(&mut self, coordinate_system: SsCoordinateSystem) {
+        self.coordinate_system = coordinate_system;
+    }
+
+    pub fn get_coordinate_system(&self) -> SsCoordinateSystem {
+        self.coordinate_system
     }
 
     // Playback control

@@ -6,6 +6,31 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WebCoordinateSystem {
+    YUp = 0,
+    YDown = 1,
+}
+
+impl From<crate::core::SsCoordinateSystem> for WebCoordinateSystem {
+    fn from(cs: crate::core::SsCoordinateSystem) -> Self {
+        match cs {
+            crate::core::SsCoordinateSystem::YUp => WebCoordinateSystem::YUp,
+            crate::core::SsCoordinateSystem::YDown => WebCoordinateSystem::YDown,
+        }
+    }
+}
+
+impl From<WebCoordinateSystem> for crate::core::SsCoordinateSystem {
+    fn from(cs: WebCoordinateSystem) -> Self {
+        match cs {
+            WebCoordinateSystem::YUp => crate::core::SsCoordinateSystem::YUp,
+            WebCoordinateSystem::YDown => crate::core::SsCoordinateSystem::YDown,
+        }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WebPlaybackDirection {
     Forward = 0,
     Backward = 1,
@@ -242,6 +267,14 @@ impl SSRuntimeContext {
         self.inner.set_animation_section(start_frame, end_frame);
     }
 
+    pub fn set_coordinate_system(&mut self, coordinate_system: WebCoordinateSystem) {
+        self.inner.set_coordinate_system(coordinate_system.into());
+    }
+
+    pub fn get_coordinate_system(&self) -> WebCoordinateSystem {
+        self.inner.get_coordinate_system().into()
+    }
+
     pub fn update(&mut self, delta: f32) -> UpdateResult {
         let (frame, decimal) = self.inner.update(delta);
         UpdateResult { frame, decimal }
@@ -346,7 +379,7 @@ impl SSRuntimeUtils {
 
     pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
         if let Some(res) = context.inner.get_resource()
-            && let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no)
+            && let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no, context.inner.get_coordinate_system())
         {
             return Some(Box::new(res_m.m));
         }

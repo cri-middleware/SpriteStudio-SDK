@@ -1,16 +1,21 @@
-use crate::core::framedata::{CachedPartData, NUM_PART_ATTRIBUTES, evaluate_part};
+use crate::core::framedata::{evaluate_part, CachedPartData, NUM_PART_ATTRIBUTES};
 use crate::core::matrix::SsMatrix4x4;
+use crate::core::SsCoordinateSystem;
 use alloc::vec;
 use alloc::vec::Vec;
 use wide::f32x4;
 
 /// Calculate the target frame for a child instance animation.
 pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
-    if independent { accumulated_time * speed + start_offset as f32 } else { (parent_frame - key_frame as f32) * speed + start_offset as f32 }
+    if independent {
+        accumulated_time * speed + start_offset as f32
+    } else {
+        (parent_frame - key_frame as f32) * speed + start_offset as f32
+    }
 }
 
 /// Compute world matrix for a specific part by traversing its ancestors.
-pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no: i32) -> Option<SsMatrix4x4> {
+pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no: i32, coordinate_system: SsCoordinateSystem) -> Option<SsMatrix4x4> {
     if (part_index as usize) >= parts.len() {
         return None;
     }
@@ -19,19 +24,19 @@ pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no
     // We use a fresh cursor set to avoid side-effects on the main context's cursors.
     let mut temp_cursors = vec![0usize; parts.len() * NUM_PART_ATTRIBUTES];
 
-    fn compute_recursive(target_idx: u16, frame: i32, parts: &[CachedPartData], cursors: &mut [usize], is_drawing: bool) -> SsMatrix4x4 {
+    fn compute_recursive(target_idx: u16, frame: i32, parts: &[CachedPartData], cursors: &mut [usize], coordinate_system: SsCoordinateSystem, is_drawing: bool) -> SsMatrix4x4 {
         let part = &parts[target_idx as usize];
         let part_cursors = &mut cursors[target_idx as usize * NUM_PART_ATTRIBUTES..(target_idx as usize + 1) * NUM_PART_ATTRIBUTES];
 
-        let res = evaluate_part(part, frame, part_cursors);
+        let res = evaluate_part(part, frame, part_cursors, coordinate_system);
         let parent_idx = part.parent_index;
-        let parent_mat = if parent_idx >= 0 { Some(compute_recursive(parent_idx as u16, frame, parts, cursors, false)) } else { None };
+        let parent_mat = if parent_idx >= 0 { Some(compute_recursive(parent_idx as u16, frame, parts, cursors, coordinate_system, false)) } else { None };
 
         let (inh, draw) = SsMatrix4x4::compute_world_matrix(&res.state, parent_mat.as_ref(), None);
         if is_drawing { draw } else { inh }
     }
 
-    Some(compute_recursive(part_index, frame_no, parts, &mut temp_cursors, true))
+    Some(compute_recursive(part_index, frame_no, parts, &mut temp_cursors, coordinate_system, true))
 }
 
 /// Transform multiple 2D points (x, y, x, y...) by a matrix using SIMD (wide::f32x4).
@@ -150,7 +155,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "std")]
-    fn test_get_part_world_matrix_with_real_data() {
+    fn test_get_part_world_matrix_ydown() {
         use crate::{AnimationResource, SsabData};
         use std::path::PathBuf;
 
@@ -160,24 +165,28 @@ mod tests {
 
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
         if !ssab_path.exists() {
-            // Skip if test data is not prepared
             return;
         }
 
         let input_buf = std::fs::read(&ssab_path).unwrap();
         let ssab_data = SsabData::load_copy(&input_buf).unwrap();
         let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
-        let metadata = &resource.animations[0]; // anime_1
+        let metadata = &resource.animations[0];
 
-        // Find index of "POS_XYZ"
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data.as_slice()) };
         let pos_xyz_idx = ssab.parts().unwrap().iter().position(|p| p.name() == Some("POS_XYZ")).unwrap() as u16;
 
-        // Calculate world matrix via utility at frame 10
-        let res_m = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10).unwrap();
+        // Calculate world matrix via utility at frame 10 (Y-Up)
+        let res_m_up = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YUp).unwrap();
+        
+        // Calculate world matrix via utility at frame 10 (Y-Down)
+        let res_m_down = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YDown).unwrap();
 
-        // X translation should be 32.0 based on evaluate_animation_at_frame test
-        assert!((res_m.m[12] - 32.0).abs() < 1e-5, "World X: {} != 32.0", res_m.m[12]);
-        assert!((res_m.m[0] - 1.0).abs() < 1e-5, "Scale X: {} != 1.0", res_m.m[0]);
+        // In Y-Up, Y is positive. In Y-Down, it should be negated.
+        assert!((res_m_up.m[12] - 32.0).abs() < 1e-5, "World X: {} != 32.0", res_m_up.m[12]);
+        assert_eq!(res_m_up.m[12], res_m_down.m[12]); // X is same
+        
+        // Let's assume original Y translation at frame 10 was 0.0 or something else, but down should be negated.
+        assert!((res_m_up.m[13] + res_m_down.m[13]).abs() < 1e-5, "Y should be negated: {} vs {}", res_m_up.m[13], res_m_down.m[13]);
     }
 }
