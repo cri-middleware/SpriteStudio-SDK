@@ -19,40 +19,42 @@ Player 側は、`ss_runtime_update` を呼び出した直後にイベント総�
 // 1. アニメーションの更新
 int frame_no = ss_runtime_update(runtime_ctx, delta_time);
 
-// 2. 今回の更新でイベントが発生したフレーム数を取得
-int event_frame_count = ss_runtime_get_passed_event_count(runtime_ctx);
+if (_currentAnimationData->events() != nullptr) {
+    // 2. 今回の更新でイベントが発生したフレーム数を取得
+    int event_count = ss_runtime_get_passed_event_count(runtime_ctx);
 
-// 3. イベントが発生したフレームごとのポーリング処理
-for (int i = 0; i < event_frame_count; i++) {
-    int frame = ss_runtime_get_passed_event_frame_no(runtime_ctx, i);
+    // 3. イベントが発生したフレームごとのポーリング処理
+    for (int i = 0; i < event_count; i++) {
+        // データのインデックスを直接取得
+        int event_idx = ss_runtime_get_passed_event_index(runtime_ctx, i);
 
-    // 自分の保持している AnimationData から対象フレームのイベントを検索
-    auto events_per_frame = _currentAnimationData->events()->LookupByKey(frame);
-    if (!events_per_frame) continue;
+        // 自分の保持している AnimationData からインデックスを指定して直接アクセス
+        auto events_per_frame = _currentAnimationData->events()->Get(event_idx);
 
-    // ユーザーデータ (UserData)
-    if (auto users = events_per_frame->users()) {
-        for (auto user : *users) {
-            emit_user_data_event(user->part_index(), user->value());
+        // ユーザーデータ (UserData)
+        if (auto users = events_per_frame->users()) {
+            for (auto user : *users) {
+                emit_user_data_event(user->part_index(), user->value());
+            }
         }
-    }
 
-    // シグナル (Signal)
-    if (auto signals = events_per_frame->signals()) {
-        for (auto signal : *signals) {
-            emit_signal_event(signal->part_index(), signal->value());
+        // シグナル (Signal)
+        if (auto signals = events_per_frame->signals()) {
+            for (auto signal : *signals) {
+                emit_signal_event(signal->part_index(), signal->value());
+            }
         }
-    }
 
-    // 音声 (Audio)
-    if (auto audios = events_per_frame->audios()) {
-        for (auto audio : *audios) {
-            emit_audio_event(audio->part_index(), audio->value());
+        // 音声 (Audio)
+        if (auto audios = events_per_frame->audios()) {
+            for (auto audio : *audios) {
+                emit_audio_event(audio->part_index(), audio->value());
+            }
         }
-    }
 
-    // エフェクト等、その他のイベントも同様に処理
-    // ...
+        // エフェクト等、その他のイベントも同様に処理
+        // ...
+    }
 }
 ```
 

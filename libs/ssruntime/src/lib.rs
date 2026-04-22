@@ -246,12 +246,12 @@ struct ContextBuffers<'a> {
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
-    collected_event_frames: Vec<i32>,
+    collected_event_indices: Vec<i32>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_event_frames: Vec::new() }
+        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_event_indices: Vec::new() }
     }
 }
 
@@ -489,7 +489,7 @@ impl<'a> Context<'a> {
     }
 
     fn collect_events(&mut self) {
-        self.buffers.collected_event_frames.clear();
+        self.buffers.collected_event_indices.clear();
         let Some(resource) = self.resource else {
             return;
         };
@@ -502,32 +502,48 @@ impl<'a> Context<'a> {
         };
 
         for &frame_no in self.controller.get_passed_frames() {
+            if frame_no < 0 || frame_no > u16::MAX as i32 {
+                continue;
+            }
+            let target_frame = frame_no as u16;
+
             // Find events for this frame using binary search
             let mut low = 0;
             let mut high = events_vec.len();
-            let mut found_idx = None;
 
             while low < high {
                 let mid = low + (high - low) / 2;
-                let mid_frame = events_vec.get(mid).frame_index() as i32;
-                if mid_frame == frame_no {
-                    found_idx = Some(mid);
-                    break;
-                } else if mid_frame < frame_no {
-                    low = mid + 1;
-                } else {
-                    high = mid;
+                match events_vec.get(mid).frame_index().cmp(&target_frame) {
+                    ::core::cmp::Ordering::Equal => {
+                        self.buffers.collected_event_indices.push(mid as i32);
+                        break;
+                    }
+                    ::core::cmp::Ordering::Less => low = mid + 1,
+                    ::core::cmp::Ordering::Greater => high = mid,
                 }
-            }
-
-            if found_idx.is_some() {
-                self.buffers.collected_event_frames.push(frame_no);
             }
         }
     }
 
-    pub fn get_passed_event_frames(&self) -> &[i32] {
-        &self.buffers.collected_event_frames
+    pub fn get_passed_event_indices(&self) -> &[i32] {
+        &self.buffers.collected_event_indices
+    }
+
+    /// (Deprecated) Use get_passed_event_indices instead.
+    /// This method is maintained for backward compatibility and may perform lookups.
+    pub fn get_passed_event_frames(&self) -> Vec<i32> {
+        let Some(resource) = self.resource else {
+            return Vec::new();
+        };
+        if self.animation_idx < 0 {
+            return Vec::new();
+        }
+        let metadata = &resource.animations[self.animation_idx as usize];
+        let Some(events_vec) = metadata.events else {
+            return Vec::new();
+        };
+
+        self.buffers.collected_event_indices.iter().map(|&idx| events_vec.get(idx as usize).frame_index() as i32).collect()
     }
 
     pub fn play(&mut self) {

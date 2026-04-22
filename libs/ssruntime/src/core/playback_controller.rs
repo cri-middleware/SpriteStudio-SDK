@@ -785,4 +785,77 @@ mod tests {
         // Check passed_frames for pingpong boundary
         assert_eq!(t.get_passed_frames(), &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8]);
     }
+
+    #[test]
+    fn test_passed_frames_high_speed() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 20, 30);
+        t.set_skip_frames(true);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Advance 15.5 frames at once (0.0 -> 15.5)
+        t.update(interval * 15.5);
+        let passed = t.get_passed_frames();
+        // Expect 0 to 15
+        let expected: Vec<i32> = (0..=15).collect();
+        assert_eq!(passed, expected.as_slice());
+    }
+
+    #[test]
+    fn test_passed_frames_multiple_loops() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 5, 30); // Total 6 frames (0,1,2,3,4,5)
+        t.set_loops(-1); // Infinite
+        t.set_skip_frames(true);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Current at 0.0. Advance 14.5 frames.
+        // 0, 1, 2, 3, 4, 5 (end) -> 0, 1, 2, 3, 4, 5 (end) -> 0, 1, 2 (current 2.5)
+        t.update(interval * 14.5);
+        let passed = t.get_passed_frames();
+        let expected = vec![0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2];
+        assert_eq!(passed, expected.as_slice());
+    }
+
+    #[test]
+    fn test_passed_frames_backward_skip() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
+        t.set_skip_frames(true);
+        t.play(); // Starts at 10.0
+
+        let interval = 1000.0 / 30.0;
+
+        // 10.0 -> 2.5 (Skip 7.5 frames backward)
+        t.update(interval * 7.5);
+        let passed = t.get_passed_frames();
+        // Expected: 10 (start), 9, 8, 7, 6, 5, 4, 3, 2 (final floor(2.5))
+        let expected = vec![10, 9, 8, 7, 6, 5, 4, 3, 2];
+        assert_eq!(passed, expected.as_slice());
+    }
+
+    #[test]
+    fn test_passed_frames_pingpong_multi_skip() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 5, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_skip_frames(true);
+        t.play(); // Starts at 0.0
+
+        let interval = 1000.0 / 30.0;
+
+        // Advance 12.5 frames.
+        // 0 -> 5 (Forward end) : 0,1,2,3,4,5
+        // 5 -> 0 (Backward end) : 4,3,2,1,0
+        // 0 -> 2.5 (Forward) : 1, 2
+        t.update(interval * 12.5);
+        let passed = t.get_passed_frames();
+        let expected = vec![0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, 1, 2];
+        assert_eq!(passed, expected.as_slice());
+    }
 }
