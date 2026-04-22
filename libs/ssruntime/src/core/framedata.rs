@@ -1,5 +1,5 @@
 use crate::core::interpolation::*;
-use crate::core::SsCoordinateSystem;
+use crate::core::{SsCoordinateSystem, SsOrigin, SsUnit};
 use crate::runtime;
 use alloc::vec::Vec;
 
@@ -144,7 +144,16 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem) -> PartEvaluationResult {
+pub(crate) fn evaluate_part(
+    cached_part: &CachedPartData,
+    frame_no: i32,
+    part_cursors: &mut [usize],
+    coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
+) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
     // Set SpriteStudio default values
@@ -176,17 +185,40 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cu
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     }
+
+    let mut pos_x = 0.0;
     if let Some((val, mask)) = cached_part.position_x_array.and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSX])) {
-        part_state.set_position_x(val);
+        pos_x = val;
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX & mask;
     }
+    let mut pos_y = 0.0;
     if let Some((mut val, mask)) = cached_part.position_y_array.and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSY])) {
         if coordinate_system == SsCoordinateSystem::YDown {
             val = -val;
         }
-        part_state.set_position_y(val);
+        pos_y = val;
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosY & mask;
     }
+
+    // Apply origin offset for root part
+    if origin == SsOrigin::TopLeft && cached_part.parent_index == -1 {
+        pos_x += canvas_width / 2.0;
+        if coordinate_system == SsCoordinateSystem::YDown {
+            pos_y += canvas_height / 2.0;
+        } else {
+            pos_y -= canvas_height / 2.0;
+        }
+    }
+
+    // Apply unit normalization
+    if unit == SsUnit::Normalized {
+        pos_x /= canvas_width;
+        pos_y /= canvas_height;
+    }
+
+    part_state.set_position_x(pos_x);
+    part_state.set_position_y(pos_y);
+
     if let Some((val, mask)) = cached_part.position_z_array.and_then(|arr| evaluate_float(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEPOSZ])) {
         part_state.set_position_z(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosZ & mask;
@@ -383,6 +415,10 @@ fn get_parts<'a>(
     deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
     cursors: &mut [usize],
     coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
 ) {
     parts_vec.clear();
     cell_vec.clear();
@@ -393,7 +429,7 @@ fn get_parts<'a>(
 
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
-        let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system);
+        let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
         if let Some(cell) = result.cell {
             cell_vec.push(cell);
             result.state.set_cell((cell_vec.len() - 1) as i16);
@@ -469,6 +505,10 @@ pub fn get_frame_data<'a>(
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: &mut [usize],
     coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -477,7 +517,7 @@ pub fn get_frame_data<'a>(
     let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
     let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors, coordinate_system);
+    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
     }
