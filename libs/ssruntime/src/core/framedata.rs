@@ -143,7 +143,7 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> Option<PartEvaluationResult> {
+pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize]) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
     // Set SpriteStudio default values
@@ -156,7 +156,14 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cu
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
-    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, part_color: None, shader: None, vertex: None, deform: None };
+    let mut result = PartEvaluationResult {
+        state: runtime::framedata::ss::runtime::PartState::default(),
+        cell: None,
+        part_color: None,
+        shader: None,
+        vertex: None,
+        deform: None,
+    };
 
     part_state.set_part_index(cached_part.part_index);
 
@@ -321,12 +328,9 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cu
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture;
     }
 
-    if update_flag.is_empty() {
-        return None;
-    }
     part_state.set_update_flag(update_flag);
     result.state = part_state;
-    Some(result)
+    result
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -356,37 +360,36 @@ fn get_parts<'a>(
 
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
-        if let Some(mut result) = evaluate_part(part, frame_no, part_cursors) {
-            if let Some(cell) = result.cell {
-                cell_vec.push(cell);
-                result.state.set_cell((cell_vec.len() - 1) as i16);
-            }
-            if let Some(part_color) = result.part_color {
-                parts_color_vec.push(part_color);
-                result.state.set_part_color((parts_color_vec.len() - 1) as i16);
-            }
-            if let Some(shader) = result.shader {
-                shader_vec.push(shader);
-                result.state.set_shader((shader_vec.len() - 1) as i16);
-            }
-            if let Some(vertex) = result.vertex {
-                vertice_vec.push(vertex);
-                result.state.set_vertex((vertice_vec.len() - 1) as i16);
-            }
-            if let Some(deform_data) = result.deform {
-                let mut args = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
-                if !deform_data.coordinate.is_empty() {
-                    args.coordinate = Some(fb.create_vector(&deform_data.coordinate));
-                }
-                if !deform_data.index.is_empty() {
-                    args.index = Some(fb.create_vector(&deform_data.index));
-                }
-                let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &args);
-                deform_vec.push(deform_off);
-                result.state.set_deform((deform_vec.len() - 1) as i16);
-            }
-            parts_vec.push(result.state);
+        let mut result = evaluate_part(part, frame_no, part_cursors);
+        if let Some(cell) = result.cell {
+            cell_vec.push(cell);
+            result.state.set_cell((cell_vec.len() - 1) as i16);
         }
+        if let Some(part_color) = result.part_color {
+            parts_color_vec.push(part_color);
+            result.state.set_part_color((parts_color_vec.len() - 1) as i16);
+        }
+        if let Some(shader) = result.shader {
+            shader_vec.push(shader);
+            result.state.set_shader((shader_vec.len() - 1) as i16);
+        }
+        if let Some(vertex) = result.vertex {
+            vertice_vec.push(vertex);
+            result.state.set_vertex((vertice_vec.len() - 1) as i16);
+        }
+        if let Some(deform_data) = result.deform {
+            let mut args = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
+            if !deform_data.coordinate.is_empty() {
+                args.coordinate = Some(fb.create_vector(&deform_data.coordinate));
+            }
+            if !deform_data.index.is_empty() {
+                args.index = Some(fb.create_vector(&deform_data.index));
+            }
+            let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &args);
+            deform_vec.push(deform_off);
+            result.state.set_deform((deform_vec.len() - 1) as i16);
+        }
+        parts_vec.push(result.state);
     }
 
     if !cell_vec.is_empty() {
