@@ -1,4 +1,4 @@
-use crate::core::framedata::{evaluate_part, CachedPartData, NUM_PART_ATTRIBUTES};
+use crate::core::framedata::{CachedPartData, NUM_PART_ATTRIBUTES, evaluate_part};
 use crate::core::matrix::SsMatrix4x4;
 use crate::core::{SsCoordinateSystem, SsOrigin, SsUnit};
 use alloc::vec;
@@ -7,11 +7,7 @@ use wide::f32x4;
 
 /// Calculate the target frame for a child instance animation.
 pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
-    if independent {
-        accumulated_time * speed + start_offset as f32
-    } else {
-        (parent_frame - key_frame as f32) * speed + start_offset as f32
-    }
+    if independent { accumulated_time * speed + start_offset as f32 } else { (parent_frame - key_frame as f32) * speed + start_offset as f32 }
 }
 
 /// Compute world matrix for a specific part by traversing its ancestors.
@@ -178,14 +174,14 @@ mod tests {
 
         // Calculate world matrix via utility at frame 10 (Y-Up)
         let res_m_up = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
-        
+
         // Calculate world matrix via utility at frame 10 (Y-Down)
         let res_m_down = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YDown, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
 
         // In Y-Up, Y is positive. In Y-Down, it should be negated.
         assert!((res_m_up.m[12] - 32.0).abs() < 1e-5, "World X: {} != 32.0", res_m_up.m[12]);
         assert_eq!(res_m_up.m[12], res_m_down.m[12]); // X is same
-        
+
         // Let's assume original Y translation at frame 10 was 0.0 or something else, but down should be negated.
         assert!((res_m_up.m[13] + res_m_down.m[13]).abs() < 1e-5, "Y should be negated: {} vs {}", res_m_up.m[13], res_m_down.m[13]);
     }
@@ -212,16 +208,16 @@ mod tests {
 
         let _ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data.as_slice()) };
         let root_idx = 0; // Usually index 0 is root
-        
+
         let canvas_w = metadata.canvas_width;
         let canvas_h = metadata.canvas_height;
 
         // Center / Pixel (Original)
         let m_orig = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
-        
+
         // TopLeft / Pixel
         let m_tl = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::TopLeft, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
-        
+
         // m_tl should be m_orig shifted by (w/2, -h/2) in Y-Up
         assert!((m_tl.m[12] - (m_orig.m[12] + canvas_w / 2.0)).abs() < 1e-5);
         assert!((m_tl.m[13] - (m_orig.m[13] - canvas_h / 2.0)).abs() < 1e-5);

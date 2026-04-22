@@ -199,11 +199,7 @@ impl<'a> AnimationResource<'a> {
                     }
                 }
                 let name_hash = anim.name_hash();
-                let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() {
-                    (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1())
-                } else {
-                    (0.0, 0.0)
-                };
+                let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
                 animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events() });
             }
         }
@@ -275,7 +271,6 @@ pub struct Context<'a> {
     unit: crate::core::SsUnit,
 }
 
-
 impl<'a> Default for Context<'a> {
     fn default() -> Self {
         Self::new()
@@ -306,7 +301,6 @@ impl<'a> Context<'a> {
         self.origin = crate::core::SsOrigin::default();
         self.unit = crate::core::SsUnit::default();
     }
-
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
         self.resource = Some(resource);
@@ -538,7 +532,6 @@ impl<'a> Context<'a> {
     }
 
     // Playback control
-
 
     pub fn update(&mut self, delta: f32) -> (i32, f32) {
         let res = self.controller.update(delta);

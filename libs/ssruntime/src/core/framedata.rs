@@ -144,16 +144,7 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-pub(crate) fn evaluate_part(
-    cached_part: &CachedPartData,
-    frame_no: i32,
-    part_cursors: &mut [usize],
-    coordinate_system: SsCoordinateSystem,
-    origin: SsOrigin,
-    unit: SsUnit,
-    canvas_width: f32,
-    canvas_height: f32,
-) -> PartEvaluationResult {
+pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
     // Set SpriteStudio default values
@@ -166,14 +157,7 @@ pub(crate) fn evaluate_part(
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
-    let mut result = PartEvaluationResult {
-        state: runtime::framedata::ss::runtime::PartState::default(),
-        cell: None,
-        part_color: None,
-        shader: None,
-        vertex: None,
-        deform: None,
-    };
+    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, part_color: None, shader: None, vertex: None, deform: None };
 
     part_state.set_part_index(cached_part.part_index);
 
@@ -292,10 +276,10 @@ pub(crate) fn evaluate_part(
     }
     if let Some((mut val, mask)) = cached_part.vertex_array.and_then(|arr| evaluate_vertex(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEVERTEX])) {
         if coordinate_system == SsCoordinateSystem::YDown {
-            let mut lt = val.lt().clone();
-            let mut rt = val.rt().clone();
-            let mut lb = val.lb().clone();
-            let mut rb = val.rb().clone();
+            let mut lt = *val.lt();
+            let mut rt = *val.rt();
+            let mut lb = *val.lb();
+            let mut rb = *val.rb();
             lt.set_y(-lt.y());
             rt.set_y(-rt.y());
             lb.set_y(-lb.y());
@@ -517,7 +501,28 @@ pub fn get_frame_data<'a>(
     let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
     let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
 
-    get_parts(fb, cached_parts, frame_no, parts_vec, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec, &mut cells_off, &mut parts_color_off, &mut shaders_off, &mut vertices_off, &mut deforms_off, cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
+    get_parts(
+        fb,
+        cached_parts,
+        frame_no,
+        parts_vec,
+        cell_vec,
+        parts_color_vec,
+        shader_vec,
+        vertice_vec,
+        deform_vec,
+        &mut cells_off,
+        &mut parts_color_off,
+        &mut shaders_off,
+        &mut vertices_off,
+        &mut deforms_off,
+        cursors,
+        coordinate_system,
+        origin,
+        unit,
+        canvas_width,
+        canvas_height,
+    );
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
     }

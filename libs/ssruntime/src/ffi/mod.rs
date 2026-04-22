@@ -728,16 +728,9 @@ pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, par
     {
         let metadata = &resource.animations[idx as usize];
 
-        if let Some(res_m) = crate::core::util::get_part_world_matrix(
-            &metadata.cached_parts,
-            part_index,
-            frame_no,
-            ffi_context.ctx.get_coordinate_system(),
-            ffi_context.ctx.get_origin(),
-            ffi_context.ctx.get_unit(),
-            metadata.canvas_width,
-            metadata.canvas_height,
-        ) {
+        if let Some(res_m) =
+            crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, ffi_context.ctx.get_coordinate_system(), ffi_context.ctx.get_origin(), ffi_context.ctx.get_unit(), metadata.canvas_width, metadata.canvas_height)
+        {
             unsafe {
                 core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
             }
