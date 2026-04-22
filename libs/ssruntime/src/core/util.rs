@@ -23,15 +23,12 @@ pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no
         let part = &parts[target_idx as usize];
         let part_cursors = &mut cursors[target_idx as usize * NUM_PART_ATTRIBUTES..(target_idx as usize + 1) * NUM_PART_ATTRIBUTES];
 
-        if let Some(res) = evaluate_part(part, frame, part_cursors) {
-            let parent_idx = part.parent_index;
-            let parent_mat = if parent_idx >= 0 { Some(compute_recursive(parent_idx as u16, frame, parts, cursors, false)) } else { None };
+        let res = evaluate_part(part, frame, part_cursors);
+        let parent_idx = part.parent_index;
+        let parent_mat = if parent_idx >= 0 { Some(compute_recursive(parent_idx as u16, frame, parts, cursors, false)) } else { None };
 
-            let (inh, draw) = SsMatrix4x4::compute_world_matrix(&res.state, parent_mat.as_ref(), None);
-            if is_drawing { draw } else { inh }
-        } else {
-            SsMatrix4x4::identity()
-        }
+        let (inh, draw) = SsMatrix4x4::compute_world_matrix(&res.state, parent_mat.as_ref(), None);
+        if is_drawing { draw } else { inh }
     }
 
     Some(compute_recursive(part_index, frame_no, parts, &mut temp_cursors, true))
