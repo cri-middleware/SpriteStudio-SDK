@@ -118,8 +118,122 @@ Render(runtime_ctx);
 - **ダイレクト描画 / バッチレンダリング方式**:
   1 つの描画関数内でループを回し、連続して描画命令を発行します。この方式は、近年のデータドリブンなアーキテクチャと非常に相性が良く、高いパフォーマンスを発揮します。`ssab` の親子構造を辿り、自前で行列演算を行ってワールド座標を算出して頂点バッファへ流し込む実装が必要ですが、多くのケースでこのアプローチが有利になります。
 
+### 効率的な行列演算の手順
+`libssruntime` から取得できる `FrameData` 内のパーツリストは、**「親パーツが必ず子パーツよりも前に出現する」**ように並んでいます。これを利用すると、非常に効率的に各パーツのワールド行列を計算できます。
+
+また、SpriteStudio 独自の継承ルール（アンカーポイントやローカルスケールの扱いなど）を正しく計算するために、SDK が提供するユーティリティ関数 **`ss_matrix_compute_world`** を利用することを強く推奨します。
+
+1. **ワールド行列のキャッシュを用意する**: パーツ数分の行列を保持できる配列（`world_matrices`）を用意します。
+2. **パーツリストを先頭からループする**:
+   - `ss_matrix_compute_world` を呼び出し、現在のパーツの「継承用行列」と「描画用行列」を算出します。
+   - 親がいる場合は、キャッシュから親の「継承用行列」を取得して関数に渡します。
+   - 得られた **継承用行列 (inheritance matrix)** を `world_matrices[i]` に保存します（子パーツが参照するため）。
+   - 得られた **描画用行列 (drawing matrix)** を使って、実際の描画（頂点変換）を行います。
+
+```cpp
+// ss_matrix_compute_world を利用した効率的な描画ループの例 (C++)
+std::vector<float[16]> inheritance_matrices(parts->size());
+
+for (size_t i = 0; i < parts->size(); i++) {
+    auto part = parts->Get(i);
+    int parent_idx = part->parent_index();
+
+    float* parent_m = (parent_idx >= 0) ? inheritance_matrices[parent_idx] : nullptr;
+    float drawing_m[16];
+    
+    // SDK提供の関数で「次世代への継承用」と「現在の描画用」の行列を同時に計算
+    // ※第5引数以降は、親パーツのサイズ情報（NineSlice等で使用）を渡します
+    ss_matrix_compute_world(
+        inheritance_matrices[i], // out: 継承用行列
+        drawing_m,               // out: 描画用行列
+        part,                    // 現在のパーツ状態
+        parent_m,                // 親の継承用行列
+        false, 0, 0              // 親のサイズ情報（オプション）
+    );
+
+    // 描画の実行 (非表示パーツでなければ)
+    if (!part->hide()) {
+        DrawPart(drawing_m, part->cell_index(), part->alpha());
+    }
+}
+```
+
+- **描画用行列 (drawing matrix)**: 現在のパーツのローカルスケール等、子に継承「させない」パラメータを含んだ、描画にそのまま使える行列です。
+- **継承用行列 (inheritance matrix)**: 子パーツが親の Transform として参照すべき、継承可能なパラメータのみを含んだ行列です。
+
+このユーティリティを使用することで、SpriteStudio 特有の複雑な行列計算を自前で実装することなく、正しく高速な描画が可能になります。
+
 - **シーングラフ / 階層ノード方式**: 
   パーツの数だけエンジンのオブジェクトを生成し、`ssab` メタデータの `parent_index` を元にエンジンの Transform 階層を構築します。`FrameData` から取得した各 `PartState` のローカル値を各オブジェクトの `transform` に反映させることで、最終的な描画位置（ワールド座標）の計算をエンジンに委ねることができます。実装は容易ですが、パーツ数に比例してエンジン側のノード管理オーバーヘッドが増大するため、注意が必要です。
+
+---
+
+# 実装フェーズ 4：パーツ種別とアトリビュートの詳細
+
+SpriteStudio7 には多くのパーツ種別とアトリビュートが存在します。Player 実装の段階に合わせて、対応する項目を増やしていくためのリファレンスです。
+
+## 1. 利用するパーツタイプ
+
+### 基本パーツ
+- **PartTypeNull**: 描画を行わないヌルパーツ。親子関係の中継用として使われます。
+- **PartTypeNormal**: 通常の矩形パーツ。最も頻繁に使用されます。
+
+### v5〜v6 拡張系パーツ
+- **PartTypeInstance**: インスタンスパーツ。別のアニメーションをこのパーツの子として再生します。
+- **PartTypeEffect**: エフェクトパーツ。パーティクルエフェクトを表示します。
+- **PartTypeMesh**: メッシュパーツ。頂点を変形させて表示します。
+- **PartTypeMask**: マスクパーツ。以降の描画にマスクをかけます。
+
+### 7.1 拡張系
+- **PartTypeShape**: シェイプパーツ。単純な図形を表示します。
+- **PartTypeText**: テキストパーツ。
+- **PartTypeNines**: 9スライスパーツ。
+- **PartTypeAudio**: 音声再生用のパーツ。
+- **PartTypeCamera**: カメラ制御用のパーツ。
+
+### ボーン・関連パーツ
+- **PartTypeArmature**, **PartTypeJoint**, **PartTypeMovenode**, **PartTypeConstraint**, **PartTypeBonepoint**, **PartTypeTransformConstraint**
+
+## 2. パーツ操作 API
+Player は、データによる指定とは別に、プログラムからパーツの状態を制御する API を提供することを推奨します。
+
+- **setPartVisible(partName, visible)**: 指定したパーツの表示・非表示を強制的に切り替えます。データ上の `AttributeHide` よりも優先して制御したい場合に使用します。
+
+## 3. 利用するアトリビュート
+
+### すべてのパーツ（Null を含む）
+- **AttributePosX, AttributePosY, AttributePosZ**: 座標。
+- **AttributeRotX, AttributeRotY, AttributeRotZ**: 回転。
+- **AttributeSclX, AttributeSclY**: スケール。
+- **AttributeLosclX, AttributeLosclY**: ローカルスケール。
+- **AttributeAnchorX, AttributeAnchorY**: アンカーポイント（ピボット）。
+
+### 描画系（Normal, Mesh, Nines 等）
+- **AttributeCell**: 参照セル。
+- **AttributeAlpha, AttributeLoAlpha**: 不透明度。
+- **AttributePrio**: 描画優先度（Zオーダー）。
+- **AttributeFlipH, AttributeFlipV**: 左右・上下反転。
+- **AttributeHide**: 非表示。
+- **AttributePivotX, AttributePivotY**: ピボット位置。
+- **AttributeSizeX, AttributeSizeY**: サイズ。
+- **AttributeImgFlipH, AttributeImgFlipV**: セル（画像）自体の反転。
+- **AttributeUvtX, AttributeUvtY, AttributeUvrZ, AttributeUvsX, AttributeUvsY**: UV 座標の移動・回転・スケール。
+- **AttributeBoundr**: 当たり判定の半径。
+
+### 特殊系
+- **Mask**: `AttributeMask`
+- **Effect**: エフェクト開始イベント
+- **Instance**: インスタンス再生設定
+- **UserData**: ユーザーデータイベント
+- **Signal**: シグナルイベント
+
+## 3. この段階での動作確認 (Validation)
+主要なアトリビュート（反転、サイズ、ピボット等）が正しく反映されているかを確認します。
+
+- **確認対象**: `Bounding.ssae`
+    - **チェック内容**: 
+        - 当たり判定用パーツの座標やサイズ（半径）が、正しくアトリビュートとして取得できているか。
+        - 反転（Flip）などが親子関係を通じて正しく計算されているか。
 
 ---
 [目次に戻る](./README.ja.md)
