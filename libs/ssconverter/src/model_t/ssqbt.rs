@@ -1,4 +1,5 @@
 use crate::model_t::ssqbt;
+use crate::utils;
 use sspj::ssqe::{SsSequence, SsSequenceItem};
 
 fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssqb::ss::format::SequenceT>> {
@@ -8,6 +9,7 @@ fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssq
             .map(|sequence| {
                 let mut sequence_t = ssab::ssqb::ss::format::SequenceT::default();
                 sequence_t.name = sequence.name.clone();
+                sequence_t.name_hash = utils::fnv1a_hash_str(&sequence.name);
                 sequence_t.index = sequence.index;
                 sequence_t.type_ = match &sequence.sequence_type {
                     sspj::sstypes::SsSequenceType::Last => ssab::ssqb::ss::format::SequenceType::Last,
@@ -28,7 +30,9 @@ fn convert_sequence_item_t_list(sequence_item_list: &[SsSequenceItem]) -> Vec<ss
         .map(|sequence_item| {
             let mut sequence_item_t = ssab::ssqb::ss::format::SequenceItemT::default();
             sequence_item_t.ref_anime = Some(sequence_item.ref_anime.clone());
+            sequence_item_t.ref_anime_hash = utils::fnv1a_hash_str(&sequence_item.ref_anime);
             sequence_item_t.ref_anime_pack = Some(sequence_item.ref_anime_pack.clone());
+            sequence_item_t.ref_anime_pack_hash = utils::fnv1a_hash_str(&sequence_item.ref_anime_pack);
             sequence_item_t.repeat_count = sequence_item.repeat_count;
 
             sequence_item_t

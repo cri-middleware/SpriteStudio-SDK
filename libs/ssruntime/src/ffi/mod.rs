@@ -877,7 +877,7 @@ pub unsafe extern "C" fn ss_matrix_compute_world(out_inheritance_m: *mut f32, ou
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_passed_event_frames().len() as i32;
+        return ffi_context.ctx.get_passed_event_indices().len() as i32;
     }
     0
 }
@@ -885,9 +885,27 @@ pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_frame_no(context: *mut c_void, index: i32) -> i32 {
     if let Some(ffi_context) = get_context(context)
-        && let Some(&frame_no) = ffi_context.ctx.get_passed_event_frames().get(index as usize)
+        && let Some(&event_idx) = ffi_context.ctx.get_passed_event_indices().get(index as usize)
     {
-        return frame_no;
+        // Look up frame number from index for compatibility
+        if let Some(resource) = ffi_context.ctx.get_resource()
+            && let Some(anim_idx) = ffi_context.ctx.get_animation_idx()
+        {
+            let metadata = &resource.animations[anim_idx as usize];
+            if let Some(events_vec) = metadata.events {
+                return events_vec.get(event_idx as usize).frame_index() as i32;
+            }
+        }
+    }
+    -1
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index: i32) -> i32 {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(&event_idx) = ffi_context.ctx.get_passed_event_indices().get(index as usize)
+    {
+        return event_idx;
     }
     -1
 }

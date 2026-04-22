@@ -482,6 +482,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssqb フィールド | ssqe フィールド | 備考 |
 |---------------|---------------|------|
 | `name` | `name` | シーケンス名 |
+| `name_hash` | — | 高速検索用ハッシュ |
 | `index` | `index` | シーケンスインデックス |
 | `type` | `sequence_type` | Last / Keep / Top |
 | `list` | `list` | シーケンス項目 |
@@ -491,7 +492,9 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssqb フィールド | ssqe フィールド | 備考 |
 |---------------|---------------|------|
 | `ref_anime_pack` | `ref_anime_pack` | 参照アニメーションパック名 |
+| `ref_anime_pack_hash` | — | 高速検索用ハッシュ |
 | `ref_anime` | `ref_anime` | 参照アニメーション名 |
+| `ref_anime_hash` | — | 高速検索用ハッシュ |
 | `repeat_count` | `repeat_count` | 繰り返し回数 |
 
 シーケンスフォーマットは ssqe と ssqb 間でほぼ同一であり、最小限の変換のみが行われます。

@@ -276,11 +276,15 @@ impl SSRuntimeContext {
     }
 
     pub fn get_passed_event_count(&self) -> i32 {
-        self.inner.get_passed_event_frames().len() as i32
+        self.inner.get_passed_event_indices().len() as i32
     }
 
     pub fn get_passed_event_frame_no(&self, index: i32) -> i32 {
         self.inner.get_passed_event_frames().get(index as usize).copied().unwrap_or(-1)
+    }
+
+    pub fn get_passed_event_index(&self, index: i32) -> i32 {
+        self.inner.get_passed_event_indices().get(index as usize).copied().unwrap_or(-1)
     }
 }
 
@@ -341,10 +345,10 @@ impl SSRuntimeUtils {
     }
 
     pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
-        if let Some(res) = context.inner.get_resource() {
-            if let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no) {
-                return Some(Box::new(res_m.m));
-            }
+        if let Some(res) = context.inner.get_resource()
+            && let Some(res_m) = crate::core::util::get_part_world_matrix(&res.animations[context.inner.get_animation_idx()? as usize].cached_parts, part_index, frame_no)
+        {
+            return Some(Box::new(res_m.m));
         }
         None
     }

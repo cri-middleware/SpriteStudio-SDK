@@ -482,6 +482,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssqb field | ssqe field | Notes |
 |-----------|-----------|-------|
 | `name` | `name` | Sequence name |
+| `name_hash` | — | Hash for fast lookup |
 | `index` | `index` | Sequence index |
 | `type` | `sequence_type` | Last / Keep / Top |
 | `list` | `list` | Sequence items |
@@ -491,7 +492,9 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssqb field | ssqe field | Notes |
 |-----------|-----------|-------|
 | `ref_anime_pack` | `ref_anime_pack` | Referenced animation pack name |
+| `ref_anime_pack_hash` | — | Hash for fast lookup |
 | `ref_anime` | `ref_anime` | Referenced animation name |
+| `ref_anime_hash` | — | Hash for fast lookup |
 | `repeat_count` | `repeat_count` | Number of repeats |
 
 The sequence format is largely identical between ssqe and ssqb, with minimal transformation.
