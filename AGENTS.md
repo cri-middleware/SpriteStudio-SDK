@@ -32,15 +32,18 @@ SpriteStudio7-SDK is designed to provide professional-grade animation capabiliti
 
 ### Roadmap (Ongoing & Future)
 
+**Phase 1: Core Architecture & API Stabilization (Pre-Release)**
 *   [x] Restructure and improve Player Implementation Documentation.
+*   [x] Add SSAB and FrameData schema documentation.
 *   [x] Web (WASM) support for direct JS/TS usage via `wasm-pack`.
-*   [ ] ECS Optimization: Stateless Evaluation API (Decomposing Context).
 *   [x] Support for `no_std` environments (embedded/bare-metal).
 *   [ ] Animation Mixing/Blending implementation in `ssruntime`.
+
+**Phase 2: Ecosystem & Integration**
 *   [ ] Migration of existing Players to use `ssruntime`.
-*   [ ] Support for SOA (Structure of Arrays) direct memory writing.
-*   [ ] Batch processing with SIMD for high-performance entities update.
-*   [ ] Batch processing support.
+
+**Phase 3: Feature Expansion & Schema Additions (Post-Release)**
+*(Note: Adding fields to `.fbs` schemas is generally acceptable, but changing existing `FrameData` structures forces Player updates.)*
 *   [ ] State machine implementation.
 
 ### Key Components
@@ -49,8 +52,10 @@ SpriteStudio7-SDK is designed to provide professional-grade animation capabiliti
 *   **`libs/sspj`**: A pure Rust library responsible for parsing the XML-based SpriteStudio project files (`.sspj`, `.ssae`, `.ssee`, etc.) using `quick-xml` and `serde`.
 *   **`libs/ssconverter`**: The core conversion logic that transforms parsed `sspj` data into the `ssab` binary format. It utilizes `rayon` for parallel processing and exposes a C-API for integration.
 *   **`libs/ssab`**: Defines the schema and structure for the `.ssab` binary format, utilizing **FlatBuffers** for efficient serialization and deserialization.
+    *   [**SSAB Schema Documentation**](./libs/ssab/SCHEMA.md)
 *   **`libs/ssinterpolate`**: A platform-agnostic math library for animation interpolations.
 *   **`libs/ssruntime`**: A platform-agnostic runtime library for playing back `.ssab` animations. It handles playback control, interpolation, and state updates, exposing a C-API for integration into game engines (e.g., Unity, Unreal, custom engines). **Note:** It does not handle rendering directly; it provides the state required for a renderer.
+    *   [**FrameData Schema Documentation**](./libs/ssruntime/SCHEMA.md)
 
 ## Architecture & Technologies
 
@@ -149,6 +154,10 @@ Platform-specific release scripts are located in the `scripts/` directory. These
 
 *   **Workspace**: All crates are part of a single Cargo workspace. Dependencies between local crates are specified with `{ path = "..." }` or `{ workspace = true }`.
 *   **Versioning**: The project uses centralized workspace versioning. The version is defined in the root `Cargo.toml` (`[workspace.package]`) and inherited by all member crates.
+*   **Documentation**:
+    *   [**Player Implementation Guide (Japanese)**](./libs/ssruntime/docs/README.ja.md): Step-by-step guide for building a custom renderer.
+    *   [**SSAB Schema**](./libs/ssab/SCHEMA.md): Detailed description of the optimized binary asset format.
+    *   [**FrameData Schema**](./libs/ssruntime/SCHEMA.md): Specification of the runtime data exchange interface.
 *   **Testing**: Unit tests are co-located with source code or in the `tests/` directory. The CLI has integration tests that run conversions on sample projects in `tests/`.
 *   **FFI**: Libraries intended for external use (`ssconverter`, `ssruntime`) expose C-compatible APIs and use `cbindgen` for header generation.
 *   **Formatting**: Standard `rustfmt` guidelines are enforced. Auto-formatting and linting (`clippy`) are checked in CI.
@@ -157,7 +166,7 @@ Platform-specific release scripts are located in the `scripts/` directory. These
 
 The playback environment of SpriteStudio7-SDK is clearly separated into two components: **libssruntime** (Brain), which is responsible for the calculation logic, and the **Player** (Body), which handles the actual rendering and platform-dependent processing.
 
-For detailed implementation steps and technical specifications, please refer to the following index file:
+For detailed implementation steps and technical specifications, please refer to the following guide:
 
 - [**Player Implementation Guide (Japanese)**](./libs/ssruntime/docs/README.ja.md)
 
@@ -165,3 +174,6 @@ For detailed implementation steps and technical specifications, please refer to 
 *   **libssruntime (Brain)**: The animation calculator. Responsible for keyframe interpolation, time management, and calculation of local attributes.
 *   **Player (Body)**: The renderer. Responsible for parsing `ssab` metadata, managing textures, matrix transformations to world coordinates, and final rendering.
 *   **Boundary**: `libssruntime` does not return metadata required for rendering (e.g., texture paths or part names). These must be obtained directly by the Player by referencing the `ssab` (FlatBuffers) data.
+*   **Schemas**:
+    *   The Player uses the [**SSAB Schema**](./libs/ssab/SCHEMA.md) to read metadata and keyframe data.
+    *   The Player uses the [**FrameData Schema**](./libs/ssruntime/SCHEMA.md) to receive evaluated part states from the Brain.

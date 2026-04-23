@@ -5,24 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [7.0.0-alpha01] - 2026-04-18
+## [7.0.0-alpha01] - 2026-04-23
 ### Added
 - **Initial Public Release** of the SpriteStudio7-SDK.
-- `ssconverter-cli`: Command-line tool for converting `.sspj` projects to optimized `.ssab` binary files. Supports single and batch processing modes.
-- `libsspj`: Library for parsing SpriteStudio 7 XML project files (`.sspj`, `.ssae`, `.ssee`, `.ssse`, `.ssce`, `.charmap`).
-- `libssab`: Library for reading and writing SpriteStudio 7 animation binary data (`.ssab`, `.ssqb`) based on FlatBuffers.
-- `libssconverter`: Core conversion library from `.sspj` to `.ssab` format with C-API support.
-- `libssruntime`: Platform-agnostic runtime library for animation playback with FFI (C/C++/C#) and WASM support.
-- `libssinterpolate`: Math library for animation interpolations (Hermite, Bezier, etc.).
-- `no_std` support for `ssruntime` with `libc_alloc` feature for embedded and console environments.
-- Multi-platform CI/CD pipeline: Linux, Windows, macOS, Android, iOS, Web (WASM).
-- Multi-platform release pipeline with static and dynamic library outputs.
-- Bilingual documentation (English / Japanese) for all components.
-- Player implementation guidelines in `libs/ssruntime/docs/`.
+- **Unified Conversion Pipeline**: A complete workflow for converting SpriteStudio 7 XML projects (`.sspj`) into optimized FlatBuffers-based binary data (`.ssab`) via `ssconverter-cli`.
+- **Platform-Agnostic Runtime**: A modular, `no_std` compatible runtime library (`ssruntime`) providing core animation playback logic with FFI and WASM support.
+- **High-Performance Math Core**: SIMD-optimized transformation and interpolation logic (SSE/WASM SIMD128) for efficient frame calculations.
+- **Flexible Integration**: Native support for multiple coordinate systems (Y-Up/Y-Down) and a stateless data model designed for easy integration with modern rendering engines.
+- **Robust Event System**: A comprehensive event collection and management API, including support for custom user data and missed-event prevention.
+- **Multi-Platform Support**: Validated CI/CD and release pipelines for Linux, Windows, macOS, Android, iOS, and Web (WASM).
+- **Developer Documentation**: Bilingual documentation (English/Japanese) and detailed guidelines for implementing custom players.
 
 ### Known Limitations
-- **Particle Effect (SSEE)**: Effect tree construction and cell index resolution are not yet implemented. Effect attributes (`cur_keyframe`, `loopflag`) are partially converted.
-- **Font Bitmap**: Font bitmap conversion is a stub; character map properties (face, size, padding, texture, etc.) are not yet populated.
-- **Z-sort Priority**: Priority values do not account for spatially transformed Z-values during Z-sort ordering.
-- **Mesh Bind Info**: Deform vertex change (`vchg`) does not convert `SsMeshBindInfo` from string representation.
-- **macOS / iOS Code Signing**: Release binaries are not yet code-signed or notarized.
+- **Particle Effect (SSEE)**: Core simulation logic and emitter tree construction are currently unimplemented.
+- **Font Bitmap**: Font-related properties and character map texture resolution are stubs.
+- **Z-sort Priority**: Spatial Z-value transformation is not currently factored into part priority ordering.
+- **Mesh Bind Info**: Conversion of vertex bind information for mesh deformation is not yet supported.
+- **Code Signing**: Release binaries for macOS and iOS are not code-signed or notarized.
