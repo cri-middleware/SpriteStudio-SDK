@@ -48,8 +48,8 @@ impl CharMapLoader for SsCharMapCommon {
 
 #[derive(Deserialize, PartialEq, Default, Debug)]
 pub struct SsCharMapPage {
-    id: i32,
-    file: String,
+    pub id: i32,
+    pub file: String,
 }
 impl CharMapLoader for SsCharMapPage {
     type Output = SsCharMapPage;
