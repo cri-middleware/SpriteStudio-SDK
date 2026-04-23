@@ -1,136 +1,162 @@
-# 実装フェーズ 3：更新・描画 (Render Loop)
+# 実装フェーズ 5：拡張機能の実装 (Advanced Features)
 
-毎フレーム実行される、アニメーションの更新とレンダリングのフェーズです。
+アニメーションの表現をさらに高めるための拡張機能（インスタンス、エフェクト、メッシュ、パーツカラー等）の実装ガイドです。
+これらの機能はイベント駆動ではなく、**毎フレームの描画ループ内において、親のフレーム時間に同期して状態を計算・適用**するアーキテクチャが基本となります。
 
-## 1. アニメーションの更新
-経過時間（デルタタイム）を渡してアニメーションを進め、現在のフレーム番号を取得します。
+## 1. インスタンス再生 (Instance)
+SpriteStudio のインスタンス機能は、別のアニメーションを部品として参照し再生する機能です。
+親の再生時間（フレーム）に完全に同期させるため、**毎フレーム親の現在のフレームから子のローカルフレームを算出し、子Playerの時間を強制的に合わせる**手法をとります。これにより、逆再生やフレームスキップ時でも常に正しい状態が描画されます。
+
+### 同期計算と描画ループ
+子アニメーションの複雑な同期計算（オフセット、速度、ループの剰余計算など）を行うため、SDKには `ss_util_calculate_instance_frame` というユーティリティ関数が用意されています。
 
 ```cpp
-// delta は前回の更新からの経過秒数 (e.g. 1/60)
-int current_frame = ss_runtime_update(context, delta);
+// 毎フレームの描画ループ内
+if (part->type() == PartTypeInstance) {
+    // 1. Attribute からインスタンス設定を取得
+    // (通常は ssab の instance_params や UserData などから取得しますが、
+    //  実装上は PartState または AnimationData に格納された設定を参照します)
+    float instance_start_frame = ...; // 再生開始フレーム
+    float instance_offset = ...;      // オフセット
+    float instance_speed = ...;       // 再生速度
+    bool independent_flag = ...;      // 独立動作フラグ
+
+    // 2. SDKのユーティリティを使って、現在の子の正確な再生フレームを算出
+    float local_frame = ss_util_calculate_instance_frame(
+        current_parent_frame, // 親の現在のフレーム (float)
+        instance_start_frame,
+        instance_offset,
+        instance_speed,
+        independent_flag,
+        accumulated_time      // 独立動作時の累積時間（非独立なら0.0f）
+    );
+    
+    // 3. 子Playerの時間を強制的に合わせ、描画を実行
+    // ※子Playerは事前に外部ssabからロード・生成しておく必要があります
+    child_player->set_frame_no(local_frame);
+    child_player->render(parent_world_matrix); // 親の行列をベースに描画
+}
 ```
 
-## 2. フレームデータの取得
-指定したフレームの描画に必要な情報を FlatBuffers 形式で取得します。
+## 2. エフェクト (Effect)
+パーティクルエフェクトのシミュレーションもインスタンスと同様に、イベント駆動ではなく**絶対時間（フレーム）を指定して状態を一意に決定する**アプローチをとります。
+SpriteStudio 6/7 のエフェクトシミュレータはステートレス・決定論的なアルゴリズムであるため、指定したフレームの状態を瞬時に計算でき、逆再生にも対応可能です。
+
+### エフェクトの更新と描画
+Player 側で `ss_effect_create` を用いて Context を作成しておき、毎フレーム `ss_effect_update` に相対フレームを渡してパーティクル群を取得します。
 
 ```cpp
-uint8_t* frame_buf = nullptr;
-size_t frame_len = 0;
-// 現在のフレーム番号（または指定フレーム）のデータを取得
-ss_runtime_get_frame_data(context, current_frame, &frame_buf, &frame_len);
+// 毎フレームの描画ループ内
+if (part->type() == PartTypeEffect) {
+    // 1. エフェクトの発生開始フレームからの相対フレームを計算
+    float relative_frame = current_parent_frame - effect_start_frame;
 
-if (frame_buf == nullptr) return; // データがない場合はスキップ
+    if (relative_frame >= 0.0f) {
+        // 2. 絶対的なフレーム時間を指定してシミュレータを更新
+        // ※delta_time ではなくフレーム値を渡すことで、逆再生やシーク時も一意の結果が得られます
+        ss_effect_update(effect_ctx, relative_frame);
 
-// FlatBuffers でパース
-auto frame_data = ss::runtime::GetFrameData(frame_buf);
-```
+        // 3. パーティクルの状態（FlatBuffersチャンク）を取得
+        const uint8_t* state_buf = nullptr;
+        size_t state_len = 0;
+        ss_effect_get_state(effect_ctx, &state_buf, &state_len);
 
-## 3. レンダリングの実行
-`frame_data` に含まれる各パーツの状態（`PartState`）をループで処理し、描画を行います。
-
-```cpp
-if (frame_data->parts()) {
-    for (auto part_state : *frame_data->parts()) {
-        // 1. 非表示フラグの確認
-        if (part_state->hide()) continue;
-
-        // 2. 基本アトリビュートの取得
-        // position, rotation, scale は親子関係を考慮した計算（後述）が必要
-        float px = part_state->position_x();
-        float py = part_state->position_y();
-        float pz = part_state->position_z(); // Z座標（優先度とは別）
-        
-        float rx = part_state->rotation_x();
-        float ry = part_state->rotation_y();
-        float rz = part_state->rotation_z();
-        
-        float sx = part_state->scale_x();
-        float sy = part_state->scale_y();
-
-        // 不透明度
-        float alpha = part_state->alpha();
-        float local_alpha = part_state->local_alpha(); // パーツ固有の不透明度
-
-        // 3. セル情報の取得
-        // PartState->cell() は frame_data->cells() へのインデックスです
-        int cell_attr_idx = part_state->cell();
-        if (cell_attr_idx >= 0 && frame_data->cells()) {
-            auto cell_attr = frame_data->cells()->Get(cell_attr_idx);
+        if (state_buf) {
+            auto effect_state = ss::runtime::GetEffectState(state_buf);
             
-            // cell_attr->map_id(): 使用する CellMap のインデックス
-            // cell_attr->name_hash(): セルの名前のハッシュ
-            
-            // これらを元に、初期化時に構築したマップから UV やテクスチャを取得します
-            Texture* tex = GetTexture(cell_attr->map_id());
-            Rect uv_rect = GetUVByHash(cell_attr->map_id(), cell_attr->name_hash());
-
-            // 4. 描画の実行
-            // ワールド行列を計算し、テクスチャ、UV、不透明度を渡して描画
-            Matrix4x4 world_matrix = CalculateWorldMatrix(part_state->part_index(), ...);
-            DrawPart(world_matrix, tex, uv_rect, alpha * local_alpha);
+            // 4. パーティクルの描画（エミッターの描画コマンドごとにループ）
+            if (effect_state->emitters()) {
+                for (auto emitter : *effect_state->emitters()) {
+                    int cell_index = emitter->cell_index();
+                    int blend_type = emitter->blend_type(); // 加算・通常などの合成モード
+                    
+                    if (emitter->particles()) {
+                        for (auto particle : *emitter->particles()) {
+                            // パーティクル個別の座標・スケール・回転・カラーを取得して描画
+                            DrawParticle(
+                                parent_world_matrix, 
+                                particle->x(), particle->y(), 
+                                particle->scale_x(), particle->scale_y(), 
+                                particle->rotation(), 
+                                particle->color_a(), particle->color_r(), particle->color_g(), particle->color_b(),
+                                cell_index, blend_type
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 }
 ```
 
-## 4. イベントの処理
-ユーザーデータやシグナルなどのイベントは、アニメーションデータ（`SsAnimeBinary`）から直接取得する必要があります。
-`libssruntime` の `Context` を通じて現在の再生フレームに基づいたイベントを抽出する実装を Player 側で行ってください。
+## 3. メッシュとデフォーム (Mesh / Deform)
+`PartTypeMesh` パーツと、その頂点を変形させる `AttributeDeform` の実装です。複雑なデータは FlatBuffers のテーブル化（プーリング）により最適化されているため、インデックスを介して取得します。
 
-## 5. 行列計算の注意点
-- **継承関係**: `PartState` に格納されている値は、親子関係が計算された後の値（ワールド座標相当）ではなく、**そのフレームにおける各アトリビュートの最終的な値**です。ただし、SpriteStudio の仕様上、行列として親の結果を継承する必要があるため、計算順序には注意してください。
-- **Flip**: `flip_h()`, `flip_v()`（パーツ全体の反転）と `img_flip_h()`, `img_flip_v()`（テクスチャのみの反転）を正しく反映させてください。
-- **Skew**: `skew_x()`, `skew_y()` による歪み変形に対応する場合、行列計算に歪みの要素を追加します。
+- **頂点配列 (AttributeVertex)**: メッシュの基準となるローカルの頂点座標とUV座標です。`part_state->vertex()` のインデックスを使って、`FrameData` 直下の `vertices` テーブルから取得します。
+- **デフォーム (AttributeDeform)**: アニメーションによって加算される変形オフセット値です。`part_state->deform()` のインデックスを使って、`FrameData` 直下の `deforms` テーブルから取得します。
 
----
+```cpp
+// メッシュパーツの頂点計算例
+if (part->type() == PartTypeMesh) {
+    int vertex_idx = part_state->vertex();
+    int deform_idx = part_state->deform();
 
-# 実装フェーズ 5：拡張機能の実装 (Advanced Features)
+    if (vertex_idx >= 0) {
+        auto vertex_data = frame_data->vertices()->Get(vertex_idx);
+        auto base_positions = vertex_data->positions(); // 基準頂点 (X, Y) の配列
+        auto uvs = vertex_data->uvs();                  // UV座標の配列
 
-アニメーションの表現をさらに高めるための拡張機能（メッシュ、インスタンス再生、パーツカラー等）の実装ガイドです。
+        // デフォームデータが存在すれば取得
+        const flatbuffers::Vector<float>* deform_offsets = nullptr;
+        if (deform_idx >= 0) {
+            auto deform_data = frame_data->deforms()->Get(deform_idx);
+            deform_offsets = deform_data->offsets();    // 変形オフセット (X, Y) の配列
+        }
 
-## 1. インスタンス再生
-SpriteStudio のインスタンス機能は、別のアニメーションを参照して再生する機能です。
+        // 各頂点の最終ローカル座標を計算し、ワールド行列を掛けて描画
+        for (size_t i = 0; i < base_positions->size() / 2; i++) {
+            float lx = base_positions->Get(i * 2);
+            float ly = base_positions->Get(i * 2 + 1);
 
-### 外部 ssab のインスタンス再生
-インスタンスは、同じ ssae 内だけでなく別の ssae のアニメーションも参照できます。`ssab` ファイルは一つの ssae 情報しか持たないため、外部の ssae を参照している場合は、Player 側で別の `ssab` ファイルをロードする必要があります。
+            if (deform_offsets && i * 2 + 1 < deform_offsets->size()) {
+                lx += deform_offsets->Get(i * 2);
+                ly += deform_offsets->Get(i * 2 + 1);
+            }
 
-- **情報の取得**: `ss.format.SsAnimeBinary.external_instances` に、外部参照されているアニメーション情報が入っています。
-- **フォーマット**: `ssae名/アニメーション名` という形式で格納されています。これを見て、対応する `ssab` を Player で管理するようにしてください。
+            // lx, ly を parent_world_matrix で変換して最終頂点を生成
+        }
+    }
+}
+```
 
-## 2. メッシュとデフォーム
-`PartTypeMesh` パーツと、その頂点を変形させる `AttributeDeform` の実装です。
+## 4. パーツカラー (PartsColor)
+パーツ全体や頂点ごとにカラー合成を行うアトリビュートです。単色または4頂点のカラー情報（RGBA）が格納されています。
+これも `part_state->part_color()` のインデックスを用いて、`FrameData` 直下の `parts_color` テーブルから取得します。
 
-- **頂点計算**: 各頂点のアトリビュート（位置）を取得し、ワールド座標を算出します。
-- **ボーン (Bone)**: ボーン構造による変形が必要な場合、階層構造（Armature/Joint等）を反映して計算します。
+- **合成タイプ (BlendType)**: Mix(通常), Add(加算), Sub(減算), Mul(乗算)。シェーダーで色を合成する際の計算式を決定します。
+- **カラー配列**: 1つの色（全体単色）または4つの色（各頂点）の RGBA (0〜255) 配列が格納されています。
 
-## 3. パーツカラー (PartsColor)
-パーツ全体や頂点ごとにカラー合成を行うアトリビュートです。
+```cpp
+// パーツカラーの取得例
+int color_idx = part_state->part_color();
+if (color_idx >= 0) {
+    auto color_data = frame_data->parts_color()->Get(color_idx);
+    int blend_type = color_data->blend_type();
+    auto colors = color_data->colors(); // [R, G, B, A, R, G, B, A, ...] 
 
-- **合成タイプ**: BlendType（Mix, Add 等）を取得し、シェーダーで色を合成します。
-
-## 4. エフェクト (Effect)
-`PartTypeEffect` パーツから、パーティクルエフェクト（.ssee 由来）を再生します。
-
-- **パーティクル上限**: Player 側でパーティクルの最大生成数を管理・制限することを推奨します。
-
-## 5. シェーダー (Shader)
-パーツにカスタムシェーダーを適用し、各種パラメータ（param0〜param7）やセカンダリテクスチャを渡して描画します。
-
-## 6. この段階での動作確認 (Validation)
-表現を拡張する各機能が正しく動作するかを確認します。
-
-- **確認対象**: `PartsColor.ssae`
-    - **チェック内容**: 頂点ごとの色や単色塗りの合成が正しいか。
-- **確認対象**: `Instance.ssae`
-    - **チェック内容**: インスタンスパーツ内のアニメーションが再生されているか。
-- **確認対象**: `Mask.ssae`
-    - **チェック内容**: マスク範囲でパーツが切り抜かれているか。
-- **確認対象**: `Mesh.ssae`
-    - **チェック内容**: デフォーム（変形）でメッシュが歪むか。
-- **確認対象**: `Effect.ssae`
-    - **チェック内容**: パーティクルが正しく放出・再生されているか。
-- **確認対象**: `Shader.ssae`
-    - **チェック内容**: シェーダーパラメータの変化が描画に反映されているか。
+    if (colors->size() == 4) {
+        // 単色指定の場合: 全頂点に同じ色を適用
+        Color c = Color(colors->Get(0), colors->Get(1), colors->Get(2), colors->Get(3));
+    } else if (colors->size() == 16) {
+        // 4頂点カラー指定の場合: 頂点ごとに色を適用（グラデーション）
+        Color tl = Color(colors->Get(0),  colors->Get(1),  colors->Get(2),  colors->Get(3));   // 左上
+        Color tr = Color(colors->Get(4),  colors->Get(5),  colors->Get(6),  colors->Get(7));   // 右上
+        Color bl = Color(colors->Get(8),  colors->Get(9),  colors->Get(10), colors->Get(11)); // 左下
+        Color br = Color(colors->Get(12), colors->Get(13), colors->Get(14), colors->Get(15));// 右下
+    }
+}
+```
 
 ---
 [目次に戻る](./README.ja.md)

@@ -8,6 +8,7 @@
 
 ### 第1章：概要と準備 (Overview & Preparation)
 実装を始める前に読むべき「概念」と「準備」についてです。
+
 1. [はじめに・用語解説](./01_introduction.ja.md)
 2. [アーキテクチャと実装方針](./02_architecture.ja.md)
 3. [事前確認とプロジェクトの準備](./03_preparation.ja.md)
@@ -15,12 +16,14 @@
 
 ### 第2章：基本実装 (Core Implementation)
 最小限のアニメーションを画面に出すまでのステップです。
+
 5. [データのロードと初期化](./05_initialization.ja.md)
 6. [アニメーションの設定と再生制御](./06_playback_control.ja.md)
 7. [描画ループと基本アトリビュートの適用](./07_render_loop.ja.md)
 
 ### 第3章：応用実装 (Advanced Features)
 よりリッチなアニメーションを再現するための追加実装です。
+
 8. [高度な機能と描画ループの拡張](./08_advanced_rendering.ja.md)
 9. [イベント処理 (UserData / Signal / サウンド)](./09_events.ja.md)
 10. [Optional な機能の実装](./10_optional_features.ja.md)
