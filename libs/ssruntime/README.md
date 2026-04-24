@@ -50,13 +50,23 @@ This library outputs the calculation results as "Part States".
 The Player side needs to receive this State and render it to the screen.
 
 ```mermaid
-graph LR
-A[SSAB / SSQB Data] --> B(SSRuntime Loader)
-B --> C{SSRuntime Player}
-D[Delta Time] --> C
-C --> E[Part States]
-E --> F[Rendering Engine]
-F --> G[Screen]
+graph TD
+    subgraph App ["Your App / Game Engine"]
+        RAW["SSAB / SSQB Data"]
+        DT["Delta Time"]
+        DRAW["Rendering"]
+    end
+
+    subgraph SSRuntime ["libssruntime (Rust / C-FFI)"]
+        RES["Shared Resource (AnimationResource)"]
+        CTX["Playback Context (Context)"]
+    end
+
+    RAW -->|1. ss_resource_create_borrow| RES
+    RES -->|2. ss_runtime_bind_resource| CTX
+    DT -->|3. ss_runtime_update| CTX
+    CTX -->|4. ss_runtime_get_frame_data| STATE["Part States / Mesh Info"]
+    STATE --> DRAW
 ```
 
 # FFI (C-API)

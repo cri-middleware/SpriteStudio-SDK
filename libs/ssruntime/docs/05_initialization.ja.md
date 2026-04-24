@@ -81,15 +81,24 @@ context.bind_resource(&resource);
 #### オブジェクトの相関図
 ```mermaid
 graph TD
-    Data[ssab Binary Data] -- (A) Borrow / (B) Copy --> Res[AnimationResource]
-    Res -- (C) Bind --> Ctx1[Context A]
-    Res -- (C) Bind --> Ctx2[Context B]
-    
-    subgraph "Player Side"
-        PData[Memory Data]
+    subgraph Owner ["アプリ側 (オーナー)"]
+        Raw[バイナリデータ]
     end
 
-    style PData fill:#f9f,stroke:#333,stroke-width:2px
+    subgraph Lib ["libssruntime"]
+        Res[AnimationResource]
+        CtxA[Context A]
+        CtxB[Context B]
+    end
+
+    Raw -->|A: Borrow / ポインタ参照| Res
+    Raw -.->|B: Copy / 内部で複製| Res
+    
+    Res ==>|Bind| CtxA
+    Res ==>|Bind| CtxB
+
+    classDef owner fill:#f9f,stroke:#333;
+    class Raw owner;
 ```
 
 1. **バインド後の安全性**: `ss_runtime_bind_resource` を実行した後は、`ss_resource_destroy` を呼び出しても、そのリソースを参照している Context が存在し続ける限りメモリは解放されません。

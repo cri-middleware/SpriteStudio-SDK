@@ -7,26 +7,36 @@ A Software Development Kit for sspj projects that are created by [OPTPiX SpriteS
 
 ## Overview
 
-The following diagram shows how the libraries in this SDK interact to convert and play SpriteStudio 7 animations:
+The following diagram shows the workflow of converting assets and playing animations using this SDK:
 
 ```mermaid
 graph LR
-    subgraph "Project Assets"
-        A[.sspj / .ssae / .ssce]
+    subgraph Assets ["Project Assets"]
+        SS[".sspj / .ssae / .ssce"]
+        IMG["Images / .png"]
     end
 
-    subgraph "Build Time (Conversion)"
-        A --> B(libsspj)
-        B --> C(libssconverter)
-        C --> D[.ssab / .ssqb]
+    subgraph Conversion ["Build Time (Conversion)"]
+        CLI[["ssconverter-cli"]]
+        CONV("libssconverter")
+        SS --> CLI
+        CLI --> CONV
+        CONV --> BIN[".ssab / .ssqb"]
     end
 
-    subgraph "Runtime (Playback)"
-        D --> E(libssruntime)
-        E --> F(libssinterpolate)
-        E --> G[Part States / Rendering Info]
-        G --> H[Your Game Engine]
+    subgraph Runtime ["Runtime (Playback)"]
+        BIN --> RT("libssruntime")
+        RT -.-> INT("libssinterpolate")
+        RT --> STATE["Part States / Mesh Info"]
     end
+
+    subgraph Engine ["Your Game Engine"]
+        STATE --> REND["Rendering Engine"]
+        IMG --> REND
+    end
+
+    style CLI fill:#f9f,stroke:#333,stroke-width:2px
+    style BIN fill:#fff,stroke:#333,stroke-dasharray: 5 5
 ```
 
 - Libraries

@@ -7,26 +7,36 @@
 
 ## 概要 (Overview)
 
-この SDK に含まれる各ライブラリがどのように連携してアニメーションを変換・再生するかを以下の図に示します：
+この SDK を使用してアセットを変換し、アニメーションを再生する際の流れを以下の図に示します：
 
 ```mermaid
 graph LR
-    subgraph "プロジェクトアセット"
-        A[.sspj / .ssae / .ssce]
+    subgraph Assets ["プロジェクトアセット"]
+        SS[".sspj / .ssae / .ssce"]
+        IMG["画像ファイル / .png"]
     end
 
-    subgraph "ビルド時 (変換)"
-        A --> B(libsspj)
-        B --> C(libssconverter)
-        C --> D[.ssab / .ssqb]
+    subgraph Conversion ["ビルド時 (変換)"]
+        CLI[["ssconverter-cli"]]
+        CONV("libssconverter")
+        SS --> CLI
+        CLI --> CONV
+        CONV --> BIN[".ssab / .ssqb"]
     end
 
-    subgraph "ランタイム (再生)"
-        D --> E(libssruntime)
-        E --> F(libssinterpolate)
-        E --> G[パーツの状態 / 描画情報]
-        G --> H[ゲームエンジン]
+    subgraph Runtime ["ランタイム (再生)"]
+        BIN --> RT("libssruntime")
+        RT -.-> INT("libssinterpolate")
+        RT --> STATE["パーツの状態 / メッシュ情報"]
     end
+
+    subgraph Engine ["ゲームエンジン"]
+        STATE --> REND["レンダリングエンジン"]
+        IMG --> REND
+    end
+
+    style CLI fill:#f9f,stroke:#333,stroke-width:2px
+    style BIN fill:#fff,stroke:#333,stroke-dasharray: 5 5
 ```
 
 - ライブラリ
