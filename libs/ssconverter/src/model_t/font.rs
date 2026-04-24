@@ -4,6 +4,8 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
     let mut v = charmap_dic
         .iter()
         .map(|(key, charmap)| {
+            let parent_path = std::path::Path::new(&key).parent();
+
             let mut bitmap = ssab::ssab::ss::format::FontBitmapT::default();
 
             bitmap.name_hash = crate::utils::fnv1a_hash_str(key);
@@ -35,8 +37,20 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
 
             let mut pages: Vec<_> = charmap.pages.values().collect();
             pages.sort_by_key(|p| p.id);
-            let name_texture = pages.into_iter().map(|p| p.file.clone()).collect::<Vec<_>>();
-            bitmap.name_texture = if name_texture.is_empty() { None } else { Some(name_texture) };
+            let name_textures = pages.into_iter().map(|p| {
+                if let Some(parent_path) = parent_path {
+                    parent_path.join(&p.file).to_string_lossy().to_string()
+                } else {
+                    p.file.clone()
+                }
+            }).collect::<Vec<_>>();
+            if name_textures.is_empty() {
+                bitmap.name_texture_hash = None;
+                bitmap.name_texture = None;
+            } else {
+                bitmap.name_texture_hash = Some(name_textures.iter().map(|f| crate::utils::fnv1a_hash_str(f)).collect::<Vec<_>>());
+                bitmap.name_texture = Some(name_textures);
+            }
 
             let mut table_data = charmap
                 .chars

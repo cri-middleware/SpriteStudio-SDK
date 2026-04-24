@@ -8983,7 +8983,8 @@ impl<'a> FontBitmap<'a> {
   pub const VT_SPACING: ::flatbuffers::VOffsetT = 26;
   pub const VT_SIZE_TEXTURE_ORIGINAL: ::flatbuffers::VOffsetT = 28;
   pub const VT_NAME_TEXTURE: ::flatbuffers::VOffsetT = 30;
-  pub const VT_TABLE_DATA: ::flatbuffers::VOffsetT = 32;
+  pub const VT_NAME_TEXTURE_HASH: ::flatbuffers::VOffsetT = 32;
+  pub const VT_TABLE_DATA: ::flatbuffers::VOffsetT = 34;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -8996,6 +8997,7 @@ impl<'a> FontBitmap<'a> {
   ) -> ::flatbuffers::WIPOffset<FontBitmap<'bldr>> {
     let mut builder = FontBitmapBuilder::new(_fbb);
     if let Some(x) = args.table_data { builder.add_table_data(x); }
+    if let Some(x) = args.name_texture_hash { builder.add_name_texture_hash(x); }
     if let Some(x) = args.name_texture { builder.add_name_texture(x); }
     if let Some(x) = args.size_texture_original { builder.add_size_texture_original(x); }
     if let Some(x) = args.spacing { builder.add_spacing(x); }
@@ -9040,6 +9042,9 @@ impl<'a> FontBitmap<'a> {
     let name_texture = self.name_texture().map(|x| {
       x.iter().map(|s| alloc::string::ToString::to_string(s)).collect()
     });
+    let name_texture_hash = self.name_texture_hash().map(|x| {
+      x.into_iter().collect()
+    });
     let table_data = self.table_data().map(|x| {
       x.iter().map(|t| t.unpack()).collect()
     });
@@ -9058,6 +9063,7 @@ impl<'a> FontBitmap<'a> {
       spacing,
       size_texture_original,
       name_texture,
+      name_texture_hash,
       table_data,
     }
   }
@@ -9171,6 +9177,13 @@ impl<'a> FontBitmap<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(FontBitmap::VT_NAME_TEXTURE, None)}
   }
   #[inline]
+  pub fn name_texture_hash(&self) -> Option<::flatbuffers::Vector<'a, u32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u32>>>(FontBitmap::VT_NAME_TEXTURE_HASH, None)}
+  }
+  #[inline]
   pub fn table_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontGlyphBitmap<'a>>>> {
     // Safety:
     // Created from valid Table for this object
@@ -9199,6 +9212,7 @@ impl ::flatbuffers::Verifiable for FontBitmap<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("spacing", Self::VT_SPACING, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("size_texture_original", Self::VT_SIZE_TEXTURE_ORIGINAL, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("name_texture", Self::VT_NAME_TEXTURE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u32>>>("name_texture_hash", Self::VT_NAME_TEXTURE_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontGlyphBitmap>>>>("table_data", Self::VT_TABLE_DATA, false)?
      .finish();
     Ok(())
@@ -9219,6 +9233,7 @@ pub struct FontBitmapArgs<'a> {
     pub spacing: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub size_texture_original: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub name_texture: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub name_texture_hash: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, u32>>>,
     pub table_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontGlyphBitmap<'a>>>>>,
 }
 impl<'a> Default for FontBitmapArgs<'a> {
@@ -9239,6 +9254,7 @@ impl<'a> Default for FontBitmapArgs<'a> {
       spacing: None,
       size_texture_original: None,
       name_texture: None,
+      name_texture_hash: None,
       table_data: None,
     }
   }
@@ -9306,6 +9322,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> FontBitmapBuilder<'a, 'b, A> 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FontBitmap::VT_NAME_TEXTURE, name_texture);
   }
   #[inline]
+  pub fn add_name_texture_hash(&mut self, name_texture_hash: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , u32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FontBitmap::VT_NAME_TEXTURE_HASH, name_texture_hash);
+  }
+  #[inline]
   pub fn add_table_data(&mut self, table_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<FontGlyphBitmap<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FontBitmap::VT_TABLE_DATA, table_data);
   }
@@ -9341,6 +9361,7 @@ impl ::core::fmt::Debug for FontBitmap<'_> {
       ds.field("spacing", &self.spacing());
       ds.field("size_texture_original", &self.size_texture_original());
       ds.field("name_texture", &self.name_texture());
+      ds.field("name_texture_hash", &self.name_texture_hash());
       ds.field("table_data", &self.table_data());
       ds.finish()
   }
@@ -9362,6 +9383,7 @@ pub struct FontBitmapT {
   pub spacing: Option<alloc::boxed::Box<Vec2T>>,
   pub size_texture_original: Option<alloc::boxed::Box<Vec2T>>,
   pub name_texture: Option<alloc::vec::Vec<alloc::string::String>>,
+  pub name_texture_hash: Option<alloc::vec::Vec<u32>>,
   pub table_data: Option<alloc::vec::Vec<FontGlyphBitmapT>>,
 }
 impl Default for FontBitmapT {
@@ -9381,6 +9403,7 @@ impl Default for FontBitmapT {
       spacing: None,
       size_texture_original: None,
       name_texture: None,
+      name_texture_hash: None,
       table_data: None,
     }
   }
@@ -9416,6 +9439,9 @@ impl FontBitmapT {
     let name_texture = self.name_texture.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|s| _fbb.create_string(s)).collect();_fbb.create_vector(&w)
     });
+    let name_texture_hash = self.name_texture_hash.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
     let table_data = self.table_data.as_ref().map(|x|{
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
@@ -9434,6 +9460,7 @@ impl FontBitmapT {
       spacing,
       size_texture_original,
       name_texture,
+      name_texture_hash,
       table_data,
     })
   }
