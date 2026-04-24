@@ -51,6 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 # FFI (C/C++)
 
 このライブラリは、コンバータの作成や進捗監視を行うための C API を公開しています。
+詳細な組み込み方法については、[libssconverter 組み込みガイド](./docs/USAGE.ja.md) を参照してください。
+
 ヘッダファイルは `cbindgen` によって `target/ssconverter.h` に生成されます。
 
 ## C++ API 使用例
