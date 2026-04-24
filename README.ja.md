@@ -9,34 +9,39 @@
 
 この SDK を使用してアセットを変換し、アニメーションを再生する際の流れを以下の図に示します：
 
+> **図の凡例**
+> - **図形**: `[ ]` データ/ファイル, `( )` ライブラリ/コンポーネント, `[[ ]]` ツール/アプリケーション
+> - **矢印**: `-->` データの流れ, `-.->` 依存/参照
+> - **枠線**: 点線枠は生成されたファイルを示します。
+
 ```mermaid
 graph LR
     subgraph Assets ["プロジェクトアセット"]
-        SS[".sspj / .ssae / .ssce"]
-        IMG["画像ファイル / .png"]
+        SS[" .sspj / .ssae / .ssce "]
+        IMG[" 画像ファイル / .png "]
     end
 
     subgraph Conversion ["ビルド時 (変換)"]
-        CLI[["ssconverter-cli"]]
-        CONV("libssconverter")
+        CLI[[" ssconverter-cli "]]
+        CONV(" libssconverter ")
         SS --> CLI
         CLI --> CONV
-        CONV --> BIN[".ssab / .ssqb"]
+        CONV --> BIN[" .ssab / .ssqb "]
     end
 
     subgraph Runtime ["ランタイム (再生)"]
-        BIN --> RT("libssruntime")
-        RT -.-> INT("libssinterpolate")
-        RT --> STATE["パーツの状態 / メッシュ情報"]
+        BIN --> RT(" libssruntime ")
+        RT -.-> INT(" libssinterpolate ")
+        RT --> STATE[" パーツの状態 / メッシュ情報 "]
     end
 
     subgraph Engine ["ゲームエンジン"]
-        STATE --> REND["レンダリングエンジン"]
+        STATE --> REND[[" レンダリングエンジン "]]
         IMG --> REND
     end
 
-    style CLI fill:#f9f,stroke:#333,stroke-width:2px
-    style BIN fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    classDef generated stroke-dasharray: 5 5;
+    class BIN generated;
 ```
 
 - ライブラリ

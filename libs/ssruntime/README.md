@@ -49,23 +49,27 @@ When integrating this library into a Player (game engine), please pay close atte
 This library outputs the calculation results as "Part States".
 The Player side needs to receive this State and render it to the screen.
 
+> **Diagram Legend**
+> - **Shapes**: `[ ]` Data/Resources, `{ }` Context/State, `[[ ]]` Applications/Engines.
+> - **Arrows**: `-->` Data Flow / API Call.
+
 ```mermaid
 graph TD
     subgraph App ["Your App / Game Engine"]
-        RAW["SSAB / SSQB Data"]
-        DT["Delta Time"]
-        DRAW["Rendering"]
+        RAW[" SSAB / SSQB Data "]
+        DT[" Delta Time "]
+        DRAW[[" Rendering "]]
     end
 
     subgraph SSRuntime ["libssruntime (Rust / C-FFI)"]
-        RES["Shared Resource (AnimationResource)"]
-        CTX["Playback Context (Context)"]
+        RES[" Shared Resource (AnimationResource) "]
+        CTX{" Playback Context (Context) "}
     end
 
     RAW -->|1. ss_resource_create_borrow| RES
     RES -->|2. ss_runtime_bind_resource| CTX
     DT -->|3. ss_runtime_update| CTX
-    CTX -->|4. ss_runtime_get_frame_data| STATE["Part States / Mesh Info"]
+    CTX -->|4. ss_runtime_get_frame_data| STATE[" Part States / Mesh Info "]
     STATE --> DRAW
 ```
 

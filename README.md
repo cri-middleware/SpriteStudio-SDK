@@ -9,34 +9,39 @@ A Software Development Kit for sspj projects that are created by [OPTPiX SpriteS
 
 The following diagram shows the workflow of converting assets and playing animations using this SDK:
 
+> **Diagram Legend**
+> - **Shapes**: `[ ]` Data/Files, `( )` Libraries/Components, `[[ ]]` Tools/Applications.
+> - **Arrows**: `-->` Data Flow, `-.->` Dependency/Reference.
+> - **Borders**: Dashed borders indicate generated files.
+
 ```mermaid
 graph LR
     subgraph Assets ["Project Assets"]
-        SS[".sspj / .ssae / .ssce"]
-        IMG["Images / .png"]
+        SS[" .sspj / .ssae / .ssce "]
+        IMG[" Images / .png "]
     end
 
     subgraph Conversion ["Build Time (Conversion)"]
-        CLI[["ssconverter-cli"]]
-        CONV("libssconverter")
+        CLI[[" ssconverter-cli "]]
+        CONV(" libssconverter ")
         SS --> CLI
         CLI --> CONV
-        CONV --> BIN[".ssab / .ssqb"]
+        CONV --> BIN[" .ssab / .ssqb "]
     end
 
     subgraph Runtime ["Runtime (Playback)"]
-        BIN --> RT("libssruntime")
-        RT -.-> INT("libssinterpolate")
-        RT --> STATE["Part States / Mesh Info"]
+        BIN --> RT(" libssruntime ")
+        RT -.-> INT(" libssinterpolate ")
+        RT --> STATE[" Part States / Mesh Info "]
     end
 
     subgraph Engine ["Your Game Engine"]
-        STATE --> REND["Rendering Engine"]
+        STATE --> REND[[" Rendering Engine "]]
         IMG --> REND
     end
 
-    style CLI fill:#f9f,stroke:#333,stroke-width:2px
-    style BIN fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    classDef generated stroke-dasharray: 5 5;
+    class BIN generated;
 ```
 
 - Libraries
