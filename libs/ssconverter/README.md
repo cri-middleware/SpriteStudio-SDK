@@ -50,8 +50,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # FFI (C/C++)
 
-The library exposes a C API for creating converters and monitoring progress.
+This library exposes a C API for creating converters and monitoring progress.
+For detailed integration instructions, see the [libssconverter Integration Guide](./docs/USAGE.md).
+
 Headers are generated in `target/ssconverter.h` by `cbindgen`.
+
 
 ## Example C++ API Usage
 
