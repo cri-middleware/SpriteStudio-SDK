@@ -50,13 +50,23 @@ ssruntime = { path = "libs/ssruntime", default-features = false }
 Player 側はこの State を受け取り、画面に描画する必要があります。
 
 ```mermaid
-graph LR
-A[SSAB / SSQB Data] --> B(SSRuntime Loader)
-B --> C{SSRuntime Player}
-D[Delta Time] --> C
-C --> E[Part States]
-E --> F[Rendering Engine]
-F --> G[Screen]
+graph TD
+    subgraph App ["あなたのアプリ / ゲームエンジン"]
+        RAW["SSAB / SSQB バイナリデータ"]
+        DT["デルタタイム"]
+        DRAW["レンダリング"]
+    end
+
+    subgraph SSRuntime ["libssruntime (Rust / C-FFI)"]
+        RES["共有リソース (AnimationResource)"]
+        CTX["再生コンテキスト (Context)"]
+    end
+
+    RAW -->|1. ss_resource_create_borrow| RES
+    RES -->|2. ss_runtime_bind_resource| CTX
+    DT -->|3. ss_runtime_update| CTX
+    CTX -->|4. ss_runtime_get_frame_data| STATE["パーツの状態 / メッシュ情報"]
+    STATE --> DRAW
 ```
 
 # FFI (C-API)
