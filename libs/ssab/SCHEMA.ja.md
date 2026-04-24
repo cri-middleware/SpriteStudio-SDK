@@ -450,6 +450,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `scale` | `common.scale_w/h` | テクスチャスケール |
 | `size_texture_original` | — | 元のテクスチャサイズ |
 | `name_texture` | `pages[*].file` | テクスチャファイル名 |
+| `name_texture_hash` | — | テクスチャファイル名のハッシュ配列 |
 | `table_data` | `chars` | グリフデータ |
 
 ### `FontGlyphBitmap` (ssab) vs `SsCharMapChar` (fnt)

@@ -330,6 +330,7 @@ table FontBitmap {
   size_texture_original: Vec2;
 
   name_texture: [string];
+  name_texture_hash: [uint32];
   table_data: [FontGlyphBitmap];
 }
 

@@ -77,17 +77,22 @@ pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::ss::format::SsAnim
         })
         .collect::<HashMap<String, String>>();
 
-    // TODO: improve font bitmap path
-    /*
-    let fonts =  anime.font_bitmaps().into_iter().flatten().flat_map(|font_bitmap| {
-        font_bitmap.name_texture().into_iter().flatten().map(|name_texture| name_texture.to_string())
-    });
-     */
+    let fonts = ssab_obj
+        .font_bitmaps
+        .iter()
+        .flat_map(|font_bitmaps| font_bitmaps.iter())
+        .flat_map(|font_bitmap| {
+            font_bitmap.name_texture.iter().flatten().map(|name_texture| {
+                (name_texture.to_string(), name_texture.to_string())
+            })
+        })
+        .collect::<HashMap<String, String>>();
 
     let mut output = HashMap::<String, String>::new();
     output.extend(images);
     output.extend(external_textures);
     output.extend(sounds);
+    output.extend(fonts);
     output
 }
 
@@ -119,17 +124,22 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
         })
         .collect::<HashMap<_, _>>();
 
-    // TODO: improve font bitmap path
-    /*
-    let fonts = anime.font_bitmaps().into_iter().flatten().flat_map(|font_bitmap| {
-        font_bitmap.name_texture().into_iter().flatten().map(|name_texture| name_texture.to_string())
-    });
-     */
+    let fonts = anime
+        .font_bitmaps()
+        .iter()
+        .flatten()
+        .flat_map(|font_bitmap| {
+            font_bitmap.name_texture().into_iter().flatten().map(|name_texture| {
+                (name_texture.to_string(), name_texture.to_string())
+            })
+        })
+        .collect::<HashMap<_, _>>();
 
     let mut output = HashMap::<String, String>::new();
     output.extend(images);
     output.extend(external_textures);
     output.extend(sounds);
+    output.extend(fonts);
     output
 }
 
