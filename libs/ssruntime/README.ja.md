@@ -3,7 +3,7 @@
 # libssruntime
 
 SpriteStudio 7 のアニメーションデータを再生するためのランタイムライブラリです。
-バイナリデータ (`.ssab`, `.ssqb`) を読み込み、アニメーションの更新、キーフレームの抽出、補間計算などのコアロジックを提供します。
+バイナリデータ (`.ssab`) を読み込み、アニメーションの更新、キーフレームの抽出、補間計算などのコアロジックを提供します。
 
 > **Note**
 > このライブラリ自体は描画機能 (レンダリング) を持っていません。
@@ -49,23 +49,27 @@ ssruntime = { path = "libs/ssruntime", default-features = false }
 このライブラリは、計算結果を「パーツの状態 (State)」として出力します。
 Player 側はこの State を受け取り、画面に描画する必要があります。
 
+> **図の凡例**
+> - **図形**: `[ ]` データ/リソース, `{ }` コンテキスト/状態, `[[ ]]` アプリケーション/エンジン
+> - **矢印**: `-->` データの流れ / API呼び出し
+
 ```mermaid
 graph TD
     subgraph App ["あなたのアプリ / ゲームエンジン"]
-        RAW["SSAB / SSQB バイナリデータ"]
-        DT["デルタタイム"]
-        DRAW["レンダリング"]
+        RAW[" SSAB バイナリデータ "]
+        DT[" デルタタイム "]
+        DRAW[[" レンダリング "]]
     end
 
     subgraph SSRuntime ["libssruntime (Rust / C-FFI)"]
-        RES["共有リソース (AnimationResource)"]
-        CTX["再生コンテキスト (Context)"]
+        RES[" 共有リソース (AnimationResource) "]
+        CTX{" 再生コンテキスト (Context) "}
     end
 
     RAW -->|1. ss_resource_create_borrow| RES
     RES -->|2. ss_runtime_bind_resource| CTX
-    DT -->|3. ss_runtime_update| CTX
-    CTX -->|4. ss_runtime_get_frame_data| STATE["パーツの状態 / メッシュ情報"]
+    DT -->|"3. ss_runtime_update -> frame"| CTX
+    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" パーツの状態 / メッシュ情報 "]
     STATE --> DRAW
 ```
 

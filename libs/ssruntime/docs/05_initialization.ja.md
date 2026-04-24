@@ -79,26 +79,28 @@ context.bind_resource(&resource);
 | **Context (再生状態)** | **Player 側** (明示的に破棄が必要) | `ss_runtime_destroy` で Context 本身と参照先リソースを解放。 |
 
 #### オブジェクトの相関図
+
+> **図の凡例**
+> - **図形**: `[ ]` データ/リソース, `{ }` コンテキスト/状態
+> - **矢印**: `-->` 参照, `-.->` 複製, `==>` 紐付け (Bind)
+
 ```mermaid
 graph TD
     subgraph Owner ["アプリ側 (オーナー)"]
-        Raw[バイナリデータ]
+        Raw[" バイナリデータ "]
     end
 
     subgraph Lib ["libssruntime"]
-        Res[AnimationResource]
-        CtxA[Context A]
-        CtxB[Context B]
+        Res[" AnimationResource "]
+        CtxA{" Context A "}
+        CtxB{" Context B "}
     end
 
     Raw -->|A: Borrow / ポインタ参照| Res
     Raw -.->|B: Copy / 内部で複製| Res
-    
+
     Res ==>|Bind| CtxA
     Res ==>|Bind| CtxB
-
-    classDef owner fill:#f9f,stroke:#333;
-    class Raw owner;
 ```
 
 1. **バインド後の安全性**: `ss_runtime_bind_resource` を実行した後は、`ss_resource_destroy` を呼び出しても、そのリソースを参照している Context が存在し続ける限りメモリは解放されません。
