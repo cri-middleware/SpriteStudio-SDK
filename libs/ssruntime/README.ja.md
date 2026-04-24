@@ -3,7 +3,7 @@
 # libssruntime
 
 SpriteStudio 7 のアニメーションデータを再生するためのランタイムライブラリです。
-バイナリデータ (`.ssab`, `.ssqb`) を読み込み、アニメーションの更新、キーフレームの抽出、補間計算などのコアロジックを提供します。
+バイナリデータ (`.ssab`) を読み込み、アニメーションの更新、キーフレームの抽出、補間計算などのコアロジックを提供します。
 
 > **Note**
 > このライブラリ自体は描画機能 (レンダリング) を持っていません。
@@ -56,7 +56,7 @@ Player 側はこの State を受け取り、画面に描画する必要があり
 ```mermaid
 graph TD
     subgraph App ["あなたのアプリ / ゲームエンジン"]
-        RAW[" SSAB / SSQB バイナリデータ "]
+        RAW[" SSAB バイナリデータ "]
         DT[" デルタタイム "]
         DRAW[[" レンダリング "]]
     end
@@ -68,8 +68,8 @@ graph TD
 
     RAW -->|1. ss_resource_create_borrow| RES
     RES -->|2. ss_runtime_bind_resource| CTX
-    DT -->|3. ss_runtime_update| CTX
-    CTX -->|4. ss_runtime_get_frame_data| STATE[" パーツの状態 / メッシュ情報 "]
+    DT -->|"3. ss_runtime_update -> frame"| CTX
+    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" パーツの状態 / メッシュ情報 "]
     STATE --> DRAW
 ```
 

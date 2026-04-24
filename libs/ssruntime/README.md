@@ -3,7 +3,7 @@
 # libssruntime
 
 A runtime library for playing SpriteStudio 7 animation data.
-It loads binary data (`.ssab`, `.ssqb`) and provides core logic such as animation updates, keyframe extraction, and interpolation calculations.
+It loads binary data (`.ssab`) and provides core logic such as animation updates, keyframe extraction, and interpolation calculations.
 
 > **Note**
 > This library itself does not have rendering capabilities.
@@ -56,7 +56,7 @@ The Player side needs to receive this State and render it to the screen.
 ```mermaid
 graph TD
     subgraph App ["Your App / Game Engine"]
-        RAW[" SSAB / SSQB Data "]
+        RAW[" SSAB Data "]
         DT[" Delta Time "]
         DRAW[[" Rendering "]]
     end
@@ -68,8 +68,8 @@ graph TD
 
     RAW -->|1. ss_resource_create_borrow| RES
     RES -->|2. ss_runtime_bind_resource| CTX
-    DT -->|3. ss_runtime_update| CTX
-    CTX -->|4. ss_runtime_get_frame_data| STATE[" Part States / Mesh Info "]
+    DT -->|"3. ss_runtime_update -> frame"| CTX
+    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" Part States / Mesh Info "]
     STATE --> DRAW
 ```
 
