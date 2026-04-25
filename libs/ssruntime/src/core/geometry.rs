@@ -98,21 +98,21 @@ pub fn compute_local_uvs(
     let mut out_u = [0.0; 5];
     let mut out_v = [0.0; 5];
 
-    // LU (-1, -1)
-    out_u[0] = -m11 - m12 + ou;
-    out_v[0] = -m21 - m22 + ov;
+    let m11_v = f32x4::splat(m11);
+    let m21_v = f32x4::splat(m21);
+    let m12_v = f32x4::splat(m12);
+    let m22_v = f32x4::splat(m22);
+    let ou_v = f32x4::splat(ou);
+    let ov_v = f32x4::splat(ov);
 
-    // RU (+1, -1)
-    out_u[1] =  m11 - m12 + ou;
-    out_v[1] =  m21 - m22 + ov;
+    let x = f32x4::from([-1.0, 1.0, -1.0, 1.0]);
+    let y = f32x4::from([-1.0, -1.0, 1.0, 1.0]);
 
-    // LD (-1, +1)
-    out_u[2] = -m11 + m12 + ou;
-    out_v[2] = -m21 + m22 + ov;
+    let u_simd = (m11_v * x) + (m12_v * y) + ou_v;
+    let v_simd = (m21_v * x) + (m22_v * y) + ov_v;
 
-    // RD (+1, +1)
-    out_u[3] =  m11 + m12 + ou;
-    out_v[3] =  m21 + m22 + ov;
+    out_u[..4].copy_from_slice(&u_simd.to_array());
+    out_v[..4].copy_from_slice(&v_simd.to_array());
 
     let count = if use_5_vertices {
         out_u[4] = ou;
