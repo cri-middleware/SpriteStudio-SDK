@@ -1,4 +1,3 @@
-use wide::f32x4;
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
 /// Utilizes SIMD via the `wide` crate for maximum performance.
@@ -126,8 +125,87 @@ pub fn compute_local_uvs(
     (count, out_u, out_v)
 }
 
+
+/// Performs a hit test for a point against a rectangle in local space.
+/// The point is expected to be already transformed into local space (using inverse matrix).
+pub fn is_point_in_rect(local_p: (f32, f32), size: (f32, f32)) -> bool {
+    let hw = size.0 * 0.5;
+    let hh = size.1 * 0.5;
+    local_p.0 >= -hw && local_p.0 <= hw && local_p.1 >= -hh && local_p.1 <= hh
+}
+
+use wide::{f32x4, CmpGt, CmpLt};
+
+/// Performs a hit test for a point against a 4-point quadrilateral in world space.
+/// Uses the even-odd rule (ray casting) algorithm and SIMD via the `wide` crate to support both convex and concave quadrilaterals efficiently.
+pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) -> bool {
+    let tp_x = f32x4::splat(target_p.0);
+    let tp_y = f32x4::splat(target_p.1);
+
+    // Indices for LU(0) -> RU(1) -> RD(3) -> LD(2) loop
+    let x0 = f32x4::from([v_x[0], v_x[1], v_x[3], v_x[2]]);
+    let y0 = f32x4::from([v_y[0], v_y[1], v_y[3], v_y[2]]);
+    let x1 = f32x4::from([v_x[1], v_x[3], v_x[2], v_x[0]]);
+    let y1 = f32x4::from([v_y[1], v_y[3], v_y[2], v_y[0]]);
+
+    // Ray casting to the right (+x direction)
+    // Condition 1: (y0 > target_p.1) != (y1 > target_p.1)
+    let y0_gt = y0.simd_gt(tp_y);
+    let y1_gt = y1.simd_gt(tp_y);
+    let y_cond = y0_gt ^ y1_gt;
+
+    // Condition 2: target_p.0 < intersect_x
+    // intersect_x = x0 + (target_p.1 - y0) * (x1 - x0) / (y1 - y0)
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let intersect_x = x0 + (tp_y - y0) * dx / dy;
+    let x_cond = tp_x.simd_lt(intersect_x);
+
+    // Combine conditions: both must be true (bitwise AND on mask)
+    let inside_mask = y_cond & x_cond;
+
+    // We count how many true values exist in the mask.
+    // wide crate stores masks as all 1s (0xFFFFFFFF) for true and 0 for false in f32 format.
+    // Converting the bit pattern of each lane into an array allows counting.
+    let arr = inside_mask.to_array();
+    let mut intersections = 0;
+    for item in &arr {
+        if item.to_bits() != 0 {
+            intersections += 1;
+        }
+    }
+
+    (intersections % 2) != 0
+}
+
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn test_is_point_in_rect() {
+        assert!(is_point_in_rect((0.0, 0.0), (100.0, 100.0)));
+        assert!(is_point_in_rect((49.0, -49.0), (100.0, 100.0)));
+        assert!(!is_point_in_rect((51.0, 0.0), (100.0, 100.0)));
+    }
+
+    #[test]
+    fn test_is_point_in_quad() {
+        // Simple 100x100 square vertices in Z-order: LU, RU, LD, RD
+        let vx = [-50.0, 50.0, -50.0, 50.0];
+        let vy = [50.0, 50.0, -50.0, -50.0];
+        
+        assert!(is_point_in_quad((0.0, 0.0), &vx, &vy));
+        assert!(is_point_in_quad((45.0, 45.0), &vx, &vy));
+        assert!(!is_point_in_quad((55.0, 0.0), &vx, &vy));
+        
+        // Deformed trapezoid
+        let vx2 = [-20.0, 20.0, -50.0, 50.0];
+        let vy2 = [50.0, 50.0, -50.0, -50.0];
+        assert!(is_point_in_quad((0.0, 0.0), &vx2, &vy2));
+        assert!(is_point_in_quad((15.0, 45.0), &vx2, &vy2));
+        assert!(!is_point_in_quad((25.0, 45.0), &vx2, &vy2));
+    }
+
 
     #[test]
     fn test_compute_local_uvs_basic() {
@@ -265,5 +343,90 @@ mod tests {
         assert_approx_eq(x2[4], 25.0);
         // Sum of Y: 50 + (50+100) - 50 - 50 = 50 + 150 - 50 - 50 = 100. Average = 25.0
         assert_approx_eq(y2[4], 25.0);
+    }
+
+    #[test]
+    fn test_vertices_complex_flip_offset() {
+        // 100x100 square, pivot at bottom-right (0.5, -0.5), offset by (0.5, 0.5)
+        // effectively pivot is at (1.0, 0.0) relative to center, which is right edge center.
+        let size = (100.0, 100.0);
+        let pivot = (0.5, -0.5); 
+        let pivot_offset = (0.5, 0.5);
+        let flip = (true, true); // Double flip
+
+        let (_, x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, None, false);
+        
+        // With H-Flip: pivot_x becomes 1.0 - (0.5 + 0.5) = 0.0
+        // With V-Flip: pivot_y becomes 1.0 - (0.5 + 0.5) = 0.0
+        // Resulting p_x = (0.0 + 0.5) * 100 = 50
+        // Resulting p_y = (0.0 - 0.5) * 100 = -50
+        // sx = -50, ex = 50, sy = -50, ey = -150
+        assert_approx_eq(x[0], -50.0); // LU
+        assert_approx_eq(y[0], -50.0);
+    }
+
+    #[test]
+    fn test_uvs_full_transform() {
+        let rect = (0.0, 0.0, 1.0, 1.0);
+        // Translate 0.1, Rotate 90deg, Scale 2.0
+        let anim = (0.1, 0.1, 90.0, 2.0, 2.0);
+        let (_, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false, false);
+        
+        // Center is (0.5, 0.5)
+        // LU (0, 0) relative to center is (-0.5, -0.5)
+        // Scale 2.0 -> (-1.0, -1.0)
+        // Rotate 90deg -> (1.0, -1.0)  [x' = -y, y' = x]
+        // Back to origin (0.5, 0.5) -> (1.5, -0.5)
+        // Translate 0.1 -> (1.6, -0.4)
+        assert_approx_eq(u[0], 1.6);
+        assert_approx_eq(v[0], -0.4);
+    }
+
+    #[test]
+    fn test_uvs_rotated_cell() {
+        let rect = (0.1, 0.1, 0.5, 0.4); // 0.4x0.3 rect
+        let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
+        let (_, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), true, false);
+        
+        // In rotated mode, LU corresponds to (left, bottom) of the rect
+        assert_approx_eq(u[0], 0.1); 
+        assert_approx_eq(v[0], 0.4);
+        // RU corresponds to (left, top)
+        assert_approx_eq(u[1], 0.1);
+        assert_approx_eq(v[1], 0.1);
+    }
+
+    #[test]
+    fn test_hit_test_edge_cases() {
+        let vx = [0.0, 10.0, 0.0, 10.0];
+        let vy = [10.0, 10.0, 0.0, 0.0];
+
+        // Inside
+        assert!(is_point_in_quad((5.0, 5.0), &vx, &vy));
+        // Outside
+        assert!(!is_point_in_quad((11.0, 5.0), &vx, &vy));
+        // Exactly on edge (should be true with our epsilon)
+        assert!(is_point_in_quad((0.0, 5.0), &vx, &vy));
+        // Exactly on vertex
+        assert!(is_point_in_quad((0.0, 0.0), &vx, &vy));
+    }
+
+    #[test]
+    fn test_hit_test_concave_quad() {
+        // Vertices forming a true concave shape (boomerang style)
+        // LU: (0, 10), RU: (2, 2), LD: (0, 0), RD: (10, 0)
+        // This makes RU folded inwards.
+        let vx = [0.0, 2.0, 0.0, 10.0];
+        let vy = [10.0, 2.0, 0.0, 0.0];
+        
+        // Inside the top arm
+        assert!(is_point_in_quad((1.0, 5.0), &vx, &vy));
+        // Inside the bottom arm
+        assert!(is_point_in_quad((5.0, 1.0), &vx, &vy));
+        
+        // Outside, in the concave notch (right side of the fold)
+        assert!(!is_point_in_quad((5.0, 5.0), &vx, &vy));
+        // Outside, entirely to the right
+        assert!(!is_point_in_quad((11.0, 5.0), &vx, &vy));
     }
 }

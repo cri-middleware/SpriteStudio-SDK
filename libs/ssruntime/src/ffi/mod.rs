@@ -1087,3 +1087,23 @@ pub unsafe extern "C" fn ss_uv_compute_local(
 
     count as i32
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_geometry_is_point_in_rect(
+    px: f32, py: f32,
+    size_w: f32, size_h: f32,
+) -> bool {
+    crate::core::geometry::is_point_in_rect((px, py), (size_w, size_h))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_geometry_is_point_in_quad(
+    tx: f32, ty: f32,
+    vx: *const f32, // Array of 4 floats
+    vy: *const f32, // Array of 4 floats
+) -> bool {
+    if vx.is_null() || vy.is_null() { return false; }
+    let vxa = unsafe { &*(vx as *const [f32; 4]) };
+    let vya = unsafe { &*(vy as *const [f32; 4]) };
+    crate::core::geometry::is_point_in_quad((tx, ty), vxa, vya)
+}
