@@ -47,8 +47,113 @@ pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset:
     (vertex_count, out_x, out_y)
 }
 
+
+/// Computes the local UV coordinates for a part, including UV animation (translate, rotate, scale) and flipping.
+/// Returns a tuple containing the number of UVs (4 or 5) and the u and v coordinates.
+pub fn compute_local_uvs(
+    uv_rect: (f32, f32, f32, f32), // (left, top, right, bottom)
+    uv_anim: (f32, f32, f32, f32, f32), // (trans_u, trans_v, rot_deg, scale_u, scale_v)
+    part_flip: (bool, bool), // (h_flip, v_flip)
+    image_flip: (bool, bool), // (img_flip_h, img_flip_v)
+    rotated: bool, // is the cell rotated?
+    use_5_vertices: bool,
+) -> (usize, [f32; 5], [f32; 5]) {
+    let (left, top, right, bottom) = uv_rect;
+    let (tu, tv, rot_deg, su, sv) = uv_anim;
+
+    let mut base_u = [0.0; 4];
+    let mut base_v = [0.0; 4];
+
+    if rotated {
+        // 13
+        // 02
+        base_u[0] = left;  base_v[0] = bottom; // LU
+        base_u[1] = left;  base_v[1] = top;    // RU
+        base_u[2] = right; base_v[2] = bottom; // LD
+        base_u[3] = right; base_v[3] = top;    // RD
+    } else {
+        // 01
+        // 23
+        base_u[0] = left;  base_v[0] = top;    // LU
+        base_u[1] = right; base_v[1] = top;    // RU
+        base_u[2] = left;  base_v[2] = bottom; // LD
+        base_u[3] = right; base_v[3] = bottom; // RD
+    }
+
+    let mut u = [0.0; 5];
+    let mut v = [0.0; 5];
+
+    // Apply part_flip (reorder)
+    let order: [usize; 4] = match (part_flip.0, part_flip.1) {
+        (false, false) => [0, 1, 2, 3],
+        (true, false)  => [1, 0, 3, 2],
+        (false, true)  => [2, 3, 0, 1],
+        (true, true)   => [3, 2, 1, 0],
+    };
+
+    for i in 0..4 {
+        u[i] = base_u[order[i]];
+        v[i] = base_v[order[i]];
+    }
+
+    // Image Flip (scale by -1)
+    let scale_u = if image_flip.0 { -su } else { su };
+    let scale_v = if image_flip.1 { -sv } else { sv };
+
+    let center_u = (left + right) * 0.5;
+    let center_v = (top + bottom) * 0.5;
+
+    let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
+    let cos_r = rot_rad.cos();
+    let sin_r = rot_rad.sin();
+
+    for i in 0..4 {
+        let mut cu = u[i] - center_u;
+        let mut cv = v[i] - center_v;
+
+        cu *= scale_u;
+        cv *= scale_v;
+
+        let ru = cu * cos_r - cv * sin_r;
+        let rv = cu * sin_r + cv * cos_r;
+
+        u[i] = ru + center_u + tu;
+        v[i] = rv + center_v + tv;
+    }
+
+    let count = if use_5_vertices {
+        u[4] = (u[0] + u[1] + u[2] + u[3]) * 0.25;
+        v[4] = (v[0] + v[1] + v[2] + v[3]) * 0.25;
+        5
+    } else {
+        4
+    };
+
+    (count, u, v)
+}
+
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn test_compute_local_uvs_basic() {
+        let rect = (0.0, 0.0, 1.0, 1.0);
+        let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
+        let (count, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false, false);
+        assert_eq!(count, 4);
+        assert_arr_approx_eq(&u, &[0.0, 1.0, 0.0, 1.0], 4);
+        assert_arr_approx_eq(&v, &[0.0, 0.0, 1.0, 1.0], 4);
+    }
+
+    #[test]
+    fn test_compute_local_uvs_part_flip() {
+        let rect = (0.0, 0.0, 1.0, 1.0);
+        let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
+        let (_, u, v) = compute_local_uvs(rect, anim, (true, false), (false, false), false, false);
+        assert_arr_approx_eq(&u, &[1.0, 0.0, 1.0, 0.0], 4);
+        assert_arr_approx_eq(&v, &[0.0, 0.0, 1.0, 1.0], 4);
+    }
+
     use super::*;
 
     // Float comparison helper

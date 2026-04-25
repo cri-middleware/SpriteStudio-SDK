@@ -1005,3 +1005,40 @@ pub extern "C" fn ss_vertex_compute_local(input_data: *const f32, flags: u32, ou
     }
     count as i32
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_uv_compute_local(
+    input_data: *const f32, // Array of 9 floats: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
+    flags: u32,             // Bitmask: 1=part_flip_h, 2=part_flip_v, 4=img_flip_h, 8=img_flip_v, 16=rotated, 32=use_5_vertices
+    out_u: *mut f32,        // Array of 5 floats
+    out_v: *mut f32,        // Array of 5 floats
+) -> i32 {
+    if input_data.is_null() || out_u.is_null() || out_v.is_null() {
+        return 0;
+    }
+
+    let part_flip_h = (flags & 1) != 0;
+    let part_flip_v = (flags & 2) != 0;
+    let img_flip_h = (flags & 4) != 0;
+    let img_flip_v = (flags & 8) != 0;
+    let rotated = (flags & 16) != 0;
+    let use_5_vertices = (flags & 32) != 0;
+
+    let data = unsafe { core::slice::from_raw_parts(input_data, 9) };
+
+    let (count, u, v) = crate::core::geometry::compute_local_uvs(
+        (data[0], data[1], data[2], data[3]),
+        (data[4], data[5], data[6], data[7], data[8]),
+        (part_flip_h, part_flip_v),
+        (img_flip_h, img_flip_v),
+        rotated,
+        use_5_vertices,
+    );
+
+    unsafe {
+        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, 5);
+        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, 5);
+    }
+
+    count as i32
+}
