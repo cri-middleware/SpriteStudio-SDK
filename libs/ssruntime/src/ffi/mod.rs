@@ -982,23 +982,47 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_vertex_compute_local(input_data: *const f32, flags: u32, out_x: *mut f32, out_y: *mut f32) -> i32 {
-    if input_data.is_null() || out_x.is_null() || out_y.is_null() {
+/// Computes the local vertices for a part using primitive parameters.
+/// deform_x_ptr, deform_y_ptr: optional pointers to float arrays of size 4.
+/// out_x, out_y: pointers to float arrays of size 5 to store results.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_vertex_compute_local(
+    size_w: f32,
+    size_h: f32,
+    pivot_x: f32,
+    pivot_y: f32,
+    pivot_offset_x: f32,
+    pivot_offset_y: f32,
+    h_flip: bool,
+    v_flip: bool,
+    use_5_vertices: bool,
+    deform_x_ptr: *const f32,
+    deform_y_ptr: *const f32,
+    out_x: *mut f32,
+    out_y: *mut f32,
+) -> i32 {
+    if out_x.is_null() || out_y.is_null() {
         return 0;
     }
-    let h_flip = (flags & 1) != 0;
-    let v_flip = (flags & 2) != 0;
-    let has_deform = (flags & 4) != 0;
-    let use_5_vertices = (flags & 8) != 0;
-    let data = unsafe { core::slice::from_raw_parts(input_data, 14) };
-    let deform = if has_deform {
-        let dx: &[f32; 4] = data[6..10].try_into().unwrap();
-        let dy: &[f32; 4] = data[10..14].try_into().unwrap();
+
+    let deform = if !deform_x_ptr.is_null() && !deform_y_ptr.is_null() {
+        let dx = unsafe { &*(deform_x_ptr as *const [f32; 4]) };
+        let dy = unsafe { &*(deform_y_ptr as *const [f32; 4]) };
         Some((dx, dy))
     } else {
         None
     };
-    let (count, vx, vy) = crate::core::geometry::compute_local_vertices((data[0], data[1]), (data[2], data[3]), (data[4], data[5]), (h_flip, v_flip), deform, use_5_vertices);
+
+    let (count, vx, vy) = crate::core::geometry::compute_local_vertices(
+        (size_w, size_h),
+        (pivot_x, pivot_y),
+        (pivot_offset_x, pivot_offset_y),
+        (h_flip, v_flip),
+        deform,
+        use_5_vertices,
+    );
+
     unsafe {
         core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, 5);
         core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, 5);
@@ -1007,28 +1031,36 @@ pub extern "C" fn ss_vertex_compute_local(input_data: *const f32, flags: u32, ou
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_uv_compute_local(
-    input_data: *const f32, // Array of 9 floats: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
-    flags: u32,             // Bitmask: 1=part_flip_h, 2=part_flip_v, 4=img_flip_h, 8=img_flip_v, 16=rotated, 32=use_5_vertices
-    out_u: *mut f32,        // Array of 5 floats
-    out_v: *mut f32,        // Array of 5 floats
+/// Computes the local UV coordinates for a part using primitive parameters.
+/// out_u, out_v: pointers to float arrays of size 5 to store results.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_uv_compute_local(
+    u_left: f32,
+    v_top: f32,
+    u_right: f32,
+    v_bottom: f32,
+    trans_u: f32,
+    trans_v: f32,
+    rot_deg: f32,
+    scale_u: f32,
+    scale_v: f32,
+    part_flip_h: bool,
+    part_flip_v: bool,
+    img_flip_h: bool,
+    img_flip_v: bool,
+    rotated: bool,
+    use_5_vertices: bool,
+    out_u: *mut f32,
+    out_v: *mut f32,
 ) -> i32 {
-    if input_data.is_null() || out_u.is_null() || out_v.is_null() {
+    if out_u.is_null() || out_v.is_null() {
         return 0;
     }
 
-    let part_flip_h = (flags & 1) != 0;
-    let part_flip_v = (flags & 2) != 0;
-    let img_flip_h = (flags & 4) != 0;
-    let img_flip_v = (flags & 8) != 0;
-    let rotated = (flags & 16) != 0;
-    let use_5_vertices = (flags & 32) != 0;
-
-    let data = unsafe { core::slice::from_raw_parts(input_data, 9) };
-
     let (count, u, v) = crate::core::geometry::compute_local_uvs(
-        (data[0], data[1], data[2], data[3]),
-        (data[4], data[5], data[6], data[7], data[8]),
+        (u_left, v_top, u_right, v_bottom),
+        (trans_u, trans_v, rot_deg, scale_u, scale_v),
         (part_flip_h, part_flip_v),
         (img_flip_h, img_flip_v),
         rotated,
