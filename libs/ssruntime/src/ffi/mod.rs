@@ -980,3 +980,28 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
     }
     -1
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_vertex_compute_local(input_data: *const f32, flags: u32, out_x: *mut f32, out_y: *mut f32) -> i32 {
+    if input_data.is_null() || out_x.is_null() || out_y.is_null() {
+        return 0;
+    }
+    let h_flip = (flags & 1) != 0;
+    let v_flip = (flags & 2) != 0;
+    let has_deform = (flags & 4) != 0;
+    let use_5_vertices = (flags & 8) != 0;
+    let data = unsafe { core::slice::from_raw_parts(input_data, 14) };
+    let deform = if has_deform {
+        let dx: &[f32; 4] = data[6..10].try_into().unwrap();
+        let dy: &[f32; 4] = data[10..14].try_into().unwrap();
+        Some((dx, dy))
+    } else {
+        None
+    };
+    let (count, vx, vy) = crate::core::geometry::compute_local_vertices((data[0], data[1]), (data[2], data[3]), (data[4], data[5]), (h_flip, v_flip), deform, use_5_vertices);
+    unsafe {
+        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, 5);
+        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, 5);
+    }
+    count as i32
+}
