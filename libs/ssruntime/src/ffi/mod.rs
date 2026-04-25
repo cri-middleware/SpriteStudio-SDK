@@ -981,6 +981,13 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
     -1
 }
 
+/// Computes the local vertex coordinates for a part.
+///
+/// # Safety
+/// - `input_data`: Must point to an array of at least 6 floats if `has_deform` (flag 4) is false, 
+///   or 14 floats if `has_deform` is true.
+///   Layout: [size_x, size_y, pivot_x, pivot_y, pivot_offset_x, pivot_offset_y, (optional) dx0..3, dy0..3]
+/// - `out_x`, `out_y`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 8) is true.
 #[unsafe(no_mangle)]
 /// Computes the local vertices for a part using primitive parameters.
 /// deform_x_ptr, deform_y_ptr: optional pointers to float arrays of size 4.
@@ -1024,12 +1031,18 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
     );
 
     unsafe {
-        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, 5);
-        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, 5);
+        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, count);
+        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, count);
     }
     count as i32
 }
 
+/// Computes the local UV coordinates for a part.
+///
+/// # Safety
+/// - `input_data`: Must point to an array of at least 9 floats.
+///   Layout: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
+/// - `out_u`, `out_v`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 32) is true.
 #[unsafe(no_mangle)]
 /// Computes the local UV coordinates for a part using primitive parameters.
 /// out_u, out_v: pointers to float arrays of size 5 to store results.
@@ -1068,8 +1081,8 @@ pub unsafe extern "C" fn ss_uv_compute_local(
     );
 
     unsafe {
-        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, 5);
-        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, 5);
+        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, count);
+        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, count);
     }
 
     count as i32
