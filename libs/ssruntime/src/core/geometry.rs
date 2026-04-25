@@ -61,75 +61,69 @@ pub fn compute_local_uvs(
     let (left, top, right, bottom) = uv_rect;
     let (tu, tv, rot_deg, su, sv) = uv_anim;
 
-    let mut base_u = [0.0; 4];
-    let mut base_v = [0.0; 4];
+    let hw = (right - left) * 0.5;
+    let hh = (bottom - top) * 0.5;
 
-    if rotated {
-        // 13
-        // 02
-        base_u[0] = left;  base_v[0] = bottom; // LU
-        base_u[1] = left;  base_v[1] = top;    // RU
-        base_u[2] = right; base_v[2] = bottom; // LD
-        base_u[3] = right; base_v[3] = top;    // RD
-    } else {
-        // 01
-        // 23
-        base_u[0] = left;  base_v[0] = top;    // LU
-        base_u[1] = right; base_v[1] = top;    // RU
-        base_u[2] = left;  base_v[2] = bottom; // LD
-        base_u[3] = right; base_v[3] = bottom; // RD
-    }
+    let center_u = left + hw;
+    let center_v = top + hh;
 
-    let mut u = [0.0; 5];
-    let mut v = [0.0; 5];
+    let su_scaled = su * if image_flip.0 { -1.0 } else { 1.0 } * hw;
+    let sv_scaled = sv * if image_flip.1 { -1.0 } else { 1.0 } * hh;
 
-    // Apply part_flip (reorder)
-    let order: [usize; 4] = match (part_flip.0, part_flip.1) {
-        (false, false) => [0, 1, 2, 3],
-        (true, false)  => [1, 0, 3, 2],
-        (false, true)  => [2, 3, 0, 1],
-        (true, true)   => [3, 2, 1, 0],
-    };
-
-    for i in 0..4 {
-        u[i] = base_u[order[i]];
-        v[i] = base_v[order[i]];
-    }
-
-    // Image Flip (scale by -1)
-    let scale_u = if image_flip.0 { -su } else { su };
-    let scale_v = if image_flip.1 { -sv } else { sv };
-
-    let center_u = (left + right) * 0.5;
-    let center_v = (top + bottom) * 0.5;
+    let fx = if part_flip.0 { -1.0 } else { 1.0 };
+    let fy = if part_flip.1 { -1.0 } else { 1.0 };
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
     let cos_r = rot_rad.cos();
     let sin_r = rot_rad.sin();
 
-    for i in 0..4 {
-        let mut cu = u[i] - center_u;
-        let mut cv = v[i] - center_v;
+    let (m11, m21, m12, m22) = if !rotated {
+        (
+             su_scaled * cos_r * fx,
+             su_scaled * sin_r * fx,
+            -sv_scaled * sin_r * fy,
+             sv_scaled * cos_r * fy
+        )
+    } else {
+        (
+             sv_scaled * sin_r * fx,
+            -sv_scaled * cos_r * fx,
+             su_scaled * cos_r * fy,
+             su_scaled * sin_r * fy
+        )
+    };
 
-        cu *= scale_u;
-        cv *= scale_v;
+    let ou = center_u + tu;
+    let ov = center_v + tv;
 
-        let ru = cu * cos_r - cv * sin_r;
-        let rv = cu * sin_r + cv * cos_r;
+    let mut out_u = [0.0; 5];
+    let mut out_v = [0.0; 5];
 
-        u[i] = ru + center_u + tu;
-        v[i] = rv + center_v + tv;
-    }
+    // LU (-1, -1)
+    out_u[0] = -m11 - m12 + ou;
+    out_v[0] = -m21 - m22 + ov;
+
+    // RU (+1, -1)
+    out_u[1] =  m11 - m12 + ou;
+    out_v[1] =  m21 - m22 + ov;
+
+    // LD (-1, +1)
+    out_u[2] = -m11 + m12 + ou;
+    out_v[2] = -m21 + m22 + ov;
+
+    // RD (+1, +1)
+    out_u[3] =  m11 + m12 + ou;
+    out_v[3] =  m21 + m22 + ov;
 
     let count = if use_5_vertices {
-        u[4] = (u[0] + u[1] + u[2] + u[3]) * 0.25;
-        v[4] = (v[0] + v[1] + v[2] + v[3]) * 0.25;
+        out_u[4] = ou;
+        out_v[4] = ov;
         5
     } else {
         4
     };
 
-    (count, u, v)
+    (count, out_u, out_v)
 }
 
 #[cfg(test)]
