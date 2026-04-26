@@ -459,20 +459,6 @@ impl SSRuntimeUtils {
         crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
     }
 
-    pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
-        if let Some(res) = context.inner.get_resource()
-            && let Some(idx) = context.inner.get_animation_idx()
-        {
-            let metadata = &res.animations[idx as usize];
-            if let Some(res_m) =
-                crate::core::util::get_part_world_matrix_recursive(&metadata.cached_parts, part_index, frame_no, context.inner.get_coordinate_system(), context.inner.get_origin(), context.inner.get_unit(), metadata.canvas_width, metadata.canvas_height)
-            {
-                return Some(Box::new(res_m.m));
-            }
-        }
-        None
-    }
-
     pub fn transform_particles(matrix_arr: &[f32], particles_ptr: *const u8, count: i32) -> Result<Box<[f32]>, JsValue> {
         if matrix_arr.len() < 16 {
             return Err(JsValue::from_str("Invalid matrix size"));

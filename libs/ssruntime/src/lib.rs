@@ -339,14 +339,6 @@ impl<'a> Context<'a> {
         self.resource.map(|r| r.get_ssab_data())
     }
 
-    pub(crate) fn get_resource(&self) -> Option<&'a AnimationResource<'a>> {
-        self.resource
-    }
-
-    pub(crate) fn get_animation_idx(&self) -> Option<i32> {
-        if self.animation_idx >= 0 { Some(self.animation_idx) } else { None }
-    }
-
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
         let hash = fnv1a_hash_str(name);
         self.setup_animation_by_hash(hash)

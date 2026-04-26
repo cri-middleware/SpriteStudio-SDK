@@ -122,47 +122,38 @@ Render(runtime_ctx);
 ### 効率的な行列演算の手順
 `libssruntime` から取得できる `FrameData` 内のパーツリストは、**「親パーツが必ず子パーツよりも前に出現する」**ように並んでいます。これを利用すると、非常に効率的に各パーツのワールド行列を計算できます。
 
-また、SpriteStudio 独自の継承ルール（アンカーポイントやローカルスケールの扱いなど）を正しく計算するために、SDK が提供するユーティリティ関数 **`ss_matrix_compute_world`** を利用することを強く推奨します。
+また、SpriteStudio 独自の継承ルール（アンカーポイントやローカルスケールの扱いなど）を正しく計算した「ワールド行列」を一括で取得する機能が `libssruntime` に備わっています。自前で行列演算を実装する代わりに、SDK が提供する **`ss_runtime_get_world_matrices`** を利用することを強く推奨します。
 
-1. **ワールド行列のキャッシュを用意する**: パーツ数分の行列を保持できる配列（`world_matrices`）を用意します。
-2. **パーツリストを先頭からループする**:
-   - `ss_matrix_compute_world` を呼び出し、現在のパーツの「継承用行列」と「描画用行列」を算出します。
-   - 親がいる場合は、キャッシュから親の「継承用行列」を取得して関数に渡します。
-   - 得られた **継承用行列 (inheritance matrix)** を `world_matrices[i]` に保存します（子パーツが参照するため）。
-   - 得られた **描画用行列 (drawing matrix)** を使って、実際の描画（頂点変換）を行います。
+1. **ワールド行列の計算を有効にする**: `ss_runtime_set_world_matrix_calculation_enabled(ctx, true)` を呼び出します（デフォルトで有効です）。
+2. **ワールド行列バッファを取得する**: `ss_runtime_get_world_matrices` を呼び出し、現在のフレームの全パーツ分の行列が格納された配列へのポインタと要素数を取得します。
+3. **描画ループで利用する**:
+   - `FrameData` 内のパーツリストをループします。
+   - `world_matrices[i]` には、そのパーツの「描画用行列 (Drawing Matrix)」が既に計算された状態で格納されています。
 
 ```cpp
-// ss_matrix_compute_world を利用した効率的な描画ループの例 (C++)
-std::vector<float[16]> inheritance_matrices(parts->size());
+// ss_runtime_get_world_matrices を利用した効率的な描画ループの例 (C++)
+const float* world_matrices = nullptr;
+size_t matrix_count = 0;
+ss_runtime_get_world_matrices(runtime_ctx, &world_matrices, &matrix_count);
+
+auto frame_data = GetFrameData(chunk_data);
+auto parts = frame_data->parts();
 
 for (size_t i = 0; i < parts->size(); i++) {
     auto part = parts->Get(i);
-    int parent_idx = part->parent_index();
-
-    float* parent_m = (parent_idx >= 0) ? inheritance_matrices[parent_idx] : nullptr;
-    float drawing_m[16];
-    
-    // SDK提供の関数で「次世代への継承用」と「現在の描画用」の行列を同時に計算
-    // ※第5引数以降は、親パーツのサイズ情報（NineSlice等で使用）を渡します
-    ss_matrix_compute_world(
-        inheritance_matrices[i], // out: 継承用行列
-        drawing_m,               // out: 描画用行列
-        part,                    // 現在のパーツ状態
-        parent_m,                // 親の継承用行列
-        false, 0, 0              // 親のサイズ情報（オプション）
-    );
 
     // 描画の実行 (非表示パーツでなければ)
     if (!part->hide()) {
-        DrawPart(drawing_m, part->cell_index(), part->alpha());
+        // i 番目の行列（16要素の float 配列）をそのままエンジンに渡す
+        const float* m = &world_matrices[i * 16];
+        DrawPart(m, part->cell_index(), part->alpha());
     }
 }
 ```
 
-- **描画用行列 (drawing matrix)**: 現在のパーツのローカルスケール等、子に継承「させない」パラメータを含んだ、描画にそのまま使える行列です。
-- **継承用行列 (inheritance matrix)**: 子パーツが親の Transform として参照すべき、継承可能なパラメータのみを含んだ行列です。
+- **描画用行列 (drawing matrix)**: 現在のパーツのローカルスケール等、子に継承「させない」パラメータを含んだ、描画にそのまま使える行列です。`libssruntime` 内部では、子パーツへの継承には別途「継承用行列 (Inheritance Matrix)」が使用されていますが、外部へ公開されるのは常にこの描画用行列です。
 
-このユーティリティを使用することで、SpriteStudio 特有の複雑な行列計算を自前で実装することなく、正しく高速な描画が可能になります。
+この機能を使用することで、SpriteStudio 特有の複雑な行列計算を自前で実装することなく、正しく高速な描画が可能になります。
 
 - **シーングラフ / 階層ノード方式**: 
   パーツの数だけエンジンのオブジェクトを生成し、`ssab` メタデータの `parent_index` を元にエンジンの Transform 階層を構築します。`FrameData` から取得した各 `PartState` のローカル値を各オブジェクトの `transform` に反映させることで、最終的な描画位置（ワールド座標）の計算をエンジンに委ねることができます。実装は容易ですが、パーツ数に比例してエンジン側のノード管理オーバーヘッドが増大するため、注意が必要です。
