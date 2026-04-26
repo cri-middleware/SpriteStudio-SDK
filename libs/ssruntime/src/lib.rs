@@ -254,6 +254,8 @@ struct ContextBuffers<'a> {
     collected_event_indices: Vec<i32>,
     world_matrices: Vec<crate::core::SsMatrix4x4>,
     inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
+    z_order: Vec<i32>,
+    z_indices: Vec<usize>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -269,6 +271,8 @@ impl<'a> ContextBuffers<'a> {
             collected_event_indices: Vec::new(),
             world_matrices: Vec::new(),
             inheritance_matrices: Vec::new(),
+            z_order: Vec::new(),
+            z_indices: Vec::new(),
         }
     }
 }
@@ -403,6 +407,10 @@ impl<'a> Context<'a> {
         self.buffers.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         self.buffers.inheritance_matrices.clear();
         self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        self.buffers.z_order.clear();
+        self.buffers.z_order.resize(num_parts, 0);
+        self.buffers.z_indices.clear();
+        self.buffers.z_indices.extend(0..num_parts);
 
         Ok(())
     }
@@ -448,8 +456,37 @@ impl<'a> Context<'a> {
             self.compute_matrices(&metadata.cached_parts);
         }
 
+        self.compute_z_order();
+
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
+    }
+
+    fn compute_z_order(&mut self) {
+        let num_parts = self.buffers.parts_vec.len();
+        if self.buffers.z_order.len() != num_parts {
+            self.buffers.z_order.resize(num_parts, 0);
+            self.buffers.z_indices.clear();
+            self.buffers.z_indices.extend(0..num_parts);
+        } else {
+            for (i, v) in self.buffers.z_indices.iter_mut().enumerate() {
+                *v = i;
+            }
+        }
+
+        self.buffers.z_indices.sort_by(|&a, &b| {
+            let pa = &self.buffers.parts_vec[a];
+            let pb = &self.buffers.parts_vec[b];
+            if pa.priority() == pb.priority() {
+                pa.part_index().cmp(&pb.part_index())
+            } else {
+                pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal)
+            }
+        });
+
+        for (order, &part_idx) in self.buffers.z_indices.iter().enumerate() {
+            self.buffers.z_order[part_idx] = order as i32;
+        }
     }
 
     fn compute_matrices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
@@ -495,6 +532,14 @@ impl<'a> Context<'a> {
 
     pub fn get_world_matrices_len(&self) -> usize {
         self.buffers.world_matrices.len() * 16
+    }
+
+    pub fn get_z_order_ptr(&self) -> *const i32 {
+        self.buffers.z_order.as_ptr()
+    }
+
+    pub fn get_z_order_len(&self) -> usize {
+        self.buffers.z_order.len()
     }
 
     // setting getter functions
