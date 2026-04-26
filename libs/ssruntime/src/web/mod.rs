@@ -217,6 +217,14 @@ impl SSRuntimeContext {
         false
     }
 
+    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
+        self.inner.is_world_matrix_calculation_enabled()
+    }
+
+    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
+        self.inner.set_world_matrix_calculation_enabled(enabled);
+    }
+
     pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {
         self.inner.setup_animation(name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }

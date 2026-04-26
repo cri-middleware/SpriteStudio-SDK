@@ -674,6 +674,21 @@ pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame:
 }
 
 #[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_runtime_set_world_matrix_calculation_enabled(context: *mut c_void, enabled: bool) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.set_world_matrix_calculation_enabled(enabled);
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_runtime_is_world_matrix_calculation_enabled(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.is_world_matrix_calculation_enabled();
+    }
+    false
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_context_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
     if let Some(ffi_context) = get_context(context) {
         let cs = match coordinate_system {

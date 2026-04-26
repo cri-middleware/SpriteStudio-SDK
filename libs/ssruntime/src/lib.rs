@@ -282,6 +282,7 @@ pub struct Context<'a> {
     coordinate_system: crate::core::SsCoordinateSystem,
     origin: crate::core::SsOrigin,
     unit: crate::core::SsUnit,
+    world_matrix_calculation_enabled: bool,
 }
 
 impl<'a> Default for Context<'a> {
@@ -301,6 +302,7 @@ impl<'a> Context<'a> {
             coordinate_system: crate::core::SsCoordinateSystem::default(),
             origin: crate::core::SsOrigin::default(),
             unit: crate::core::SsUnit::default(),
+            world_matrix_calculation_enabled: true,
         }
     }
 
@@ -313,6 +315,15 @@ impl<'a> Context<'a> {
         self.coordinate_system = crate::core::SsCoordinateSystem::default();
         self.origin = crate::core::SsOrigin::default();
         self.unit = crate::core::SsUnit::default();
+        self.world_matrix_calculation_enabled = true;
+    }
+
+    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
+        self.world_matrix_calculation_enabled = enabled;
+    }
+
+    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
+        self.world_matrix_calculation_enabled
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
@@ -441,7 +452,9 @@ impl<'a> Context<'a> {
             metadata.canvas_height,
         );
 
-        self.compute_matrices(&metadata.cached_parts);
+        if self.world_matrix_calculation_enabled {
+            self.compute_matrices(&metadata.cached_parts);
+        }
 
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
