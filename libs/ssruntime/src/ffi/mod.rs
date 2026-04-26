@@ -729,7 +729,7 @@ pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, par
         let metadata = &resource.animations[idx as usize];
 
         if let Some(res_m) =
-            crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, ffi_context.ctx.get_coordinate_system(), ffi_context.ctx.get_origin(), ffi_context.ctx.get_unit(), metadata.canvas_width, metadata.canvas_height)
+            crate::core::util::get_part_world_matrix_recursive(&metadata.cached_parts, part_index, frame_no, ffi_context.ctx.get_coordinate_system(), ffi_context.ctx.get_origin(), ffi_context.ctx.get_unit(), metadata.canvas_width, metadata.canvas_height)
         {
             unsafe {
                 core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
@@ -984,7 +984,7 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// Computes the local vertex coordinates for a part.
 ///
 /// # Safety
-/// - `input_data`: Must point to an array of at least 6 floats if `has_deform` (flag 4) is false, 
+/// - `input_data`: Must point to an array of at least 6 floats if `has_deform` (flag 4) is false,
 ///   or 14 floats if `has_deform` is true.
 ///   Layout: [size_x, size_y, pivot_x, pivot_y, pivot_offset_x, pivot_offset_y, (optional) dx0..3, dy0..3]
 /// - `out_x`, `out_y`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 8) is true.

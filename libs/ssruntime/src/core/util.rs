@@ -10,8 +10,25 @@ pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset:
     if independent { accumulated_time * speed + start_offset as f32 } else { (parent_frame - key_frame as f32) * speed + start_offset as f32 }
 }
 
+/// Compute world matrix for a specific part in O(1) time by providing the parent's inheritance world matrix.
+/// Returns a tuple of (inheritance_matrix, drawing_matrix).
+pub fn get_part_world_matrix(
+    part: &CachedPartData,
+    frame_no: i32,
+    part_cursors: &mut [usize],
+    parent_world_matrix: Option<&SsMatrix4x4>,
+    coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
+) -> (SsMatrix4x4, SsMatrix4x4) {
+    let res = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
+    SsMatrix4x4::compute_world_matrix(&res.state, parent_world_matrix, None)
+}
+
 /// Compute world matrix for a specific part by traversing its ancestors.
-pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no: i32, coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> Option<SsMatrix4x4> {
+pub fn get_part_world_matrix_recursive(parts: &[CachedPartData], part_index: u16, frame_no: i32, coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> Option<SsMatrix4x4> {
     if (part_index as usize) >= parts.len() {
         return None;
     }
@@ -173,10 +190,10 @@ mod tests {
         let pos_xyz_idx = ssab.parts().unwrap().iter().position(|p| p.name() == Some("POS_XYZ")).unwrap() as u16;
 
         // Calculate world matrix via utility at frame 10 (Y-Up)
-        let res_m_up = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
+        let res_m_up = get_part_world_matrix_recursive(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
 
         // Calculate world matrix via utility at frame 10 (Y-Down)
-        let res_m_down = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YDown, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
+        let res_m_down = get_part_world_matrix_recursive(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YDown, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
 
         // In Y-Up, Y is positive. In Y-Down, it should be negated.
         assert!((res_m_up.m[12] - 32.0).abs() < 1e-5, "World X: {} != 32.0", res_m_up.m[12]);
@@ -213,17 +230,17 @@ mod tests {
         let canvas_h = metadata.canvas_height;
 
         // Center / Pixel (Original)
-        let m_orig = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
+        let m_orig = get_part_world_matrix_recursive(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
 
         // TopLeft / Pixel
-        let m_tl = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::TopLeft, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
+        let m_tl = get_part_world_matrix_recursive(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::TopLeft, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
 
         // m_tl should be m_orig shifted by (w/2, -h/2) in Y-Up
         assert!((m_tl.m[12] - (m_orig.m[12] + canvas_w / 2.0)).abs() < 1e-5);
         assert!((m_tl.m[13] - (m_orig.m[13] - canvas_h / 2.0)).abs() < 1e-5);
 
         // Center / Normalized
-        let m_norm = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Normalized, canvas_w, canvas_h).unwrap();
+        let m_norm = get_part_world_matrix_recursive(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Normalized, canvas_w, canvas_h).unwrap();
         assert!((m_norm.m[12] - (m_orig.m[12] / canvas_w)).abs() < 1e-5);
         assert!((m_norm.m[13] - (m_orig.m[13] / canvas_h)).abs() < 1e-5);
     }

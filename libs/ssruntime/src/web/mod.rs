@@ -449,7 +449,7 @@ impl SSRuntimeUtils {
         {
             let metadata = &res.animations[idx as usize];
             if let Some(res_m) =
-                crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, context.inner.get_coordinate_system(), context.inner.get_origin(), context.inner.get_unit(), metadata.canvas_width, metadata.canvas_height)
+                crate::core::util::get_part_world_matrix_recursive(&metadata.cached_parts, part_index, frame_no, context.inner.get_coordinate_system(), context.inner.get_origin(), context.inner.get_unit(), metadata.canvas_width, metadata.canvas_height)
             {
                 return Some(Box::new(res_m.m));
             }
