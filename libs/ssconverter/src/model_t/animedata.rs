@@ -1261,38 +1261,45 @@ fn convert_part_animation_data_expand_key_skew(value_start: &sspj::ssattribute::
 
     Some(Box::new(result))
 }
-fn convert_part_animation_data_expand_key_deform(value_start: &sspj::ssattribute::SsAttributeDeformKey, value_end: &sspj::ssattribute::SsAttributeDeformKey, time: i32) -> Option<Vec<ssab::ssab::ss::format::Vec2T>> {
+fn convert_part_animation_data_expand_key_deform(value_start: &sspj::ssattribute::SsAttributeDeformKey, value_end: &sspj::ssattribute::SsAttributeDeformKey, time: i32) -> Option<Box<ssab::ssab::ss::format::PartAttributeDeformT>> {
     let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
 
-    let mut result = Vec::new();
-    let mut coordinate: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_start: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_end: ssab::ssab::ss::format::Vec2T;
-
-    // MEMO: Usually, "value_start.value.size" and "value_end.value.size" are equivalent.
-    let count_vertex_start = value_start.value.vsize as usize;
-    let count_vertex_end = value_end.value.vsize as usize;
-    let count_vertex = std::cmp::max(count_vertex_start, count_vertex_end);
-    for i in 0..count_vertex {
-        coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-        if i < count_vertex_start {
-            coordinate_start.v1 = value_start.value.vchg[i].x;
-            coordinate_start.v2 = value_start.value.vchg[i].y;
-        }
-        coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-        if i < count_vertex_end {
-            coordinate_end.v1 = value_end.value.vchg[i].x;
-            coordinate_end.v2 = value_end.value.vchg[i].y;
-        }
-
-        coordinate = ssab::ssab::ss::format::Vec2T::default();
-        coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-        coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-
-        result.push(coordinate);
+    let mut map_start = HashMap::new();
+    for v in &value_start.value.vchg {
+        map_start.insert(v.x_index.round() as i32, (v.x, v.y));
+    }
+    let mut map_end = HashMap::new();
+    for v in &value_end.value.vchg {
+        map_end.insert(v.x_index.round() as i32, (v.x, v.y));
     }
 
-    Some(result)
+    let mut all_indices: Vec<i32> = map_start.keys().cloned().collect();
+    for k in map_end.keys() {
+        if !map_start.contains_key(k) {
+            all_indices.push(*k);
+        }
+    }
+    all_indices.sort_unstable();
+
+    let mut coordinate = Vec::new();
+    let mut index = Vec::new();
+    for idx in all_indices {
+        let (x_start, y_start) = map_start.get(&idx).cloned().unwrap_or((0.0, 0.0));
+        let (x_end, y_end) = map_end.get(&idx).cloned().unwrap_or((0.0, 0.0));
+
+        let mut c = ssab::ssab::ss::format::Vec2T::default();
+        c.v1 = ssinterpolate::interpolate::linear(x_start, x_end, rate_linear);
+        c.v2 = ssinterpolate::interpolate::linear(y_start, y_end, rate_linear);
+
+        coordinate.push(c);
+        index.push(idx as i16);
+    }
+
+    let mut result = ssab::ssab::ss::format::PartAttributeDeformT::default();
+    result.coordinate = Some(coordinate);
+    result.index = Some(index);
+
+    Some(Box::new(result))
 }
 macro_rules! process_interpolatable_attribute {
     ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr, $expand_func:expr) => {{
@@ -1631,11 +1638,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         Some(Box::new(value))
                     },
                     |k1, k2, t| {
-                        let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-                        value.coordinate = convert_part_animation_data_expand_key_deform(k1, k2, t);
-                        // Use index from first key
-                        value.index = Some(k1.value.vchg.iter().map(|p| p.x_index as i16).collect());
-                        Some(Box::new(value))
+                        convert_part_animation_data_expand_key_deform(k1, k2, t)
                     }
                 );
             }
