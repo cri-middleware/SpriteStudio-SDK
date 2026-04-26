@@ -1,4 +1,3 @@
-
 /// Computes the local vertices for a part, including pivot calculation and deformations.
 /// Utilizes SIMD via the `wide` crate for maximum performance.
 /// Returns a tuple containing the number of vertices (4 or 5) and the x and y coordinates.
@@ -46,15 +45,14 @@ pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset:
     (vertex_count, out_x, out_y)
 }
 
-
 /// Computes the local UV coordinates for a part, including UV animation (translate, rotate, scale) and flipping.
 /// Returns a tuple containing the number of UVs (4 or 5) and the u and v coordinates.
 pub fn compute_local_uvs(
-    uv_rect: (f32, f32, f32, f32), // (left, top, right, bottom)
+    uv_rect: (f32, f32, f32, f32),      // (left, top, right, bottom)
     uv_anim: (f32, f32, f32, f32, f32), // (trans_u, trans_v, rot_deg, scale_u, scale_v)
-    part_flip: (bool, bool), // (h_flip, v_flip)
-    image_flip: (bool, bool), // (img_flip_h, img_flip_v)
-    rotated: bool, // is the cell rotated?
+    part_flip: (bool, bool),            // (h_flip, v_flip)
+    image_flip: (bool, bool),           // (img_flip_h, img_flip_v)
+    rotated: bool,                      // is the cell rotated?
     use_5_vertices: bool,
 ) -> (usize, [f32; 5], [f32; 5]) {
     let (left, top, right, bottom) = uv_rect;
@@ -73,24 +71,17 @@ pub fn compute_local_uvs(
     let fy = if part_flip.1 { -1.0 } else { 1.0 };
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
+    #[cfg(feature = "std")]
     let cos_r = rot_rad.cos();
-    let sin_r = rot_rad.sin();
+    #[cfg(not(feature = "std"))]
+    let cos_r = libm::cosf(rot_rad);
 
-    let (m11, m21, m12, m22) = if !rotated {
-        (
-             su_scaled * cos_r * fx,
-             su_scaled * sin_r * fx,
-            -sv_scaled * sin_r * fy,
-             sv_scaled * cos_r * fy
-        )
-    } else {
-        (
-             sv_scaled * sin_r * fx,
-            -sv_scaled * cos_r * fx,
-             su_scaled * cos_r * fy,
-             su_scaled * sin_r * fy
-        )
-    };
+    #[cfg(feature = "std")]
+    let sin_r = rot_rad.sin();
+    #[cfg(not(feature = "std"))]
+    let sin_r = libm::sinf(rot_rad);
+
+    let (m11, m21, m12, m22) = if !rotated { (su_scaled * cos_r * fx, su_scaled * sin_r * fx, -sv_scaled * sin_r * fy, sv_scaled * cos_r * fy) } else { (sv_scaled * sin_r * fx, -sv_scaled * cos_r * fx, su_scaled * cos_r * fy, su_scaled * sin_r * fy) };
 
     let ou = center_u + tu;
     let ov = center_v + tv;
@@ -125,7 +116,6 @@ pub fn compute_local_uvs(
     (count, out_u, out_v)
 }
 
-
 /// Performs a hit test for a point against a rectangle in local space.
 /// The point is expected to be already transformed into local space (using inverse matrix).
 pub fn is_point_in_rect(local_p: (f32, f32), size: (f32, f32)) -> bool {
@@ -134,7 +124,7 @@ pub fn is_point_in_rect(local_p: (f32, f32), size: (f32, f32)) -> bool {
     local_p.0 >= -hw && local_p.0 <= hw && local_p.1 >= -hh && local_p.1 <= hh
 }
 
-use wide::{f32x4, CmpGt, CmpLt};
+use wide::{CmpGt, CmpLt, f32x4};
 
 /// Performs a hit test for a point against a 4-point quadrilateral in world space.
 /// Uses the even-odd rule (ray casting) algorithm and SIMD via the `wide` crate to support both convex and concave quadrilaterals efficiently.
@@ -193,11 +183,11 @@ mod tests {
         // Simple 100x100 square vertices in Z-order: LU, RU, LD, RD
         let vx = [-50.0, 50.0, -50.0, 50.0];
         let vy = [50.0, 50.0, -50.0, -50.0];
-        
+
         assert!(is_point_in_quad((0.0, 0.0), &vx, &vy));
         assert!(is_point_in_quad((45.0, 45.0), &vx, &vy));
         assert!(!is_point_in_quad((55.0, 0.0), &vx, &vy));
-        
+
         // Deformed trapezoid
         let vx2 = [-20.0, 20.0, -50.0, 50.0];
         let vy2 = [50.0, 50.0, -50.0, -50.0];
@@ -205,7 +195,6 @@ mod tests {
         assert!(is_point_in_quad((15.0, 45.0), &vx2, &vy2));
         assert!(!is_point_in_quad((25.0, 45.0), &vx2, &vy2));
     }
-
 
     #[test]
     fn test_compute_local_uvs_basic() {
@@ -350,12 +339,12 @@ mod tests {
         // 100x100 square, pivot at bottom-right (0.5, -0.5), offset by (0.5, 0.5)
         // effectively pivot is at (1.0, 0.0) relative to center, which is right edge center.
         let size = (100.0, 100.0);
-        let pivot = (0.5, -0.5); 
+        let pivot = (0.5, -0.5);
         let pivot_offset = (0.5, 0.5);
         let flip = (true, true); // Double flip
 
         let (_, x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, None, false);
-        
+
         // With H-Flip: pivot_x becomes 1.0 - (0.5 + 0.5) = 0.0
         // With V-Flip: pivot_y becomes 1.0 - (0.5 + 0.5) = 0.0
         // Resulting p_x = (0.0 + 0.5) * 100 = 50
@@ -371,7 +360,7 @@ mod tests {
         // Translate 0.1, Rotate 90deg, Scale 2.0
         let anim = (0.1, 0.1, 90.0, 2.0, 2.0);
         let (_, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false, false);
-        
+
         // Center is (0.5, 0.5)
         // LU (0, 0) relative to center is (-0.5, -0.5)
         // Scale 2.0 -> (-1.0, -1.0)
@@ -387,9 +376,9 @@ mod tests {
         let rect = (0.1, 0.1, 0.5, 0.4); // 0.4x0.3 rect
         let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
         let (_, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), true, false);
-        
+
         // In rotated mode, LU corresponds to (left, bottom) of the rect
-        assert_approx_eq(u[0], 0.1); 
+        assert_approx_eq(u[0], 0.1);
         assert_approx_eq(v[0], 0.4);
         // RU corresponds to (left, top)
         assert_approx_eq(u[1], 0.1);
@@ -418,12 +407,12 @@ mod tests {
         // This makes RU folded inwards.
         let vx = [0.0, 2.0, 0.0, 10.0];
         let vy = [10.0, 2.0, 0.0, 0.0];
-        
+
         // Inside the top arm
         assert!(is_point_in_quad((1.0, 5.0), &vx, &vy));
         // Inside the bottom arm
         assert!(is_point_in_quad((5.0, 1.0), &vx, &vy));
-        
+
         // Outside, in the concave notch (right side of the fold)
         assert!(!is_point_in_quad((5.0, 5.0), &vx, &vy));
         // Outside, entirely to the right

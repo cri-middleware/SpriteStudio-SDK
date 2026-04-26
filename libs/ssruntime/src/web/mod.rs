@@ -230,6 +230,14 @@ impl SSRuntimeContext {
         self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
+    pub fn get_world_matrices_buf(&self) -> *const f32 {
+        self.inner.get_world_matrices_ptr()
+    }
+
+    pub fn get_world_matrices_len(&self) -> usize {
+        self.inner.get_world_matrices_len()
+    }
+
     pub fn get_ssab_buf(&self) -> Result<*const u8, JsValue> {
         self.inner.get_ssab_data().map(|s| s.as_ptr()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }

@@ -1,3 +1,6 @@
+#![allow(clippy::missing_safety_doc)]
+#![allow(clippy::doc_lazy_continuation)]
+
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
@@ -352,6 +355,26 @@ pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_n
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_world_matrices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_world_matrices_len();
+            }
+        }
+    }
+}
+
+// Frame Number getter functions
 pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_int {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.get_frame_no();
@@ -1021,14 +1044,7 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
         None
     };
 
-    let (count, vx, vy) = crate::core::geometry::compute_local_vertices(
-        (size_w, size_h),
-        (pivot_x, pivot_y),
-        (pivot_offset_x, pivot_offset_y),
-        (h_flip, v_flip),
-        deform,
-        use_5_vertices,
-    );
+    let (count, vx, vy) = crate::core::geometry::compute_local_vertices((size_w, size_h), (pivot_x, pivot_y), (pivot_offset_x, pivot_offset_y), (h_flip, v_flip), deform, use_5_vertices);
 
     unsafe {
         core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, count);
@@ -1071,14 +1087,7 @@ pub unsafe extern "C" fn ss_uv_compute_local(
         return 0;
     }
 
-    let (count, u, v) = crate::core::geometry::compute_local_uvs(
-        (u_left, v_top, u_right, v_bottom),
-        (trans_u, trans_v, rot_deg, scale_u, scale_v),
-        (part_flip_h, part_flip_v),
-        (img_flip_h, img_flip_v),
-        rotated,
-        use_5_vertices,
-    );
+    let (count, u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated, use_5_vertices);
 
     unsafe {
         core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, count);
@@ -1089,20 +1098,20 @@ pub unsafe extern "C" fn ss_uv_compute_local(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_geometry_is_point_in_rect(
-    px: f32, py: f32,
-    size_w: f32, size_h: f32,
-) -> bool {
+pub extern "C" fn ss_geometry_is_point_in_rect(px: f32, py: f32, size_w: f32, size_h: f32) -> bool {
     crate::core::geometry::is_point_in_rect((px, py), (size_w, size_h))
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_geometry_is_point_in_quad(
-    tx: f32, ty: f32,
+    tx: f32,
+    ty: f32,
     vx: *const f32, // Array of 4 floats
     vy: *const f32, // Array of 4 floats
 ) -> bool {
-    if vx.is_null() || vy.is_null() { return false; }
+    if vx.is_null() || vy.is_null() {
+        return false;
+    }
     let vxa = unsafe { &*(vx as *const [f32; 4]) };
     let vya = unsafe { &*(vy as *const [f32; 4]) };
     crate::core::geometry::is_point_in_quad((tx, ty), vxa, vya)

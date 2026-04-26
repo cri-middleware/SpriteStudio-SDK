@@ -37,13 +37,7 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
 
             let mut pages: Vec<_> = charmap.pages.values().collect();
             pages.sort_by_key(|p| p.id);
-            let name_textures = pages.into_iter().map(|p| {
-                if let Some(parent_path) = parent_path {
-                    parent_path.join(&p.file).to_string_lossy().to_string()
-                } else {
-                    p.file.clone()
-                }
-            }).collect::<Vec<_>>();
+            let name_textures = pages.into_iter().map(|p| if let Some(parent_path) = parent_path { parent_path.join(&p.file).to_string_lossy().to_string() } else { p.file.clone() }).collect::<Vec<_>>();
             if name_textures.is_empty() {
                 bitmap.name_texture_hash = None;
                 bitmap.name_texture = None;

@@ -252,11 +252,24 @@ struct ContextBuffers<'a> {
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
     collected_event_indices: Vec<i32>,
+    world_matrices: Vec<f32>,
+    inheritance_matrices: Vec<f32>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_event_indices: Vec::new() }
+        Self {
+            parts_vec: Vec::new(),
+            cell_vec: Vec::new(),
+            parts_color_vec: Vec::new(),
+            shader_vec: Vec::new(),
+            vertice_vec: Vec::new(),
+            deform_vec: Vec::new(),
+            cursors: Vec::new(),
+            collected_event_indices: Vec::new(),
+            world_matrices: Vec::new(),
+            inheritance_matrices: Vec::new(),
+        }
     }
 }
 
@@ -383,6 +396,11 @@ impl<'a> Context<'a> {
         self.buffers.cursors.clear();
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
+        self.buffers.world_matrices.clear();
+        self.buffers.world_matrices.resize(num_parts * 16, 0.0);
+        self.buffers.inheritance_matrices.clear();
+        self.buffers.inheritance_matrices.resize(num_parts * 16, 0.0);
+
         Ok(())
     }
 
@@ -422,8 +440,37 @@ impl<'a> Context<'a> {
             metadata.canvas_width,
             metadata.canvas_height,
         );
+
+        self.compute_matrices(&metadata.cached_parts);
+
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
+    }
+
+    fn compute_matrices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        for (i, part_state) in self.buffers.parts_vec.iter().enumerate() {
+            let parent_idx = cached_parts[i].parent_index;
+
+            let parent_world = if parent_idx >= 0 && (parent_idx as usize) < i {
+                let p_idx = parent_idx as usize;
+                let slice = &self.buffers.inheritance_matrices[p_idx * 16..(p_idx + 1) * 16];
+                let arr: [f32; 16] = slice.try_into().unwrap_or_default();
+                Some(crate::core::SsMatrix4x4::from_array(arr))
+            } else {
+                None
+            };
+
+            let parent_size = if parent_idx >= 0 && (parent_idx as usize) < i {
+                let p_state = &self.buffers.parts_vec[parent_idx as usize];
+                Some((p_state.size_x(), p_state.size_y()))
+            } else {
+                None
+            };
+
+            let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world.as_ref(), parent_size);
+            self.buffers.inheritance_matrices[i * 16..(i + 1) * 16].copy_from_slice(&inh_m.m);
+            self.buffers.world_matrices[i * 16..(i + 1) * 16].copy_from_slice(&draw_m.m);
+        }
     }
 
     // Frame Number getter functions
@@ -438,6 +485,14 @@ impl<'a> Context<'a> {
 
     pub fn is_end_frame_reached(&self) -> bool {
         self.controller.is_end_frame_reached()
+    }
+
+    pub fn get_world_matrices_ptr(&self) -> *const f32 {
+        self.buffers.world_matrices.as_ptr()
+    }
+
+    pub fn get_world_matrices_len(&self) -> usize {
+        self.buffers.world_matrices.len()
     }
 
     // setting getter functions
@@ -853,6 +908,35 @@ mod tests {
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert!(hide_state_2.hide());
+    }
+
+    #[test]
+    fn test_world_matrices() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        // Verify world matrices are computed correctly
+        let frame_no = 0;
+        let _ = context.get_frame_data(frame_no).expect("Failed to get frame data");
+
+        let world_matrices_ptr = context.get_world_matrices_ptr();
+        let world_matrices_len = context.get_world_matrices_len();
+
+        // Length should be 16 floats per part
+        let num_parts = context.buffers.parts_vec.len();
+        assert_eq!(world_matrices_len, num_parts * 16);
+
+        let world_matrices = unsafe { ::core::slice::from_raw_parts(world_matrices_ptr, world_matrices_len) };
+
+        // For simplicity, just test that matrices are non-zero/valid
+        assert!(world_matrices[0] != 0.0 || world_matrices[1] != 0.0);
     }
 
     #[test]
