@@ -252,8 +252,8 @@ struct ContextBuffers<'a> {
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
     collected_event_indices: Vec<i32>,
-    world_matrices: Vec<f32>,
-    inheritance_matrices: Vec<f32>,
+    world_matrices: Vec<crate::core::SsMatrix4x4>,
+    inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -408,9 +408,9 @@ impl<'a> Context<'a> {
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
         self.buffers.world_matrices.clear();
-        self.buffers.world_matrices.resize(num_parts * 16, 0.0);
+        self.buffers.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         self.buffers.inheritance_matrices.clear();
-        self.buffers.inheritance_matrices.resize(num_parts * 16, 0.0);
+        self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
 
         Ok(())
     }
@@ -465,10 +465,7 @@ impl<'a> Context<'a> {
             let parent_idx = cached_parts[i].parent_index;
 
             let parent_world = if parent_idx >= 0 && (parent_idx as usize) < i {
-                let p_idx = parent_idx as usize;
-                let slice = &self.buffers.inheritance_matrices[p_idx * 16..(p_idx + 1) * 16];
-                let arr: [f32; 16] = slice.try_into().unwrap_or_default();
-                Some(crate::core::SsMatrix4x4::from_array(arr))
+                Some(&self.buffers.inheritance_matrices[parent_idx as usize])
             } else {
                 None
             };
@@ -480,9 +477,9 @@ impl<'a> Context<'a> {
                 None
             };
 
-            let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world.as_ref(), parent_size);
-            self.buffers.inheritance_matrices[i * 16..(i + 1) * 16].copy_from_slice(&inh_m.m);
-            self.buffers.world_matrices[i * 16..(i + 1) * 16].copy_from_slice(&draw_m.m);
+            let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
+            self.buffers.inheritance_matrices[i] = inh_m;
+            self.buffers.world_matrices[i] = draw_m;
         }
     }
 
@@ -501,11 +498,11 @@ impl<'a> Context<'a> {
     }
 
     pub fn get_world_matrices_ptr(&self) -> *const f32 {
-        self.buffers.world_matrices.as_ptr()
+        self.buffers.world_matrices.as_ptr() as *const f32
     }
 
     pub fn get_world_matrices_len(&self) -> usize {
-        self.buffers.world_matrices.len()
+        self.buffers.world_matrices.len() * 16
     }
 
     // setting getter functions
