@@ -375,6 +375,7 @@ pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out
 }
 
 // Frame Number getter functions
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_int {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.get_frame_no();
