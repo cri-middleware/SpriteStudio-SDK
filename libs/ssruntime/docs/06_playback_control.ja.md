@@ -36,7 +36,7 @@ ss_runtime_set_animation_section(context, 0, 30);
 ss_runtime_play(context);
 
 // 特定のフレームから再生開始
-// ss_runtime_play_with_start_frame(context, 10);
+// ss_runtime_play_with_start_frame(context, 10.0f);
 
 // 一時停止 (時間の更新を止める)
 ss_runtime_pause(context);
@@ -116,8 +116,7 @@ Player の API を設計する際は、上記のライブラリ挙動をラッ�
 Player の外部（スクリプト等）から現在の状況を確認するための API です。
 
 - `ss_runtime_is_playing(context)`: 再生中か
-- `ss_runtime_get_frame_no(context)`: 現在のフレーム番号（整数）
-- `ss_runtime_get_frame_no_decimal(context)`: 現在のフレーム番号（小数：補間計算用）
+- `ss_runtime_get_frame_no(context)`: 現在のフレーム番号（小数）
 - `ss_runtime_get_fps(context)`: 設定されている FPS
 
 ## 4. 再生終了コールバックの実装

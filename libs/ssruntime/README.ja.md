@@ -110,14 +110,16 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
     // 5. 更新ループ
     float dt = 1.0f / 60.0f;
     while (ss_runtime_is_playing(ctx)) {
-        int frame = ss_runtime_update(ctx, dt);
+        float frame = ss_runtime_update(ctx, dt);
         
         // 6. 描画情報の取得
         uint8_t* data;
         size_t len;
-        ss_runtime_get_frame_data(ctx, frame, &data, &len);
+        // 小数点以下を切り捨てて整数フレームのデータを取得
+        ss_runtime_get_frame_data(ctx, (int)frame, &data, &len);
         
-        // render_parts(data, len);
+        // float decimal = ss_runtime_get_frame_no(ctx) - (int)ss_runtime_get_frame_no(ctx);
+        // render_parts(data, len, decimal);
     }
 
     // リソースとコンテキストの破棄

@@ -505,12 +505,8 @@ impl<'a> Context<'a> {
 
     // Frame Number getter functions
 
-    pub fn get_frame_no(&self) -> i32 {
+    pub fn get_frame_no(&self) -> f32 {
         self.controller.get_frame_no()
-    }
-
-    pub fn get_frame_no_decimal(&self) -> f32 {
-        self.controller.get_frame_no_decimal()
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
@@ -626,7 +622,7 @@ impl<'a> Context<'a> {
 
     // Playback control
 
-    pub fn update(&mut self, delta: f32) -> (i32, f32) {
+    pub fn update(&mut self, delta: f32) -> f32 {
         let res = self.controller.update(delta);
 
         self.collect_events();
@@ -696,7 +692,7 @@ impl<'a> Context<'a> {
         self.controller.play();
     }
 
-    pub fn play_with_start_frame(&mut self, frame_no: i32) {
+    pub fn play_with_start_frame(&mut self, frame_no: f32) {
         self.controller.play_with_start_frame(frame_no);
     }
 
@@ -708,7 +704,7 @@ impl<'a> Context<'a> {
         self.controller.stop();
     }
 
-    pub fn set_frame_no(&mut self, frame: i32) {
+    pub fn set_frame_no(&mut self, frame: f32) {
         self.controller.set_frame_no(frame);
     }
 
@@ -1063,7 +1059,7 @@ mod tests {
 
         // Setup animation
         context.setup_animation("anime_1").expect("Failed to setup animation");
-        assert_eq!(context.get_frame_no(), 0);
+        assert_eq!(context.get_frame_no(), 0.0);
     }
 
     #[test]
