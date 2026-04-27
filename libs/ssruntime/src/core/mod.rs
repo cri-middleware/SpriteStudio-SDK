@@ -1,6 +1,7 @@
 pub mod effect;
 pub mod framedata;
 pub mod interpolation;
+pub mod math;
 pub mod matrix;
 pub mod playback_controller;
 pub mod util;

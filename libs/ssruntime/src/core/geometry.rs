@@ -1,3 +1,7 @@
+use crate::core::math::*;
+use crate::core::matrix::SsMatrix4x4;
+use wide::{CmpGt, CmpLt, f32x4};
+
 /// Computes the local vertices for a part, including pivot calculation and deformations.
 /// Utilizes SIMD via the `wide` crate for maximum performance.
 /// Returns a tuple containing the number of vertices (4 or 5) and the x and y coordinates.
@@ -71,36 +75,34 @@ pub fn compute_local_uvs(
     let fy = if part_flip.1 { -1.0 } else { 1.0 };
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
-    #[cfg(feature = "std")]
-    let cos_r = rot_rad.cos();
-    #[cfg(not(feature = "std"))]
-    let cos_r = libm::cosf(rot_rad);
-
-    #[cfg(feature = "std")]
-    let sin_r = rot_rad.sin();
-    #[cfg(not(feature = "std"))]
-    let sin_r = libm::sinf(rot_rad);
-
-    let (m11, m21, m12, m22) = if !rotated { (su_scaled * cos_r * fx, su_scaled * sin_r * fx, -sv_scaled * sin_r * fy, sv_scaled * cos_r * fy) } else { (sv_scaled * sin_r * fx, -sv_scaled * cos_r * fx, su_scaled * cos_r * fy, su_scaled * sin_r * fy) };
+    let cos_r = cosf(rot_rad);
+    let sin_r = sinf(rot_rad);
 
     let ou = center_u + tu;
     let ov = center_v + tv;
 
-    let mut out_u = [0.0; 5];
-    let mut out_v = [0.0; 5];
-
-    let m11_v = f32x4::splat(m11);
-    let m21_v = f32x4::splat(m21);
-    let m12_v = f32x4::splat(m12);
-    let m22_v = f32x4::splat(m22);
-    let ou_v = f32x4::splat(ou);
-    let ov_v = f32x4::splat(ov);
+    let mut mat = SsMatrix4x4::IDENTITY;
+    if !rotated {
+        mat.m[0] = cos_r * su_scaled * fx;
+        mat.m[1] = sin_r * su_scaled * fx;
+        mat.m[4] = -sin_r * sv_scaled * fy;
+        mat.m[5] = cos_r * sv_scaled * fy;
+    } else {
+        mat.m[0] = sin_r * sv_scaled * fx;
+        mat.m[1] = -cos_r * sv_scaled * fx;
+        mat.m[4] = cos_r * su_scaled * fy;
+        mat.m[5] = sin_r * su_scaled * fy;
+    }
+    mat.m[12] = ou;
+    mat.m[13] = ov;
 
     let x = f32x4::from([-1.0, 1.0, -1.0, 1.0]);
     let y = f32x4::from([-1.0, -1.0, 1.0, 1.0]);
 
-    let u_simd = (m11_v * x) + (m12_v * y) + ou_v;
-    let v_simd = (m21_v * x) + (m22_v * y) + ov_v;
+    let (u_simd, v_simd) = mat.transform_v4_2d(x, y);
+
+    let mut out_u = [0.0; 5];
+    let mut out_v = [0.0; 5];
 
     out_u[..4].copy_from_slice(&u_simd.to_array());
     out_v[..4].copy_from_slice(&v_simd.to_array());
@@ -123,8 +125,6 @@ pub fn is_point_in_rect(local_p: (f32, f32), size: (f32, f32)) -> bool {
     let hh = size.1 * 0.5;
     local_p.0 >= -hw && local_p.0 <= hw && local_p.1 >= -hh && local_p.1 <= hh
 }
-
-use wide::{CmpGt, CmpLt, f32x4};
 
 /// Performs a hit test for a point against a 4-point quadrilateral in world space.
 /// Uses the even-odd rule (ray casting) algorithm and SIMD via the `wide` crate to support both convex and concave quadrilaterals efficiently.

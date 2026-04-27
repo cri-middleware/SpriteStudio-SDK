@@ -218,7 +218,7 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
             let next_index = next.index() as i32;
             let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
 
-            (libm::roundf(linear(prev.value() as f32, next.value() as f32, rate)) as i32, UPDATE_FLAG_ON)
+            (crate::core::math::roundf(linear(prev.value() as f32, next.value() as f32, rate)) as i32, UPDATE_FLAG_ON)
         } else {
             if prev.index() as i32 == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }

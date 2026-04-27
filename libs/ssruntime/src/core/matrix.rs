@@ -1,24 +1,6 @@
+use crate::core::math::*;
 use core::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign};
 use wide::f32x4;
-
-#[cfg(not(feature = "std"))]
-use libm::{cosf, fabsf, sinf};
-
-#[cfg(feature = "std")]
-#[inline]
-fn cosf(f: f32) -> f32 {
-    f.cos()
-}
-#[cfg(feature = "std")]
-#[inline]
-fn sinf(f: f32) -> f32 {
-    f.sin()
-}
-#[cfg(feature = "std")]
-#[inline]
-fn fabsf(f: f32) -> f32 {
-    f.abs()
-}
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -358,6 +340,30 @@ impl SsMatrix4x4 {
         let res_arr: [f32; 4] = res_vec.into();
 
         SsVector3 { x: res_arr[0], y: res_arr[1], z: res_arr[2] }
+    }
+
+    /// Transforms four 3D vectors at once using SIMD.
+    /// `vx`, `vy`, `vz` are f32x4 containing the x, y, and z components of the four vectors.
+    /// `vw` is the w component, typically all 1.0 for positions.
+    #[inline]
+    #[must_use]
+    pub fn transform_v4(&self, vx: f32x4, vy: f32x4, vz: f32x4, vw: f32x4) -> (f32x4, f32x4, f32x4, f32x4) {
+        let out_x = (f32x4::splat(self.m[0]) * vx) + (f32x4::splat(self.m[4]) * vy) + (f32x4::splat(self.m[8]) * vz) + (f32x4::splat(self.m[12]) * vw);
+        let out_y = (f32x4::splat(self.m[1]) * vx) + (f32x4::splat(self.m[5]) * vy) + (f32x4::splat(self.m[9]) * vz) + (f32x4::splat(self.m[13]) * vw);
+        let out_z = (f32x4::splat(self.m[2]) * vx) + (f32x4::splat(self.m[6]) * vy) + (f32x4::splat(self.m[10]) * vz) + (f32x4::splat(self.m[14]) * vw);
+        let out_w = (f32x4::splat(self.m[3]) * vx) + (f32x4::splat(self.m[7]) * vy) + (f32x4::splat(self.m[11]) * vz) + (f32x4::splat(self.m[15]) * vw);
+        (out_x, out_y, out_z, out_w)
+    }
+
+    /// Transforms four 2D vectors at once using SIMD, ignoring Z and W for performance.
+    /// `vx`, `vy` are f32x4 containing the x and y components of the four vectors.
+    /// Assumes a 2D affine transformation where z=0 and w=1.
+    #[inline]
+    #[must_use]
+    pub fn transform_v4_2d(&self, vx: f32x4, vy: f32x4) -> (f32x4, f32x4) {
+        let out_x = (f32x4::splat(self.m[0]) * vx) + (f32x4::splat(self.m[4]) * vy) + f32x4::splat(self.m[12]);
+        let out_y = (f32x4::splat(self.m[1]) * vx) + (f32x4::splat(self.m[5]) * vy) + f32x4::splat(self.m[13]);
+        (out_x, out_y)
     }
 
     #[must_use]

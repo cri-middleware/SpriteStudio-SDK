@@ -1,5 +1,6 @@
 use super::state::*;
 use super::types::*;
+use crate::core::math::*;
 use alloc::vec::Vec;
 use wide::{CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, f32x4};
 
@@ -107,7 +108,7 @@ impl EffectSimulator {
             state.particle_state.born[i] = false;
 
             if target_ep.cycle != 0 {
-                let loopnum = libm::floorf(t / target_ep.cycle as f32) as i32;
+                let loopnum = floorf(t / target_ep.cycle as f32) as i32;
                 let cycle_top = loopnum * target_ep.cycle;
 
                 state.particle_state.id[i] = target_ep.uid;
@@ -188,18 +189,18 @@ impl EffectSimulator {
                 addr = (accel / c) * t;
             }
 
-            let mut x = libm::cosf(rad + addr) * speed * t;
-            let mut y = libm::sinf(rad + addr) * speed * t;
+            let mut x = cosf(rad + addr) * speed * t;
+            let mut y = sinf(rad + addr) * speed * t;
 
             if particle_params.use_trans_speed {
                 let transspeed = particle_params.trans_speed + (particle_params.trans_speed2 * gen_rand());
                 let speedadd = transspeed / life;
-                let addtx = libm::cosf(rad + addr) * speed;
-                let addtx_trans = libm::cosf(rad + addr) * speedadd;
+                let addtx = cosf(rad + addr) * speed;
+                let addtx_trans = cosf(rad + addr) * speedadd;
                 x = ((addtx_trans * t) + addtx) * (t + 1.0) / 2.0;
 
-                let addty = libm::sinf(rad + addr) * speed;
-                let addty_trans = libm::sinf(rad + addr) * speedadd;
+                let addty = sinf(rad + addr) * speed;
+                let addty_trans = sinf(rad + addr) * speedadd;
                 y = ((addty_trans * t) + addty) * (t + 1.0) / 2.0;
             }
 
@@ -305,7 +306,7 @@ impl EffectSimulator {
         if particle_params.use_p_gravity {
             let vx = particle_params.gravity_pos.x - (ox + emitter_pos.x);
             let vy = particle_params.gravity_pos.y - (oy + emitter_pos.y);
-            let dist = libm::sqrtf(vx * vx + vy * vy);
+            let dist = sqrtf(vx * vx + vy * vy);
             let inv_dist = if dist == 0.0 { 0.0 } else { 1.0 / dist };
             let nvx = vx * inv_dist;
             let nvy = vy * inv_dist;
@@ -344,18 +345,18 @@ impl EffectSimulator {
                 addr = (accel / c) * next_t;
             }
 
-            let mut x = libm::cosf(rad + addr) * speed * next_t;
-            let mut y = libm::sinf(rad + addr) * speed * next_t;
+            let mut x = cosf(rad + addr) * speed * next_t;
+            let mut y = sinf(rad + addr) * speed * next_t;
 
             if particle_params.use_trans_speed {
                 let transspeed = particle_params.trans_speed + (particle_params.trans_speed2 * gen_rand_next());
                 let speedadd = transspeed / life;
-                let addtx = libm::cosf(rad + addr) * speed;
-                let addtx_trans = libm::cosf(rad + addr) * speedadd;
+                let addtx = cosf(rad + addr) * speed;
+                let addtx_trans = cosf(rad + addr) * speedadd;
                 x = ((addtx_trans * next_t) + addtx) * (next_t + 1.0) / 2.0;
 
-                let addty = libm::sinf(rad + addr) * speed;
-                let addty_trans = libm::sinf(rad + addr) * speedadd;
+                let addty = sinf(rad + addr) * speed;
+                let addty_trans = sinf(rad + addr) * speedadd;
                 y = ((addty_trans * next_t) + addty) * (next_t + 1.0) / 2.0;
             }
 
@@ -378,7 +379,7 @@ impl EffectSimulator {
             if particle_params.use_p_gravity {
                 let vx = particle_params.gravity_pos.x - (ox + emitter_pos.x);
                 let vy = particle_params.gravity_pos.y - (oy + emitter_pos.y);
-                let dist = libm::sqrtf(vx * vx + vy * vy);
+                let dist = sqrtf(vx * vx + vy * vy);
                 let inv_dist = if dist == 0.0 { 0.0 } else { 1.0 / dist };
                 let nvx = vx * inv_dist;
                 let nvy = vy * inv_dist;
@@ -399,7 +400,7 @@ impl EffectSimulator {
                 }
             }
 
-            direction = libm::atan2f(next_final_y - final_y, next_final_x - final_x) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
+            direction = atan2f(next_final_y - final_y, next_final_x - final_x) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
         }
 
         ParticleDrawState { x: final_x, y: final_y, scale_x: out_scale_x, scale_y: out_scale_y, rotation, direction, color }
@@ -694,7 +695,7 @@ impl EffectSimulator {
             let final_y_arr = final_y.to_array();
 
             for i in 0..4 {
-                direction[i] = libm::atan2f(next_y_arr[i] - final_y_arr[i], next_x_arr[i] - final_x_arr[i]) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
+                direction[i] = atan2f(next_y_arr[i] - final_y_arr[i], next_x_arr[i] - final_x_arr[i]) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
             }
         }
 

@@ -12,13 +12,6 @@ pub fn transform_vec2s(matrix: &SsMatrix4x4, input: &[f32]) -> Vec<f32> {
     let count = input.len() / 2;
     let mut result = Vec::with_capacity(input.len());
 
-    let m0 = f32x4::splat(matrix.m[0]);
-    let m1 = f32x4::splat(matrix.m[1]);
-    let m4 = f32x4::splat(matrix.m[4]);
-    let m5 = f32x4::splat(matrix.m[5]);
-    let m12 = f32x4::splat(matrix.m[12]);
-    let m13 = f32x4::splat(matrix.m[13]);
-
     let mut i = 0;
     while i + 3 < count {
         let base = i * 2;
@@ -27,8 +20,9 @@ pub fn transform_vec2s(matrix: &SsMatrix4x4, input: &[f32]) -> Vec<f32> {
         let vx = f32x4::from([input[base], input[base + 2], input[base + 4], input[base + 6]]);
         let vy = f32x4::from([input[base + 1], input[base + 3], input[base + 5], input[base + 7]]);
 
-        let res_x: [f32; 4] = (m0 * vx + m4 * vy + m12).into();
-        let res_y: [f32; 4] = (m1 * vx + m5 * vy + m13).into();
+        let (res_x_simd, res_y_simd) = matrix.transform_v4_2d(vx, vy);
+        let res_x: [f32; 4] = res_x_simd.into();
+        let res_y: [f32; 4] = res_y_simd.into();
 
         for k in 0..4 {
             result.push(res_x[k]);
