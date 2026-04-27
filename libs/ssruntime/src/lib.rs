@@ -490,22 +490,17 @@ impl<'a> Context<'a> {
     }
 
     fn compute_matrices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        for (i, part_state) in self.buffers.parts_vec.iter().enumerate() {
+        for i in 0..self.buffers.parts_vec.len() {
             let parent_idx = cached_parts[i].parent_index;
+            let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
 
-            let parent_world = if parent_idx >= 0 && (parent_idx as usize) < i {
-                Some(&self.buffers.inheritance_matrices[parent_idx as usize])
-            } else {
-                None
-            };
+            let parent_world = valid_parent_idx.map(|p_idx| &self.buffers.inheritance_matrices[p_idx]);
+            let parent_size = valid_parent_idx.map(|p_idx| {
+                let p_state = &self.buffers.parts_vec[p_idx];
+                (p_state.size_x(), p_state.size_y())
+            });
 
-            let parent_size = if parent_idx >= 0 && (parent_idx as usize) < i {
-                let p_state = &self.buffers.parts_vec[parent_idx as usize];
-                Some((p_state.size_x(), p_state.size_y()))
-            } else {
-                None
-            };
-
+            let part_state = &self.buffers.parts_vec[i];
             let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
             self.buffers.inheritance_matrices[i] = inh_m;
             self.buffers.world_matrices[i] = draw_m;
