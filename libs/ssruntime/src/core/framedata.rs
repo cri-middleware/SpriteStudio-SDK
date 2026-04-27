@@ -414,6 +414,21 @@ fn get_parts<'a>(
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
         let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
+
+        let parent_idx = part.parent_index;
+        let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
+
+        if let Some(p_idx) = valid_parent_idx {
+            let (parent_alpha, parent_hide) = {
+                let p_state = &parts_vec[p_idx];
+                (p_state.alpha(), p_state.hide())
+            };
+            result.state.set_alpha(result.state.alpha() * parent_alpha);
+            if parent_hide {
+                result.state.set_hide(true);
+            }
+        }
+
         if let Some(cell) = result.cell {
             cell_vec.push(cell);
             result.state.set_cell((cell_vec.len() - 1) as i16);
