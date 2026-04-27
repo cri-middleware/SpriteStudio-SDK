@@ -1264,33 +1264,14 @@ fn convert_part_animation_data_expand_key_skew(value_start: &sspj::ssattribute::
 fn convert_part_animation_data_expand_key_deform(value_start: &sspj::ssattribute::SsAttributeDeformKey, value_end: &sspj::ssattribute::SsAttributeDeformKey, time: i32) -> Option<Vec<ssab::ssab::ss::format::Vec2T>> {
     let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
 
-    let mut result = Vec::new();
-    let mut coordinate: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_start: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_end: ssab::ssab::ss::format::Vec2T;
-
-    // MEMO: Usually, "value_start.value.size" and "value_end.value.size" are equivalent.
-    let count_vertex_start = value_start.value.vsize as usize;
-    let count_vertex_end = value_end.value.vsize as usize;
-    let count_vertex = std::cmp::max(count_vertex_start, count_vertex_end);
-    for i in 0..count_vertex {
-        coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-        if i < count_vertex_start {
-            coordinate_start.v1 = value_start.value.vchg[i].x;
-            coordinate_start.v2 = value_start.value.vchg[i].y;
-        }
-        coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-        if i < count_vertex_end {
-            coordinate_end.v1 = value_end.value.vchg[i].x;
-            coordinate_end.v2 = value_end.value.vchg[i].y;
-        }
-
-        coordinate = ssab::ssab::ss::format::Vec2T::default();
-        coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-        coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-
-        result.push(coordinate);
-    }
+    let result = value_start.value.vchg.iter().map(|s| {
+        let e = value_end.value.vchg.iter().find(|p| p.x_index == s.x_index);
+        let (ex, ey) = e.map_or((s.x, s.y), |p| (p.x, p.y));
+        let mut coord = ssab::ssab::ss::format::Vec2T::default();
+        coord.v1 = ssinterpolate::interpolate::linear(s.x, ex, rate_linear);
+        coord.v2 = ssinterpolate::interpolate::linear(s.y, ey, rate_linear);
+        coord
+    }).collect();
 
     Some(result)
 }
