@@ -1264,11 +1264,6 @@ fn convert_part_animation_data_expand_key_skew(value_start: &sspj::ssattribute::
 fn convert_part_animation_data_expand_key_deform(value_start: &sspj::ssattribute::SsAttributeDeformKey, value_end: &sspj::ssattribute::SsAttributeDeformKey, time: i32) -> Option<Vec<ssab::ssab::ss::format::Vec2T>> {
     let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
 
-    if value_start.value.vchg.len() != value_end.value.vchg.len() {
-        let mut aaa = 0u32;
-        aaa += 1;
-    }
-
     let result = value_start.value.vchg.iter().map(|s| {
         let e = value_end.value.vchg.iter().find(|p| p.x_index == s.x_index);
         let (ex, ey) = e.map_or((s.x, s.y), |p| (p.x, p.y));
