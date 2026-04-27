@@ -1,6 +1,7 @@
 use super::simulator::*;
 use super::state::*;
 use super::types::*;
+use crate::core::math::*;
 use alloc::vec::Vec;
 use ssab::ssab::ss::format as ssab_fbs;
 
@@ -276,7 +277,7 @@ impl EffectInstance {
         self.state.target_frame = frame;
 
         if !self.is_infinite && self.state.is_loop && self.effect_time_length > 0 && self.state.current_frame > self.effect_time_length as f32 {
-            self.state.target_frame = libm::fmodf(self.state.current_frame, self.effect_time_length as f32);
+            self.state.target_frame = fmodf(self.state.current_frame, self.effect_time_length as f32);
             self.state.seed_offset = (self.state.current_frame / self.effect_time_length as f32) as i32;
         }
     }
