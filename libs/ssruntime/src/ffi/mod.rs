@@ -861,14 +861,14 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
     deform_y_ptr: *const f32,
     out_x: *mut f32,
     out_y: *mut f32,
-) -> i32 {
+) -> bool {
     if out_x.is_null() || out_y.is_null() {
-        return 0;
+        return false;
     }
 
     let deform = if !deform_x_ptr.is_null() && !deform_y_ptr.is_null() {
-        let dx = unsafe { &*(deform_x_ptr as *const [f32; 4]) };
-        let dy = unsafe { &*(deform_y_ptr as *const [f32; 4]) };
+        let dx = unsafe { &*deform_x_ptr.cast::<[f32; 4]>() };
+        let dy = unsafe { &*deform_y_ptr.cast::<[f32; 4]>() };
         Some((dx, dy))
     } else {
         None
@@ -877,10 +877,10 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
     let (vx, vy) = crate::core::geometry::compute_local_vertices((size_w, size_h), (pivot_x, pivot_y), (pivot_offset_x, pivot_offset_y), (h_flip, v_flip), deform);
 
     unsafe {
-        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, 5);
-        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, 5);
+        *out_x.cast::<[f32; 5]>() = vx;
+        *out_y.cast::<[f32; 5]>() = vy;
     }
-    5
+    true
 }
 
 /// Computes the local UV coordinates for a part.
@@ -911,19 +911,18 @@ pub unsafe extern "C" fn ss_uv_compute_local(
     rotated: bool,
     out_u: *mut f32,
     out_v: *mut f32,
-) -> i32 {
+) -> bool {
     if out_u.is_null() || out_v.is_null() {
-        return 0;
+        return false;
     }
 
     let (u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated);
 
     unsafe {
-        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, 5);
-        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, 5);
+        *out_u.cast::<[f32; 5]>() = u;
+        *out_v.cast::<[f32; 5]>() = v;
     }
-
-    5
+    true
 }
 
 #[unsafe(no_mangle)]
