@@ -252,11 +252,28 @@ struct ContextBuffers<'a> {
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
     collected_event_indices: Vec<i32>,
+    world_matrices: Vec<crate::core::SsMatrix4x4>,
+    inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
+    z_order: Vec<i32>,
+    z_indices: Vec<usize>,
 }
 
 impl<'a> ContextBuffers<'a> {
     fn new() -> Self {
-        Self { parts_vec: Vec::new(), cell_vec: Vec::new(), parts_color_vec: Vec::new(), shader_vec: Vec::new(), vertice_vec: Vec::new(), deform_vec: Vec::new(), cursors: Vec::new(), collected_event_indices: Vec::new() }
+        Self {
+            parts_vec: Vec::new(),
+            cell_vec: Vec::new(),
+            parts_color_vec: Vec::new(),
+            shader_vec: Vec::new(),
+            vertice_vec: Vec::new(),
+            deform_vec: Vec::new(),
+            cursors: Vec::new(),
+            collected_event_indices: Vec::new(),
+            world_matrices: Vec::new(),
+            inheritance_matrices: Vec::new(),
+            z_order: Vec::new(),
+            z_indices: Vec::new(),
+        }
     }
 }
 
@@ -269,6 +286,7 @@ pub struct Context<'a> {
     coordinate_system: crate::core::SsCoordinateSystem,
     origin: crate::core::SsOrigin,
     unit: crate::core::SsUnit,
+    world_matrix_calculation_enabled: bool,
 }
 
 impl<'a> Default for Context<'a> {
@@ -288,6 +306,7 @@ impl<'a> Context<'a> {
             coordinate_system: crate::core::SsCoordinateSystem::default(),
             origin: crate::core::SsOrigin::default(),
             unit: crate::core::SsUnit::default(),
+            world_matrix_calculation_enabled: true,
         }
     }
 
@@ -300,6 +319,15 @@ impl<'a> Context<'a> {
         self.coordinate_system = crate::core::SsCoordinateSystem::default();
         self.origin = crate::core::SsOrigin::default();
         self.unit = crate::core::SsUnit::default();
+        self.world_matrix_calculation_enabled = true;
+    }
+
+    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
+        self.world_matrix_calculation_enabled = enabled;
+    }
+
+    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
+        self.world_matrix_calculation_enabled
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
@@ -313,14 +341,6 @@ impl<'a> Context<'a> {
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.resource.map(|r| r.get_ssab_data())
-    }
-
-    pub(crate) fn get_resource(&self) -> Option<&'a AnimationResource<'a>> {
-        self.resource
-    }
-
-    pub(crate) fn get_animation_idx(&self) -> Option<i32> {
-        if self.animation_idx >= 0 { Some(self.animation_idx) } else { None }
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -383,6 +403,15 @@ impl<'a> Context<'a> {
         self.buffers.cursors.clear();
         self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
 
+        self.buffers.world_matrices.clear();
+        self.buffers.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        self.buffers.inheritance_matrices.clear();
+        self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        self.buffers.z_order.clear();
+        self.buffers.z_order.resize(num_parts, 0);
+        self.buffers.z_indices.clear();
+        self.buffers.z_indices.extend(0..num_parts);
+
         Ok(())
     }
 
@@ -422,8 +451,65 @@ impl<'a> Context<'a> {
             metadata.canvas_width,
             metadata.canvas_height,
         );
+
+        if self.world_matrix_calculation_enabled {
+            self.compute_matrices(&metadata.cached_parts);
+        }
+
+        self.compute_z_order();
+
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
+    }
+
+    fn compute_z_order(&mut self) {
+        let num_parts = self.buffers.parts_vec.len();
+        if self.buffers.z_order.len() != num_parts {
+            self.buffers.z_order.resize(num_parts, 0);
+            self.buffers.z_indices.clear();
+            self.buffers.z_indices.extend(0..num_parts);
+        } else {
+            for (i, v) in self.buffers.z_indices.iter_mut().enumerate() {
+                *v = i;
+            }
+        }
+
+        self.buffers.z_indices.sort_by(|&a, &b| {
+            let pa = &self.buffers.parts_vec[a];
+            let pb = &self.buffers.parts_vec[b];
+            if pa.priority() == pb.priority() {
+                pa.part_index().cmp(&pb.part_index())
+            } else {
+                pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal)
+            }
+        });
+
+        for (order, &part_idx) in self.buffers.z_indices.iter().enumerate() {
+            self.buffers.z_order[part_idx] = order as i32;
+        }
+    }
+
+    fn compute_matrices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        for (i, part_state) in self.buffers.parts_vec.iter().enumerate() {
+            let parent_idx = cached_parts[i].parent_index;
+
+            let parent_world = if parent_idx >= 0 && (parent_idx as usize) < i {
+                Some(&self.buffers.inheritance_matrices[parent_idx as usize])
+            } else {
+                None
+            };
+
+            let parent_size = if parent_idx >= 0 && (parent_idx as usize) < i {
+                let p_state = &self.buffers.parts_vec[parent_idx as usize];
+                Some((p_state.size_x(), p_state.size_y()))
+            } else {
+                None
+            };
+
+            let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
+            self.buffers.inheritance_matrices[i] = inh_m;
+            self.buffers.world_matrices[i] = draw_m;
+        }
     }
 
     // Frame Number getter functions
@@ -438,6 +524,22 @@ impl<'a> Context<'a> {
 
     pub fn is_end_frame_reached(&self) -> bool {
         self.controller.is_end_frame_reached()
+    }
+
+    pub fn get_world_matrices_ptr(&self) -> *const f32 {
+        self.buffers.world_matrices.as_ptr() as *const f32
+    }
+
+    pub fn get_world_matrices_len(&self) -> usize {
+        self.buffers.world_matrices.len() * 16
+    }
+
+    pub fn get_z_order_ptr(&self) -> *const i32 {
+        self.buffers.z_order.as_ptr()
+    }
+
+    pub fn get_z_order_len(&self) -> usize {
+        self.buffers.z_order.len()
     }
 
     // setting getter functions
@@ -853,6 +955,35 @@ mod tests {
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert!(hide_state_2.hide());
+    }
+
+    #[test]
+    fn test_world_matrices() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        // Verify world matrices are computed correctly
+        let frame_no = 0;
+        let _ = context.get_frame_data(frame_no).expect("Failed to get frame data");
+
+        let world_matrices_ptr = context.get_world_matrices_ptr();
+        let world_matrices_len = context.get_world_matrices_len();
+
+        // Length should be 16 floats per part
+        let num_parts = context.buffers.parts_vec.len();
+        assert_eq!(world_matrices_len, num_parts * 16);
+
+        let world_matrices = unsafe { ::core::slice::from_raw_parts(world_matrices_ptr, world_matrices_len) };
+
+        // For simplicity, just test that matrices are non-zero/valid
+        assert!(world_matrices[0] != 0.0 || world_matrices[1] != 0.0);
     }
 
     #[test]

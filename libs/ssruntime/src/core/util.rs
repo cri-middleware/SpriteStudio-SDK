@@ -1,38 +1,10 @@
-use crate::core::framedata::{CachedPartData, NUM_PART_ATTRIBUTES, evaluate_part};
 use crate::core::matrix::SsMatrix4x4;
-use crate::core::{SsCoordinateSystem, SsOrigin, SsUnit};
-use alloc::vec;
 use alloc::vec::Vec;
 use wide::f32x4;
 
 /// Calculate the target frame for a child instance animation.
 pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
     if independent { accumulated_time * speed + start_offset as f32 } else { (parent_frame - key_frame as f32) * speed + start_offset as f32 }
-}
-
-/// Compute world matrix for a specific part by traversing its ancestors.
-pub fn get_part_world_matrix(parts: &[CachedPartData], part_index: u16, frame_no: i32, coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> Option<SsMatrix4x4> {
-    if (part_index as usize) >= parts.len() {
-        return None;
-    }
-
-    // Temporary cursors for this specific part's ancestor calculation.
-    // We use a fresh cursor set to avoid side-effects on the main context's cursors.
-    let mut temp_cursors = vec![0usize; parts.len() * NUM_PART_ATTRIBUTES];
-
-    fn compute_recursive(target_idx: u16, frame: i32, parts: &[CachedPartData], cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32, is_drawing: bool) -> SsMatrix4x4 {
-        let part = &parts[target_idx as usize];
-        let part_cursors = &mut cursors[target_idx as usize * NUM_PART_ATTRIBUTES..(target_idx as usize + 1) * NUM_PART_ATTRIBUTES];
-
-        let res = evaluate_part(part, frame, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
-        let parent_idx = part.parent_index;
-        let parent_mat = if parent_idx >= 0 { Some(compute_recursive(parent_idx as u16, frame, parts, cursors, coordinate_system, origin, unit, canvas_width, canvas_height, false)) } else { None };
-
-        let (inh, draw) = SsMatrix4x4::compute_world_matrix(&res.state, parent_mat.as_ref(), None);
-        if is_drawing { draw } else { inh }
-    }
-
-    Some(compute_recursive(part_index, frame_no, parts, &mut temp_cursors, coordinate_system, origin, unit, canvas_width, canvas_height, true))
 }
 
 /// Transform multiple 2D points (x, y, x, y...) by a matrix using SIMD (wide::f32x4).
@@ -146,85 +118,27 @@ mod tests {
 
     #[test]
     fn test_transform_particles_simd_and_remainder() {
-        // ... (existing test code)
-    }
+        let matrix = SsMatrix4x4::create_translation(10.0, 20.0, 0.0);
+        // Stride 28: x:0(4), y:4(4), rest: 20
+        let mut particles = vec![0u8; 28 * 2];
+        
+        // p0: (0, 0) -> (10, 20)
+        let x0 = 0.0f32.to_le_bytes();
+        let y0 = 0.0f32.to_le_bytes();
+        particles[0..4].copy_from_slice(&x0);
+        particles[4..8].copy_from_slice(&y0);
 
-    #[test]
-    #[cfg(feature = "std")]
-    fn test_get_part_world_matrix_ydown() {
-        use crate::{AnimationResource, SsabData};
-        use std::path::PathBuf;
+        // p1: (5, -5) -> (15, 15)
+        let x1 = 5.0f32.to_le_bytes();
+        let y1 = (-5.0f32).to_le_bytes();
+        particles[28..32].copy_from_slice(&x1);
+        particles[32..36].copy_from_slice(&y1);
 
-        fn get_test_base_path() -> PathBuf {
-            std::env::current_dir().unwrap().ancestors().nth(2).unwrap().to_path_buf()
-        }
-
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
-        if !ssab_path.exists() {
-            return;
-        }
-
-        let input_buf = std::fs::read(&ssab_path).unwrap();
-        let ssab_data = SsabData::load_copy(&input_buf).unwrap();
-        let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
-        let metadata = &resource.animations[0];
-
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data.as_slice()) };
-        let pos_xyz_idx = ssab.parts().unwrap().iter().position(|p| p.name() == Some("POS_XYZ")).unwrap() as u16;
-
-        // Calculate world matrix via utility at frame 10 (Y-Up)
-        let res_m_up = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
-
-        // Calculate world matrix via utility at frame 10 (Y-Down)
-        let res_m_down = get_part_world_matrix(&metadata.cached_parts, pos_xyz_idx, 10, SsCoordinateSystem::YDown, SsOrigin::Center, SsUnit::Pixel, metadata.canvas_width, metadata.canvas_height).unwrap();
-
-        // In Y-Up, Y is positive. In Y-Down, it should be negated.
-        assert!((res_m_up.m[12] - 32.0).abs() < 1e-5, "World X: {} != 32.0", res_m_up.m[12]);
-        assert_eq!(res_m_up.m[12], res_m_down.m[12]); // X is same
-
-        // Let's assume original Y translation at frame 10 was 0.0 or something else, but down should be negated.
-        assert!((res_m_up.m[13] + res_m_down.m[13]).abs() < 1e-5, "Y should be negated: {} vs {}", res_m_up.m[13], res_m_down.m[13]);
-    }
-
-    #[test]
-    #[cfg(feature = "std")]
-    fn test_get_part_world_matrix_topleft_normalized() {
-        use crate::{AnimationResource, SsabData};
-        use std::path::PathBuf;
-
-        fn get_test_base_path() -> PathBuf {
-            std::env::current_dir().unwrap().ancestors().nth(2).unwrap().to_path_buf()
-        }
-
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
-        if !ssab_path.exists() {
-            return;
-        }
-
-        let input_buf = std::fs::read(&ssab_path).unwrap();
-        let ssab_data = SsabData::load_copy(&input_buf).unwrap();
-        let resource = AnimationResource::new(ssab_data.as_slice()).unwrap();
-        let metadata = &resource.animations[0];
-
-        let _ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_data.as_slice()) };
-        let root_idx = 0; // Usually index 0 is root
-
-        let canvas_w = metadata.canvas_width;
-        let canvas_h = metadata.canvas_height;
-
-        // Center / Pixel (Original)
-        let m_orig = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
-
-        // TopLeft / Pixel
-        let m_tl = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::TopLeft, SsUnit::Pixel, canvas_w, canvas_h).unwrap();
-
-        // m_tl should be m_orig shifted by (w/2, -h/2) in Y-Up
-        assert!((m_tl.m[12] - (m_orig.m[12] + canvas_w / 2.0)).abs() < 1e-5);
-        assert!((m_tl.m[13] - (m_orig.m[13] - canvas_h / 2.0)).abs() < 1e-5);
-
-        // Center / Normalized
-        let m_norm = get_part_world_matrix(&metadata.cached_parts, root_idx, 0, SsCoordinateSystem::YUp, SsOrigin::Center, SsUnit::Normalized, canvas_w, canvas_h).unwrap();
-        assert!((m_norm.m[12] - (m_orig.m[12] / canvas_w)).abs() < 1e-5);
-        assert!((m_norm.m[13] - (m_orig.m[13] / canvas_h)).abs() < 1e-5);
+        let transformed = transform_particles(&matrix, &particles);
+        assert_eq!(transformed.len(), 2);
+        assert!((transformed[0].0 - 10.0).abs() < 1e-5);
+        assert!((transformed[0].1 - 20.0).abs() < 1e-5);
+        assert!((transformed[1].0 - 15.0).abs() < 1e-5);
+        assert!((transformed[1].1 - 15.0).abs() < 1e-5);
     }
 }

@@ -217,6 +217,14 @@ impl SSRuntimeContext {
         false
     }
 
+    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
+        self.inner.is_world_matrix_calculation_enabled()
+    }
+
+    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
+        self.inner.set_world_matrix_calculation_enabled(enabled);
+    }
+
     pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {
         self.inner.setup_animation(name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
@@ -228,6 +236,14 @@ impl SSRuntimeContext {
 
     pub fn get_frame_data_len(&mut self, frame_no: i32) -> Result<usize, JsValue> {
         self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn get_world_matrices_buf(&self) -> *const f32 {
+        self.inner.get_world_matrices_ptr()
+    }
+
+    pub fn get_world_matrices_len(&self) -> usize {
+        self.inner.get_world_matrices_len()
     }
 
     pub fn get_ssab_buf(&self) -> Result<*const u8, JsValue> {
@@ -441,20 +457,6 @@ pub struct SSRuntimeUtils;
 impl SSRuntimeUtils {
     pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
         crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
-    }
-
-    pub fn get_part_world_matrix(context: &SSRuntimeContext, part_index: u16, frame_no: i32) -> Option<Box<[f32]>> {
-        if let Some(res) = context.inner.get_resource()
-            && let Some(idx) = context.inner.get_animation_idx()
-        {
-            let metadata = &res.animations[idx as usize];
-            if let Some(res_m) =
-                crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, context.inner.get_coordinate_system(), context.inner.get_origin(), context.inner.get_unit(), metadata.canvas_width, metadata.canvas_height)
-            {
-                return Some(Box::new(res_m.m));
-            }
-        }
-        None
     }
 
     pub fn transform_particles(matrix_arr: &[f32], particles_ptr: *const u8, count: i32) -> Result<Box<[f32]>, JsValue> {

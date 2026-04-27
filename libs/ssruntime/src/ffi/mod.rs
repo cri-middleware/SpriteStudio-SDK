@@ -1,3 +1,6 @@
+#![allow(clippy::missing_safety_doc)]
+#![allow(clippy::doc_lazy_continuation)]
+
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
@@ -352,6 +355,47 @@ pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_n
 }
 
 #[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_world_matrices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_world_matrices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_z_order(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_z_order_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_z_order_len();
+            }
+        }
+    }
+}
+
+// Frame Number getter functions
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_int {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.get_frame_no();
@@ -650,6 +694,21 @@ pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame:
 }
 
 #[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_runtime_set_world_matrix_calculation_enabled(context: *mut c_void, enabled: bool) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.set_world_matrix_calculation_enabled(enabled);
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_runtime_is_world_matrix_calculation_enabled(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.is_world_matrix_calculation_enabled();
+    }
+    false
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_context_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
     if let Some(ffi_context) = get_context(context) {
         let cs = match coordinate_system {
@@ -719,28 +778,6 @@ pub unsafe extern "C" fn ss_context_get_unit(context: *mut c_void) -> i32 {
 }
 
 #[unsafe(no_mangle)]
-/// Compute world matrix for a specific part by traversing its ancestors.
-/// out_m: pointer to float array of size 16.
-pub unsafe extern "C" fn ss_util_get_part_world_matrix(context: *mut c_void, part_index: u16, frame_no: i32, out_m: *mut f32) -> bool {
-    if let Some(ffi_context) = get_context(context)
-        && let Some(resource) = ffi_context.ctx.get_resource()
-        && let Some(idx) = ffi_context.ctx.get_animation_idx()
-    {
-        let metadata = &resource.animations[idx as usize];
-
-        if let Some(res_m) =
-            crate::core::util::get_part_world_matrix(&metadata.cached_parts, part_index, frame_no, ffi_context.ctx.get_coordinate_system(), ffi_context.ctx.get_origin(), ffi_context.ctx.get_unit(), metadata.canvas_width, metadata.canvas_height)
-        {
-            unsafe {
-                core::ptr::copy_nonoverlapping(res_m.m.as_ptr(), out_m, 16);
-            }
-            return true;
-        }
-    }
-    false
-}
-
-#[unsafe(no_mangle)]
 /// Transform multiple particle positions by a matrix.
 /// matrix_ptr: pointer to float array of size 16.
 /// particles_ptr: pointer to ParticleState array from ss_effect_get_state.
@@ -772,179 +809,6 @@ pub unsafe extern "C" fn ss_effect_transform_particles(matrix_ptr: *const f32, p
     }
 }
 
-// --- Matrix V2 FFI (Primitive-based) ---
-
-#[unsafe(no_mangle)]
-/// out_m must be a pointer to a float array of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences a raw pointer.
-pub unsafe extern "C" fn ss_matrix_identity(out_m: *mut f32) {
-    if !out_m.is_null() {
-        let identity = crate::core::SsMatrix4x4::identity();
-        unsafe {
-            core::ptr::copy_nonoverlapping(identity.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m, lhs, rhs must be pointers to float arrays of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_matrix_multiply(out_m: *mut f32, lhs: *const f32, rhs: *const f32) {
-    if !out_m.is_null() && !lhs.is_null() && !rhs.is_null() {
-        let mut lhs_arr = [0.0f32; 16];
-        let mut rhs_arr = [0.0f32; 16];
-        unsafe {
-            core::ptr::copy_nonoverlapping(lhs, lhs_arr.as_mut_ptr(), 16);
-            core::ptr::copy_nonoverlapping(rhs, rhs_arr.as_mut_ptr(), 16);
-        }
-        let lhs_m = crate::core::SsMatrix4x4::from_array(lhs_arr);
-        let rhs_m = crate::core::SsMatrix4x4::from_array(rhs_arr);
-        let res = lhs_m.multiply(&rhs_m);
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m, in_m must be pointers to float arrays of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_matrix_inverse(out_m: *mut f32, in_m: *const f32) {
-    if !out_m.is_null() && !in_m.is_null() {
-        let mut in_arr = [0.0f32; 16];
-        unsafe {
-            core::ptr::copy_nonoverlapping(in_m, in_arr.as_mut_ptr(), 16);
-        }
-        let mat = crate::core::SsMatrix4x4::from_array(in_arr);
-        let res = mat.inverse();
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_x, out_y, out_z: output pointers for transformed vector.
-/// mat: pointer to a float array of size 16.
-/// x, y, z: input vector components.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_matrix_transform_vector3(out_x: *mut f32, out_y: *mut f32, out_z: *mut f32, mat: *const f32, x: f32, y: f32, z: f32) {
-    if !out_x.is_null() && !out_y.is_null() && !out_z.is_null() && !mat.is_null() {
-        let mut mat_arr = [0.0f32; 16];
-        unsafe {
-            core::ptr::copy_nonoverlapping(mat, mat_arr.as_mut_ptr(), 16);
-        }
-        let mat_m = crate::core::SsMatrix4x4::from_array(mat_arr);
-        let v = crate::core::SsVector3::new(x, y, z);
-        let res = mat_m.transform(&v);
-        unsafe {
-            *out_x = res.x;
-            *out_y = res.y;
-            *out_z = res.z;
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m: pointer to a float array of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences a raw pointer.
-pub unsafe extern "C" fn ss_matrix_create_scale(out_m: *mut f32, x: f32, y: f32, z: f32) {
-    if !out_m.is_null() {
-        let res = crate::core::SsMatrix4x4::create_scale(x, y, z);
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m: pointer to a float array of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences a raw pointer.
-pub unsafe extern "C" fn ss_matrix_create_translation(out_m: *mut f32, x: f32, y: f32, z: f32) {
-    if !out_m.is_null() {
-        let res = crate::core::SsMatrix4x4::create_translation(x, y, z);
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m: pointer to a float array of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences a raw pointer.
-pub unsafe extern "C" fn ss_matrix_create_rotation_x(out_m: *mut f32, radians: f32) {
-    if !out_m.is_null() {
-        let res = crate::core::SsMatrix4x4::create_rotation_x(radians);
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m: pointer to a float array of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences a raw pointer.
-pub unsafe extern "C" fn ss_matrix_create_rotation_y(out_m: *mut f32, radians: f32) {
-    if !out_m.is_null() {
-        let res = crate::core::SsMatrix4x4::create_rotation_y(radians);
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_m: pointer to a float array of size 16.
-/// # Safety
-/// This function is unsafe because it dereferences a raw pointer.
-pub unsafe extern "C" fn ss_matrix_create_rotation_z(out_m: *mut f32, radians: f32) {
-    if !out_m.is_null() {
-        let res = crate::core::SsMatrix4x4::create_rotation_z(radians);
-        unsafe {
-            core::ptr::copy_nonoverlapping(res.m.as_ptr(), out_m, 16);
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-/// out_inheritance_m, out_drawing_m: pointers to float arrays of size 16.
-/// state: pointer to PartState
-/// parent_matrix: pointer to a float array of size 16, or null.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_matrix_compute_world(out_inheritance_m: *mut f32, out_drawing_m: *mut f32, state: *const core::ffi::c_void, parent_matrix: *const f32, has_parent_size: bool, parent_size_x: f32, parent_size_y: f32) {
-    if !out_inheritance_m.is_null() && !out_drawing_m.is_null() && !state.is_null() {
-        let p_state = unsafe { &*(state as *const crate::runtime::framedata::ss::runtime::PartState) };
-
-        let p_mat_opt = if parent_matrix.is_null() {
-            None
-        } else {
-            let mut arr = [0.0f32; 16];
-            unsafe {
-                core::ptr::copy_nonoverlapping(parent_matrix, arr.as_mut_ptr(), 16);
-            }
-            Some(crate::core::SsMatrix4x4::from_array(arr))
-        };
-
-        let p_size_opt = if has_parent_size { Some((parent_size_x, parent_size_y)) } else { None };
-
-        let (inh, draw) = crate::core::SsMatrix4x4::compute_world_matrix(p_state, p_mat_opt.as_ref(), p_size_opt);
-
-        unsafe {
-            core::ptr::copy_nonoverlapping(inh.m.as_ptr(), out_inheritance_m, 16);
-            core::ptr::copy_nonoverlapping(draw.m.as_ptr(), out_drawing_m, 16);
-        }
-    }
-}
-
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
@@ -955,18 +819,8 @@ pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32
 
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_frame_no(context: *mut c_void, index: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context)
-        && let Some(&event_idx) = ffi_context.ctx.get_passed_event_indices().get(index as usize)
-    {
-        // Look up frame number from index for compatibility
-        if let Some(resource) = ffi_context.ctx.get_resource()
-            && let Some(anim_idx) = ffi_context.ctx.get_animation_idx()
-        {
-            let metadata = &resource.animations[anim_idx as usize];
-            if let Some(events_vec) = metadata.events {
-                return events_vec.get(event_idx as usize).frame_index() as i32;
-            }
-        }
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.get_passed_event_frames().get(index as usize).copied().unwrap_or(-1);
     }
     -1
 }
@@ -979,4 +833,117 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
         return event_idx;
     }
     -1
+}
+
+/// Computes the local vertex coordinates for a part.
+///
+/// # Safety
+/// - `input_data`: Must point to an array of at least 6 floats if `has_deform` (flag 4) is false,
+///   or 14 floats if `has_deform` is true.
+///   Layout: [size_x, size_y, pivot_x, pivot_y, pivot_offset_x, pivot_offset_y, (optional) dx0..3, dy0..3]
+/// - `out_x`, `out_y`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 8) is true.
+#[unsafe(no_mangle)]
+/// Computes the local vertices for a part using primitive parameters.
+/// deform_x_ptr, deform_y_ptr: optional pointers to float arrays of size 4.
+/// out_x, out_y: pointers to float arrays of size 5 to store results.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_vertex_compute_local(
+    size_w: f32,
+    size_h: f32,
+    pivot_x: f32,
+    pivot_y: f32,
+    pivot_offset_x: f32,
+    pivot_offset_y: f32,
+    h_flip: bool,
+    v_flip: bool,
+    use_5_vertices: bool,
+    deform_x_ptr: *const f32,
+    deform_y_ptr: *const f32,
+    out_x: *mut f32,
+    out_y: *mut f32,
+) -> i32 {
+    if out_x.is_null() || out_y.is_null() {
+        return 0;
+    }
+
+    let deform = if !deform_x_ptr.is_null() && !deform_y_ptr.is_null() {
+        let dx = unsafe { &*(deform_x_ptr as *const [f32; 4]) };
+        let dy = unsafe { &*(deform_y_ptr as *const [f32; 4]) };
+        Some((dx, dy))
+    } else {
+        None
+    };
+
+    let (count, vx, vy) = crate::core::geometry::compute_local_vertices((size_w, size_h), (pivot_x, pivot_y), (pivot_offset_x, pivot_offset_y), (h_flip, v_flip), deform, use_5_vertices);
+
+    unsafe {
+        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, count);
+        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, count);
+    }
+    count as i32
+}
+
+/// Computes the local UV coordinates for a part.
+///
+/// # Safety
+/// - `input_data`: Must point to an array of at least 9 floats.
+///   Layout: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
+/// - `out_u`, `out_v`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 32) is true.
+#[unsafe(no_mangle)]
+/// Computes the local UV coordinates for a part using primitive parameters.
+/// out_u, out_v: pointers to float arrays of size 5 to store results.
+/// # Safety
+/// This function is unsafe because it dereferences raw pointers.
+pub unsafe extern "C" fn ss_uv_compute_local(
+    u_left: f32,
+    v_top: f32,
+    u_right: f32,
+    v_bottom: f32,
+    trans_u: f32,
+    trans_v: f32,
+    rot_deg: f32,
+    scale_u: f32,
+    scale_v: f32,
+    part_flip_h: bool,
+    part_flip_v: bool,
+    img_flip_h: bool,
+    img_flip_v: bool,
+    rotated: bool,
+    use_5_vertices: bool,
+    out_u: *mut f32,
+    out_v: *mut f32,
+) -> i32 {
+    if out_u.is_null() || out_v.is_null() {
+        return 0;
+    }
+
+    let (count, u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated, use_5_vertices);
+
+    unsafe {
+        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, count);
+        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, count);
+    }
+
+    count as i32
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_geometry_is_point_in_rect(px: f32, py: f32, size_w: f32, size_h: f32) -> bool {
+    crate::core::geometry::is_point_in_rect((px, py), (size_w, size_h))
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_geometry_is_point_in_quad(
+    tx: f32,
+    ty: f32,
+    vx: *const f32, // Array of 4 floats
+    vy: *const f32, // Array of 4 floats
+) -> bool {
+    if vx.is_null() || vy.is_null() {
+        return false;
+    }
+    let vxa = unsafe { &*(vx as *const [f32; 4]) };
+    let vya = unsafe { &*(vy as *const [f32; 4]) };
+    crate::core::geometry::is_point_in_quad((tx, ty), vxa, vya)
 }

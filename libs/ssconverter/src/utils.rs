@@ -81,11 +81,7 @@ pub fn get_assets_of_ssab_object_class(ssab_obj: &ssab::ssab::ss::format::SsAnim
         .font_bitmaps
         .iter()
         .flat_map(|font_bitmaps| font_bitmaps.iter())
-        .flat_map(|font_bitmap| {
-            font_bitmap.name_texture.iter().flatten().map(|name_texture| {
-                (name_texture.to_string(), name_texture.to_string())
-            })
-        })
+        .flat_map(|font_bitmap| font_bitmap.name_texture.iter().flatten().map(|name_texture| (name_texture.to_string(), name_texture.to_string())))
         .collect::<HashMap<String, String>>();
 
     let mut output = HashMap::<String, String>::new();
@@ -124,16 +120,7 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
         })
         .collect::<HashMap<_, _>>();
 
-    let fonts = anime
-        .font_bitmaps()
-        .iter()
-        .flatten()
-        .flat_map(|font_bitmap| {
-            font_bitmap.name_texture().into_iter().flatten().map(|name_texture| {
-                (name_texture.to_string(), name_texture.to_string())
-            })
-        })
-        .collect::<HashMap<_, _>>();
+    let fonts = anime.font_bitmaps().iter().flatten().flat_map(|font_bitmap| font_bitmap.name_texture().into_iter().flatten().map(|name_texture| (name_texture.to_string(), name_texture.to_string()))).collect::<HashMap<_, _>>();
 
     let mut output = HashMap::<String, String>::new();
     output.extend(images);

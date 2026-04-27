@@ -215,6 +215,32 @@ impl SsMatrix4x4 {
         res
     }
 
+    #[inline]
+    #[must_use]
+    pub fn load_columns(&self) -> (f32x4, f32x4, f32x4, f32x4) {
+        (
+            f32x4::from([self.m[0], self.m[1], self.m[2], self.m[3]]),
+            f32x4::from([self.m[4], self.m[5], self.m[6], self.m[7]]),
+            f32x4::from([self.m[8], self.m[9], self.m[10], self.m[11]]),
+            f32x4::from([self.m[12], self.m[13], self.m[14], self.m[15]]),
+        )
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn from_columns(c0: f32x4, c1: f32x4, c2: f32x4, c3: f32x4) -> Self {
+        let mut res = [0.0f32; 16];
+        let a0: [f32; 4] = c0.into();
+        let a1: [f32; 4] = c1.into();
+        let a2: [f32; 4] = c2.into();
+        let a3: [f32; 4] = c3.into();
+        res[0..4].copy_from_slice(&a0);
+        res[4..8].copy_from_slice(&a1);
+        res[8..12].copy_from_slice(&a2);
+        res[12..16].copy_from_slice(&a3);
+        Self { m: res }
+    }
+
     /// Calculates the world matrix for inheritance and the local matrix for drawing.
     /// Returns `(inheritance_matrix, drawing_matrix)`.
     #[inline]
@@ -227,28 +253,67 @@ impl SsMatrix4x4 {
             pos_x += parent_size_x * state.anchor_x();
             pos_y += parent_size_y * state.anchor_y();
         }
+        let pos_z = state.position_z();
 
-        let mut m = parent_world_matrix.copied().unwrap_or(Self::IDENTITY);
-        m *= Self::create_translation(pos_x, pos_y, state.position_z());
+        let (mut col0, mut col1, mut col2, mut col3) = if let Some(p) = parent_world_matrix {
+            p.load_columns()
+        } else {
+            (
+                f32x4::from([1.0, 0.0, 0.0, 0.0]),
+                f32x4::from([0.0, 1.0, 0.0, 0.0]),
+                f32x4::from([0.0, 0.0, 1.0, 0.0]),
+                f32x4::from([0.0, 0.0, 0.0, 1.0]),
+            )
+        };
 
+        // Translation
+        if pos_x != 0.0 || pos_y != 0.0 || pos_z != 0.0 {
+            col3 = (col0 * f32x4::splat(pos_x)) + (col1 * f32x4::splat(pos_y)) + (col2 * f32x4::splat(pos_z)) + col3;
+        }
+
+        // Rotation X
         let rx = state.rotation_x() * core::f32::consts::PI / 180.0;
-        let ry = state.rotation_y() * core::f32::consts::PI / 180.0;
-        let rz = state.rotation_z() * core::f32::consts::PI / 180.0;
-
         if rx != 0.0 {
-            m *= Self::create_rotation_x(rx);
+            let s = f32x4::splat(sinf(rx));
+            let c = f32x4::splat(cosf(rx));
+            let new_col1 = (col1 * c) + (col2 * s);
+            let new_col2 = (col1 * -s) + (col2 * c);
+            col1 = new_col1;
+            col2 = new_col2;
         }
+
+        // Rotation Y
+        let ry = state.rotation_y() * core::f32::consts::PI / 180.0;
         if ry != 0.0 {
-            m *= Self::create_rotation_y(ry);
+            let s = f32x4::splat(sinf(ry));
+            let c = f32x4::splat(cosf(ry));
+            let new_col0 = (col0 * c) + (col2 * -s);
+            let new_col2 = (col0 * s) + (col2 * c);
+            col0 = new_col0;
+            col2 = new_col2;
         }
+
+        // Rotation Z
+        let rz = state.rotation_z() * core::f32::consts::PI / 180.0;
         if rz != 0.0 {
-            m *= Self::create_rotation_z(rz);
+            let s = f32x4::splat(sinf(rz));
+            let c = f32x4::splat(cosf(rz));
+            let new_col0 = (col0 * c) + (col1 * s);
+            let new_col1 = (col0 * -s) + (col1 * c);
+            col0 = new_col0;
+            col1 = new_col1;
         }
 
-        let inheritance_matrix = m * Self::create_scale(state.scale_x(), state.scale_y(), 1.0);
-        let drawing_matrix = m * Self::create_scale(state.scale_x() * state.local_scale_x(), state.scale_y() * state.local_scale_y(), 1.0);
+        let sx = state.scale_x();
+        let sy = state.scale_y();
 
-        (inheritance_matrix, drawing_matrix)
+        let inh_m = Self::from_columns(col0 * f32x4::splat(sx), col1 * f32x4::splat(sy), col2, col3);
+
+        let lsx = state.local_scale_x();
+        let lsy = state.local_scale_y();
+        let draw_m = Self::from_columns(col0 * f32x4::splat(sx * lsx), col1 * f32x4::splat(sy * lsy), col2, col3);
+
+        (inh_m, draw_m)
     }
 
     #[inline]
@@ -685,6 +750,36 @@ mod tests {
 
         assert_mat4_eq(&inh2, &expected_inh2);
         assert_mat4_eq(&draw2, &expected_draw2);
+    }
+
+    #[test]
+    fn test_compute_world_matrix_rotation() {
+        let mut state = crate::runtime::framedata::ss::runtime::PartState::default();
+        state.set_position_x(10.0);
+        state.set_position_y(20.0);
+        state.set_position_z(5.0);
+        state.set_rotation_x(30.0);
+        state.set_rotation_y(45.0);
+        state.set_rotation_z(60.0);
+        state.set_scale_x(2.0);
+        state.set_scale_y(3.0);
+        state.set_local_scale_x(1.5);
+        state.set_local_scale_y(0.5);
+
+        let (inh, draw) = SsMatrix4x4::compute_world_matrix(&state, None, None);
+
+        // Expected matrices using scalar math functions
+        let mut expected_m = SsMatrix4x4::identity();
+        expected_m *= SsMatrix4x4::create_translation(10.0, 20.0, 5.0);
+        expected_m *= SsMatrix4x4::create_rotation_x(30.0 * core::f32::consts::PI / 180.0);
+        expected_m *= SsMatrix4x4::create_rotation_y(45.0 * core::f32::consts::PI / 180.0);
+        expected_m *= SsMatrix4x4::create_rotation_z(60.0 * core::f32::consts::PI / 180.0);
+
+        let expected_inh = expected_m * SsMatrix4x4::create_scale(2.0, 3.0, 1.0);
+        let expected_draw = expected_m * SsMatrix4x4::create_scale(2.0 * 1.5, 3.0 * 0.5, 1.0);
+
+        assert_mat4_eq(&inh, &expected_inh);
+        assert_mat4_eq(&draw, &expected_draw);
     }
 
     #[test]

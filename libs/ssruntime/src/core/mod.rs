@@ -27,3 +27,5 @@ pub enum SsUnit {
 }
 
 pub use matrix::{SsMatrix4x4, SsVector3};
+pub mod geometry;
+pub use geometry::*;
