@@ -200,12 +200,7 @@ impl SsMatrix4x4 {
     #[inline]
     #[must_use]
     pub fn load_columns(&self) -> (f32x4, f32x4, f32x4, f32x4) {
-        (
-            f32x4::from([self.m[0], self.m[1], self.m[2], self.m[3]]),
-            f32x4::from([self.m[4], self.m[5], self.m[6], self.m[7]]),
-            f32x4::from([self.m[8], self.m[9], self.m[10], self.m[11]]),
-            f32x4::from([self.m[12], self.m[13], self.m[14], self.m[15]]),
-        )
+        (f32x4::from([self.m[0], self.m[1], self.m[2], self.m[3]]), f32x4::from([self.m[4], self.m[5], self.m[6], self.m[7]]), f32x4::from([self.m[8], self.m[9], self.m[10], self.m[11]]), f32x4::from([self.m[12], self.m[13], self.m[14], self.m[15]]))
     }
 
     #[inline]
@@ -237,16 +232,8 @@ impl SsMatrix4x4 {
         }
         let pos_z = state.position_z();
 
-        let (mut col0, mut col1, mut col2, mut col3) = if let Some(p) = parent_world_matrix {
-            p.load_columns()
-        } else {
-            (
-                f32x4::from([1.0, 0.0, 0.0, 0.0]),
-                f32x4::from([0.0, 1.0, 0.0, 0.0]),
-                f32x4::from([0.0, 0.0, 1.0, 0.0]),
-                f32x4::from([0.0, 0.0, 0.0, 1.0]),
-            )
-        };
+        let (mut col0, mut col1, mut col2, mut col3) =
+            if let Some(p) = parent_world_matrix { p.load_columns() } else { (f32x4::from([1.0, 0.0, 0.0, 0.0]), f32x4::from([0.0, 1.0, 0.0, 0.0]), f32x4::from([0.0, 0.0, 1.0, 0.0]), f32x4::from([0.0, 0.0, 0.0, 1.0])) };
 
         // Translation
         if pos_x != 0.0 || pos_y != 0.0 || pos_z != 0.0 {
