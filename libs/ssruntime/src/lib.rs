@@ -477,11 +477,7 @@ impl<'a> Context<'a> {
         self.buffers.z_indices.sort_by(|&a, &b| {
             let pa = &self.buffers.parts_vec[a];
             let pb = &self.buffers.parts_vec[b];
-            if pa.priority() == pb.priority() {
-                pa.part_index().cmp(&pb.part_index())
-            } else {
-                pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal)
-            }
+            if pa.priority() == pb.priority() { pa.part_index().cmp(&pb.part_index()) } else { pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal) }
         });
 
         for (order, &part_idx) in self.buffers.z_indices.iter().enumerate() {

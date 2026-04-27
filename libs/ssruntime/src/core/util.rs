@@ -115,7 +115,7 @@ mod tests {
         let matrix = SsMatrix4x4::create_translation(10.0, 20.0, 0.0);
         // Stride 28: x:0(4), y:4(4), rest: 20
         let mut particles = vec![0u8; 28 * 2];
-        
+
         // p0: (0, 0) -> (10, 20)
         let x0 = 0.0f32.to_le_bytes();
         let y0 = 0.0f32.to_le_bytes();

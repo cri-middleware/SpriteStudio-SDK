@@ -4,11 +4,8 @@ use wide::{CmpGt, CmpLt, f32x4};
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
 /// Utilizes SIMD via the `wide` crate for maximum performance.
-/// Returns a tuple containing the number of vertices (4 or 5) and the x and y coordinates.
-pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset: (f32, f32), flip: (bool, bool), deform: Option<(&[f32; 4], &[f32; 4])>, use_5_vertices: bool) -> (usize, [f32; 5], [f32; 5]) {
-    let mut out_x = [0.0; 5];
-    let mut out_y = [0.0; 5];
-
+/// Returns a tuple containing the x and y coordinates of the 5 vertices.
+pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset: (f32, f32), flip: (bool, bool), deform: Option<(&[f32; 4], &[f32; 4])>) -> ([f32; 5], [f32; 5]) {
     // 1. Pivot Calculation
     let cpx = if flip.0 { 1.0 - (pivot.0 + 0.5) } else { pivot.0 + 0.5 };
     let p_x = (cpx + pivot_offset.0) * size.0;
@@ -34,31 +31,22 @@ pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset:
     let vx_arr: [f32; 4] = vx.to_array();
     let vy_arr: [f32; 4] = vy.to_array();
 
-    out_x[0..4].copy_from_slice(&vx_arr);
-    out_y[0..4].copy_from_slice(&vy_arr);
+    // 4. Compute 5th center vertex (Mathematical Optimization: Varignon's theorem)
+    let cx = vx.reduce_add() * 0.25;
+    let cy = vy.reduce_add() * 0.25;
 
-    // 4. Compute 5th center vertex if requested (Mathematical Optimization: Varignon's theorem)
-    let vertex_count = if use_5_vertices {
-        out_x[4] = vx_arr.iter().sum::<f32>() * 0.25;
-        out_y[4] = vy_arr.iter().sum::<f32>() * 0.25;
-        5
-    } else {
-        4
-    };
-
-    (vertex_count, out_x, out_y)
+    ([vx_arr[0], vx_arr[1], vx_arr[2], vx_arr[3], cx], [vy_arr[0], vy_arr[1], vy_arr[2], vy_arr[3], cy])
 }
 
 /// Computes the local UV coordinates for a part, including UV animation (translate, rotate, scale) and flipping.
-/// Returns a tuple containing the number of UVs (4 or 5) and the u and v coordinates.
+/// Returns a tuple containing the u and v coordinates for the 5 vertices.
 pub fn compute_local_uvs(
     uv_rect: (f32, f32, f32, f32),      // (left, top, right, bottom)
     uv_anim: (f32, f32, f32, f32, f32), // (trans_u, trans_v, rot_deg, scale_u, scale_v)
     part_flip: (bool, bool),            // (h_flip, v_flip)
     image_flip: (bool, bool),           // (img_flip_h, img_flip_v)
     rotated: bool,                      // is the cell rotated?
-    use_5_vertices: bool,
-) -> (usize, [f32; 5], [f32; 5]) {
+) -> ([f32; 5], [f32; 5]) {
     let (left, top, right, bottom) = uv_rect;
     let (tu, tv, rot_deg, su, sv) = uv_anim;
 
@@ -101,21 +89,10 @@ pub fn compute_local_uvs(
 
     let (u_simd, v_simd) = mat.transform_v4_2d(x, y);
 
-    let mut out_u = [0.0; 5];
-    let mut out_v = [0.0; 5];
+    let u_arr: [f32; 4] = u_simd.to_array();
+    let v_arr: [f32; 4] = v_simd.to_array();
 
-    out_u[..4].copy_from_slice(&u_simd.to_array());
-    out_v[..4].copy_from_slice(&v_simd.to_array());
-
-    let count = if use_5_vertices {
-        out_u[4] = ou;
-        out_v[4] = ov;
-        5
-    } else {
-        4
-    };
-
-    (count, out_u, out_v)
+    ([u_arr[0], u_arr[1], u_arr[2], u_arr[3], ou], [v_arr[0], v_arr[1], v_arr[2], v_arr[3], ov])
 }
 
 /// Performs a hit test for a point against a rectangle in local space.
@@ -200,8 +177,7 @@ mod tests {
     fn test_compute_local_uvs_basic() {
         let rect = (0.0, 0.0, 1.0, 1.0);
         let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
-        let (count, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false, false);
-        assert_eq!(count, 4);
+        let (u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false);
         assert_arr_approx_eq(&u, &[0.0, 1.0, 0.0, 1.0], 4);
         assert_arr_approx_eq(&v, &[0.0, 0.0, 1.0, 1.0], 4);
     }
@@ -210,7 +186,7 @@ mod tests {
     fn test_compute_local_uvs_part_flip() {
         let rect = (0.0, 0.0, 1.0, 1.0);
         let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
-        let (_, u, v) = compute_local_uvs(rect, anim, (true, false), (false, false), false, false);
+        let (u, v) = compute_local_uvs(rect, anim, (true, false), (false, false), false);
         assert_arr_approx_eq(&u, &[1.0, 0.0, 1.0, 0.0], 4);
         assert_arr_approx_eq(&v, &[0.0, 0.0, 1.0, 1.0], 4);
     }
@@ -236,11 +212,8 @@ mod tests {
         let pivot_offset = (0.0, 0.0);
         let flip = (false, false);
         let deform = None;
-        let use_5_vertices = false;
 
-        let (count, x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, deform, use_5_vertices);
-
-        assert_eq!(count, 4);
+        let (x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, deform);
         // Expecting LU: (-50, 50), RU: (50, 50), LD: (-50, -50), RD: (50, -50)
         assert_arr_approx_eq(&x, &[-50.0, 50.0, -50.0, 50.0], 4);
         assert_arr_approx_eq(&y, &[50.0, 50.0, -50.0, -50.0], 4);
@@ -254,9 +227,7 @@ mod tests {
         let pivot_offset = (0.5, -0.5); // Move pivot right by 50, down by 50
         let flip = (false, false);
 
-        let (count, x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, None, false);
-
-        assert_eq!(count, 4);
+        let (x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, None);
         // Expecting LU: (-100, 100), RU: (0, 100), LD: (-100, 0), RD: (0, 0)
         assert_arr_approx_eq(&x, &[-100.0, 0.0, -100.0, 0.0], 4);
         assert_arr_approx_eq(&y, &[100.0, 100.0, 0.0, 0.0], 4);
@@ -270,17 +241,17 @@ mod tests {
         let pivot_offset = (0.0, 0.0);
 
         // No flip: LU should be (0, 0), RU: (100, 0), LD: (0, -100), RD: (100, -100)
-        let (_, x1, y1) = compute_local_vertices(size, pivot, pivot_offset, (false, false), None, false);
+        let (x1, y1) = compute_local_vertices(size, pivot, pivot_offset, (false, false), None);
         assert_arr_approx_eq(&x1, &[0.0, 100.0, 0.0, 100.0], 4);
         assert_arr_approx_eq(&y1, &[0.0, 0.0, -100.0, -100.0], 4);
 
         // Flip H: pivot effectively moves to top-right
-        let (_, x2, y2) = compute_local_vertices(size, pivot, pivot_offset, (true, false), None, false);
+        let (x2, y2) = compute_local_vertices(size, pivot, pivot_offset, (true, false), None);
         assert_arr_approx_eq(&x2, &[-100.0, 0.0, -100.0, 0.0], 4);
         assert_arr_approx_eq(&y2, &[0.0, 0.0, -100.0, -100.0], 4);
 
         // Flip V: pivot effectively moves to bottom-left
-        let (_, x3, y3) = compute_local_vertices(size, pivot, pivot_offset, (false, true), None, false);
+        let (x3, y3) = compute_local_vertices(size, pivot, pivot_offset, (false, true), None);
         assert_arr_approx_eq(&x3, &[0.0, 100.0, 0.0, 100.0], 4);
         assert_arr_approx_eq(&y3, &[100.0, 100.0, 0.0, 0.0], 4);
     }
@@ -292,9 +263,7 @@ mod tests {
         let deform_x = [10.0, 20.0, 30.0, 40.0];
         let deform_y = [1.0, 2.0, 3.0, 4.0];
 
-        let (count, x, y) = compute_local_vertices(size, pivot, (0.0, 0.0), (false, false), Some((&deform_x, &deform_y)), false);
-
-        assert_eq!(count, 4);
+        let (x, y) = compute_local_vertices(size, pivot, (0.0, 0.0), (false, false), Some((&deform_x, &deform_y)));
         // Original X: [-50, 50, -50, 50] -> [+10, +20, +30, +40]
         assert_arr_approx_eq(&x, &[-40.0, 70.0, -20.0, 90.0], 4);
         // Original Y: [50, 50, -50, -50] -> [+1, +2, +3, +4]
@@ -310,9 +279,7 @@ mod tests {
         let deform_x = [10.0, -10.0, 20.0, -20.0];
         let deform_y = [5.0, 15.0, -5.0, -15.0];
 
-        let (count, x, y) = compute_local_vertices(size, pivot, (0.0, 0.0), (false, false), Some((&deform_x, &deform_y)), true);
-
-        assert_eq!(count, 5);
+        let (x, y) = compute_local_vertices(size, pivot, (0.0, 0.0), (false, false), Some((&deform_x, &deform_y)));
 
         // Sum of X: (-50+10) + (50-10) + (-50+20) + (50-20) = -40 + 40 - 30 + 30 = 0
         // Average X = 0
@@ -326,7 +293,7 @@ mod tests {
         let deform_x2 = [100.0, 0.0, 0.0, 0.0];
         let deform_y2 = [0.0, 100.0, 0.0, 0.0];
 
-        let (_, x2, y2) = compute_local_vertices(size, pivot, (0.0, 0.0), (false, false), Some((&deform_x2, &deform_y2)), true);
+        let (x2, y2) = compute_local_vertices(size, pivot, (0.0, 0.0), (false, false), Some((&deform_x2, &deform_y2)));
 
         // Sum of X: (-50+100) + 50 - 50 + 50 = 50 + 50 - 50 + 50 = 100. Average = 25.0
         assert_approx_eq(x2[4], 25.0);
@@ -343,7 +310,7 @@ mod tests {
         let pivot_offset = (0.5, 0.5);
         let flip = (true, true); // Double flip
 
-        let (_, x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, None, false);
+        let (x, y) = compute_local_vertices(size, pivot, pivot_offset, flip, None);
 
         // With H-Flip: pivot_x becomes 1.0 - (0.5 + 0.5) = 0.0
         // With V-Flip: pivot_y becomes 1.0 - (0.5 + 0.5) = 0.0
@@ -359,7 +326,7 @@ mod tests {
         let rect = (0.0, 0.0, 1.0, 1.0);
         // Translate 0.1, Rotate 90deg, Scale 2.0
         let anim = (0.1, 0.1, 90.0, 2.0, 2.0);
-        let (_, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false, false);
+        let (u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), false);
 
         // Center is (0.5, 0.5)
         // LU (0, 0) relative to center is (-0.5, -0.5)
@@ -375,7 +342,7 @@ mod tests {
     fn test_uvs_rotated_cell() {
         let rect = (0.1, 0.1, 0.5, 0.4); // 0.4x0.3 rect
         let anim = (0.0, 0.0, 0.0, 1.0, 1.0);
-        let (_, u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), true, false);
+        let (u, v) = compute_local_uvs(rect, anim, (false, false), (false, false), true);
 
         // In rotated mode, LU corresponds to (left, bottom) of the rect
         assert_approx_eq(u[0], 0.1);

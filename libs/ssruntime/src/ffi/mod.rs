@@ -841,7 +841,7 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// - `input_data`: Must point to an array of at least 6 floats if `has_deform` (flag 4) is false,
 ///   or 14 floats if `has_deform` is true.
 ///   Layout: [size_x, size_y, pivot_x, pivot_y, pivot_offset_x, pivot_offset_y, (optional) dx0..3, dy0..3]
-/// - `out_x`, `out_y`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 8) is true.
+/// - `out_x`, `out_y`: Must point to buffers with at least 5 floats.
 #[unsafe(no_mangle)]
 /// Computes the local vertices for a part using primitive parameters.
 /// deform_x_ptr, deform_y_ptr: optional pointers to float arrays of size 4.
@@ -857,7 +857,6 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
     pivot_offset_y: f32,
     h_flip: bool,
     v_flip: bool,
-    use_5_vertices: bool,
     deform_x_ptr: *const f32,
     deform_y_ptr: *const f32,
     out_x: *mut f32,
@@ -875,13 +874,13 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
         None
     };
 
-    let (count, vx, vy) = crate::core::geometry::compute_local_vertices((size_w, size_h), (pivot_x, pivot_y), (pivot_offset_x, pivot_offset_y), (h_flip, v_flip), deform, use_5_vertices);
+    let (vx, vy) = crate::core::geometry::compute_local_vertices((size_w, size_h), (pivot_x, pivot_y), (pivot_offset_x, pivot_offset_y), (h_flip, v_flip), deform);
 
     unsafe {
-        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, count);
-        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, count);
+        core::ptr::copy_nonoverlapping(vx.as_ptr(), out_x, 5);
+        core::ptr::copy_nonoverlapping(vy.as_ptr(), out_y, 5);
     }
-    count as i32
+    5
 }
 
 /// Computes the local UV coordinates for a part.
@@ -889,7 +888,7 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
 /// # Safety
 /// - `input_data`: Must point to an array of at least 9 floats.
 ///   Layout: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
-/// - `out_u`, `out_v`: Must point to buffers with at least 4 floats, or 5 floats if `use_5_vertices` (flag 32) is true.
+/// - `out_u`, `out_v`: Must point to buffers with at least 5 floats.
 #[unsafe(no_mangle)]
 /// Computes the local UV coordinates for a part using primitive parameters.
 /// out_u, out_v: pointers to float arrays of size 5 to store results.
@@ -910,7 +909,6 @@ pub unsafe extern "C" fn ss_uv_compute_local(
     img_flip_h: bool,
     img_flip_v: bool,
     rotated: bool,
-    use_5_vertices: bool,
     out_u: *mut f32,
     out_v: *mut f32,
 ) -> i32 {
@@ -918,14 +916,14 @@ pub unsafe extern "C" fn ss_uv_compute_local(
         return 0;
     }
 
-    let (count, u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated, use_5_vertices);
+    let (u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated);
 
     unsafe {
-        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, count);
-        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, count);
+        core::ptr::copy_nonoverlapping(u.as_ptr(), out_u, 5);
+        core::ptr::copy_nonoverlapping(v.as_ptr(), out_v, 5);
     }
 
-    count as i32
+    5
 }
 
 #[unsafe(no_mangle)]
