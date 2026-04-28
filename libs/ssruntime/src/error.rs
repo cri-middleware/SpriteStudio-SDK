@@ -12,6 +12,8 @@ pub enum SSRuntimeError {
     InvalidParameter,
     /// メモリ確保に失敗
     MemoryError,
+    /// エフェクトデータが壊れている（必須フィールド欠落など）
+    MalformedEffect,
     /// その他のエラー（将来的な拡張用）
     Unknown,
 }
@@ -25,6 +27,7 @@ impl SSRuntimeError {
             SSRuntimeError::NotLoaded => 4,
             SSRuntimeError::InvalidParameter => 5,
             SSRuntimeError::MemoryError => 6,
+            SSRuntimeError::MalformedEffect => 7,
             SSRuntimeError::Unknown => 99,
         }
     }
@@ -41,6 +44,7 @@ impl core::fmt::Display for SSRuntimeError {
             SSRuntimeError::NotLoaded => write!(f, "SSAB data is not loaded"),
             SSRuntimeError::InvalidParameter => write!(f, "Invalid parameter"),
             SSRuntimeError::MemoryError => write!(f, "Memory allocation failed"),
+            SSRuntimeError::MalformedEffect => write!(f, "Effect data is malformed"),
             SSRuntimeError::Unknown => write!(f, "Unknown error occurred"),
         }
     }

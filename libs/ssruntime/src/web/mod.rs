@@ -140,7 +140,7 @@ impl SSRuntimeResource {
     pub fn new(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
         let ssab_data = SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let inner = SsabResource::new(ssab_data);
-        if inner.resource.is_none() {
+        if inner.resource().is_none() {
             return Err(JsValue::from_str("Failed to parse SSAB data"));
         }
         Ok(SSRuntimeResource { inner })
@@ -149,7 +149,7 @@ impl SSRuntimeResource {
     pub fn create_borrow(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
         let ssab_data = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) }.map_err(|e| JsValue::from_str(&e.to_string()))?;
         let inner = SsabResource::new(ssab_data);
-        if inner.resource.is_none() {
+        if inner.resource().is_none() {
             return Err(JsValue::from_str("Failed to parse SSAB data"));
         }
         Ok(SSRuntimeResource { inner })
@@ -181,18 +181,19 @@ impl SSRuntimeContext {
     }
 
     pub fn bind_resource(&mut self, resource: &SSRuntimeResource) {
-        if let Some(res) = &resource.inner.resource {
-            // Safety: We hold the Arc in bound_resource, so the reference stays valid.
-            let res_ptr = res as *const crate::AnimationResource<'static>;
-            self.inner.bind_resource(unsafe { &*res_ptr });
-            self.bound_resource = Some(resource.inner.clone());
+        let res_ptr = resource.inner.resource_static_ptr();
+        if res_ptr.is_null() {
+            return;
         }
+        // Safety: We clone the Arc into bound_resource, keeping the buffer alive.
+        self.bound_resource = Some(resource.inner.clone());
+        self.inner.bind_resource(unsafe { &*res_ptr });
     }
 
     pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
         if let Ok(ssab_data) = SsabData::load_copy(data) {
             let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
-            if res.inner.resource.is_some() {
+            if res.inner.resource().is_some() {
                 self.bind_resource(&res);
                 return true;
             }
@@ -203,7 +204,7 @@ impl SSRuntimeContext {
     pub fn load_ssab_borrow(&mut self, data: &[u8]) -> bool {
         if let Ok(ssab_data) = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) } {
             let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
-            if res.inner.resource.is_some() {
+            if res.inner.resource().is_some() {
                 self.bind_resource(&res);
                 return true;
             }
@@ -398,15 +399,15 @@ pub struct SSRuntimeEffectContext {
 #[wasm_bindgen]
 impl SSRuntimeEffectContext {
     pub fn create(resource: &SSRuntimeResource, effect_name_hash: u32, seed: u32) -> Result<SSRuntimeEffectContext, JsValue> {
-        if let Some(res) = &resource.inner.resource {
-            // Safety: We hold the Arc in resource_handle, so the reference stays valid.
-            let res_ptr = res as *const crate::AnimationResource<'static>;
-            match crate::EffectContext::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-                Ok(inner) => Ok(SSRuntimeEffectContext { inner, resource_handle: resource.inner.clone() }),
-                Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
-            }
-        } else {
-            Err(JsValue::from_str("Resource not initialized"))
+        let res_ptr = resource.inner.resource_static_ptr();
+        if res_ptr.is_null() {
+            return Err(JsValue::from_str("Resource not initialized"));
+        }
+        // Safety: resource_handle holds the Arc, keeping the buffer alive.
+        let resource_handle = resource.inner.clone();
+        match crate::EffectContext::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
+            Ok(inner) => Ok(SSRuntimeEffectContext { inner, resource_handle }),
+            Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
         }
     }
 

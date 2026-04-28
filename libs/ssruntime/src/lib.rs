@@ -100,15 +100,36 @@ pub mod ffi;
 #[cfg(feature = "web")]
 pub mod web;
 
-pub enum SsabStorage {
+/// A read-only borrow of an external SSAB byte buffer.
+///
+/// The pointer/length pair is never observed publicly; it is only constructed
+/// inside [`SsabData::load_borrow`] (whose `# Safety` clause owns the validity
+/// invariant) and read internally via [`SsabStorage::as_slice`].
+pub(crate) struct BorrowedBuffer {
+    ptr: ::core::ptr::NonNull<u8>,
+    len: usize,
+}
+
+// SAFETY: `BorrowedBuffer` represents a borrow of read-only memory whose
+// validity is upheld by the caller of `SsabData::load_borrow`. Nothing in this
+// crate mutates the pointed-to bytes, so transferring (`Send`) or sharing
+// (`Sync`) the handle does not introduce data races as long as the caller's
+// contract — that the memory remains valid and unmodified for the duration of
+// the borrow, including across threads — is honored.
+unsafe impl Send for BorrowedBuffer {}
+unsafe impl Sync for BorrowedBuffer {}
+
+pub(crate) enum SsabStorage {
     Owned(Vec<u8>),
-    Borrowed { ptr: *const u8, len: usize },
+    Borrowed(BorrowedBuffer),
 }
 impl SsabStorage {
     pub fn as_slice(&self) -> &[u8] {
         match self {
             SsabStorage::Owned(vec) => vec.as_slice(),
-            SsabStorage::Borrowed { ptr, len } => unsafe { ::core::slice::from_raw_parts(*ptr, *len) },
+            // SAFETY: see the safety contract on `BorrowedBuffer` and
+            // `SsabData::load_borrow`.
+            SsabStorage::Borrowed(b) => unsafe { ::core::slice::from_raw_parts(b.ptr.as_ptr(), b.len) },
         }
     }
 }
@@ -128,10 +149,9 @@ pub struct SsabData {
     storage: SsabStorage,
 }
 
-// Safety: SsabData only holds a read-only buffer. For Borrowed variant,
-// the caller is responsible for ensuring the memory remains valid and unmodified.
-unsafe impl Send for SsabData {}
-unsafe impl Sync for SsabData {}
+// `SsabData` derives `Send + Sync` automatically: `Vec<u8>` is `Send + Sync`
+// and `BorrowedBuffer` carries its own `unsafe impl` of those traits, scoped
+// to the smallest type that actually needs it.
 
 impl SsabData {
     pub fn load_copy(ssab_data: &[u8]) -> Result<Self, error::SSRuntimeError> {
@@ -142,11 +162,19 @@ impl SsabData {
     /// # Safety
     ///
     /// This function is unsafe because it creates a slice from a raw pointer and length.
-    /// The caller must ensure that `ptr` points to a valid memory block of at least `len` bytes
-    /// and that the memory remains valid for the lifetime of the returned `SsabData`.
+    /// The caller must ensure:
+    /// - `ptr` is non-null and points to a valid memory block of at least `len` bytes.
+    /// - The memory remains valid and unmodified for the lifetime of the returned
+    ///   `SsabData` (and any `SsabResource` derived from it).
+    /// - If the resulting `SsabData` is sent to or shared with another thread,
+    ///   no other party may mutate the memory for the duration of the borrow.
+    ///
+    /// Returns `SSRuntimeError::InvalidParameter` if `ptr` is null.
     pub unsafe fn load_borrow(ptr: *const u8, len: usize) -> Result<Self, error::SSRuntimeError> {
-        let storage = SsabStorage::Borrowed { ptr, len };
-        Ok(Self { storage })
+        let Some(ptr) = ::core::ptr::NonNull::new(ptr as *mut u8) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        Ok(Self { storage: SsabStorage::Borrowed(BorrowedBuffer { ptr, len }) })
     }
 
     pub fn as_slice(&self) -> &[u8] {
@@ -160,22 +188,78 @@ pub struct AnimationResource<'a> {
 }
 
 /// A thread-safe, shared resource containing SSAB data and its parsed metadata.
+///
+/// This is a self-referential structure: `resource` holds borrows into `data`'s
+/// buffer. The `'static` lifetime stored internally is fictitious — the actual
+/// lifetime is bound to `&self`. The `resource()` accessor restores the correct
+/// lifetime, so external code never observes the unsound `'static` form.
+///
+/// Invariants (must hold for soundness):
+/// - Fields are private so `data` cannot be mutated or replaced after construction.
+/// - Field declaration order ensures `resource` is dropped before `data`.
+/// - `SsabData::Owned` keeps its `Vec<u8>` buffer at a stable heap address;
+///   `SsabData::Borrowed` requires the caller to keep the memory valid (documented
+///   on `SsabData::load_borrow`).
 pub struct SsabResource {
-    pub data: SsabData,
-    pub resource: Option<AnimationResource<'static>>,
+    // NOTE: declaration order matters — `resource` borrows from `data`,
+    // so it must drop first.
+    resource: Option<AnimationResource<'static>>,
+    data: SsabData,
 }
 
 impl SsabResource {
     pub fn new(data: SsabData) -> alloc::sync::Arc<Self> {
-        let res = Self { data, resource: None };
+        let res = Self { resource: None, data };
         let mut arc = alloc::sync::Arc::new(res);
         if let Some(mut_res) = alloc::sync::Arc::get_mut(&mut arc) {
-            let data_ptr = mut_res.data.as_slice() as *const [u8];
-            if let Ok(resource) = AnimationResource::new(unsafe { &*data_ptr }) {
+            // SAFETY: `mut_res.data` lives as long as `mut_res` (i.e. as long as the
+            // Arc allocation). The `AnimationResource` we build holds borrows into
+            // that buffer, but we store it as `'static` because Rust cannot express
+            // a self-borrow directly. The `resource()` accessor downgrades the lie
+            // back to a self-bound lifetime before exposing it.
+            let data_slice: &'static [u8] = unsafe { &*(mut_res.data.as_slice() as *const [u8]) };
+            if let Ok(resource) = AnimationResource::new(data_slice) {
                 mut_res.resource = Some(resource);
             }
         }
         arc
+    }
+
+    /// Returns the parsed animation resource, with its lifetime tied to `&self`.
+    #[inline]
+    pub fn resource(&self) -> Option<&AnimationResource<'_>> {
+        self.resource.as_ref()
+    }
+
+    /// Returns the underlying SSAB data.
+    #[inline]
+    pub fn data(&self) -> &SsabData {
+        &self.data
+    }
+
+    /// Returns a raw pointer to the parsed resource (or null if parsing failed),
+    /// detached from `self`'s borrow scope.
+    ///
+    /// This is intended for FFI/WASM bindings that need to extend the resource
+    /// reference into a `'static` context while transferring ownership of the
+    /// surrounding `Arc<SsabResource>` to a long-lived holder. Using a raw
+    /// pointer breaks the borrow chain so the `Arc` can be moved into its
+    /// holder before the pointer is dereferenced.
+    ///
+    /// Obtaining the pointer is safe; dereferencing it is `unsafe` and the
+    /// caller must uphold the obligations below.
+    ///
+    /// # Caller obligations when dereferencing
+    /// - Keep some `Arc<SsabResource>` pointing at this allocation alive for the
+    ///   entire duration the pointer (or any borrow derived from it) is in use.
+    /// - Do not dereference after the last `Arc` referencing this allocation
+    ///   is dropped — doing so is undefined behaviour.
+    #[inline]
+    pub fn resource_static_ptr(&self) -> *const AnimationResource<'static> {
+        match &self.resource {
+            Some(r) => r as *const _,
+            None => ::core::ptr::null(),
+        }
     }
 }
 
@@ -709,13 +793,18 @@ pub struct EffectContext<'a> {
 impl<'a> EffectContext<'a> {
     pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-        if let Some(effects) = ssab.effects()
-            && let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash)
-            && let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed)
-        {
-            return Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new() });
-        }
-        Err(error::SSRuntimeError::AnimationNotFound)
+        let Some(effects) = ssab.effects() else {
+            return Err(error::SSRuntimeError::AnimationNotFound);
+        };
+        let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash) else {
+            return Err(error::SSRuntimeError::AnimationNotFound);
+        };
+        // The effect was located by name_hash, but its data is malformed
+        // (e.g. missing required `effect_node` table).
+        let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed) else {
+            return Err(error::SSRuntimeError::MalformedEffect);
+        };
+        Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new() })
     }
 
     pub fn reset(&mut self) {
@@ -1075,5 +1164,60 @@ mod tests {
         let events = ctx.get_passed_event_indices();
         assert!(!events.is_empty(), "Should have collected events");
         assert!(events.iter().any(|&e| e > 0), "Should have collected at least one event with index > 0");
+    }
+
+    #[test]
+    fn test_ssab_resource_accessors() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let res = SsabResource::new(ssab_data);
+
+        // resource() returns Some for a valid SSAB.
+        assert!(res.resource().is_some());
+
+        // data() returns the underlying SSAB bytes.
+        assert_eq!(res.data().as_slice().len(), input_buf.len());
+
+        // resource_static_ptr() is non-null and points at the same allocation as resource().
+        let ptr = res.resource_static_ptr();
+        assert!(!ptr.is_null());
+        let safe_ref_addr = res.resource().unwrap() as *const _ as usize;
+        assert_eq!(ptr as usize, safe_ref_addr);
+    }
+
+    #[test]
+    fn test_load_borrow_rejects_null_pointer() {
+        // `load_borrow` must not construct an SsabData wrapping a null pointer,
+        // because `as_slice` would then call `from_raw_parts(null, len)` (UB for len > 0).
+        let result = unsafe { SsabData::load_borrow(::core::ptr::null(), 16) };
+        match result {
+            Err(error::SSRuntimeError::InvalidParameter) => {}
+            _ => panic!("Expected InvalidParameter for null pointer"),
+        }
+    }
+
+    #[test]
+    fn test_ssab_resource_arc_sharing_keeps_buffer_alive() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let res = SsabResource::new(ssab_data);
+
+        // Take a raw pointer, then drop the original Arc handle while a clone keeps
+        // the allocation alive. The pointer must remain valid through the clone.
+        let ptr = res.resource_static_ptr();
+        assert!(!ptr.is_null());
+        let clone = res.clone();
+        drop(res);
+
+        // Safety: `clone` still owns the allocation.
+        let names = unsafe { (*ptr).get_animation_names() };
+        assert!(names.contains(&alloc::string::String::from("anime_1")));
+        drop(clone);
     }
 }
