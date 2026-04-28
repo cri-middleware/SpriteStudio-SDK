@@ -115,10 +115,11 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
         // 6. 描画情報の取得
         uint8_t* data;
         size_t len;
-        // 小数点以下を切り捨てて整数フレームのデータを取得
-        ss_runtime_get_frame_data(ctx, (int)frame, &data, &len);
+        // フレーム番号は浮動小数で管理・取得されます（サブフレーム対応）
+        ss_runtime_get_frame_data(ctx, frame, &data, &len);
         
-        // float decimal = ss_runtime_get_frame_no(ctx) - (int)ss_runtime_get_frame_no(ctx);
+        // オプション: 整数フレームとして扱いたい場合は Player 側で切り捨て（floor）を行ってください。
+        // float decimal = ss_runtime_get_frame_no(ctx) - floor(ss_runtime_get_frame_no(ctx));
         // render_parts(data, len, decimal);
     }
 
