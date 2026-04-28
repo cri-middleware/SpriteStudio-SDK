@@ -212,8 +212,8 @@ pub struct EffectInstance {
 }
 
 impl EffectInstance {
-    pub fn from_ssab(effect: &ssab_fbs::Effect, my_seed: u32) -> Self {
-        let nodes = effect.effect_node().unwrap();
+    pub fn from_ssab(effect: &ssab_fbs::Effect, my_seed: u32) -> Option<Self> {
+        let nodes = effect.effect_node()?;
         let mut emitters: Vec<EffectEmitterInstance> = Vec::with_capacity(nodes.len());
         let mut emitter_states: Vec<EmitterState> = Vec::with_capacity(nodes.len());
 
@@ -250,7 +250,7 @@ impl EffectInstance {
 
         let layout_scale = if let Some(ls) = effect.layout_scale() { Vector2::new(ls.v1() / 100.0, ls.v2() / 100.0) } else { Vector2::new(1.0, 1.0) };
 
-        Self {
+        Some(Self {
             emitters,
             state: RenderState { emitter_states, is_playing: true, ..Default::default() },
             is_infinite,
@@ -259,7 +259,7 @@ impl EffectInstance {
             fps: if effect.fps() == 0 { 30 } else { effect.fps() as i32 },
             draw_commands: Vec::new(),
             draw_particles: Vec::new(),
-        }
+        })
     }
 
     pub fn reset(&mut self) {

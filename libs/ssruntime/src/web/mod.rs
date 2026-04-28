@@ -383,10 +383,6 @@ impl SSRuntimeContext {
         self.inner.get_passed_event_indices().len() as i32
     }
 
-    pub fn get_passed_event_frame_no(&self, index: i32) -> i32 {
-        self.inner.get_passed_event_frames().get(index as usize).copied().unwrap_or(-1)
-    }
-
     pub fn get_passed_event_index(&self, index: i32) -> i32 {
         self.inner.get_passed_event_indices().get(index as usize).copied().unwrap_or(-1)
     }
