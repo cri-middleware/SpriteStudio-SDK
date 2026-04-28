@@ -68,7 +68,7 @@ fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
 
 fn create_ffi_resource(data: crate::SsabData) -> *mut c_void {
     let arc = SsabResource::new(data);
-    if arc.resource.is_none() {
+    if arc.resource().is_none() {
         return core::ptr::null_mut();
     }
     Arc::into_raw(arc) as *mut c_void
@@ -177,14 +177,16 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
     let arc_clone = arc.clone();
     let _ = Arc::into_raw(arc); // Keep original pointer valid
 
-    if let Some(res) = &arc_clone.resource {
-        // Safe because arc_clone will be owned by ffi_context.bound_resource
-        ffi_context.ctx.bind_resource(unsafe { &*(res as *const _) });
-        ffi_context.bound_resource = Some(arc_clone);
-        true
-    } else {
-        false
+    // Use a raw pointer to break the borrow on `arc_clone` so it can be moved
+    // into `bound_resource` before the pointer is dereferenced. The pointer
+    // stays valid because `bound_resource` owns the surrounding Arc.
+    let res_ptr = arc_clone.resource_static_ptr();
+    if res_ptr.is_null() {
+        return false;
     }
+    ffi_context.bound_resource = Some(arc_clone);
+    ffi_context.ctx.bind_resource(unsafe { &*res_ptr });
+    true
 }
 
 #[unsafe(no_mangle)]
@@ -604,7 +606,7 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
     let res = unsafe { &*(resource as *const crate::SsabResource) };
-    if let Some(r) = &res.resource
+    if let Some(r) = res.resource()
         && let Ok(effect_ctx) = crate::EffectContext::new(r, effect_name_hash, seed)
     {
         return Box::into_raw(Box::new(effect_ctx)) as *mut c_void;
