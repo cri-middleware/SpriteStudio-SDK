@@ -295,27 +295,37 @@ pub fn evaluate_partcolor(
             let n_lb = get_color(&next_val.lb());
             let n_rb = get_color(&next_val.rb());
 
-            let p_a = wide::f32x4::from([p_lt.0, p_rt.0, p_lb.0, p_rb.0]);
-            let p_r = wide::f32x4::from([p_lt.1, p_rt.1, p_lb.1, p_rb.1]);
-            let p_g = wide::f32x4::from([p_lt.2, p_rt.2, p_lb.2, p_rb.2]);
-            let p_b = wide::f32x4::from([p_lt.3, p_rt.3, p_lb.3, p_rb.3]);
-            let p_rate = wide::f32x4::from([p_lt.4, p_rt.4, p_lb.4, p_rb.4]);
+            let start_color = [
+                p_lt.0, p_lt.1, p_lt.2, p_lt.3,
+                p_rt.0, p_rt.1, p_rt.2, p_rt.3,
+                p_lb.0, p_lb.1, p_lb.2, p_lb.3,
+                p_rb.0, p_rb.1, p_rb.2, p_rb.3,
+            ];
+            let end_color = [
+                n_lt.0, n_lt.1, n_lt.2, n_lt.3,
+                n_rt.0, n_rt.1, n_rt.2, n_rt.3,
+                n_lb.0, n_lb.1, n_lb.2, n_lb.3,
+                n_rb.0, n_rb.1, n_rb.2, n_rb.3,
+            ];
+            let mut out_color = [0.0; 16];
+            interpolate_color_linear(&start_color, &end_color, rate, &mut out_color);
 
-            let n_a = wide::f32x4::from([n_lt.0, n_rt.0, n_lb.0, n_rb.0]);
-            let n_r = wide::f32x4::from([n_lt.1, n_rt.1, n_lb.1, n_rb.1]);
-            let n_g = wide::f32x4::from([n_lt.2, n_rt.2, n_lb.2, n_rb.2]);
-            let n_b = wide::f32x4::from([n_lt.3, n_rt.3, n_lb.3, n_rb.3]);
-            let n_rate = wide::f32x4::from([n_lt.4, n_rt.4, n_lb.4, n_rb.4]);
-
-            let rate_simd = wide::f32x4::splat(rate);
-            let res_a = (p_a + (n_a - p_a) * rate_simd).to_array();
-            let res_r = (p_r + (n_r - p_r) * rate_simd).to_array();
-            let res_g = (p_g + (n_g - p_g) * rate_simd).to_array();
-            let res_b = (p_b + (n_b - p_b) * rate_simd).to_array();
-            let res_rate = (p_rate + (n_rate - p_rate) * rate_simd).to_array();
+            let start_rate = [p_lt.4, p_rt.4, p_lb.4, p_rb.4];
+            let end_rate = [n_lt.4, n_rt.4, n_lb.4, n_rb.4];
+            let mut out_rate = [0.0; 4];
+            interpolate_array_linear(&start_rate, &end_rate, rate, &mut out_rate);
 
             let create_color = |idx: usize| -> runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
-                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&runtime::framedata::ss::runtime::U8Rect::new(res_a[idx] as u8, res_r[idx] as u8, res_g[idx] as u8, res_b[idx] as u8), res_rate[idx])
+                let base = idx * 4;
+                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(
+                    &runtime::framedata::ss::runtime::U8Rect::new(
+                        out_color[base] as u8,
+                        out_color[base + 1] as u8,
+                        out_color[base + 2] as u8,
+                        out_color[base + 3] as u8,
+                    ),
+                    out_rate[idx],
+                )
             };
 
             current.set_lt(&create_color(0));
@@ -482,18 +492,20 @@ pub fn evaluate_vertex(
             let n_lb = get_coords(&next_value.lb());
             let n_rb = get_coords(&next_value.rb());
 
-            let p_v1 = wide::f32x4::from([p_lt.0, p_rt.0, p_lb.0, p_rb.0]);
-            let p_v2 = wide::f32x4::from([p_lt.1, p_rt.1, p_lb.1, p_rb.1]);
+            let start_arr = [
+                p_lt.0, p_lt.1, p_rt.0, p_rt.1,
+                p_lb.0, p_lb.1, p_rb.0, p_rb.1,
+            ];
+            let end_arr = [
+                n_lt.0, n_lt.1, n_rt.0, n_rt.1,
+                n_lb.0, n_lb.1, n_rb.0, n_rb.1,
+            ];
+            let mut out_arr = [0.0; 8];
+            interpolate_vertex_linear(&start_arr, &end_arr, rate, &mut out_arr);
 
-            let n_v1 = wide::f32x4::from([n_lt.0, n_rt.0, n_lb.0, n_rb.0]);
-            let n_v2 = wide::f32x4::from([n_lt.1, n_rt.1, n_lb.1, n_rb.1]);
+            let r_v1 = [out_arr[0], out_arr[2], out_arr[4], out_arr[6]];
+            let r_v2 = [out_arr[1], out_arr[3], out_arr[5], out_arr[7]];
 
-            let rate_simd = wide::f32x4::splat(rate);
-            let res_v1 = p_v1 + (n_v1 - p_v1) * rate_simd;
-            let res_v2 = p_v2 + (n_v2 - p_v2) * rate_simd;
-
-            let r_v1 = res_v1.to_array();
-            let r_v2 = res_v2.to_array();
 
             (
                 runtime::framedata::ss::runtime::PartAttributeVertex::new(
@@ -595,35 +607,22 @@ pub fn evaluate_deform(
                 current.coordinate.reserve(length_full);
                 let length = core::cmp::min(length_full, next_coodinate.len());
 
-                // SIMD lerp 4 vertices at a time on the overlap.
-                let rate_simd = wide::f32x4::splat(rate);
-                let chunks = length / 4;
-                for c in 0..chunks {
-                    let i = c * 4;
-                    let p0 = prev_coodinate.get(i);
-                    let p1 = prev_coodinate.get(i + 1);
-                    let p2 = prev_coodinate.get(i + 2);
-                    let p3 = prev_coodinate.get(i + 3);
-                    let n0 = next_coodinate.get(i);
-                    let n1 = next_coodinate.get(i + 1);
-                    let n2 = next_coodinate.get(i + 2);
-                    let n3 = next_coodinate.get(i + 3);
-
-                    let p_v1 = wide::f32x4::from([p0.v1(), p1.v1(), p2.v1(), p3.v1()]);
-                    let p_v2 = wide::f32x4::from([p0.v2(), p1.v2(), p2.v2(), p3.v2()]);
-                    let n_v1 = wide::f32x4::from([n0.v1(), n1.v1(), n2.v1(), n3.v1()]);
-                    let n_v2 = wide::f32x4::from([n0.v2(), n1.v2(), n2.v2(), n3.v2()]);
-
-                    let r_v1 = (p_v1 + (n_v1 - p_v1) * rate_simd).to_array();
-                    let r_v2 = (p_v2 + (n_v2 - p_v2) * rate_simd).to_array();
-
-                    for k in 0..4 {
-                        current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(r_v1[k], r_v2[k]));
-                    }
+                let mut start_vec = alloc::vec::Vec::with_capacity(length * 2);
+                let mut end_vec = alloc::vec::Vec::with_capacity(length * 2);
+                for i in 0..length {
+                    let p = prev_coodinate.get(i);
+                    let n = next_coodinate.get(i);
+                    start_vec.push(p.v1());
+                    start_vec.push(p.v2());
+                    end_vec.push(n.v1());
+                    end_vec.push(n.v2());
                 }
-                // Tail (length - chunks*4 elements remaining on the overlap).
-                for i in (chunks * 4)..length {
-                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(linear(prev_coodinate.get(i).v1(), next_coodinate.get(i).v1(), rate), linear(prev_coodinate.get(i).v2(), next_coodinate.get(i).v2(), rate)));
+
+                let mut out_vec = alloc::vec![0.0; length * 2];
+                interpolate_array_linear(&start_vec, &end_vec, rate, &mut out_vec);
+
+                for i in 0..length {
+                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(out_vec[i * 2], out_vec[i * 2 + 1]));
                 }
                 // Overrun use the value of `prev` as is.
                 for i in length..length_full {
