@@ -485,6 +485,7 @@ impl<'a> Context<'a> {
         }
     }
 
+    #[allow(clippy::needless_range_loop)]
     fn compute_matrices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
         for i in 0..self.buffers.parts_vec.len() {
             let parent_idx = cached_parts[i].parent_index;
@@ -671,23 +672,6 @@ impl<'a> Context<'a> {
         &self.buffers.collected_event_indices
     }
 
-    /// (Deprecated) Use get_passed_event_indices instead.
-    /// This method is maintained for backward compatibility and may perform lookups.
-    pub fn get_passed_event_frames(&self) -> Vec<i32> {
-        let Some(resource) = self.resource else {
-            return Vec::new();
-        };
-        if self.animation_idx < 0 {
-            return Vec::new();
-        }
-        let metadata = &resource.animations[self.animation_idx as usize];
-        let Some(events_vec) = metadata.events else {
-            return Vec::new();
-        };
-
-        self.buffers.collected_event_indices.iter().map(|&idx| events_vec.get(idx as usize).frame_index() as i32).collect()
-    }
-
     pub fn play(&mut self) {
         self.controller.play();
     }
@@ -717,8 +701,6 @@ impl<'a> Context<'a> {
     }
 }
 
-impl<'a> Context<'a> {}
-
 pub struct EffectContext<'a> {
     pub instance: crate::core::effect::instance::EffectInstance,
     fb: flatbuffers::FlatBufferBuilder<'a>,
@@ -729,8 +711,8 @@ impl<'a> EffectContext<'a> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         if let Some(effects) = ssab.effects()
             && let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash)
+            && let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed)
         {
-            let instance = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed);
             return Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new() });
         }
         Err(error::SSRuntimeError::AnimationNotFound)
@@ -1085,16 +1067,13 @@ mod tests {
         let interval = 1000.0 / 30.0;
         ctx.update(interval * 15.0);
 
-        let events = ctx.get_passed_event_frames();
-        // println!("Collected events at frames: {:?}", events);
+        let events = ctx.get_passed_event_indices();
         assert!(!events.is_empty(), "Should have collected at least one event");
 
         // Advance further to cover the whole animation
         ctx.update(interval * 100.0);
-        let events = ctx.get_passed_event_frames();
-        // println!("All collected events at frames: {:?}", events);
-
-        // Let's check for any event that is not at frame 0 (setup)
-        assert!(events.iter().any(|&e| e > 0), "Should have collected at least one event at a frame > 0");
+        let events = ctx.get_passed_event_indices();
+        assert!(!events.is_empty(), "Should have collected events");
+        assert!(events.iter().any(|&e| e > 0), "Should have collected at least one event with index > 0");
     }
 }

@@ -195,7 +195,7 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cu
     }
 
     // Apply unit normalization
-    if unit == SsUnit::Normalized {
+    if unit == SsUnit::Normalized && canvas_width != 0.0 && canvas_height != 0.0 {
         pos_x /= canvas_width;
         pos_y /= canvas_height;
     }
