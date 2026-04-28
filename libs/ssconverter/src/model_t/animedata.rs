@@ -892,403 +892,33 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
 
     Some(events_t)
 }
-
-fn convert_part_animation_data_required_precalculation<T: PartialEq>(interpolation: &sspj::sstypes::SsInterpolationType, value_start: &T, value_end: &T) -> bool {
-    if value_start == value_end {
-        return false;
-    }
-    // Determines whether to calculate in runtime or pre-interpolation.
-    // Return also false when range is need not interpolate.
-    match interpolation {
-        sspj::sstypes::SsInterpolationType::None => false,
-        sspj::sstypes::SsInterpolationType::Linear => false,
-        sspj::sstypes::SsInterpolationType::Hermite => true,
-        sspj::sstypes::SsInterpolationType::Bezier => true,
-        sspj::sstypes::SsInterpolationType::Acceleration => false,
-        sspj::sstypes::SsInterpolationType::Deceleration => false,
-        sspj::sstypes::SsInterpolationType::EaseIn => true,
-        sspj::sstypes::SsInterpolationType::EaseOut => true,
-        sspj::sstypes::SsInterpolationType::EaseInOut => true,
-        sspj::sstypes::SsInterpolationType::EaseExponentialIn => false,
-        sspj::sstypes::SsInterpolationType::EaseExponentialOut => false,
-        sspj::sstypes::SsInterpolationType::EaseExponentialInOut => false,
-        sspj::sstypes::SsInterpolationType::EaseSineIn => false,
-        sspj::sstypes::SsInterpolationType::EaseSineOut => false,
-        sspj::sstypes::SsInterpolationType::EaseSineInOut => false,
-        sspj::sstypes::SsInterpolationType::EaseElasticIn => true,
-        sspj::sstypes::SsInterpolationType::EaseElasticOut => true,
-        sspj::sstypes::SsInterpolationType::EaseElasticInOut => true,
-        sspj::sstypes::SsInterpolationType::EaseBounceIn => false,
-        sspj::sstypes::SsInterpolationType::EaseBounceOut => false,
-        sspj::sstypes::SsInterpolationType::EaseBounceInOut => false,
-        sspj::sstypes::SsInterpolationType::EaseBackIn => false,
-        sspj::sstypes::SsInterpolationType::EaseBackOut => false,
-        sspj::sstypes::SsInterpolationType::EaseBackInOut => false,
-        _ => false,
-    }
-}
-fn convert_part_animation_data_expand_get_rate(interpolation: &sspj::sstypes::SsInterpolationType, frame_now: i32, frame_start: i32, frame_end: i32, curve: &sspj::sstypes::SsCurve, easing_rate: f32) -> f32 {
-    let rate = ssinterpolate::interpolate::rate_linear(frame_now as f32, frame_start as f32, frame_end as f32);
-    match interpolation {
-        sspj::sstypes::SsInterpolationType::None => 0.0_f32,
-        sspj::sstypes::SsInterpolationType::Linear => rate,
-        sspj::sstypes::SsInterpolationType::Hermite => ssinterpolate::interpolate::hermite(0.0_f32, 1.0_f32, rate, curve.start_value, curve.end_value),
-        sspj::sstypes::SsInterpolationType::Bezier => ssinterpolate::interpolate::bezier(frame_start as f32, 0.0_f32, frame_end as f32, 1.0_f32, rate, curve.start_time, curve.start_value, curve.end_time, curve.end_value),
-        sspj::sstypes::SsInterpolationType::Acceleration => ssinterpolate::interpolate::rate_accelerate(rate),
-        sspj::sstypes::SsInterpolationType::Deceleration => ssinterpolate::interpolate::rate_decelerate(rate),
-        sspj::sstypes::SsInterpolationType::EaseIn => ssinterpolate::interpolate::rate_ease_in(rate, easing_rate),
-        sspj::sstypes::SsInterpolationType::EaseOut => ssinterpolate::interpolate::rate_ease_out(rate, easing_rate),
-        sspj::sstypes::SsInterpolationType::EaseInOut => ssinterpolate::interpolate::rate_ease_inout(rate, easing_rate),
-        sspj::sstypes::SsInterpolationType::EaseExponentialIn => ssinterpolate::interpolate::rate_ease_exponential_in(rate),
-        sspj::sstypes::SsInterpolationType::EaseExponentialOut => ssinterpolate::interpolate::rate_ease_exponential_out(rate),
-        sspj::sstypes::SsInterpolationType::EaseExponentialInOut => ssinterpolate::interpolate::rate_ease_exponential_inout(rate),
-        sspj::sstypes::SsInterpolationType::EaseSineIn => ssinterpolate::interpolate::rate_ease_sine_in(rate),
-        sspj::sstypes::SsInterpolationType::EaseSineOut => ssinterpolate::interpolate::rate_ease_sine_out(rate),
-        sspj::sstypes::SsInterpolationType::EaseSineInOut => ssinterpolate::interpolate::rate_ease_sine_inout(rate),
-        sspj::sstypes::SsInterpolationType::EaseElasticIn => ssinterpolate::interpolate::rate_ease_elastic_in(rate, easing_rate),
-        sspj::sstypes::SsInterpolationType::EaseElasticOut => ssinterpolate::interpolate::rate_ease_elastic_out(rate, easing_rate),
-        sspj::sstypes::SsInterpolationType::EaseElasticInOut => ssinterpolate::interpolate::rate_ease_elastic_inout(rate, easing_rate),
-        sspj::sstypes::SsInterpolationType::EaseBounceIn => ssinterpolate::interpolate::rate_ease_bounce_in(rate),
-        sspj::sstypes::SsInterpolationType::EaseBounceOut => ssinterpolate::interpolate::rate_ease_bounce_out(rate),
-        sspj::sstypes::SsInterpolationType::EaseBounceInOut => ssinterpolate::interpolate::rate_ease_bounce_inout(rate),
-        sspj::sstypes::SsInterpolationType::EaseBackIn => ssinterpolate::interpolate::rate_ease_back_in(rate),
-        sspj::sstypes::SsInterpolationType::EaseBackOut => ssinterpolate::interpolate::rate_ease_back_out(rate),
-        sspj::sstypes::SsInterpolationType::EaseBackInOut => ssinterpolate::interpolate::rate_ease_back_inout(rate),
-        _ => 0.0_f32,
-    }
-}
-fn convert_part_animation_data_expand_key_float(value_start: &sspj::ssattribute::SsAttributeFloatKey, value_end: &sspj::ssattribute::SsAttributeFloatKey, time: i32) -> f32 {
-    let rate = ssinterpolate::interpolate::rate_linear(time as f32, value_start.time as f32, value_end.time as f32);
-    match value_start.ip_type {
-        sspj::sstypes::SsInterpolationType::None => value_start.value,
-        sspj::sstypes::SsInterpolationType::Linear => ssinterpolate::interpolate::linear(value_start.value, value_end.value, rate),
-        sspj::sstypes::SsInterpolationType::Hermite => {
-            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
-            ssinterpolate::interpolate::hermite(value_start.value as f64, value_end.value as f64, rate as f64, value_start.curve.start_value as f64, value_start.curve.end_value as f64) as f32
-        }
-        sspj::sstypes::SsInterpolationType::Bezier => {
-            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
-            ssinterpolate::interpolate::bezier(
-                value_start.time as f64,
-                value_start.value as f64,
-                value_end.time as f64,
-                value_end.value as f64,
-                rate as f64,
-                value_start.curve.start_time as f64,
-                value_start.curve.start_value as f64,
-                value_start.curve.end_time as f64,
-                value_start.curve.end_value as f64,
-            ) as f32
-        }
-        sspj::sstypes::SsInterpolationType::Acceleration => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_accelerate(rate)),
-        sspj::sstypes::SsInterpolationType::Deceleration => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_decelerate(rate)),
-        sspj::sstypes::SsInterpolationType::EaseIn => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_in(rate, value_start.easing_rate)),
-        sspj::sstypes::SsInterpolationType::EaseOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_out(rate, value_start.easing_rate)),
-        sspj::sstypes::SsInterpolationType::EaseInOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_inout(rate, value_start.easing_rate)),
-        sspj::sstypes::SsInterpolationType::EaseExponentialIn => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_exponential_in(rate)),
-        sspj::sstypes::SsInterpolationType::EaseExponentialOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_exponential_out(rate)),
-        sspj::sstypes::SsInterpolationType::EaseExponentialInOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_exponential_inout(rate)),
-        sspj::sstypes::SsInterpolationType::EaseSineIn => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_sine_in(rate)),
-        sspj::sstypes::SsInterpolationType::EaseSineOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_sine_out(rate)),
-        sspj::sstypes::SsInterpolationType::EaseSineInOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_sine_inout(rate)),
-        sspj::sstypes::SsInterpolationType::EaseElasticIn => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_elastic_in(rate, value_start.easing_rate)),
-        sspj::sstypes::SsInterpolationType::EaseElasticOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_elastic_out(rate, value_start.easing_rate)),
-        sspj::sstypes::SsInterpolationType::EaseElasticInOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_elastic_inout(rate, value_start.easing_rate)),
-        sspj::sstypes::SsInterpolationType::EaseBounceIn => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_bounce_in(rate)),
-        sspj::sstypes::SsInterpolationType::EaseBounceOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_bounce_out(rate)),
-        sspj::sstypes::SsInterpolationType::EaseBounceInOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_bounce_inout(rate)),
-        sspj::sstypes::SsInterpolationType::EaseBackIn => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_back_in(rate)),
-        sspj::sstypes::SsInterpolationType::EaseBackOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_back_out(rate)),
-        sspj::sstypes::SsInterpolationType::EaseBackInOut => ssinterpolate::interpolate::linear(value_start.value, value_end.value, ssinterpolate::interpolate::rate_ease_back_inout(rate)),
-        _ => value_start.value,
-    }
-}
-fn convert_part_animation_data_expand_key_int(value_start: &sspj::ssattribute::SsAttributeIntKey, value_end: &sspj::ssattribute::SsAttributeIntKey, time: i32) -> i32 {
-    let rate = ssinterpolate::interpolate::rate_linear(time as f32, value_start.time as f32, value_end.time as f32);
-    match value_start.ip_type {
-        sspj::sstypes::SsInterpolationType::None => value_start.value,
-        sspj::sstypes::SsInterpolationType::Linear => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, rate) as i32,
-        sspj::sstypes::SsInterpolationType::Hermite => {
-            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
-            ssinterpolate::interpolate::hermite(value_start.value as f64, value_end.value as f64, rate as f64, value_start.curve.start_value as f64, value_start.curve.end_value as f64) as i32
-        }
-        sspj::sstypes::SsInterpolationType::Bezier => {
-            // MEMO: As use as possible  f64 instead of f32 for  Bezier/Hermite interpolation calculation because the results fluctuate  to rounding errors, which hinder data optimization.
-            ssinterpolate::interpolate::bezier(
-                value_start.time as f64,
-                value_start.value as f64,
-                value_end.time as f64,
-                value_end.value as f64,
-                rate as f64,
-                value_start.curve.start_time as f64,
-                value_start.curve.start_value as f64,
-                value_start.curve.end_time as f64,
-                value_start.curve.end_value as f64,
-            ) as i32
-        }
-        sspj::sstypes::SsInterpolationType::Acceleration => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_accelerate(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::Deceleration => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_decelerate(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseIn => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_in(rate, value_start.easing_rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_out(rate, value_start.easing_rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseInOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_inout(rate, value_start.easing_rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseExponentialIn => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_exponential_in(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseExponentialOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_exponential_out(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseExponentialInOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_exponential_inout(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseSineIn => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_sine_in(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseSineOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_sine_out(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseSineInOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_sine_inout(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseElasticIn => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_elastic_in(rate, value_start.easing_rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseElasticOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_elastic_out(rate, value_start.easing_rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseElasticInOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_elastic_inout(rate, value_start.easing_rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseBounceIn => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_bounce_in(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseBounceOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_bounce_out(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseBounceInOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_bounce_inout(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseBackIn => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_back_in(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseBackOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_back_out(rate)) as i32,
-        sspj::sstypes::SsInterpolationType::EaseBackInOut => ssinterpolate::interpolate::linear(value_start.value as f32, value_end.value as f32, ssinterpolate::interpolate::rate_ease_back_inout(rate)) as i32,
-        _ => value_start.value,
-    }
-}
-fn convert_part_animation_data_expand_key_partcolor(value_start: &sspj::ssattribute::SsAttributePartsColorKey, value_end: &sspj::ssattribute::SsAttributePartsColorKey, time: i32) -> Option<Box<ssab::ssab::ss::format::PartAttributePartColorT>> {
-    let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
-
-    let lt_start: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    let rt_start: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    let lb_start: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    let rb_start: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    match value_start.value.target {
-        sspj::sstypes::SsColorBlendTarget::Whole => {
-            lt_start = &value_start.value.color;
-            rt_start = &value_start.value.color;
-            lb_start = &value_start.value.color;
-            rb_start = &value_start.value.color;
-        }
-        sspj::sstypes::SsColorBlendTarget::Vertex => {
-            lt_start = &value_start.value.lt;
-            rt_start = &value_start.value.rt;
-            lb_start = &value_start.value.lb;
-            rb_start = &value_start.value.rb;
-        } //        _ => {
-          //            lt_start = &value_start.value.color;
-          //            rt_start = &value_start.value.color;
-          //            lb_start = &value_start.value.color;
-          //            rb_start = &value_start.value.color;
-          //        }
-    }
-
-    let lt_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    let rt_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    let rb_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    let lb_end: &sspj::ssattribute::SsAttributePartsColorKeyValueColor;
-    match value_end.value.target {
-        sspj::sstypes::SsColorBlendTarget::Whole => {
-            lt_end = &value_end.value.color;
-            rt_end = &value_end.value.color;
-            lb_end = &value_end.value.color;
-            rb_end = &value_end.value.color;
-        }
-        sspj::sstypes::SsColorBlendTarget::Vertex => {
-            lt_end = &value_end.value.lt;
-            rt_end = &value_end.value.rt;
-            lb_end = &value_end.value.lb;
-            rb_end = &value_end.value.rb;
-        } //        _ => {
-          //            lt_end = &value_end.value.color;
-          //            rt_end = &value_end.value.color;
-          //            lb_end = &value_end.value.color;
-          //            rb_end = &value_end.value.color;
-          //        }
-    }
-
-    let mut result = ssab::ssab::ss::format::PartAttributePartColorT::default();
-    result.blend_type = convert_alpha_blend_type(&value_start.value.blend_type);
-
-    let mut result_color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-    let mut color = ssab::ssab::ss::format::U8RectT::default();
-    color.a = ssinterpolate::interpolate::linear(lt_start.rgba.a as f32, lt_end.rgba.a as f32, rate_linear) as u8;
-    color.r = ssinterpolate::interpolate::linear(lt_start.rgba.r as f32, lt_end.rgba.r as f32, rate_linear) as u8;
-    color.g = ssinterpolate::interpolate::linear(lt_start.rgba.g as f32, lt_end.rgba.g as f32, rate_linear) as u8;
-    color.b = ssinterpolate::interpolate::linear(lt_start.rgba.b as f32, lt_end.rgba.b as f32, rate_linear) as u8;
-    result_color.rgba = Some(Box::new(color));
-    result_color.rate = ssinterpolate::interpolate::linear(lt_start.rate, lt_end.rate, rate_linear);
-    result.lt = Some(Box::new(result_color));
-
-    result_color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-    color = ssab::ssab::ss::format::U8RectT::default();
-    color.a = ssinterpolate::interpolate::linear(rt_start.rgba.a as f32, rt_end.rgba.a as f32, rate_linear) as u8;
-    color.r = ssinterpolate::interpolate::linear(rt_start.rgba.r as f32, rt_end.rgba.r as f32, rate_linear) as u8;
-    color.g = ssinterpolate::interpolate::linear(rt_start.rgba.g as f32, rt_end.rgba.g as f32, rate_linear) as u8;
-    color.b = ssinterpolate::interpolate::linear(rt_start.rgba.b as f32, rt_end.rgba.b as f32, rate_linear) as u8;
-    result_color.rgba = Some(Box::new(color));
-    result_color.rate = ssinterpolate::interpolate::linear(rt_start.rate, rt_end.rate, rate_linear);
-    result.rt = Some(Box::new(result_color));
-
-    result_color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-    color = ssab::ssab::ss::format::U8RectT::default();
-    color.a = ssinterpolate::interpolate::linear(lb_start.rgba.a as f32, lb_end.rgba.a as f32, rate_linear) as u8;
-    color.r = ssinterpolate::interpolate::linear(lb_start.rgba.r as f32, lb_end.rgba.r as f32, rate_linear) as u8;
-    color.g = ssinterpolate::interpolate::linear(lb_start.rgba.g as f32, lb_end.rgba.g as f32, rate_linear) as u8;
-    color.b = ssinterpolate::interpolate::linear(lb_start.rgba.b as f32, lb_end.rgba.b as f32, rate_linear) as u8;
-    result_color.rgba = Some(Box::new(color));
-    result_color.rate = ssinterpolate::interpolate::linear(lb_start.rate, lb_end.rate, rate_linear);
-    result.lb = Some(Box::new(result_color));
-
-    result_color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-    color = ssab::ssab::ss::format::U8RectT::default();
-    color.a = ssinterpolate::interpolate::linear(rb_start.rgba.a as f32, rb_end.rgba.a as f32, rate_linear) as u8;
-    color.r = ssinterpolate::interpolate::linear(rb_start.rgba.r as f32, rb_end.rgba.r as f32, rate_linear) as u8;
-    color.g = ssinterpolate::interpolate::linear(rb_start.rgba.g as f32, rb_end.rgba.g as f32, rate_linear) as u8;
-    color.b = ssinterpolate::interpolate::linear(rb_start.rgba.b as f32, rb_end.rgba.b as f32, rate_linear) as u8;
-    result_color.rgba = Some(Box::new(color));
-    result_color.rate = ssinterpolate::interpolate::linear(rb_start.rate, rb_end.rate, rate_linear);
-    result.rb = Some(Box::new(result_color));
-
-    Some(Box::new(result))
-}
-fn convert_part_animation_data_expand_key_shader(value_start: &sspj::ssattribute::SsAttributeShaderKey, value_end: &sspj::ssattribute::SsAttributeShaderKey, time: i32) -> Option<Box<ssab::ssab::ss::format::PartAttributeShaderT>> {
-    let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
-
-    let mut result = ssab::ssab::ss::format::PartAttributeShaderT::default();
-    result.id = Some(value_start.value.id.clone());
-    result.id_hash = crate::utils::fnv1a_hash_str(&value_start.value.id);
-
-    result.param0 = ssinterpolate::interpolate::linear(value_start.value.param0, value_end.value.param0, rate_linear);
-    result.param1 = ssinterpolate::interpolate::linear(value_start.value.param1, value_end.value.param1, rate_linear);
-    result.param2 = ssinterpolate::interpolate::linear(value_start.value.param2, value_end.value.param2, rate_linear);
-    result.param3 = ssinterpolate::interpolate::linear(value_start.value.param3, value_end.value.param3, rate_linear);
-    result.param4 = ssinterpolate::interpolate::linear(value_start.value.param4, value_end.value.param4, rate_linear);
-    result.param5 = ssinterpolate::interpolate::linear(value_start.value.param5, value_end.value.param5, rate_linear);
-    result.param6 = ssinterpolate::interpolate::linear(value_start.value.param6, value_end.value.param6, rate_linear);
-    result.param7 = ssinterpolate::interpolate::linear(value_start.value.param7, value_end.value.param7, rate_linear);
-
-    result.map0_id = value_start.value.map0.map_id;
-    result.map0_name_hash = crate::utils::fnv1a_hash_str(&value_start.value.map0.name);
-    result.map1_id = value_start.value.map1.map_id;
-    result.map1_name_hash = crate::utils::fnv1a_hash_str(&value_start.value.map1.name);
-
-    Some(Box::new(result))
-}
-fn convert_part_animation_data_expand_key_vertex(value_start: &sspj::ssattribute::SsAttributeVertexKey, value_end: &sspj::ssattribute::SsAttributeVertexKey, time: i32) -> Option<Box<ssab::ssab::ss::format::PartAttributeVertexT>> {
-    let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
-
-    let mut result = ssab::ssab::ss::format::PartAttributeVertexT::default();
-    let mut coordinate: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_start: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_end: ssab::ssab::ss::format::Vec2T;
-
-    coordinate = ssab::ssab::ss::format::Vec2T::default();
-    coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_start.value.lt.as_ref() {
-        coordinate_start.v1 = c.x;
-        coordinate_start.v2 = c.y;
-    }
-    coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_end.value.lt.as_ref() {
-        coordinate_end.v1 = c.x;
-        coordinate_end.v2 = c.y;
-    }
-    coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-    result.lt = Some(Box::new(coordinate));
-
-    coordinate = ssab::ssab::ss::format::Vec2T::default();
-    coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_start.value.rt.as_ref() {
-        coordinate_start.v1 = c.x;
-        coordinate_start.v2 = c.y;
-    }
-    coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_end.value.rt.as_ref() {
-        coordinate_end.v1 = c.x;
-        coordinate_end.v2 = c.y;
-    }
-    coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-    result.rt = Some(Box::new(coordinate));
-
-    coordinate = ssab::ssab::ss::format::Vec2T::default();
-    coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_start.value.lb.as_ref() {
-        coordinate_start.v1 = c.x;
-        coordinate_start.v2 = c.y;
-    }
-    coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_end.value.lb.as_ref() {
-        coordinate_end.v1 = c.x;
-        coordinate_end.v2 = c.y;
-    }
-    coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-    result.lb = Some(Box::new(coordinate));
-
-    coordinate = ssab::ssab::ss::format::Vec2T::default();
-    coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_start.value.rb.as_ref() {
-        coordinate_start.v1 = c.x;
-        coordinate_start.v2 = c.y;
-    }
-    coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_end.value.rb.as_ref() {
-        coordinate_end.v1 = c.x;
-        coordinate_end.v2 = c.y;
-    }
-    coordinate.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    coordinate.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-    result.rb = Some(Box::new(coordinate));
-
-    Some(Box::new(result))
-}
-fn convert_part_animation_data_expand_key_skew(value_start: &sspj::ssattribute::SsAttributeVertexKey, value_end: &sspj::ssattribute::SsAttributeVertexKey, time: i32) -> Option<Box<ssab::ssab::ss::format::Vec2T>> {
-    let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
-
-    let mut result: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_start: ssab::ssab::ss::format::Vec2T;
-    let mut coordinate_end: ssab::ssab::ss::format::Vec2T;
-
-    result = ssab::ssab::ss::format::Vec2T::default();
-    coordinate_start = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_start.value.skew.as_ref() {
-        coordinate_start.v1 = c.x;
-        coordinate_start.v2 = c.y;
-    }
-    coordinate_end = ssab::ssab::ss::format::Vec2T::default();
-    if let Some(c) = value_end.value.skew.as_ref() {
-        coordinate_end.v1 = c.x;
-        coordinate_end.v2 = c.y;
-    }
-    result.v1 = ssinterpolate::interpolate::linear(coordinate_start.v1, coordinate_end.v1, rate_linear);
-    result.v2 = ssinterpolate::interpolate::linear(coordinate_start.v2, coordinate_end.v2, rate_linear);
-
-    Some(Box::new(result))
-}
-fn convert_part_animation_data_expand_key_deform(value_start: &sspj::ssattribute::SsAttributeDeformKey, value_end: &sspj::ssattribute::SsAttributeDeformKey, time: i32) -> Option<Vec<ssab::ssab::ss::format::Vec2T>> {
-    let rate_linear = convert_part_animation_data_expand_get_rate(&value_start.ip_type, time, value_start.time, value_end.time, &value_start.curve, value_start.easing_rate);
-
-    let result = value_start
-        .value
-        .vchg
-        .iter()
-        .map(|s| {
-            let e = value_end.value.vchg.iter().find(|p| p.x_index == s.x_index);
-            let (ex, ey) = e.map_or((s.x, s.y), |p| (p.x, p.y));
-            let mut coord = ssab::ssab::ss::format::Vec2T::default();
-            coord.v1 = ssinterpolate::interpolate::linear(s.x, ex, rate_linear);
-            coord.v2 = ssinterpolate::interpolate::linear(s.y, ey, rate_linear);
-            coord
-        })
-        .collect();
-
-    Some(result)
-}
 macro_rules! process_interpolatable_attribute {
-    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr, $expand_func:expr) => {{
-        let count_keys = $keys.len();
-        for i in 0..count_keys {
-            let key = &$keys[i];
+    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr) => {{
+        for key in $keys {
             let mut args = <$arg_type>::default();
             args.index = key.time as u16;
             args.interpolation = convert_interpolation_type(&key.ip_type);
             args.value = $extract_value(key);
+
+            match &key.ip_type {
+                sspj::sstypes::SsInterpolationType::Hermite | sspj::sstypes::SsInterpolationType::Bezier => {
+                    let mut curve_t = ssab::ssab::ss::format::SsCurveT::default();
+                    curve_t.start_time = key.curve.start_time;
+                    curve_t.start_value = key.curve.start_value;
+                    curve_t.end_time = key.curve.end_time;
+                    curve_t.end_value = key.curve.end_value;
+                    args.curve = Some(Box::new(curve_t));
+                }
+                sspj::sstypes::SsInterpolationType::EaseIn
+                | sspj::sstypes::SsInterpolationType::EaseOut
+                | sspj::sstypes::SsInterpolationType::EaseInOut
+                | sspj::sstypes::SsInterpolationType::EaseElasticIn
+                | sspj::sstypes::SsInterpolationType::EaseElasticOut
+                | sspj::sstypes::SsInterpolationType::EaseElasticInOut => {
+                    args.easing_rate = key.easing_rate;
+                }
+                _ => {}
+            }
 
             let array = $target_array.get_or_insert_with(|| {
                 let mut array_new = Vec::new();
@@ -1296,30 +926,18 @@ macro_rules! process_interpolatable_attribute {
                     let mut args_frame_0 = args.clone();
                     args_frame_0.index = 0;
                     args_frame_0.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+                    args_frame_0.curve = None;
+                    args_frame_0.easing_rate = 0.0;
                     array_new.push(args_frame_0);
                 }
                 array_new
             });
 
-            let index_key_start = if let Some(pos) = array.iter().position(|item| item.index == args.index) {
+            if let Some(pos) = array.iter().position(|item| item.index == args.index) {
                 array.remove(pos);
                 array.insert(pos, args);
-                pos
             } else {
                 array.push(args);
-                array.len() - 1
-            };
-
-            if i < (count_keys - 1) && convert_part_animation_data_required_precalculation(&key.ip_type, &key.value, &($keys[i + 1].value)) {
-                let key_next = &$keys[i + 1];
-                array[index_key_start].interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                for time_now in (key.time + 1)..key_next.time {
-                    let mut args_now = <$arg_type>::default();
-                    args_now.index = time_now as u16;
-                    args_now.interpolation = ssab::ssab::ss::format::InterpolationType::None;
-                    args_now.value = $expand_func(key, key_next, time_now);
-                    array.push(args_now);
-                }
             }
         }
     }};
@@ -1364,43 +982,43 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 });
             }
             sspj::ssattribute::SsAttributeKind::PosX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::PosY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::PosZ(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::RotX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::RotY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::RotZ(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::SclX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::SclY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::LosclX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::LosclY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::Alpha(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.priority_array, ssab::ssab::ss::format::PartAnimationDataIntValueT, |k: &sspj::ssattribute::SsAttributeIntKey| k.value, convert_part_animation_data_expand_key_int);
+                process_interpolatable_attribute!(&v.keys, p_arg.priority_array, ssab::ssab::ss::format::PartAnimationDataIntValueT, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::FlipH(v) => {
                 process_simple_attribute!(&v.keys, p_arg.flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
@@ -1412,22 +1030,22 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 process_simple_attribute!(&v.keys, p_arg.hide_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::PivotX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::PivotY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::SizeX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::SizeY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
                 process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
@@ -1436,25 +1054,25 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::UvtX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::UvtY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::UvsX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::UvsY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::Boundr(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::Mask(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value, convert_part_animation_data_expand_key_float);
+                process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
             }
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
                 process_interpolatable_attribute!(
@@ -1501,8 +1119,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         key_value.rate = k.value.rb.rate;
                         value.rb = Some(Box::new(key_value));
                         Some(Box::new(value))
-                    },
-                    convert_part_animation_data_expand_key_partcolor
+                    }
                 );
             }
             sspj::ssattribute::SsAttributeKind::Shader(v) => {
@@ -1527,8 +1144,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                         value.map1_id = k.value.map1.map_id;
                         value.map1_name_hash = crate::utils::fnv1a_hash_str(&k.value.map1.name);
                         Some(Box::new(value))
-                    },
-                    convert_part_animation_data_expand_key_shader
+                    }
                 );
             }
             sspj::ssattribute::SsAttributeKind::Vertex(v) => {
@@ -1553,8 +1169,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                                 val.v2 = v.y;
                                 Box::new(val)
                             })
-                        },
-                        convert_part_animation_data_expand_key_skew
+                        }
                     );
                 }
                 if !vertex_keys.is_empty() {
@@ -1589,8 +1204,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                             }
                             value.rb = Some(Box::new(c));
                             Some(Box::new(value))
-                        },
-                        convert_part_animation_data_expand_key_vertex
+                        }
                     );
                 }
             }
@@ -1614,13 +1228,6 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                                 .collect(),
                         );
                         value.index = Some(k.value.vchg.iter().map(|p| p.x_index as i16).collect());
-                        Some(Box::new(value))
-                    },
-                    |k1, k2, t| {
-                        let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-                        value.coordinate = convert_part_animation_data_expand_key_deform(k1, k2, t);
-                        // Use index from first key
-                        value.index = Some(k1.value.vchg.iter().map(|p| p.x_index as i16).collect());
                         Some(Box::new(value))
                     }
                 );
@@ -2032,23 +1639,6 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_part_animation_data_expand_key_float_interpolation() {
-        use sspj::ssattribute::SsAttributeFloatKey;
-        use sspj::sstypes::{SsCurve, SsInterpolationType};
-
-        let start_key = SsAttributeFloatKey { time: 0, value: 0.0, ip_type: SsInterpolationType::Linear, easing_rate: 0.0, curve: SsCurve::default() };
-        let end_key = SsAttributeFloatKey { time: 10, value: 10.0, ip_type: SsInterpolationType::Linear, easing_rate: 0.0, curve: SsCurve::default() };
-
-        let result = convert_part_animation_data_expand_key_float(&start_key, &end_key, 5);
-        assert_eq!(result, 5.0);
-
-        // Test f64 to f32 stability with Hermite
-        let start_key_hermite = SsAttributeFloatKey { time: 0, value: 0.0, ip_type: SsInterpolationType::Hermite, easing_rate: 0.0, curve: SsCurve { start_time: 0.0, start_value: 0.0, end_time: 1.0, end_value: 0.0, ..Default::default() } };
-        let result_hermite = convert_part_animation_data_expand_key_float(&start_key_hermite, &end_key, 5);
-        assert!((0.0..=10.0).contains(&result_hermite));
-    }
-
-    #[test]
     fn test_optimize_part_animation_data_value_changing_range() {
         assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::Linear));
         assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Hermite));
@@ -2056,43 +1646,4 @@ mod tests {
         assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::None));
     }
 
-    #[test]
-    fn test_convert_part_animation_data_expand_key_skew() {
-        use sspj::ssattribute::{SsAttributeVertexKey, SsAttributeVertexKeyValue};
-        use sspj::sstypes::{SsCurve, SsInterpolationType, SsPoint2};
-
-        let start_key = SsAttributeVertexKey { time: 0, ip_type: SsInterpolationType::Linear, easing_rate: 0.0, curve: SsCurve::default(), value: SsAttributeVertexKeyValue { skew: Some(SsPoint2 { x: 0.0, y: 0.0 }), ..Default::default() } };
-        let end_key = SsAttributeVertexKey { time: 10, ip_type: SsInterpolationType::Linear, easing_rate: 0.0, curve: SsCurve::default(), value: SsAttributeVertexKeyValue { skew: Some(SsPoint2 { x: 10.0, y: 20.0 }), ..Default::default() } };
-
-        let result = convert_part_animation_data_expand_key_skew(&start_key, &end_key, 5).expect("Should expand");
-        assert_eq!(result.v1, 5.0);
-        assert_eq!(result.v2, 10.0);
-    }
-
-    #[test]
-    fn test_convert_part_animation_data_expand_key_vertex() {
-        use sspj::ssattribute::{SsAttributeVertexKey, SsAttributeVertexKeyValue};
-        use sspj::sstypes::{SsCurve, SsInterpolationType, SsPoint2};
-
-        let start_key = SsAttributeVertexKey {
-            time: 0,
-            ip_type: SsInterpolationType::Linear,
-            easing_rate: 0.0,
-            curve: SsCurve::default(),
-            value: SsAttributeVertexKeyValue { lt: Some(SsPoint2 { x: 0.0, y: 0.0 }), rt: Some(SsPoint2 { x: 0.0, y: 0.0 }), lb: Some(SsPoint2 { x: 0.0, y: 0.0 }), rb: Some(SsPoint2 { x: 0.0, y: 0.0 }), ..Default::default() },
-        };
-        let end_key = SsAttributeVertexKey {
-            time: 10,
-            ip_type: SsInterpolationType::Linear,
-            easing_rate: 0.0,
-            curve: SsCurve::default(),
-            value: SsAttributeVertexKeyValue { lt: Some(SsPoint2 { x: 10.0, y: 10.0 }), rt: Some(SsPoint2 { x: -10.0, y: 10.0 }), lb: Some(SsPoint2 { x: 10.0, y: -10.0 }), rb: Some(SsPoint2 { x: -10.0, y: -10.0 }), ..Default::default() },
-        };
-
-        let result = convert_part_animation_data_expand_key_vertex(&start_key, &end_key, 5).expect("Should expand");
-        assert_eq!(result.lt.as_ref().unwrap().v1, 5.0);
-        assert_eq!(result.rt.as_ref().unwrap().v1, -5.0);
-        assert_eq!(result.lb.as_ref().unwrap().v2, -5.0);
-        assert_eq!(result.rb.as_ref().unwrap().v2, -5.0);
-    }
 }

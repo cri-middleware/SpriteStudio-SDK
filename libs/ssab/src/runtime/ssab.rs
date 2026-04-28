@@ -2136,6 +2136,153 @@ impl ::core::fmt::Debug for U8Rect<'_> {
       ds.finish()
   }
 }
+pub enum SsCurveOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct SsCurve<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for SsCurve<'a> {
+  type Inner = SsCurve<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> SsCurve<'a> {
+  pub const VT_START_TIME: ::flatbuffers::VOffsetT = 4;
+  pub const VT_START_VALUE: ::flatbuffers::VOffsetT = 6;
+  pub const VT_END_TIME: ::flatbuffers::VOffsetT = 8;
+  pub const VT_END_VALUE: ::flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    SsCurve { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args SsCurveArgs
+  ) -> ::flatbuffers::WIPOffset<SsCurve<'bldr>> {
+    let mut builder = SsCurveBuilder::new(_fbb);
+    builder.add_end_value(args.end_value);
+    builder.add_end_time(args.end_time);
+    builder.add_start_value(args.start_value);
+    builder.add_start_time(args.start_time);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn start_time(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SsCurve::VT_START_TIME, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn start_value(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SsCurve::VT_START_VALUE, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn end_time(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SsCurve::VT_END_TIME, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn end_value(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(SsCurve::VT_END_VALUE, Some(0.0)).unwrap()}
+  }
+}
+
+impl ::flatbuffers::Verifiable for SsCurve<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<f32>("start_time", Self::VT_START_TIME, false)?
+     .visit_field::<f32>("start_value", Self::VT_START_VALUE, false)?
+     .visit_field::<f32>("end_time", Self::VT_END_TIME, false)?
+     .visit_field::<f32>("end_value", Self::VT_END_VALUE, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct SsCurveArgs {
+    pub start_time: f32,
+    pub start_value: f32,
+    pub end_time: f32,
+    pub end_value: f32,
+}
+impl<'a> Default for SsCurveArgs {
+  #[inline]
+  fn default() -> Self {
+    SsCurveArgs {
+      start_time: 0.0,
+      start_value: 0.0,
+      end_time: 0.0,
+      end_value: 0.0,
+    }
+  }
+}
+
+pub struct SsCurveBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsCurveBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_start_time(&mut self, start_time: f32) {
+    self.fbb_.push_slot::<f32>(SsCurve::VT_START_TIME, start_time, 0.0);
+  }
+  #[inline]
+  pub fn add_start_value(&mut self, start_value: f32) {
+    self.fbb_.push_slot::<f32>(SsCurve::VT_START_VALUE, start_value, 0.0);
+  }
+  #[inline]
+  pub fn add_end_time(&mut self, end_time: f32) {
+    self.fbb_.push_slot::<f32>(SsCurve::VT_END_TIME, end_time, 0.0);
+  }
+  #[inline]
+  pub fn add_end_value(&mut self, end_value: f32) {
+    self.fbb_.push_slot::<f32>(SsCurve::VT_END_VALUE, end_value, 0.0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> SsCurveBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    SsCurveBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<SsCurve<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for SsCurve<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("SsCurve");
+      ds.field("start_time", &self.start_time());
+      ds.field("start_value", &self.start_value());
+      ds.field("end_time", &self.end_time());
+      ds.field("end_value", &self.end_value());
+      ds.finish()
+  }
+}
 pub enum NoneValueEntryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -11306,6 +11453,8 @@ impl<'a> PartAnimationDataFloatValue<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -11314,9 +11463,11 @@ impl<'a> PartAnimationDataFloatValue<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAnimationDataFloatValueArgs
+    args: &'args PartAnimationDataFloatValueArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataFloatValue<'bldr>> {
     let mut builder = PartAnimationDataFloatValueBuilder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     builder.add_value(args.value);
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -11355,6 +11506,20 @@ impl<'a> PartAnimationDataFloatValue<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<f32>(PartAnimationDataFloatValue::VT_VALUE, Some(0.0)).unwrap()}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataFloatValue::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataFloatValue::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataFloatValue<'_> {
@@ -11366,22 +11531,28 @@ impl ::flatbuffers::Verifiable for PartAnimationDataFloatValue<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<f32>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartAnimationDataFloatValueArgs {
+pub struct PartAnimationDataFloatValueArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: f32,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
-impl<'a> Default for PartAnimationDataFloatValueArgs {
+impl<'a> Default for PartAnimationDataFloatValueArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartAnimationDataFloatValueArgs {
       index: 0,
       interpolation: InterpolationType::None,
       value: 0.0,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -11404,6 +11575,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataFloatValueBu
     self.fbb_.push_slot::<f32>(PartAnimationDataFloatValue::VT_VALUE, value, 0.0);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataFloatValue::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataFloatValue::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataFloatValueBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataFloatValueBuilder {
@@ -11424,6 +11603,8 @@ impl ::core::fmt::Debug for PartAnimationDataFloatValue<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }
@@ -11446,6 +11627,8 @@ impl<'a> PartAnimationDataIntValue<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -11454,9 +11637,11 @@ impl<'a> PartAnimationDataIntValue<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartAnimationDataIntValueArgs
+    args: &'args PartAnimationDataIntValueArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataIntValue<'bldr>> {
     let mut builder = PartAnimationDataIntValueBuilder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     builder.add_value(args.value);
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -11495,6 +11680,20 @@ impl<'a> PartAnimationDataIntValue<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(PartAnimationDataIntValue::VT_VALUE, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataIntValue::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataIntValue::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataIntValue<'_> {
@@ -11506,22 +11705,28 @@ impl ::flatbuffers::Verifiable for PartAnimationDataIntValue<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<i32>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartAnimationDataIntValueArgs {
+pub struct PartAnimationDataIntValueArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: i32,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
-impl<'a> Default for PartAnimationDataIntValueArgs {
+impl<'a> Default for PartAnimationDataIntValueArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartAnimationDataIntValueArgs {
       index: 0,
       interpolation: InterpolationType::None,
       value: 0,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -11544,6 +11749,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataIntValueBuil
     self.fbb_.push_slot::<i32>(PartAnimationDataIntValue::VT_VALUE, value, 0);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataIntValue::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataIntValue::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataIntValueBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataIntValueBuilder {
@@ -11564,6 +11777,8 @@ impl ::core::fmt::Debug for PartAnimationDataIntValue<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }
@@ -11849,6 +12064,8 @@ impl<'a> PartAnimationDataPartColor<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -11860,6 +12077,8 @@ impl<'a> PartAnimationDataPartColor<'a> {
     args: &'args PartAnimationDataPartColorArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataPartColor<'bldr>> {
     let mut builder = PartAnimationDataPartColorBuilder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     if let Some(x) = args.value { builder.add_value(x); }
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -11898,6 +12117,20 @@ impl<'a> PartAnimationDataPartColor<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>(PartAnimationDataPartColor::VT_VALUE, None)}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataPartColor::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataPartColor::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataPartColor<'_> {
@@ -11909,6 +12142,8 @@ impl ::flatbuffers::Verifiable for PartAnimationDataPartColor<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributePartColor>>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
@@ -11917,6 +12152,8 @@ pub struct PartAnimationDataPartColorArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: Option<::flatbuffers::WIPOffset<PartAttributePartColor<'a>>>,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
 impl<'a> Default for PartAnimationDataPartColorArgs<'a> {
   #[inline]
@@ -11925,6 +12162,8 @@ impl<'a> Default for PartAnimationDataPartColorArgs<'a> {
       index: 0,
       interpolation: InterpolationType::None,
       value: None,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -11947,6 +12186,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataPartColorBui
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributePartColor>>(PartAnimationDataPartColor::VT_VALUE, value);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataPartColor::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataPartColor::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataPartColorBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataPartColorBuilder {
@@ -11967,6 +12214,8 @@ impl ::core::fmt::Debug for PartAnimationDataPartColor<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }
@@ -11989,6 +12238,8 @@ impl<'a> PartAnimationDataShader<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12000,6 +12251,8 @@ impl<'a> PartAnimationDataShader<'a> {
     args: &'args PartAnimationDataShaderArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataShader<'bldr>> {
     let mut builder = PartAnimationDataShaderBuilder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     if let Some(x) = args.value { builder.add_value(x); }
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -12038,6 +12291,20 @@ impl<'a> PartAnimationDataShader<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>(PartAnimationDataShader::VT_VALUE, None)}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataShader::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataShader::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataShader<'_> {
@@ -12049,6 +12316,8 @@ impl ::flatbuffers::Verifiable for PartAnimationDataShader<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeShader>>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
@@ -12057,6 +12326,8 @@ pub struct PartAnimationDataShaderArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: Option<::flatbuffers::WIPOffset<PartAttributeShader<'a>>>,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
 impl<'a> Default for PartAnimationDataShaderArgs<'a> {
   #[inline]
@@ -12065,6 +12336,8 @@ impl<'a> Default for PartAnimationDataShaderArgs<'a> {
       index: 0,
       interpolation: InterpolationType::None,
       value: None,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -12087,6 +12360,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataShaderBuilde
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeShader>>(PartAnimationDataShader::VT_VALUE, value);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataShader::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataShader::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataShaderBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataShaderBuilder {
@@ -12107,6 +12388,8 @@ impl ::core::fmt::Debug for PartAnimationDataShader<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }
@@ -12129,6 +12412,8 @@ impl<'a> PartAnimationDataVertex<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12140,6 +12425,8 @@ impl<'a> PartAnimationDataVertex<'a> {
     args: &'args PartAnimationDataVertexArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataVertex<'bldr>> {
     let mut builder = PartAnimationDataVertexBuilder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     if let Some(x) = args.value { builder.add_value(x); }
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -12178,6 +12465,20 @@ impl<'a> PartAnimationDataVertex<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>(PartAnimationDataVertex::VT_VALUE, None)}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataVertex::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataVertex::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataVertex<'_> {
@@ -12189,6 +12490,8 @@ impl ::flatbuffers::Verifiable for PartAnimationDataVertex<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeVertex>>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
@@ -12197,6 +12500,8 @@ pub struct PartAnimationDataVertexArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: Option<::flatbuffers::WIPOffset<PartAttributeVertex<'a>>>,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
 impl<'a> Default for PartAnimationDataVertexArgs<'a> {
   #[inline]
@@ -12205,6 +12510,8 @@ impl<'a> Default for PartAnimationDataVertexArgs<'a> {
       index: 0,
       interpolation: InterpolationType::None,
       value: None,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -12227,6 +12534,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataVertexBuilde
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeVertex>>(PartAnimationDataVertex::VT_VALUE, value);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataVertex::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataVertex::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataVertexBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataVertexBuilder {
@@ -12247,6 +12562,8 @@ impl ::core::fmt::Debug for PartAnimationDataVertex<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }
@@ -12515,6 +12832,8 @@ impl<'a> PartAnimationDataVec2<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12526,6 +12845,8 @@ impl<'a> PartAnimationDataVec2<'a> {
     args: &'args PartAnimationDataVec2Args<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataVec2<'bldr>> {
     let mut builder = PartAnimationDataVec2Builder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     if let Some(x) = args.value { builder.add_value(x); }
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -12564,6 +12885,20 @@ impl<'a> PartAnimationDataVec2<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(PartAnimationDataVec2::VT_VALUE, None)}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataVec2::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataVec2::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataVec2<'_> {
@@ -12575,6 +12910,8 @@ impl ::flatbuffers::Verifiable for PartAnimationDataVec2<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
@@ -12583,6 +12920,8 @@ pub struct PartAnimationDataVec2Args<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
 impl<'a> Default for PartAnimationDataVec2Args<'a> {
   #[inline]
@@ -12591,6 +12930,8 @@ impl<'a> Default for PartAnimationDataVec2Args<'a> {
       index: 0,
       interpolation: InterpolationType::None,
       value: None,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -12613,6 +12954,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataVec2Builder<
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(PartAnimationDataVec2::VT_VALUE, value);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataVec2::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataVec2::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataVec2Builder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataVec2Builder {
@@ -12633,6 +12982,8 @@ impl ::core::fmt::Debug for PartAnimationDataVec2<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }
@@ -12655,6 +13006,8 @@ impl<'a> PartAnimationDataDeform<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_INTERPOLATION: ::flatbuffers::VOffsetT = 6;
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CURVE: ::flatbuffers::VOffsetT = 10;
+  pub const VT_EASING_RATE: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -12666,6 +13019,8 @@ impl<'a> PartAnimationDataDeform<'a> {
     args: &'args PartAnimationDataDeformArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartAnimationDataDeform<'bldr>> {
     let mut builder = PartAnimationDataDeformBuilder::new(_fbb);
+    builder.add_easing_rate(args.easing_rate);
+    if let Some(x) = args.curve { builder.add_curve(x); }
     if let Some(x) = args.value { builder.add_value(x); }
     builder.add_index(args.index);
     builder.add_interpolation(args.interpolation);
@@ -12704,6 +13059,20 @@ impl<'a> PartAnimationDataDeform<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>(PartAnimationDataDeform::VT_VALUE, None)}
   }
+  #[inline]
+  pub fn curve(&self) -> Option<SsCurve<'a>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<SsCurve>>(PartAnimationDataDeform::VT_CURVE, None)}
+  }
+  #[inline]
+  pub fn easing_rate(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(PartAnimationDataDeform::VT_EASING_RATE, Some(0.0)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAnimationDataDeform<'_> {
@@ -12715,6 +13084,8 @@ impl ::flatbuffers::Verifiable for PartAnimationDataDeform<'_> {
      .visit_field::<u16>("index", Self::VT_INDEX, false)?
      .visit_field::<InterpolationType>("interpolation", Self::VT_INTERPOLATION, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartAttributeDeform>>("value", Self::VT_VALUE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<SsCurve>>("curve", Self::VT_CURVE, false)?
+     .visit_field::<f32>("easing_rate", Self::VT_EASING_RATE, false)?
      .finish();
     Ok(())
   }
@@ -12723,6 +13094,8 @@ pub struct PartAnimationDataDeformArgs<'a> {
     pub index: u16,
     pub interpolation: InterpolationType,
     pub value: Option<::flatbuffers::WIPOffset<PartAttributeDeform<'a>>>,
+    pub curve: Option<::flatbuffers::WIPOffset<SsCurve<'a>>>,
+    pub easing_rate: f32,
 }
 impl<'a> Default for PartAnimationDataDeformArgs<'a> {
   #[inline]
@@ -12731,6 +13104,8 @@ impl<'a> Default for PartAnimationDataDeformArgs<'a> {
       index: 0,
       interpolation: InterpolationType::None,
       value: None,
+      curve: None,
+      easing_rate: 0.0,
     }
   }
 }
@@ -12753,6 +13128,14 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAnimationDataDeformBuilde
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<PartAttributeDeform>>(PartAnimationDataDeform::VT_VALUE, value);
   }
   #[inline]
+  pub fn add_curve(&mut self, curve: ::flatbuffers::WIPOffset<SsCurve<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<SsCurve>>(PartAnimationDataDeform::VT_CURVE, curve);
+  }
+  #[inline]
+  pub fn add_easing_rate(&mut self, easing_rate: f32) {
+    self.fbb_.push_slot::<f32>(PartAnimationDataDeform::VT_EASING_RATE, easing_rate, 0.0);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAnimationDataDeformBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAnimationDataDeformBuilder {
@@ -12773,6 +13156,8 @@ impl ::core::fmt::Debug for PartAnimationDataDeform<'_> {
       ds.field("index", &self.index());
       ds.field("interpolation", &self.interpolation());
       ds.field("value", &self.value());
+      ds.field("curve", &self.curve());
+      ds.field("easing_rate", &self.easing_rate());
       ds.finish()
   }
 }

@@ -19,6 +19,13 @@ table U8Rect {
   b: ubyte;
 }
 
+table SsCurve {
+  start_time: float;
+  start_value: float;
+  end_time: float;
+  end_value: float;
+}
+
 enum TexFilterMode: ubyte {
   Nearest,
   Linear,
@@ -645,6 +652,9 @@ table PartAnimationDataFloatValue {
   interpolation: InterpolationType = None;
 
   value: float;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationDataIntValue {
@@ -652,6 +662,9 @@ table PartAnimationDataIntValue {
   interpolation: InterpolationType = None;
 
   value: int;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationDataUIntValue {
@@ -672,6 +685,9 @@ table PartAnimationDataPartColor {
   interpolation: InterpolationType = None;
 
   value: PartAttributePartColor;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationDataShader {
@@ -679,6 +695,9 @@ table PartAnimationDataShader {
   interpolation: InterpolationType = None;
 
   value: PartAttributeShader;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationDataVertex {
@@ -686,6 +705,9 @@ table PartAnimationDataVertex {
   interpolation: InterpolationType = None;
 
   value: PartAttributeVertex;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationDataInstance {
@@ -705,6 +727,9 @@ table PartAnimationDataVec2 {
   interpolation: InterpolationType = None;
 
   value: Vec2;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationDataDeform {
@@ -712,6 +737,9 @@ table PartAnimationDataDeform {
   interpolation: InterpolationType = None;
 
   value: PartAttributeDeform;
+
+  curve: SsCurve;
+  easing_rate: float = 0;
 }
 
 table PartAnimationData {

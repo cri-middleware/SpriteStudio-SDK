@@ -122,14 +122,40 @@ impl From<&ssab::ssab::ss::format::RectValueEntryT> for RectValueEntryKey {
 }
 
 #[derive(Hash, Eq, PartialEq)]
+pub struct SsCurveKey {
+    pub start_time: ordered_float::OrderedFloat<f32>,
+    pub start_value: ordered_float::OrderedFloat<f32>,
+    pub end_time: ordered_float::OrderedFloat<f32>,
+    pub end_value: ordered_float::OrderedFloat<f32>,
+}
+impl From<&ssab::ssab::ss::format::SsCurveT> for SsCurveKey {
+    fn from(value: &ssab::ssab::ss::format::SsCurveT) -> Self {
+        Self {
+            start_time: ordered_float::OrderedFloat(value.start_time),
+            start_value: ordered_float::OrderedFloat(value.start_value),
+            end_time: ordered_float::OrderedFloat(value.end_time),
+            end_value: ordered_float::OrderedFloat(value.end_value),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
 pub struct PartAnimationDataFloatValueKey {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: ordered_float::OrderedFloat<f32>,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataFloatValueT> for PartAnimationDataFloatValueKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataFloatValueT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: ordered_float::OrderedFloat(value.value) }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: ordered_float::OrderedFloat(value.value),
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -148,10 +174,18 @@ pub struct PartAnimationDataIntValueKey {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: i32,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataIntValueT> for PartAnimationDataIntValueKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataIntValueT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: value.value,
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -234,10 +268,18 @@ pub struct PartAnimationDataPartColorKey {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: Option<PartAttributePartColorKey>,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataPartColorT> for PartAnimationDataPartColorKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataPartColorT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value.as_ref().map(|v| PartAttributePartColorKey::from(v.as_ref())) }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: value.value.as_ref().map(|v| PartAttributePartColorKey::from(v.as_ref())),
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -256,10 +298,18 @@ pub struct PartAnimationDataShaderKey {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: Option<PartAttributeShaderKey>,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataShaderT> for PartAnimationDataShaderKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataShaderT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value.as_ref().map(|v| PartAttributeShaderKey::from(v.as_ref())) }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: value.value.as_ref().map(|v| PartAttributeShaderKey::from(v.as_ref())),
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -278,10 +328,18 @@ pub struct PartAnimationDataVertexKey {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: Option<PartAttributeVertexKey>,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataVertexT> for PartAnimationDataVertexKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataVertexT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value.as_ref().map(|v| PartAttributeVertexKey::from(v.as_ref())) }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: value.value.as_ref().map(|v| PartAttributeVertexKey::from(v.as_ref())),
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -300,10 +358,18 @@ pub struct PartAnimationDataVec2Key {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: Option<Vec2Key>,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataVec2T> for PartAnimationDataVec2Key {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataVec2T) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value.as_ref().map(|v| Vec2Key::from(v.as_ref())) }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: value.value.as_ref().map(|v| Vec2Key::from(v.as_ref())),
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -322,10 +388,18 @@ pub struct PartAnimationDataDeformKey {
     pub index: u16,
     pub interpolation: ssab::ssab::ss::format::InterpolationType,
     pub value: Option<PartAttributeDeformKey>,
+    pub curve: Option<SsCurveKey>,
+    pub easing_rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataDeformT> for PartAnimationDataDeformKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataDeformT) -> Self {
-        Self { index: value.index, interpolation: value.interpolation, value: value.value.as_ref().map(|v| PartAttributeDeformKey::from(v.as_ref())) }
+        Self {
+            index: value.index,
+            interpolation: value.interpolation,
+            value: value.value.as_ref().map(|v| PartAttributeDeformKey::from(v.as_ref())),
+            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
+            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
+        }
     }
 }
 
@@ -1032,7 +1106,14 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_float_value_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs { index: part_animation_data_float_value_t.index, interpolation: part_animation_data_float_value_t.interpolation, value: part_animation_data_float_value_t.value };
+        let curve_off = part_animation_data_float_value_t.curve.as_ref().map(|c| c.pack(fb));
+        let args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs {
+            index: part_animation_data_float_value_t.index,
+            interpolation: part_animation_data_float_value_t.interpolation,
+            value: part_animation_data_float_value_t.value,
+            curve: curve_off,
+            easing_rate: part_animation_data_float_value_t.easing_rate,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataFloatValue::create(fb, &args);
         self.part_animation_data_float_value_cache.insert(key, offset);
         offset
@@ -1063,7 +1144,14 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_int_value_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs { index: part_animation_data_int_value_t.index, interpolation: part_animation_data_int_value_t.interpolation, value: part_animation_data_int_value_t.value };
+        let curve_off = part_animation_data_int_value_t.curve.as_ref().map(|c| c.pack(fb));
+        let args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs {
+            index: part_animation_data_int_value_t.index,
+            interpolation: part_animation_data_int_value_t.interpolation,
+            value: part_animation_data_int_value_t.value,
+            curve: curve_off,
+            easing_rate: part_animation_data_int_value_t.easing_rate,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataIntValue::create(fb, &args);
         self.part_animation_data_int_value_cache.insert(key, offset);
         offset
@@ -1184,10 +1272,13 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_part_color_cache.get(&key) {
             return offset;
         }
+        let curve_off = part_animation_data_part_color.curve.as_ref().map(|c| c.pack(fb));
         let args = ssab::ssab::ss::format::PartAnimationDataPartColorArgs {
             index: part_animation_data_part_color.index,
             interpolation: part_animation_data_part_color.interpolation,
             value: part_animation_data_part_color.value.as_ref().map(|v| self.create_shared_part_attribute_part_color(fb, v)),
+            curve: curve_off,
+            easing_rate: part_animation_data_part_color.easing_rate,
         };
         let offset = ssab::ssab::ss::format::PartAnimationDataPartColor::create(fb, &args);
         self.part_animation_data_part_color_cache.insert(key, offset);
@@ -1218,10 +1309,13 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_shader_cache.get(&key) {
             return offset;
         }
+        let curve_off = part_animation_data_shader.curve.as_ref().map(|c| c.pack(fb));
         let args = ssab::ssab::ss::format::PartAnimationDataShaderArgs {
             index: part_animation_data_shader.index,
             interpolation: part_animation_data_shader.interpolation,
             value: part_animation_data_shader.value.as_ref().map(|v| self.create_shared_part_attribute_shader(fb, v)),
+            curve: curve_off,
+            easing_rate: part_animation_data_shader.easing_rate,
         };
         let offset = ssab::ssab::ss::format::PartAnimationDataShader::create(fb, &args);
         self.part_animation_data_shader_cache.insert(key, offset);
@@ -1252,10 +1346,13 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_vertex_cache.get(&key) {
             return offset;
         }
+        let curve_off = part_animation_data_vertex.curve.as_ref().map(|c| c.pack(fb));
         let args = ssab::ssab::ss::format::PartAnimationDataVertexArgs {
             index: part_animation_data_vertex.index,
             interpolation: part_animation_data_vertex.interpolation,
             value: part_animation_data_vertex.value.as_ref().map(|v| self.create_shared_part_attribute_vertex(fb, v)),
+            curve: curve_off,
+            easing_rate: part_animation_data_vertex.easing_rate,
         };
         let offset = ssab::ssab::ss::format::PartAnimationDataVertex::create(fb, &args);
         self.part_animation_data_vertex_cache.insert(key, offset);
@@ -1282,7 +1379,14 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_vec2_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::PartAnimationDataVec2Args { index: part_animation_data_vec2.index, interpolation: part_animation_data_vec2.interpolation, value: part_animation_data_vec2.value.as_ref().map(|v| self.create_shared_vec2(fb, v)) };
+        let curve_off = part_animation_data_vec2.curve.as_ref().map(|c| c.pack(fb));
+        let args = ssab::ssab::ss::format::PartAnimationDataVec2Args {
+            index: part_animation_data_vec2.index,
+            interpolation: part_animation_data_vec2.interpolation,
+            value: part_animation_data_vec2.value.as_ref().map(|v| self.create_shared_vec2(fb, v)),
+            curve: curve_off,
+            easing_rate: part_animation_data_vec2.easing_rate,
+        };
         let offset = ssab::ssab::ss::format::PartAnimationDataVec2::create(fb, &args);
         self.part_animation_data_vec2_cache.insert(key, offset);
         offset
@@ -1312,10 +1416,13 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_deform_cache.get(&key) {
             return offset;
         }
+        let curve_off = part_animation_data_deform.curve.as_ref().map(|c| c.pack(fb));
         let args = ssab::ssab::ss::format::PartAnimationDataDeformArgs {
             index: part_animation_data_deform.index,
             interpolation: part_animation_data_deform.interpolation,
             value: part_animation_data_deform.value.as_ref().map(|v| self.create_shared_part_attribute_deform(fb, v)),
+            curve: curve_off,
+            easing_rate: part_animation_data_deform.easing_rate,
         };
         let offset = ssab::ssab::ss::format::PartAnimationDataDeform::create(fb, &args);
         self.part_animation_data_deform_cache.insert(key, offset);
