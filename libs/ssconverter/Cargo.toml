@@ -12,14 +12,13 @@ description.workspace = true
 crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
-zip = "8.5.0"
+zip = "8.6.0"
 flatbuffers = { workspace = true, features = ["std"] }
 rayon = { workspace = true }
 walkdir = "2.5.0"
 ordered-float = "5.3.0"
 sspj = { workspace = true }
 ssab = { workspace = true, features = ["converter"] }
-ssinterpolate = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 notify-debouncer-mini = "0.7.0"
 
