@@ -1,4 +1,3 @@
-use crate::core::math::*;
 use crate::core::matrix::SsMatrix4x4;
 use wide::{CmpGt, CmpLt, f32x4};
 
@@ -63,8 +62,9 @@ pub fn compute_local_uvs(
     let fy = if part_flip.1 { -1.0 } else { 1.0 };
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
-    let cos_r = cosf(rot_rad);
-    let sin_r = sinf(rot_rad);
+    let (sin_v, cos_v) = f32x4::splat(rot_rad).sin_cos();
+    let sin_r = sin_v.to_array()[0];
+    let cos_r = cos_v.to_array()[0];
 
     let ou = center_u + tu;
     let ov = center_v + tv;

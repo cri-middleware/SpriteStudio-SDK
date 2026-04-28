@@ -689,14 +689,10 @@ impl EffectSimulator {
                 next_final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
             }
 
-            let next_x_arr = next_final_x.to_array();
-            let next_y_arr = next_final_y.to_array();
-            let final_x_arr = final_x.to_array();
-            let final_y_arr = final_y.to_array();
-
-            for i in 0..4 {
-                direction[i] = atan2f(next_y_arr[i] - final_y_arr[i], next_x_arr[i] - final_x_arr[i]) + core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0);
-            }
+            let dy = next_final_y - final_y;
+            let dx = next_final_x - final_x;
+            let bias = f32x4::splat(core::f32::consts::FRAC_PI_2 + (particle_params.direc_rot_add * core::f32::consts::PI / 180.0));
+            direction = (dy.atan2(dx) + bias).to_array();
         }
 
         let out_x_arr = final_x.to_array();
