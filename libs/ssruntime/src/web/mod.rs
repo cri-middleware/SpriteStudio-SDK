@@ -130,12 +130,6 @@ impl From<WebPlaybackStyle> for crate::core::playback_controller::PlaybackStyle 
 }
 
 #[wasm_bindgen]
-pub struct UpdateResult {
-    pub frame: i32,
-    pub decimal: f32,
-}
-
-#[wasm_bindgen]
 pub struct SSRuntimeResource {
     pub(crate) inner: Arc<SsabResource>,
 }
@@ -255,12 +249,8 @@ impl SSRuntimeContext {
     }
 
     // Frame Number getter functions
-    pub fn get_frame_no(&self) -> i32 {
+    pub fn get_frame_no(&self) -> f32 {
         self.inner.get_frame_no()
-    }
-
-    pub fn get_frame_no_decimal(&self) -> f32 {
-        self.inner.get_frame_no_decimal()
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
@@ -357,16 +347,15 @@ impl SSRuntimeContext {
         self.inner.get_unit().into()
     }
 
-    pub fn update(&mut self, delta: f32) -> UpdateResult {
-        let (frame, decimal) = self.inner.update(delta);
-        UpdateResult { frame, decimal }
+    pub fn update(&mut self, delta: f32) -> f32 {
+        self.inner.update(delta)
     }
 
     pub fn play(&mut self) {
         self.inner.play();
     }
 
-    pub fn play_with_start_frame(&mut self, frame_no: i32) {
+    pub fn play_with_start_frame(&mut self, frame_no: f32) {
         self.inner.play_with_start_frame(frame_no);
     }
 
@@ -378,7 +367,7 @@ impl SSRuntimeContext {
         self.inner.stop();
     }
 
-    pub fn set_frame_no(&mut self, frame: i32) {
+    pub fn set_frame_no(&mut self, frame: f32) {
         self.inner.set_frame_no(frame);
     }
 

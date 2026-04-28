@@ -107,17 +107,19 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
     ss_runtime_setup_animation(ctx, "Wait");
     ss_runtime_play(ctx);
 
-    // 5. Update Loop
+    // 5. Update loop
     float dt = 1.0f / 60.0f;
     while (ss_runtime_is_playing(ctx)) {
-        int frame = ss_runtime_update(ctx, dt);
-        
-        // 6. Get Rendering Info
+        float frame = ss_runtime_update(ctx, dt);
+
+        // 6. Get rendering information
         uint8_t* data;
         size_t len;
-        ss_runtime_get_frame_data(ctx, frame, &data, &len);
-        
-        // render_parts(data, len);
+        // Get the data of the integer frame by truncating the decimal point
+        ss_runtime_get_frame_data(ctx, (int)frame, &data, &len);
+
+        // float decimal = ss_runtime_get_frame_no(ctx) - (int)ss_runtime_get_frame_no(ctx);
+        // render_parts(data, len, decimal);
     }
 
     ss_resource_destroy(res);

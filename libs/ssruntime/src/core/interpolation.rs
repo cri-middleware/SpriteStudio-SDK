@@ -254,10 +254,10 @@ pub fn evaluate_partcolor(
             };
 
             let get_color = |c: &Option<ssab::ssab::ss::format::SsAttributePartColorKeyValueColor>| -> (f32, f32, f32, f32, f32) {
-                if let Some(c) = c {
-                    if let Some(rgba) = c.rgba() {
-                        return (rgba.a() as f32, rgba.r() as f32, rgba.g() as f32, rgba.b() as f32, c.rate());
-                    }
+                if let Some(c) = c
+                    && let Some(rgba) = c.rgba()
+                {
+                    return (rgba.a() as f32, rgba.r() as f32, rgba.g() as f32, rgba.b() as f32, c.rate());
                 }
                 (0.0, 0.0, 0.0, 0.0, 0.0)
             };

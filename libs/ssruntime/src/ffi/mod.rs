@@ -396,17 +396,9 @@ pub unsafe extern "C" fn ss_runtime_get_z_order(context: *mut c_void, out_data: 
 
 // Frame Number getter functions
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_int {
+pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.get_frame_no();
-    }
-    0
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_frame_no_decimal(context: *mut c_void) -> c_float {
-    if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_frame_no_decimal();
     }
     0.0
 }
@@ -544,21 +536,20 @@ pub extern "C" fn ss_runtime_set_animation_section(context: *mut c_void, start_f
 // Playback control
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> i32 {
+pub extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> c_float {
     if let Some(ffi_context) = get_context(context) {
-        let (frame_no, _) = ffi_context.ctx.update(delta);
-        return frame_no;
+        return ffi_context.ctx.update(delta);
     }
-    0
+    0.0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_update_animation(context: *mut c_void, delta: f32) -> i32 {
+pub extern "C" fn ss_runtime_update_animation(context: *mut c_void, delta: f32) -> c_float {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.update_animation(delta);
         return ffi_context.ctx.get_frame_no();
     }
-    0
+    0.0
 }
 
 #[unsafe(no_mangle)]
@@ -569,7 +560,7 @@ pub extern "C" fn ss_runtime_play(context: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_no: i32) {
+pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_no: f32) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.play_with_start_frame(frame_no);
     }
@@ -590,7 +581,7 @@ pub extern "C" fn ss_runtime_stop(context: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_int) {
+pub extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_float) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.set_frame_no(frame);
     }

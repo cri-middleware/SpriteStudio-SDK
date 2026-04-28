@@ -43,12 +43,8 @@ pub struct PlaybackController {
 }
 
 impl PlaybackController {
-    pub fn get_frame_no(&self) -> i32 {
-        floorf(self.current_frame) as i32
-    }
-
-    pub fn get_frame_no_decimal(&self) -> f32 {
-        self.current_frame - floorf(self.current_frame)
+    pub fn get_frame_no(&self) -> f32 {
+        self.current_frame
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
@@ -233,7 +229,7 @@ impl PlaybackController {
         self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 }
     }
 
-    pub fn update(&mut self, delta: f32) -> (i32, f32) {
+    pub fn update(&mut self, delta: f32) -> f32 {
         self.passed_frames.clear();
 
         if self.needs_evaluation {
@@ -353,32 +349,29 @@ impl PlaybackController {
                     self.current_frame = current_frame_no as f32;
                 }
             }
-
-            (floorf(self.current_frame) as i32, self.current_frame - floorf(self.current_frame))
-        } else {
-            (floorf(self.current_frame) as i32, self.current_frame - floorf(self.current_frame))
         }
+        self.current_frame
     }
 }
 
 impl PlaybackController {
     // playback control
     pub fn play(&mut self) {
-        self.play_with_start_frame(-1)
+        self.play_with_start_frame(-1.0)
     }
 
-    pub fn play_with_start_frame(&mut self, frame_no: i32) {
+    pub fn play_with_start_frame(&mut self, frame_no: f32) {
         self.is_playing = true;
         self.is_pausing = false;
 
         let mut current_frame = match &self.playback_direction {
-            PlaybackDirection::Forward => self.start_frame,
-            PlaybackDirection::Backward => self.end_frame,
+            PlaybackDirection::Forward => self.start_frame as f32,
+            PlaybackDirection::Backward => self.end_frame as f32,
         };
-        if frame_no >= 0 {
+        if frame_no >= 0.0 {
             current_frame = frame_no;
         }
-        self.current_frame = current_frame as f32;
+        self.current_frame = current_frame;
         self.needs_evaluation = true;
     }
 
@@ -390,8 +383,8 @@ impl PlaybackController {
         self.is_playing = false;
     }
 
-    pub fn set_frame_no(&mut self, frame: i32) {
-        self.current_frame = frame as f32;
+    pub fn set_frame_no(&mut self, frame: f32) {
+        self.current_frame = frame;
         self.needs_evaluation = true;
     }
 
@@ -404,7 +397,7 @@ impl PlaybackController {
         if current_frame == self.end_frame {
             return;
         }
-        self.set_frame_no(current_frame + 1);
+        self.set_frame_no((current_frame + 1) as f32);
     }
 
     /**
@@ -416,7 +409,7 @@ impl PlaybackController {
         if current_frame == self.start_frame {
             return;
         }
-        self.set_frame_no(current_frame - 1);
+        self.set_frame_no((current_frame - 1) as f32);
     }
 }
 
@@ -436,8 +429,8 @@ mod tests {
 
         // Frames 0 to 9
         for i in 1..=10 {
-            let (frame, _) = t.update(interval);
-            assert_eq!(frame, i, "Failed at step {} (Forward)", i);
+            let frame = t.update(interval);
+            assert_eq!(frame, i as f32, "Failed at step {} (Forward)", i);
             assert!(t.is_playing());
         }
 
@@ -445,8 +438,8 @@ mod tests {
         assert!(t.is_end_frame_reached(), "end_frame_reached should be true at frame 10");
 
         // Next update should stop playback
-        let (frame, _) = t.update(interval);
-        assert_eq!(frame, 10, "Should remain at end frame when stopped");
+        let frame = t.update(interval);
+        assert_eq!(frame, 10.0, "Should remain at end frame when stopped");
         assert!(!t.is_playing(), "Should stop playing after 1 loop");
     }
 
@@ -465,12 +458,12 @@ mod tests {
             t.update(interval);
         }
         assert!(t.is_end_frame_reached(), "end_frame_reached should be true after first loop");
-        assert_eq!(t.get_frame_no(), 10);
+        assert_eq!(t.get_frame_no(), 10.0);
         assert_eq!(t.get_remain_loops(), 2);
 
         // Transition to second loop (shows frame 0)
-        let (frame, _) = t.update(interval);
-        assert_eq!(frame, 0, "Should jump back to start frame");
+        let frame = t.update(interval);
+        assert_eq!(frame, 0.0, "Should jump back to start frame");
         assert_eq!(t.get_remain_loops(), 1);
         assert!(!t.is_end_frame_reached(), "end_frame_reached should reset at start of new loop");
 
@@ -499,8 +492,8 @@ mod tests {
 
         // Forward: 0 -> 10
         for i in 1..=10 {
-            let (frame, _) = t.update(interval);
-            assert_eq!(frame, i, "Forward failed at step {}", i);
+            let frame = t.update(interval);
+            assert_eq!(frame, i as f32, "Forward failed at step {}", i);
         }
 
         // At 10, it should NOT have reached end yet in PingPong (need to return to 0)
@@ -508,8 +501,8 @@ mod tests {
 
         // Backward: 10 -> 0
         for i in (0..=9).rev() {
-            let (frame, _) = t.update(interval);
-            assert_eq!(frame, i, "Backward failed at step {}", i);
+            let frame = t.update(interval);
+            assert_eq!(frame, i as f32, "Backward failed at step {}", i);
         }
 
         // Back at 0, now end_frame_reached should be true
@@ -529,12 +522,14 @@ mod tests {
 
         let delta = 1000.0 / 60.0; // Half a frame
 
-        let (frame, decimal) = t.update(delta);
-        assert_eq!(frame, 0);
+        let frame = t.update(delta);
+        assert_eq!(floorf(frame), 0.0);
+        let decimal = frame - floorf(frame);
         assert!(decimal > 0.4 && decimal < 0.6, "Expected around 0.5, got {}", decimal);
 
-        let (frame, decimal) = t.update(delta);
-        assert_eq!(frame, 1);
+        let frame = t.update(delta);
+        assert_eq!(floorf(frame), 1.0);
+        let decimal = frame - floorf(frame);
         assert!((0.0..0.1).contains(&decimal), "Expected around 0.0, got {}", decimal);
     }
 
@@ -566,15 +561,15 @@ mod tests {
         // Supply a very large delta (e.g., 500ms = 15 frames worth of time)
         let delta = 500.0;
 
-        let (frame, _) = t.update(delta);
+        let frame = t.update(delta);
 
         // In Fixed mode, it should ONLY advance by 1 frame, no matter how large delta is.
-        assert_eq!(frame, 1, "Fixed animation should only advance by 1 frame at a time");
+        assert_eq!(frame, 1.0, "Fixed animation should only advance by 1 frame at a time");
 
         // The remaining time (500 - 33.33) should be stored in next_frame_time.
         // Calling update with 0 delta should continue to advance frames until the buffer is empty.
-        let (frame, _) = t.update(0.0);
-        assert_eq!(frame, 2, "Should use buffered time to advance even with 0 delta");
+        let frame = t.update(0.0);
+        assert_eq!(frame, 2.0, "Should use buffered time to advance even with 0 delta");
     }
 
     #[test]
@@ -590,8 +585,8 @@ mod tests {
 
         // Starts at 10, goes down to 1
         for i in (0..=9).rev() {
-            let (frame, _) = t.update(interval);
-            assert_eq!(frame, i, "Reverse failed at step {}", i);
+            let frame = t.update(interval);
+            assert_eq!(frame, i as f32, "Reverse failed at step {}", i);
         }
 
         assert!(t.is_end_frame_reached(), "end_frame_reached should be true at frame 0 (start_frame for reverse)");
@@ -615,11 +610,11 @@ mod tests {
             t.update(interval);
         }
         assert!(t.is_end_frame_reached());
-        assert_eq!(t.get_frame_no(), 0);
+        assert_eq!(t.get_frame_no(), 0.0);
 
         // Transition to second loop (jumps to 10)
-        let (frame, _) = t.update(interval);
-        assert_eq!(frame, 10);
+        let frame = t.update(interval);
+        assert_eq!(frame, 10.0);
         assert!(!t.is_end_frame_reached());
 
         // Second loop: 10 -> 0
@@ -645,16 +640,16 @@ mod tests {
 
         // Backward first: 10 -> 0
         for i in (0..=9).rev() {
-            let (frame, _) = t.update(interval);
-            assert_eq!(frame, i, "Initial backward failed at step {}", i);
+            let frame = t.update(interval);
+            assert_eq!(frame, i as f32, "Initial backward failed at step {}", i);
         }
 
         assert!(!t.is_end_frame_reached());
 
         // Then Forward: 0 -> 10
         for i in 1..=10 {
-            let (frame, _) = t.update(interval);
-            assert_eq!(frame, i, "Return forward failed at step {}", i);
+            let frame = t.update(interval);
+            assert_eq!(frame, i as f32, "Return forward failed at step {}", i);
         }
 
         assert!(t.is_end_frame_reached());
@@ -673,13 +668,15 @@ mod tests {
         // Skip 2.5 frames at once (33.33 * 2.5 = 83.33ms)
         let delta = (1000.0 / 30.0) * 2.5;
 
-        let (frame, decimal) = t.update(delta);
-        assert_eq!(frame, 2, "Should jump to frame 2");
+        let frame = t.update(delta);
+        assert_eq!(floorf(frame), 2.0, "Should jump to frame 2");
+        let decimal = frame - floorf(frame);
         assert!(decimal > 0.4 && decimal < 0.6, "Decimal should be around 0.5, got {}", decimal);
 
         // Update another 1.0 frame
-        let (frame, decimal) = t.update(1000.0 / 30.0);
-        assert_eq!(frame, 3);
+        let frame = t.update(1000.0 / 30.0);
+        assert_eq!(floorf(frame), 3.0);
+        let decimal = frame - floorf(frame);
         assert!(decimal > 0.4 && decimal < 0.6, "Decimal should stay around 0.5, got {}", decimal);
     }
 
@@ -695,9 +692,10 @@ mod tests {
         // 0.0 -> 10.0 (end frame) -> 0.0 (start of next loop) -> 0.5 (decimal)
         let delta = (1000.0 / 30.0) * 11.5;
 
-        let (frame, decimal) = t.update(delta);
+        let frame = t.update(delta);
 
-        assert_eq!(frame, 0, "Should have looped back to start frame");
+        assert_eq!(floorf(frame), 0.0, "Should have looped back to start frame");
+        let decimal = frame - floorf(frame);
         assert!(decimal > 0.4 && decimal < 0.6, "Should have 0.5 decimal after loop, got {}", decimal);
         assert_eq!(t.get_remain_loops(), 1, "Should have 1 loop remaining");
     }
@@ -779,8 +777,9 @@ mod tests {
         // 0.0 -> 10.0 (hit end) -> (12.0 - 10.0 = 2.0 frames backwards) -> 8.0
         let delta = (1000.0 / 30.0) * 12.0;
 
-        let (frame, decimal) = t.update(delta);
-        assert_eq!(frame, 8, "Should have bounced back to frame 8");
+        let frame = t.update(delta);
+        assert_eq!(floorf(frame), 8.0, "Should have bounced back to frame 8");
+        let decimal = frame - floorf(frame);
         assert!((0.0..0.001).contains(&decimal), "Decimal should be exactly 0.0, got {}", decimal);
 
         // Check passed_frames for pingpong boundary
