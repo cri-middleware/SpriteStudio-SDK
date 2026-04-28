@@ -420,17 +420,23 @@ pub fn evaluate_shader(
             let Some(next_value) = next.value() else {
                 return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
             };
+
+            let start_params = [
+                prev_value.param0(), prev_value.param1(), prev_value.param2(), prev_value.param3(),
+                prev_value.param4(), prev_value.param5(), prev_value.param6(), prev_value.param7(),
+            ];
+            let end_params = [
+                next_value.param0(), next_value.param1(), next_value.param2(), next_value.param3(),
+                next_value.param4(), next_value.param5(), next_value.param6(), next_value.param7(),
+            ];
+            let mut out_params = [0.0f32; 8];
+            interpolate_array_linear(&start_params, &end_params, rate, &mut out_params);
+
             (
                 runtime::framedata::ss::runtime::PartAttributeShader::new(
                     prev_value.id_hash(),
-                    linear(prev_value.param0(), next_value.param0(), rate),
-                    linear(prev_value.param1(), next_value.param1(), rate),
-                    linear(prev_value.param2(), next_value.param2(), rate),
-                    linear(prev_value.param3(), next_value.param3(), rate),
-                    linear(prev_value.param4(), next_value.param4(), rate),
-                    linear(prev_value.param5(), next_value.param5(), rate),
-                    linear(prev_value.param6(), next_value.param6(), rate),
-                    linear(prev_value.param7(), next_value.param7(), rate),
+                    out_params[0], out_params[1], out_params[2], out_params[3],
+                    out_params[4], out_params[5], out_params[6], out_params[7],
                     prev_value.map0_id(),
                     prev_value.map0_name_hash(),
                     prev_value.map1_id(),
