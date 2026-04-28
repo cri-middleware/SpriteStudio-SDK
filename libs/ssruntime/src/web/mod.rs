@@ -225,11 +225,11 @@ impl SSRuntimeContext {
     }
 
     // Zero-copy getters
-    pub fn get_frame_data_buf(&mut self, frame_no: i32) -> Result<*const u8, JsValue> {
+    pub fn get_frame_data_buf(&mut self, frame_no: f32) -> Result<*const u8, JsValue> {
         self.inner.get_frame_data(frame_no).map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    pub fn get_frame_data_len(&mut self, frame_no: i32) -> Result<usize, JsValue> {
+    pub fn get_frame_data_len(&mut self, frame_no: f32) -> Result<usize, JsValue> {
         self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 

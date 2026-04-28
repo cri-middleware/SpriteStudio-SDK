@@ -337,7 +337,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
-pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_int, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.last_error = 0;
         match ffi_context.ctx.get_frame_data(frame_no) {
