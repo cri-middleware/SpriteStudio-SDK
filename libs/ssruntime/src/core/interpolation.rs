@@ -30,7 +30,7 @@ pub fn get_interpolated_rate(interpolation: InterpolationType, rate: f32) -> f32
 // Optimized for both forward and reverse playback (O(1) fast path).
 // Long distance seeks will fallback to binary search (O(log N)).
 #[inline]
-pub fn search_prev_next<'a, T, F>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>, frame_no: i32, get_index: F, hint: &mut usize) -> Option<(T::Inner, Option<T::Inner>)>
+pub fn search_prev_next<'a, T, F>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<T>>, frame_no: f32, get_index: F, hint: &mut usize) -> Option<(T::Inner, Option<T::Inner>)>
 where
     T: 'a + flatbuffers::Follow<'a>,
     F: Fn(&T::Inner) -> i32,
@@ -48,12 +48,12 @@ where
     let mut curr_val = array.get(i);
     let curr_idx = get_index(&curr_val);
 
-    if curr_idx <= frame_no {
+    if (curr_idx as f32) <= frame_no {
         let mut checks = 0;
         while i + 1 < len && checks < 4 {
             let next_val = array.get(i + 1);
             let next_idx = get_index(&next_val);
-            if frame_no < next_idx {
+            if frame_no < next_idx as f32 {
                 *hint = i;
                 return Some((curr_val, Some(next_val)));
             }
@@ -72,7 +72,7 @@ where
             local_i -= 1;
             let prev_val = array.get(local_i);
             let prev_idx = get_index(&prev_val);
-            if prev_idx <= frame_no {
+            if (prev_idx as f32) <= frame_no {
                 *hint = local_i;
                 return Some((prev_val, Some(array.get(local_i + 1))));
             }
@@ -85,7 +85,7 @@ where
     while left < right {
         let mid = left + (right - left) / 2;
         let mid_val = array.get(mid);
-        if get_index(&mid_val) <= frame_no {
+        if (get_index(&mid_val) as f32) <= frame_no {
             left = mid + 1;
         } else {
             right = mid;
@@ -100,7 +100,7 @@ where
     }
 
     let prev = array.get(left - 1);
-    if get_index(&prev) == frame_no || left == len {
+    if (get_index(&prev) as f32) == frame_no || left == len {
         return Some((prev, None));
     }
 
@@ -180,10 +180,10 @@ where
 }
 
 #[inline]
-pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'_>>>, frame_no: i32, hint: &mut usize) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'_>>>, frame_no: f32, hint: &mut usize) -> Option<(f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -192,21 +192,21 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
                 return (prev.value(), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             (linear(prev.value(), next.value(), rate), UPDATE_FLAG_ON)
         } else {
-            if prev.index() as i32 == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }
     })
 }
 
 #[inline]
-pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'_>>>, frame_no: i32, hint: &mut usize) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataIntValue<'_>>>, frame_no: f32, hint: &mut usize) -> Option<(i32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -215,12 +215,12 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
                 return (prev.value(), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             (crate::core::math::roundf(linear(prev.value() as f32, next.value() as f32, rate)) as i32, UPDATE_FLAG_ON)
         } else {
-            if prev.index() as i32 == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }
     })
 }
@@ -228,12 +228,12 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
 #[inline]
 pub fn evaluate_partcolor(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataPartColor<'_>>>,
-    frame_no: i32,
+    frame_no: f32,
     hint: &mut usize,
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributePartColor, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -242,8 +242,8 @@ pub fn evaluate_partcolor(
                 return (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             let mut current = runtime::framedata::ss::runtime::PartAttributePartColor::default();
             let Some(prev_val) = prev.value() else {
@@ -303,7 +303,7 @@ pub fn evaluate_partcolor(
 
             (current, UPDATE_FLAG_ON)
         } else {
-            if prev.index() as i32 == frame_no { (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF) }
         }
     })
 }
@@ -364,12 +364,12 @@ fn transfer_partcolor(source: &Option<ssab::ssab::ss::format::PartAttributePartC
 #[inline]
 pub fn evaluate_shader(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataShader<'_>>>,
-    frame_no: i32,
+    frame_no: f32,
     hint: &mut usize,
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributeShader, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -378,8 +378,8 @@ pub fn evaluate_shader(
                 return (transfer_shader(&prev.value()), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             let Some(prev_value) = prev.value() else {
                 return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
@@ -406,7 +406,7 @@ pub fn evaluate_shader(
                 UPDATE_FLAG_ON,
             )
         } else {
-            if prev.index() as i32 == frame_no { (transfer_shader(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_shader(&prev.value()), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (transfer_shader(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_shader(&prev.value()), UPDATE_FLAG_OFF) }
         }
     })
 }
@@ -423,12 +423,12 @@ fn transfer_shader(source: &Option<ssab::ssab::ss::format::PartAttributeShader>)
 #[inline]
 pub fn evaluate_vertex(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVertex<'_>>>,
-    frame_no: i32,
+    frame_no: f32,
     hint: &mut usize,
 ) -> Option<(runtime::framedata::ss::runtime::PartAttributeVertex, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -437,8 +437,8 @@ pub fn evaluate_vertex(
                 return (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             let Some(prev_value) = prev.value() else {
                 return (runtime::framedata::ss::runtime::PartAttributeVertex::default(), UPDATE_FLAG_OFF);
@@ -482,7 +482,7 @@ pub fn evaluate_vertex(
                 UPDATE_FLAG_ON,
             )
         } else {
-            if prev.index() as i32 == frame_no { (transfer_vertex(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (transfer_vertex(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF) }
         }
     })
 }
@@ -502,13 +502,13 @@ fn transfer_vertex(source: &Option<ssab::ssab::ss::format::PartAttributeVertex>)
 }
 
 #[inline]
-pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>, frame_no: i32, hint: &mut usize) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>, frame_no: f32, hint: &mut usize) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let Some(prev_value) = prev.value() else {
                 return (0.0, 0.0, UPDATE_FLAG_OFF);
             };
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -517,8 +517,8 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
                 return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             let Some(next_value) = next.value() else {
                 return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF);
@@ -528,7 +528,7 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
             let Some(prev_value) = prev.value() else {
                 return (0.0, 0.0, UPDATE_FLAG_OFF);
             };
-            if prev.index() as i32 == frame_no { (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON) } else { (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON) } else { (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF) }
         }
     })
 }
@@ -542,12 +542,12 @@ pub struct DeformEvaluationData {
 #[inline]
 pub fn evaluate_deform(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
-    frame_no: i32,
+    frame_no: f32,
     hint: &mut usize,
 ) -> Option<(DeformEvaluationData, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let prev_index = prev.index() as i32;
+            let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
                 if prev_index == frame_no {
@@ -556,8 +556,8 @@ pub fn evaluate_deform(
                 return (transfer_deform(&prev.value()), UPDATE_FLAG_OFF);
             }
 
-            let next_index = next.index() as i32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no as f32, prev_index as f32, next_index as f32));
+            let next_index = next.index() as i32 as f32;
+            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
 
             let mut current = DeformEvaluationData::default();
             let Some(prev_val) = prev.value() else {
@@ -589,7 +589,7 @@ pub fn evaluate_deform(
                 (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
             }
         } else {
-            if prev.index() as i32 == frame_no { (transfer_deform(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_deform(&prev.value()), UPDATE_FLAG_OFF) }
+            if (prev.index() as i32 as f32) == frame_no { (transfer_deform(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_deform(&prev.value()), UPDATE_FLAG_OFF) }
         }
     })
 }
@@ -609,17 +609,20 @@ fn transfer_deform(source: &Option<ssab::ssab::ss::format::PartAttributeDeform>)
 }
 
 #[inline]
-pub fn evaluate_bool(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'_>>>, frame_no: i32, hint: &mut usize) -> Option<bool> {
+pub fn evaluate_bool(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataBoolValue<'_>>>, frame_no: f32, hint: &mut usize) -> Option<bool> {
+    let frame_no = crate::core::math::floorf(frame_no) as i32;
     search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
 }
 
 #[inline]
-pub fn evaluate_cell<'a>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>, frame_no: i32, hint: &mut usize) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
+pub fn evaluate_cell<'a>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>, frame_no: f32, hint: &mut usize) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
+    let frame_no = crate::core::math::floorf(frame_no) as i32;
     search_prev(array, frame_no, |v| v.index() as i32, hint).and_then(|prev| prev.value())
 }
 
 #[inline]
-pub fn evaluate_texture(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'_>>>, frame_no: i32, hint: &mut usize) -> Option<u32> {
+pub fn evaluate_texture(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'_>>>, frame_no: f32, hint: &mut usize) -> Option<u32> {
+    let frame_no = crate::core::math::floorf(frame_no) as i32;
     search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
 }
 
@@ -650,15 +653,19 @@ mod tests {
 
         let mut hint = 0;
         // Exact match
-        assert_eq!(evaluate_bool(vector, 0, &mut hint), Some(true));
+        assert_eq!(evaluate_bool(vector, 0.0, &mut hint), Some(true));
         // Interpolated (should use prev)
-        assert_eq!(evaluate_bool(vector, 5, &mut hint), Some(true));
+        assert_eq!(evaluate_bool(vector, 5.0, &mut hint), Some(true));
         // Exact match
-        assert_eq!(evaluate_bool(vector, 10, &mut hint), Some(false));
+        assert_eq!(evaluate_bool(vector, 10.0, &mut hint), Some(false));
         // Beyond last key
-        assert_eq!(evaluate_bool(vector, 15, &mut hint), Some(false));
+        assert_eq!(evaluate_bool(vector, 15.0, &mut hint), Some(false));
         // Before first key
-        assert_eq!(evaluate_bool(vector, -1, &mut hint), None);
+        assert_eq!(evaluate_bool(vector, -1.0, &mut hint), None);
+        // Fractional: floor() applied internally — 9.9 → 9 → still uses prev (true)
+        assert_eq!(evaluate_bool(vector, 9.9, &mut hint), Some(true));
+        // Fractional: 10.0 → 10 → false
+        assert_eq!(evaluate_bool(vector, 10.0, &mut hint), Some(false));
     }
 
     #[test]
@@ -674,10 +681,12 @@ mod tests {
         let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataUIntValue>>>(buf).unwrap();
 
         let mut hint = 0;
-        assert_eq!(evaluate_texture(vector, 0, &mut hint), Some(100));
-        assert_eq!(evaluate_texture(vector, 5, &mut hint), Some(100));
-        assert_eq!(evaluate_texture(vector, 10, &mut hint), Some(200));
-        assert_eq!(evaluate_texture(vector, 15, &mut hint), Some(200));
+        assert_eq!(evaluate_texture(vector, 0.0, &mut hint), Some(100));
+        assert_eq!(evaluate_texture(vector, 5.0, &mut hint), Some(100));
+        assert_eq!(evaluate_texture(vector, 10.0, &mut hint), Some(200));
+        assert_eq!(evaluate_texture(vector, 15.0, &mut hint), Some(200));
+        // Fractional: floor() applied internally — 9.99 → 9 → still 100
+        assert_eq!(evaluate_texture(vector, 9.99, &mut hint), Some(100));
     }
 
     #[test]
@@ -695,19 +704,69 @@ mod tests {
 
         let mut hint = 0;
         // At frame 0, should be ON and 100
-        let (val, flags) = evaluate_int(vector, 0, &mut hint).unwrap();
+        let (val, flags) = evaluate_int(vector, 0.0, &mut hint).unwrap();
         assert_eq!(val, 100);
         assert!(!flags.is_empty());
 
         // At frame 5, should be OFF (inherited) and 100
-        let (val, flags) = evaluate_int(vector, 5, &mut hint).unwrap();
+        let (val, flags) = evaluate_int(vector, 5.0, &mut hint).unwrap();
         assert_eq!(val, 100);
         assert!(flags.is_empty());
 
         // At frame 10, should be ON and 200
-        let (val, flags) = evaluate_int(vector, 10, &mut hint).unwrap();
+        let (val, flags) = evaluate_int(vector, 10.0, &mut hint).unwrap();
         assert_eq!(val, 200);
         assert!(!flags.is_empty());
+    }
+
+    #[test]
+    fn test_evaluate_int_linear_interpolation_fractional() {
+        use ssab::ssab::ss::format::{PartAnimationDataIntValue, PartAnimationDataIntValueArgs};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+
+        let v0 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 0, value: 0, interpolation: InterpolationType::Linear });
+        let v10 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 10, value: 100, interpolation: InterpolationType::None });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataIntValue>>>(buf).unwrap();
+
+        // Fractional frame: 5.5 should yield round(linear(0,100,0.55)) == 55
+        let mut hint = 0;
+        let (val, flags) = evaluate_int(vector, 5.5, &mut hint).unwrap();
+        assert_eq!(val, 55);
+        assert!(!flags.is_empty());
+
+        // Integer frame still works at the keyframe (rate=0.5 -> 50)
+        let mut hint = 0;
+        let (val, _) = evaluate_int(vector, 5.0, &mut hint).unwrap();
+        assert_eq!(val, 50);
+    }
+
+    #[test]
+    fn test_evaluate_float_linear_interpolation_fractional() {
+        use ssab::ssab::ss::format::{PartAnimationDataFloatValue, PartAnimationDataFloatValueArgs};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+
+        let v0 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 0, value: 0.0, interpolation: InterpolationType::Linear });
+        let v10 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 10, value: 1.0, interpolation: InterpolationType::None });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>(buf).unwrap();
+
+        // Fractional 2.5 → rate 0.25
+        let mut hint = 0;
+        let (val, flags) = evaluate_float(vector, 2.5, &mut hint).unwrap();
+        assert!((val - 0.25).abs() < 1e-6, "expected ~0.25, got {val}");
+        assert!(!flags.is_empty());
+
+        // Integer 5 → rate 0.5
+        let mut hint = 0;
+        let (val, _) = evaluate_float(vector, 5.0, &mut hint).unwrap();
+        assert!((val - 0.5).abs() < 1e-6);
     }
 
     #[test]
@@ -728,12 +787,17 @@ mod tests {
         let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataCellValue>>>(buf).unwrap();
 
         let mut hint = 0;
-        let res = evaluate_cell(vector, 5, &mut hint).unwrap();
+        let res = evaluate_cell(vector, 5.0, &mut hint).unwrap();
         assert_eq!(res.map_id(), 1);
         assert_eq!(res.name_hash(), 111);
 
-        let res = evaluate_cell(vector, 10, &mut hint).unwrap();
+        let res = evaluate_cell(vector, 10.0, &mut hint).unwrap();
         assert_eq!(res.map_id(), 2);
         assert_eq!(res.name_hash(), 222);
+
+        // Fractional: floor() applied internally — 9.999 → 9 → still cell A
+        let mut hint = 0;
+        let res = evaluate_cell(vector, 9.999, &mut hint).unwrap();
+        assert_eq!(res.map_id(), 1);
     }
 }

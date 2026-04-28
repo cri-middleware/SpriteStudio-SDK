@@ -144,7 +144,7 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
+pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
     // Set SpriteStudio default values
@@ -385,7 +385,7 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: i32, part_cu
 fn get_parts<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     cached_parts: &[CachedPartData<'a>],
-    frame_no: i32,
+    frame_no: f32,
     parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
     cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
     parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
@@ -495,7 +495,7 @@ fn get_parts<'a>(
 pub fn get_frame_data<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     cached_parts: &[CachedPartData<'a>],
-    frame_no: i32,
+    frame_no: f32,
     parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
     cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
     parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,

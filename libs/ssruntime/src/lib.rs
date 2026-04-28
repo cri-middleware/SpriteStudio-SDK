@@ -503,7 +503,7 @@ impl<'a> Context<'a> {
         self.controller.update(delta_time);
     }
 
-    pub fn get_frame_data(&mut self, frame_no: i32) -> Result<&[u8], error::SSRuntimeError> {
+    pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(resource) = self.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
@@ -513,7 +513,7 @@ impl<'a> Context<'a> {
         }
 
         let metadata = &resource.animations[self.animation_idx as usize];
-        if !(metadata.start_frame <= frame_no && frame_no <= metadata.end_frame) {
+        if !((metadata.start_frame as f32) <= frame_no && frame_no <= (metadata.end_frame as f32)) {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
@@ -935,7 +935,7 @@ mod tests {
 
         // Test frame 0
         {
-            let frame_data_buf = context.get_frame_data(0).expect("Failed to get frame data at frame 0");
+            let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data at frame 0");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
@@ -945,7 +945,7 @@ mod tests {
 
         // Test frame 5 (interpolating)
         {
-            let frame_data_buf = context.get_frame_data(5).expect("Failed to get frame data at frame 5");
+            let frame_data_buf = context.get_frame_data(5.0).expect("Failed to get frame data at frame 5");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
@@ -955,7 +955,7 @@ mod tests {
 
         // Test frame 10
         {
-            let frame_data_buf = context.get_frame_data(10).expect("Failed to get frame data at frame 10");
+            let frame_data_buf = context.get_frame_data(10.0).expect("Failed to get frame data at frame 10");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
@@ -965,7 +965,7 @@ mod tests {
 
         // Test frame 11 (not interpolating, no key)
         {
-            let frame_data_buf = context.get_frame_data(11).expect("Failed to get frame data at frame 11");
+            let frame_data_buf = context.get_frame_data(11.0).expect("Failed to get frame data at frame 11");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
@@ -1003,13 +1003,13 @@ mod tests {
         let hide_part_idx = parts_meta.iter().position(|p| p.name() == Some("HIDE")).expect("Part HIDE not found") as i16;
 
         // Frame 0: Not hidden
-        let frame_0_buf = context.get_frame_data(0).unwrap();
+        let frame_0_buf = context.get_frame_data(0.0).unwrap();
         let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
         let hide_state_0 = frame_0.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert!(!hide_state_0.hide());
 
         // Frame 2: Hidden
-        let frame_2_buf = context.get_frame_data(2).unwrap();
+        let frame_2_buf = context.get_frame_data(2.0).unwrap();
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
         let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert!(hide_state_2.hide());
@@ -1028,7 +1028,7 @@ mod tests {
         context.setup_animation("anime_1").expect("Failed to setup animation");
 
         // Verify world matrices are computed correctly
-        let frame_no = 0;
+        let frame_no = 0.0;
         let _ = context.get_frame_data(frame_no).expect("Failed to get frame data");
 
         let world_matrices_ptr = context.get_world_matrices_ptr();
@@ -1075,7 +1075,7 @@ mod tests {
 
         // Test frame 0
         {
-            let frame_0_buf = context.get_frame_data(0).unwrap();
+            let frame_0_buf = context.get_frame_data(0.0).unwrap();
             let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
             let parts = frame_0.parts().unwrap();
             let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 0");
@@ -1091,7 +1091,7 @@ mod tests {
 
         // Test frame 10: Interpolated deform
         {
-            let frame_10_buf = context.get_frame_data(10).unwrap();
+            let frame_10_buf = context.get_frame_data(10.0).unwrap();
             let frame_10 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_10_buf) };
             let parts = frame_10.parts().unwrap();
             let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 10");
