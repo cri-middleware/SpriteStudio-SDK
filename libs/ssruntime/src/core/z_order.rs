@@ -58,11 +58,7 @@ impl ZOrderTable {
         self.indices.sort_by(|&a, &b| {
             let pa = &parts[a];
             let pb = &parts[b];
-            if pa.priority() == pb.priority() {
-                pa.part_index().cmp(&pb.part_index())
-            } else {
-                pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal)
-            }
+            if pa.priority() == pb.priority() { pa.part_index().cmp(&pb.part_index()) } else { pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal) }
         });
 
         self.write_ranks();

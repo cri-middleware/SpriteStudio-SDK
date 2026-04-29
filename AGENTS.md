@@ -37,25 +37,31 @@ SpriteStudio7-SDK is designed to provide professional-grade animation capabiliti
 *   [x] Add SSAB and FrameData schema documentation.
 *   [x] Web (WASM) support for direct JS/TS usage via `wasm-pack`.
 *   [x] Support for `no_std` environments (embedded/bare-metal).
-*   [ ] Animation Mixing/Blending implementation in `ssruntime`.
+*   [ ] SSPlayer for Godot integration (serves as both C-API validation and Player migration).
 
 **Phase 2: Ecosystem & Integration**
 *   [ ] Migration of existing Players to use `ssruntime`.
+*   [ ] `ssplayer-wgpu` implementation.
 
-**Phase 3: Feature Expansion & Schema Additions (Post-Release)**
-*(Note: Adding fields to `.fbs` schemas is generally acceptable, but changing existing `FrameData` structures forces Player updates.)*
+**Phase 3: Feature Expansion (Post-Release)**
+*(Note: Phase 3 items are expected to be implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only. Any item that turns out to require schema changes should be reconsidered for an earlier phase.)*
+*   [ ] Animation Mixing/Blending implementation in `ssruntime` (whole-animation weighted blend).
+*   [ ] Per-part mask support (extends Mixing/Blending with per-part targeting; also enables selective evaluation).
+*   [ ] Animation Instancing: shared evaluation context for driving many instances of the same animation, consumable by Players (e.g., for crowd-style rendering).
 *   [ ] State machine implementation.
 
 ### Key Components
 
 *   **`cli` (ssconverter-cli)**: A command-line tool that wraps `ssconverter` to convert SpriteStudio project files (`.sspj`) into binary animation files (`.ssab`). It supports batch processing and parallel conversion.
+    *   [**CLI README**](./cli/README.md) ([日本語](./cli/README.ja.md))
 *   **`libs/sspj`**: A pure Rust library responsible for parsing the XML-based SpriteStudio project files (`.sspj`, `.ssae`, `.ssee`, etc.) using `quick-xml` and `serde`.
 *   **`libs/ssconverter`**: The core conversion logic that transforms parsed `sspj` data into the `ssab` binary format. It utilizes `rayon` for parallel processing and exposes a C-API for integration.
+    *   [**Converter Usage Guide**](./libs/ssconverter/docs/USAGE.md) ([日本語](./libs/ssconverter/docs/USAGE.ja.md))
 *   **`libs/ssab`**: Defines the schema and structure for the `.ssab` binary format, utilizing **FlatBuffers** for efficient serialization and deserialization.
     *   [**SSAB Schema Documentation**](./libs/ssab/SCHEMA.md)
 *   **`libs/ssinterpolate`**: A platform-agnostic math library for animation interpolations.
 *   **`libs/ssruntime`**: A platform-agnostic runtime library for playing back `.ssab` animations. It handles playback control, interpolation, and state updates, exposing a C-API for integration into game engines (e.g., Unity, Unreal, custom engines). **Note:** It does not handle rendering directly; it provides the state required for a renderer.
-    *   [**FrameData Schema Documentation**](./libs/ssruntime/SCHEMA.md)
+    *   [**FrameData Schema Documentation**](./libs/ssruntime/SCHEMA.md) ([日本語](./libs/ssruntime/SCHEMA.ja.md))
 
 ## Architecture & Technologies
 
@@ -157,7 +163,9 @@ Platform-specific release scripts are located in the `scripts/` directory. These
 *   **Documentation**:
     *   [**Player Implementation Guide (Japanese)**](./libs/ssruntime/docs/README.ja.md): Step-by-step guide for building a custom renderer.
     *   [**SSAB Schema**](./libs/ssab/SCHEMA.md): Detailed description of the optimized binary asset format.
-    *   [**FrameData Schema**](./libs/ssruntime/SCHEMA.md): Specification of the runtime data exchange interface.
+    *   [**FrameData Schema**](./libs/ssruntime/SCHEMA.md) ([日本語](./libs/ssruntime/SCHEMA.ja.md)): Specification of the runtime data exchange interface.
+    *   [**Converter Usage Guide**](./libs/ssconverter/docs/USAGE.md) ([日本語](./libs/ssconverter/docs/USAGE.ja.md)): How to invoke `ssconverter` / `ssconverter-cli`.
+    *   [**CLI README**](./cli/README.md) ([日本語](./cli/README.ja.md)): Command-line interface reference.
 *   **Testing**: Unit tests are co-located with source code or in the `tests/` directory. The CLI has integration tests that run conversions on sample projects in `tests/`.
 *   **FFI**: Libraries intended for external use (`ssconverter`, `ssruntime`) expose C-compatible APIs and use `cbindgen` for header generation.
 *   **Formatting**: Standard `rustfmt` guidelines are enforced. Auto-formatting and linting (`clippy`) are checked in CI.

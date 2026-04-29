@@ -58,32 +58,15 @@ pub fn get_interpolated_rate(interpolation: InterpolationType, frame_no: f32, pr
 // e.g. a Y position interpolation curve flip direction when the value range is descending.
 // For other interpolation types the rate is value-independent, so we use the existing rate path.
 #[inline]
-fn evaluate_curve_value_f32(
-    interpolation: InterpolationType,
-    frame_no: f32,
-    prev_frame: f32,
-    next_frame: f32,
-    prev_value: f32,
-    next_value: f32,
-    curve: Option<ssab::ssab::ss::format::SsCurve>,
-    easing_rate: f32,
-) -> f32 {
+fn evaluate_curve_value_f32(interpolation: InterpolationType, frame_no: f32, prev_frame: f32, next_frame: f32, prev_value: f32, next_value: f32, curve: Option<ssab::ssab::ss::format::SsCurve>, easing_rate: f32) -> f32 {
     match interpolation {
         InterpolationType::Hermite => {
             let rate = rate_linear(frame_no, prev_frame, next_frame);
-            if let Some(c) = curve {
-                hermite(prev_value, next_value, rate, c.start_value(), c.end_value())
-            } else {
-                linear(prev_value, next_value, rate)
-            }
+            if let Some(c) = curve { hermite(prev_value, next_value, rate, c.start_value(), c.end_value()) } else { linear(prev_value, next_value, rate) }
         }
         InterpolationType::Bezier => {
             let rate = rate_linear(frame_no, prev_frame, next_frame);
-            if let Some(c) = curve {
-                bezier(prev_frame, prev_value, next_frame, next_value, rate, c.start_time(), c.start_value(), c.end_time(), c.end_value())
-            } else {
-                linear(prev_value, next_value, rate)
-            }
+            if let Some(c) = curve { bezier(prev_frame, prev_value, next_frame, next_value, rate, c.start_time(), c.start_value(), c.end_time(), c.end_value()) } else { linear(prev_value, next_value, rate) }
         }
         _ => {
             let rate = get_interpolated_rate(interpolation, frame_no, prev_frame, next_frame, curve, easing_rate);
@@ -337,18 +320,8 @@ pub fn evaluate_partcolor(
             let n_lb = get_color(&next_val.lb());
             let n_rb = get_color(&next_val.rb());
 
-            let start_color = [
-                p_lt.0, p_lt.1, p_lt.2, p_lt.3,
-                p_rt.0, p_rt.1, p_rt.2, p_rt.3,
-                p_lb.0, p_lb.1, p_lb.2, p_lb.3,
-                p_rb.0, p_rb.1, p_rb.2, p_rb.3,
-            ];
-            let end_color = [
-                n_lt.0, n_lt.1, n_lt.2, n_lt.3,
-                n_rt.0, n_rt.1, n_rt.2, n_rt.3,
-                n_lb.0, n_lb.1, n_lb.2, n_lb.3,
-                n_rb.0, n_rb.1, n_rb.2, n_rb.3,
-            ];
+            let start_color = [p_lt.0, p_lt.1, p_lt.2, p_lt.3, p_rt.0, p_rt.1, p_rt.2, p_rt.3, p_lb.0, p_lb.1, p_lb.2, p_lb.3, p_rb.0, p_rb.1, p_rb.2, p_rb.3];
+            let end_color = [n_lt.0, n_lt.1, n_lt.2, n_lt.3, n_rt.0, n_rt.1, n_rt.2, n_rt.3, n_lb.0, n_lb.1, n_lb.2, n_lb.3, n_rb.0, n_rb.1, n_rb.2, n_rb.3];
             let mut out_color = [0.0; 16];
             interpolate_color_linear(&start_color, &end_color, rate, &mut out_color);
 
@@ -359,15 +332,7 @@ pub fn evaluate_partcolor(
 
             let create_color = |idx: usize| -> runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
                 let base = idx * 4;
-                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(
-                    &runtime::framedata::ss::runtime::U8Rect::new(
-                        out_color[base] as u8,
-                        out_color[base + 1] as u8,
-                        out_color[base + 2] as u8,
-                        out_color[base + 3] as u8,
-                    ),
-                    out_rate[idx],
-                )
+                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&runtime::framedata::ss::runtime::U8Rect::new(out_color[base] as u8, out_color[base + 1] as u8, out_color[base + 2] as u8, out_color[base + 3] as u8), out_rate[idx])
             };
 
             current.set_lt(&create_color(0));
@@ -463,22 +428,22 @@ pub fn evaluate_shader(
                 return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
             };
 
-            let start_params = [
-                prev_value.param0(), prev_value.param1(), prev_value.param2(), prev_value.param3(),
-                prev_value.param4(), prev_value.param5(), prev_value.param6(), prev_value.param7(),
-            ];
-            let end_params = [
-                next_value.param0(), next_value.param1(), next_value.param2(), next_value.param3(),
-                next_value.param4(), next_value.param5(), next_value.param6(), next_value.param7(),
-            ];
+            let start_params = [prev_value.param0(), prev_value.param1(), prev_value.param2(), prev_value.param3(), prev_value.param4(), prev_value.param5(), prev_value.param6(), prev_value.param7()];
+            let end_params = [next_value.param0(), next_value.param1(), next_value.param2(), next_value.param3(), next_value.param4(), next_value.param5(), next_value.param6(), next_value.param7()];
             let mut out_params = [0.0f32; 8];
             interpolate_array_linear(&start_params, &end_params, rate, &mut out_params);
 
             (
                 runtime::framedata::ss::runtime::PartAttributeShader::new(
                     prev_value.id_hash(),
-                    out_params[0], out_params[1], out_params[2], out_params[3],
-                    out_params[4], out_params[5], out_params[6], out_params[7],
+                    out_params[0],
+                    out_params[1],
+                    out_params[2],
+                    out_params[3],
+                    out_params[4],
+                    out_params[5],
+                    out_params[6],
+                    out_params[7],
                     prev_value.map0_id(),
                     prev_value.map0_name_hash(),
                     prev_value.map1_id(),
@@ -540,20 +505,13 @@ pub fn evaluate_vertex(
             let n_lb = get_coords(&next_value.lb());
             let n_rb = get_coords(&next_value.rb());
 
-            let start_arr = [
-                p_lt.0, p_lt.1, p_rt.0, p_rt.1,
-                p_lb.0, p_lb.1, p_rb.0, p_rb.1,
-            ];
-            let end_arr = [
-                n_lt.0, n_lt.1, n_rt.0, n_rt.1,
-                n_lb.0, n_lb.1, n_rb.0, n_rb.1,
-            ];
+            let start_arr = [p_lt.0, p_lt.1, p_rt.0, p_rt.1, p_lb.0, p_lb.1, p_rb.0, p_rb.1];
+            let end_arr = [n_lt.0, n_lt.1, n_rt.0, n_rt.1, n_lb.0, n_lb.1, n_rb.0, n_rb.1];
             let mut out_arr = [0.0; 8];
             interpolate_vertex_linear(&start_arr, &end_arr, rate, &mut out_arr);
 
             let r_v1 = [out_arr[0], out_arr[2], out_arr[4], out_arr[6]];
             let r_v2 = [out_arr[1], out_arr[3], out_arr[5], out_arr[7]];
-
 
             (
                 runtime::framedata::ss::runtime::PartAttributeVertex::new(
@@ -1019,6 +977,7 @@ mod tests {
     // -- evaluate_deform tests --
 
     /// Build a single PartAnimationDataDeform key with given index, interpolation, coordinates, and indices.
+    #[allow(clippy::type_complexity)]
     fn deform_buf(keys: &[(u16, InterpolationType, &[(f32, f32)], &[i16])]) -> alloc::vec::Vec<u8> {
         use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs, Vec2, Vec2Args};
 
@@ -1122,9 +1081,9 @@ mod tests {
             assert!((data.coordinate[i].y() - exp_y).abs() < 1e-4, "interpolated y mismatch at {i}");
         }
         // Indices 4 and 5: passthrough from prev.
-        for i in 4..6 {
-            assert_eq!(data.coordinate[i].x(), prev[i].0, "overrun x at {i}");
-            assert_eq!(data.coordinate[i].y(), prev[i].1, "overrun y at {i}");
+        for (i, p) in prev.iter().enumerate().take(6).skip(4) {
+            assert_eq!(data.coordinate[i].x(), p.0, "overrun x at {i}");
+            assert_eq!(data.coordinate[i].y(), p.1, "overrun y at {i}");
         }
     }
 
