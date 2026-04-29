@@ -971,272 +971,245 @@ macro_rules! process_simple_attribute {
 }
 
 fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime) {
-    part_anime.attributes.iter().for_each(|attribute| {
-        match attribute {
-            sspj::ssattribute::SsAttributeKind::Cell(v) => {
-                process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
-                    let mut c_args = ssab::ssab::ss::format::PartAttributeCellT::default();
-                    c_args.map_id = k.value.map_id;
-                    c_args.name_hash = crate::utils::fnv1a_hash_str(&k.value.name);
-                    Some(Box::new(c_args))
+    part_anime.attributes.iter().for_each(|attribute| match attribute {
+        sspj::ssattribute::SsAttributeKind::Cell(v) => {
+            process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
+                let mut c_args = ssab::ssab::ss::format::PartAttributeCellT::default();
+                c_args.map_id = k.value.map_id;
+                c_args.name_hash = crate::utils::fnv1a_hash_str(&k.value.name);
+                Some(Box::new(c_args))
+            });
+        }
+        sspj::ssattribute::SsAttributeKind::PosX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::PosY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::PosZ(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::RotX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::RotY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::RotZ(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::SclX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::SclY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::LosclX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::LosclY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::Alpha(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::Prio(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.priority_array, ssab::ssab::ss::format::PartAnimationDataIntValueT, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::FlipH(v) => {
+            process_simple_attribute!(&v.keys, p_arg.flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::FlipV(v) => {
+            process_simple_attribute!(&v.keys, p_arg.flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::Hide(v) => {
+            process_simple_attribute!(&v.keys, p_arg.hide_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::PivotX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::PivotY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::SizeX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::SizeY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
+            process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
+            process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::UvtX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::UvtY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::UvsX(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::UvsY(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::Boundr(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::Mask(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
+        }
+        sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, ssab::ssab::ss::format::PartAnimationDataPartColorT, |k: &sspj::ssattribute::SsAttributePartsColorKey| {
+                let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
+                value.blend_type = convert_alpha_blend_type(&k.value.blend_type);
+                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+                rgba.a = k.value.lt.rgba.a;
+                rgba.r = k.value.lt.rgba.r;
+                rgba.g = k.value.lt.rgba.g;
+                rgba.b = k.value.lt.rgba.b;
+                key_value.rgba = Some(Box::new(rgba));
+                key_value.rate = k.value.lt.rate;
+                value.lt = Some(Box::new(key_value));
+                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+                rgba.a = k.value.rt.rgba.a;
+                rgba.r = k.value.rt.rgba.r;
+                rgba.g = k.value.rt.rgba.g;
+                rgba.b = k.value.rt.rgba.b;
+                key_value.rgba = Some(Box::new(rgba));
+                key_value.rate = k.value.rt.rate;
+                value.rt = Some(Box::new(key_value));
+                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+                rgba.a = k.value.lb.rgba.a;
+                rgba.r = k.value.lb.rgba.r;
+                rgba.g = k.value.lb.rgba.g;
+                rgba.b = k.value.lb.rgba.b;
+                key_value.rgba = Some(Box::new(rgba));
+                key_value.rate = k.value.lb.rate;
+                value.lb = Some(Box::new(key_value));
+                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+                rgba.a = k.value.rb.rgba.a;
+                rgba.r = k.value.rb.rgba.r;
+                rgba.g = k.value.rb.rgba.g;
+                rgba.b = k.value.rb.rgba.b;
+                key_value.rgba = Some(Box::new(rgba));
+                key_value.rate = k.value.rb.rate;
+                value.rb = Some(Box::new(key_value));
+                Some(Box::new(value))
+            });
+        }
+        sspj::ssattribute::SsAttributeKind::Shader(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.shader_array, ssab::ssab::ss::format::PartAnimationDataShaderT, |k: &sspj::ssattribute::SsAttributeShaderKey| {
+                let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
+                value.id = Some(k.value.id.clone());
+                value.id_hash = crate::utils::fnv1a_hash_str(&k.value.id);
+                value.param0 = k.value.param0;
+                value.param1 = k.value.param1;
+                value.param2 = k.value.param2;
+                value.param3 = k.value.param3;
+                value.param4 = k.value.param4;
+                value.param5 = k.value.param5;
+                value.param6 = k.value.param6;
+                value.param7 = k.value.param7;
+                value.map0_id = k.value.map0.map_id;
+                value.map0_name_hash = crate::utils::fnv1a_hash_str(&k.value.map0.name);
+                value.map1_id = k.value.map1.map_id;
+                value.map1_name_hash = crate::utils::fnv1a_hash_str(&k.value.map1.name);
+                Some(Box::new(value))
+            });
+        }
+        sspj::ssattribute::SsAttributeKind::Vertex(v) => {
+            let mut skew_keys = Vec::new();
+            let mut vertex_keys = Vec::new();
+            for key in &v.keys {
+                if key.value.use_skew.unwrap_or(false) {
+                    skew_keys.push(key);
+                } else {
+                    vertex_keys.push(key);
+                }
+            }
+            if !skew_keys.is_empty() {
+                process_interpolatable_attribute!(&skew_keys, p_arg.skew_array, ssab::ssab::ss::format::PartAnimationDataVec2T, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                    k.value.skew.as_ref().map(|v| {
+                        let mut val = ssab::ssab::ss::format::Vec2T::default();
+                        val.v1 = v.x;
+                        val.v2 = v.y;
+                        Box::new(val)
+                    })
                 });
             }
-            sspj::ssattribute::SsAttributeKind::PosX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.position_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::PosY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.position_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::PosZ(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.position_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::RotX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.rotation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::RotY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.rotation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::RotZ(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::SclX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::SclY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::LosclX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.local_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::LosclY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.local_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::Alpha(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::LoAlpha(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.local_alpha_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::Prio(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.priority_array, ssab::ssab::ss::format::PartAnimationDataIntValueT, |k: &sspj::ssattribute::SsAttributeIntKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::FlipH(v) => {
-                process_simple_attribute!(&v.keys, p_arg.flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::FlipV(v) => {
-                process_simple_attribute!(&v.keys, p_arg.flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::Hide(v) => {
-                process_simple_attribute!(&v.keys, p_arg.hide_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::PivotX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::PivotY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.pivot_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::AnchorX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.anchor_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::AnchorY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.anchor_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::SizeX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.size_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::SizeY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.size_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::ImgFlipH(v) => {
-                process_simple_attribute!(&v.keys, p_arg.img_flip_h_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::ImgFlipV(v) => {
-                process_simple_attribute!(&v.keys, p_arg.img_flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::UvtX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::UvtY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_translation_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::UvrZ(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_rotation_z_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::UvsX(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::UvsY(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.uv_scale_y_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::Boundr(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.bounding_radius_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::Mask(v) => {
-                process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
-            }
-            sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-                process_interpolatable_attribute!(
-                    &v.keys,
-                    p_arg.part_color_array,
-                    ssab::ssab::ss::format::PartAnimationDataPartColorT,
-                    |k: &sspj::ssattribute::SsAttributePartsColorKey| {
-                        let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
-                        value.blend_type = convert_alpha_blend_type(&k.value.blend_type);
-                        let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                        let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                        rgba.a = k.value.lt.rgba.a;
-                        rgba.r = k.value.lt.rgba.r;
-                        rgba.g = k.value.lt.rgba.g;
-                        rgba.b = k.value.lt.rgba.b;
-                        key_value.rgba = Some(Box::new(rgba));
-                        key_value.rate = k.value.lt.rate;
-                        value.lt = Some(Box::new(key_value));
-                        let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                        let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                        rgba.a = k.value.rt.rgba.a;
-                        rgba.r = k.value.rt.rgba.r;
-                        rgba.g = k.value.rt.rgba.g;
-                        rgba.b = k.value.rt.rgba.b;
-                        key_value.rgba = Some(Box::new(rgba));
-                        key_value.rate = k.value.rt.rate;
-                        value.rt = Some(Box::new(key_value));
-                        let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                        let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                        rgba.a = k.value.lb.rgba.a;
-                        rgba.r = k.value.lb.rgba.r;
-                        rgba.g = k.value.lb.rgba.g;
-                        rgba.b = k.value.lb.rgba.b;
-                        key_value.rgba = Some(Box::new(rgba));
-                        key_value.rate = k.value.lb.rate;
-                        value.lb = Some(Box::new(key_value));
-                        let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                        let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                        rgba.a = k.value.rb.rgba.a;
-                        rgba.r = k.value.rb.rgba.r;
-                        rgba.g = k.value.rb.rgba.g;
-                        rgba.b = k.value.rb.rgba.b;
-                        key_value.rgba = Some(Box::new(rgba));
-                        key_value.rate = k.value.rb.rate;
-                        value.rb = Some(Box::new(key_value));
-                        Some(Box::new(value))
+            if !vertex_keys.is_empty() {
+                process_interpolatable_attribute!(&vertex_keys, p_arg.vertex_array, ssab::ssab::ss::format::PartAnimationDataVertexT, |k: &sspj::ssattribute::SsAttributeVertexKey| {
+                    let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
+                    let mut c = ssab::ssab::ss::format::Vec2T::default();
+                    if let Some(p) = k.value.lt.as_ref() {
+                        c.v1 = p.x;
+                        c.v2 = p.y;
                     }
-                );
-            }
-            sspj::ssattribute::SsAttributeKind::Shader(v) => {
-                process_interpolatable_attribute!(
-                    &v.keys,
-                    p_arg.shader_array,
-                    ssab::ssab::ss::format::PartAnimationDataShaderT,
-                    |k: &sspj::ssattribute::SsAttributeShaderKey| {
-                        let mut value = ssab::ssab::ss::format::PartAttributeShaderT::default();
-                        value.id = Some(k.value.id.clone());
-                        value.id_hash = crate::utils::fnv1a_hash_str(&k.value.id);
-                        value.param0 = k.value.param0;
-                        value.param1 = k.value.param1;
-                        value.param2 = k.value.param2;
-                        value.param3 = k.value.param3;
-                        value.param4 = k.value.param4;
-                        value.param5 = k.value.param5;
-                        value.param6 = k.value.param6;
-                        value.param7 = k.value.param7;
-                        value.map0_id = k.value.map0.map_id;
-                        value.map0_name_hash = crate::utils::fnv1a_hash_str(&k.value.map0.name);
-                        value.map1_id = k.value.map1.map_id;
-                        value.map1_name_hash = crate::utils::fnv1a_hash_str(&k.value.map1.name);
-                        Some(Box::new(value))
+                    value.lt = Some(Box::new(c));
+                    let mut c = ssab::ssab::ss::format::Vec2T::default();
+                    if let Some(p) = k.value.rt.as_ref() {
+                        c.v1 = p.x;
+                        c.v2 = p.y;
                     }
-                );
-            }
-            sspj::ssattribute::SsAttributeKind::Vertex(v) => {
-                let mut skew_keys = Vec::new();
-                let mut vertex_keys = Vec::new();
-                for key in &v.keys {
-                    if key.value.use_skew.unwrap_or(false) {
-                        skew_keys.push(key);
-                    } else {
-                        vertex_keys.push(key);
+                    value.rt = Some(Box::new(c));
+                    let mut c = ssab::ssab::ss::format::Vec2T::default();
+                    if let Some(p) = k.value.lb.as_ref() {
+                        c.v1 = p.x;
+                        c.v2 = p.y;
                     }
-                }
-                if !skew_keys.is_empty() {
-                    process_interpolatable_attribute!(
-                        &skew_keys,
-                        p_arg.skew_array,
-                        ssab::ssab::ss::format::PartAnimationDataVec2T,
-                        |k: &sspj::ssattribute::SsAttributeVertexKey| {
-                            k.value.skew.as_ref().map(|v| {
-                                let mut val = ssab::ssab::ss::format::Vec2T::default();
-                                val.v1 = v.x;
-                                val.v2 = v.y;
-                                Box::new(val)
-                            })
-                        }
-                    );
-                }
-                if !vertex_keys.is_empty() {
-                    process_interpolatable_attribute!(
-                        &vertex_keys,
-                        p_arg.vertex_array,
-                        ssab::ssab::ss::format::PartAnimationDataVertexT,
-                        |k: &sspj::ssattribute::SsAttributeVertexKey| {
-                            let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            if let Some(p) = k.value.lt.as_ref() {
-                                c.v1 = p.x;
-                                c.v2 = p.y;
-                            }
-                            value.lt = Some(Box::new(c));
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            if let Some(p) = k.value.rt.as_ref() {
-                                c.v1 = p.x;
-                                c.v2 = p.y;
-                            }
-                            value.rt = Some(Box::new(c));
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            if let Some(p) = k.value.lb.as_ref() {
-                                c.v1 = p.x;
-                                c.v2 = p.y;
-                            }
-                            value.lb = Some(Box::new(c));
-                            let mut c = ssab::ssab::ss::format::Vec2T::default();
-                            if let Some(p) = k.value.rb.as_ref() {
-                                c.v1 = p.x;
-                                c.v2 = p.y;
-                            }
-                            value.rb = Some(Box::new(c));
-                            Some(Box::new(value))
-                        }
-                    );
-                }
-            }
-            sspj::ssattribute::SsAttributeKind::Deform(v) => {
-                process_interpolatable_attribute!(
-                    &v.keys,
-                    p_arg.deform_array,
-                    ssab::ssab::ss::format::PartAnimationDataDeformT,
-                    |k: &sspj::ssattribute::SsAttributeDeformKey| {
-                        let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-                        value.coordinate = Some(
-                            k.value
-                                .vchg
-                                .iter()
-                                .map(|p| {
-                                    let mut v = ssab::ssab::ss::format::Vec2T::default();
-                                    v.v1 = p.x;
-                                    v.v2 = p.y;
-                                    v
-                                })
-                                .collect(),
-                        );
-                        value.index = Some(k.value.vchg.iter().map(|p| p.x_index as i16).collect());
-                        Some(Box::new(value))
+                    value.lb = Some(Box::new(c));
+                    let mut c = ssab::ssab::ss::format::Vec2T::default();
+                    if let Some(p) = k.value.rb.as_ref() {
+                        c.v1 = p.x;
+                        c.v2 = p.y;
                     }
-                );
+                    value.rb = Some(Box::new(c));
+                    Some(Box::new(value))
+                });
             }
-            sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-                process_simple_attribute!(&v.keys, p_arg.texture_array, ssab::ssab::ss::format::PartAnimationDataUIntValueT, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_str(&k.value.texture_name) });
-            }
-            _ => {}
         }
+        sspj::ssattribute::SsAttributeKind::Deform(v) => {
+            process_interpolatable_attribute!(&v.keys, p_arg.deform_array, ssab::ssab::ss::format::PartAnimationDataDeformT, |k: &sspj::ssattribute::SsAttributeDeformKey| {
+                let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
+                value.coordinate = Some(
+                    k.value
+                        .vchg
+                        .iter()
+                        .map(|p| {
+                            let mut v = ssab::ssab::ss::format::Vec2T::default();
+                            v.v1 = p.x;
+                            v.v2 = p.y;
+                            v
+                        })
+                        .collect(),
+                );
+                value.index = Some(k.value.vchg.iter().map(|p| p.x_index as i16).collect());
+                Some(Box::new(value))
+            });
+        }
+        sspj::ssattribute::SsAttributeKind::Texchange(v) => {
+            process_simple_attribute!(&v.keys, p_arg.texture_array, ssab::ssab::ss::format::PartAnimationDataUIntValueT, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_str(&k.value.texture_name) });
+        }
+        _ => {}
     });
 }
 
@@ -1645,5 +1618,4 @@ mod tests {
         assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Bezier));
         assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::None));
     }
-
 }

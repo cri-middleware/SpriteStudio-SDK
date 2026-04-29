@@ -445,6 +445,7 @@ impl SSRuntimeUtils {
         crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
     }
 
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     pub fn transform_particles(matrix_arr: &[f32], particles_ptr: *const u8, count: i32) -> Result<Box<[f32]>, JsValue> {
         if matrix_arr.len() < 16 {
             return Err(JsValue::from_str("Invalid matrix size"));

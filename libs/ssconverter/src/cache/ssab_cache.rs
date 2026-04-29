@@ -130,12 +130,7 @@ pub struct SsCurveKey {
 }
 impl From<&ssab::ssab::ss::format::SsCurveT> for SsCurveKey {
     fn from(value: &ssab::ssab::ss::format::SsCurveT) -> Self {
-        Self {
-            start_time: ordered_float::OrderedFloat(value.start_time),
-            start_value: ordered_float::OrderedFloat(value.start_value),
-            end_time: ordered_float::OrderedFloat(value.end_time),
-            end_value: ordered_float::OrderedFloat(value.end_value),
-        }
+        Self { start_time: ordered_float::OrderedFloat(value.start_time), start_value: ordered_float::OrderedFloat(value.start_value), end_time: ordered_float::OrderedFloat(value.end_time), end_value: ordered_float::OrderedFloat(value.end_value) }
     }
 }
 
@@ -149,13 +144,7 @@ pub struct PartAnimationDataFloatValueKey {
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataFloatValueT> for PartAnimationDataFloatValueKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataFloatValueT) -> Self {
-        Self {
-            index: value.index,
-            interpolation: value.interpolation,
-            value: ordered_float::OrderedFloat(value.value),
-            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
-            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
-        }
+        Self { index: value.index, interpolation: value.interpolation, value: ordered_float::OrderedFloat(value.value), curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())), easing_rate: ordered_float::OrderedFloat(value.easing_rate) }
     }
 }
 
@@ -179,13 +168,7 @@ pub struct PartAnimationDataIntValueKey {
 }
 impl From<&ssab::ssab::ss::format::PartAnimationDataIntValueT> for PartAnimationDataIntValueKey {
     fn from(value: &ssab::ssab::ss::format::PartAnimationDataIntValueT) -> Self {
-        Self {
-            index: value.index,
-            interpolation: value.interpolation,
-            value: value.value,
-            curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())),
-            easing_rate: ordered_float::OrderedFloat(value.easing_rate),
-        }
+        Self { index: value.index, interpolation: value.interpolation, value: value.value, curve: value.curve.as_ref().map(|c| SsCurveKey::from(c.as_ref())), easing_rate: ordered_float::OrderedFloat(value.easing_rate) }
     }
 }
 
