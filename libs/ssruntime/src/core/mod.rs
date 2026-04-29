@@ -5,6 +5,7 @@ pub mod math;
 pub mod matrix;
 pub mod playback_controller;
 pub mod util;
+pub mod z_order;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SsCoordinateSystem {
