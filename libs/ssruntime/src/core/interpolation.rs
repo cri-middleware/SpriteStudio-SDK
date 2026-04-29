@@ -50,6 +50,48 @@ pub fn get_interpolated_rate(interpolation: InterpolationType, frame_no: f32, pr
     }
 }
 
+// Compute the interpolated value directly in (frame, value)-space for single-value attributes.
+//
+// Why: for Bezier/Hermite the curve handle Y values from `SsCurve` are in attribute-value units
+// (e.g. pixels). Mapping the Y axis to [0,1] rate space and feeding those handles unchanged
+// loses both magnitude and sign of the handle relative to (next_value - prev_value), which makes
+// e.g. a Y position interpolation curve flip direction when the value range is descending.
+// For other interpolation types the rate is value-independent, so we use the existing rate path.
+#[inline]
+fn evaluate_curve_value_f32(
+    interpolation: InterpolationType,
+    frame_no: f32,
+    prev_frame: f32,
+    next_frame: f32,
+    prev_value: f32,
+    next_value: f32,
+    curve: Option<ssab::ssab::ss::format::SsCurve>,
+    easing_rate: f32,
+) -> f32 {
+    match interpolation {
+        InterpolationType::Hermite => {
+            let rate = rate_linear(frame_no, prev_frame, next_frame);
+            if let Some(c) = curve {
+                hermite(prev_value, next_value, rate, c.start_value(), c.end_value())
+            } else {
+                linear(prev_value, next_value, rate)
+            }
+        }
+        InterpolationType::Bezier => {
+            let rate = rate_linear(frame_no, prev_frame, next_frame);
+            if let Some(c) = curve {
+                bezier(prev_frame, prev_value, next_frame, next_value, rate, c.start_time(), c.start_value(), c.end_time(), c.end_value())
+            } else {
+                linear(prev_value, next_value, rate)
+            }
+        }
+        _ => {
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_frame, next_frame, curve, easing_rate);
+            linear(prev_value, next_value, rate)
+        }
+    }
+}
+
 // Optimized for both forward and reverse playback (O(1) fast path).
 // Long distance seeks will fallback to binary search (O(log N)).
 #[inline]
@@ -216,9 +258,9 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
+            let value = evaluate_curve_value_f32(interpolation, frame_no, prev_index, next_index, prev.value(), next.value(), prev.curve(), prev.easing_rate());
 
-            (linear(prev.value(), next.value(), rate), UPDATE_FLAG_ON)
+            (value, UPDATE_FLAG_ON)
         } else {
             if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }
@@ -239,9 +281,9 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
+            let value = evaluate_curve_value_f32(interpolation, frame_no, prev_index, next_index, prev.value() as f32, next.value() as f32, prev.curve(), prev.easing_rate());
 
-            (crate::core::math::roundf(linear(prev.value() as f32, next.value() as f32, rate)) as i32, UPDATE_FLAG_ON)
+            (crate::core::math::roundf(value) as i32, UPDATE_FLAG_ON)
         } else {
             if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }
