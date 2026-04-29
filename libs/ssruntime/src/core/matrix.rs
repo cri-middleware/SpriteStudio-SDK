@@ -162,8 +162,9 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn create_rotation_x(radians: f32) -> Self {
         let mut res = Self::IDENTITY;
-        let s = sinf(radians);
-        let c = cosf(radians);
+        let (sv, cv) = f32x4::splat(radians).sin_cos();
+        let s = sv.to_array()[0];
+        let c = cv.to_array()[0];
         res.m[5] = c;
         res.m[6] = s;
         res.m[9] = -s;
@@ -175,8 +176,9 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn create_rotation_y(radians: f32) -> Self {
         let mut res = Self::IDENTITY;
-        let s = sinf(radians);
-        let c = cosf(radians);
+        let (sv, cv) = f32x4::splat(radians).sin_cos();
+        let s = sv.to_array()[0];
+        let c = cv.to_array()[0];
         res.m[0] = c;
         res.m[2] = -s;
         res.m[8] = s;
@@ -188,8 +190,9 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn create_rotation_z(radians: f32) -> Self {
         let mut res = Self::IDENTITY;
-        let s = sinf(radians);
-        let c = cosf(radians);
+        let (sv, cv) = f32x4::splat(radians).sin_cos();
+        let s = sv.to_array()[0];
+        let c = cv.to_array()[0];
         res.m[0] = c;
         res.m[1] = s;
         res.m[4] = -s;
@@ -243,8 +246,7 @@ impl SsMatrix4x4 {
         // Rotation X
         let rx = state.rotation_x() * core::f32::consts::PI / 180.0;
         if rx != 0.0 {
-            let s = f32x4::splat(sinf(rx));
-            let c = f32x4::splat(cosf(rx));
+            let (s, c) = f32x4::splat(rx).sin_cos();
             let new_col1 = (col1 * c) + (col2 * s);
             let new_col2 = (col1 * -s) + (col2 * c);
             col1 = new_col1;
@@ -254,8 +256,7 @@ impl SsMatrix4x4 {
         // Rotation Y
         let ry = state.rotation_y() * core::f32::consts::PI / 180.0;
         if ry != 0.0 {
-            let s = f32x4::splat(sinf(ry));
-            let c = f32x4::splat(cosf(ry));
+            let (s, c) = f32x4::splat(ry).sin_cos();
             let new_col0 = (col0 * c) + (col2 * -s);
             let new_col2 = (col0 * s) + (col2 * c);
             col0 = new_col0;
@@ -265,8 +266,7 @@ impl SsMatrix4x4 {
         // Rotation Z
         let rz = state.rotation_z() * core::f32::consts::PI / 180.0;
         if rz != 0.0 {
-            let s = f32x4::splat(sinf(rz));
-            let c = f32x4::splat(cosf(rz));
+            let (s, c) = f32x4::splat(rz).sin_cos();
             let new_col0 = (col0 * c) + (col1 * s);
             let new_col1 = (col0 * -s) + (col1 * c);
             col0 = new_col0;

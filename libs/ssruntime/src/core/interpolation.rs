@@ -7,16 +7,39 @@ const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = ru
 const UPDATE_FLAG_OFF: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
 #[inline]
-pub fn get_interpolated_rate(interpolation: InterpolationType, rate: f32) -> f32 {
+pub fn get_interpolated_rate(interpolation: InterpolationType, frame_no: f32, prev_frame: f32, next_frame: f32, curve: Option<ssab::ssab::ss::format::SsCurve>, easing_rate: f32) -> f32 {
+    let rate = rate_linear(frame_no, prev_frame, next_frame);
     match interpolation {
+        InterpolationType::None => 0.0,
+        InterpolationType::Linear => rate,
+        InterpolationType::Hermite => {
+            if let Some(c) = curve {
+                hermite(0.0_f32, 1.0_f32, rate, c.start_value(), c.end_value())
+            } else {
+                rate
+            }
+        }
+        InterpolationType::Bezier => {
+            if let Some(c) = curve {
+                bezier(prev_frame, 0.0_f32, next_frame, 1.0_f32, rate, c.start_time(), c.start_value(), c.end_time(), c.end_value())
+            } else {
+                rate
+            }
+        }
         InterpolationType::Acceleration => rate_accelerate(rate),
         InterpolationType::Deceleration => rate_decelerate(rate),
+        InterpolationType::EaseIn => rate_ease_in(rate, easing_rate),
+        InterpolationType::EaseOut => rate_ease_out(rate, easing_rate),
+        InterpolationType::EaseInOut => rate_ease_inout(rate, easing_rate),
         InterpolationType::EaseExponentialIn => rate_ease_exponential_in(rate),
         InterpolationType::EaseExponentialOut => rate_ease_exponential_out(rate),
         InterpolationType::EaseExponentialInOut => rate_ease_exponential_inout(rate),
         InterpolationType::EaseSineIn => rate_ease_sine_in(rate),
         InterpolationType::EaseSineOut => rate_ease_sine_out(rate),
         InterpolationType::EaseSineInOut => rate_ease_sine_inout(rate),
+        InterpolationType::EaseElasticIn => rate_ease_elastic_in(rate, easing_rate),
+        InterpolationType::EaseElasticOut => rate_ease_elastic_out(rate, easing_rate),
+        InterpolationType::EaseElasticInOut => rate_ease_elastic_inout(rate, easing_rate),
         InterpolationType::EaseBounceIn => rate_ease_bounce_in(rate),
         InterpolationType::EaseBounceOut => rate_ease_bounce_out(rate),
         InterpolationType::EaseBounceInOut => rate_ease_bounce_inout(rate),
@@ -24,6 +47,48 @@ pub fn get_interpolated_rate(interpolation: InterpolationType, rate: f32) -> f32
         InterpolationType::EaseBackOut => rate_ease_back_out(rate),
         InterpolationType::EaseBackInOut => rate_ease_back_inout(rate),
         _ => rate,
+    }
+}
+
+// Compute the interpolated value directly in (frame, value)-space for single-value attributes.
+//
+// Why: for Bezier/Hermite the curve handle Y values from `SsCurve` are in attribute-value units
+// (e.g. pixels). Mapping the Y axis to [0,1] rate space and feeding those handles unchanged
+// loses both magnitude and sign of the handle relative to (next_value - prev_value), which makes
+// e.g. a Y position interpolation curve flip direction when the value range is descending.
+// For other interpolation types the rate is value-independent, so we use the existing rate path.
+#[inline]
+fn evaluate_curve_value_f32(
+    interpolation: InterpolationType,
+    frame_no: f32,
+    prev_frame: f32,
+    next_frame: f32,
+    prev_value: f32,
+    next_value: f32,
+    curve: Option<ssab::ssab::ss::format::SsCurve>,
+    easing_rate: f32,
+) -> f32 {
+    match interpolation {
+        InterpolationType::Hermite => {
+            let rate = rate_linear(frame_no, prev_frame, next_frame);
+            if let Some(c) = curve {
+                hermite(prev_value, next_value, rate, c.start_value(), c.end_value())
+            } else {
+                linear(prev_value, next_value, rate)
+            }
+        }
+        InterpolationType::Bezier => {
+            let rate = rate_linear(frame_no, prev_frame, next_frame);
+            if let Some(c) = curve {
+                bezier(prev_frame, prev_value, next_frame, next_value, rate, c.start_time(), c.start_value(), c.end_time(), c.end_value())
+            } else {
+                linear(prev_value, next_value, rate)
+            }
+        }
+        _ => {
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_frame, next_frame, curve, easing_rate);
+            linear(prev_value, next_value, rate)
+        }
     }
 }
 
@@ -193,9 +258,9 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let value = evaluate_curve_value_f32(interpolation, frame_no, prev_index, next_index, prev.value(), next.value(), prev.curve(), prev.easing_rate());
 
-            (linear(prev.value(), next.value(), rate), UPDATE_FLAG_ON)
+            (value, UPDATE_FLAG_ON)
         } else {
             if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }
@@ -216,9 +281,9 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let value = evaluate_curve_value_f32(interpolation, frame_no, prev_index, next_index, prev.value() as f32, next.value() as f32, prev.curve(), prev.easing_rate());
 
-            (crate::core::math::roundf(linear(prev.value() as f32, next.value() as f32, rate)) as i32, UPDATE_FLAG_ON)
+            (crate::core::math::roundf(value) as i32, UPDATE_FLAG_ON)
         } else {
             if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
         }
@@ -243,7 +308,7 @@ pub fn evaluate_partcolor(
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let mut current = runtime::framedata::ss::runtime::PartAttributePartColor::default();
             let Some(prev_val) = prev.value() else {
@@ -272,27 +337,37 @@ pub fn evaluate_partcolor(
             let n_lb = get_color(&next_val.lb());
             let n_rb = get_color(&next_val.rb());
 
-            let p_a = wide::f32x4::from([p_lt.0, p_rt.0, p_lb.0, p_rb.0]);
-            let p_r = wide::f32x4::from([p_lt.1, p_rt.1, p_lb.1, p_rb.1]);
-            let p_g = wide::f32x4::from([p_lt.2, p_rt.2, p_lb.2, p_rb.2]);
-            let p_b = wide::f32x4::from([p_lt.3, p_rt.3, p_lb.3, p_rb.3]);
-            let p_rate = wide::f32x4::from([p_lt.4, p_rt.4, p_lb.4, p_rb.4]);
+            let start_color = [
+                p_lt.0, p_lt.1, p_lt.2, p_lt.3,
+                p_rt.0, p_rt.1, p_rt.2, p_rt.3,
+                p_lb.0, p_lb.1, p_lb.2, p_lb.3,
+                p_rb.0, p_rb.1, p_rb.2, p_rb.3,
+            ];
+            let end_color = [
+                n_lt.0, n_lt.1, n_lt.2, n_lt.3,
+                n_rt.0, n_rt.1, n_rt.2, n_rt.3,
+                n_lb.0, n_lb.1, n_lb.2, n_lb.3,
+                n_rb.0, n_rb.1, n_rb.2, n_rb.3,
+            ];
+            let mut out_color = [0.0; 16];
+            interpolate_color_linear(&start_color, &end_color, rate, &mut out_color);
 
-            let n_a = wide::f32x4::from([n_lt.0, n_rt.0, n_lb.0, n_rb.0]);
-            let n_r = wide::f32x4::from([n_lt.1, n_rt.1, n_lb.1, n_rb.1]);
-            let n_g = wide::f32x4::from([n_lt.2, n_rt.2, n_lb.2, n_rb.2]);
-            let n_b = wide::f32x4::from([n_lt.3, n_rt.3, n_lb.3, n_rb.3]);
-            let n_rate = wide::f32x4::from([n_lt.4, n_rt.4, n_lb.4, n_rb.4]);
-
-            let rate_simd = wide::f32x4::splat(rate);
-            let res_a = (p_a + (n_a - p_a) * rate_simd).to_array();
-            let res_r = (p_r + (n_r - p_r) * rate_simd).to_array();
-            let res_g = (p_g + (n_g - p_g) * rate_simd).to_array();
-            let res_b = (p_b + (n_b - p_b) * rate_simd).to_array();
-            let res_rate = (p_rate + (n_rate - p_rate) * rate_simd).to_array();
+            let start_rate = [p_lt.4, p_rt.4, p_lb.4, p_rb.4];
+            let end_rate = [n_lt.4, n_rt.4, n_lb.4, n_rb.4];
+            let mut out_rate = [0.0; 4];
+            interpolate_array_linear(&start_rate, &end_rate, rate, &mut out_rate);
 
             let create_color = |idx: usize| -> runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
-                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&runtime::framedata::ss::runtime::U8Rect::new(res_a[idx] as u8, res_r[idx] as u8, res_g[idx] as u8, res_b[idx] as u8), res_rate[idx])
+                let base = idx * 4;
+                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(
+                    &runtime::framedata::ss::runtime::U8Rect::new(
+                        out_color[base] as u8,
+                        out_color[base + 1] as u8,
+                        out_color[base + 2] as u8,
+                        out_color[base + 3] as u8,
+                    ),
+                    out_rate[idx],
+                )
             };
 
             current.set_lt(&create_color(0));
@@ -379,7 +454,7 @@ pub fn evaluate_shader(
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let Some(prev_value) = prev.value() else {
                 return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
@@ -387,17 +462,23 @@ pub fn evaluate_shader(
             let Some(next_value) = next.value() else {
                 return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
             };
+
+            let start_params = [
+                prev_value.param0(), prev_value.param1(), prev_value.param2(), prev_value.param3(),
+                prev_value.param4(), prev_value.param5(), prev_value.param6(), prev_value.param7(),
+            ];
+            let end_params = [
+                next_value.param0(), next_value.param1(), next_value.param2(), next_value.param3(),
+                next_value.param4(), next_value.param5(), next_value.param6(), next_value.param7(),
+            ];
+            let mut out_params = [0.0f32; 8];
+            interpolate_array_linear(&start_params, &end_params, rate, &mut out_params);
+
             (
                 runtime::framedata::ss::runtime::PartAttributeShader::new(
                     prev_value.id_hash(),
-                    linear(prev_value.param0(), next_value.param0(), rate),
-                    linear(prev_value.param1(), next_value.param1(), rate),
-                    linear(prev_value.param2(), next_value.param2(), rate),
-                    linear(prev_value.param3(), next_value.param3(), rate),
-                    linear(prev_value.param4(), next_value.param4(), rate),
-                    linear(prev_value.param5(), next_value.param5(), rate),
-                    linear(prev_value.param6(), next_value.param6(), rate),
-                    linear(prev_value.param7(), next_value.param7(), rate),
+                    out_params[0], out_params[1], out_params[2], out_params[3],
+                    out_params[4], out_params[5], out_params[6], out_params[7],
                     prev_value.map0_id(),
                     prev_value.map0_name_hash(),
                     prev_value.map1_id(),
@@ -438,7 +519,7 @@ pub fn evaluate_vertex(
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let Some(prev_value) = prev.value() else {
                 return (runtime::framedata::ss::runtime::PartAttributeVertex::default(), UPDATE_FLAG_OFF);
@@ -459,18 +540,20 @@ pub fn evaluate_vertex(
             let n_lb = get_coords(&next_value.lb());
             let n_rb = get_coords(&next_value.rb());
 
-            let p_v1 = wide::f32x4::from([p_lt.0, p_rt.0, p_lb.0, p_rb.0]);
-            let p_v2 = wide::f32x4::from([p_lt.1, p_rt.1, p_lb.1, p_rb.1]);
+            let start_arr = [
+                p_lt.0, p_lt.1, p_rt.0, p_rt.1,
+                p_lb.0, p_lb.1, p_rb.0, p_rb.1,
+            ];
+            let end_arr = [
+                n_lt.0, n_lt.1, n_rt.0, n_rt.1,
+                n_lb.0, n_lb.1, n_rb.0, n_rb.1,
+            ];
+            let mut out_arr = [0.0; 8];
+            interpolate_vertex_linear(&start_arr, &end_arr, rate, &mut out_arr);
 
-            let n_v1 = wide::f32x4::from([n_lt.0, n_rt.0, n_lb.0, n_rb.0]);
-            let n_v2 = wide::f32x4::from([n_lt.1, n_rt.1, n_lb.1, n_rb.1]);
+            let r_v1 = [out_arr[0], out_arr[2], out_arr[4], out_arr[6]];
+            let r_v2 = [out_arr[1], out_arr[3], out_arr[5], out_arr[7]];
 
-            let rate_simd = wide::f32x4::splat(rate);
-            let res_v1 = p_v1 + (n_v1 - p_v1) * rate_simd;
-            let res_v2 = p_v2 + (n_v2 - p_v2) * rate_simd;
-
-            let r_v1 = res_v1.to_array();
-            let r_v2 = res_v2.to_array();
 
             (
                 runtime::framedata::ss::runtime::PartAttributeVertex::new(
@@ -518,7 +601,7 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let Some(next_value) = next.value() else {
                 return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF);
@@ -557,7 +640,7 @@ pub fn evaluate_deform(
             }
 
             let next_index = next.index() as i32 as f32;
-            let rate = get_interpolated_rate(interpolation, rate_linear(frame_no, prev_index, next_index));
+            let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let mut current = DeformEvaluationData::default();
             let Some(prev_val) = prev.value() else {
@@ -571,8 +654,23 @@ pub fn evaluate_deform(
                 let length_full = prev_coodinate.len();
                 current.coordinate.reserve(length_full);
                 let length = core::cmp::min(length_full, next_coodinate.len());
+
+                let mut start_vec = alloc::vec::Vec::with_capacity(length * 2);
+                let mut end_vec = alloc::vec::Vec::with_capacity(length * 2);
                 for i in 0..length {
-                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(linear(prev_coodinate.get(i).v1(), next_coodinate.get(i).v1(), rate), linear(prev_coodinate.get(i).v2(), next_coodinate.get(i).v2(), rate)));
+                    let p = prev_coodinate.get(i);
+                    let n = next_coodinate.get(i);
+                    start_vec.push(p.v1());
+                    start_vec.push(p.v2());
+                    end_vec.push(n.v1());
+                    end_vec.push(n.v2());
+                }
+
+                let mut out_vec = alloc::vec![0.0; length * 2];
+                interpolate_array_linear(&start_vec, &end_vec, rate, &mut out_vec);
+
+                for i in 0..length {
+                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(out_vec[i * 2], out_vec[i * 2 + 1]));
                 }
                 // Overrun use the value of `prev` as is.
                 for i in length..length_full {
@@ -694,8 +792,8 @@ mod tests {
         use ssab::ssab::ss::format::{PartAnimationDataIntValue, PartAnimationDataIntValueArgs};
         let mut builder = flatbuffers::FlatBufferBuilder::new();
 
-        let v0 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 0, value: 100, interpolation: InterpolationType::None });
-        let v10 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 10, value: 200, interpolation: InterpolationType::None });
+        let v0 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 0, value: 100, interpolation: InterpolationType::None, ..Default::default() });
+        let v10 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 10, value: 200, interpolation: InterpolationType::None, ..Default::default() });
         let values_off = builder.create_vector(&[v0, v10]);
         builder.finish(values_off, None);
 
@@ -724,8 +822,8 @@ mod tests {
         use ssab::ssab::ss::format::{PartAnimationDataIntValue, PartAnimationDataIntValueArgs};
         let mut builder = flatbuffers::FlatBufferBuilder::new();
 
-        let v0 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 0, value: 0, interpolation: InterpolationType::Linear });
-        let v10 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 10, value: 100, interpolation: InterpolationType::None });
+        let v0 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 0, value: 0, interpolation: InterpolationType::Linear, ..Default::default() });
+        let v10 = PartAnimationDataIntValue::create(&mut builder, &PartAnimationDataIntValueArgs { index: 10, value: 100, interpolation: InterpolationType::None, ..Default::default() });
         let values_off = builder.create_vector(&[v0, v10]);
         builder.finish(values_off, None);
 
@@ -749,8 +847,8 @@ mod tests {
         use ssab::ssab::ss::format::{PartAnimationDataFloatValue, PartAnimationDataFloatValueArgs};
         let mut builder = flatbuffers::FlatBufferBuilder::new();
 
-        let v0 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 0, value: 0.0, interpolation: InterpolationType::Linear });
-        let v10 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 10, value: 1.0, interpolation: InterpolationType::None });
+        let v0 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 0, value: 0.0, interpolation: InterpolationType::Linear, ..Default::default() });
+        let v10 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 10, value: 1.0, interpolation: InterpolationType::None, ..Default::default() });
         let values_off = builder.create_vector(&[v0, v10]);
         builder.finish(values_off, None);
 
@@ -799,5 +897,329 @@ mod tests {
         let mut hint = 0;
         let res = evaluate_cell(vector, 9.999, &mut hint).unwrap();
         assert_eq!(res.map_id(), 1);
+    }
+
+    #[test]
+    fn test_evaluate_float_hermite() {
+        use ssab::ssab::ss::format::{PartAnimationDataFloatValue, PartAnimationDataFloatValueArgs, SsCurve, SsCurveArgs};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+
+        // start_value/end_value are absolute target values for tangents, so
+        // (0, 1) → tangent (s_start - v_start) = 0 at start, (s_end - v_end) = 0 at end.
+        let curve = SsCurve::create(&mut builder, &SsCurveArgs { start_time: 0.0, start_value: 0.0, end_time: 0.0, end_value: 1.0 });
+        let v0 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 0, value: 0.0, interpolation: InterpolationType::Hermite, curve: Some(curve), ..Default::default() });
+        let v10 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 10, value: 1.0, interpolation: InterpolationType::None, ..Default::default() });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>(buf).unwrap();
+
+        // Hermite with zero tangents at midpoint: rate = 3*0.5^2 - 2*0.5^3 = 0.5
+        let mut hint = 0;
+        let (val, _) = evaluate_float(vector, 5.0, &mut hint).unwrap();
+        assert!((val - 0.5).abs() < 1e-6, "expected ~0.5, got {val}");
+
+        // Sub-frame between integer keys: smooth Hermite curve
+        let mut hint = 0;
+        let (val_25, _) = evaluate_float(vector, 2.5, &mut hint).unwrap();
+        let (val_3, _) = evaluate_float(vector, 3.0, &mut hint).unwrap();
+        assert!(val_25 < val_3, "Hermite must be monotonically increasing on this segment");
+        assert!(val_25 > 0.0 && val_25 < 1.0);
+    }
+
+    #[test]
+    fn test_evaluate_float_ease_in() {
+        use ssab::ssab::ss::format::{PartAnimationDataFloatValue, PartAnimationDataFloatValueArgs};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+
+        let v0 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 0, value: 0.0, interpolation: InterpolationType::EaseIn, easing_rate: 2.0, ..Default::default() });
+        let v10 = PartAnimationDataFloatValue::create(&mut builder, &PartAnimationDataFloatValueArgs { index: 10, value: 1.0, interpolation: InterpolationType::None, ..Default::default() });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataFloatValue>>>(buf).unwrap();
+
+        // EaseIn with power 2 at rate 0.5: 0.5^2 = 0.25
+        let mut hint = 0;
+        let (val, _) = evaluate_float(vector, 5.0, &mut hint).unwrap();
+        assert!((val - 0.25).abs() < 1e-5, "expected ~0.25, got {val}");
+
+        // Sub-frame: smooth, not stepped
+        let mut hint = 0;
+        let (val_25, _) = evaluate_float(vector, 2.5, &mut hint).unwrap();
+        let (val_3, _) = evaluate_float(vector, 3.0, &mut hint).unwrap();
+        assert!(val_25 < val_3);
+    }
+
+    #[test]
+    fn test_evaluate_skew_linear() {
+        use ssab::ssab::ss::format::{PartAnimationDataVec2, PartAnimationDataVec2Args, Vec2, Vec2Args};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+
+        let v0_value = Vec2::create(&mut builder, &Vec2Args { v1: 0.0, v2: 0.0 });
+        let v0 = PartAnimationDataVec2::create(&mut builder, &PartAnimationDataVec2Args { index: 0, value: Some(v0_value), interpolation: InterpolationType::Linear, ..Default::default() });
+        let v10_value = Vec2::create(&mut builder, &Vec2Args { v1: 10.0, v2: 20.0 });
+        let v10 = PartAnimationDataVec2::create(&mut builder, &PartAnimationDataVec2Args { index: 10, value: Some(v10_value), interpolation: InterpolationType::None, ..Default::default() });
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataVec2>>>(buf).unwrap();
+
+        // Midpoint: linear interpolation of both axes
+        let mut hint = 0;
+        let (val_x, val_y, flags) = evaluate_skew(vector, 5.0, &mut hint).unwrap();
+        assert!((val_x - 5.0).abs() < 1e-6);
+        assert!((val_y - 10.0).abs() < 1e-6);
+        assert!(!flags.is_empty());
+
+        // Sub-frame: smooth interpolation
+        let mut hint = 0;
+        let (val_x, val_y, _) = evaluate_skew(vector, 2.5, &mut hint).unwrap();
+        assert!((val_x - 2.5).abs() < 1e-6);
+        assert!((val_y - 5.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_evaluate_vertex_linear() {
+        use ssab::ssab::ss::format::{PartAnimationDataVertex, PartAnimationDataVertexArgs, PartAttributeVertex, PartAttributeVertexArgs, Vec2, Vec2Args};
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+
+        let lt0 = Vec2::create(&mut builder, &Vec2Args { v1: 0.0, v2: 0.0 });
+        let rt0 = Vec2::create(&mut builder, &Vec2Args { v1: 0.0, v2: 0.0 });
+        let lb0 = Vec2::create(&mut builder, &Vec2Args { v1: 0.0, v2: 0.0 });
+        let rb0 = Vec2::create(&mut builder, &Vec2Args { v1: 0.0, v2: 0.0 });
+        let v0_value = PartAttributeVertex::create(&mut builder, &PartAttributeVertexArgs { lt: Some(lt0), rt: Some(rt0), lb: Some(lb0), rb: Some(rb0) });
+        let v0 = PartAnimationDataVertex::create(&mut builder, &PartAnimationDataVertexArgs { index: 0, value: Some(v0_value), interpolation: InterpolationType::Linear, ..Default::default() });
+
+        let lt1 = Vec2::create(&mut builder, &Vec2Args { v1: 10.0, v2: 10.0 });
+        let rt1 = Vec2::create(&mut builder, &Vec2Args { v1: -10.0, v2: 10.0 });
+        let lb1 = Vec2::create(&mut builder, &Vec2Args { v1: 10.0, v2: -10.0 });
+        let rb1 = Vec2::create(&mut builder, &Vec2Args { v1: -10.0, v2: -10.0 });
+        let v10_value = PartAttributeVertex::create(&mut builder, &PartAttributeVertexArgs { lt: Some(lt1), rt: Some(rt1), lb: Some(lb1), rb: Some(rb1) });
+        let v10 = PartAnimationDataVertex::create(&mut builder, &PartAnimationDataVertexArgs { index: 10, value: Some(v10_value), interpolation: InterpolationType::None, ..Default::default() });
+
+        let values_off = builder.create_vector(&[v0, v10]);
+        builder.finish(values_off, None);
+
+        let buf = builder.finished_data();
+        let vector = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataVertex>>>(buf).unwrap();
+
+        // Midpoint: each corner linearly interpolated
+        let mut hint = 0;
+        let (val, _) = evaluate_vertex(vector, 5.0, &mut hint).unwrap();
+        assert!((val.lt().x() - 5.0).abs() < 1e-6);
+        assert!((val.rt().x() - -5.0).abs() < 1e-6);
+        assert!((val.lb().y() - -5.0).abs() < 1e-6);
+        assert!((val.rb().y() - -5.0).abs() < 1e-6);
+    }
+
+    // -- evaluate_deform tests --
+
+    /// Build a single PartAnimationDataDeform key with given index, interpolation, coordinates, and indices.
+    fn deform_buf(keys: &[(u16, InterpolationType, &[(f32, f32)], &[i16])]) -> alloc::vec::Vec<u8> {
+        use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs, Vec2, Vec2Args};
+
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+        let mut key_offsets = alloc::vec::Vec::new();
+
+        for (idx, ip, coords, indices) in keys {
+            let vec_offsets: alloc::vec::Vec<_> = coords.iter().map(|(x, y)| Vec2::create(&mut builder, &Vec2Args { v1: *x, v2: *y })).collect();
+            let coord_off = if vec_offsets.is_empty() { None } else { Some(builder.create_vector(&vec_offsets)) };
+            let idx_off = if indices.is_empty() { None } else { Some(builder.create_vector(indices)) };
+            let value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coordinate: coord_off, index: idx_off });
+            let key = PartAnimationDataDeform::create(&mut builder, &PartAnimationDataDeformArgs { index: *idx, interpolation: *ip, value: Some(value), ..Default::default() });
+            key_offsets.push(key);
+        }
+
+        let arr = builder.create_vector(&key_offsets);
+        builder.finish(arr, None);
+        builder.finished_data().to_vec()
+    }
+
+    fn deform_root(buf: &[u8]) -> flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>> {
+        flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform>>>(buf).unwrap()
+    }
+
+    #[test]
+    fn test_evaluate_deform_simd_chunk_aligned() {
+        // 8 vertices = exactly 2 SIMD chunks, no tail.
+        let prev: alloc::vec::Vec<(f32, f32)> = (0..8).map(|i| (i as f32, i as f32 * 2.0)).collect();
+        let next: alloc::vec::Vec<(f32, f32)> = (0..8).map(|i| (i as f32 * 3.0, i as f32 * 4.0)).collect();
+        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
+        let vec = deform_root(&buf);
+
+        // At rate=0.5, lerp(prev, next, 0.5) = (prev + next) / 2.
+        let mut hint = 0;
+        let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        assert_eq!(data.coordinate.len(), 8);
+        assert!(!flags.is_empty());
+        for i in 0..8 {
+            let exp_x = (prev[i].0 + next[i].0) / 2.0;
+            let exp_y = (prev[i].1 + next[i].1) / 2.0;
+            assert!((data.coordinate[i].x() - exp_x).abs() < 1e-6, "x mismatch at {i}: got {} want {exp_x}", data.coordinate[i].x());
+            assert!((data.coordinate[i].y() - exp_y).abs() < 1e-6, "y mismatch at {i}: got {} want {exp_y}", data.coordinate[i].y());
+        }
+    }
+
+    #[test]
+    fn test_evaluate_deform_simd_with_tail() {
+        // 7 vertices = 1 SIMD chunk (4) + tail (3). Both branches must produce identical results.
+        let prev: alloc::vec::Vec<(f32, f32)> = (0..7).map(|i| (i as f32, i as f32 * 10.0)).collect();
+        let next: alloc::vec::Vec<(f32, f32)> = (0..7).map(|i| ((i as f32) + 100.0, (i as f32) * 10.0 + 1000.0)).collect();
+        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, _) = evaluate_deform(vec, 2.5, &mut hint).unwrap();
+        assert_eq!(data.coordinate.len(), 7);
+        // rate = 0.25
+        for i in 0..7 {
+            let exp_x = prev[i].0 + (next[i].0 - prev[i].0) * 0.25;
+            let exp_y = prev[i].1 + (next[i].1 - prev[i].1) * 0.25;
+            assert!((data.coordinate[i].x() - exp_x).abs() < 1e-4, "x mismatch at {i}: got {} want {exp_x}", data.coordinate[i].x());
+            assert!((data.coordinate[i].y() - exp_y).abs() < 1e-4, "y mismatch at {i}: got {} want {exp_y}", data.coordinate[i].y());
+        }
+    }
+
+    #[test]
+    fn test_evaluate_deform_simd_only_tail() {
+        // 3 vertices = 0 SIMD chunks, 3 tail. Exercises the scalar path.
+        let prev = [(0.0, 0.0), (1.0, 2.0), (3.0, 4.0)];
+        let next = [(10.0, 20.0), (11.0, 22.0), (13.0, 24.0)];
+        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        assert_eq!(data.coordinate.len(), 3);
+        for i in 0..3 {
+            let exp_x = (prev[i].0 + next[i].0) / 2.0;
+            let exp_y = (prev[i].1 + next[i].1) / 2.0;
+            assert!((data.coordinate[i].x() - exp_x).abs() < 1e-6);
+            assert!((data.coordinate[i].y() - exp_y).abs() < 1e-6);
+        }
+    }
+
+    #[test]
+    fn test_evaluate_deform_overrun_prev_longer() {
+        // prev has 6 vertices, next has 4. The 2 extras must come from prev as-is.
+        let prev: alloc::vec::Vec<(f32, f32)> = (0..6).map(|i| (i as f32 + 100.0, i as f32 + 200.0)).collect();
+        let next: alloc::vec::Vec<(f32, f32)> = (0..4).map(|i| (i as f32, i as f32)).collect();
+        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        assert_eq!(data.coordinate.len(), 6, "output length should match prev_full");
+        // First 4 are interpolated.
+        for i in 0..4 {
+            let exp_x = (prev[i].0 + next[i].0) / 2.0;
+            let exp_y = (prev[i].1 + next[i].1) / 2.0;
+            assert!((data.coordinate[i].x() - exp_x).abs() < 1e-4, "interpolated x mismatch at {i}");
+            assert!((data.coordinate[i].y() - exp_y).abs() < 1e-4, "interpolated y mismatch at {i}");
+        }
+        // Indices 4 and 5: passthrough from prev.
+        for i in 4..6 {
+            assert_eq!(data.coordinate[i].x(), prev[i].0, "overrun x at {i}");
+            assert_eq!(data.coordinate[i].y(), prev[i].1, "overrun y at {i}");
+        }
+    }
+
+    #[test]
+    fn test_evaluate_deform_none_at_keyframe() {
+        // None interpolation at exact keyframe → flag ON, prev value.
+        let prev = [(1.0, 2.0), (3.0, 4.0)];
+        let next = [(10.0, 20.0), (30.0, 40.0)];
+        let buf = deform_buf(&[(0, InterpolationType::None, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, flags) = evaluate_deform(vec, 0.0, &mut hint).unwrap();
+        assert!(!flags.is_empty(), "exact keyframe match must set ON");
+        assert_eq!(data.coordinate[0].x(), prev[0].0);
+        assert_eq!(data.coordinate[0].y(), prev[0].1);
+    }
+
+    #[test]
+    fn test_evaluate_deform_none_off_keyframe() {
+        // None interpolation off-keyframe → flag OFF, prev value held.
+        let prev = [(1.0, 2.0), (3.0, 4.0)];
+        let next = [(10.0, 20.0), (30.0, 40.0)];
+        let buf = deform_buf(&[(0, InterpolationType::None, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        assert!(flags.is_empty(), "off-keyframe None must clear flag");
+        // Should still hold prev value.
+        assert_eq!(data.coordinate[0].x(), prev[0].0);
+    }
+
+    #[test]
+    fn test_evaluate_deform_after_last_key() {
+        // After last key: exact match → ON, otherwise OFF, value held from prev.
+        let prev = [(7.0, 8.0)];
+        let buf = deform_buf(&[(5, InterpolationType::Linear, &prev, &[])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        assert!(!flags.is_empty());
+        assert_eq!(data.coordinate[0].x(), 7.0);
+
+        let mut hint = 0;
+        let (data, flags) = evaluate_deform(vec, 9.0, &mut hint).unwrap();
+        assert!(flags.is_empty());
+        assert_eq!(data.coordinate[0].x(), 7.0);
+    }
+
+    #[test]
+    fn test_evaluate_deform_index_preserved() {
+        // The "index" array is not interpolated; runtime must copy from prev key.
+        let prev = [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0), (3.0, 3.0)];
+        let next = [(10.0, 10.0); 4];
+        let prev_indices: [i16; 4] = [5, 6, 7, 8];
+        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &prev_indices), (10, InterpolationType::None, &next, &[42, 43, 44, 45])]);
+        let vec = deform_root(&buf);
+
+        let mut hint = 0;
+        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        assert_eq!(data.index, alloc::vec![5, 6, 7, 8], "index must come from prev key, not next");
+    }
+
+    #[test]
+    fn test_evaluate_deform_hermite() {
+        // Hermite interpolation with zero tangents matches midpoint at rate 0.5.
+        use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs, SsCurve, SsCurveArgs, Vec2, Vec2Args};
+
+        let mut builder = flatbuffers::FlatBufferBuilder::new();
+        let curve = SsCurve::create(&mut builder, &SsCurveArgs { start_time: 0.0, start_value: 0.0, end_time: 0.0, end_value: 1.0 });
+
+        let p_vec: alloc::vec::Vec<_> = (0..4).map(|i| Vec2::create(&mut builder, &Vec2Args { v1: i as f32, v2: 0.0 })).collect();
+        let p_coord = builder.create_vector(&p_vec);
+        let p_value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coordinate: Some(p_coord), index: None });
+        let v0 = PartAnimationDataDeform::create(&mut builder, &PartAnimationDataDeformArgs { index: 0, interpolation: InterpolationType::Hermite, value: Some(p_value), curve: Some(curve), ..Default::default() });
+
+        let n_vec: alloc::vec::Vec<_> = (0..4).map(|i| Vec2::create(&mut builder, &Vec2Args { v1: (i as f32) + 10.0, v2: 0.0 })).collect();
+        let n_coord = builder.create_vector(&n_vec);
+        let n_value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coordinate: Some(n_coord), index: None });
+        let v10 = PartAnimationDataDeform::create(&mut builder, &PartAnimationDataDeformArgs { index: 10, interpolation: InterpolationType::None, value: Some(n_value), ..Default::default() });
+
+        let arr = builder.create_vector(&[v0, v10]);
+        builder.finish(arr, None);
+
+        let buf = builder.finished_data();
+        let vec = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>(buf).unwrap();
+
+        let mut hint = 0;
+        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        // Zero-tangent Hermite at midpoint = 0.5 → x = prev + (next-prev) * 0.5
+        for i in 0..4 {
+            let exp = (i as f32) + 5.0;
+            assert!((data.coordinate[i].x() - exp).abs() < 1e-5, "x at {i}: got {} want {exp}", data.coordinate[i].x());
+        }
     }
 }

@@ -115,10 +115,11 @@ void play_animation(const uint8_t* ssab_data, size_t size) {
         // 6. Get rendering information
         uint8_t* data;
         size_t len;
-        // Get the data of the integer frame by truncating the decimal point
-        ss_runtime_get_frame_data(ctx, (int)frame, &data, &len);
+        // The frame number is managed as a float (Sub-frame support).
+        ss_runtime_get_frame_data(ctx, frame, &data, &len);
 
-        // float decimal = ss_runtime_get_frame_no(ctx) - (int)ss_runtime_get_frame_no(ctx);
+        // Optional: you can implement integer frame management by truncating the decimal point
+        // float decimal = ss_runtime_get_frame_no(ctx) - floor(ss_runtime_get_frame_no(ctx));
         // render_parts(data, len, decimal);
     }
 

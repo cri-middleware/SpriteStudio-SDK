@@ -97,11 +97,13 @@ draw_texture_rect_region(texture, rect, uv_rect, Color(1, 1, 1, state.alpha));
 ```cpp
 // 毎フレームの更新ループ
 float delta_ms = GetDeltaTime() * 1000.0f; // ミリ秒で渡す
-int current_frame = ss_runtime_update(runtime_ctx, delta_ms);
+float current_frame = ss_runtime_update(runtime_ctx, delta_ms);
 
 // 更新後に描画関数を呼び出す
 Render(runtime_ctx);
 ```
+
+> **注意**: `ss_runtime_update` は現在、浮動小数 (`float`) のフレーム番号を返します。整数フレームとして扱いたい場合は、戻り値を `floor` するか、前述のサブフレーム設定を Player 側に実装して制御してください。
 
 ## 6. この段階での動作確認 (Validation)
 基本的な行列計算と描画パイプラインが正しいか、`overall.sspj` の以下のデータを使用して確認します。

@@ -14,7 +14,7 @@ ssab = { workspace = true }
 ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
-libc = { version = "0.2", optional = true }
+libc = { version = "1.0.0-alpha.3", optional = true }
 wide = { workspace = true }
 
 [features]
