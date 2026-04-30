@@ -11,9 +11,6 @@ impl From<&ssab::ssab::ss::format::Vec2T> for Vec2Key {
     }
 }
 impl Vec2Key {
-    fn new(x: f32, y: f32) -> Self {
-        Self { v1: ordered_float::OrderedFloat(x), v2: ordered_float::OrderedFloat(y) }
-    }
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -29,9 +26,6 @@ impl From<&ssab::ssab::ss::format::RectT> for RectKey {
     }
 }
 impl RectKey {
-    fn new(x1: f32, y1: f32, x2: f32, y2: f32) -> Self {
-        Self { x1: ordered_float::OrderedFloat(x1), y1: ordered_float::OrderedFloat(y1), x2: ordered_float::OrderedFloat(x2), y2: ordered_float::OrderedFloat(y2) }
-    }
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
@@ -97,27 +91,21 @@ impl From<&ssab::ssab::ss::format::StringValueEntryT> for StringValueEntryKey {
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct Vec2ValueEntryKey {
-    pub value: Vec2Key,
+    pub value: Option<Vec2Key>,
 }
 impl From<&ssab::ssab::ss::format::Vec2ValueEntryT> for Vec2ValueEntryKey {
     fn from(vec2_value_table_t: &ssab::ssab::ss::format::Vec2ValueEntryT) -> Self {
-        let v1 = vec2_value_table_t.value.as_ref().map_or(0.0, |v| v.v1);
-        let v2 = vec2_value_table_t.value.as_ref().map_or(0.0, |v| v.v2);
-        Self { value: Vec2Key::new(v1, v2) }
+        Self { value: vec2_value_table_t.value.as_ref().map(|v| Vec2Key::from(v.as_ref())) }
     }
 }
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct RectValueEntryKey {
-    pub value: RectKey,
+    pub value: Option<RectKey>,
 }
 impl From<&ssab::ssab::ss::format::RectValueEntryT> for RectValueEntryKey {
     fn from(rect_value_table_t: &ssab::ssab::ss::format::RectValueEntryT) -> Self {
-        let x1 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.x1);
-        let y1 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.y1);
-        let x2 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.x2);
-        let y2 = rect_value_table_t.value.as_ref().map_or(0.0, |v| v.y2);
-        Self { value: RectKey::new(x1, y1, x2, y2) }
+        Self { value: rect_value_table_t.value.as_ref().map(|v| RectKey::from(v.as_ref())) }
     }
 }
 
