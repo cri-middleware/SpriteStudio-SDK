@@ -875,6 +875,7 @@ pub struct SsabCache<'a> {
     pub vec2_value_table_cache: HashMap<Vec2ValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2ValueEntry<'a>>>,
     pub rect_value_table_cache: HashMap<RectValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::RectValueEntry<'a>>>,
 
+    pub ss_curve_cache: HashMap<SsCurveKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::SsCurve<'a>>>,
     pub cell_cache: HashMap<CellKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Cell<'a>>>,
     pub label_cache: HashMap<LabelKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Label<'a>>>,
     pub part_attribute_cell_cache: HashMap<PartAttributeCellKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAttributeCell<'a>>>,
@@ -929,6 +930,7 @@ impl<'a> SsabCache<'a> {
             rect_value_table_cache: HashMap::new(),
             u8rect_cache: HashMap::new(),
 
+            ss_curve_cache: HashMap::new(),
             cell_cache: HashMap::new(),
             label_cache: HashMap::new(),
             part_attribute_cell_cache: HashMap::new(),
@@ -1000,6 +1002,22 @@ impl<'a> SsabCache<'a> {
         let args = ssab::ssab::ss::format::U8RectArgs { a: u8rectt.a, r: u8rectt.r, g: u8rectt.g, b: u8rectt.b };
         let offset = ssab::ssab::ss::format::U8Rect::create(fb, &args);
         self.u8rect_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_ss_curve(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, curve: &ssab::ssab::ss::format::SsCurveT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::SsCurve<'a>> {
+        let key = SsCurveKey::from(curve);
+        if let Some(&offset) = self.ss_curve_cache.get(&key) {
+            return offset;
+        }
+        let args = ssab::ssab::ss::format::SsCurveArgs {
+            start_time: curve.start_time,
+            start_value: curve.start_value,
+            end_time: curve.end_time,
+            end_value: curve.end_value,
+        };
+        let offset = ssab::ssab::ss::format::SsCurve::create(fb, &args);
+        self.ss_curve_cache.insert(key, offset);
         offset
     }
 
@@ -1089,7 +1107,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_float_value_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_float_value_t.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_float_value_t.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataFloatValueArgs {
             index: part_animation_data_float_value_t.index,
             interpolation: part_animation_data_float_value_t.interpolation,
@@ -1127,7 +1145,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_int_value_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_int_value_t.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_int_value_t.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataIntValueArgs {
             index: part_animation_data_int_value_t.index,
             interpolation: part_animation_data_int_value_t.interpolation,
@@ -1255,7 +1273,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_part_color_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_part_color.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_part_color.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataPartColorArgs {
             index: part_animation_data_part_color.index,
             interpolation: part_animation_data_part_color.interpolation,
@@ -1292,7 +1310,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_shader_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_shader.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_shader.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataShaderArgs {
             index: part_animation_data_shader.index,
             interpolation: part_animation_data_shader.interpolation,
@@ -1329,7 +1347,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_vertex_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_vertex.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_vertex.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataVertexArgs {
             index: part_animation_data_vertex.index,
             interpolation: part_animation_data_vertex.interpolation,
@@ -1362,7 +1380,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_vec2_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_vec2.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_vec2.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataVec2Args {
             index: part_animation_data_vec2.index,
             interpolation: part_animation_data_vec2.interpolation,
@@ -1399,7 +1417,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_animation_data_deform_cache.get(&key) {
             return offset;
         }
-        let curve_off = part_animation_data_deform.curve.as_ref().map(|c| c.pack(fb));
+        let curve_off = part_animation_data_deform.curve.as_ref().map(|c| self.create_shared_ss_curve(fb, c.as_ref()));
         let args = ssab::ssab::ss::format::PartAnimationDataDeformArgs {
             index: part_animation_data_deform.index,
             interpolation: part_animation_data_deform.interpolation,
