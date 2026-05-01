@@ -273,6 +273,18 @@ impl SsMatrix4x4 {
             col1 = new_col1;
         }
 
+        // Skew
+        let skew_x = state.skew_x() * core::f32::consts::PI / 180.0;
+        let skew_y = state.skew_y() * core::f32::consts::PI / 180.0;
+        if skew_x != 0.0 || skew_y != 0.0 {
+            let sx = tanf(skew_x);
+            let sy = tanf(skew_y);
+            let new_col0 = col0 + (col1 * f32x4::splat(sy));
+            let new_col1 = col1 + (col0 * f32x4::splat(sx));
+            col0 = new_col0;
+            col1 = new_col1;
+        }
+
         let sx = state.scale_x();
         let sy = state.scale_y();
 
@@ -808,5 +820,30 @@ mod tests {
         // Translation Y: res[13] = m1[1]*m2[12] + m1[5]*m2[13] + m1[9]*m2[14] + m1[13]*m2[15]
         //                        = 0 + 3.0 * -10.0 + 0 + 20.0 * 1.0 = -10.0
         assert_f32_eq(res.m[13], -10.0);
+    }
+
+    #[test]
+    fn test_compute_world_matrix_skew() {
+        let mut state = crate::runtime::framedata::ss::runtime::PartState::default();
+        state.set_scale_x(1.0);
+        state.set_scale_y(1.0);
+        state.set_skew_x(30.0);
+        state.set_skew_y(45.0);
+
+        let (inh, _) = SsMatrix4x4::compute_world_matrix(&state, None, None);
+
+        let tan30 = tanf(30.0f32 * core::f32::consts::PI / 180.0);
+        let tan45 = tanf(45.0f32 * core::f32::consts::PI / 180.0);
+
+        // col0' = col0 + col1 * tan(sy)
+        // col1' = col1 + col0 * tan(sx)
+        // Since col0=[1,0,0,0], col1=[0,1,0,0]
+        // col0' = [1, tan45, 0, 0]
+        // col1' = [tan30, 1, 0, 0]
+
+        assert_f32_eq(inh.m[0], 1.0);
+        assert_f32_eq(inh.m[1], tan45);
+        assert_f32_eq(inh.m[4], tan30);
+        assert_f32_eq(inh.m[5], 1.0);
     }
 }
