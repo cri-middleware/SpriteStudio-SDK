@@ -23,7 +23,7 @@ jobs:
     name: 💅 Lint & Format
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -36,15 +36,9 @@ jobs:
           platform: linux
           os: ubuntu-latest
 
-      - name: Format
-        run: cargo fmt --all
+      - name: Format Check
+        run: cargo fmt --all -- --check
         shell: bash
-
-      - name: Commit formatting changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "chore: apply cargo fmt"
-          commit_author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
 
       - name: Clippy (workspace)
         run: cargo clippy --workspace --all-targets -- -D warnings
