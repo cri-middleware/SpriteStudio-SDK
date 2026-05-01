@@ -15,7 +15,13 @@ fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::s
     v
 }
 
-fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab::ssab::ss::format::EventsPerFrameT>, anime_data: &sspj::ssae::SsAnimation, is_timeline: bool, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) {
+fn convert_events_per_frames_part(
+    map_events_per_frames: &mut HashMap<i32, ssab::ssab::ss::format::EventsPerFrameT>,
+    anime_data: &sspj::ssae::SsAnimation,
+    is_timeline: bool,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+) {
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
             // not found part (an illegal case)
@@ -273,7 +279,12 @@ fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab:
     }
 }
 
-fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Option<Vec<ssab::ssab::ss::format::EventsPerFrameT>> {
+fn convert_events_per_frames(
+    anime_data: &sspj::ssae::SsAnimation,
+    setup_animation: &sspj::ssae::SsAnimation,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+) -> Option<Vec<ssab::ssab::ss::format::EventsPerFrameT>> {
     let mut map_events_per_frames = HashMap::<i32, ssab::ssab::ss::format::EventsPerFrameT>::new();
 
     convert_events_per_frames_part(&mut map_events_per_frames, setup_animation, false, parts_map, sound_list_id_to_name_hash);

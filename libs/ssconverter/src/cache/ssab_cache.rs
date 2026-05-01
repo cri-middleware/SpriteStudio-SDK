@@ -10,8 +10,7 @@ impl From<&ssab::ssab::ss::format::Vec2T> for Vec2Key {
         Self { v1: ordered_float::OrderedFloat(v.v1), v2: ordered_float::OrderedFloat(v.v2) }
     }
 }
-impl Vec2Key {
-}
+impl Vec2Key {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct RectKey {
@@ -25,8 +24,7 @@ impl From<&ssab::ssab::ss::format::RectT> for RectKey {
         Self { x1: ordered_float::OrderedFloat(value.x1), y1: ordered_float::OrderedFloat(value.y1), x2: ordered_float::OrderedFloat(value.x2), y2: ordered_float::OrderedFloat(value.y2) }
     }
 }
-impl RectKey {
-}
+impl RectKey {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct U8RectKey {
@@ -999,12 +997,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.ss_curve_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::SsCurveArgs {
-            start_time: curve.start_time,
-            start_value: curve.start_value,
-            end_time: curve.end_time,
-            end_value: curve.end_value,
-        };
+        let args = ssab::ssab::ss::format::SsCurveArgs { start_time: curve.start_time, start_value: curve.start_value, end_time: curve.end_time, end_value: curve.end_value };
         let offset = ssab::ssab::ss::format::SsCurve::create(fb, &args);
         self.ss_curve_cache.insert(key, offset);
         offset
