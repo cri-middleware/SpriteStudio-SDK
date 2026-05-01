@@ -15,7 +15,13 @@ fn convert_animedata_labels(labels: &[sspj::ssae::SsLabel]) -> Vec<ssab::ssab::s
     v
 }
 
-fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab::ssab::ss::format::EventsPerFrameT>, anime_data: &sspj::ssae::SsAnimation, is_timeline: bool, parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
+fn convert_events_per_frames_part(
+    map_events_per_frames: &mut HashMap<i32, ssab::ssab::ss::format::EventsPerFrameT>,
+    anime_data: &sspj::ssae::SsAnimation,
+    is_timeline: bool,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+) {
     for part_anime in &anime_data.part_animes {
         let Some(p) = parts_map.get(&part_anime.part_name) else {
             // not found part (an illegal case)
@@ -244,7 +250,8 @@ fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab:
                         let mut a_args = ssab::ssab::ss::format::EventAudioT::default();
                         a_args.part_index = part_index;
                         let mut audio_t = ssab::ssab::ss::format::PartAttributeAudioT::default();
-                        audio_t.sound_list_id = key.value.sound_list_id;
+                        audio_t.sound_list_name_hash = sound_list_id_to_name_hash.get(&key.value.sound_list_id).copied().unwrap_or(0);
+                        audio_t.sound_name_hash = crate::utils::fnv1a_hash_str(&key.value.sound_name);
                         audio_t.sound_name = Some(key.value.sound_name.to_string());
                         audio_t.loop_num = key.value.loop_num;
                         a_args.value = Some(Box::new(audio_t));
@@ -272,11 +279,16 @@ fn convert_events_per_frames_part(map_events_per_frames: &mut HashMap<i32, ssab:
     }
 }
 
-fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Option<Vec<ssab::ssab::ss::format::EventsPerFrameT>> {
+fn convert_events_per_frames(
+    anime_data: &sspj::ssae::SsAnimation,
+    setup_animation: &sspj::ssae::SsAnimation,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+) -> Option<Vec<ssab::ssab::ss::format::EventsPerFrameT>> {
     let mut map_events_per_frames = HashMap::<i32, ssab::ssab::ss::format::EventsPerFrameT>::new();
 
-    convert_events_per_frames_part(&mut map_events_per_frames, setup_animation, false, parts_map);
-    convert_events_per_frames_part(&mut map_events_per_frames, anime_data, true, parts_map);
+    convert_events_per_frames_part(&mut map_events_per_frames, setup_animation, false, parts_map, sound_list_id_to_name_hash);
+    convert_events_per_frames_part(&mut map_events_per_frames, anime_data, true, parts_map, sound_list_id_to_name_hash);
 
     if map_events_per_frames.is_empty() {
         None
@@ -286,7 +298,7 @@ fn convert_events_per_frames(anime_data: &sspj::ssae::SsAnimation, setup_animati
         Some(vec_map.into_iter().map(|(_, v)| v).collect::<Vec<ssab::ssab::ss::format::EventsPerFrameT>>())
     }
 }
-fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> ssab::ssab::ss::format::AnimationDataT {
+fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> ssab::ssab::ss::format::AnimationDataT {
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
@@ -294,8 +306,8 @@ fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &ss
     anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map));
     anime_data_t.parts_mesh_data = None;
-    anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map);
-    anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map);
+    anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
+    anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
     anime_data_t.start_frame = anime_data.settings.start_frame as i16;
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
@@ -713,7 +725,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
     });
 }
 
-fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::InitialEventsT], part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::InitialEventsT], part_index: u16, setup_attributes: &[sspj::ssattribute::SsAttributeKind], sound_list_id_to_name_hash: &HashMap<i32, u32>) {
     let mut initial_event_t = ssab::ssab::ss::format::InitialEventsT::default();
     let mut flag_exist_event = false;
 
@@ -844,7 +856,8 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
             sspj::ssattribute::SsAttributeKind::Audio(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeAudioT::default();
-                    value.sound_list_id = _key.value.sound_list_id;
+                    value.sound_list_name_hash = sound_list_id_to_name_hash.get(&_key.value.sound_list_id).copied().unwrap_or(0);
+                    value.sound_name_hash = crate::utils::fnv1a_hash_str(&_key.value.sound_name);
                     value.sound_name = Some(_key.value.sound_name.to_string());
                     value.loop_num = _key.value.loop_num;
 
@@ -877,7 +890,7 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation) -> Vec
         .collect::<Vec<_>>()
 }
 
-fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
+fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
     let mut events_t = Vec::<ssab::ssab::ss::format::InitialEventsT>::new();
     events_t.resize(parts_map.len(), ssab::ssab::ss::format::InitialEventsT::default());
 
@@ -887,7 +900,7 @@ fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map:
             continue;
         };
 
-        merge_setup_attributes_to_part_event_t(&mut events_t, p.array_index as u16, &part_anime.attributes);
+        merge_setup_attributes_to_part_event_t(&mut events_t, p.array_index as u16, &part_anime.attributes, sound_list_id_to_name_hash);
     }
 
     Some(events_t)
@@ -1545,7 +1558,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         .collect::<Vec<_>>()
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
+pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
         return vec![];
@@ -1558,7 +1571,7 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_m
             if anime_data == setup_animation {
                 return None;
             }
-            Some(convert_animedatat(anime_data, setup_animation, parts_map))
+            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash))
         })
         .collect::<Vec<ssab::ssab::ss::format::AnimationDataT>>()
 }

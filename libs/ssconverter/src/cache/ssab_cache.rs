@@ -10,8 +10,7 @@ impl From<&ssab::ssab::ss::format::Vec2T> for Vec2Key {
         Self { v1: ordered_float::OrderedFloat(v.v1), v2: ordered_float::OrderedFloat(v.v2) }
     }
 }
-impl Vec2Key {
-}
+impl Vec2Key {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct RectKey {
@@ -25,8 +24,7 @@ impl From<&ssab::ssab::ss::format::RectT> for RectKey {
         Self { x1: ordered_float::OrderedFloat(value.x1), y1: ordered_float::OrderedFloat(value.y1), x2: ordered_float::OrderedFloat(value.x2), y2: ordered_float::OrderedFloat(value.y2) }
     }
 }
-impl RectKey {
-}
+impl RectKey {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct U8RectKey {
@@ -828,13 +826,14 @@ impl From<&ssab::ssab::ss::format::PartAttributeSignalT> for PartAttributeSignal
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeAudioKey {
-    pub sound_list_id: i32,
+    pub sound_list_name_hash: u32,
+    pub sound_name_hash: u32,
     pub sound_name: Option<String>,
     pub loop_num: i32,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeAudioT> for PartAttributeAudioKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeAudioT) -> Self {
-        Self { sound_list_id: value.sound_list_id, sound_name: value.sound_name.clone(), loop_num: value.loop_num }
+        Self { sound_list_name_hash: value.sound_list_name_hash, sound_name_hash: value.sound_name_hash, sound_name: value.sound_name.clone(), loop_num: value.loop_num }
     }
 }
 
@@ -998,12 +997,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.ss_curve_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::SsCurveArgs {
-            start_time: curve.start_time,
-            start_value: curve.start_value,
-            end_time: curve.end_time,
-            end_value: curve.end_value,
-        };
+        let args = ssab::ssab::ss::format::SsCurveArgs { start_time: curve.start_time, start_value: curve.start_value, end_time: curve.end_time, end_value: curve.end_value };
         let offset = ssab::ssab::ss::format::SsCurve::create(fb, &args);
         self.ss_curve_cache.insert(key, offset);
         offset
@@ -1821,7 +1815,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::PartAttributeAudioArgs::default();
-        args.sound_list_id = part_attribute_audio.sound_list_id;
+        args.sound_list_name_hash = part_attribute_audio.sound_list_name_hash;
+        args.sound_name_hash = part_attribute_audio.sound_name_hash;
         args.sound_name = part_attribute_audio.sound_name.as_ref().map(|sound_name| fb.create_shared_string(sound_name));
         args.loop_num = part_attribute_audio.loop_num;
         let offset = ssab::ssab::ss::format::PartAttributeAudio::create(fb, &args);
@@ -2128,6 +2123,7 @@ impl<'a> SsabCache<'a> {
                 sound_file_args.name_hash = table_data_t.name_hash;
                 sound_file_args.name = table_data_t.name.as_ref().map(|name| fb.create_shared_string(name));
                 sound_file_args.file_path = table_data_t.file_path.as_ref().map(|s| fb.create_shared_string(s));
+                sound_file_args.file_path_hash = table_data_t.file_path_hash;
                 sound_file_args.time_total = table_data_t.time_total;
 
                 ssab::ssab::ss::format::SoundFile::create(fb, &sound_file_args)

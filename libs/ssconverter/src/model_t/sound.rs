@@ -5,8 +5,8 @@ fn convert_sound_file_list(_sspj: &sspj::sspj::SsProject, sssound_list: &sspj::s
         .map(|sssound| {
             let mut sound_file_t = ssab::ssab::ss::format::SoundFileT::default();
 
-            sound_file_t.name_hash = crate::utils::fnv1a_hash_str(&sssound.filename);
-            sound_file_t.name = if sssound.filename.is_empty() { None } else { Some(sssound.filename.to_string()) };
+            sound_file_t.name_hash = crate::utils::fnv1a_hash_str(&sssound.alias);
+            sound_file_t.name = if sssound.alias.is_empty() { None } else { Some(sssound.alias.to_string()) };
             sound_file_t.file_path = if sssound.filename.is_empty() {
                 None
             } else {
@@ -17,6 +17,7 @@ fn convert_sound_file_list(_sspj: &sspj::sspj::SsProject, sssound_list: &sspj::s
                 };
                 Some(filename)
             };
+            sound_file_t.file_path_hash = if sssound.filename.is_empty() { 0 } else { crate::utils::fnv1a_hash_str(&sssound.filename) };
             sound_file_t.time_total = sssound.msec;
             Ok(sound_file_t)
         })

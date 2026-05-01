@@ -33,6 +33,10 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     let using_sound_list =
         if anime_pack.model.part_list.iter().filter(|part| part.part_type == sspj::sstypes::SsPartType::Audio).collect::<Vec<&sspj::ssae::SsPart>>().is_empty() { vec![] } else { sspj.sound_list.iter().collect::<Vec<&sspj::ssse::SsAudioPack>>() };
 
+    // Map .ssse <table><id> to fnv1a(SoundList.name) so PartAttributeAudio
+    // events can be linked to a SoundList without storing the integer id.
+    let sound_list_id_to_name_hash: HashMap<i32, u32> = sspj.sound_list.iter().map(|p| (p.table.id, crate::utils::fnv1a_hash_str(&p.name))).collect();
+
     let external_textures = sspj.external_textures.iter().map(|texture_info| texture_info.path_name.clone()).collect::<HashSet<String>>();
 
     let external_instances = anime_pack
@@ -51,7 +55,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.animations = if anime_pack.anime_list.is_empty() {
         None
     } else {
-        let animations = model_t::animedata::convert_animation_data_list(anime_pack, &parts_map);
+        let animations = model_t::animedata::convert_animation_data_list(anime_pack, &parts_map, &sound_list_id_to_name_hash);
         if animations.is_empty() { None } else { Some(animations) }
     };
     anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(sspj, &cellmaps, asset_provider)?) };
