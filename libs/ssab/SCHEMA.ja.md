@@ -302,6 +302,15 @@ ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (
 | `map_id` (int) | `map_id` (i32) | セルマップインデックス |
 | `name_hash` (uint32) | `name` (String) | 文字列の代わりにハッシュ |
 
+### オーディオ属性
+
+| ssab `PartAttributeAudio` | ssae `SsAttributeAudioKeyValue` | 備考 |
+|--------------------------|--------------------------------|------|
+| `sound_list_name_hash` (uint32) | `sound_list_id` (i32) | サウンドリスト名から生成したハッシュ |
+| `sound_name_hash` (uint32) | `sound_name` (String) | エイリアス名から生成したハッシュ |
+| `sound_name` (string) | — | 診断用のエイリアス名（オプション） |
+| `loop_num` (int) | `loop_num` (i32) | ループ回数 |
+
 ---
 
 ## 初期パーツ属性
@@ -427,10 +436,12 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 | ssab フィールド | ssse フィールド | 備考 |
 |---------------|---------------|------|
-| `name_hash` | — | 高速検索用ハッシュ |
+| `name_hash` | — | 高速検索用ハッシュ (Alias名から生成) |
 | `name` | `alias` | サウンドエイリアス名 |
 | `file_path` | `filename` | ファイルパス |
+| `file_path_hash` | — | ファイルパスから生成したハッシュ |
 | `time_total` | `msec` | 再生時間（ミリ秒） |
+
 
 ---
 

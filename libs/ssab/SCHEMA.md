@@ -302,6 +302,15 @@ In ssae, keyframes can also carry `curve` data (`SsCurve`) for Bezier/Hermite in
 | `map_id` (int) | `map_id` (i32) | Cell map index |
 | `name_hash` (uint32) | `name` (String) | Hash instead of string |
 
+### Audio Attribute
+
+| ssab `PartAttributeAudio` | ssae `SsAttributeAudioKeyValue` | Notes |
+|--------------------------|--------------------------------|-------|
+| `sound_list_name_hash` (uint32) | `sound_list_id` (i32) | Hash generated from SoundList name |
+| `sound_name_hash` (uint32) | `sound_name` (String) | Hash generated from alias name |
+| `sound_name` (string) | — | Diagnostic alias name (optional) |
+| `loop_num` (int) | `loop_num` (i32) | Loop count |
+
 ---
 
 ## Initial Part Attributes
@@ -427,10 +436,12 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 
 | ssab field | ssse field | Notes |
 |-----------|-----------|-------|
-| `name_hash` | — | Hash for fast lookup |
+| `name_hash` | — | Hash for fast lookup (generated from Alias) |
 | `name` | `alias` | Sound alias name |
 | `file_path` | `filename` | File path |
+| `file_path_hash` | — | Hash generated from file path |
 | `time_total` | `msec` | Duration in milliseconds |
+
 
 ---
 
