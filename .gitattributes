@@ -23,19 +23,12 @@
 *.ps1 text eol=crlf
 
 # SpriteStudio Project Files (XML-based)
-*.sspj text
-*.ssae text
-*.ssce text
-*.ssee text
-*.ssse text
-
-# Enforce CRLF for test data to prevent cargo fmt from normalizing to LF
-tests/**/*.sspj text eol=crlf
-tests/**/*.ssae text eol=crlf
-tests/**/*.ssce text eol=crlf
-tests/**/*.ssee text eol=crlf
-tests/**/*.ssqe text eol=crlf
-tests/**/*.ssse text eol=crlf
+*.sspj text eol=crlf
+*.ssae text eol=crlf
+*.ssce text eol=crlf
+*.ssee text eol=crlf
+*.ssse text eol=crlf
+*.ssqe text eol=crlf
 
 # Binary files
 *.png binary
