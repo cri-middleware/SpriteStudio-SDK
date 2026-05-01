@@ -103,6 +103,9 @@ jobs:
           mkdir -p lib
           cp target/release/*.a lib/
           cp target/release/*.so lib/
+          mkdir -p lib/include
+          cp libs/ssruntime/target/ssruntime.h lib/include/
+          cp libs/ssconverter/target/ssconverter.h lib/include/
 
       - name: build macOS
         if: matrix.platform == 'macos' && matrix.arch == 'universal'
@@ -230,9 +233,8 @@ jobs:
           rm -rf static
           mkdir -p static/runtime
           pushd static/runtime
-          mkdir -p libs
+          mkdir -p libs include
           pushd libs
-          echo ${{ steps.commit.outputs.hash }} > VERSION
           mkdir -p macos
           mkdir -p web
           mkdir -p ios
@@ -254,6 +256,11 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
+
+          cp ../../spritestudio7-sdk-libraries-linux/include/*.h include/
+
+          echo ${{ steps.commit.outputs.hash }} > VERSION
+          cp ../../../LICENSE.md ./
           # pushd libs/windows
           # cp x86_64/ssconverter.lib ssconverter.windows.editor.x86_64.lib
           # cp x86_64/ssconverter.lib ssconverter.windows.template_debug.x86_64.lib
@@ -268,9 +275,8 @@ jobs:
           rm -rf dynamic
           mkdir -p dynamic/runtime
           pushd dynamic/runtime
-          mkdir -p libs
+          mkdir -p libs include
           pushd libs
-          echo ${{ steps.commit.outputs.hash }} > VERSION
           mkdir -p macos
           mkdir -p web
           mkdir -p ios
@@ -292,6 +298,11 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
+
+          mv ../../spritestudio7-sdk-libraries-linux/include/*.h include/
+
+          echo ${{ steps.commit.outputs.hash }} > VERSION
+          cp ../../../LICENSE.md ./
 
           popd # static/runtime
 
