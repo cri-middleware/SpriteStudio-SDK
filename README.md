@@ -3,6 +3,9 @@
 
 [![CI](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml)
 
+The repository is in experimental and unstable phase.
+No guarantee, No support and can't reply any requests and any bug reports regarding the repository.
+
 A Software Development Kit for sspj projects that are created by [OPTPiX SpriteStudio](https://www.webtech.co.jp/eng/spritestudio/) 7 or higher flexibly to implement an animation player on any game engines or platforms.
 
 ## Overview
