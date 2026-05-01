@@ -208,13 +208,11 @@ pub fn compute_nineslice_geometry(
     };
 
     for row in 0..4 {
-        for col in 0..4 {
-            let idx = row * 4 + col;
-            grid.vertices_x[idx] = vx[col];
-            grid.vertices_y[idx] = vy[row];
-            grid.uvs_u[idx] = uv_u[col];
-            grid.uvs_v[idx] = uv_v[row];
-        }
+        let offset = row * 4;
+        grid.vertices_x[offset..offset + 4].copy_from_slice(&vx);
+        grid.vertices_y[offset..offset + 4].fill(vy[row]);
+        grid.uvs_u[offset..offset + 4].copy_from_slice(&uv_u);
+        grid.uvs_v[offset..offset + 4].fill(uv_v[row]);
     }
 
     grid
