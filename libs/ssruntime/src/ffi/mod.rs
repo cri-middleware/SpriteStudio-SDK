@@ -953,12 +953,7 @@ pub unsafe extern "C" fn ss_nineslice_compute_local(
         return false;
     }
 
-    let grid = crate::core::geometry::compute_nineslice_geometry(
-        (size_w, size_h),
-        (u_left, v_top, u_right, v_bottom),
-        (margin_l, margin_t, margin_r, margin_b),
-        (source_w, source_h),
-    );
+    let grid = crate::core::geometry::compute_nineslice_geometry((size_w, size_h), (u_left, v_top, u_right, v_bottom), (margin_l, margin_t, margin_r, margin_b), (source_w, source_h));
 
     unsafe {
         *out_vx.cast::<[f32; 16]>() = grid.vertices_x;

@@ -1,5 +1,5 @@
+use crate::core::math::{cosf, sinf};
 use crate::core::matrix::SsMatrix4x4;
-use crate::core::math::{sinf, cosf};
 use wide::{CmpGt, CmpLt, f32x4};
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
@@ -160,12 +160,7 @@ pub struct NineSliceGrid {
 /// `uv_rect`: (left, top, right, bottom) in normalized UV space or pixel space.
 /// `margins`: (left, top, right, bottom) margins.
 /// `source_size`: (width, height) of the source image/rect for margin validation.
-pub fn compute_nineslice_geometry(
-    size: (f32, f32),
-    uv_rect: (f32, f32, f32, f32),
-    margins: (f32, f32, f32, f32),
-    source_size: (f32, f32),
-) -> NineSliceGrid {
+pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32), margins: (f32, f32, f32, f32), source_size: (f32, f32)) -> NineSliceGrid {
     let (w, h) = size;
     let (l, t, r, b) = uv_rect;
     let (ml, mt, mr, mb) = margins;
@@ -200,12 +195,7 @@ pub fn compute_nineslice_geometry(
     let uv_u = [l, l + sml / sw * (r - l), r - smr / sw * (r - l), r];
     let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
 
-    let mut grid = NineSliceGrid {
-        vertices_x: [0.0; 16],
-        vertices_y: [0.0; 16],
-        uvs_u: [0.0; 16],
-        uvs_v: [0.0; 16],
-    };
+    let mut grid = NineSliceGrid { vertices_x: [0.0; 16], vertices_y: [0.0; 16], uvs_u: [0.0; 16], uvs_v: [0.0; 16] };
 
     for row in 0..4 {
         let offset = row * 4;
@@ -230,10 +220,7 @@ pub enum ShapeType {
 
 /// Computes local vertices for a primitive shape.
 /// Returns the number of vertices and the coordinates.
-pub fn compute_shape_vertices(
-    shape_type: ShapeType,
-    size: (f32, f32),
-) -> (usize, [f32; 16], [f32; 16]) {
+pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize, [f32; 16], [f32; 16]) {
     let (w, h) = size;
     let hw = w * 0.5;
     let hh = h * 0.5;
