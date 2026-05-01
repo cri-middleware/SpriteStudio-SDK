@@ -929,3 +929,73 @@ pub extern "C" fn ss_geometry_is_point_in_quad(
     let vya = unsafe { &*(vy as *const [f32; 4]) };
     crate::core::geometry::is_point_in_quad((tx, ty), vxa, vya)
 }
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_nineslice_compute_local(
+    size_w: f32,
+    size_h: f32,
+    u_left: f32,
+    v_top: f32,
+    u_right: f32,
+    v_bottom: f32,
+    margin_l: f32,
+    margin_t: f32,
+    margin_r: f32,
+    margin_b: f32,
+    source_w: f32,
+    source_h: f32,
+    out_vx: *mut f32, // Array of 16 floats
+    out_vy: *mut f32, // Array of 16 floats
+    out_uv: *mut f32, // Array of 16 floats
+    out_vv: *mut f32, // Array of 16 floats
+) -> bool {
+    if out_vx.is_null() || out_vy.is_null() || out_uv.is_null() || out_vv.is_null() {
+        return false;
+    }
+
+    let grid = crate::core::geometry::compute_nineslice_geometry(
+        (size_w, size_h),
+        (u_left, v_top, u_right, v_bottom),
+        (margin_l, margin_t, margin_r, margin_b),
+        (source_w, source_h),
+    );
+
+    unsafe {
+        *out_vx.cast::<[f32; 16]>() = grid.vertices_x;
+        *out_vy.cast::<[f32; 16]>() = grid.vertices_y;
+        *out_uv.cast::<[f32; 16]>() = grid.uvs_u;
+        *out_vv.cast::<[f32; 16]>() = grid.uvs_v;
+    }
+    true
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_shape_compute_local(
+    shape_type: i32,
+    size_w: f32,
+    size_h: f32,
+    out_vx: *mut f32, // Array of 16 floats
+    out_vy: *mut f32, // Array of 16 floats
+    out_count: *mut i32,
+) -> bool {
+    if out_vx.is_null() || out_vy.is_null() || out_count.is_null() {
+        return false;
+    }
+
+    let shape = match shape_type {
+        0 => crate::core::geometry::ShapeType::Rectangle,
+        1 => crate::core::geometry::ShapeType::Triangle,
+        2 => crate::core::geometry::ShapeType::Star,
+        3 => crate::core::geometry::ShapeType::Arrow,
+        _ => return false,
+    };
+
+    let (count, vx, vy) = crate::core::geometry::compute_shape_vertices(shape, (size_w, size_h));
+
+    unsafe {
+        *out_vx.cast::<[f32; 16]>() = vx;
+        *out_vy.cast::<[f32; 16]>() = vy;
+        *out_count = count as i32;
+    }
+    true
+}
