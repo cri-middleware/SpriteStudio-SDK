@@ -1,5 +1,11 @@
 #[cfg(not(feature = "std"))]
-pub use libm::{atan2f, cosf, fabsf, floorf, fmodf, roundf, sinf, sqrtf};
+pub use libm::{atan2f, cosf, fabsf, floorf, fmodf, roundf, sinf, sqrtf, tanf};
+
+#[cfg(feature = "std")]
+#[inline]
+pub fn tanf(f: f32) -> f32 {
+    f.tan()
+}
 
 #[cfg(feature = "std")]
 #[inline]

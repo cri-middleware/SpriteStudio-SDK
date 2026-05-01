@@ -1,3 +1,4 @@
+use crate::core::math::{cosf, sinf};
 use crate::core::matrix::SsMatrix4x4;
 use wide::{CmpGt, CmpLt, f32x4};
 
@@ -143,6 +144,139 @@ pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) ->
     }
 
     (intersections % 2) != 0
+}
+
+/// Represents a 4x4 grid of vertices and UVs for a Nine-Slice part.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct NineSliceGrid {
+    pub vertices_x: [f32; 16],
+    pub vertices_y: [f32; 16],
+    pub uvs_u: [f32; 16],
+    pub uvs_v: [f32; 16],
+}
+
+/// Computes the 16 grid points for a Nine-Slice part.
+/// `size`: (width, height) of the part.
+/// `uv_rect`: (left, top, right, bottom) in normalized UV space or pixel space.
+/// `margins`: (left, top, right, bottom) margins.
+/// `source_size`: (width, height) of the source image/rect for margin validation.
+pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32), margins: (f32, f32, f32, f32), source_size: (f32, f32)) -> NineSliceGrid {
+    let (w, h) = size;
+    let (l, t, r, b) = uv_rect;
+    let (ml, mt, mr, mb) = margins;
+    let (sw, sh) = source_size;
+
+    // 1. Calculate Safe Margins (same as SS6-SDK)
+    let mut sml = ml;
+    let mut smr = mr;
+    let diff_x = ml + mr - sw;
+    if diff_x > 0.0 {
+        let half = diff_x * 0.5;
+        sml -= half;
+        smr -= diff_x - half;
+    }
+
+    let mut smt = mt;
+    let mut smb = mb;
+    let diff_y = mt + mb - sh;
+    if diff_y > 0.0 {
+        let half = diff_y * 0.5;
+        smt -= half;
+        smb -= diff_y - half;
+    }
+
+    // 2. Calculate Grid Coordinates
+    let hx2 = w * 0.5;
+    let hy2 = h * 0.5;
+
+    let vx = [-hx2, -hx2 + sml, hx2 - smr, hx2];
+    let vy = [hy2, hy2 - smt, -hy2 + smb, -hy2]; // Y down in SS7-SDK default? No, let's stick to SS6-SDK logic (Y up internally)
+
+    let uv_u = [l, l + sml / sw * (r - l), r - smr / sw * (r - l), r];
+    let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
+
+    let mut grid = NineSliceGrid { vertices_x: [0.0; 16], vertices_y: [0.0; 16], uvs_u: [0.0; 16], uvs_v: [0.0; 16] };
+
+    for row in 0..4 {
+        let offset = row * 4;
+        grid.vertices_x[offset..offset + 4].copy_from_slice(&vx);
+        grid.vertices_y[offset..offset + 4].fill(vy[row]);
+        grid.uvs_u[offset..offset + 4].copy_from_slice(&uv_u);
+        grid.uvs_v[offset..offset + 4].fill(uv_v[row]);
+    }
+
+    grid
+}
+
+/// Primitive shape types supported by Shape Parts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
+pub enum ShapeType {
+    Rectangle = 0,
+    Triangle = 1,
+    Star = 2,
+    Arrow = 3,
+}
+
+/// Computes local vertices for a primitive shape.
+/// Returns the number of vertices and the coordinates.
+pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize, [f32; 16], [f32; 16]) {
+    let (w, h) = size;
+    let hw = w * 0.5;
+    let hh = h * 0.5;
+
+    let mut out_x = [0.0; 16];
+    let mut out_y = [0.0; 16];
+    let count;
+
+    match shape_type {
+        ShapeType::Rectangle => {
+            out_x[0..4].copy_from_slice(&[-hw, hw, -hw, hw]);
+            out_y[0..4].copy_from_slice(&[hh, hh, -hh, -hh]);
+            count = 4;
+        }
+        ShapeType::Triangle => {
+            // Center + 3 points
+            out_x[0] = 0.0;
+            out_y[0] = 0.0;
+            for i in 0..3 {
+                let rad = (120.0 * i as f32) * core::f32::consts::PI / 180.0;
+                let s = sinf(rad);
+                let c = cosf(rad);
+                out_x[i + 1] = s * hw;
+                out_y[i + 1] = c * hh;
+            }
+            out_x[4] = out_x[1]; // Close the fan
+            out_y[4] = out_y[1];
+            count = 5;
+        }
+        ShapeType::Star => {
+            // Center + 10 points
+            out_x[0] = 0.0;
+            out_y[0] = 0.0;
+            for i in 0..10 {
+                let rad = (36.0 * i as f32) * core::f32::consts::PI / 180.0;
+                let r_scale = if i % 2 == 0 { 1.0 } else { 0.382 }; // Golden ratio related for star
+                let s = sinf(rad);
+                let c = cosf(rad);
+                out_x[i + 1] = s * hw * r_scale;
+                out_y[i + 1] = c * hh * r_scale;
+            }
+            count = 11;
+        }
+        ShapeType::Arrow => {
+            // Simplified arrow (7 points)
+            // stem: (-hw/4, -hh) to (hw/4, 0)
+            // head: (-hw, 0), (hw, 0), (0, hh)
+            let sx = hw * 0.5;
+            let sy = 0.0;
+            out_x[0..7].copy_from_slice(&[-sx / 2.0, sx / 2.0, sx / 2.0, hw, 0.0, -hw, -sx / 2.0]);
+            out_y[0..7].copy_from_slice(&[-hh, -hh, sy, sy, hh, sy, sy]);
+            count = 7;
+        }
+    }
+
+    (count, out_x, out_y)
 }
 
 #[cfg(test)]
@@ -384,5 +518,36 @@ mod tests {
         assert!(!is_point_in_quad((5.0, 5.0), &vx, &vy));
         // Outside, entirely to the right
         assert!(!is_point_in_quad((11.0, 5.0), &vx, &vy));
+    }
+
+    #[test]
+    fn test_compute_nineslice_geometry() {
+        let size = (100.0, 100.0);
+        let uv_rect = (0.0, 0.0, 1.0, 1.0);
+        let margins = (10.0, 10.0, 10.0, 10.0);
+        let source_size = (100.0, 100.0);
+
+        let grid = compute_nineslice_geometry(size, uv_rect, margins, source_size);
+
+        // Check top-left corner vertex
+        assert_approx_eq(grid.vertices_x[0], -50.0);
+        assert_approx_eq(grid.vertices_y[0], 50.0);
+        // Check grid vertex (1,1)
+        assert_approx_eq(grid.vertices_x[5], -40.0);
+        assert_approx_eq(grid.vertices_y[5], 40.0);
+
+        // Check UVs
+        assert_approx_eq(grid.uvs_u[0], 0.0);
+        assert_approx_eq(grid.uvs_v[0], 0.0);
+        assert_approx_eq(grid.uvs_u[5], 0.1);
+        assert_approx_eq(grid.uvs_v[5], 0.1);
+    }
+
+    #[test]
+    fn test_compute_shape_vertices_rectangle() {
+        let (count, x, y) = compute_shape_vertices(ShapeType::Rectangle, (100.0, 200.0));
+        assert_eq!(count, 4);
+        assert_approx_eq(x[0], -50.0);
+        assert_approx_eq(y[0], 100.0);
     }
 }
