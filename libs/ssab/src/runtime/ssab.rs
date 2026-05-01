@@ -6040,7 +6040,8 @@ impl<'a> SoundFile<'a> {
   pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
   pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
   pub const VT_FILE_PATH: ::flatbuffers::VOffsetT = 8;
-  pub const VT_TIME_TOTAL: ::flatbuffers::VOffsetT = 10;
+  pub const VT_FILE_PATH_HASH: ::flatbuffers::VOffsetT = 10;
+  pub const VT_TIME_TOTAL: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -6053,6 +6054,7 @@ impl<'a> SoundFile<'a> {
   ) -> ::flatbuffers::WIPOffset<SoundFile<'bldr>> {
     let mut builder = SoundFileBuilder::new(_fbb);
     builder.add_time_total(args.time_total);
+    builder.add_file_path_hash(args.file_path_hash);
     if let Some(x) = args.file_path { builder.add_file_path(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_name_hash(args.name_hash);
@@ -6092,6 +6094,13 @@ impl<'a> SoundFile<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SoundFile::VT_FILE_PATH, None)}
   }
   #[inline]
+  pub fn file_path_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(SoundFile::VT_FILE_PATH_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
   pub fn time_total(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
@@ -6109,6 +6118,7 @@ impl ::flatbuffers::Verifiable for SoundFile<'_> {
      .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("file_path", Self::VT_FILE_PATH, false)?
+     .visit_field::<u32>("file_path_hash", Self::VT_FILE_PATH_HASH, false)?
      .visit_field::<u32>("time_total", Self::VT_TIME_TOTAL, false)?
      .finish();
     Ok(())
@@ -6118,6 +6128,7 @@ pub struct SoundFileArgs<'a> {
     pub name_hash: u32,
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub file_path: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub file_path_hash: u32,
     pub time_total: u32,
 }
 impl<'a> Default for SoundFileArgs<'a> {
@@ -6127,6 +6138,7 @@ impl<'a> Default for SoundFileArgs<'a> {
       name_hash: 0,
       name: None,
       file_path: None,
+      file_path_hash: 0,
       time_total: 0,
     }
   }
@@ -6148,6 +6160,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SoundFileBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_file_path(&mut self, file_path: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SoundFile::VT_FILE_PATH, file_path);
+  }
+  #[inline]
+  pub fn add_file_path_hash(&mut self, file_path_hash: u32) {
+    self.fbb_.push_slot::<u32>(SoundFile::VT_FILE_PATH_HASH, file_path_hash, 0);
   }
   #[inline]
   pub fn add_time_total(&mut self, time_total: u32) {
@@ -6174,6 +6190,7 @@ impl ::core::fmt::Debug for SoundFile<'_> {
       ds.field("name_hash", &self.name_hash());
       ds.field("name", &self.name());
       ds.field("file_path", &self.file_path());
+      ds.field("file_path_hash", &self.file_path_hash());
       ds.field("time_total", &self.time_total());
       ds.finish()
   }
@@ -8802,9 +8819,10 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeAudio<'a> {
 }
 
 impl<'a> PartAttributeAudio<'a> {
-  pub const VT_SOUND_LIST_ID: ::flatbuffers::VOffsetT = 4;
-  pub const VT_SOUND_NAME: ::flatbuffers::VOffsetT = 6;
-  pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 8;
+  pub const VT_SOUND_LIST_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_SOUND_NAME_HASH: ::flatbuffers::VOffsetT = 6;
+  pub const VT_SOUND_NAME: ::flatbuffers::VOffsetT = 8;
+  pub const VT_LOOP_NUM: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -8818,17 +8836,25 @@ impl<'a> PartAttributeAudio<'a> {
     let mut builder = PartAttributeAudioBuilder::new(_fbb);
     builder.add_loop_num(args.loop_num);
     if let Some(x) = args.sound_name { builder.add_sound_name(x); }
-    builder.add_sound_list_id(args.sound_list_id);
+    builder.add_sound_name_hash(args.sound_name_hash);
+    builder.add_sound_list_name_hash(args.sound_list_name_hash);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn sound_list_id(&self) -> i32 {
+  pub fn sound_list_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeAudio::VT_SOUND_LIST_ID, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(PartAttributeAudio::VT_SOUND_LIST_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn sound_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(PartAttributeAudio::VT_SOUND_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn sound_name(&self) -> Option<&'a str> {
@@ -8852,7 +8878,8 @@ impl ::flatbuffers::Verifiable for PartAttributeAudio<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<i32>("sound_list_id", Self::VT_SOUND_LIST_ID, false)?
+     .visit_field::<u32>("sound_list_name_hash", Self::VT_SOUND_LIST_NAME_HASH, false)?
+     .visit_field::<u32>("sound_name_hash", Self::VT_SOUND_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("sound_name", Self::VT_SOUND_NAME, false)?
      .visit_field::<i32>("loop_num", Self::VT_LOOP_NUM, false)?
      .finish();
@@ -8860,7 +8887,8 @@ impl ::flatbuffers::Verifiable for PartAttributeAudio<'_> {
   }
 }
 pub struct PartAttributeAudioArgs<'a> {
-    pub sound_list_id: i32,
+    pub sound_list_name_hash: u32,
+    pub sound_name_hash: u32,
     pub sound_name: Option<::flatbuffers::WIPOffset<&'a str>>,
     pub loop_num: i32,
 }
@@ -8868,7 +8896,8 @@ impl<'a> Default for PartAttributeAudioArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartAttributeAudioArgs {
-      sound_list_id: 0,
+      sound_list_name_hash: 0,
+      sound_name_hash: 0,
       sound_name: None,
       loop_num: 0,
     }
@@ -8881,8 +8910,12 @@ pub struct PartAttributeAudioBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + '
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeAudioBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_sound_list_id(&mut self, sound_list_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeAudio::VT_SOUND_LIST_ID, sound_list_id, 0);
+  pub fn add_sound_list_name_hash(&mut self, sound_list_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeAudio::VT_SOUND_LIST_NAME_HASH, sound_list_name_hash, 0);
+  }
+  #[inline]
+  pub fn add_sound_name_hash(&mut self, sound_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeAudio::VT_SOUND_NAME_HASH, sound_name_hash, 0);
   }
   #[inline]
   pub fn add_sound_name(&mut self, sound_name: ::flatbuffers::WIPOffset<&'b  str>) {
@@ -8910,7 +8943,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeAudioBuilder<'a,
 impl ::core::fmt::Debug for PartAttributeAudio<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeAudio");
-      ds.field("sound_list_id", &self.sound_list_id());
+      ds.field("sound_list_name_hash", &self.sound_list_name_hash());
+      ds.field("sound_name_hash", &self.sound_name_hash());
       ds.field("sound_name", &self.sound_name());
       ds.field("loop_num", &self.loop_num());
       ds.finish()

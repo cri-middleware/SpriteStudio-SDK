@@ -301,6 +301,7 @@ table SoundFile {
   name_hash: uint32 (key);
   name: string;
   file_path: string;
+  file_path_hash: uint32;
   time_total: uint;
 }
 
@@ -444,8 +445,9 @@ table PartAttributeSignal {
 }
 
 table PartAttributeAudio {
-  sound_list_id: int;
-  sound_name: string;
+  sound_list_name_hash: uint32; // fnv1a(SoundList.name) — addresses SoundList
+  sound_name_hash: uint32;      // fnv1a(alias) — addresses SoundFile within the SoundList
+  sound_name: string;           // alias (kept for diagnostics)
   loop_num: int;
 }
 
