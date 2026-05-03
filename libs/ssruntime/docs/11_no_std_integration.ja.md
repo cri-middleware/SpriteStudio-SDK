@@ -12,9 +12,13 @@ SDK の `scripts/release-*.sh` が出力する **すべての配布バイナリ 
 |---|---|---|
 | `ffi` | ✅ | C-API エクスポート |
 | `libc_alloc` | — | `libc::malloc/free` ベースの `#[global_allocator]` |
-| `panic-handler` | — | `#[panic_handler]` を提供 (パニック時に `libc::abort()`) |
+| `wasm_alloc` | — | Pure Wasm 用 `dlmalloc` ベースの `#[global_allocator]` |
+| `panic-handler` | — | `#[panic_handler]` を提供 (パニック時に `libc::abort` または Wasm `unreachable`) |
 | `std` | — | `flatbuffers` / `ssab` を std モードに、テスト実行用 `ssconverter` を依存に追加 |
-| `web` | — | `wasm-bindgen` バインディング |
+| `web` | — | `wasm-bindgen` バインディング (`wasm-bindgen` 自体の `std` フィーチャを有効化します) |
+
+> [!NOTE]
+> `web` フィーチャを有効にすると、ブラウザでの動作に必要な `wasm-bindgen` がリンクされ、それに伴い Rust の `std` がアロケータやパニックハンドラを提供します。しかし、`ssruntime` 内部の計算（数学関数など）は引き続き `libm` クレートを使用するため、他のプラットフォームとの決定性（Bit-identical）は維持されます。
 
 各環境向けの代表的なコマンド:
 
@@ -22,11 +26,14 @@ SDK の `scripts/release-*.sh` が出力する **すべての配布バイナリ 
 # モバイル / コンソール / デスクトップ用 no_std staticlib (推奨)
 cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
 
+# Wasm (ブラウザ / WebWorker / wasm-bindgen) 用 no_std ビルド
+cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "web"
+
+# Pure Wasm (JS 非依存・WASI や組み込み Wasm エンジン向け) 用 no_std ビルド
+cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+
 # Rust ネイティブで rlib として組み込む (ホストが allocator/panic_handler を提供する場合)
 cargo build -p ssruntime --release --no-default-features --features "ffi"
-
-# 開発時のみ: std を有効化してテスト実行
-cargo test -p ssruntime --features std
 ```
 
 ---
@@ -42,6 +49,12 @@ cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
 ```
 
 これにより `no_std` を維持しつつ、メモリアロケーションを C 言語の `malloc` にフォールバックさせ、パニックハンドラを注入した静的ライブラリ (`.a` または `.lib`) が生成されます。パニック発生時は `libc::abort()` が呼ばれて安全にプロセスが終了 (またはデバッガにブレーク) します。
+
+WASI や JS に依存しない組み込み Pure Wasm 環境に `ssruntime` をコンパイルする場合は、以下のように `wasm_alloc` を指定します。内部で `dlmalloc` がリンクされます。
+
+```bash
+cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+```
 
 ---
 

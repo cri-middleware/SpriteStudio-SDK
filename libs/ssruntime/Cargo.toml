@@ -14,6 +14,7 @@ ssab = { workspace = true }
 ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
+dlmalloc = { workspace = true, optional = true, features = ["global"] }
 libc = { version = "1.0.0-alpha.3", optional = true }
 ssconverter = { workspace = true, optional = true }
 wide = { workspace = true }
@@ -21,9 +22,10 @@ wide = { workspace = true }
 [features]
 default = ["ffi"]
 ffi = []
-web = ["wasm-bindgen"]
-std = ["flatbuffers/std", "ssab/std", "dep:ssconverter"]
+web = ["wasm-bindgen/std"]
+std = ["flatbuffers/std", "ssab/std", "dep:ssconverter", "wasm-bindgen/std"]
 libc_alloc = ["dep:libc"]
+wasm_alloc = ["dep:dlmalloc"]
 panic-handler = []
 
 [lints.clippy]
