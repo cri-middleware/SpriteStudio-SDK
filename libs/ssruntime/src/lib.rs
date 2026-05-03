@@ -1,19 +1,29 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
-#[cfg(all(not(feature = "std"), not(test), feature = "panic-handler"))]
+#[cfg(all(not(feature = "std"), not(test), not(feature = "web"), feature = "panic-handler"))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
-    #[cfg(feature = "libc_alloc")]
+    #[cfg(target_arch = "wasm32")]
+    ::core::arch::wasm32::unreachable();
+
+    #[cfg(all(not(target_arch = "wasm32"), feature = "libc_alloc"))]
     unsafe {
         libc::abort();
     }
-    #[cfg(not(feature = "libc_alloc"))]
+
+    #[cfg(not(target_arch = "wasm32"))]
     loop {}
 }
 
 #[cfg(all(not(feature = "std"), not(test), unix, feature = "panic-handler"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn rust_eh_personality() {}
+
+#[cfg(all(not(feature = "std"), not(feature = "web"), target_arch = "wasm32", feature = "wasm_alloc"))]
+mod wasm_allocator {
+    #[global_allocator]
+    static ALLOCATOR: dlmalloc::GlobalDlmalloc = dlmalloc::GlobalDlmalloc;
+}
 
 #[cfg(all(not(feature = "std"), feature = "libc_alloc"))]
 mod allocator {

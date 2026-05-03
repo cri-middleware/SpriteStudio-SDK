@@ -25,8 +25,14 @@ SpriteStudio 7 のアニメーションデータを再生するためのラン�
 `no_std` 環境で使用する場合は、`Cargo.toml` でデフォルト機能を無効にします：
 
 ```toml
-[dependencies]
-ssruntime = { path = "libs/ssruntime", default-features = false }
+# モバイル / コンソール / デスクトップ用 no_std (C-API 利用)
+ssruntime = { version = "7.0", default-features = false, features = ["ffi", "libc_alloc", "panic-handler"] }
+
+# Web Wasm (ブラウザ / wasm-bindgen) 用 no_std
+ssruntime = { version = "7.0", default-features = false, features = ["web"] }
+
+# Pure Wasm (WASI / カスタム Wasm エンジン) 用 no_std
+ssruntime = { version = "7.0", default-features = false, features = ["wasm_alloc", "panic-handler"] }
 ```
 
 *注意: `no_std` モードでも、アニメーションの状態やメタデータを管理するためにアロケータ (`alloc` クレート) は必要です。*
