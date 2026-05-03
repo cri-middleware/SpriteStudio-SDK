@@ -117,16 +117,17 @@ jobs:
       - name: Build
         run: |
           if [ "${{ matrix.platform }}" == "android" ]; then
-            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
+            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime --features "libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "ios" ]; then
-            cargo build --target aarch64-apple-ios --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
+            cargo build --target aarch64-apple-ios --verbose -p ssruntime --features "libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "web" ]; then
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
           elif [ "${{ matrix.platform }}" == "no_std" ]; then
-            cargo build --release --verbose -p ssruntime --no-default-features --features "ffi,libc_alloc,panic-handler"
+            cargo build --release --verbose -p ssruntime --features "libc_alloc,panic-handler"
           else
             cargo build --verbose
+            cargo build --verbose -p ssruntime --features "libc_alloc,panic-handler"
           fi
         shell: bash
 

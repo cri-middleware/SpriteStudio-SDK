@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CargoProjectsService">
+    <option name="userEnabledFeatures">
+      <map>
+        <entry key="$PROJECT_DIR$/libs/ssruntime/Cargo.toml">
+          <value>
+            <set>
+              <option value="std" />
+            </set>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
