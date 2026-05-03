@@ -15,21 +15,19 @@ ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 libc = { version = "1.0.0-alpha.3", optional = true }
+ssconverter = { workspace = true, optional = true }
 wide = { workspace = true }
 
 [features]
-default = ["ffi", "std"]
+default = ["ffi"]
 ffi = []
 web = ["wasm-bindgen"]
-std = ["flatbuffers/std", "ssab/std"]
+std = ["flatbuffers/std", "ssab/std", "dep:ssconverter"]
 libc_alloc = ["dep:libc"]
 panic-handler = []
 
 [lints.clippy]
 too_many_arguments = "allow"
-
-[dev-dependencies]
-ssconverter = { workspace = true }
 
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]

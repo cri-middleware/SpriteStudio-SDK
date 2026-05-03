@@ -9,5 +9,6 @@ ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
 pushd ${ROOTDIR} > /dev/null
 cargo build --release
+cargo build --release -p ssruntime --features libc_alloc,panic-handler
 
 popd > /dev/null

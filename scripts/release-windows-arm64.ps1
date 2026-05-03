@@ -9,5 +9,6 @@ $rootDirectory = Split-Path -Parent $baseDirectory
 
 pushd $rootDirectory
 cargo build --target aarch64-pc-windows-msvc --release
+cargo build --target aarch64-pc-windows-msvc --release -p ssruntime --features libc_alloc,panic-handler
 
 popd

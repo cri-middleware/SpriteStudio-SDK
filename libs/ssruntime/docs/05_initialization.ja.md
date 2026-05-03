@@ -33,6 +33,15 @@ ss_runtime_set_log_callback(my_log_callback);
 不正なデータや破損したデータを `ss_resource_create_*` や `ss_runtime_load_ssab_*` に渡すと、未定義動作（Out-of-bounds Read によるクラッシュ等）を引き起こす可能性があります。
 Player の実装者は、入力データが信頼できるソースからのものであることを保証するか、必要に応じて事前にデータ検証（チェックサムや FlatBuffers バリデータ等）を行う責任があります。
 
+#### 簡易な事前検証
+ライブラリに渡す前に以下の確認を行うと、取り違えや破損データの大半は弾けます。
+
+- **ファイル識別子のチェック**: `ssab` バイナリの **オフセット 4-7 バイト** に `file_identifier` として `"SSAB"` (ASCII 4 文字) が入っています。ライブラリに渡す前にこの 4 バイトを比較すれば、別フォーマットのファイルや空ファイルを誤って渡したケースを検出できます。言語に依存しない単純なバイト比較で実装できます。
+- **FlatBuffers レベルの境界チェック**: `ssruntime` の C-API は内部でパフォーマンス優先のチェックなしパースを行うため、不正データは未定義動作になります。境界の妥当性まで検証したい場合は、Player 側の言語に対応した FlatBuffers バインディング (C++ の `flatbuffers::Verifier`, C# の `SsAnimeBinaryVerify`, Kotlin/TS の同等 API など) を使い、ssab スキーマで生成した Verifier を通してから C-API に渡してください。
+
+> [!NOTE]
+> ssconverter が出力する `.ssab` は size-prefix なしの形式です。Player 側で FlatBuffers バインディングを使う場合、`size-prefixed` 系のヘルパー (例: C++ の `GetSizePrefixedSsAnimeBinary`) は適合しないので、通常版 (`GetSsAnimeBinary` 相当) を使ってください。
+
 ### C-API (C/C++) を使用する場合
 C-API では `SsabData` と `AnimationResource` は内部的に `FfiResource` として隠蔽されているため、以下の2ステップで初期化します。
 

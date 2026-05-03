@@ -122,8 +122,33 @@ When modifying code in this repository, you MUST adhere to the following rules:
 Run these commands to verify your changes:
 *   **Linting:** `cargo clippy --workspace --all-targets -- -D warnings`
 *   **Formatting:** `cargo fmt --all -- --check`
-*   **Testing (All):** `cargo test --workspace`
-*   **Testing (no_std explicitly):** `cargo build -p ssruntime --no-default-features --features ffi,libc_alloc,panic-handler`
+*   **Testing (All):** `cargo test --workspace --all-features`
+*   **Building (no_std standalone, mobile-style):** `cargo build -p ssruntime --features libc_alloc,panic-handler`
+*   **Building (std opt-in for desktop DX):** `cargo build -p ssruntime --features std`
+
+### `ssruntime` Feature Layout
+
+`libs/ssruntime` defaults to a no_std-friendly feature set; `std` is opt-in.
+
+| Feature | Purpose |
+|---------|---------|
+| `ffi` (default) | C-API exports |
+| `libc_alloc` | `libc::malloc/free`-backed `#[global_allocator]` for no_std FFI builds |
+| `panic-handler` | Provides `#[panic_handler]` for no_std FFI builds |
+| `std` | Enables std on `flatbuffers`/`ssab`, pulls in `ssconverter` (used by tests) |
+| `web` | `wasm-bindgen` bindings |
+
+All release deliverables for `ssruntime` (mobile + desktop) are pure no_std. Desktop release scripts run `cargo build --release` for the workspace first (to produce `ssconverter` / `ssconverter-cli` artifacts), then re-build `ssruntime` with `--features libc_alloc,panic-handler` to overwrite its `cdylib` / `staticlib` with a no_std version. The `std` feature exists solely for IDE / `cargo test` ergonomics and is never used by release scripts.
+
+Mobile/standalone no_std builds need `libc_alloc,panic-handler` explicitly because the workspace's `cargo build` reaches `std` transitively via `ssconverter` (which fulfills the panic handler at link time). When `cargo build -p ssruntime` is invoked alone, those deps aren't in the graph, so the package must define them itself.
+
+### Editor Setup (Cargo Features for Analysis)
+
+The default features no longer include `std`, so IDEs see the no_std code path by default. To restore std-aware completion / debugger ergonomics, configure your editor to enable `ssruntime/std`:
+
+*   **VS Code (rust-analyzer)**: `.vscode/settings.json` is committed with `"rust-analyzer.cargo.features": ["ssruntime/std"]`.
+*   **JetBrains (RustRover / IntelliJ + Rust plugin)**:
+    *   A starter `.idea/cargo.xml` is committed enabling `std` for `libs/ssruntime/Cargo.toml`. Newer plugin versions may rewrite the schema — if the IDE drops the entry, set it manually via **Settings → Languages & Frameworks → Rust → Cargo features** (or in the Cargo tool window, right-click `ssruntime` → **Features → std**).
 
 ### Updating `.fbs` Files (Code Generation)
 
