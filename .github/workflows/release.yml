@@ -192,7 +192,6 @@ jobs:
           ./scripts/release-web.sh
           mkdir -p lib
           cp target/wasm32-unknown-unknown/release/*.a lib/
-          cp target/wasm32-unknown-unknown/release/*.wasm lib/
           cp -r pkg/web lib/js
 
       - name: Upload artifact ssconverter-cli
@@ -278,7 +277,6 @@ jobs:
           mkdir -p libs include
           pushd libs
           mkdir -p macos
-          mkdir -p web
           mkdir -p ios
           mkdir -p linux/x86_64
           mkdir -p android/arm32
@@ -289,7 +287,6 @@ jobs:
 
           mv ../../spritestudio7-sdk-libraries-macos/libssconverter.dylib libs/macos/
           mv ../../spritestudio7-sdk-libraries-macos/libssruntime.dylib libs/macos/
-          mv ../../spritestudio7-sdk-libraries-web/ssruntime.wasm libs/web/
           mv ../../spritestudio7-sdk-libraries-ios/libssruntime.dylib libs/ios/
           mv ../../spritestudio7-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
