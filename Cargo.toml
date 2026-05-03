@@ -11,6 +11,7 @@ members = [
 [workspace.package]
 version = "7.0.0-alpha01"
 edition = "2024"
+rust-version = "1.95"
 authors = ["CRI Middleware Co., Ltd."]
 license-file = "LICENSE.md"
 repository = "https://github.com/SpriteStudio/SpriteStudio7-SDK"

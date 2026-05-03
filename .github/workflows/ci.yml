@@ -2,10 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 env:
@@ -134,4 +133,61 @@ jobs:
       - name: Test (workspace)
         if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
         run: cargo test --workspace --all-features --verbose -- --test-threads=1
+        shell: bash
+
+  msrv:
+    name: 🦀 MSRV (declared rust-version)
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Extract MSRV from Cargo.toml
+        id: msrv
+        run: |
+          msrv=$(grep -E '^rust-version = ' Cargo.toml | sed -E 's/rust-version = "(.+)"/\1/')
+          if [ -z "$msrv" ]; then
+            echo "::error::rust-version not found in workspace Cargo.toml"
+            exit 1
+          fi
+          echo "version=$msrv" >> "$GITHUB_OUTPUT"
+          echo "Declared MSRV: $msrv"
+        shell: bash
+
+      - name: Install pinned Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ steps.msrv.outputs.version }}
+
+      - name: cargo check (workspace, all targets, all features)
+        run: cargo check --workspace --all-targets --all-features --locked
+        shell: bash
+
+  audit:
+    name: 🔒 Security audit (cargo-audit)
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      - name: Run cargo audit
+        run: cargo audit
         shell: bash
