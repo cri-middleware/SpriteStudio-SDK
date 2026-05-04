@@ -663,11 +663,7 @@ impl<'a> Context<'a> {
                 let Some(cell) = found else { continue };
                 let Some(rect) = cell.rectangle() else { continue };
 
-                let (tex_w, tex_h) = cellmap
-                    .size_original()
-                    .map(|v| (v.v1(), v.v2()))
-                    .filter(|(w, h)| *w > 0.0 && *h > 0.0)
-                    .unwrap_or((rect.x2(), rect.y2()));
+                let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((rect.x2(), rect.y2()));
 
                 (rect.x1(), rect.y1(), rect.x2(), rect.y2(), cell.rotated(), tex_w, tex_h)
             };
@@ -676,26 +672,10 @@ impl<'a> Context<'a> {
 
             let (tu, tv, rot_deg, su, sv, fh, fv, ifh, ifv) = {
                 let state = &self.buffers.parts_vec[i];
-                (
-                    state.uv_translation_x() * tex_w,
-                    state.uv_translation_y() * tex_h,
-                    state.uv_rotation_z(),
-                    state.uv_scale_x(),
-                    state.uv_scale_y(),
-                    state.flip_h(),
-                    state.flip_v(),
-                    state.img_flip_h(),
-                    state.img_flip_v(),
-                )
+                (state.uv_translation_x() * tex_w, state.uv_translation_y() * tex_h, state.uv_rotation_z(), state.uv_scale_x(), state.uv_scale_y(), state.flip_h(), state.flip_v(), state.img_flip_h(), state.img_flip_v())
             };
 
-            let (us, vs) = crate::core::geometry::compute_local_uvs(
-                (rect_left, rect_top, rect_right, rect_bottom),
-                (tu, tv, rot_deg, su, sv),
-                (fh, fv),
-                (ifh, ifv),
-                rotated,
-            );
+            let (us, vs) = crate::core::geometry::compute_local_uvs((rect_left, rect_top, rect_right, rect_bottom), (tu, tv, rot_deg, su, sv), (fh, fv), (ifh, ifv), rotated);
 
             let offset = i * 10;
             for k in 0..5 {

@@ -435,12 +435,8 @@ fn get_parts<'a>(
         let parent_idx = part.parent_index;
         let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
 
-        let parent_inh_alpha = valid_parent_idx
-            .and_then(|p_idx| inheritance_alphas.get(p_idx).copied())
-            .unwrap_or(1.0);
-        let parent_hide = valid_parent_idx
-            .and_then(|p_idx| parts_vec.get(p_idx).map(|p| p.hide()))
-            .unwrap_or(false);
+        let parent_inh_alpha = valid_parent_idx.and_then(|p_idx| inheritance_alphas.get(p_idx).copied()).unwrap_or(1.0);
+        let parent_hide = valid_parent_idx.and_then(|p_idx| parts_vec.get(p_idx).map(|p| p.hide())).unwrap_or(false);
 
         let inh_alpha = result.state.alpha() * parent_inh_alpha;
         inheritance_alphas.push(inh_alpha);
