@@ -12,8 +12,15 @@ BASEDIR=$(cd $BASEDIR && pwd -P)
 ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
+BUILD_MODE="release"
+CARGO_FLAGS="--release"
+if [ "$1" = "debug" ]; then
+    BUILD_MODE="debug"
+    CARGO_FLAGS=""
+fi
+
 pushd ${ROOTDIR} > /dev/null
-cargo ndk --target aarch64-linux-android build -p ssruntime --features libc_alloc,panic-handler --release
-cargo ndk --target armv7-linux-androideabi build -p ssruntime --features libc_alloc,panic-handler --release
-cargo ndk --target x86_64-linux-android build -p ssruntime --features libc_alloc,panic-handler --release
+cargo ndk --target aarch64-linux-android build -p ssruntime --features libc_alloc,panic-handler ${CARGO_FLAGS}
+cargo ndk --target armv7-linux-androideabi build -p ssruntime --features libc_alloc,panic-handler ${CARGO_FLAGS}
+cargo ndk --target x86_64-linux-android build -p ssruntime --features libc_alloc,panic-handler ${CARGO_FLAGS}
 popd > /dev/null

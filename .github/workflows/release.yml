@@ -186,13 +186,18 @@ jobs:
         if: matrix.platform == 'web'
         run: |
           rustup target add wasm32-unknown-unknown
+          rustup toolchain install nightly
+          rustup target add wasm32-unknown-unknown --toolchain nightly
+          rustup component add rust-src --toolchain nightly
+          
           ./scripts/release-wasm.sh
+          mkdir -p lib
+          cp target/wasm32-unknown-unknown/release/*.a lib/
+          
           # Use faster binary installer for wasm-pack
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
           ./scripts/release-web.sh
-          mkdir -p lib
-          cp target/wasm32-unknown-unknown/release/*.a lib/
-          cp -r pkg/web lib/js
+          cp -r pkg/web/release lib/js
 
       - name: Upload artifact ssconverter-cli
         if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'

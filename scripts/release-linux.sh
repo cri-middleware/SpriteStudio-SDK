@@ -7,8 +7,15 @@ BASEDIR=$(cd $BASEDIR && pwd -P)
 ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
+BUILD_MODE="release"
+CARGO_FLAGS="--release"
+if [ "$1" = "debug" ]; then
+    BUILD_MODE="debug"
+    CARGO_FLAGS=""
+fi
+
 pushd ${ROOTDIR} > /dev/null
-cargo build --release
-cargo build --release -p ssruntime --features libc_alloc,panic-handler
+cargo build ${CARGO_FLAGS}
+cargo build ${CARGO_FLAGS} -p ssruntime --features libc_alloc,panic-handler
 
 popd > /dev/null

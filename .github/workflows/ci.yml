@@ -110,6 +110,10 @@ jobs:
             cargo install cargo-ndk
           elif [ "${{ matrix.platform }}" == "web" ]; then
             rustup target add wasm32-unknown-unknown
+            # Nightly is required for PIC support in wasm32-unknown-unknown (Godot GDExtension)
+            rustup toolchain install nightly
+            rustup target add wasm32-unknown-unknown --toolchain nightly
+            rustup component add rust-src --toolchain nightly
           fi
         shell: bash
 
@@ -120,8 +124,19 @@ jobs:
           elif [ "${{ matrix.platform }}" == "ios" ]; then
             cargo build --target aarch64-apple-ios --verbose -p ssruntime --features "libc_alloc,panic-handler"
           elif [ "${{ matrix.platform }}" == "web" ]; then
+            # Build for general FFI and Web (Stable)
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
+            
+            # Build for Godot GDExtension (Nightly + PIC)
+            export RUSTFLAGS="-C relocation-model=pic"
+            cargo +nightly rustc -Z build-std=core,alloc \
+              --target wasm32-unknown-unknown \
+              --verbose \
+              -p ssruntime \
+              --no-default-features \
+              --features "wasm_alloc,panic-handler" \
+              --crate-type staticlib,rlib
           elif [ "${{ matrix.platform }}" == "no_std" ]; then
             cargo build --release --verbose -p ssruntime --features "libc_alloc,panic-handler"
           else
