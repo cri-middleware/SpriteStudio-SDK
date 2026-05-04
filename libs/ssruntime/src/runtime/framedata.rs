@@ -936,10 +936,10 @@ impl<'a> PartAttributePartColor {
 // struct PartAttributeVertex, aligned to 4
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct PartAttributeVertex(pub [u8; 32]);
+pub struct PartAttributeVertex(pub [u8; 40]);
 impl Default for PartAttributeVertex { 
   fn default() -> Self { 
-    Self([0; 32])
+    Self([0; 40])
   }
 }
 impl ::core::fmt::Debug for PartAttributeVertex {
@@ -949,6 +949,7 @@ impl ::core::fmt::Debug for PartAttributeVertex {
       .field("rt", &self.rt())
       .field("lb", &self.lb())
       .field("rb", &self.rb())
+      .field("center", &self.center())
       .finish()
   }
 }
@@ -997,12 +998,14 @@ impl<'a> PartAttributeVertex {
     rt: &Vec2,
     lb: &Vec2,
     rb: &Vec2,
+    center: &Vec2,
   ) -> Self {
-    let mut s = Self([0; 32]);
+    let mut s = Self([0; 40]);
     s.set_lt(lt);
     s.set_rt(rt);
     s.set_lb(lb);
     s.set_rb(rb);
+    s.set_center(center);
     s
   }
 
@@ -1052,6 +1055,18 @@ impl<'a> PartAttributeVertex {
   #[allow(clippy::identity_op)]
   pub fn set_rb(&mut self, x: &Vec2) {
     self.0[24..24 + 8].copy_from_slice(&x.0)
+  }
+
+  pub fn center(&self) -> &Vec2 {
+    // Safety:
+    // Created from a valid Table for this object
+    // Which contains a valid struct in this slot
+    unsafe { &*(self.0[32..].as_ptr() as *const Vec2) }
+  }
+
+  #[allow(clippy::identity_op)]
+  pub fn set_center(&mut self, x: &Vec2) {
+    self.0[32..32 + 8].copy_from_slice(&x.0)
   }
 
 }

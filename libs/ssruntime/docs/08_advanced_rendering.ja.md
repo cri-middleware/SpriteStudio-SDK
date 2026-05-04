@@ -90,71 +90,66 @@ if (part->type() == PartTypeEffect) {
 }
 ```
 
-## 3. メッシュとデフォーム (Mesh / Deform)
-`PartTypeMesh` パーツと、その頂点を変形させる `AttributeDeform` の実装です。複雑なデータは FlatBuffers のテーブル化（プーリング）により最適化されているため、インデックスを介して取得します。
+## 3. 頂点配列 (AttributeVertex)
+通常パーツ（スプライトパーツ）の描画に使う **算出済みローカル頂点座標** です。
+Brain 側で `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセットがすべて適用された状態で配信されるため、Player はワールド行列を掛けるだけで描画頂点を得られます。
 
-- **頂点配列 (AttributeVertex)**: メッシュの基準となるローカルの頂点座標とUV座標です。`part_state->vertex()` のインデックスを使って、`FrameData` 直下の `vertices` テーブルから取得します。
-- **デフォーム (AttributeDeform)**: アニメーションによって加算される変形オフセット値です。`part_state->deform()` のインデックスを使って、`FrameData` 直下の `deforms` テーブルから取得します。
+頂点は **5 点構成** で `LT / RT / LB / RB / center` の順に格納されます。`center` は 4 隅の平均（Varignon の定理）に基づく中心点で、Player はこれを基点に三角形ファンを組むことで頂点変形時もきれいな補間で描画できます。
+
+`part_state->vertex()` のインデックスを使って、`FrameData` 直下の `vertices` テーブル（`PartAttributeVertex`）から取得します。
 
 ```cpp
-// メッシュパーツの頂点計算例
-if (part->type() == PartTypeMesh) {
-    int vertex_idx = part_state->vertex();
-    int deform_idx = part_state->deform();
+// 通常パーツの頂点取得例
+int vertex_idx = part_state->vertex();
+if (vertex_idx >= 0) {
+    auto v = frame_data->vertices()->Get(vertex_idx);
 
-    if (vertex_idx >= 0) {
-        auto vertex_data = frame_data->vertices()->Get(vertex_idx);
-        auto base_positions = vertex_data->positions(); // 基準頂点 (X, Y) の配列
-        auto uvs = vertex_data->uvs();                  // UV座標の配列
+    // 5 つのローカル頂点 (pivot / size / img_flip / deform 適用済み)
+    float lx[5] = { v->lt()->x(), v->rt()->x(), v->lb()->x(), v->rb()->x(), v->center()->x() };
+    float ly[5] = { v->lt()->y(), v->rt()->y(), v->lb()->y(), v->rb()->y(), v->center()->y() };
 
-        // デフォームデータが存在すれば取得
-        const flatbuffers::Vector<float>* deform_offsets = nullptr;
-        if (deform_idx >= 0) {
-            auto deform_data = frame_data->deforms()->Get(deform_idx);
-            deform_offsets = deform_data->offsets();    // 変形オフセット (X, Y) の配列
-        }
-
-        // 各頂点の最終ローカル座標を計算し、ワールド行列を掛けて描画
-        for (size_t i = 0; i < base_positions->size() / 2; i++) {
-            float lx = base_positions->Get(i * 2);
-            float ly = base_positions->Get(i * 2 + 1);
-
-            if (deform_offsets && i * 2 + 1 < deform_offsets->size()) {
-                lx += deform_offsets->Get(i * 2);
-                ly += deform_offsets->Get(i * 2 + 1);
-            }
-
-            // lx, ly を parent_world_matrix で変換して最終頂点を生成
-        }
+    // それぞれを world_matrix で変換するだけで最終描画頂点になる
+    for (int i = 0; i < 5; ++i) {
+        // (wx, wy) = world_matrix * (lx[i], ly[i])
     }
 }
 ```
 
-## 4. パーツカラー (PartsColor)
-パーツ全体や頂点ごとにカラー合成を行うアトリビュートです。単色または4頂点のカラー情報（RGBA）が格納されています。
-これも `part_state->part_color()` のインデックスを用いて、`FrameData` 直下の `parts_color` テーブルから取得します。
+### update_flag との関係
+`update_flag & AttributeVertex` は **ソース SSAB に頂点変形アニメ（raw deform）が含まれていたか** を示すヒントとして引き続き機能します。フラグが立っていなくても `vertex()` インデックスは常に有効で（通常パーツに対しては毎フレーム算出されるため）、Player は単に「変形あり / なし」を区別したい場合の補助情報として使えます。
 
-- **合成タイプ (BlendType)**: Mix(通常), Add(加算), Sub(減算), Mul(乗算)。シェーダーで色を合成する際の計算式を決定します。
-- **カラー配列**: 1つの色（全体単色）または4つの色（各頂点）の RGBA (0〜255) 配列が格納されています。
+## 3.5 メッシュとデフォーム (Mesh / Deform) — 未実装
+`PartTypeMesh` パーツのサポートは現在 **未実装** です（[ロードマップ](./04_roadmap.ja.md)参照）。
+`PartAttributeDeform`（`FrameData::deforms`）はメッシュパーツの可変数頂点向けに予約された構造で、現時点ではプレイヤー実装の対象外です。実装は今後のフェーズで行います。
+
+## 4. パーツカラー (PartsColor)
+頂点ごとにカラー合成を行うアトリビュートです。`PartAttributePartColor` は 4 隅 (`lt` / `rt` / `lb` / `rb`) ぶんの色情報を保持します。
+`part_state->part_color()` のインデックスを使って、`FrameData` 直下の `parts_color` テーブルから取得します。
+
+- **合成タイプ (`blend_type`)**: Mix(通常), Mul(乗算), Add(加算), Sub(減算) ほか。シェーダーで色を合成する際の計算式を決定します。
+- **頂点カラー (`lt` / `rt` / `lb` / `rb`)**: それぞれ `SsAttributePartColorKeyValueColor`（`rgba: U8Rect{a, r, g, b}` と補間レート `rate`）。`a` チャンネルには **パーツの階層的 `alpha` が事前合成済み** なので、Player 側で `state.alpha()` を再度乗算する必要はありません。
+- 単色指定（4 頂点で同じ色）の場合も同様に 4 隅すべてが同一値で配信されます。
 
 ```cpp
 // パーツカラーの取得例
 int color_idx = part_state->part_color();
 if (color_idx >= 0) {
-    auto color_data = frame_data->parts_color()->Get(color_idx);
-    int blend_type = color_data->blend_type();
-    auto colors = color_data->colors(); // [R, G, B, A, R, G, B, A, ...] 
+    auto pc = frame_data->parts_color()->Get(color_idx);
+    auto blend_type = pc->blend_type();
 
-    if (colors->size() == 4) {
-        // 単色指定の場合: 全頂点に同じ色を適用
-        Color c = Color(colors->Get(0), colors->Get(1), colors->Get(2), colors->Get(3));
-    } else if (colors->size() == 16) {
-        // 4頂点カラー指定の場合: 頂点ごとに色を適用（グラデーション）
-        Color tl = Color(colors->Get(0),  colors->Get(1),  colors->Get(2),  colors->Get(3));   // 左上
-        Color tr = Color(colors->Get(4),  colors->Get(5),  colors->Get(6),  colors->Get(7));   // 右上
-        Color bl = Color(colors->Get(8),  colors->Get(9),  colors->Get(10), colors->Get(11)); // 左下
-        Color br = Color(colors->Get(12), colors->Get(13), colors->Get(14), colors->Get(15));// 右下
-    }
+    auto to_color = [](const ss::runtime::SsAttributePartColorKeyValueColor* c) {
+        const auto& rgba = c->rgba();
+        // a は階層 alpha 事前合成済み。再乗算しない。
+        return Color(rgba.r() / 255.0f, rgba.g() / 255.0f, rgba.b() / 255.0f, rgba.a() / 255.0f);
+    };
+
+    Color clt = to_color(pc->lt());  // 左上
+    Color crt = to_color(pc->rt());  // 右上
+    Color clb = to_color(pc->lb());  // 左下
+    Color crb = to_color(pc->rb());  // 右下
+
+    // 5 頂点描画する場合、center 頂点には 4 隅の平均色を割り当てるのが自然
+    Color ccenter = (clt + crt + clb + crb) * 0.25f;
 }
 ```
 

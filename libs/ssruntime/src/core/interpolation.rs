@@ -513,12 +513,14 @@ pub fn evaluate_vertex(
             let r_v1 = [out_arr[0], out_arr[2], out_arr[4], out_arr[6]];
             let r_v2 = [out_arr[1], out_arr[3], out_arr[5], out_arr[7]];
 
+            // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
             (
                 runtime::framedata::ss::runtime::PartAttributeVertex::new(
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[0], r_v2[0]),
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[1], r_v2[1]),
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[2], r_v2[2]),
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[3], r_v2[3]),
+                    &runtime::framedata::ss::runtime::Vec2::default(),
                 ),
                 UPDATE_FLAG_ON,
             )
@@ -536,7 +538,8 @@ fn transfer_vertex(source: &Option<ssab::ssab::ss::format::PartAttributeVertex>)
         let lb = s.lb().map(|lb| runtime::framedata::ss::runtime::Vec2::new(lb.v1(), lb.v2())).unwrap_or_default();
         let rb = s.rb().map(|rb| runtime::framedata::ss::runtime::Vec2::new(rb.v1(), rb.v2())).unwrap_or_default();
 
-        runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb)
+        // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
+        runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &runtime::framedata::ss::runtime::Vec2::default())
     } else {
         runtime::framedata::ss::runtime::PartAttributeVertex::default()
     }

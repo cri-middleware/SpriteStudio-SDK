@@ -77,9 +77,9 @@ FrameData (FFI を介したメモリバッファ)
 | PartState 参照フィールド | ソース: SSAB `PartAnimationData` 配列 | FrameData 内のテーブル | 説明 |
 |:---|:---|:---|:---|
 | `cell` | `cell_array` | `cells` | セルマップとセル名ハッシュへの参照。通常描画に使用されるテクスチャはここから取得されます。 |
-| `part_color` | `part_color_array` | `parts_color` | 補間済みの 4頂点カラーとブレンドタイプ。 |
+| `part_color` | `part_color_array` | `parts_color` | 4 頂点ぶんのカラーとブレンドタイプ。**RGBA の `a` チャンネルにはパーツの階層的 `alpha` が事前合成済み** なので、Player 側で再度アルファを掛ける必要はありません。 |
 | `shader` | `shader_array` | `shaders` | 補間済みのシェーダーパラメータとマップ ID。 |
-| `vertex` | `vertex_array` | `vertices` | 補間済みの頂点座標オフセット。 |
+| `vertex` | `vertex_array` | `vertices` | **算出済みのローカル頂点座標** (LT/RT/LB/RB に加え `center` の 5 頂点)。`pivot` / `size` / `img_flip_h/v` と補間済みの raw deform オフセットがすべて適用されています。Player はそのままワールド行列を掛けて描画でき、生の deform オフセットは公開されません。`center` 頂点は 4 隅の平均 (Varignon の定理) として算出されており、Player はこれを基点に三角形ファンを組むことで頂点変形時もきれいな補間で描画できます。なお `update_flag` 内の `AttributeVertex` フラグは、ソース SSAB に実際に頂点変形アニメがあるかどうかを引き続き示します。 |
 | `deform` | `deform_array` | `deforms` | 補間済みのメッシュ変形座標。 |
 
 ---

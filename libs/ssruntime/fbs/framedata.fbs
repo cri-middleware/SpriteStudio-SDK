@@ -51,6 +51,7 @@ struct PartAttributeVertex {
   rt: Vec2;
   lb: Vec2;
   rb: Vec2;
+  center: Vec2;
 }
 
 table PartAttributeDeform {

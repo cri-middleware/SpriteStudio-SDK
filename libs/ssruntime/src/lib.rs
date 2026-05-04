@@ -377,8 +377,6 @@ pub struct Context<'a> {
     origin: crate::core::SsOrigin,
     unit: crate::core::SsUnit,
     world_matrix_calculation_enabled: bool,
-    calculate_local_vertices_enabled: bool,
-    calculate_parts_color_enabled: bool,
     z_order: crate::core::z_order::ZOrderTable,
 }
 
@@ -400,8 +398,6 @@ impl<'a> Context<'a> {
             origin: crate::core::SsOrigin::default(),
             unit: crate::core::SsUnit::default(),
             world_matrix_calculation_enabled: true,
-            calculate_local_vertices_enabled: true,
-            calculate_parts_color_enabled: true,
             z_order: crate::core::z_order::ZOrderTable::new(),
         }
     }
@@ -416,8 +412,6 @@ impl<'a> Context<'a> {
         self.origin = crate::core::SsOrigin::default();
         self.unit = crate::core::SsUnit::default();
         self.world_matrix_calculation_enabled = true;
-        self.calculate_local_vertices_enabled = true;
-        self.calculate_parts_color_enabled = true;
         self.z_order = crate::core::z_order::ZOrderTable::new();
     }
 
@@ -427,22 +421,6 @@ impl<'a> Context<'a> {
 
     pub fn is_world_matrix_calculation_enabled(&self) -> bool {
         self.world_matrix_calculation_enabled
-    }
-
-    pub fn set_calculate_local_vertices_enabled(&mut self, enabled: bool) {
-        self.calculate_local_vertices_enabled = enabled;
-    }
-
-    pub fn is_calculate_local_vertices_enabled(&self) -> bool {
-        self.calculate_local_vertices_enabled
-    }
-
-    pub fn set_calculate_parts_color_enabled(&mut self, enabled: bool) {
-        self.calculate_parts_color_enabled = enabled;
-    }
-
-    pub fn is_calculate_parts_color_enabled(&self) -> bool {
-        self.calculate_parts_color_enabled
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
@@ -550,26 +528,26 @@ impl<'a> Context<'a> {
 
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let cell_pivot_lookup = |map_id: i32, name_hash: u32| -> (f32, f32) {
-            if let Some(cellmaps) = ssab.cellmaps() {
-                if (map_id as usize) < cellmaps.len() {
-                    let cellmap = cellmaps.get(map_id as usize);
-                    if let Some(cells) = cellmap.cells() {
-                        let mut low = 0;
-                        let mut high = cells.len();
-                        while low < high {
-                            let mid = (low + high) / 2;
-                            let cell = cells.get(mid);
-                            let hash = cell.name_hash();
-                            if hash == name_hash {
-                                if let Some(pivot) = cell.pivot() {
-                                    return (pivot.v1(), pivot.v2());
-                                }
-                                return (0.0, 0.0);
-                            } else if hash < name_hash {
-                                low = mid + 1;
-                            } else {
-                                high = mid;
+            if let Some(cellmaps) = ssab.cellmaps()
+                && (map_id as usize) < cellmaps.len()
+            {
+                let cellmap = cellmaps.get(map_id as usize);
+                if let Some(cells) = cellmap.cells() {
+                    let mut low = 0;
+                    let mut high = cells.len();
+                    while low < high {
+                        let mid = (low + high) / 2;
+                        let cell = cells.get(mid);
+                        let hash = cell.name_hash();
+                        if hash == name_hash {
+                            if let Some(pivot) = cell.pivot() {
+                                return (pivot.v1(), pivot.v2());
                             }
+                            return (0.0, 0.0);
+                        } else if hash < name_hash {
+                            low = mid + 1;
+                        } else {
+                            high = mid;
                         }
                     }
                 }
@@ -594,8 +572,6 @@ impl<'a> Context<'a> {
             self.unit,
             metadata.canvas_width,
             metadata.canvas_height,
-            self.calculate_local_vertices_enabled,
-            self.calculate_parts_color_enabled,
             &lookup_opt,
         );
 
