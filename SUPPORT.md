@@ -11,7 +11,7 @@ For most cases, please use [GitHub Issues](../../issues). This is the best place
 Before opening a new issue, please search existing issues to see if your topic has already been discussed.
 
 ## 🔒 Private Inquiries & Large Files
-If you need to report a sensitive issue, require a private consultation, or need to send large reproduction data (e.g., `.sspj` projects), please use our official **Help Center**:
+If you need to report a sensitive issue, require a private consultation, need to send large reproduction data (e.g., `.sspj` projects), or require support with contractual guarantees, please use our official **Help Center**:
 
 👉 [**CRI Middleware Help Center (Inquiry Form)**](https://www.webtech.co.jp/help/en/spritestudio7/inquiries/ssplayer_tool/)
 
@@ -32,7 +32,7 @@ SpriteStudio7-SDK をご利用いただきありがとうございます。ご�
 投稿前に、同様の内容が既に報告されていないか、既存の Issue を検索してください。
 
 ### 🔒 非公開でのお問い合わせ・データの送付
-非公開での相談を希望される場合や、再現データ（`.sspj` プロジェクトなど）を送付いただく必要がある場合は、公式の**ヘルプセンター**をご利用ください。
+非公開での相談を希望される場合、再現データ（`.sspj` プロジェクトなど）を送付いただく必要がある場合、または契約に基づくサポートが必要な場合は、公式の**ヘルプセンター**をご利用ください。
 
 👉 [**ヘルプセンター（お問い合わせフォーム）**](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/)
 
