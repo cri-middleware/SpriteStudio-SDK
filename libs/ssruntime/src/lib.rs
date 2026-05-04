@@ -527,7 +527,9 @@ impl<'a> Context<'a> {
         self.fb.reset();
 
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-        let cell_pivot_lookup = |map_id: i32, name_hash: u32| -> (f32, f32) {
+        // Returns (pivot_x, pivot_y, size_w, size_h) for the cell. size_w/h come from
+        // the cell rectangle (x2/y2 in SSAB are width/height, not the right/bottom edge).
+        let cell_lookup = |map_id: i32, name_hash: u32| -> (f32, f32, f32, f32) {
             if let Some(cellmaps) = ssab.cellmaps()
                 && (map_id as usize) < cellmaps.len()
             {
@@ -540,10 +542,9 @@ impl<'a> Context<'a> {
                         let cell = cells.get(mid);
                         let hash = cell.name_hash();
                         if hash == name_hash {
-                            if let Some(pivot) = cell.pivot() {
-                                return (pivot.v1(), pivot.v2());
-                            }
-                            return (0.0, 0.0);
+                            let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+                            let (size_w, size_h) = cell.rectangle().map(|r| (r.x2(), r.y2())).unwrap_or((0.0, 0.0));
+                            return (pivot_x, pivot_y, size_w, size_h);
                         } else if hash < name_hash {
                             low = mid + 1;
                         } else {
@@ -552,9 +553,9 @@ impl<'a> Context<'a> {
                     }
                 }
             }
-            (0.0, 0.0)
+            (0.0, 0.0, 0.0, 0.0)
         };
-        let lookup_opt: Option<&dyn Fn(i32, u32) -> (f32, f32)> = Some(&cell_pivot_lookup);
+        let lookup_opt: Option<&core::framedata::CellLookupFn<'_>> = Some(&cell_lookup);
 
         let offset = core::framedata::get_frame_data(
             &mut self.fb,

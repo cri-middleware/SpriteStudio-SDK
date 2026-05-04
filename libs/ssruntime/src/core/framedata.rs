@@ -144,6 +144,11 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
+/// Looks up a cell's metadata by `(map_id, name_hash)` and returns
+/// `(pivot_x, pivot_y, size_w, size_h)`. Used to default the part state's
+/// pivot/size when those attributes are not animated.
+pub type CellLookupFn<'a> = dyn Fn(i32, u32) -> (f32, f32, f32, f32) + 'a;
+
 pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
@@ -154,6 +159,9 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cu
     part_state.set_scale_y(1.0);
     part_state.set_local_scale_x(1.0);
     part_state.set_local_scale_y(1.0);
+    // Sentinel for "no vertex pushed" (parts without a cell skip the vertex slot
+    // to avoid wasted compute and FrameData payload).
+    part_state.set_vertex(-1);
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
@@ -274,19 +282,11 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cu
         result.shader = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeShader & mask;
     }
-    if let Some((mut val, mask)) = cached_part.vertex_array.and_then(|arr| evaluate_vertex(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEVERTEX])) {
-        if coordinate_system == SsCoordinateSystem::YDown {
-            let mut lt = *val.lt();
-            let mut rt = *val.rt();
-            let mut lb = *val.lb();
-            let mut rb = *val.rb();
-            lt.set_y(-lt.y());
-            rt.set_y(-rt.y());
-            lb.set_y(-lb.y());
-            rb.set_y(-rb.y());
-            // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
-            val = crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &crate::runtime::framedata::ss::runtime::Vec2::default());
-        }
+    if let Some((val, mask)) = cached_part.vertex_array.and_then(|arr| evaluate_vertex(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEVERTEX])) {
+        // Raw deform Y is kept in the source (Y-Up) orientation here; the always-on
+        // local-vertex calc consumes it as deform offsets and the result is flipped
+        // to YDown only at the very end. The intermediate raw deform value is never
+        // exposed publicly, so flipping/unflipping it would be wasted work.
         result.vertex = Some(val);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex & mask;
     }
@@ -404,7 +404,7 @@ fn get_parts<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
-    cell_pivot_lookup: &Option<&dyn Fn(i32, u32) -> (f32, f32)>,
+    cell_lookup: &Option<&CellLookupFn<'_>>,
 ) {
     parts_vec.clear();
     cell_vec.clear();
@@ -416,6 +416,20 @@ fn get_parts<'a>(
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
         let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
+
+        // Look up the current cell's metadata once and reuse for size default + pivot.
+        let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = if let Some(cell) = &result.cell { if let Some(lookup) = cell_lookup { lookup(cell.map_id(), cell.name_hash()) } else { (0.0, 0.0, 0.0, 0.0) } } else { (0.0, 0.0, 0.0, 0.0) };
+
+        // Default state.size_x/y to the current cell's rectangle when SIZX/SIZY were not animated.
+        // Without this, parts that reference a cell but don't animate size would have size 0,
+        // which makes the always-on local-vertex calc produce a degenerate (deform-only) quad.
+        let flag = result.state.update_flag();
+        if !flag.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeX) {
+            result.state.set_size_x(cell_size_w);
+        }
+        if !flag.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeY) {
+            result.state.set_size_y(cell_size_h);
+        }
 
         let parent_idx = part.parent_index;
         let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
@@ -451,10 +465,15 @@ fn get_parts<'a>(
 
         // Replace raw deform offsets with pre-computed local vertex coordinates
         // (pivot, size, image-flip and deform applied). Players consume these directly.
-        {
-            let pivot = if let Some(cell) = &result.cell { if let Some(lookup) = cell_pivot_lookup { lookup(cell.map_id(), cell.name_hash()) } else { (0.0, 0.0) } } else { (0.0, 0.0) };
+        // Skipped for cell-less parts (null/bone/transform-only) since they are not
+        // drawn as sprites — saves work and FrameData payload.
+        if result.cell.is_none() {
+            // Drop any raw deform we might have evaluated; nothing will read it.
+            result.vertex = None;
+        } else {
+            let pivot = (cell_pivot_x, cell_pivot_y);
 
-            let mut deform = result.vertex.as_ref().map(|v| {
+            let deform = result.vertex.as_ref().map(|v| {
                 let lt = v.lt();
                 let rt = v.rt();
                 let lb = v.lb();
@@ -462,15 +481,12 @@ fn get_parts<'a>(
                 ([lt.x(), rt.x(), lb.x(), rb.x()], [lt.y(), rt.y(), lb.y(), rb.y()])
             });
 
-            // compute_local_vertices assumes Y-Up; un-negate Y while calling.
+            // compute_local_vertices assumes Y-Up. pivot_y was flipped to YDown for
+            // public consumption in evaluate_part, so un-flip it here. Raw deform was
+            // intentionally kept in Y-Up upstream, so it needs no conversion.
             let mut pivot_y = result.state.pivot_y();
             if coordinate_system == SsCoordinateSystem::YDown {
                 pivot_y = -pivot_y;
-                if let Some((_, ref mut dy)) = deform {
-                    for y in dy.iter_mut() {
-                        *y = -*y;
-                    }
-                }
             }
 
             let (vx, mut vy) =
@@ -569,7 +585,7 @@ pub fn get_frame_data<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
-    cell_pivot_lookup: &Option<&dyn Fn(i32, u32) -> (f32, f32)>,
+    cell_lookup: &Option<&CellLookupFn<'_>>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -599,7 +615,7 @@ pub fn get_frame_data<'a>(
         unit,
         canvas_width,
         canvas_height,
-        cell_pivot_lookup,
+        cell_lookup,
     );
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
