@@ -403,6 +403,9 @@ fn get_parts<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
+    calculate_local_vertices_enabled: bool,
+    calculate_parts_color_enabled: bool,
+    cell_pivot_lookup: &Option<&dyn Fn(i32, u32) -> (f32, f32)>,
 ) {
     parts_vec.clear();
     cell_vec.clear();
@@ -427,6 +430,85 @@ fn get_parts<'a>(
             if parent_hide {
                 result.state.set_hide(true);
             }
+        }
+
+        // Calculate parts color if requested
+        if calculate_parts_color_enabled {
+            if let Some(pc) = result.part_color {
+                let alpha = result.state.alpha();
+                let apply_alpha = |c: &crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor| {
+                    let rgba = c.rgba();
+                    let new_a = ((rgba.a() as f32 / 255.0) * alpha * 255.0).clamp(0.0, 255.0) as u8;
+                    crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(
+                        &crate::runtime::framedata::ss::runtime::U8Rect::new(new_a, rgba.r(), rgba.g(), rgba.b()),
+                        c.rate()
+                    )
+                };
+
+                let blend_type = pc.blend_type();
+                let lt = apply_alpha(pc.lt());
+                let rt = apply_alpha(pc.rt());
+                let lb = apply_alpha(pc.lb());
+                let rb = apply_alpha(pc.rb());
+
+                result.part_color = Some(crate::runtime::framedata::ss::runtime::PartAttributePartColor::new(
+                    blend_type, &lt, &rt, &lb, &rb
+                ));
+            }
+        }
+
+        // Calculate local vertices if requested
+        if calculate_local_vertices_enabled {
+            let pivot = if let Some(cell) = &result.cell {
+                if let Some(lookup) = cell_pivot_lookup {
+                    lookup(cell.map_id(), cell.name_hash())
+                } else {
+                    (0.0, 0.0)
+                }
+            } else {
+                (0.0, 0.0)
+            };
+
+            let mut deform = result.vertex.as_ref().map(|v| {
+                let lt = v.lt();
+                let rt = v.rt();
+                let lb = v.lb();
+                let rb = v.rb();
+                ([lt.x(), rt.x(), lb.x(), rb.x()], [lt.y(), rt.y(), lb.y(), rb.y()])
+            });
+
+            // Un-negate Y values if YDown, since compute_local_vertices assumes Y-Up
+            let mut pivot_y = result.state.pivot_y();
+            if coordinate_system == SsCoordinateSystem::YDown {
+                pivot_y = -pivot_y;
+                if let Some((_, ref mut dy)) = deform {
+                    for y in dy.iter_mut() {
+                        *y = -*y;
+                    }
+                }
+            }
+
+            let (vx, mut vy) = crate::core::geometry::compute_local_vertices(
+                (result.state.size_x(), result.state.size_y()),
+                pivot,
+                (result.state.pivot_x(), pivot_y),
+                (result.state.img_flip_h(), result.state.img_flip_v()),
+                deform.as_ref().map(|(x, y)| (x, y))
+            );
+
+            // Re-negate resulting Y coordinates if YDown
+            if coordinate_system == SsCoordinateSystem::YDown {
+                for y in vy.iter_mut() {
+                    *y = -*y;
+                }
+            }
+
+            // Replace raw deform with calculated vertices
+            let lt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[0], vy[0]);
+            let rt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[1], vy[1]);
+            let lb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[2], vy[2]);
+            let rb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[3], vy[3]);
+            result.vertex = Some(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb));
         }
 
         if let Some(cell) = result.cell {
@@ -508,6 +590,9 @@ pub fn get_frame_data<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
+    calculate_local_vertices_enabled: bool,
+    calculate_parts_color_enabled: bool,
+    cell_pivot_lookup: &Option<&dyn Fn(i32, u32) -> (f32, f32)>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -537,6 +622,9 @@ pub fn get_frame_data<'a>(
         unit,
         canvas_width,
         canvas_height,
+        calculate_local_vertices_enabled,
+        calculate_parts_color_enabled,
+        cell_pivot_lookup,
     );
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
