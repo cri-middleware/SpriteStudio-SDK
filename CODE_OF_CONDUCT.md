@@ -19,6 +19,11 @@ Examples of unacceptable behavior include:
 - Public or private harassment
 - Publishing others' private information, such as a physical or email address, without their explicit permission
 - Other conduct which could reasonably be considered inappropriate in a professional setting
+- Pressuring others through repeated, demanding, or coercive communications
+
+## Scope
+
+This Code of Conduct applies within all project spaces — including but not limited to GitHub Issues, Pull Requests, Discussions, and any communication between participants in this open-source project.
 
 ---
 
@@ -43,6 +48,11 @@ Examples of unacceptable behavior include:
 - 公開・非公開を問わないハラスメント行為
 - 明示的な許可なく、住所やメールアドレスなどの他者の個人情報を公開すること
 - 専門的な場において不適切と合理的にみなされるその他の行為
+- 他者に対する、威圧的・要求的、または執拗な働きかけによる圧力
+
+### 適用範囲
+
+本行動規範は、本プロジェクトに関わるすべての場 ―― GitHub Issues、Pull Request、Discussions、および本オープンソースプロジェクトの参加者間のすべてのコミュニケーション ―― に適用されます。
 
 ---
 
