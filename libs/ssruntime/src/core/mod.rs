@@ -28,6 +28,22 @@ pub enum SsUnit {
     Normalized,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RenderMode {
+    #[default]
+    Direct,
+    SceneGraph,
+}
+
+impl RenderMode {
+    pub fn from_u8(value: u8) -> Self {
+        match value {
+            1 => RenderMode::SceneGraph,
+            _ => RenderMode::Direct,
+        }
+    }
+}
+
 pub use matrix::{SsMatrix4x4, SsVector3};
 pub mod geometry;
 pub use geometry::*;

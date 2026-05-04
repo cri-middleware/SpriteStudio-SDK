@@ -378,7 +378,7 @@ pub struct Context<'a> {
     coordinate_system: crate::core::SsCoordinateSystem,
     origin: crate::core::SsOrigin,
     unit: crate::core::SsUnit,
-    world_matrix_calculation_enabled: bool,
+    render_mode: crate::core::RenderMode,
     z_order: crate::core::z_order::ZOrderTable,
 }
 
@@ -399,7 +399,7 @@ impl<'a> Context<'a> {
             coordinate_system: crate::core::SsCoordinateSystem::default(),
             origin: crate::core::SsOrigin::default(),
             unit: crate::core::SsUnit::default(),
-            world_matrix_calculation_enabled: true,
+            render_mode: crate::core::RenderMode::default(),
             z_order: crate::core::z_order::ZOrderTable::new(),
         }
     }
@@ -413,16 +413,16 @@ impl<'a> Context<'a> {
         self.coordinate_system = crate::core::SsCoordinateSystem::default();
         self.origin = crate::core::SsOrigin::default();
         self.unit = crate::core::SsUnit::default();
-        self.world_matrix_calculation_enabled = true;
+        self.render_mode = crate::core::RenderMode::default();
         self.z_order = crate::core::z_order::ZOrderTable::new();
     }
 
-    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
-        self.world_matrix_calculation_enabled = enabled;
+    pub fn set_render_mode(&mut self, mode: crate::core::RenderMode) {
+        self.render_mode = mode;
     }
 
-    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
-        self.world_matrix_calculation_enabled
+    pub fn render_mode(&self) -> crate::core::RenderMode {
+        self.render_mode
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
@@ -580,7 +580,7 @@ impl<'a> Context<'a> {
             &lookup_opt,
         );
 
-        if self.world_matrix_calculation_enabled {
+        if self.render_mode == crate::core::RenderMode::Direct {
             self.compute_matrices(&metadata.cached_parts);
         }
 

@@ -706,19 +706,23 @@ pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame:
     crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
 }
 
+/// Set the render mode. `mode` is interpreted as:
+///   0 = Direct       (pre-bake world matrices; default)
+///   1 = SceneGraph   (skip world matrix pre-computation)
+/// Unknown values fall back to Direct.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_set_world_matrix_calculation_enabled(context: *mut c_void, enabled: bool) {
+pub unsafe extern "C" fn ss_runtime_set_render_mode(context: *mut c_void, mode: u8) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.set_world_matrix_calculation_enabled(enabled);
+        ffi_context.ctx.set_render_mode(crate::core::RenderMode::from_u8(mode));
     }
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_is_world_matrix_calculation_enabled(context: *mut c_void) -> bool {
+pub unsafe extern "C" fn ss_runtime_get_render_mode(context: *mut c_void) -> u8 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.is_world_matrix_calculation_enabled();
+        return ffi_context.ctx.render_mode() as u8;
     }
-    false
+    crate::core::RenderMode::Direct as u8
 }
 
 #[unsafe(no_mangle)]

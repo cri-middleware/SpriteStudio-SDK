@@ -126,7 +126,7 @@ Render(runtime_ctx);
 
 また、SpriteStudio 独自の継承ルール（アンカーポイントやローカルスケールの扱いなど）を正しく計算した「ワールド行列」を一括で取得する機能が `libssruntime` に備わっています。自前で行列演算を実装する代わりに、SDK が提供する **`ss_runtime_get_world_matrices`** を利用することを強く推奨します。
 
-1. **ワールド行列の計算を有効にする**: `ss_runtime_set_world_matrix_calculation_enabled(ctx, true)` を呼び出します（デフォルトで有効です）。
+1. **描画モードを Direct に設定する**: `ss_runtime_set_render_mode(ctx, 0)` を呼び出します（`0` = Direct、デフォルト）。シーングラフ方式を使う場合は `1`（SceneGraph）を指定し、ワールド行列の事前計算をスキップして `FrameData` の各パーツのローカル属性から自前で transform を組み立てます。
 2. **ワールド行列バッファを取得する**: `ss_runtime_get_world_matrices` を呼び出し、現在のフレームの全パーツ分の行列が格納された配列へのポインタと要素数を取得します。
 3. **描画ループで利用する**:
    - `FrameData` 内のパーツリストをループします。
