@@ -382,6 +382,26 @@ pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_local_uvs_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_local_uvs_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_z_order(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.last_error = 0;
@@ -864,48 +884,6 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
     unsafe {
         *out_x.cast::<[f32; 5]>() = vx;
         *out_y.cast::<[f32; 5]>() = vy;
-    }
-    true
-}
-
-/// Computes the local UV coordinates for a part.
-///
-/// # Safety
-/// - `input_data`: Must point to an array of at least 9 floats.
-///   Layout: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
-/// - `out_u`, `out_v`: Must point to buffers with at least 5 floats.
-#[unsafe(no_mangle)]
-/// Computes the local UV coordinates for a part using primitive parameters.
-/// out_u, out_v: pointers to float arrays of size 5 to store results.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_uv_compute_local(
-    u_left: f32,
-    v_top: f32,
-    u_right: f32,
-    v_bottom: f32,
-    trans_u: f32,
-    trans_v: f32,
-    rot_deg: f32,
-    scale_u: f32,
-    scale_v: f32,
-    part_flip_h: bool,
-    part_flip_v: bool,
-    img_flip_h: bool,
-    img_flip_v: bool,
-    rotated: bool,
-    out_u: *mut f32,
-    out_v: *mut f32,
-) -> bool {
-    if out_u.is_null() || out_v.is_null() {
-        return false;
-    }
-
-    let (u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated);
-
-    unsafe {
-        *out_u.cast::<[f32; 5]>() = u;
-        *out_v.cast::<[f32; 5]>() = v;
     }
     true
 }

@@ -94,7 +94,7 @@ if (part->type() == PartTypeEffect) {
 通常パーツ（スプライトパーツ）の描画に使う **算出済みローカル頂点座標** です。
 Brain 側で `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセットがすべて適用された状態で配信されるため、Player はワールド行列を掛けるだけで描画頂点を得られます。
 
-頂点は **5 点構成** で `LT / RT / LB / RB / center` の順に格納されます。`center` は 4 隅の平均（Varignon の定理）に基づく中心点で、Player はこれを基点に三角形ファンを組むことで頂点変形時もきれいな補間で描画できます。
+頂点は最大 **5 点構成** (`LT` / `RT` / `LB` / `RB` / `center`) で格納されます。ただし `center` は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 有効値が入ります (頂点変形・パーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外の場合は `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画して構いません。
 
 `part_state->vertex()` のインデックスを使って、`FrameData` 直下の `vertices` テーブル（`PartAttributeVertex`）から取得します。
 
@@ -104,19 +104,31 @@ int vertex_idx = part_state->vertex();
 if (vertex_idx >= 0) {
     auto v = frame_data->vertices()->Get(vertex_idx);
 
-    // 5 つのローカル頂点 (pivot / size / img_flip / deform 適用済み)
-    float lx[5] = { v->lt()->x(), v->rt()->x(), v->lb()->x(), v->rb()->x(), v->center()->x() };
-    float ly[5] = { v->lt()->y(), v->rt()->y(), v->lb()->y(), v->rb()->y(), v->center()->y() };
+    // 4 隅は常に算出済み (pivot / size / img_flip / deform 適用済み)
+    float lx[5] = { v->lt()->x(), v->rt()->x(), v->lb()->x(), v->rb()->x(), 0.0f };
+    float ly[5] = { v->lt()->y(), v->rt()->y(), v->lb()->y(), v->rb()->y(), 0.0f };
+
+    uint64_t flags = part_state->update_flag();
+    bool needs_center =
+        (flags & UpdateAttributeFlags_AttributeVertex) ||
+        (flags & UpdateAttributeFlags_AttributePartColor);
+
+    if (needs_center) {
+        // 5 頂点 + 4 三角形のファン (center を起点に LT-RT-RB-LB を回す)
+        lx[4] = v->center()->x();
+        ly[4] = v->center()->y();
+        // indices: { 0,1,4, 1,3,4, 3,2,4, 2,0,4 }
+    } else {
+        // 4 頂点 + 2 三角形 (center 不使用)
+        // indices: { 0,1,2, 1,3,2 }
+    }
 
     // それぞれを world_matrix で変換するだけで最終描画頂点になる
-    for (int i = 0; i < 5; ++i) {
-        // (wx, wy) = world_matrix * (lx[i], ly[i])
-    }
 }
 ```
 
 ### update_flag との関係
-`update_flag & AttributeVertex` は **ソース SSAB に頂点変形アニメ（raw deform）が含まれていたか** を示すヒントとして引き続き機能します。フラグが立っていなくても `vertex()` インデックスは常に有効で（通常パーツに対しては毎フレーム算出されるため）、Player は単に「変形あり / なし」を区別したい場合の補助情報として使えます。
+`update_flag & AttributeVertex` は **ソース SSAB に頂点変形アニメ（raw deform）が含まれていたか** を示すヒントとして引き続き機能します。フラグが立っていなくても 4 隅の `vertex()` 値は有効で、Player は「center を使う / 使わない」の判定にこのフラグと `AttributePartColor` を使います。
 
 ## 3.5 メッシュとデフォーム (Mesh / Deform) — 未実装
 `PartTypeMesh` パーツのサポートは現在 **未実装** です（[ロードマップ](./04_roadmap.ja.md)参照）。

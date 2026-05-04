@@ -348,6 +348,7 @@ struct ContextBuffers<'a> {
     collected_event_indices: Vec<i32>,
     world_matrices: Vec<crate::core::SsMatrix4x4>,
     inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
+    local_uvs: Vec<f32>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -363,6 +364,7 @@ impl<'a> ContextBuffers<'a> {
             collected_event_indices: Vec::new(),
             world_matrices: Vec::new(),
             inheritance_matrices: Vec::new(),
+            local_uvs: Vec::new(),
         }
     }
 }
@@ -500,6 +502,8 @@ impl<'a> Context<'a> {
         self.buffers.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         self.buffers.inheritance_matrices.clear();
         self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        self.buffers.local_uvs.clear();
+        self.buffers.local_uvs.resize(num_parts * 10, 0.0);
 
         self.z_order.setup(&metadata.cached_parts);
 
@@ -580,6 +584,8 @@ impl<'a> Context<'a> {
             self.compute_matrices(&metadata.cached_parts);
         }
 
+        self.compute_local_uvs(&ssab);
+
         self.z_order.update(&self.buffers.parts_vec);
 
         self.fb.finish_minimal(offset);
@@ -602,6 +608,100 @@ impl<'a> Context<'a> {
             let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
             self.buffers.inheritance_matrices[i] = inh_m;
             self.buffers.world_matrices[i] = draw_m;
+        }
+    }
+
+    fn compute_local_uvs(&mut self, ssab: &ssab::ssab::ss::format::SsAnimeBinary<'_>) {
+        let num_parts = self.buffers.parts_vec.len();
+        if self.buffers.local_uvs.len() != num_parts * 10 {
+            self.buffers.local_uvs.resize(num_parts * 10, 0.0);
+        }
+        for slot in self.buffers.local_uvs.iter_mut() {
+            *slot = 0.0;
+        }
+
+        let Some(cellmaps) = ssab.cellmaps() else { return };
+
+        for i in 0..num_parts {
+            let (rect_left, rect_top, size_w, size_h, rotated, tex_w, tex_h) = {
+                let state = &self.buffers.parts_vec[i];
+                let cell_idx = state.cell();
+                if cell_idx < 0 {
+                    continue;
+                }
+                let cell_vec_idx = cell_idx as usize;
+                if cell_vec_idx >= self.buffers.cell_vec.len() {
+                    continue;
+                }
+                let cell_attr = &self.buffers.cell_vec[cell_vec_idx];
+                let map_id = cell_attr.map_id();
+                let name_hash = cell_attr.name_hash();
+
+                if map_id < 0 || (map_id as usize) >= cellmaps.len() {
+                    continue;
+                }
+                let cellmap = cellmaps.get(map_id as usize);
+                let Some(cells) = cellmap.cells() else { continue };
+
+                // Cells in ssab are sorted by name_hash (FlatBuffers `key`).
+                let mut low = 0usize;
+                let mut high = cells.len();
+                let mut found = None;
+                while low < high {
+                    let mid = (low + high) / 2;
+                    let cell = cells.get(mid);
+                    let h = cell.name_hash();
+                    if h == name_hash {
+                        found = Some(cell);
+                        break;
+                    } else if h < name_hash {
+                        low = mid + 1;
+                    } else {
+                        high = mid;
+                    }
+                }
+                let Some(cell) = found else { continue };
+                let Some(rect) = cell.rectangle() else { continue };
+
+                let (tex_w, tex_h) = cellmap
+                    .size_original()
+                    .map(|v| (v.v1(), v.v2()))
+                    .filter(|(w, h)| *w > 0.0 && *h > 0.0)
+                    .unwrap_or((rect.x2(), rect.y2()));
+
+                (rect.x1(), rect.y1(), rect.x2(), rect.y2(), cell.rotated(), tex_w, tex_h)
+            };
+            let rect_right = rect_left + size_w;
+            let rect_bottom = rect_top + size_h;
+
+            let (tu, tv, rot_deg, su, sv, fh, fv, ifh, ifv) = {
+                let state = &self.buffers.parts_vec[i];
+                (
+                    state.uv_translation_x() * tex_w,
+                    state.uv_translation_y() * tex_h,
+                    state.uv_rotation_z(),
+                    state.uv_scale_x(),
+                    state.uv_scale_y(),
+                    state.flip_h(),
+                    state.flip_v(),
+                    state.img_flip_h(),
+                    state.img_flip_v(),
+                )
+            };
+
+            let (us, vs) = crate::core::geometry::compute_local_uvs(
+                (rect_left, rect_top, rect_right, rect_bottom),
+                (tu, tv, rot_deg, su, sv),
+                (fh, fv),
+                (ifh, ifv),
+                rotated,
+            );
+
+            let offset = i * 10;
+            for k in 0..5 {
+                self.buffers.local_uvs[offset + k * 2] = us[k];
+                self.buffers.local_uvs[offset + k * 2 + 1] = vs[k];
+            }
         }
     }
 
@@ -629,6 +729,18 @@ impl<'a> Context<'a> {
 
     pub fn get_z_order_len(&self) -> usize {
         self.z_order.len()
+    }
+
+    /// Pointer to the per-part 5-vertex UV table (texture pixel space).
+    /// Layout: `[u0, v0, u1, v1, u2, v2, u3, v3, u4, v4]` per part, indexed by
+    /// `part_index * 10`. See [`Context::get_local_uvs_len`].
+    pub fn get_local_uvs_ptr(&self) -> *const f32 {
+        self.buffers.local_uvs.as_ptr()
+    }
+
+    /// Length of the per-part 5-vertex UV table in floats (= num_parts * 10).
+    pub fn get_local_uvs_len(&self) -> usize {
+        self.buffers.local_uvs.len()
     }
 
     // setting getter functions
@@ -980,15 +1092,19 @@ mod tests {
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
 
-        // Test frame 11 (not interpolating, no key)
+        // Test frame 11 (past the last keyframe — value held at last key).
+        // The flag is now ON: per the updated `evaluate_float` semantics, ON
+        // means "value comes from animation data", which still holds when the
+        // value is a held last keyframe. Render-path consumers
+        // (e.g. Godot's `use_advanced`) and cell-default fallbacks both rely
+        // on this signal to avoid silently dropping animated state.
         {
             let frame_data_buf = context.get_frame_data(11.0).expect("Failed to get frame data at frame 11");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
-            // Should NOT contain AttributePosX update flag because it's not a keyframe and no interpolation
-            assert!(!part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
     }
 
@@ -1059,6 +1175,54 @@ mod tests {
 
         // For simplicity, just test that matrices are non-zero/valid
         assert!(world_matrices[0] != 0.0 || world_matrices[1] != 0.0);
+    }
+
+    #[test]
+    fn test_local_uvs() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let _ = context.get_frame_data(0.0).expect("Failed to get frame data");
+
+        let uvs_ptr = context.get_local_uvs_ptr();
+        let uvs_len = context.get_local_uvs_len();
+        let num_parts = context.buffers.parts_vec.len();
+        // 5 vertices * 2 floats per part.
+        assert_eq!(uvs_len, num_parts * 10);
+
+        let uvs = unsafe { ::core::slice::from_raw_parts(uvs_ptr, uvs_len) };
+
+        // At least one cell-bearing part must have produced non-zero UVs.
+        // (Cell-less parts and parts whose cell can't be resolved keep their
+        // all-zero default — we don't make a stronger per-part assertion here
+        // since the test fixture's exact part roster is incidental.)
+        let any_nonzero = uvs.iter().any(|f| *f != 0.0);
+        assert!(any_nonzero, "Expected at least one part to have non-zero UVs");
+
+        // Find any part whose UV slot was populated with a non-degenerate
+        // quad. There should be at least one such part in a basic animation.
+        let any_valid_quad = (0..num_parts).any(|i| {
+            let off = i * 10;
+            let lt_u = uvs[off];
+            let rt_u = uvs[off + 2];
+            let lt_v = uvs[off + 1];
+            let lb_v = uvs[off + 5];
+            (rt_u - lt_u).abs() > f32::EPSILON && (lb_v - lt_v).abs() > f32::EPSILON
+        });
+        assert!(any_valid_quad, "Expected at least one part to have a non-degenerate UV quad");
+
+        // Recomputing on a different frame should still yield a sane buffer.
+        let _ = context.get_frame_data(1.0).expect("Failed to get frame data on frame 1");
+        let uvs_after = unsafe { ::core::slice::from_raw_parts(context.get_local_uvs_ptr(), context.get_local_uvs_len()) };
+        assert_eq!(uvs_after.len(), num_parts * 10);
+        assert!(uvs_after.iter().any(|f| *f != 0.0));
     }
 
     #[test]

@@ -152,16 +152,22 @@ pub type CellLookupFn<'a> = dyn Fn(i32, u32) -> (f32, f32, f32, f32) + 'a;
 pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
-    // Set SpriteStudio default values
+    // default values
     part_state.set_alpha(1.0);
     part_state.set_local_alpha(1.0);
     part_state.set_scale_x(1.0);
     part_state.set_scale_y(1.0);
     part_state.set_local_scale_x(1.0);
     part_state.set_local_scale_y(1.0);
-    // Sentinel for "no vertex pushed" (parts without a cell skip the vertex slot
-    // to avoid wasted compute and FrameData payload).
+    part_state.set_size_x(1.0);
+    part_state.set_size_y(1.0);
+    part_state.set_uv_scale_x(1.0);
+    part_state.set_uv_scale_y(1.0);
+    part_state.set_cell(-1);
+    part_state.set_part_color(-1);
+    part_state.set_shader(-1);
     part_state.set_vertex(-1);
+    part_state.set_deform(-1);
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
@@ -169,10 +175,6 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cu
 
     part_state.set_part_index(cached_part.part_index);
 
-    // Note: Calling `clone()` on `flatbuffers::Vector` here is extremely cheap and does NOT cause
-    // memory fragmentation or heap allocation. `flatbuffers::Vector` is just a lightweight view
-    // (a pointer and a length) into the underlying byte buffer. This shallow copy is necessary
-    // to satisfy Rust's ownership rules when consuming the `Option` via `and_then` from a reference.
     if let Some(value) = cached_part.cell_array.and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])) {
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
@@ -413,6 +415,8 @@ fn get_parts<'a>(
     vertice_vec.clear();
     deform_vec.clear();
 
+    let mut inheritance_alphas: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(cached_parts.len());
+
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
         let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
@@ -420,9 +424,6 @@ fn get_parts<'a>(
         // Look up the current cell's metadata once and reuse for size default + pivot.
         let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = if let Some(cell) = &result.cell { if let Some(lookup) = cell_lookup { lookup(cell.map_id(), cell.name_hash()) } else { (0.0, 0.0, 0.0, 0.0) } } else { (0.0, 0.0, 0.0, 0.0) };
 
-        // Default state.size_x/y to the current cell's rectangle when SIZX/SIZY were not animated.
-        // Without this, parts that reference a cell but don't animate size would have size 0,
-        // which makes the always-on local-vertex calc produce a degenerate (deform-only) quad.
         let flag = result.state.update_flag();
         if !flag.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeX) {
             result.state.set_size_x(cell_size_w);
@@ -434,15 +435,22 @@ fn get_parts<'a>(
         let parent_idx = part.parent_index;
         let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
 
-        if let Some(p_idx) = valid_parent_idx {
-            let (parent_alpha, parent_hide) = {
-                let p_state = &parts_vec[p_idx];
-                (p_state.alpha(), p_state.hide())
-            };
-            result.state.set_alpha(result.state.alpha() * parent_alpha);
-            if parent_hide {
-                result.state.set_hide(true);
-            }
+        let parent_inh_alpha = valid_parent_idx
+            .and_then(|p_idx| inheritance_alphas.get(p_idx).copied())
+            .unwrap_or(1.0);
+        let parent_hide = valid_parent_idx
+            .and_then(|p_idx| parts_vec.get(p_idx).map(|p| p.hide()))
+            .unwrap_or(false);
+
+        let inh_alpha = result.state.alpha() * parent_inh_alpha;
+        inheritance_alphas.push(inh_alpha);
+
+        let has_local_alpha = result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLoAlpha);
+        let effective_alpha = if has_local_alpha { result.state.local_alpha() } else { inh_alpha };
+        result.state.set_alpha(effective_alpha);
+
+        if parent_hide {
+            result.state.set_hide(true);
         }
 
         // Pre-multiply per-vertex parts color alpha with the hierarchical alpha.
@@ -463,10 +471,6 @@ fn get_parts<'a>(
             result.part_color = Some(crate::runtime::framedata::ss::runtime::PartAttributePartColor::new(blend_type, &lt, &rt, &lb, &rb));
         }
 
-        // Replace raw deform offsets with pre-computed local vertex coordinates
-        // (pivot, size, image-flip and deform applied). Players consume these directly.
-        // Skipped for cell-less parts (null/bone/transform-only) since they are not
-        // drawn as sprites — saves work and FrameData payload.
         if result.cell.is_none() {
             // Drop any raw deform we might have evaluated; nothing will read it.
             result.vertex = None;
@@ -481,9 +485,6 @@ fn get_parts<'a>(
                 ([lt.x(), rt.x(), lb.x(), rb.x()], [lt.y(), rt.y(), lb.y(), rb.y()])
             });
 
-            // compute_local_vertices assumes Y-Up. pivot_y was flipped to YDown for
-            // public consumption in evaluate_part, so un-flip it here. Raw deform was
-            // intentionally kept in Y-Up upstream, so it needs no conversion.
             let mut pivot_y = result.state.pivot_y();
             if coordinate_system == SsCoordinateSystem::YDown {
                 pivot_y = -pivot_y;
@@ -502,7 +503,8 @@ fn get_parts<'a>(
             let rt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[1], vy[1]);
             let lb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[2], vy[2]);
             let rb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[3], vy[3]);
-            let center = crate::runtime::framedata::ss::runtime::Vec2::new(vx[4], vy[4]);
+            let needs_center = result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex) || result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor);
+            let center = if needs_center { crate::runtime::framedata::ss::runtime::Vec2::new(vx[4], vy[4]) } else { crate::runtime::framedata::ss::runtime::Vec2::default() };
             result.vertex = Some(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &center));
         }
 

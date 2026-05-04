@@ -234,10 +234,7 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (prev.value(), UPDATE_FLAG_ON);
-                }
-                return (prev.value(), UPDATE_FLAG_OFF);
+                return (prev.value(), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -245,7 +242,7 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
 
             (value, UPDATE_FLAG_ON)
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
+            (prev.value(), UPDATE_FLAG_ON)
         }
     })
 }
@@ -257,10 +254,7 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (prev.value(), UPDATE_FLAG_ON);
-                }
-                return (prev.value(), UPDATE_FLAG_OFF);
+                return (prev.value(), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -268,7 +262,7 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
 
             (crate::core::math::roundf(value) as i32, UPDATE_FLAG_ON)
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
+            (prev.value(), UPDATE_FLAG_ON)
         }
     })
 }
@@ -767,10 +761,15 @@ mod tests {
         assert_eq!(val, 100);
         assert!(!flags.is_empty());
 
-        // At frame 5, should be OFF (inherited) and 100
+        // At frame 5, the value comes from a keyframe (held from frame 0
+        // because InterpolationType::None doesn't tween). Per the new flag
+        // semantics — ON means "value is derived from animation data" — the
+        // flag is ON. Cell-default fallbacks and Player render-path checks
+        // both want this signal so they don't silently overwrite the held
+        // animated value.
         let (val, flags) = evaluate_int(vector, 5.0, &mut hint).unwrap();
         assert_eq!(val, 100);
-        assert!(flags.is_empty());
+        assert!(!flags.is_empty());
 
         // At frame 10, should be ON and 200
         let (val, flags) = evaluate_int(vector, 10.0, &mut hint).unwrap();
