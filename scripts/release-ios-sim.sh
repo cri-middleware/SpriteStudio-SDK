@@ -11,16 +11,23 @@ BASEDIR=$(cd $BASEDIR && pwd -P)
 ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
-pushd ${ROOTDIR} > /dev/null
-cargo build --target aarch64-apple-ios-sim -p ssruntime --features libc_alloc,panic-handler --release
-cargo build --target x86_64-apple-ios -p ssruntime --features libc_alloc,panic-handler --release
+BUILD_MODE="release"
+CARGO_FLAGS="--release"
+if [ "$1" = "debug" ]; then
+    BUILD_MODE="debug"
+    CARGO_FLAGS=""
+fi
 
-OUTPUT=target/universal-apple-ios-sim
+pushd ${ROOTDIR} > /dev/null
+cargo build --target aarch64-apple-ios-sim -p ssruntime --features libc_alloc,panic-handler ${CARGO_FLAGS}
+cargo build --target x86_64-apple-ios -p ssruntime --features libc_alloc,panic-handler ${CARGO_FLAGS}
+
+OUTPUT=target/universal-apple-ios-sim/${BUILD_MODE}
 /bin/mkdir -p ${OUTPUT}
 
 LIBS=(libssruntime.a libssruntime.dylib)
 for lib in ${LIBS[@]}; do
-    lipo -create target/aarch64-apple-ios-sim/release/${lib} target/x86_64-apple-ios/release/${lib} -output ${OUTPUT}/${lib}
+    lipo -create target/aarch64-apple-ios-sim/${BUILD_MODE}/${lib} target/x86_64-apple-ios/${BUILD_MODE}/${lib} -output ${OUTPUT}/${lib}
 done
 
 popd > /dev/null

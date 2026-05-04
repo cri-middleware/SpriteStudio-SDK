@@ -10,6 +10,13 @@ BASEDIR=$(cd $BASEDIR && pwd -P)
 ROOTDIR=${BASEDIR}/..
 ROOTDIR=$(cd $ROOTDIR && pwd -P)
 
+BUILD_MODE="release"
+WASM_PACK_FLAGS=""
+if [ "$1" = "debug" ]; then
+    BUILD_MODE="debug"
+    WASM_PACK_FLAGS="--dev"
+fi
+
 WASM_PACK="wasm-pack"
 if ! command -v $WASM_PACK &> /dev/null
 then
@@ -23,9 +30,10 @@ fi
 
 pushd ${ROOTDIR} > /dev/null
 
-/bin/rm -rf "pkg/web"
+OUT_DIR="../../pkg/web/${BUILD_MODE}"
+/bin/rm -rf "pkg/web/${BUILD_MODE}"
 /bin/cp "LICENSE.md" "libs/ssruntime/LICENSE.md"
-$WASM_PACK build libs/ssruntime --target web --out-dir ../../pkg/web -- --features web --no-default-features
+$WASM_PACK build libs/ssruntime ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_DIR} -- --features web --no-default-features
 /bin/rm "libs/ssruntime/LICENSE.md"
 
 popd > /dev/null
