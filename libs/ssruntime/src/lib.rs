@@ -729,6 +729,10 @@ impl<'a> Context<'a> {
         self.controller.is_end_frame_reached()
     }
 
+    pub fn is_looped(&self) -> bool {
+        self.controller.is_looped()
+    }
+
     pub fn get_world_matrices_ptr(&self) -> *const f32 {
         self.buffers.world_matrices.as_ptr() as *const f32
     }
