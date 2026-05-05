@@ -212,12 +212,12 @@ impl SSRuntimeContext {
         false
     }
 
-    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
-        self.inner.is_world_matrix_calculation_enabled()
+    pub fn get_render_mode(&self) -> u8 {
+        self.inner.render_mode() as u8
     }
 
-    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
-        self.inner.set_world_matrix_calculation_enabled(enabled);
+    pub fn set_render_mode(&mut self, mode: u8) {
+        self.inner.set_render_mode(crate::core::RenderMode::from_u8(mode));
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {

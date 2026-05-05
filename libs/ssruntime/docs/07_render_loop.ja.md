@@ -126,7 +126,7 @@ Render(runtime_ctx);
 
 また、SpriteStudio 独自の継承ルール（アンカーポイントやローカルスケールの扱いなど）を正しく計算した「ワールド行列」を一括で取得する機能が `libssruntime` に備わっています。自前で行列演算を実装する代わりに、SDK が提供する **`ss_runtime_get_world_matrices`** を利用することを強く推奨します。
 
-1. **ワールド行列の計算を有効にする**: `ss_runtime_set_world_matrix_calculation_enabled(ctx, true)` を呼び出します（デフォルトで有効です）。
+1. **描画モードを Direct に設定する**: `ss_runtime_set_render_mode(ctx, 0)` を呼び出します（`0` = Direct、デフォルト）。シーングラフ方式を使う場合は `1`（SceneGraph）を指定し、ワールド行列の事前計算をスキップして `FrameData` の各パーツのローカル属性から自前で transform を組み立てます。
 2. **ワールド行列バッファを取得する**: `ss_runtime_get_world_matrices` を呼び出し、現在のフレームの全パーツ分の行列が格納された配列へのポインタと要素数を取得します。
 3. **描画ループで利用する**:
    - `FrameData` 内のパーツリストをループします。
@@ -156,6 +156,79 @@ for (size_t i = 0; i < parts->size(); i++) {
 - **描画用行列 (drawing matrix)**: 現在のパーツのローカルスケール等、子に継承「させない」パラメータを含んだ、描画にそのまま使える行列です。`libssruntime` 内部では、子パーツへの継承には別途「継承用行列 (Inheritance Matrix)」が使用されていますが、外部へ公開されるのは常にこの描画用行列です。
 
 この機能を使用することで、SpriteStudio 特有の複雑な行列計算を自前で実装することなく、正しく高速な描画が可能になります。
+
+### Cell メタデータと UV の事前解決バッファ
+
+`libssruntime` は cellmap からの値解決を Setup 時に一度だけ行い、毎フレームは Player が SoA バッファをインデックスで読むだけで済むよう、以下のバッファを公開しています。Player 側で `cellmap->cells()->LookupByKey(name_hash)` のような毎フレームの二分探索を行う必要はありません。
+
+- **`ss_runtime_get_cell_meta`**: パーツごとの `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` を 6 floats × num_parts のレイアウトで返します。`(rect_left, rect_top)` はテクスチャ・ピクセル空間でのセル矩形の左上原点、`(size_w, size_h)` はセルの幅・高さです。セルが無いパーツのスロットはゼロで埋められます。
+- **`ss_runtime_get_cell_texture_hashes`**: パーツごとの「現在セルが属する cellmap」の `name_hash` (FNV-1a, `uint32_t × num_parts`) を返します。値は SSAB の `cellmaps[map_id].name_hash` と一致するため、Player は自前の `name_hash → Texture` テーブルを直接引いて目的のテクスチャを得られます。`FrameData::cells()->Get(...)->map_id()` → `cellmaps()->Get(map_id)->name_hash()` という 2 段の FlatBuffer ルックアップは不要です。セルが無いパーツのスロットはゼロです。
+- **`ss_runtime_get_local_uvs`**: パーツごとの 5 頂点分の UV を `[u0, v0, u1, v1, u2, v2, u3, v3, u4, v4]` (テクスチャ・ピクセル空間、10 floats × num_parts) で返します。flip / UV 平行移動 / 回転 / スケールが反映済みの最終 UV です。
+- **`ss_runtime_get_local_vertices`**: Normal パーツの 5 頂点ローカル座標 `[lt.x, lt.y, rt.x, rt.y, lb.x, lb.y, rb.x, rb.y, center.x, center.y]` (10 floats × num_parts) を返します。pivot オフセット、image flip、頂点変形 (`AttributeVertex`)、座標系 (Y-Up / Y-Down) の処理は Brain 側で完了済みなので、Player は `world_matrix * v` をかけて描画するだけです。`FrameData::vertices()` の FlatBuffer ルックアップは不要で、Fast-path (4 隅のみ) でも Advanced-path (4 隅 + center) でも同じバッファを利用します。セルが無いパーツのスロットはゼロです。
+- **`ss_runtime_get_shape_vertices`** / **`ss_runtime_get_shape_vertex_box_coords`** / **`ss_runtime_get_shape_vertex_counts`**: Shape パーツの描画用 SoA 群です。
+    - `shape_vertices`: ローカル頂点座標 12 頂点 × `(x, y)` = 24 floats × num_parts。pivot オフセットと座標系 (Y-Up / Y-Down) の処理は Brain 側で完了済みなので、Player は `world_matrix * v` をかけて描画するだけです。
+    - `shape_vertex_box_coords`: 各頂点の正規化バウンディングボックス座標 `(fx, fy)` 12 頂点 × 2 floats × num_parts。`(0, 0)` が LT 角、`(1, 1)` が RB 角に対応し、pivot や座標系の影響を受けません。Player は part の 4 隅カラー (`pc->lt/rt/lb/rb`) を `(1-fx)*(1-fy), fx*(1-fy), (1-fx)*fy, fx*fy` で重み付け加算するだけで、各頂点色を確定できます。
+    - `shape_vertex_counts`: 有効頂点数 `int32 × num_parts`。Shape 以外のパーツでは 0、頂点・box-coord スロットはゼロ埋めです。
+- **`ss_runtime_get_z_order`**: パーツの描画順位 (priority と階層位置から決定) を `int32_t × num_parts` で返します。
+
+```cpp
+const float* cell_meta = nullptr;
+size_t cell_meta_len = 0;
+ss_runtime_get_cell_meta(runtime_ctx, &cell_meta, &cell_meta_len);
+
+const uint32_t* cell_texture_hashes = nullptr;
+size_t cell_texture_hashes_len = 0;
+ss_runtime_get_cell_texture_hashes(runtime_ctx, &cell_texture_hashes, &cell_texture_hashes_len);
+
+const float* local_uvs = nullptr;
+size_t local_uvs_len = 0;
+ss_runtime_get_local_uvs(runtime_ctx, &local_uvs, &local_uvs_len);
+
+const float* local_vertices = nullptr;
+size_t local_vertices_len = 0;
+ss_runtime_get_local_vertices(runtime_ctx, &local_vertices, &local_vertices_len);
+
+auto frame_data = GetFrameData(chunk_data);
+auto parts = frame_data->parts();
+
+for (size_t i = 0; i < parts->size(); i++) {
+    auto part = parts->Get(i);
+    if (part->hide() || part->cell() < 0) continue;
+
+    // cell_meta の per-part スライス (6 floats)
+    const float* meta = cell_meta + i * 6;
+    // [pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]
+
+    // local_uvs の per-part スライス (10 floats: 4 corners + center)
+    const float* uvs = local_uvs + i * 10;
+
+    // local_vertices の per-part スライス (10 floats: lt, rt, lb, rb, center)
+    const float* verts = local_vertices + i * 10;
+
+    // テクスチャ参照は cell_texture_hashes から直接 (毎フレームの FlatBuffer ルックアップ不要)
+    uint32_t tex_hash = cell_texture_hashes[i];
+    Texture* tex = ResolveTextureByNameHash(tex_hash);
+
+    DrawPart(tex, meta, uvs, verts, /* world matrix, alpha, ... */);
+}
+```
+
+Player のテクスチャ管理は **Setup 時に `cellmaps[i].name_hash` をキーに自前のテクスチャテーブル** を構築しておくだけで、毎フレームの解決は SoA 配列の 1 アクセスで完結します。`FrameData::cells()` / `FrameData::vertices()` を Player から触る必要はもうありません。
+
+### Player と Brain (ssruntime) の責務分担
+
+事前解決 SoA バッファ群により、Player 側に残る描画責務はほぼエンジン API 呼び出しのみとなりました。代表的な分担を以下に示します。
+
+| 関心事 | Brain (ssruntime) 側で済ませること | Player 側で必要なこと |
+|--------|--------------------------------------|------------------------|
+| 座標系 (`coordinate_system`) | Y-Up / Y-Down の符号反転を pivot, vertex, deform に適用済み | なし。`local_vertices` / `shape_vertices` をそのまま使う |
+| 頂点位置 (`local_vertices`) | pivot / image flip / `AttributeVertex` 変形 / 座標系反転を適用 | `world_matrix * v` のみ |
+| UV (`local_uvs`) | flip / UV 平行移動・回転・スケールを適用 | テクスチャサイズで割って正規化するだけ |
+| Cell → Texture | `cell_texture_hashes` で `name_hash` を直接公開 | Setup 時に作った `name_hash → Texture` テーブルを引くだけ |
+| パーツ色 (`parts_color`) | 階層 alpha を pre-multiply 済み | エンジンのカラーフォーマット (0–1, 0–255) に正規化するだけ |
+| 描画順 (`z_order`) | priority と階層位置から決定済み | 配列順に描画するだけ |
+| `blend_type` (パーツの矩形ブレンド) | 各パーツの最終値を `partBinary->blend_type()` で取得可能 | エンジン固有のマテリアル / ブレンドステートにマッピングする (例: Godot の `CanvasItemMaterial::BlendMode`) |
+| `color_blend_type` (パーツ色のブレンド) | `parts_color->blend_type()` で公開 (Mix/Mul/Add/Sub) | 同上。シェーダのブレンド演算にマッピングする (現状未配線でも動作する) |
 
 - **シーングラフ / 階層ノード方式**: 
   パーツの数だけエンジンのオブジェクトを生成し、`ssab` メタデータの `parent_index` を元にエンジンの Transform 階層を構築します。`FrameData` から取得した各 `PartState` のローカル値を各オブジェクトの `transform` に反映させることで、最終的な描画位置（ワールド座標）の計算をエンジンに委ねることができます。実装は容易ですが、パーツ数に比例してエンジン側のノード管理オーバーヘッドが増大するため、注意が必要です。

@@ -7,6 +7,33 @@
 SpriteStudio のインスタンス機能は、別のアニメーションを部品として参照し再生する機能です。
 親の再生時間（フレーム）に完全に同期させるため、**毎フレーム親の現在のフレームから子のローカルフレームを算出し、子Playerの時間を強制的に合わせる**手法をとります。これにより、逆再生やフレームスキップ時でも常に正しい状態が描画されます。
 
+> **【制限事項】 `independent=true` は逆再生 / シークでは動作しません**
+>
+> `PartAttributeInstance.independent` を `true` にすると、子インスタンスは親の timeline から切り離されてリアルタイム (delta_time) で進行する仕様です。これは設計上、親フレームから子フレームを deterministic に逆算できないため、以下のような操作で破綻します:
+>
+> - 親の逆再生 (子のリアルタイム時計は単調増加なので、過去方向に進まない)
+> - 親のシーク (過去の任意フレームへ戻ったときの「子の累積時間」が一意に決まらない)
+>
+> 一方、**親のフレームスキップ自体は対応可能**です。親が経過 `delta_time` を子に渡し、子が `update(delta)` で累積を進めれば、スキップ量に比例した分だけ子も進みます (順方向のみ)。
+>
+> Player 移植にあたっては、SS7 のアニメ制作時に `independent=true` を使わない運用を推奨します。やむを得ず使う場合は、対応する子インスタンスは「順方向再生時のみ正しく描画される」ことを利用者に明示してください。
+
+> **【NO_KEY (Instance アトリビュートにキーがない) ときの挙動】**
+>
+> ある Instance パーツに `EventInstance` が一つも紐づかず `InitialEvents.instance` も `None` の場合、Player は SS6 SDK の `SsInstanceAttr` デフォルトコンストラクタ (`Common/Loader/sstypes.h:1294`) と同じ値で再生を組み立てる必要があります:
+>
+> - `loop_num = 1`（**`-1` 無限ループにしない**）
+> - `infinity = false`
+> - `pingpong = false`, `reverse = false`
+> - `start_label = "_start"` / `end_label = "_end"` (= 子アニメの先頭〜末尾)
+> - `start_offset = 0`, `end_offset = 0`
+> - `speed = 1.0`
+> - `curKeyframe = 0`（= 親フレームをそのまま `diff` に使う）
+>
+> SS6 の `updateInstance`（`Common/Animator/ssplayer_animedecode.cpp:1670-1677`) は `nowloop >= loop_num` になった時点で `reftime = inst_scale - 1` にクランプするため、結果として **1 サイクル再生 → end_frame で停止** という挙動になります。`loops = -1` をフォールバックにすると SS では止まる位置で Godot/Unity 側だけループし続けてしまうので注意してください。
+>
+> なお SS6 では `SsGetKeyValue` が `nowTime` より未来のキーを返してきた場合（= 今より前にキーがない）、`state->instanceValue` をデフォルトコンストラクタに**戻して**から `updateInstance` を続行します（`ssplayer_animedecode.cpp:1162-1166`）。SS7 では converter が `time == 0` のキーを `InitialEvents.instance` に複製するため通常は再現される一方、ユーザーが意図的にキーを入れていない（NO_KEY）パーツでは `InitialEvents.instance = None` になるので、上記デフォルトを Player 側で用意してください。
+
 ### 同期計算と描画ループ
 子アニメーションの複雑な同期計算（オフセット、速度、ループの剰余計算など）を行うため、SDKには `ss_util_calculate_instance_frame` というユーティリティ関数が用意されています。
 
@@ -90,71 +117,78 @@ if (part->type() == PartTypeEffect) {
 }
 ```
 
-## 3. メッシュとデフォーム (Mesh / Deform)
-`PartTypeMesh` パーツと、その頂点を変形させる `AttributeDeform` の実装です。複雑なデータは FlatBuffers のテーブル化（プーリング）により最適化されているため、インデックスを介して取得します。
+## 3. 頂点配列 (AttributeVertex)
+通常パーツ（スプライトパーツ）の描画に使う **算出済みローカル頂点座標** です。
+Brain 側で `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセットがすべて適用された状態で配信されるため、Player はワールド行列を掛けるだけで描画頂点を得られます。
 
-- **頂点配列 (AttributeVertex)**: メッシュの基準となるローカルの頂点座標とUV座標です。`part_state->vertex()` のインデックスを使って、`FrameData` 直下の `vertices` テーブルから取得します。
-- **デフォーム (AttributeDeform)**: アニメーションによって加算される変形オフセット値です。`part_state->deform()` のインデックスを使って、`FrameData` 直下の `deforms` テーブルから取得します。
+頂点は最大 **5 点構成** (`LT` / `RT` / `LB` / `RB` / `center`) で格納されます。ただし `center` は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 有効値が入ります (頂点変形・パーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外の場合は `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画して構いません。
+
+`part_state->vertex()` のインデックスを使って、`FrameData` 直下の `vertices` テーブル（`PartAttributeVertex`）から取得します。
 
 ```cpp
-// メッシュパーツの頂点計算例
-if (part->type() == PartTypeMesh) {
-    int vertex_idx = part_state->vertex();
-    int deform_idx = part_state->deform();
+// 通常パーツの頂点取得例
+int vertex_idx = part_state->vertex();
+if (vertex_idx >= 0) {
+    auto v = frame_data->vertices()->Get(vertex_idx);
 
-    if (vertex_idx >= 0) {
-        auto vertex_data = frame_data->vertices()->Get(vertex_idx);
-        auto base_positions = vertex_data->positions(); // 基準頂点 (X, Y) の配列
-        auto uvs = vertex_data->uvs();                  // UV座標の配列
+    // 4 隅は常に算出済み (pivot / size / img_flip / deform 適用済み)
+    float lx[5] = { v->lt()->x(), v->rt()->x(), v->lb()->x(), v->rb()->x(), 0.0f };
+    float ly[5] = { v->lt()->y(), v->rt()->y(), v->lb()->y(), v->rb()->y(), 0.0f };
 
-        // デフォームデータが存在すれば取得
-        const flatbuffers::Vector<float>* deform_offsets = nullptr;
-        if (deform_idx >= 0) {
-            auto deform_data = frame_data->deforms()->Get(deform_idx);
-            deform_offsets = deform_data->offsets();    // 変形オフセット (X, Y) の配列
-        }
+    uint64_t flags = part_state->update_flag();
+    bool needs_center =
+        (flags & UpdateAttributeFlags_AttributeVertex) ||
+        (flags & UpdateAttributeFlags_AttributePartColor);
 
-        // 各頂点の最終ローカル座標を計算し、ワールド行列を掛けて描画
-        for (size_t i = 0; i < base_positions->size() / 2; i++) {
-            float lx = base_positions->Get(i * 2);
-            float ly = base_positions->Get(i * 2 + 1);
-
-            if (deform_offsets && i * 2 + 1 < deform_offsets->size()) {
-                lx += deform_offsets->Get(i * 2);
-                ly += deform_offsets->Get(i * 2 + 1);
-            }
-
-            // lx, ly を parent_world_matrix で変換して最終頂点を生成
-        }
+    if (needs_center) {
+        // 5 頂点 + 4 三角形のファン (center を起点に LT-RT-RB-LB を回す)
+        lx[4] = v->center()->x();
+        ly[4] = v->center()->y();
+        // indices: { 0,1,4, 1,3,4, 3,2,4, 2,0,4 }
+    } else {
+        // 4 頂点 + 2 三角形 (center 不使用)
+        // indices: { 0,1,2, 1,3,2 }
     }
+
+    // それぞれを world_matrix で変換するだけで最終描画頂点になる
 }
 ```
 
-## 4. パーツカラー (PartsColor)
-パーツ全体や頂点ごとにカラー合成を行うアトリビュートです。単色または4頂点のカラー情報（RGBA）が格納されています。
-これも `part_state->part_color()` のインデックスを用いて、`FrameData` 直下の `parts_color` テーブルから取得します。
+### update_flag との関係
+`update_flag & AttributeVertex` は **ソース SSAB に頂点変形アニメ（raw deform）が含まれていたか** を示すヒントとして引き続き機能します。フラグが立っていなくても 4 隅の `vertex()` 値は有効で、Player は「center を使う / 使わない」の判定にこのフラグと `AttributePartColor` を使います。
 
-- **合成タイプ (BlendType)**: Mix(通常), Add(加算), Sub(減算), Mul(乗算)。シェーダーで色を合成する際の計算式を決定します。
-- **カラー配列**: 1つの色（全体単色）または4つの色（各頂点）の RGBA (0〜255) 配列が格納されています。
+## 3.5 メッシュとデフォーム (Mesh / Deform) — 未実装
+`PartTypeMesh` パーツのサポートは現在 **未実装** です（[ロードマップ](./04_roadmap.ja.md)参照）。
+`PartAttributeDeform`（`FrameData::deforms`）はメッシュパーツの可変数頂点向けに予約された構造で、現時点ではプレイヤー実装の対象外です。実装は今後のフェーズで行います。
+
+## 4. パーツカラー (PartsColor)
+頂点ごとにカラー合成を行うアトリビュートです。`PartAttributePartColor` は 4 隅 (`lt` / `rt` / `lb` / `rb`) ぶんの色情報を保持します。
+`part_state->part_color()` のインデックスを使って、`FrameData` 直下の `parts_color` テーブルから取得します。
+
+- **合成タイプ (`blend_type`)**: Mix(通常), Mul(乗算), Add(加算), Sub(減算) ほか。シェーダーで色を合成する際の計算式を決定します。
+- **頂点カラー (`lt` / `rt` / `lb` / `rb`)**: それぞれ `SsAttributePartColorKeyValueColor`（`rgba: U8Rect{a, r, g, b}` と補間レート `rate`）。`a` チャンネルには **パーツの階層的 `alpha` が事前合成済み** なので、Player 側で `state.alpha()` を再度乗算する必要はありません。
+- 単色指定（4 頂点で同じ色）の場合も同様に 4 隅すべてが同一値で配信されます。
 
 ```cpp
 // パーツカラーの取得例
 int color_idx = part_state->part_color();
 if (color_idx >= 0) {
-    auto color_data = frame_data->parts_color()->Get(color_idx);
-    int blend_type = color_data->blend_type();
-    auto colors = color_data->colors(); // [R, G, B, A, R, G, B, A, ...] 
+    auto pc = frame_data->parts_color()->Get(color_idx);
+    auto blend_type = pc->blend_type();
 
-    if (colors->size() == 4) {
-        // 単色指定の場合: 全頂点に同じ色を適用
-        Color c = Color(colors->Get(0), colors->Get(1), colors->Get(2), colors->Get(3));
-    } else if (colors->size() == 16) {
-        // 4頂点カラー指定の場合: 頂点ごとに色を適用（グラデーション）
-        Color tl = Color(colors->Get(0),  colors->Get(1),  colors->Get(2),  colors->Get(3));   // 左上
-        Color tr = Color(colors->Get(4),  colors->Get(5),  colors->Get(6),  colors->Get(7));   // 右上
-        Color bl = Color(colors->Get(8),  colors->Get(9),  colors->Get(10), colors->Get(11)); // 左下
-        Color br = Color(colors->Get(12), colors->Get(13), colors->Get(14), colors->Get(15));// 右下
-    }
+    auto to_color = [](const ss::runtime::SsAttributePartColorKeyValueColor* c) {
+        const auto& rgba = c->rgba();
+        // a は階層 alpha 事前合成済み。再乗算しない。
+        return Color(rgba.r() / 255.0f, rgba.g() / 255.0f, rgba.b() / 255.0f, rgba.a() / 255.0f);
+    };
+
+    Color clt = to_color(pc->lt());  // 左上
+    Color crt = to_color(pc->rt());  // 右上
+    Color clb = to_color(pc->lb());  // 左下
+    Color crb = to_color(pc->rb());  // 右下
+
+    // 5 頂点描画する場合、center 頂点には 4 隅の平均色を割り当てるのが自然
+    Color ccenter = (clt + crt + clb + crb) * 0.25f;
 }
 ```
 

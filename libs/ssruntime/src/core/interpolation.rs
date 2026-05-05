@@ -234,10 +234,7 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (prev.value(), UPDATE_FLAG_ON);
-                }
-                return (prev.value(), UPDATE_FLAG_OFF);
+                return (prev.value(), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -245,7 +242,7 @@ pub fn evaluate_float(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffse
 
             (value, UPDATE_FLAG_ON)
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
+            (prev.value(), UPDATE_FLAG_ON)
         }
     })
 }
@@ -257,10 +254,7 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (prev.value(), UPDATE_FLAG_ON);
-                }
-                return (prev.value(), UPDATE_FLAG_OFF);
+                return (prev.value(), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -268,7 +262,7 @@ pub fn evaluate_int(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<
 
             (crate::core::math::roundf(value) as i32, UPDATE_FLAG_ON)
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (prev.value(), UPDATE_FLAG_ON) } else { (prev.value(), UPDATE_FLAG_OFF) }
+            (prev.value(), UPDATE_FLAG_ON)
         }
     })
 }
@@ -284,10 +278,7 @@ pub fn evaluate_partcolor(
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON);
-                }
-                return (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF);
+                return (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -343,7 +334,7 @@ pub fn evaluate_partcolor(
 
             (current, UPDATE_FLAG_ON)
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_partcolor(&prev.value()), UPDATE_FLAG_OFF) }
+            (transfer_partcolor(&prev.value()), UPDATE_FLAG_ON)
         }
     })
 }
@@ -412,10 +403,7 @@ pub fn evaluate_shader(
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (transfer_shader(&prev.value()), UPDATE_FLAG_ON);
-                }
-                return (transfer_shader(&prev.value()), UPDATE_FLAG_OFF);
+                return (transfer_shader(&prev.value()), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -452,7 +440,7 @@ pub fn evaluate_shader(
                 UPDATE_FLAG_ON,
             )
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (transfer_shader(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_shader(&prev.value()), UPDATE_FLAG_OFF) }
+            (transfer_shader(&prev.value()), UPDATE_FLAG_ON)
         }
     })
 }
@@ -477,10 +465,7 @@ pub fn evaluate_vertex(
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (transfer_vertex(&prev.value()), UPDATE_FLAG_ON);
-                }
-                return (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF);
+                return (transfer_vertex(&prev.value()), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -513,17 +498,19 @@ pub fn evaluate_vertex(
             let r_v1 = [out_arr[0], out_arr[2], out_arr[4], out_arr[6]];
             let r_v2 = [out_arr[1], out_arr[3], out_arr[5], out_arr[7]];
 
+            // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
             (
                 runtime::framedata::ss::runtime::PartAttributeVertex::new(
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[0], r_v2[0]),
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[1], r_v2[1]),
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[2], r_v2[2]),
                     &runtime::framedata::ss::runtime::Vec2::new(r_v1[3], r_v2[3]),
+                    &runtime::framedata::ss::runtime::Vec2::default(),
                 ),
                 UPDATE_FLAG_ON,
             )
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (transfer_vertex(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_vertex(&prev.value()), UPDATE_FLAG_OFF) }
+            (transfer_vertex(&prev.value()), UPDATE_FLAG_ON)
         }
     })
 }
@@ -536,7 +523,8 @@ fn transfer_vertex(source: &Option<ssab::ssab::ss::format::PartAttributeVertex>)
         let lb = s.lb().map(|lb| runtime::framedata::ss::runtime::Vec2::new(lb.v1(), lb.v2())).unwrap_or_default();
         let rb = s.rb().map(|rb| runtime::framedata::ss::runtime::Vec2::new(rb.v1(), rb.v2())).unwrap_or_default();
 
-        runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb)
+        // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
+        runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &runtime::framedata::ss::runtime::Vec2::default())
     } else {
         runtime::framedata::ss::runtime::PartAttributeVertex::default()
     }
@@ -552,24 +540,21 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON);
-                }
-                return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF);
+                return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let Some(next_value) = next.value() else {
-                return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF);
+                return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON);
             };
             (linear(prev_value.v1(), next_value.v1(), rate), linear(prev_value.v2(), next_value.v2(), rate), UPDATE_FLAG_ON)
         } else {
             let Some(prev_value) = prev.value() else {
                 return (0.0, 0.0, UPDATE_FLAG_OFF);
             };
-            if (prev.index() as i32 as f32) == frame_no { (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON) } else { (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_OFF) }
+            (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON)
         }
     })
 }
@@ -591,10 +576,7 @@ pub fn evaluate_deform(
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                if prev_index == frame_no {
-                    return (transfer_deform(&prev.value()), UPDATE_FLAG_ON);
-                }
-                return (transfer_deform(&prev.value()), UPDATE_FLAG_OFF);
+                return (transfer_deform(&prev.value()), UPDATE_FLAG_ON);
             }
 
             let next_index = next.index() as i32 as f32;
@@ -645,7 +627,7 @@ pub fn evaluate_deform(
                 (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
             }
         } else {
-            if (prev.index() as i32 as f32) == frame_no { (transfer_deform(&prev.value()), UPDATE_FLAG_ON) } else { (transfer_deform(&prev.value()), UPDATE_FLAG_OFF) }
+            (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
         }
     })
 }
@@ -764,10 +746,15 @@ mod tests {
         assert_eq!(val, 100);
         assert!(!flags.is_empty());
 
-        // At frame 5, should be OFF (inherited) and 100
+        // At frame 5, the value comes from a keyframe (held from frame 0
+        // because InterpolationType::None doesn't tween). Per the new flag
+        // semantics — ON means "value is derived from animation data" — the
+        // flag is ON. Cell-default fallbacks and Player render-path checks
+        // both want this signal so they don't silently overwrite the held
+        // animated value.
         let (val, flags) = evaluate_int(vector, 5.0, &mut hint).unwrap();
         assert_eq!(val, 100);
-        assert!(flags.is_empty());
+        assert!(!flags.is_empty());
 
         // At frame 10, should be ON and 200
         let (val, flags) = evaluate_int(vector, 10.0, &mut hint).unwrap();
@@ -1104,7 +1091,10 @@ mod tests {
 
     #[test]
     fn test_evaluate_deform_none_off_keyframe() {
-        // None interpolation off-keyframe → flag OFF, prev value held.
+        // None interpolation off-keyframe: value is held from prev key. Per the
+        // updated flag semantics — ON means "value is derived from animation
+        // data" — the flag is ON. Consumers (e.g. Player render-path checks)
+        // need this signal so they don't silently overwrite the held value.
         let prev = [(1.0, 2.0), (3.0, 4.0)];
         let next = [(10.0, 20.0), (30.0, 40.0)];
         let buf = deform_buf(&[(0, InterpolationType::None, &prev, &[]), (10, InterpolationType::None, &next, &[])]);
@@ -1112,14 +1102,14 @@ mod tests {
 
         let mut hint = 0;
         let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
-        assert!(flags.is_empty(), "off-keyframe None must clear flag");
-        // Should still hold prev value.
+        assert!(!flags.is_empty(), "off-keyframe None still derives from a key, must set ON");
         assert_eq!(data.coordinate[0].x(), prev[0].0);
     }
 
     #[test]
     fn test_evaluate_deform_after_last_key() {
-        // After last key: exact match → ON, otherwise OFF, value held from prev.
+        // After last key: value is held from the last key, flag must be ON
+        // (the value still comes from animation data).
         let prev = [(7.0, 8.0)];
         let buf = deform_buf(&[(5, InterpolationType::Linear, &prev, &[])]);
         let vec = deform_root(&buf);
@@ -1131,7 +1121,7 @@ mod tests {
 
         let mut hint = 0;
         let (data, flags) = evaluate_deform(vec, 9.0, &mut hint).unwrap();
-        assert!(flags.is_empty());
+        assert!(!flags.is_empty(), "held value past last key must set ON");
         assert_eq!(data.coordinate[0].x(), 7.0);
     }
 

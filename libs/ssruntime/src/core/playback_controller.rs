@@ -13,6 +13,79 @@ pub enum PlaybackDirection {
     Backward = -1,
 }
 
+/// Pure, deterministic mapping from "frames elapsed since playback started"
+/// (`diff`, with per-instance `speed` already applied) to the resolved
+/// playback frame within the inclusive `[start, end]` range, applying loop
+/// count and playback style / direction. Matches SpriteStudio 6 SDK's
+/// `SsAnimeDecoder::updateInstance` semantics, including the inclusive
+/// `inst_scale = (end - start) + 1` cycle length and the duplicated peak /
+/// trough frames at PingPong reversal boundaries.
+///
+/// Returns `(frame, finished)` where `finished` is `true` once the
+/// configured `loops` have completed. For `loops == -1` (infinite) and
+/// `loops == 0` (treated as infinite to match `PlaybackController::update`)
+/// `finished` is always `false`. `diff < 0` is clamped to `0`.
+///
+/// `loops > 0` defines total cycles. A "cycle" is `(end - start) + 1`
+/// frames for `Normal` and `2 * ((end - start) + 1)` frames for `PingPong`
+/// (one full there-and-back, with the turn-around frame appearing in both
+/// halves to match SS6).
+pub fn resolve_frame(diff: f32, start: i32, end: i32, loops: i32, style: PlaybackStyle, direction: PlaybackDirection) -> (f32, bool) {
+    let length = (end - start + 1) as f32;
+    if length <= 0.0 {
+        let f = match direction {
+            PlaybackDirection::Forward => start as f32,
+            PlaybackDirection::Backward => end as f32,
+        };
+        return (f, true);
+    }
+
+    let cycle_len = match style {
+        PlaybackStyle::Normal => length,
+        PlaybackStyle::PingPong => length * 2.0,
+    };
+
+    let total_len = if loops > 0 { Some((loops as f32) * cycle_len) } else { None };
+
+    let elapsed = diff.max(0.0);
+
+    let finished = match total_len {
+        Some(total) => elapsed >= total,
+        None => false,
+    };
+
+    if finished {
+        let final_frame = match (style, direction) {
+            (PlaybackStyle::Normal, PlaybackDirection::Forward) => end as f32,
+            (PlaybackStyle::Normal, PlaybackDirection::Backward) => start as f32,
+            (PlaybackStyle::PingPong, PlaybackDirection::Forward) => start as f32,
+            (PlaybackStyle::PingPong, PlaybackDirection::Backward) => end as f32,
+        };
+        return (final_frame, true);
+    }
+
+    let phase = elapsed - floorf(elapsed / cycle_len) * cycle_len;
+    let local_offset = match style {
+        PlaybackStyle::Normal => phase,
+        PlaybackStyle::PingPong => {
+            // Phase [0, length) is the forward half (start → end), and
+            // [length, 2*length) is the reverse half (end → start). The
+            // turn-around frame (end) appears at both `phase = length - 1`
+            // and `phase = length`, matching SS6's nowloop transition where
+            // reftime=length plays end again at the start of the reverse
+            // loop.
+            if phase < length { phase } else { cycle_len - 1.0 - phase }
+        }
+    };
+
+    let frame = match direction {
+        PlaybackDirection::Forward => start as f32 + local_offset,
+        PlaybackDirection::Backward => end as f32 - local_offset,
+    };
+
+    (frame, false)
+}
+
 pub struct PlaybackController {
     is_pausing: bool,
     is_playing: bool,
@@ -388,6 +461,22 @@ impl PlaybackController {
         self.needs_evaluation = true;
     }
 
+    /// Sets `current_frame` to the position reached after `diff` frames have
+    /// elapsed since playback started, with the configured `start_frame` /
+    /// `end_frame` / `loops` / `playback_style` / `playback_direction`
+    /// applied. `diff` should already incorporate per-instance `speed`
+    /// (i.e. `diff = (parent_frame - event_frame) * speed`).
+    ///
+    /// Unlike `update(delta)` this is a deterministic, non-incremental
+    /// computation — the same `diff` always produces the same frame, which is
+    /// what allows parent-driven seek / reverse / frame-skip on Instance and
+    /// Effect parts to render correctly.
+    pub fn set_frame_relative(&mut self, diff: f32) {
+        let (frame, _finished) = resolve_frame(diff, self.start_frame, self.end_frame, self.loops, self.playback_style, self.playback_direction);
+        self.current_frame = frame;
+        self.needs_evaluation = true;
+    }
+
     /**
      * Set the current frame to the next frame.
      * The function ignores direction and style.
@@ -416,6 +505,133 @@ impl PlaybackController {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn rf(diff: f32, start: i32, end: i32, loops: i32, style: PlaybackStyle, dir: PlaybackDirection) -> (f32, bool) {
+        resolve_frame(diff, start, end, loops, style, dir)
+    }
+
+    #[test]
+    fn resolve_frame_normal_forward_finite() {
+        // start=0 end=10 inclusive → 11 frames per cycle (matches SS6 inst_scale)
+        let (start, end) = (0, 10);
+        let s = PlaybackStyle::Normal;
+        let d = PlaybackDirection::Forward;
+
+        assert_eq!(rf(-5.0, start, end, 1, s, d), (0.0, false));
+        assert_eq!(rf(0.0, start, end, 1, s, d), (0.0, false));
+        assert_eq!(rf(5.0, start, end, 1, s, d), (5.0, false));
+        assert_eq!(rf(10.0, start, end, 1, s, d), (10.0, false));
+        assert_eq!(rf(11.0, start, end, 1, s, d), (10.0, true));
+        assert_eq!(rf(50.0, start, end, 1, s, d), (10.0, true));
+
+        // 2 cycles = 22 frames
+        assert_eq!(rf(11.0, start, end, 2, s, d), (0.0, false));
+        assert_eq!(rf(15.0, start, end, 2, s, d), (4.0, false));
+        assert_eq!(rf(21.0, start, end, 2, s, d), (10.0, false));
+        assert_eq!(rf(22.0, start, end, 2, s, d), (10.0, true));
+        assert_eq!(rf(100.0, start, end, 2, s, d), (10.0, true));
+    }
+
+    #[test]
+    fn resolve_frame_normal_forward_infinite() {
+        let (start, end) = (0, 10);
+        let s = PlaybackStyle::Normal;
+        let d = PlaybackDirection::Forward;
+
+        assert_eq!(rf(0.0, start, end, -1, s, d), (0.0, false));
+        assert_eq!(rf(10.0, start, end, -1, s, d), (10.0, false));
+        assert_eq!(rf(11.0, start, end, -1, s, d), (0.0, false));
+        assert_eq!(rf(15.0, start, end, -1, s, d), (4.0, false));
+        assert_eq!(rf(22.0, start, end, -1, s, d), (0.0, false));
+        assert!(!rf(0.0, start, end, 0, s, d).1);
+        assert!(!rf(100.0, start, end, 0, s, d).1);
+    }
+
+    #[test]
+    fn resolve_frame_normal_backward() {
+        let (start, end) = (0, 10);
+        let s = PlaybackStyle::Normal;
+        let d = PlaybackDirection::Backward;
+
+        assert_eq!(rf(0.0, start, end, 1, s, d), (10.0, false));
+        assert_eq!(rf(3.0, start, end, 1, s, d), (7.0, false));
+        assert_eq!(rf(10.0, start, end, 1, s, d), (0.0, false));
+        assert_eq!(rf(11.0, start, end, 1, s, d), (0.0, true));
+        assert_eq!(rf(50.0, start, end, 1, s, d), (0.0, true));
+        // Infinite: cycle wraps; phase=15 → phase mod 11 = 4 → frame = end - 4 = 6.
+        assert_eq!(rf(15.0, start, end, -1, s, d), (6.0, false));
+    }
+
+    #[test]
+    fn resolve_frame_pingpong_forward() {
+        // start=0 end=10. cycle = 22 (forward 0..10 then reverse 10..0,
+        // peak 10 appears at phase 10 and phase 11 to match SS6).
+        let (start, end) = (0, 10);
+        let s = PlaybackStyle::PingPong;
+        let d = PlaybackDirection::Forward;
+
+        assert_eq!(rf(0.0, start, end, 1, s, d), (0.0, false));
+        assert_eq!(rf(5.0, start, end, 1, s, d), (5.0, false));
+        assert_eq!(rf(10.0, start, end, 1, s, d), (10.0, false));
+        assert_eq!(rf(11.0, start, end, 1, s, d), (10.0, false)); // peak duplicated
+        assert_eq!(rf(12.0, start, end, 1, s, d), (9.0, false));
+        assert_eq!(rf(21.0, start, end, 1, s, d), (0.0, false));
+        assert_eq!(rf(22.0, start, end, 1, s, d), (0.0, true));
+
+        // 2 cycles = 44
+        assert_eq!(rf(22.0, start, end, 2, s, d), (0.0, false));
+        assert_eq!(rf(33.0, start, end, 2, s, d), (10.0, false));
+        assert_eq!(rf(44.0, start, end, 2, s, d), (0.0, true));
+
+        // Infinite
+        assert_eq!(rf(22.0, start, end, -1, s, d), (0.0, false));
+        assert_eq!(rf(33.0, start, end, -1, s, d), (10.0, false));
+    }
+
+    #[test]
+    fn resolve_frame_pingpong_backward() {
+        let (start, end) = (0, 10);
+        let s = PlaybackStyle::PingPong;
+        let d = PlaybackDirection::Backward;
+
+        assert_eq!(rf(0.0, start, end, 1, s, d), (10.0, false));
+        assert_eq!(rf(5.0, start, end, 1, s, d), (5.0, false));
+        assert_eq!(rf(10.0, start, end, 1, s, d), (0.0, false));
+        assert_eq!(rf(11.0, start, end, 1, s, d), (0.0, false)); // trough duplicated
+        assert_eq!(rf(21.0, start, end, 1, s, d), (10.0, false));
+        assert_eq!(rf(22.0, start, end, 1, s, d), (10.0, true));
+    }
+
+    #[test]
+    fn resolve_frame_zero_length_section_clamps() {
+        // end == start → single-frame section, length=1, valid.
+        let s = PlaybackStyle::Normal;
+        let d = PlaybackDirection::Forward;
+        assert_eq!(rf(0.0, 5, 5, 1, s, d), (5.0, false));
+        assert_eq!(rf(1.0, 5, 5, 1, s, d), (5.0, true));
+        assert_eq!(rf(100.0, 5, 5, -1, s, d), (5.0, false));
+    }
+
+    #[test]
+    fn set_frame_relative_applies_section_and_style() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 100, 30);
+        // section [10, 20] inclusive → 11-frame cycle
+        t.set_animation_section(10, 20);
+        t.set_loops(-1);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::Normal);
+
+        t.set_frame_relative(0.0);
+        assert_eq!(t.get_frame_no(), 10.0);
+        t.set_frame_relative(5.0);
+        assert_eq!(t.get_frame_no(), 15.0);
+        t.set_frame_relative(10.0);
+        assert_eq!(t.get_frame_no(), 20.0);
+        t.set_frame_relative(11.0);
+        assert_eq!(t.get_frame_no(), 10.0);
+        t.set_frame_relative(15.0);
+        assert_eq!(t.get_frame_no(), 14.0);
+    }
 
     #[test]
     fn test_normal_playback_no_loop() {

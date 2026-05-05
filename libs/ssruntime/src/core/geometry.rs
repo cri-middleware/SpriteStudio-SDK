@@ -1,4 +1,3 @@
-use crate::core::math::{cosf, sinf};
 use crate::core::matrix::SsMatrix4x4;
 use wide::{CmpGt, CmpLt, f32x4};
 
@@ -195,17 +194,12 @@ pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32
     let uv_u = [l, l + sml / sw * (r - l), r - smr / sw * (r - l), r];
     let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
 
-    let mut grid = NineSliceGrid { vertices_x: [0.0; 16], vertices_y: [0.0; 16], uvs_u: [0.0; 16], uvs_v: [0.0; 16] };
-
-    for row in 0..4 {
-        let offset = row * 4;
-        grid.vertices_x[offset..offset + 4].copy_from_slice(&vx);
-        grid.vertices_y[offset..offset + 4].fill(vy[row]);
-        grid.uvs_u[offset..offset + 4].copy_from_slice(&uv_u);
-        grid.uvs_v[offset..offset + 4].fill(uv_v[row]);
+    NineSliceGrid {
+        vertices_x: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::from(vx); 4]) },
+        vertices_y: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::splat(vy[0]), f32x4::splat(vy[1]), f32x4::splat(vy[2]), f32x4::splat(vy[3])]) },
+        uvs_u: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::from(uv_u); 4]) },
+        uvs_v: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::splat(uv_v[0]), f32x4::splat(uv_v[1]), f32x4::splat(uv_v[2]), f32x4::splat(uv_v[3])]) },
     }
-
-    grid
 }
 
 /// Primitive shape types supported by Shape Parts.
@@ -239,37 +233,55 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             // Center + 3 points
             out_x[0] = 0.0;
             out_y[0] = 0.0;
-            for i in 0..3 {
-                let rad = (120.0 * i as f32) * core::f32::consts::PI / 180.0;
-                let s = sinf(rad);
-                let c = cosf(rad);
-                out_x[i + 1] = s * hw;
-                out_y[i + 1] = c * hh;
-            }
+
+            // Angles: 0, 120, 240 degrees in radians
+            const DEG120_RAD: f32 = 120.0 * core::f32::consts::PI / 180.0;
+            let rads = f32x4::from([0.0, DEG120_RAD, DEG120_RAD * 2.0, 0.0]);
+            let (s, c) = rads.sin_cos();
+
+            let vx = s * hw;
+            let vy = c * hh;
+
+            out_x[1..5].copy_from_slice(&vx.to_array());
+            out_y[1..5].copy_from_slice(&vy.to_array());
+
             out_x[4] = out_x[1]; // Close the fan
             out_y[4] = out_y[1];
             count = 5;
         }
         ShapeType::Star => {
-            // Center + 10 points
+            // Center + 10 outer points + closing vertex (so a TRIANGLE_FAN consumer
+            // gets all 10 wedges).
             out_x[0] = 0.0;
             out_y[0] = 0.0;
-            for i in 0..10 {
-                let rad = (36.0 * i as f32) * core::f32::consts::PI / 180.0;
-                let r_scale = if i % 2 == 0 { 1.0 } else { 0.382 }; // Golden ratio related for star
-                let s = sinf(rad);
-                let c = cosf(rad);
-                out_x[i + 1] = s * hw * r_scale;
-                out_y[i + 1] = c * hh * r_scale;
+
+            let hw_simd = f32x4::splat(hw);
+            let hh_simd = f32x4::splat(hh);
+            let r_scale = f32x4::from([1.0, 0.382, 1.0, 0.382]);
+
+            for i in (0..10).step_by(4) {
+                let idx = f32x4::from([i as f32, (i + 1) as f32, (i + 2) as f32, (i + 3) as f32]);
+                let rad = idx * (36.0 * core::f32::consts::PI / 180.0);
+                let (s, c) = rad.sin_cos();
+
+                let vx = s * hw_simd * r_scale;
+                let vy = c * hh_simd * r_scale;
+
+                let end = (i + 1 + 4).min(11);
+                let len = end - (i + 1);
+                let vx_arr = vx.to_array();
+                let vy_arr = vy.to_array();
+                out_x[i + 1..end].copy_from_slice(&vx_arr[..len]);
+                out_y[i + 1..end].copy_from_slice(&vy_arr[..len]);
             }
-            count = 11;
+            out_x[11] = out_x[1];
+            out_y[11] = out_y[1];
+            count = 12;
         }
         ShapeType::Arrow => {
-            // Simplified arrow (7 points)
-            // stem: (-hw/4, -hh) to (hw/4, 0)
-            // head: (-hw, 0), (hw, 0), (0, hh)
             let sx = hw * 0.5;
             let sy = 0.0;
+            // 7 points
             out_x[0..7].copy_from_slice(&[-sx / 2.0, sx / 2.0, sx / 2.0, hw, 0.0, -hw, -sx / 2.0]);
             out_y[0..7].copy_from_slice(&[-hh, -hh, sy, sy, hh, sy, sy]);
             count = 7;
@@ -549,5 +561,15 @@ mod tests {
         assert_eq!(count, 4);
         assert_approx_eq(x[0], -50.0);
         assert_approx_eq(y[0], 100.0);
+    }
+
+    #[test]
+    fn test_compute_shape_vertices_star_closes_fan() {
+        let (count, x, y) = compute_shape_vertices(ShapeType::Star, (100.0, 200.0));
+        assert_eq!(count, 12);
+        assert_approx_eq(x[0], 0.0);
+        assert_approx_eq(y[0], 0.0);
+        assert_approx_eq(x[11], x[1]);
+        assert_approx_eq(y[11], y[1]);
     }
 }

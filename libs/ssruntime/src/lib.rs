@@ -289,7 +289,15 @@ impl<'a> AnimationResource<'a> {
                     let fb_parts = ssab.parts();
                     for (i, p) in parts.iter().enumerate() {
                         let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index));
+                        let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
+                        let shape_kind = fb_parts.map(|meta| meta.get(i)).and_then(|part_data| part_data.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
+                            ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
+                            ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
+                            ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
+                            ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
+                            _ => None,
+                        });
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -348,6 +356,13 @@ struct ContextBuffers<'a> {
     collected_event_indices: Vec<i32>,
     world_matrices: Vec<crate::core::SsMatrix4x4>,
     inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
+    local_uvs: Vec<f32>,
+    cell_meta_per_part: Vec<f32>,
+    cell_texture_hashes: Vec<u32>,
+    local_vertices: Vec<f32>,
+    shape_vertices: Vec<f32>,
+    shape_vertex_box_coords: Vec<f32>,
+    shape_vertex_counts: Vec<i32>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -363,6 +378,13 @@ impl<'a> ContextBuffers<'a> {
             collected_event_indices: Vec::new(),
             world_matrices: Vec::new(),
             inheritance_matrices: Vec::new(),
+            local_uvs: Vec::new(),
+            cell_meta_per_part: Vec::new(),
+            cell_texture_hashes: Vec::new(),
+            local_vertices: Vec::new(),
+            shape_vertices: Vec::new(),
+            shape_vertex_box_coords: Vec::new(),
+            shape_vertex_counts: Vec::new(),
         }
     }
 }
@@ -376,7 +398,7 @@ pub struct Context<'a> {
     coordinate_system: crate::core::SsCoordinateSystem,
     origin: crate::core::SsOrigin,
     unit: crate::core::SsUnit,
-    world_matrix_calculation_enabled: bool,
+    render_mode: crate::core::RenderMode,
     z_order: crate::core::z_order::ZOrderTable,
 }
 
@@ -397,7 +419,7 @@ impl<'a> Context<'a> {
             coordinate_system: crate::core::SsCoordinateSystem::default(),
             origin: crate::core::SsOrigin::default(),
             unit: crate::core::SsUnit::default(),
-            world_matrix_calculation_enabled: true,
+            render_mode: crate::core::RenderMode::default(),
             z_order: crate::core::z_order::ZOrderTable::new(),
         }
     }
@@ -411,16 +433,16 @@ impl<'a> Context<'a> {
         self.coordinate_system = crate::core::SsCoordinateSystem::default();
         self.origin = crate::core::SsOrigin::default();
         self.unit = crate::core::SsUnit::default();
-        self.world_matrix_calculation_enabled = true;
+        self.render_mode = crate::core::RenderMode::default();
         self.z_order = crate::core::z_order::ZOrderTable::new();
     }
 
-    pub fn set_world_matrix_calculation_enabled(&mut self, enabled: bool) {
-        self.world_matrix_calculation_enabled = enabled;
+    pub fn set_render_mode(&mut self, mode: crate::core::RenderMode) {
+        self.render_mode = mode;
     }
 
-    pub fn is_world_matrix_calculation_enabled(&self) -> bool {
-        self.world_matrix_calculation_enabled
+    pub fn render_mode(&self) -> crate::core::RenderMode {
+        self.render_mode
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
@@ -500,6 +522,20 @@ impl<'a> Context<'a> {
         self.buffers.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         self.buffers.inheritance_matrices.clear();
         self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        self.buffers.local_uvs.clear();
+        self.buffers.local_uvs.resize(num_parts * 10, 0.0);
+        self.buffers.cell_meta_per_part.clear();
+        self.buffers.cell_meta_per_part.resize(num_parts * 6, 0.0);
+        self.buffers.cell_texture_hashes.clear();
+        self.buffers.cell_texture_hashes.resize(num_parts, 0);
+        self.buffers.local_vertices.clear();
+        self.buffers.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
+        self.buffers.shape_vertices.clear();
+        self.buffers.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        self.buffers.shape_vertex_box_coords.clear();
+        self.buffers.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        self.buffers.shape_vertex_counts.clear();
+        self.buffers.shape_vertex_counts.resize(num_parts, 0);
 
         self.z_order.setup(&metadata.cached_parts);
 
@@ -525,6 +561,7 @@ impl<'a> Context<'a> {
         }
 
         self.fb.reset();
+
         let offset = core::framedata::get_frame_data(
             &mut self.fb,
             &metadata.cached_parts,
@@ -536,6 +573,9 @@ impl<'a> Context<'a> {
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
             &mut self.buffers.cursors,
+            &mut self.buffers.cell_meta_per_part,
+            &mut self.buffers.cell_texture_hashes,
+            &mut self.buffers.local_vertices,
             self.coordinate_system,
             self.origin,
             self.unit,
@@ -543,9 +583,13 @@ impl<'a> Context<'a> {
             metadata.canvas_height,
         );
 
-        if self.world_matrix_calculation_enabled {
+        if self.render_mode == crate::core::RenderMode::Direct {
             self.compute_matrices(&metadata.cached_parts);
         }
+
+        self.compute_local_uvs(&metadata.cached_parts);
+
+        self.compute_shape_vertices(&metadata.cached_parts);
 
         self.z_order.update(&self.buffers.parts_vec);
 
@@ -569,6 +613,109 @@ impl<'a> Context<'a> {
             let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
             self.buffers.inheritance_matrices[i] = inh_m;
             self.buffers.world_matrices[i] = draw_m;
+        }
+    }
+
+    #[allow(clippy::needless_range_loop)]
+    fn compute_local_uvs(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let num_parts = self.buffers.parts_vec.len();
+        if self.buffers.local_uvs.len() != num_parts * 10 {
+            self.buffers.local_uvs.resize(num_parts * 10, 0.0);
+        }
+        for slot in self.buffers.local_uvs.iter_mut() {
+            *slot = 0.0;
+        }
+
+        for i in 0..num_parts {
+            let state = &self.buffers.parts_vec[i];
+            if state.cell() < 0 {
+                continue;
+            }
+            let cursor = self.buffers.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
+            let Some(meta) = cached_parts[i].resolved_cells.get(cursor) else { continue };
+            if meta.size_w == 0.0 && meta.size_h == 0.0 {
+                continue;
+            }
+
+            let rect_right = meta.rect_left + meta.size_w;
+            let rect_bottom = meta.rect_top + meta.size_h;
+
+            let (tu, tv, rot_deg, su, sv, fh, fv, ifh, ifv) =
+                (state.uv_translation_x() * meta.tex_w, state.uv_translation_y() * meta.tex_h, state.uv_rotation_z(), state.uv_scale_x(), state.uv_scale_y(), state.flip_h(), state.flip_v(), state.img_flip_h(), state.img_flip_v());
+
+            let (us, vs) = crate::core::geometry::compute_local_uvs((meta.rect_left, meta.rect_top, rect_right, rect_bottom), (tu, tv, rot_deg, su, sv), (fh, fv), (ifh, ifv), meta.rotated);
+
+            let offset = i * 10;
+            for k in 0..5 {
+                self.buffers.local_uvs[offset + k * 2] = us[k];
+                self.buffers.local_uvs[offset + k * 2 + 1] = vs[k];
+            }
+        }
+    }
+
+    #[allow(clippy::needless_range_loop)]
+    fn compute_shape_vertices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let num_parts = self.buffers.parts_vec.len();
+        let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
+        if self.buffers.shape_vertices.len() != num_parts * stride {
+            self.buffers.shape_vertices.resize(num_parts * stride, 0.0);
+        }
+        if self.buffers.shape_vertex_box_coords.len() != num_parts * stride {
+            self.buffers.shape_vertex_box_coords.resize(num_parts * stride, 0.0);
+        }
+        if self.buffers.shape_vertex_counts.len() != num_parts {
+            self.buffers.shape_vertex_counts.resize(num_parts, 0);
+        }
+        for slot in self.buffers.shape_vertices.iter_mut() {
+            *slot = 0.0;
+        }
+        for slot in self.buffers.shape_vertex_box_coords.iter_mut() {
+            *slot = 0.0;
+        }
+        for slot in self.buffers.shape_vertex_counts.iter_mut() {
+            *slot = 0;
+        }
+
+        let coordinate_system = self.coordinate_system;
+
+        for i in 0..num_parts {
+            let Some(shape_kind) = cached_parts[i].shape_kind else { continue };
+            let state = &self.buffers.parts_vec[i];
+            let size_x = state.size_x();
+            let size_y = state.size_y();
+            if size_x <= 0.0 || size_y <= 0.0 {
+                continue;
+            }
+
+            let (count, vx, vy) = crate::core::geometry::compute_shape_vertices(shape_kind, (size_x, size_y));
+            if count < 3 {
+                continue;
+            }
+
+            let mut effective_pivot_y = state.pivot_y();
+            if coordinate_system == crate::core::SsCoordinateSystem::YDown {
+                effective_pivot_y = -effective_pivot_y;
+            }
+            let tx = -state.pivot_x() * size_x;
+            let ty = -effective_pivot_y * size_y;
+            let hw = size_x * 0.5;
+            let hh = size_y * 0.5;
+
+            let offset = i * stride;
+            for v in 0..count {
+                let mut y = vy[v] + ty;
+                if coordinate_system == crate::core::SsCoordinateSystem::YDown {
+                    y = -y;
+                }
+                self.buffers.shape_vertices[offset + 2 * v] = vx[v] + tx;
+                self.buffers.shape_vertices[offset + 2 * v + 1] = y;
+
+                let fx = (vx[v] + hw) / size_x;
+                let fy = (hh - vy[v]) / size_y;
+                self.buffers.shape_vertex_box_coords[offset + 2 * v] = fx;
+                self.buffers.shape_vertex_box_coords[offset + 2 * v + 1] = fy;
+            }
+            self.buffers.shape_vertex_counts[i] = count as i32;
         }
     }
 
@@ -596,6 +743,62 @@ impl<'a> Context<'a> {
 
     pub fn get_z_order_len(&self) -> usize {
         self.z_order.len()
+    }
+
+    pub fn get_local_uvs_ptr(&self) -> *const f32 {
+        self.buffers.local_uvs.as_ptr()
+    }
+
+    pub fn get_local_uvs_len(&self) -> usize {
+        self.buffers.local_uvs.len()
+    }
+
+    pub fn get_shape_vertices_ptr(&self) -> *const f32 {
+        self.buffers.shape_vertices.as_ptr()
+    }
+
+    pub fn get_shape_vertices_len(&self) -> usize {
+        self.buffers.shape_vertices.len()
+    }
+
+    pub fn get_shape_vertex_box_coords_ptr(&self) -> *const f32 {
+        self.buffers.shape_vertex_box_coords.as_ptr()
+    }
+
+    pub fn get_shape_vertex_box_coords_len(&self) -> usize {
+        self.buffers.shape_vertex_box_coords.len()
+    }
+
+    pub fn get_shape_vertex_counts_ptr(&self) -> *const i32 {
+        self.buffers.shape_vertex_counts.as_ptr()
+    }
+
+    pub fn get_shape_vertex_counts_len(&self) -> usize {
+        self.buffers.shape_vertex_counts.len()
+    }
+
+    pub fn get_cell_meta_ptr(&self) -> *const f32 {
+        self.buffers.cell_meta_per_part.as_ptr()
+    }
+
+    pub fn get_cell_meta_len(&self) -> usize {
+        self.buffers.cell_meta_per_part.len()
+    }
+
+    pub fn get_cell_texture_hashes_ptr(&self) -> *const u32 {
+        self.buffers.cell_texture_hashes.as_ptr()
+    }
+
+    pub fn get_cell_texture_hashes_len(&self) -> usize {
+        self.buffers.cell_texture_hashes.len()
+    }
+
+    pub fn get_local_vertices_ptr(&self) -> *const f32 {
+        self.buffers.local_vertices.as_ptr()
+    }
+
+    pub fn get_local_vertices_len(&self) -> usize {
+        self.buffers.local_vertices.len()
     }
 
     // setting getter functions
@@ -758,6 +961,15 @@ impl<'a> Context<'a> {
 
     pub fn set_frame_no(&mut self, frame: f32) {
         self.controller.set_frame_no(frame);
+    }
+
+    /// Sets the playback position based on `diff` (frames elapsed since
+    /// playback started, with per-instance speed already applied), applying
+    /// the configured section / loops / style / direction. Used by parent
+    /// Players to drive child Instance / Effect Players deterministically
+    /// across reverse, seek, and frame-skip operations.
+    pub fn set_frame_relative(&mut self, diff: f32) {
+        self.controller.set_frame_relative(diff);
     }
 
     pub fn next_frame(&mut self) {
@@ -947,15 +1159,19 @@ mod tests {
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
 
-        // Test frame 11 (not interpolating, no key)
+        // Test frame 11 (past the last keyframe — value held at last key).
+        // The flag is now ON: per the updated `evaluate_float` semantics, ON
+        // means "value comes from animation data", which still holds when the
+        // value is a held last keyframe. Render-path consumers
+        // (e.g. Godot's `use_advanced`) and cell-default fallbacks both rely
+        // on this signal to avoid silently dropping animated state.
         {
             let frame_data_buf = context.get_frame_data(11.0).expect("Failed to get frame data at frame 11");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
             let parts = frame_data.parts().expect("No parts in frame data");
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
-            // Should NOT contain AttributePosX update flag because it's not a keyframe and no interpolation
-            assert!(!part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+            assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
     }
 
@@ -1029,6 +1245,93 @@ mod tests {
     }
 
     #[test]
+    fn test_local_uvs() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let _ = context.get_frame_data(0.0).expect("Failed to get frame data");
+
+        let uvs_ptr = context.get_local_uvs_ptr();
+        let uvs_len = context.get_local_uvs_len();
+        let num_parts = context.buffers.parts_vec.len();
+        // 5 vertices * 2 floats per part.
+        assert_eq!(uvs_len, num_parts * 10);
+
+        let uvs = unsafe { ::core::slice::from_raw_parts(uvs_ptr, uvs_len) };
+
+        // At least one cell-bearing part must have produced non-zero UVs.
+        // (Cell-less parts and parts whose cell can't be resolved keep their
+        // all-zero default — we don't make a stronger per-part assertion here
+        // since the test fixture's exact part roster is incidental.)
+        let any_nonzero = uvs.iter().any(|f| *f != 0.0);
+        assert!(any_nonzero, "Expected at least one part to have non-zero UVs");
+
+        // Find any part whose UV slot was populated with a non-degenerate
+        // quad. There should be at least one such part in a basic animation.
+        let any_valid_quad = (0..num_parts).any(|i| {
+            let off = i * 10;
+            let lt_u = uvs[off];
+            let rt_u = uvs[off + 2];
+            let lt_v = uvs[off + 1];
+            let lb_v = uvs[off + 5];
+            (rt_u - lt_u).abs() > f32::EPSILON && (lb_v - lt_v).abs() > f32::EPSILON
+        });
+        assert!(any_valid_quad, "Expected at least one part to have a non-degenerate UV quad");
+
+        // Recomputing on a different frame should still yield a sane buffer.
+        let _ = context.get_frame_data(1.0).expect("Failed to get frame data on frame 1");
+        let uvs_after = unsafe { ::core::slice::from_raw_parts(context.get_local_uvs_ptr(), context.get_local_uvs_len()) };
+        assert_eq!(uvs_after.len(), num_parts * 10);
+        assert!(uvs_after.iter().any(|f| *f != 0.0));
+    }
+
+    #[test]
+    fn test_cell_meta_per_part() {
+        // Per-part cell metadata exposed via FFI lets Players drop their own
+        // cellmap binary search. Layout: 6 floats per part
+        // `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]`.
+        // Cell-bearing parts populate it; the rest stay zero.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let _ = context.get_frame_data(0.0).expect("Failed to get frame data");
+
+        let meta_ptr = context.get_cell_meta_ptr();
+        let meta_len = context.get_cell_meta_len();
+        let num_parts = context.buffers.parts_vec.len();
+        assert_eq!(meta_len, num_parts * 6);
+
+        let meta = unsafe { ::core::slice::from_raw_parts(meta_ptr, meta_len) };
+
+        // At least one cell-bearing part must have non-zero size_w/size_h
+        // (zero pivot is legal for a centered cell, so use size as the signal).
+        let any_nonzero_size = (0..num_parts).any(|i| {
+            let off = i * 6;
+            meta[off + 2] != 0.0 || meta[off + 3] != 0.0
+        });
+        assert!(any_nonzero_size, "Expected at least one part to have non-zero cell size_w/size_h");
+
+        // Recomputing should produce a sane buffer of the same shape.
+        let _ = context.get_frame_data(1.0).expect("Failed to get frame data on frame 1");
+        let meta_after = unsafe { ::core::slice::from_raw_parts(context.get_cell_meta_ptr(), context.get_cell_meta_len()) };
+        assert_eq!(meta_after.len(), num_parts * 6);
+    }
+
+    #[test]
     fn test_deform_animation() {
         prepare();
         let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7_ssab/deform.ssab");
@@ -1088,6 +1391,37 @@ mod tests {
                 println!("Frame 10 Vertex Indices: {:?}", deform_attr.index().map(|i| i.len()));
             }
         }
+    }
+
+    #[test]
+    fn test_shape_default_size_64x64() {
+        // SS6 SsAnimeDecoder::updateState assigns a (64,64) initial size to
+        // shape parts before reading animation data. The fixture's shape parts
+        // (`shape_1`/`shape_2`/`shape_3` in `shape.ssab`) have no SizeX/SizeY
+        // keyframes, so the runtime must surface the SS6 default instead of the
+        // cell-size fallback used for cell-bearing types.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7_ssab/shape.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read shape.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        let parts_meta = ssab.parts().expect("No parts in ssab");
+        let shape_idx = parts_meta.iter().position(|p| p.name() == Some("shape_1")).expect("shape_1 not found") as i16;
+
+        let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data");
+        let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+        let parts = frame_data.parts().expect("No parts in frame data");
+        let state = parts.iter().find(|p| p.part_index() == shape_idx).expect("shape_1 state not found");
+
+        assert_eq!(state.size_x(), 64.0, "Shape part default size_x must be 64.0");
+        assert_eq!(state.size_y(), 64.0, "Shape part default size_y must be 64.0");
     }
 
     #[test]

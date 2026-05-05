@@ -382,6 +382,191 @@ pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_local_uvs_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_local_uvs_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part resolved cell metadata for the current frame, written by
+/// `ss_runtime_get_frame_data`. Layout:
+/// `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` per part,
+/// indexed by `part_index * 6`. `(rect_left, rect_top)` is the cell
+/// rectangle origin in the cellmap's texture pixel space, letting a
+/// Player build a complete source rect (origin + size) without its own
+/// cellmap lookup. Parts without a current cell carry zeros.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_cell_meta_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_cell_meta_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part FNV-1a hash of the cellmap name owning the current cell, written
+/// by `ss_runtime_get_frame_data`. Indexed by `part_index`. Matches
+/// `cellmaps[map_id].name_hash` in the SSAB binary, so a Player can resolve
+/// its texture table directly without walking `FrameData::cells` and
+/// `SsAnimeBinary::cellmaps`. Parts without a current cell carry zero.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_cell_texture_hashes(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_cell_texture_hashes_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_cell_texture_hashes_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part local-space vertex positions for the current frame, written by
+/// `ss_runtime_get_frame_data`. Layout per part:
+/// `[lt.x, lt.y, rt.x, rt.y, lb.x, lb.y, rb.x, rb.y, center.x, center.y]`
+/// = 10 floats, indexed by `part_index * 10`. Coordinates are in part-local
+/// space with `coordinate_system` (Y-Up/Y-Down) flip already applied, so a
+/// Player just multiplies them by the world matrix. Includes pivot, image
+/// flip, and per-frame vertex deformation. Parts without a current cell
+/// carry zeros. Replaces `FrameData::vertices` for renderers that consume
+/// pre-resolved SoA buffers.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_local_vertices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_local_vertices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part shape vertex positions for the current frame, written by
+/// `ss_runtime_get_frame_data`. Layout: 12 vertices × `(x, y)` = 24 floats
+/// per part, indexed by `part_index * 24`. Vertices are in local space,
+/// post-pivot, post-coord-system, so a Player just multiplies them by the
+/// world matrix. Only the first
+/// `ss_runtime_get_shape_vertex_counts(...)[part_index]` vertices are
+/// valid; remaining slots are zero-initialized. Non-shape parts carry zero
+/// count and zero-filled vertex slots.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_vertices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_vertices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-vertex normalized bounding-box coordinates paired with
+/// `ss_runtime_get_shape_vertices`. Layout: 12 vertices × `(fx, fy)` = 24
+/// floats per part, indexed by `part_index * 24`. `(0, 0)` corresponds to
+/// the LT corner of the shape's pre-pivot bounding box, `(1, 1)` to the RB
+/// corner, regardless of pivot offset or coordinate system. Players use
+/// this to interpolate the four part-color corners without re-deriving the
+/// box layout.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_vertex_box_coords_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_vertex_box_coords_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part valid vertex count for `ss_runtime_get_shape_vertices`. Indexed
+/// by `part_index`. Zero for parts that are not shape parts (or shape
+/// parts whose size collapsed to zero).
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_vertex_counts_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_vertex_counts_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_z_order(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.last_error = 0;
@@ -589,6 +774,20 @@ pub extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_float) 
     }
 }
 
+/// Sets the playback position based on `diff` (frames elapsed since playback
+/// started, with per-instance speed already applied), applying the configured
+/// `set_animation_section`, `set_loops`, and `set_playback_direction` values.
+///
+/// This is the entry point a parent Player uses to drive a child Instance or
+/// Effect Player deterministically: it works correctly under reverse, seek,
+/// and frame-skip because the same `diff` always produces the same frame.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_frame_relative(context: *mut c_void, diff: c_float) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.set_frame_relative(diff);
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_next_frame(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
@@ -686,19 +885,23 @@ pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame:
     crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
 }
 
+/// Set the render mode. `mode` is interpreted as:
+///   0 = Direct       (pre-bake world matrices; default)
+///   1 = SceneGraph   (skip world matrix pre-computation)
+/// Unknown values fall back to Direct.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_set_world_matrix_calculation_enabled(context: *mut c_void, enabled: bool) {
+pub unsafe extern "C" fn ss_runtime_set_render_mode(context: *mut c_void, mode: u8) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.set_world_matrix_calculation_enabled(enabled);
+        ffi_context.ctx.set_render_mode(crate::core::RenderMode::from_u8(mode));
     }
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_runtime_is_world_matrix_calculation_enabled(context: *mut c_void) -> bool {
+pub unsafe extern "C" fn ss_runtime_get_render_mode(context: *mut c_void) -> u8 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.is_world_matrix_calculation_enabled();
+        return ffi_context.ctx.render_mode() as u8;
     }
-    false
+    crate::core::RenderMode::Direct as u8
 }
 
 #[unsafe(no_mangle)]
@@ -864,48 +1067,6 @@ pub unsafe extern "C" fn ss_vertex_compute_local(
     unsafe {
         *out_x.cast::<[f32; 5]>() = vx;
         *out_y.cast::<[f32; 5]>() = vy;
-    }
-    true
-}
-
-/// Computes the local UV coordinates for a part.
-///
-/// # Safety
-/// - `input_data`: Must point to an array of at least 9 floats.
-///   Layout: [left, top, right, bottom, trans_u, trans_v, rot_deg, scale_u, scale_v]
-/// - `out_u`, `out_v`: Must point to buffers with at least 5 floats.
-#[unsafe(no_mangle)]
-/// Computes the local UV coordinates for a part using primitive parameters.
-/// out_u, out_v: pointers to float arrays of size 5 to store results.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_uv_compute_local(
-    u_left: f32,
-    v_top: f32,
-    u_right: f32,
-    v_bottom: f32,
-    trans_u: f32,
-    trans_v: f32,
-    rot_deg: f32,
-    scale_u: f32,
-    scale_v: f32,
-    part_flip_h: bool,
-    part_flip_v: bool,
-    img_flip_h: bool,
-    img_flip_v: bool,
-    rotated: bool,
-    out_u: *mut f32,
-    out_v: *mut f32,
-) -> bool {
-    if out_u.is_null() || out_v.is_null() {
-        return false;
-    }
-
-    let (u, v) = crate::core::geometry::compute_local_uvs((u_left, v_top, u_right, v_bottom), (trans_u, trans_v, rot_deg, scale_u, scale_v), (part_flip_h, part_flip_v), (img_flip_h, img_flip_v), rotated);
-
-    unsafe {
-        *out_u.cast::<[f32; 5]>() = u;
-        *out_v.cast::<[f32; 5]>() = v;
     }
     true
 }

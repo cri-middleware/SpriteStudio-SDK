@@ -10449,6 +10449,7 @@ impl<'a> PartAttributeInstance<'a> {
   pub const VT_END_LABEL_HASH: ::flatbuffers::VOffsetT = 14;
   pub const VT_END_OFFSET: ::flatbuffers::VOffsetT = 16;
   pub const VT_SPEED: ::flatbuffers::VOffsetT = 18;
+  pub const VT_REVERSE: ::flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -10466,6 +10467,7 @@ impl<'a> PartAttributeInstance<'a> {
     builder.add_start_offset(args.start_offset);
     builder.add_start_label_hash(args.start_label_hash);
     builder.add_loop_num(args.loop_num);
+    builder.add_reverse(args.reverse);
     builder.add_independent(args.independent);
     builder.add_pingpong(args.pingpong);
     builder.finish()
@@ -10480,6 +10482,7 @@ impl<'a> PartAttributeInstance<'a> {
     let end_label_hash = self.end_label_hash();
     let end_offset = self.end_offset();
     let speed = self.speed();
+    let reverse = self.reverse();
     PartAttributeInstanceT {
       pingpong,
       independent,
@@ -10489,6 +10492,7 @@ impl<'a> PartAttributeInstance<'a> {
       end_label_hash,
       end_offset,
       speed,
+      reverse,
     }
   }
 
@@ -10548,6 +10552,13 @@ impl<'a> PartAttributeInstance<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<f32>(PartAttributeInstance::VT_SPEED, Some(0.0)).unwrap()}
   }
+  #[inline]
+  pub fn reverse(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributeInstance::VT_REVERSE, Some(false)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
@@ -10564,6 +10575,7 @@ impl ::flatbuffers::Verifiable for PartAttributeInstance<'_> {
      .visit_field::<u32>("end_label_hash", Self::VT_END_LABEL_HASH, false)?
      .visit_field::<i32>("end_offset", Self::VT_END_OFFSET, false)?
      .visit_field::<f32>("speed", Self::VT_SPEED, false)?
+     .visit_field::<bool>("reverse", Self::VT_REVERSE, false)?
      .finish();
     Ok(())
   }
@@ -10577,6 +10589,7 @@ pub struct PartAttributeInstanceArgs {
     pub end_label_hash: u32,
     pub end_offset: i32,
     pub speed: f32,
+    pub reverse: bool,
 }
 impl<'a> Default for PartAttributeInstanceArgs {
   #[inline]
@@ -10590,6 +10603,7 @@ impl<'a> Default for PartAttributeInstanceArgs {
       end_label_hash: 0,
       end_offset: 0,
       speed: 0.0,
+      reverse: false,
     }
   }
 }
@@ -10632,6 +10646,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeInstanceBuilder<
     self.fbb_.push_slot::<f32>(PartAttributeInstance::VT_SPEED, speed, 0.0);
   }
   #[inline]
+  pub fn add_reverse(&mut self, reverse: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributeInstance::VT_REVERSE, reverse, false);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributeInstanceBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAttributeInstanceBuilder {
@@ -10657,6 +10675,7 @@ impl ::core::fmt::Debug for PartAttributeInstance<'_> {
       ds.field("end_label_hash", &self.end_label_hash());
       ds.field("end_offset", &self.end_offset());
       ds.field("speed", &self.speed());
+      ds.field("reverse", &self.reverse());
       ds.finish()
   }
 }
@@ -10671,6 +10690,7 @@ pub struct PartAttributeInstanceT {
   pub end_label_hash: u32,
   pub end_offset: i32,
   pub speed: f32,
+  pub reverse: bool,
 }
 impl Default for PartAttributeInstanceT {
   fn default() -> Self {
@@ -10683,6 +10703,7 @@ impl Default for PartAttributeInstanceT {
       end_label_hash: 0,
       end_offset: 0,
       speed: 0.0,
+      reverse: false,
     }
   }
 }
@@ -10699,6 +10720,7 @@ impl PartAttributeInstanceT {
     let end_label_hash = self.end_label_hash;
     let end_offset = self.end_offset;
     let speed = self.speed;
+    let reverse = self.reverse;
     PartAttributeInstance::create(_fbb, &PartAttributeInstanceArgs{
       pingpong,
       independent,
@@ -10708,6 +10730,7 @@ impl PartAttributeInstanceT {
       end_label_hash,
       end_offset,
       speed,
+      reverse,
     })
   }
 }

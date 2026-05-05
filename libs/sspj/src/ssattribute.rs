@@ -505,6 +505,8 @@ pub struct SsAttributeInstanceKeyValue {
     pub pingpong: bool,
     #[serde(default)]
     pub independent: bool,
+    #[serde(default)]
+    pub reverse: bool,
     pub loop_num: i32,
     pub start_label: String,
     pub start_offset: i32,

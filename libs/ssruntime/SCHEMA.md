@@ -77,9 +77,9 @@ Complex attributes are stored in pools within `FrameData` to avoid duplicating l
 | PartState Index Field | Source: SSAB `PartAnimationData` Array | Table in FrameData | Description |
 |:---|:---|:---|:---|
 | `cell` | `cell_array` | `cells` | Reference to cell map and cell name hash. Normal drawing texture is derived from this attribute. |
-| `part_color` | `part_color_array` | `parts_color` | Interpolated 4-vertex color and blend type. |
+| `part_color` | `part_color_array` | `parts_color` | Per-vertex color and blend type. **The RGBA `a` channel is pre-multiplied with the part's hierarchical `alpha`**, so the Player can write the color directly without a second alpha multiply. |
 | `shader` | `shader_array` | `shaders` | Interpolated shader parameters and map IDs. |
-| `vertex` | `vertex_array` | `vertices` | Interpolated vertex coordinate offsets. |
+| `vertex` | `vertex_array` | `vertices` | **Pre-computed local vertex coordinates** for the part's quad. The four corners (`lt`/`rt`/`lb`/`rb`) are always populated with `pivot`, `size`, `img_flip_h/v`, and the interpolated raw deform offsets all applied; the Player consumes them directly through the world matrix. The fifth `center` vertex is populated **only when** `update_flag` has `AttributeVertex` or `AttributePartColor` set — those cases want a triangle fan from the center for smoother per-vertex deform / colour gradients. Otherwise `center` is `(0, 0)` and the Player should render the quad as two triangles from the four corners only. The raw deform offsets are not exposed; the `AttributeVertex` flag still indicates whether the part actually has deform animation in the source SSAB. |
 | `deform` | `deform_array` | `deforms` | Interpolated mesh deformation coordinates. |
 
 ---
