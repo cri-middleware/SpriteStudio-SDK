@@ -1268,6 +1268,37 @@ mod tests {
     }
 
     #[test]
+    fn test_shape_default_size_64x64() {
+        // SS6 SsAnimeDecoder::updateState assigns a (64,64) initial size to
+        // shape parts before reading animation data. The fixture's shape parts
+        // (`shape_1`/`shape_2`/`shape_3` in `shape.ssab`) have no SizeX/SizeY
+        // keyframes, so the runtime must surface the SS6 default instead of the
+        // cell-size fallback used for cell-bearing types.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7_ssab/shape.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read shape.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        let parts_meta = ssab.parts().expect("No parts in ssab");
+        let shape_idx = parts_meta.iter().position(|p| p.name() == Some("shape_1")).expect("shape_1 not found") as i16;
+
+        let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data");
+        let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
+        let parts = frame_data.parts().expect("No parts in frame data");
+        let state = parts.iter().find(|p| p.part_index() == shape_idx).expect("shape_1 state not found");
+
+        assert_eq!(state.size_x(), 64.0, "Shape part default size_x must be 64.0");
+        assert_eq!(state.size_y(), 64.0, "Shape part default size_y must be 64.0");
+    }
+
+    #[test]
     fn test_ssab_data_and_resource_separation() {
         prepare();
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");

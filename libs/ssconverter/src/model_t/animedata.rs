@@ -1438,7 +1438,32 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, part_anime);
     }
 
+    for part in parts_map.values() {
+        let index_part = part.array_index as usize;
+        apply_part_type_defaults(&mut parts_animation_data_t[index_part], &part.part_type);
+    }
+
     parts_animation_data_t
+}
+
+fn apply_part_type_defaults(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part_type: &sspj::sstypes::SsPartType) {
+    if matches!(part_type, sspj::sstypes::SsPartType::Shape) {
+        const SHAPE_DEFAULT_SIZE: f32 = 64.0;
+        if p_args.size_x_array.as_ref().is_none_or(|v| v.is_empty()) {
+            p_args.size_x_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+        }
+        if p_args.size_y_array.as_ref().is_none_or(|v| v.is_empty()) {
+            p_args.size_y_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+        }
+    }
+}
+
+fn float_value_constant_key(value: f32) -> ssab::ssab::ss::format::PartAnimationDataFloatValueT {
+    let mut k = ssab::ssab::ss::format::PartAnimationDataFloatValueT::default();
+    k.index = 0;
+    k.interpolation = ssab::ssab::ss::format::InterpolationType::None;
+    k.value = value;
+    k
 }
 
 fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ssab::ss::format::BlendType {
