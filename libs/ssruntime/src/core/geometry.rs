@@ -256,7 +256,8 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             count = 5;
         }
         ShapeType::Star => {
-            // Center + 10 outer points + closing vertex
+            // Center + 10 outer points + closing vertex (so a TRIANGLE_FAN consumer
+            // gets all 10 wedges).
             out_x[0] = 0.0;
             out_y[0] = 0.0;
 
@@ -279,7 +280,6 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
                 out_x[i + 1..end].copy_from_slice(&vx_arr[..len]);
                 out_y[i + 1..end].copy_from_slice(&vy_arr[..len]);
             }
-
             out_x[11] = out_x[1];
             out_y[11] = out_y[1];
             count = 12;

@@ -426,6 +426,87 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part shape vertex positions for the current frame, written by
+/// `ss_runtime_get_frame_data`. Layout: 12 vertices × `(x, y)` = 24 floats
+/// per part, indexed by `part_index * 24`. Vertices are in local space,
+/// post-pivot, post-coord-system, so a Player just multiplies them by the
+/// world matrix. Only the first
+/// `ss_runtime_get_shape_vertex_counts(...)[part_index]` vertices are
+/// valid; remaining slots are zero-initialized. Non-shape parts carry zero
+/// count and zero-filled vertex slots.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_vertices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_vertices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-vertex normalized bounding-box coordinates paired with
+/// `ss_runtime_get_shape_vertices`. Layout: 12 vertices × `(fx, fy)` = 24
+/// floats per part, indexed by `part_index * 24`. `(0, 0)` corresponds to
+/// the LT corner of the shape's pre-pivot bounding box, `(1, 1)` to the RB
+/// corner, regardless of pivot offset or coordinate system. Players use
+/// this to interpolate the four part-color corners without re-deriving the
+/// box layout.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_vertex_box_coords_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_vertex_box_coords_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part valid vertex count for `ss_runtime_get_shape_vertices`. Indexed
+/// by `part_index`. Zero for parts that are not shape parts (or shape
+/// parts whose size collapsed to zero).
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_vertex_counts_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_vertex_counts_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.

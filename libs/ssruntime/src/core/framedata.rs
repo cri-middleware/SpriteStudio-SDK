@@ -44,6 +44,8 @@ const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateA
 pub const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
 pub const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
 
+pub const SHAPE_VERTICES_STRIDE: usize = 24;
+
 #[derive(Clone, Copy, Default)]
 pub struct ResolvedCellMeta {
     pub pivot_x: f32,
@@ -113,6 +115,7 @@ pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
+    pub shape_kind: Option<crate::core::geometry::ShapeType>,
     pub cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
     pub position_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
     pub position_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
@@ -154,11 +157,12 @@ pub struct CachedPartData<'a> {
 }
 
 impl<'a> CachedPartData<'a> {
-    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16, parent_index: i16, resolved_cells: alloc::vec::Vec<ResolvedCellMeta>) -> Self {
+    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16, parent_index: i16, resolved_cells: alloc::vec::Vec<ResolvedCellMeta>, shape_kind: Option<crate::core::geometry::ShapeType>) -> Self {
         Self {
             part_index,
             parent_index,
             resolved_cells,
+            shape_kind,
             cell_array: part.cell_array(),
             position_x_array: part.position_x_array(),
             position_y_array: part.position_y_array(),

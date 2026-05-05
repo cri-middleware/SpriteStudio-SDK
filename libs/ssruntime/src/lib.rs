@@ -290,7 +290,17 @@ impl<'a> AnimationResource<'a> {
                     for (i, p) in parts.iter().enumerate() {
                         let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
                         let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells));
+                        let shape_kind = fb_parts
+                            .map(|meta| meta.get(i))
+                            .and_then(|part_data| part_data.part_type_as_part_type_shape())
+                            .and_then(|s| match s.shape_type() {
+                                ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
+                                ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
+                                ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
+                                ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
+                                _ => None,
+                            });
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -351,6 +361,9 @@ struct ContextBuffers<'a> {
     inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
     local_uvs: Vec<f32>,
     cell_meta_per_part: Vec<f32>,
+    shape_vertices: Vec<f32>,
+    shape_vertex_box_coords: Vec<f32>,
+    shape_vertex_counts: Vec<i32>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -368,6 +381,9 @@ impl<'a> ContextBuffers<'a> {
             inheritance_matrices: Vec::new(),
             local_uvs: Vec::new(),
             cell_meta_per_part: Vec::new(),
+            shape_vertices: Vec::new(),
+            shape_vertex_box_coords: Vec::new(),
+            shape_vertex_counts: Vec::new(),
         }
     }
 }
@@ -509,6 +525,12 @@ impl<'a> Context<'a> {
         self.buffers.local_uvs.resize(num_parts * 10, 0.0);
         self.buffers.cell_meta_per_part.clear();
         self.buffers.cell_meta_per_part.resize(num_parts * 6, 0.0);
+        self.buffers.shape_vertices.clear();
+        self.buffers.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        self.buffers.shape_vertex_box_coords.clear();
+        self.buffers.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        self.buffers.shape_vertex_counts.clear();
+        self.buffers.shape_vertex_counts.resize(num_parts, 0);
 
         self.z_order.setup(&metadata.cached_parts);
 
@@ -559,6 +581,8 @@ impl<'a> Context<'a> {
         }
 
         self.compute_local_uvs(&metadata.cached_parts);
+
+        self.compute_shape_vertices(&metadata.cached_parts);
 
         self.z_order.update(&self.buffers.parts_vec);
 
@@ -622,6 +646,72 @@ impl<'a> Context<'a> {
         }
     }
 
+    #[allow(clippy::needless_range_loop)]
+    fn compute_shape_vertices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let num_parts = self.buffers.parts_vec.len();
+        let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
+        if self.buffers.shape_vertices.len() != num_parts * stride {
+            self.buffers.shape_vertices.resize(num_parts * stride, 0.0);
+        }
+        if self.buffers.shape_vertex_box_coords.len() != num_parts * stride {
+            self.buffers.shape_vertex_box_coords.resize(num_parts * stride, 0.0);
+        }
+        if self.buffers.shape_vertex_counts.len() != num_parts {
+            self.buffers.shape_vertex_counts.resize(num_parts, 0);
+        }
+        for slot in self.buffers.shape_vertices.iter_mut() {
+            *slot = 0.0;
+        }
+        for slot in self.buffers.shape_vertex_box_coords.iter_mut() {
+            *slot = 0.0;
+        }
+        for slot in self.buffers.shape_vertex_counts.iter_mut() {
+            *slot = 0;
+        }
+
+        let coordinate_system = self.coordinate_system;
+
+        for i in 0..num_parts {
+            let Some(shape_kind) = cached_parts[i].shape_kind else { continue };
+            let state = &self.buffers.parts_vec[i];
+            let size_x = state.size_x();
+            let size_y = state.size_y();
+            if size_x <= 0.0 || size_y <= 0.0 {
+                continue;
+            }
+
+            let (count, vx, vy) = crate::core::geometry::compute_shape_vertices(shape_kind, (size_x, size_y));
+            if count < 3 {
+                continue;
+            }
+
+            let mut effective_pivot_y = state.pivot_y();
+            if coordinate_system == crate::core::SsCoordinateSystem::YDown {
+                effective_pivot_y = -effective_pivot_y;
+            }
+            let tx = -state.pivot_x() * size_x;
+            let ty = -effective_pivot_y * size_y;
+            let hw = size_x * 0.5;
+            let hh = size_y * 0.5;
+
+            let offset = i * stride;
+            for v in 0..count {
+                let mut y = vy[v] + ty;
+                if coordinate_system == crate::core::SsCoordinateSystem::YDown {
+                    y = -y;
+                }
+                self.buffers.shape_vertices[offset + 2 * v] = vx[v] + tx;
+                self.buffers.shape_vertices[offset + 2 * v + 1] = y;
+
+                let fx = (vx[v] + hw) / size_x;
+                let fy = (hh - vy[v]) / size_y;
+                self.buffers.shape_vertex_box_coords[offset + 2 * v] = fx;
+                self.buffers.shape_vertex_box_coords[offset + 2 * v + 1] = fy;
+            }
+            self.buffers.shape_vertex_counts[i] = count as i32;
+        }
+    }
+
     // Frame Number getter functions
 
     pub fn get_frame_no(&self) -> f32 {
@@ -648,30 +738,42 @@ impl<'a> Context<'a> {
         self.z_order.len()
     }
 
-    /// Pointer to the per-part 5-vertex UV table (texture pixel space).
-    /// Layout: `[u0, v0, u1, v1, u2, v2, u3, v3, u4, v4]` per part, indexed by
-    /// `part_index * 10`. See [`Context::get_local_uvs_len`].
     pub fn get_local_uvs_ptr(&self) -> *const f32 {
         self.buffers.local_uvs.as_ptr()
     }
 
-    /// Length of the per-part 5-vertex UV table in floats (= num_parts * 10).
     pub fn get_local_uvs_len(&self) -> usize {
         self.buffers.local_uvs.len()
     }
 
-    /// Pointer to the per-part resolved cell metadata for the current frame.
-    /// Layout: `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` per
-    /// part, indexed by `part_index * 6`. `(rect_left, rect_top)` is the
-    /// cell rectangle origin in the cellmap's texture pixel space, letting
-    /// Players construct a full source rect (origin + size) without their
-    /// own cellmap lookup. Parts without a current cell carry zeros.
-    /// See [`Context::get_cell_meta_len`].
+    pub fn get_shape_vertices_ptr(&self) -> *const f32 {
+        self.buffers.shape_vertices.as_ptr()
+    }
+
+    pub fn get_shape_vertices_len(&self) -> usize {
+        self.buffers.shape_vertices.len()
+    }
+
+    pub fn get_shape_vertex_box_coords_ptr(&self) -> *const f32 {
+        self.buffers.shape_vertex_box_coords.as_ptr()
+    }
+
+    pub fn get_shape_vertex_box_coords_len(&self) -> usize {
+        self.buffers.shape_vertex_box_coords.len()
+    }
+
+    pub fn get_shape_vertex_counts_ptr(&self) -> *const i32 {
+        self.buffers.shape_vertex_counts.as_ptr()
+    }
+
+    pub fn get_shape_vertex_counts_len(&self) -> usize {
+        self.buffers.shape_vertex_counts.len()
+    }
+
     pub fn get_cell_meta_ptr(&self) -> *const f32 {
         self.buffers.cell_meta_per_part.as_ptr()
     }
 
-    /// Length of the per-part cell metadata table in floats (= num_parts * 6).
     pub fn get_cell_meta_len(&self) -> usize {
         self.buffers.cell_meta_per_part.len()
     }

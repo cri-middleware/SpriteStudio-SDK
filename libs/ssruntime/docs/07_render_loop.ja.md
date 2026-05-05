@@ -163,6 +163,10 @@ for (size_t i = 0; i < parts->size(); i++) {
 
 - **`ss_runtime_get_cell_meta`**: パーツごとの `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` を 6 floats × num_parts のレイアウトで返します。`(rect_left, rect_top)` はテクスチャ・ピクセル空間でのセル矩形の左上原点、`(size_w, size_h)` はセルの幅・高さです。セルが無いパーツのスロットはゼロで埋められます。
 - **`ss_runtime_get_local_uvs`**: パーツごとの 5 頂点分の UV を `[u0, v0, u1, v1, u2, v2, u3, v3, u4, v4]` (テクスチャ・ピクセル空間、10 floats × num_parts) で返します。flip / UV 平行移動 / 回転 / スケールが反映済みの最終 UV です。
+- **`ss_runtime_get_shape_vertices`** / **`ss_runtime_get_shape_vertex_box_coords`** / **`ss_runtime_get_shape_vertex_counts`**: Shape パーツの描画用 SoA 群です。
+    - `shape_vertices`: ローカル頂点座標 12 頂点 × `(x, y)` = 24 floats × num_parts。pivot オフセットと座標系 (Y-Up / Y-Down) の処理は Brain 側で完了済みなので、Player は `world_matrix * v` をかけて描画するだけです。
+    - `shape_vertex_box_coords`: 各頂点の正規化バウンディングボックス座標 `(fx, fy)` 12 頂点 × 2 floats × num_parts。`(0, 0)` が LT 角、`(1, 1)` が RB 角に対応し、pivot や座標系の影響を受けません。Player は part の 4 隅カラー (`pc->lt/rt/lb/rb`) を `(1-fx)*(1-fy), fx*(1-fy), (1-fx)*fy, fx*fy` で重み付け加算するだけで、各頂点色を確定できます。
+    - `shape_vertex_counts`: 有効頂点数 `int32 × num_parts`。Shape 以外のパーツでは 0、頂点・box-coord スロットはゼロ埋めです。
 - **`ss_runtime_get_z_order`**: パーツの描画順位 (priority と階層位置から決定) を `int32_t × num_parts` で返します。
 
 ```cpp
