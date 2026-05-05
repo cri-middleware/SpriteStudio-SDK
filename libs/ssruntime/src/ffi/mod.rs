@@ -399,9 +399,12 @@ pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part resolved cell metadata for the current frame, written by
-/// `ss_runtime_get_frame_data`. Layout: `[pivot_x, pivot_y, size_w, size_h]`
-/// per part, indexed by `part_index * 4`. Parts without a current cell
-/// carry zeros.
+/// `ss_runtime_get_frame_data`. Layout:
+/// `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` per part,
+/// indexed by `part_index * 6`. `(rect_left, rect_top)` is the cell
+/// rectangle origin in the cellmap's texture pixel space, letting a
+/// Player build a complete source rect (origin + size) without its own
+/// cellmap lookup. Parts without a current cell carry zeros.
 ///
 /// # Safety
 ///

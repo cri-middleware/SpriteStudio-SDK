@@ -289,7 +289,7 @@ impl<'a> AnimationResource<'a> {
                     let fb_parts = ssab.parts();
                     for (i, p) in parts.iter().enumerate() {
                         let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
-                        let resolved_cells = resolve_cell_array_meta(&ssab, p.cell_array());
+                        let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
                         cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells));
                     }
                 }
@@ -325,56 +325,6 @@ impl<'a> AnimationResource<'a> {
     pub fn find_animation_index_by_hash(&self, hash: u32) -> Option<usize> {
         self.animations.iter().position(|anim| anim.name_hash == hash)
     }
-}
-
-/// Walks a part's `cell_array` keyframes once and resolves each
-/// `(map_id, name_hash)` against the SSAB cellmaps to a `ResolvedCellMeta`.
-/// The returned vector is index-aligned with `cell_array` so the per-frame
-/// path can do an O(1) parallel-index lookup.
-///
-/// Cells are stored in `name_hash`-sorted order under each cellmap (FlatBuffers
-/// `key`); we exploit that with a binary search. Keyframes whose `(map_id,
-/// name_hash)` cannot be resolved fall back to a zero-initialized entry.
-fn resolve_cell_array_meta<'a>(
-    ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>,
-    cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
-) -> Vec<crate::core::framedata::ResolvedCellMeta> {
-    let Some(cell_array) = cell_array else { return Vec::new() };
-    let Some(cellmaps) = ssab.cellmaps() else { return Vec::new() };
-
-    let mut out = Vec::with_capacity(cell_array.len());
-    for key in cell_array {
-        let mut meta = crate::core::framedata::ResolvedCellMeta::default();
-        if let Some(value) = key.value() {
-            let map_id = value.map_id();
-            let name_hash = value.name_hash();
-            if map_id >= 0 && (map_id as usize) < cellmaps.len() {
-                let cellmap = cellmaps.get(map_id as usize);
-                if let Some(cells) = cellmap.cells() {
-                    let mut low = 0usize;
-                    let mut high = cells.len();
-                    while low < high {
-                        let mid = (low + high) / 2;
-                        let cell = cells.get(mid);
-                        let h = cell.name_hash();
-                        if h == name_hash {
-                            let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
-                            let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
-                            let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((size_w, size_h));
-                            meta = crate::core::framedata::ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated() };
-                            break;
-                        } else if h < name_hash {
-                            low = mid + 1;
-                        } else {
-                            high = mid;
-                        }
-                    }
-                }
-            }
-        }
-        out.push(meta);
-    }
-    out
 }
 
 pub fn fnv1a_hash_str(text: &str) -> u32 {
@@ -558,7 +508,7 @@ impl<'a> Context<'a> {
         self.buffers.local_uvs.clear();
         self.buffers.local_uvs.resize(num_parts * 10, 0.0);
         self.buffers.cell_meta_per_part.clear();
-        self.buffers.cell_meta_per_part.resize(num_parts * 4, 0.0);
+        self.buffers.cell_meta_per_part.resize(num_parts * 6, 0.0);
 
         self.z_order.setup(&metadata.cached_parts);
 
@@ -711,14 +661,17 @@ impl<'a> Context<'a> {
     }
 
     /// Pointer to the per-part resolved cell metadata for the current frame.
-    /// Layout: `[pivot_x, pivot_y, size_w, size_h]` per part, indexed by
-    /// `part_index * 4`. Parts without a current cell carry zeros.
+    /// Layout: `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` per
+    /// part, indexed by `part_index * 6`. `(rect_left, rect_top)` is the
+    /// cell rectangle origin in the cellmap's texture pixel space, letting
+    /// Players construct a full source rect (origin + size) without their
+    /// own cellmap lookup. Parts without a current cell carry zeros.
     /// See [`Context::get_cell_meta_len`].
     pub fn get_cell_meta_ptr(&self) -> *const f32 {
         self.buffers.cell_meta_per_part.as_ptr()
     }
 
-    /// Length of the per-part cell metadata table in floats (= num_parts * 4).
+    /// Length of the per-part cell metadata table in floats (= num_parts * 6).
     pub fn get_cell_meta_len(&self) -> usize {
         self.buffers.cell_meta_per_part.len()
     }
@@ -1208,9 +1161,9 @@ mod tests {
     #[test]
     fn test_cell_meta_per_part() {
         // Per-part cell metadata exposed via FFI lets Players drop their own
-        // cellmap binary search. Layout: 4 floats per part
-        // `[pivot_x, pivot_y, size_w, size_h]`. Cell-bearing parts populate
-        // it; the rest stay zero.
+        // cellmap binary search. Layout: 6 floats per part
+        // `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]`.
+        // Cell-bearing parts populate it; the rest stay zero.
         prepare();
         let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
@@ -1226,14 +1179,14 @@ mod tests {
         let meta_ptr = context.get_cell_meta_ptr();
         let meta_len = context.get_cell_meta_len();
         let num_parts = context.buffers.parts_vec.len();
-        assert_eq!(meta_len, num_parts * 4);
+        assert_eq!(meta_len, num_parts * 6);
 
         let meta = unsafe { ::core::slice::from_raw_parts(meta_ptr, meta_len) };
 
         // At least one cell-bearing part must have non-zero size_w/size_h
         // (zero pivot is legal for a centered cell, so use size as the signal).
         let any_nonzero_size = (0..num_parts).any(|i| {
-            let off = i * 4;
+            let off = i * 6;
             meta[off + 2] != 0.0 || meta[off + 3] != 0.0
         });
         assert!(any_nonzero_size, "Expected at least one part to have non-zero cell size_w/size_h");
@@ -1241,7 +1194,7 @@ mod tests {
         // Recomputing should produce a sane buffer of the same shape.
         let _ = context.get_frame_data(1.0).expect("Failed to get frame data on frame 1");
         let meta_after = unsafe { ::core::slice::from_raw_parts(context.get_cell_meta_ptr(), context.get_cell_meta_len()) };
-        assert_eq!(meta_after.len(), num_parts * 4);
+        assert_eq!(meta_after.len(), num_parts * 6);
     }
 
     #[test]
