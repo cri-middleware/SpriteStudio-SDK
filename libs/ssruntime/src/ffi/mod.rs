@@ -426,6 +426,32 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part FNV-1a hash of the cellmap name owning the current cell, written
+/// by `ss_runtime_get_frame_data`. Indexed by `part_index`. Matches
+/// `cellmaps[map_id].name_hash` in the SSAB binary, so a Player can resolve
+/// its texture table directly without walking `FrameData::cells` and
+/// `SsAnimeBinary::cellmaps`. Parts without a current cell carry zero.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_cell_texture_hashes(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_cell_texture_hashes_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_cell_texture_hashes_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part shape vertex positions for the current frame, written by
 /// `ss_runtime_get_frame_data`. Layout: 12 vertices × `(x, y)` = 24 floats
 /// per part, indexed by `part_index * 24`. Vertices are in local space,

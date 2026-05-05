@@ -58,6 +58,8 @@ pub struct ResolvedCellMeta {
     pub tex_w: f32,
     pub tex_h: f32,
     pub rotated: bool,
+
+    pub texture_hash: u32,
 }
 
 /// Walks a part's `cell_array` keyframes once and resolves each
@@ -94,7 +96,7 @@ pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<
                             // cellmap doesn't carry size_original (or it's zero),
                             // treat the cell rect dimensions as the texture size.
                             let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((size_w, size_h));
-                            meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated() };
+                            meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
                             break;
                         } else if h < name_hash {
                             low = mid + 1;
@@ -469,6 +471,7 @@ fn get_parts<'a>(
     deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
     cursors: &mut [usize],
     cell_meta_per_part: &mut [f32],
+    cell_texture_hashes: &mut [u32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -483,6 +486,9 @@ fn get_parts<'a>(
     deform_vec.clear();
     for slot in cell_meta_per_part.iter_mut() {
         *slot = 0.0;
+    }
+    for slot in cell_texture_hashes.iter_mut() {
+        *slot = 0;
     }
 
     let mut inheritance_alphas: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(cached_parts.len());
@@ -502,6 +508,9 @@ fn get_parts<'a>(
             cell_meta_per_part[off + 3] = cell_size_h;
             cell_meta_per_part[off + 4] = cell_meta.rect_left;
             cell_meta_per_part[off + 5] = cell_meta.rect_top;
+        }
+        if i < cell_texture_hashes.len() {
+            cell_texture_hashes[i] = cell_meta.texture_hash;
         }
 
         let flag = result.state.update_flag();
@@ -659,6 +668,7 @@ pub fn get_frame_data<'a>(
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: &mut [usize],
     cell_meta_per_part: &mut [f32],
+    cell_texture_hashes: &mut [u32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -689,6 +699,7 @@ pub fn get_frame_data<'a>(
         &mut deforms_off,
         cursors,
         cell_meta_per_part,
+        cell_texture_hashes,
         coordinate_system,
         origin,
         unit,

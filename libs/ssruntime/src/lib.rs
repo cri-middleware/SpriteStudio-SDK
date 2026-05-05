@@ -361,6 +361,7 @@ struct ContextBuffers<'a> {
     inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
     local_uvs: Vec<f32>,
     cell_meta_per_part: Vec<f32>,
+    cell_texture_hashes: Vec<u32>,
     shape_vertices: Vec<f32>,
     shape_vertex_box_coords: Vec<f32>,
     shape_vertex_counts: Vec<i32>,
@@ -381,6 +382,7 @@ impl<'a> ContextBuffers<'a> {
             inheritance_matrices: Vec::new(),
             local_uvs: Vec::new(),
             cell_meta_per_part: Vec::new(),
+            cell_texture_hashes: Vec::new(),
             shape_vertices: Vec::new(),
             shape_vertex_box_coords: Vec::new(),
             shape_vertex_counts: Vec::new(),
@@ -525,6 +527,8 @@ impl<'a> Context<'a> {
         self.buffers.local_uvs.resize(num_parts * 10, 0.0);
         self.buffers.cell_meta_per_part.clear();
         self.buffers.cell_meta_per_part.resize(num_parts * 6, 0.0);
+        self.buffers.cell_texture_hashes.clear();
+        self.buffers.cell_texture_hashes.resize(num_parts, 0);
         self.buffers.shape_vertices.clear();
         self.buffers.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
         self.buffers.shape_vertex_box_coords.clear();
@@ -569,6 +573,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.deform_vec,
             &mut self.buffers.cursors,
             &mut self.buffers.cell_meta_per_part,
+            &mut self.buffers.cell_texture_hashes,
             self.coordinate_system,
             self.origin,
             self.unit,
@@ -776,6 +781,14 @@ impl<'a> Context<'a> {
 
     pub fn get_cell_meta_len(&self) -> usize {
         self.buffers.cell_meta_per_part.len()
+    }
+
+    pub fn get_cell_texture_hashes_ptr(&self) -> *const u32 {
+        self.buffers.cell_texture_hashes.as_ptr()
+    }
+
+    pub fn get_cell_texture_hashes_len(&self) -> usize {
+        self.buffers.cell_texture_hashes.len()
     }
 
     // setting getter functions

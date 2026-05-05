@@ -162,6 +162,7 @@ for (size_t i = 0; i < parts->size(); i++) {
 `libssruntime` は cellmap からの値解決を Setup 時に一度だけ行い、毎フレームは Player が SoA バッファをインデックスで読むだけで済むよう、以下のバッファを公開しています。Player 側で `cellmap->cells()->LookupByKey(name_hash)` のような毎フレームの二分探索を行う必要はありません。
 
 - **`ss_runtime_get_cell_meta`**: パーツごとの `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` を 6 floats × num_parts のレイアウトで返します。`(rect_left, rect_top)` はテクスチャ・ピクセル空間でのセル矩形の左上原点、`(size_w, size_h)` はセルの幅・高さです。セルが無いパーツのスロットはゼロで埋められます。
+- **`ss_runtime_get_cell_texture_hashes`**: パーツごとの「現在セルが属する cellmap」の `name_hash` (FNV-1a, `uint32_t × num_parts`) を返します。値は SSAB の `cellmaps[map_id].name_hash` と一致するため、Player は自前の `name_hash → Texture` テーブルを直接引いて目的のテクスチャを得られます。`FrameData::cells()->Get(...)->map_id()` → `cellmaps()->Get(map_id)->name_hash()` という 2 段の FlatBuffer ルックアップは不要です。セルが無いパーツのスロットはゼロです。
 - **`ss_runtime_get_local_uvs`**: パーツごとの 5 頂点分の UV を `[u0, v0, u1, v1, u2, v2, u3, v3, u4, v4]` (テクスチャ・ピクセル空間、10 floats × num_parts) で返します。flip / UV 平行移動 / 回転 / スケールが反映済みの最終 UV です。
 - **`ss_runtime_get_shape_vertices`** / **`ss_runtime_get_shape_vertex_box_coords`** / **`ss_runtime_get_shape_vertex_counts`**: Shape パーツの描画用 SoA 群です。
     - `shape_vertices`: ローカル頂点座標 12 頂点 × `(x, y)` = 24 floats × num_parts。pivot オフセットと座標系 (Y-Up / Y-Down) の処理は Brain 側で完了済みなので、Player は `world_matrix * v` をかけて描画するだけです。
@@ -173,6 +174,10 @@ for (size_t i = 0; i < parts->size(); i++) {
 const float* cell_meta = nullptr;
 size_t cell_meta_len = 0;
 ss_runtime_get_cell_meta(runtime_ctx, &cell_meta, &cell_meta_len);
+
+const uint32_t* cell_texture_hashes = nullptr;
+size_t cell_texture_hashes_len = 0;
+ss_runtime_get_cell_texture_hashes(runtime_ctx, &cell_texture_hashes, &cell_texture_hashes_len);
 
 const float* local_uvs = nullptr;
 size_t local_uvs_len = 0;
@@ -192,15 +197,15 @@ for (size_t i = 0; i < parts->size(); i++) {
     // local_uvs の per-part スライス (10 floats: 4 corners + center)
     const float* uvs = local_uvs + i * 10;
 
-    // テクスチャ参照は依然 cellmap 経由 (map_id → cellmap.name_hash → 自前のテクスチャ管理)
-    auto frame_cell = frame_data->cells()->Get(part->cell());
-    Texture* tex = ResolveTextureByMapId(frame_cell->map_id());
+    // テクスチャ参照は cell_texture_hashes から直接 (毎フレームの FlatBuffer ルックアップ不要)
+    uint32_t tex_hash = cell_texture_hashes[i];
+    Texture* tex = ResolveTextureByNameHash(tex_hash);
 
     DrawPart(tex, meta, uvs, /* world matrix, alpha, ... */);
 }
 ```
 
-cellmap の **`Get(map_id)` はテクスチャ参照のために依然必要** ですが、これは Player 側のリソース管理 (`name_hash → Texture` のマップ) のための 1 段の参照であり、毎フレームの二分探索ではありません。
+Player のテクスチャ管理は **Setup 時に `cellmaps[i].name_hash` をキーに自前のテクスチャテーブル** を構築しておくだけで、毎フレームの解決は SoA 配列の 1 アクセスで完結します。`FrameData::cells()` を Player から触る必要はもうありません。
 
 - **シーングラフ / 階層ノード方式**: 
   パーツの数だけエンジンのオブジェクトを生成し、`ssab` メタデータの `parent_index` を元にエンジンの Transform 階層を構築します。`FrameData` から取得した各 `PartState` のローカル値を各オブジェクトの `transform` に反映させることで、最終的な描画位置（ワールド座標）の計算をエンジンに委ねることができます。実装は容易ですが、パーツ数に比例してエンジン側のノード管理オーバーヘッドが増大するため、注意が必要です。
