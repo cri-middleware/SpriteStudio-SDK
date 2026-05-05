@@ -195,10 +195,10 @@ pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32
     let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
 
     NineSliceGrid {
-        vertices_x: unsafe { core::mem::transmute([f32x4::from(vx); 4]) },
-        vertices_y: unsafe { core::mem::transmute([f32x4::splat(vy[0]), f32x4::splat(vy[1]), f32x4::splat(vy[2]), f32x4::splat(vy[3])]) },
-        uvs_u: unsafe { core::mem::transmute([f32x4::from(uv_u); 4]) },
-        uvs_v: unsafe { core::mem::transmute([f32x4::splat(uv_v[0]), f32x4::splat(uv_v[1]), f32x4::splat(uv_v[2]), f32x4::splat(uv_v[3])]) },
+        vertices_x: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::from(vx); 4]) },
+        vertices_y: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::splat(vy[0]), f32x4::splat(vy[1]), f32x4::splat(vy[2]), f32x4::splat(vy[3])]) },
+        uvs_u: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::from(uv_u); 4]) },
+        uvs_v: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::splat(uv_v[0]), f32x4::splat(uv_v[1]), f32x4::splat(uv_v[2]), f32x4::splat(uv_v[3])]) },
     }
 }
 
