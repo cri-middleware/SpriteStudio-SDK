@@ -398,6 +398,31 @@ pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part resolved cell metadata for the current frame, written by
+/// `ss_runtime_get_frame_data`. Layout: `[pivot_x, pivot_y, size_w, size_h]`
+/// per part, indexed by `part_index * 4`. Parts without a current cell
+/// carry zeros.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_cell_meta_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_cell_meta_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
 /// This function is unsafe because it dereferences raw pointers for output.

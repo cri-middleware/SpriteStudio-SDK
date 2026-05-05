@@ -399,6 +399,7 @@ struct ContextBuffers<'a> {
     world_matrices: Vec<crate::core::SsMatrix4x4>,
     inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
     local_uvs: Vec<f32>,
+    cell_meta_per_part: Vec<f32>,
 }
 
 impl<'a> ContextBuffers<'a> {
@@ -415,6 +416,7 @@ impl<'a> ContextBuffers<'a> {
             world_matrices: Vec::new(),
             inheritance_matrices: Vec::new(),
             local_uvs: Vec::new(),
+            cell_meta_per_part: Vec::new(),
         }
     }
 }
@@ -554,6 +556,8 @@ impl<'a> Context<'a> {
         self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
         self.buffers.local_uvs.clear();
         self.buffers.local_uvs.resize(num_parts * 10, 0.0);
+        self.buffers.cell_meta_per_part.clear();
+        self.buffers.cell_meta_per_part.resize(num_parts * 4, 0.0);
 
         self.z_order.setup(&metadata.cached_parts);
 
@@ -593,6 +597,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.vertice_vec,
             &mut self.buffers.deform_vec,
             &mut self.buffers.cursors,
+            &mut self.buffers.cell_meta_per_part,
             self.coordinate_system,
             self.origin,
             self.unit,
@@ -741,6 +746,19 @@ impl<'a> Context<'a> {
     /// Length of the per-part 5-vertex UV table in floats (= num_parts * 10).
     pub fn get_local_uvs_len(&self) -> usize {
         self.buffers.local_uvs.len()
+    }
+
+    /// Pointer to the per-part resolved cell metadata for the current frame.
+    /// Layout: `[pivot_x, pivot_y, size_w, size_h]` per part, indexed by
+    /// `part_index * 4`. Parts without a current cell carry zeros.
+    /// See [`Context::get_cell_meta_len`].
+    pub fn get_cell_meta_ptr(&self) -> *const f32 {
+        self.buffers.cell_meta_per_part.as_ptr()
+    }
+
+    /// Length of the per-part cell metadata table in floats (= num_parts * 4).
+    pub fn get_cell_meta_len(&self) -> usize {
+        self.buffers.cell_meta_per_part.len()
     }
 
     // setting getter functions
@@ -1223,6 +1241,45 @@ mod tests {
         let uvs_after = unsafe { ::core::slice::from_raw_parts(context.get_local_uvs_ptr(), context.get_local_uvs_len()) };
         assert_eq!(uvs_after.len(), num_parts * 10);
         assert!(uvs_after.iter().any(|f| *f != 0.0));
+    }
+
+    #[test]
+    fn test_cell_meta_per_part() {
+        // Per-part cell metadata exposed via FFI lets Players drop their own
+        // cellmap binary search. Layout: 4 floats per part
+        // `[pivot_x, pivot_y, size_w, size_h]`. Cell-bearing parts populate
+        // it; the rest stay zero.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let _ = context.get_frame_data(0.0).expect("Failed to get frame data");
+
+        let meta_ptr = context.get_cell_meta_ptr();
+        let meta_len = context.get_cell_meta_len();
+        let num_parts = context.buffers.parts_vec.len();
+        assert_eq!(meta_len, num_parts * 4);
+
+        let meta = unsafe { ::core::slice::from_raw_parts(meta_ptr, meta_len) };
+
+        // At least one cell-bearing part must have non-zero size_w/size_h
+        // (zero pivot is legal for a centered cell, so use size as the signal).
+        let any_nonzero_size = (0..num_parts).any(|i| {
+            let off = i * 4;
+            meta[off + 2] != 0.0 || meta[off + 3] != 0.0
+        });
+        assert!(any_nonzero_size, "Expected at least one part to have non-zero cell size_w/size_h");
+
+        // Recomputing should produce a sane buffer of the same shape.
+        let _ = context.get_frame_data(1.0).expect("Failed to get frame data on frame 1");
+        let meta_after = unsafe { ::core::slice::from_raw_parts(context.get_cell_meta_ptr(), context.get_cell_meta_len()) };
+        assert_eq!(meta_after.len(), num_parts * 4);
     }
 
     #[test]

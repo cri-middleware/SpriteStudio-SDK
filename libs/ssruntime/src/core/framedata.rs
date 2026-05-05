@@ -408,6 +408,7 @@ fn get_parts<'a>(
     vertices_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
     deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
     cursors: &mut [usize],
+    cell_meta_per_part: &mut [f32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -420,6 +421,9 @@ fn get_parts<'a>(
     shader_vec.clear();
     vertice_vec.clear();
     deform_vec.clear();
+    for slot in cell_meta_per_part.iter_mut() {
+        *slot = 0.0;
+    }
 
     let mut inheritance_alphas: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(cached_parts.len());
 
@@ -429,6 +433,14 @@ fn get_parts<'a>(
 
         let cell_meta = result.cell_meta.unwrap_or_default();
         let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = (cell_meta.pivot_x, cell_meta.pivot_y, cell_meta.size_w, cell_meta.size_h);
+
+        let off = i * 4;
+        if off + 4 <= cell_meta_per_part.len() {
+            cell_meta_per_part[off] = cell_pivot_x;
+            cell_meta_per_part[off + 1] = cell_pivot_y;
+            cell_meta_per_part[off + 2] = cell_size_w;
+            cell_meta_per_part[off + 3] = cell_size_h;
+        }
 
         let flag = result.state.update_flag();
         if !flag.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeX) {
@@ -584,6 +596,7 @@ pub fn get_frame_data<'a>(
     vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: &mut [usize],
+    cell_meta_per_part: &mut [f32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -613,6 +626,7 @@ pub fn get_frame_data<'a>(
         &mut vertices_off,
         &mut deforms_off,
         cursors,
+        cell_meta_per_part,
         coordinate_system,
         origin,
         unit,
