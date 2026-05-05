@@ -452,6 +452,36 @@ pub unsafe extern "C" fn ss_runtime_get_cell_texture_hashes(context: *mut c_void
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Per-part local-space vertex positions for the current frame, written by
+/// `ss_runtime_get_frame_data`. Layout per part:
+/// `[lt.x, lt.y, rt.x, rt.y, lb.x, lb.y, rb.x, rb.y, center.x, center.y]`
+/// = 10 floats, indexed by `part_index * 10`. Coordinates are in part-local
+/// space with `coordinate_system` (Y-Up/Y-Down) flip already applied, so a
+/// Player just multiplies them by the world matrix. Includes pivot, image
+/// flip, and per-frame vertex deformation. Parts without a current cell
+/// carry zeros. Replaces `FrameData::vertices` for renderers that consume
+/// pre-resolved SoA buffers.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_local_vertices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_local_vertices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part shape vertex positions for the current frame, written by
 /// `ss_runtime_get_frame_data`. Layout: 12 vertices × `(x, y)` = 24 floats
 /// per part, indexed by `part_index * 24`. Vertices are in local space,

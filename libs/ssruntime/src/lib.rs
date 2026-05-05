@@ -362,6 +362,7 @@ struct ContextBuffers<'a> {
     local_uvs: Vec<f32>,
     cell_meta_per_part: Vec<f32>,
     cell_texture_hashes: Vec<u32>,
+    local_vertices: Vec<f32>,
     shape_vertices: Vec<f32>,
     shape_vertex_box_coords: Vec<f32>,
     shape_vertex_counts: Vec<i32>,
@@ -383,6 +384,7 @@ impl<'a> ContextBuffers<'a> {
             local_uvs: Vec::new(),
             cell_meta_per_part: Vec::new(),
             cell_texture_hashes: Vec::new(),
+            local_vertices: Vec::new(),
             shape_vertices: Vec::new(),
             shape_vertex_box_coords: Vec::new(),
             shape_vertex_counts: Vec::new(),
@@ -529,6 +531,8 @@ impl<'a> Context<'a> {
         self.buffers.cell_meta_per_part.resize(num_parts * 6, 0.0);
         self.buffers.cell_texture_hashes.clear();
         self.buffers.cell_texture_hashes.resize(num_parts, 0);
+        self.buffers.local_vertices.clear();
+        self.buffers.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
         self.buffers.shape_vertices.clear();
         self.buffers.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
         self.buffers.shape_vertex_box_coords.clear();
@@ -574,6 +578,7 @@ impl<'a> Context<'a> {
             &mut self.buffers.cursors,
             &mut self.buffers.cell_meta_per_part,
             &mut self.buffers.cell_texture_hashes,
+            &mut self.buffers.local_vertices,
             self.coordinate_system,
             self.origin,
             self.unit,
@@ -789,6 +794,14 @@ impl<'a> Context<'a> {
 
     pub fn get_cell_texture_hashes_len(&self) -> usize {
         self.buffers.cell_texture_hashes.len()
+    }
+
+    pub fn get_local_vertices_ptr(&self) -> *const f32 {
+        self.buffers.local_vertices.as_ptr()
+    }
+
+    pub fn get_local_vertices_len(&self) -> usize {
+        self.buffers.local_vertices.len()
     }
 
     // setting getter functions

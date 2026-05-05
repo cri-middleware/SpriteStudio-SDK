@@ -46,6 +46,11 @@ pub const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::
 
 pub const SHAPE_VERTICES_STRIDE: usize = 24;
 
+/// Stride (number of `f32`s) per part in the `local_vertices` SoA buffer.
+/// Layout: `[lt.x, lt.y, rt.x, rt.y, lb.x, lb.y, rb.x, rb.y, center.x, center.y]`
+/// in part-local space, with `coordinate_system` (Y-Up/Y-Down) flip already applied.
+pub const LOCAL_VERTICES_STRIDE: usize = 10;
+
 #[derive(Clone, Copy, Default)]
 pub struct ResolvedCellMeta {
     pub pivot_x: f32,
@@ -472,6 +477,7 @@ fn get_parts<'a>(
     cursors: &mut [usize],
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
+    local_vertices: &mut [f32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -489,6 +495,9 @@ fn get_parts<'a>(
     }
     for slot in cell_texture_hashes.iter_mut() {
         *slot = 0;
+    }
+    for slot in local_vertices.iter_mut() {
+        *slot = 0.0;
     }
 
     let mut inheritance_alphas: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(cached_parts.len());
@@ -591,6 +600,15 @@ fn get_parts<'a>(
             let needs_center = result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex) || result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor);
             let center = if needs_center { crate::runtime::framedata::ss::runtime::Vec2::new(vx[4], vy[4]) } else { crate::runtime::framedata::ss::runtime::Vec2::default() };
             result.vertex = Some(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &center));
+
+            let off = i * LOCAL_VERTICES_STRIDE;
+            if off + LOCAL_VERTICES_STRIDE <= local_vertices.len() {
+                local_vertices[off]     = vx[0]; local_vertices[off + 1] = vy[0];
+                local_vertices[off + 2] = vx[1]; local_vertices[off + 3] = vy[1];
+                local_vertices[off + 4] = vx[2]; local_vertices[off + 5] = vy[2];
+                local_vertices[off + 6] = vx[3]; local_vertices[off + 7] = vy[3];
+                local_vertices[off + 8] = vx[4]; local_vertices[off + 9] = vy[4];
+            }
         }
 
         if let Some(cell) = result.cell {
@@ -669,6 +687,7 @@ pub fn get_frame_data<'a>(
     cursors: &mut [usize],
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
+    local_vertices: &mut [f32],
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -700,6 +719,7 @@ pub fn get_frame_data<'a>(
         cursors,
         cell_meta_per_part,
         cell_texture_hashes,
+        local_vertices,
         coordinate_system,
         origin,
         unit,
