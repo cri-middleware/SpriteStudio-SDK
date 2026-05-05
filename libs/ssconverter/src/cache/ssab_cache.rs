@@ -743,6 +743,7 @@ impl From<&Vec<ssab::ssab::ss::format::InitialPartAttributesT>> for PartAttribut
 pub struct PartAttributeInstanceKey {
     pub pingpong: bool,
     pub independent: bool,
+    pub reverse: bool,
     pub loop_num: i32,
     pub start_label_hash: u32,
     pub start_offset: i32,
@@ -755,6 +756,7 @@ impl From<&ssab::ssab::ss::format::PartAttributeInstanceT> for PartAttributeInst
         Self {
             pingpong: value.pingpong,
             independent: value.independent,
+            reverse: value.reverse,
             loop_num: value.loop_num,
             start_label_hash: value.start_label_hash,
             start_offset: value.start_offset,
@@ -1717,6 +1719,7 @@ impl<'a> SsabCache<'a> {
         let mut args = ssab::ssab::ss::format::PartAttributeInstanceArgs::default();
         args.pingpong = part_attribute_instance.pingpong;
         args.independent = part_attribute_instance.independent;
+        args.reverse = part_attribute_instance.reverse;
         args.loop_num = part_attribute_instance.loop_num;
         args.start_label_hash = part_attribute_instance.start_label_hash;
         args.start_offset = part_attribute_instance.start_offset;

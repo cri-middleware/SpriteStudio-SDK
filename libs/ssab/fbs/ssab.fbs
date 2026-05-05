@@ -376,6 +376,7 @@ table PartAttributeInstance {
   end_label_hash: uint32; // instead of end_label: string;
   end_offset: int;
   speed: float;
+  reverse: bool;
 }
 
 table PartAttributeEffect {

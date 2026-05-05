@@ -966,6 +966,15 @@ impl<'a> Context<'a> {
         self.controller.set_frame_no(frame);
     }
 
+    /// Sets the playback position based on `diff` (frames elapsed since
+    /// playback started, with per-instance speed already applied), applying
+    /// the configured section / loops / style / direction. Used by parent
+    /// Players to drive child Instance / Effect Players deterministically
+    /// across reverse, seek, and frame-skip operations.
+    pub fn set_frame_relative(&mut self, diff: f32) {
+        self.controller.set_frame_relative(diff);
+    }
+
     pub fn next_frame(&mut self) {
         self.controller.next_frame();
     }

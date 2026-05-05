@@ -774,6 +774,20 @@ pub extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_float) 
     }
 }
 
+/// Sets the playback position based on `diff` (frames elapsed since playback
+/// started, with per-instance speed already applied), applying the configured
+/// `set_animation_section`, `set_loops`, and `set_playback_direction` values.
+///
+/// This is the entry point a parent Player uses to drive a child Instance or
+/// Effect Player deterministically: it works correctly under reverse, seek,
+/// and frame-skip because the same `diff` always produces the same frame.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_frame_relative(context: *mut c_void, diff: c_float) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.set_frame_relative(diff);
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_next_frame(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {

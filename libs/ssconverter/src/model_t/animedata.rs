@@ -150,7 +150,14 @@ fn convert_events_per_frames_part(
                         let mut instance_t = ssab::ssab::ss::format::PartAttributeInstanceT::default();
                         instance_t.pingpong = key.value.pingpong;
                         instance_t.independent = key.value.independent;
-                        instance_t.loop_num = key.value.loop_num;
+                        instance_t.reverse = key.value.reverse;
+                        // SS6's `SsInstanceAttr` carried both `infinity: bool`
+                        // and `loop_num: i32`; SS7's `PartAttributeInstance`
+                        // collapses them into a single `loop_num` where -1
+                        // means infinite, matching `PlaybackController`'s
+                        // convention. Encode the `infinity` flag here so the
+                        // runtime never has to guess.
+                        instance_t.loop_num = if key.value.infinity { -1 } else { key.value.loop_num };
                         instance_t.start_label_hash = crate::utils::fnv1a_hash_str(&key.value.start_label);
                         instance_t.start_offset = key.value.start_offset;
                         instance_t.end_label_hash = crate::utils::fnv1a_hash_str(&key.value.end_label);
@@ -832,7 +839,10 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     let mut value = ssab::ssab::ss::format::PartAttributeInstanceT::default();
                     value.pingpong = _key.value.pingpong;
                     value.independent = _key.value.independent;
-                    value.loop_num = _key.value.loop_num;
+                    value.reverse = _key.value.reverse;
+                    // Collapse SS6's `infinity` flag into SS7's loop_num=-1.
+                    // See SsAttributeKind::Instance handling above for details.
+                    value.loop_num = if _key.value.infinity { -1 } else { _key.value.loop_num };
                     value.start_label_hash = crate::utils::fnv1a_hash_str(&_key.value.start_label);
                     value.start_offset = _key.value.start_offset;
                     value.end_label_hash = crate::utils::fnv1a_hash_str(&_key.value.end_label);

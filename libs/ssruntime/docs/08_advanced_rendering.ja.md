@@ -7,6 +7,33 @@
 SpriteStudio のインスタンス機能は、別のアニメーションを部品として参照し再生する機能です。
 親の再生時間（フレーム）に完全に同期させるため、**毎フレーム親の現在のフレームから子のローカルフレームを算出し、子Playerの時間を強制的に合わせる**手法をとります。これにより、逆再生やフレームスキップ時でも常に正しい状態が描画されます。
 
+> **【制限事項】 `independent=true` は逆再生 / シークでは動作しません**
+>
+> `PartAttributeInstance.independent` を `true` にすると、子インスタンスは親の timeline から切り離されてリアルタイム (delta_time) で進行する仕様です。これは設計上、親フレームから子フレームを deterministic に逆算できないため、以下のような操作で破綻します:
+>
+> - 親の逆再生 (子のリアルタイム時計は単調増加なので、過去方向に進まない)
+> - 親のシーク (過去の任意フレームへ戻ったときの「子の累積時間」が一意に決まらない)
+>
+> 一方、**親のフレームスキップ自体は対応可能**です。親が経過 `delta_time` を子に渡し、子が `update(delta)` で累積を進めれば、スキップ量に比例した分だけ子も進みます (順方向のみ)。
+>
+> Player 移植にあたっては、SS7 のアニメ制作時に `independent=true` を使わない運用を推奨します。やむを得ず使う場合は、対応する子インスタンスは「順方向再生時のみ正しく描画される」ことを利用者に明示してください。
+
+> **【NO_KEY (Instance アトリビュートにキーがない) ときの挙動】**
+>
+> ある Instance パーツに `EventInstance` が一つも紐づかず `InitialEvents.instance` も `None` の場合、Player は SS6 SDK の `SsInstanceAttr` デフォルトコンストラクタ (`Common/Loader/sstypes.h:1294`) と同じ値で再生を組み立てる必要があります:
+>
+> - `loop_num = 1`（**`-1` 無限ループにしない**）
+> - `infinity = false`
+> - `pingpong = false`, `reverse = false`
+> - `start_label = "_start"` / `end_label = "_end"` (= 子アニメの先頭〜末尾)
+> - `start_offset = 0`, `end_offset = 0`
+> - `speed = 1.0`
+> - `curKeyframe = 0`（= 親フレームをそのまま `diff` に使う）
+>
+> SS6 の `updateInstance`（`Common/Animator/ssplayer_animedecode.cpp:1670-1677`) は `nowloop >= loop_num` になった時点で `reftime = inst_scale - 1` にクランプするため、結果として **1 サイクル再生 → end_frame で停止** という挙動になります。`loops = -1` をフォールバックにすると SS では止まる位置で Godot/Unity 側だけループし続けてしまうので注意してください。
+>
+> なお SS6 では `SsGetKeyValue` が `nowTime` より未来のキーを返してきた場合（= 今より前にキーがない）、`state->instanceValue` をデフォルトコンストラクタに**戻して**から `updateInstance` を続行します（`ssplayer_animedecode.cpp:1162-1166`）。SS7 では converter が `time == 0` のキーを `InitialEvents.instance` に複製するため通常は再現される一方、ユーザーが意図的にキーを入れていない（NO_KEY）パーツでは `InitialEvents.instance = None` になるので、上記デフォルトを Player 側で用意してください。
+
 ### 同期計算と描画ループ
 子アニメーションの複雑な同期計算（オフセット、速度、ループの剰余計算など）を行うため、SDKには `ss_util_calculate_instance_frame` というユーティリティ関数が用意されています。
 
