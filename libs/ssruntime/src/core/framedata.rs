@@ -44,10 +44,19 @@ const IDX_ATTRIBUTESKEW: usize = crate::runtime::framedata::ss::runtime::UpdateA
 pub const IDX_ATTRIBUTEDEFORM: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform.bits().trailing_zeros() as usize;
 pub const IDX_ATTRIBUTETEXTURE: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeTexture.bits().trailing_zeros() as usize;
 
+#[derive(Clone, Copy, Default)]
+pub struct ResolvedCellMeta {
+    pub pivot_x: f32,
+    pub pivot_y: f32,
+    pub size_w: f32,
+    pub size_h: f32,
+}
+
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
+    pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
     pub position_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
     pub position_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
@@ -89,10 +98,11 @@ pub struct CachedPartData<'a> {
 }
 
 impl<'a> CachedPartData<'a> {
-    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16, parent_index: i16) -> Self {
+    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16, parent_index: i16, resolved_cells: alloc::vec::Vec<ResolvedCellMeta>) -> Self {
         Self {
             part_index,
             parent_index,
+            resolved_cells,
             cell_array: part.cell_array(),
             position_x_array: part.position_x_array(),
             position_y_array: part.position_y_array(),
@@ -138,16 +148,12 @@ impl<'a> CachedPartData<'a> {
 pub struct PartEvaluationResult {
     pub state: runtime::framedata::ss::runtime::PartState,
     pub cell: Option<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
+    pub cell_meta: Option<ResolvedCellMeta>,
     pub part_color: Option<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     pub shader: Option<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     pub vertex: Option<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     pub deform: Option<DeformEvaluationData>,
 }
-
-/// Looks up a cell's metadata by `(map_id, name_hash)` and returns
-/// `(pivot_x, pivot_y, size_w, size_h)`. Used to default the part state's
-/// pivot/size when those attributes are not animated.
-pub type CellLookupFn<'a> = dyn Fn(i32, u32) -> (f32, f32, f32, f32) + 'a;
 
 pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
@@ -171,12 +177,13 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cu
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
-    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, part_color: None, shader: None, vertex: None, deform: None };
+    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform: None };
 
     part_state.set_part_index(cached_part.part_index);
 
     if let Some(value) = cached_part.cell_array.and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])) {
         result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
+        result.cell_meta = cached_part.resolved_cells.get(part_cursors[IDX_ATTRIBUTECELL]).copied();
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     }
 
@@ -406,7 +413,6 @@ fn get_parts<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
-    cell_lookup: &Option<&CellLookupFn<'_>>,
 ) {
     parts_vec.clear();
     cell_vec.clear();
@@ -421,8 +427,8 @@ fn get_parts<'a>(
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
         let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
 
-        // Look up the current cell's metadata once and reuse for size default + pivot.
-        let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = if let Some(cell) = &result.cell { if let Some(lookup) = cell_lookup { lookup(cell.map_id(), cell.name_hash()) } else { (0.0, 0.0, 0.0, 0.0) } } else { (0.0, 0.0, 0.0, 0.0) };
+        let cell_meta = result.cell_meta.unwrap_or_default();
+        let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = (cell_meta.pivot_x, cell_meta.pivot_y, cell_meta.size_w, cell_meta.size_h);
 
         let flag = result.state.update_flag();
         if !flag.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSizeX) {
@@ -583,7 +589,6 @@ pub fn get_frame_data<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
-    cell_lookup: &Option<&CellLookupFn<'_>>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -613,7 +618,6 @@ pub fn get_frame_data<'a>(
         unit,
         canvas_width,
         canvas_height,
-        cell_lookup,
     );
     if !parts_vec.is_empty() {
         args.parts = Some(fb.create_vector(parts_vec));
@@ -697,7 +701,7 @@ mod tests {
         let mut part_state = runtime::framedata::ss::runtime::PartState::default();
         part_state.set_part_index(5);
 
-        let result = PartEvaluationResult { state: part_state, cell: None, part_color: None, shader: None, vertex: None, deform: None };
+        let result = PartEvaluationResult { state: part_state, cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform: None };
 
         assert_eq!(result.state.part_index(), 5);
         assert!(result.cell.is_none());

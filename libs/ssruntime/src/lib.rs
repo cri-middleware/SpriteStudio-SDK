@@ -289,7 +289,8 @@ impl<'a> AnimationResource<'a> {
                     let fb_parts = ssab.parts();
                     for (i, p) in parts.iter().enumerate() {
                         let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index));
+                        let resolved_cells = resolve_cell_array_meta(&ssab, p.cell_array());
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -324,6 +325,55 @@ impl<'a> AnimationResource<'a> {
     pub fn find_animation_index_by_hash(&self, hash: u32) -> Option<usize> {
         self.animations.iter().position(|anim| anim.name_hash == hash)
     }
+}
+
+/// Walks a part's `cell_array` keyframes once and resolves each
+/// `(map_id, name_hash)` against the SSAB cellmaps to a `ResolvedCellMeta`.
+/// The returned vector is index-aligned with `cell_array` so the per-frame
+/// path can do an O(1) parallel-index lookup.
+///
+/// Cells are stored in `name_hash`-sorted order under each cellmap (FlatBuffers
+/// `key`); we exploit that with a binary search. Keyframes whose `(map_id,
+/// name_hash)` cannot be resolved fall back to a zero-initialized entry.
+fn resolve_cell_array_meta<'a>(
+    ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>,
+    cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
+) -> Vec<crate::core::framedata::ResolvedCellMeta> {
+    let Some(cell_array) = cell_array else { return Vec::new() };
+    let Some(cellmaps) = ssab.cellmaps() else { return Vec::new() };
+
+    let mut out = Vec::with_capacity(cell_array.len());
+    for key in cell_array {
+        let mut meta = crate::core::framedata::ResolvedCellMeta::default();
+        if let Some(value) = key.value() {
+            let map_id = value.map_id();
+            let name_hash = value.name_hash();
+            if map_id >= 0 && (map_id as usize) < cellmaps.len() {
+                let cellmap = cellmaps.get(map_id as usize);
+                if let Some(cells) = cellmap.cells() {
+                    let mut low = 0usize;
+                    let mut high = cells.len();
+                    while low < high {
+                        let mid = (low + high) / 2;
+                        let cell = cells.get(mid);
+                        let h = cell.name_hash();
+                        if h == name_hash {
+                            let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+                            let (size_w, size_h) = cell.rectangle().map(|r| (r.x2(), r.y2())).unwrap_or((0.0, 0.0));
+                            meta = crate::core::framedata::ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h };
+                            break;
+                        } else if h < name_hash {
+                            low = mid + 1;
+                        } else {
+                            high = mid;
+                        }
+                    }
+                }
+            }
+        }
+        out.push(meta);
+    }
+    out
 }
 
 pub fn fnv1a_hash_str(text: &str) -> u32 {
@@ -531,35 +581,6 @@ impl<'a> Context<'a> {
         self.fb.reset();
 
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-        // Returns (pivot_x, pivot_y, size_w, size_h) for the cell. size_w/h come from
-        // the cell rectangle (x2/y2 in SSAB are width/height, not the right/bottom edge).
-        let cell_lookup = |map_id: i32, name_hash: u32| -> (f32, f32, f32, f32) {
-            if let Some(cellmaps) = ssab.cellmaps()
-                && (map_id as usize) < cellmaps.len()
-            {
-                let cellmap = cellmaps.get(map_id as usize);
-                if let Some(cells) = cellmap.cells() {
-                    let mut low = 0;
-                    let mut high = cells.len();
-                    while low < high {
-                        let mid = (low + high) / 2;
-                        let cell = cells.get(mid);
-                        let hash = cell.name_hash();
-                        if hash == name_hash {
-                            let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
-                            let (size_w, size_h) = cell.rectangle().map(|r| (r.x2(), r.y2())).unwrap_or((0.0, 0.0));
-                            return (pivot_x, pivot_y, size_w, size_h);
-                        } else if hash < name_hash {
-                            low = mid + 1;
-                        } else {
-                            high = mid;
-                        }
-                    }
-                }
-            }
-            (0.0, 0.0, 0.0, 0.0)
-        };
-        let lookup_opt: Option<&core::framedata::CellLookupFn<'_>> = Some(&cell_lookup);
 
         let offset = core::framedata::get_frame_data(
             &mut self.fb,
@@ -577,7 +598,6 @@ impl<'a> Context<'a> {
             self.unit,
             metadata.canvas_width,
             metadata.canvas_height,
-            &lookup_opt,
         );
 
         if self.render_mode == crate::core::RenderMode::Direct {
