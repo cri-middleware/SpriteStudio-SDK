@@ -195,17 +195,12 @@ pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32
     let uv_u = [l, l + sml / sw * (r - l), r - smr / sw * (r - l), r];
     let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
 
-    let mut grid = NineSliceGrid { vertices_x: [0.0; 16], vertices_y: [0.0; 16], uvs_u: [0.0; 16], uvs_v: [0.0; 16] };
-
-    for row in 0..4 {
-        let offset = row * 4;
-        grid.vertices_x[offset..offset + 4].copy_from_slice(&vx);
-        grid.vertices_y[offset..offset + 4].fill(vy[row]);
-        grid.uvs_u[offset..offset + 4].copy_from_slice(&uv_u);
-        grid.uvs_v[offset..offset + 4].fill(uv_v[row]);
+    NineSliceGrid {
+        vertices_x: unsafe { core::mem::transmute([f32x4::from(vx); 4]) },
+        vertices_y: unsafe { core::mem::transmute([f32x4::splat(vy[0]), f32x4::splat(vy[1]), f32x4::splat(vy[2]), f32x4::splat(vy[3])]) },
+        uvs_u: unsafe { core::mem::transmute([f32x4::from(uv_u); 4]) },
+        uvs_v: unsafe { core::mem::transmute([f32x4::splat(uv_v[0]), f32x4::splat(uv_v[1]), f32x4::splat(uv_v[2]), f32x4::splat(uv_v[3])]) },
     }
-
-    grid
 }
 
 /// Primitive shape types supported by Shape Parts.
