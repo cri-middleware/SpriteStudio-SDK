@@ -359,8 +359,9 @@ fn resolve_cell_array_meta<'a>(
                         let h = cell.name_hash();
                         if h == name_hash {
                             let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
-                            let (size_w, size_h) = cell.rectangle().map(|r| (r.x2(), r.y2())).unwrap_or((0.0, 0.0));
-                            meta = crate::core::framedata::ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h };
+                            let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
+                            let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((size_w, size_h));
+                            meta = crate::core::framedata::ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated() };
                             break;
                         } else if h < name_hash {
                             low = mid + 1;
@@ -584,8 +585,6 @@ impl<'a> Context<'a> {
 
         self.fb.reset();
 
-        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
-
         let offset = core::framedata::get_frame_data(
             &mut self.fb,
             &metadata.cached_parts,
@@ -609,7 +608,7 @@ impl<'a> Context<'a> {
             self.compute_matrices(&metadata.cached_parts);
         }
 
-        self.compute_local_uvs(&ssab);
+        self.compute_local_uvs(&metadata.cached_parts);
 
         self.z_order.update(&self.buffers.parts_vec);
 
@@ -636,7 +635,8 @@ impl<'a> Context<'a> {
         }
     }
 
-    fn compute_local_uvs(&mut self, ssab: &ssab::ssab::ss::format::SsAnimeBinary<'_>) {
+    #[allow(clippy::needless_range_loop)]
+    fn compute_local_uvs(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
         let num_parts = self.buffers.parts_vec.len();
         if self.buffers.local_uvs.len() != num_parts * 10 {
             self.buffers.local_uvs.resize(num_parts * 10, 0.0);
@@ -645,62 +645,24 @@ impl<'a> Context<'a> {
             *slot = 0.0;
         }
 
-        let Some(cellmaps) = ssab.cellmaps() else { return };
-
         for i in 0..num_parts {
-            let (rect_left, rect_top, size_w, size_h, rotated, tex_w, tex_h) = {
-                let state = &self.buffers.parts_vec[i];
-                let cell_idx = state.cell();
-                if cell_idx < 0 {
-                    continue;
-                }
-                let cell_vec_idx = cell_idx as usize;
-                if cell_vec_idx >= self.buffers.cell_vec.len() {
-                    continue;
-                }
-                let cell_attr = &self.buffers.cell_vec[cell_vec_idx];
-                let map_id = cell_attr.map_id();
-                let name_hash = cell_attr.name_hash();
+            let state = &self.buffers.parts_vec[i];
+            if state.cell() < 0 {
+                continue;
+            }
+            let cursor = self.buffers.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
+            let Some(meta) = cached_parts[i].resolved_cells.get(cursor) else { continue };
+            if meta.size_w == 0.0 && meta.size_h == 0.0 {
+                continue;
+            }
 
-                if map_id < 0 || (map_id as usize) >= cellmaps.len() {
-                    continue;
-                }
-                let cellmap = cellmaps.get(map_id as usize);
-                let Some(cells) = cellmap.cells() else { continue };
+            let rect_right = meta.rect_left + meta.size_w;
+            let rect_bottom = meta.rect_top + meta.size_h;
 
-                // Cells in ssab are sorted by name_hash (FlatBuffers `key`).
-                let mut low = 0usize;
-                let mut high = cells.len();
-                let mut found = None;
-                while low < high {
-                    let mid = (low + high) / 2;
-                    let cell = cells.get(mid);
-                    let h = cell.name_hash();
-                    if h == name_hash {
-                        found = Some(cell);
-                        break;
-                    } else if h < name_hash {
-                        low = mid + 1;
-                    } else {
-                        high = mid;
-                    }
-                }
-                let Some(cell) = found else { continue };
-                let Some(rect) = cell.rectangle() else { continue };
+            let (tu, tv, rot_deg, su, sv, fh, fv, ifh, ifv) =
+                (state.uv_translation_x() * meta.tex_w, state.uv_translation_y() * meta.tex_h, state.uv_rotation_z(), state.uv_scale_x(), state.uv_scale_y(), state.flip_h(), state.flip_v(), state.img_flip_h(), state.img_flip_v());
 
-                let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((rect.x2(), rect.y2()));
-
-                (rect.x1(), rect.y1(), rect.x2(), rect.y2(), cell.rotated(), tex_w, tex_h)
-            };
-            let rect_right = rect_left + size_w;
-            let rect_bottom = rect_top + size_h;
-
-            let (tu, tv, rot_deg, su, sv, fh, fv, ifh, ifv) = {
-                let state = &self.buffers.parts_vec[i];
-                (state.uv_translation_x() * tex_w, state.uv_translation_y() * tex_h, state.uv_rotation_z(), state.uv_scale_x(), state.uv_scale_y(), state.flip_h(), state.flip_v(), state.img_flip_h(), state.img_flip_v())
-            };
-
-            let (us, vs) = crate::core::geometry::compute_local_uvs((rect_left, rect_top, rect_right, rect_bottom), (tu, tv, rot_deg, su, sv), (fh, fv), (ifh, ifv), rotated);
+            let (us, vs) = crate::core::geometry::compute_local_uvs((meta.rect_left, meta.rect_top, rect_right, rect_bottom), (tu, tv, rot_deg, su, sv), (fh, fv), (ifh, ifv), meta.rotated);
 
             let offset = i * 10;
             for k in 0..5 {

@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 
 pub const NUM_PART_ATTRIBUTES: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::all().bits().count_ones() as usize;
 
-const IDX_ATTRIBUTECELL: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell.bits().trailing_zeros() as usize;
+pub const IDX_ATTRIBUTECELL: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTEPOSX: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTEPOSY: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosY.bits().trailing_zeros() as usize;
 const IDX_ATTRIBUTEPOSZ: usize = crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosZ.bits().trailing_zeros() as usize;
@@ -50,6 +50,12 @@ pub struct ResolvedCellMeta {
     pub pivot_y: f32,
     pub size_w: f32,
     pub size_h: f32,
+
+    pub rect_left: f32,
+    pub rect_top: f32,
+    pub tex_w: f32,
+    pub tex_h: f32,
+    pub rotated: bool,
 }
 
 #[derive(Clone)]
