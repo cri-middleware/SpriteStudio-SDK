@@ -157,6 +157,47 @@ for (size_t i = 0; i < parts->size(); i++) {
 
 この機能を使用することで、SpriteStudio 特有の複雑な行列計算を自前で実装することなく、正しく高速な描画が可能になります。
 
+### Cell メタデータと UV の事前解決バッファ
+
+`libssruntime` は cellmap からの値解決を Setup 時に一度だけ行い、毎フレームは Player が SoA バッファをインデックスで読むだけで済むよう、以下のバッファを公開しています。Player 側で `cellmap->cells()->LookupByKey(name_hash)` のような毎フレームの二分探索を行う必要はありません。
+
+- **`ss_runtime_get_cell_meta`**: パーツごとの `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` を 6 floats × num_parts のレイアウトで返します。`(rect_left, rect_top)` はテクスチャ・ピクセル空間でのセル矩形の左上原点、`(size_w, size_h)` はセルの幅・高さです。セルが無いパーツのスロットはゼロで埋められます。
+- **`ss_runtime_get_local_uvs`**: パーツごとの 5 頂点分の UV を `[u0, v0, u1, v1, u2, v2, u3, v3, u4, v4]` (テクスチャ・ピクセル空間、10 floats × num_parts) で返します。flip / UV 平行移動 / 回転 / スケールが反映済みの最終 UV です。
+- **`ss_runtime_get_z_order`**: パーツの描画順位 (priority と階層位置から決定) を `int32_t × num_parts` で返します。
+
+```cpp
+const float* cell_meta = nullptr;
+size_t cell_meta_len = 0;
+ss_runtime_get_cell_meta(runtime_ctx, &cell_meta, &cell_meta_len);
+
+const float* local_uvs = nullptr;
+size_t local_uvs_len = 0;
+ss_runtime_get_local_uvs(runtime_ctx, &local_uvs, &local_uvs_len);
+
+auto frame_data = GetFrameData(chunk_data);
+auto parts = frame_data->parts();
+
+for (size_t i = 0; i < parts->size(); i++) {
+    auto part = parts->Get(i);
+    if (part->hide() || part->cell() < 0) continue;
+
+    // cell_meta の per-part スライス (6 floats)
+    const float* meta = cell_meta + i * 6;
+    // [pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]
+
+    // local_uvs の per-part スライス (10 floats: 4 corners + center)
+    const float* uvs = local_uvs + i * 10;
+
+    // テクスチャ参照は依然 cellmap 経由 (map_id → cellmap.name_hash → 自前のテクスチャ管理)
+    auto frame_cell = frame_data->cells()->Get(part->cell());
+    Texture* tex = ResolveTextureByMapId(frame_cell->map_id());
+
+    DrawPart(tex, meta, uvs, /* world matrix, alpha, ... */);
+}
+```
+
+cellmap の **`Get(map_id)` はテクスチャ参照のために依然必要** ですが、これは Player 側のリソース管理 (`name_hash → Texture` のマップ) のための 1 段の参照であり、毎フレームの二分探索ではありません。
+
 - **シーングラフ / 階層ノード方式**: 
   パーツの数だけエンジンのオブジェクトを生成し、`ssab` メタデータの `parent_index` を元にエンジンの Transform 階層を構築します。`FrameData` から取得した各 `PartState` のローカル値を各オブジェクトの `transform` に反映させることで、最終的な描画位置（ワールド座標）の計算をエンジンに委ねることができます。実装は容易ですが、パーツ数に比例してエンジン側のノード管理オーバーヘッドが増大するため、注意が必要です。
 
