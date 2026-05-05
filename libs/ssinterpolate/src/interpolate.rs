@@ -1,83 +1,67 @@
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
-use wide::{f32x4, CmpEq, CmpGe, CmpGt, CmpLe, CmpLt};
-
-pub trait SsMask<T> {
-    fn blend(self, t: T, f: T) -> T;
-}
-
-impl SsMask<f32> for bool {
-    #[inline]
-    fn blend(self, t: f32, f: f32) -> f32 { if self { t } else { f } }
-}
-
-impl SsMask<f64> for bool {
-    #[inline]
-    fn blend(self, t: f64, f: f64) -> f64 { if self { t } else { f } }
-}
-
-impl SsMask<f32x4> for f32x4 {
-    #[inline]
-    fn blend(self, t: f32x4, f: f32x4) -> f32x4 {
-        self.blend(t, f)
-    }
-}
 
 /// A trait to abstract floating-point operations for generic interpolation.
-pub trait SsFloat: Sized + Copy + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Div<Output = Self> + AddAssign + SubAssign + MulAssign + DivAssign {
-    type Mask: SsMask<Self>;
+pub trait SsFloat: Sized + Copy + PartialEq + PartialOrd + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Div<Output = Self> + AddAssign + SubAssign + MulAssign + DivAssign {
     fn from_f32(v: f32) -> Self;
+    fn to_i32(self) -> i32;
     fn powf(self, n: Self) -> Self;
     fn sin(self) -> Self;
     fn cos(self) -> Self;
     fn pi() -> Self;
-
-    fn cmp_lt(self, other: Self) -> Self::Mask;
-    fn cmp_le(self, other: Self) -> Self::Mask;
-    fn cmp_gt(self, other: Self) -> Self::Mask;
-    fn cmp_ge(self, other: Self) -> Self::Mask;
-    fn cmp_eq(self, other: Self) -> Self::Mask;
 }
 
 impl SsFloat for f32 {
-    type Mask = bool;
-    #[inline] fn from_f32(v: f32) -> Self { v }
-    #[inline] fn powf(self, n: Self) -> Self { libm::powf(self, n) }
-    #[inline] fn sin(self) -> Self { libm::sinf(self) }
-    #[inline] fn cos(self) -> Self { libm::cosf(self) }
-    #[inline] fn pi() -> Self { core::f32::consts::PI }
-    #[inline] fn cmp_lt(self, other: Self) -> Self::Mask { self < other }
-    #[inline] fn cmp_le(self, other: Self) -> Self::Mask { self <= other }
-    #[inline] fn cmp_gt(self, other: Self) -> Self::Mask { self > other }
-    #[inline] fn cmp_ge(self, other: Self) -> Self::Mask { self >= other }
-    #[inline] fn cmp_eq(self, other: Self) -> Self::Mask { self == other }
+    #[inline]
+    fn from_f32(v: f32) -> Self {
+        v
+    }
+    #[inline]
+    fn to_i32(self) -> i32 {
+        self as i32
+    }
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        libm::powf(self, n)
+    }
+    #[inline]
+    fn sin(self) -> Self {
+        libm::sinf(self)
+    }
+    #[inline]
+    fn cos(self) -> Self {
+        libm::cosf(self)
+    }
+    #[inline]
+    fn pi() -> Self {
+        core::f32::consts::PI
+    }
 }
 
 impl SsFloat for f64 {
-    type Mask = bool;
-    #[inline] fn from_f32(v: f32) -> Self { v as f64 }
-    #[inline] fn powf(self, n: Self) -> Self { libm::pow(self, n) }
-    #[inline] fn sin(self) -> Self { libm::sin(self) }
-    #[inline] fn cos(self) -> Self { libm::cos(self) }
-    #[inline] fn pi() -> Self { core::f64::consts::PI }
-    #[inline] fn cmp_lt(self, other: Self) -> Self::Mask { self < other }
-    #[inline] fn cmp_le(self, other: Self) -> Self::Mask { self <= other }
-    #[inline] fn cmp_gt(self, other: Self) -> Self::Mask { self > other }
-    #[inline] fn cmp_ge(self, other: Self) -> Self::Mask { self >= other }
-    #[inline] fn cmp_eq(self, other: Self) -> Self::Mask { self == other }
-}
-
-impl SsFloat for f32x4 {
-    type Mask = f32x4;
-    #[inline] fn from_f32(v: f32) -> Self { f32x4::splat(v) }
-    #[inline] fn powf(self, n: Self) -> Self { self.pow_f32x4(n) }
-    #[inline] fn sin(self) -> Self { self.sin() }
-    #[inline] fn cos(self) -> Self { self.cos() }
-    #[inline] fn pi() -> Self { f32x4::splat(core::f32::consts::PI) }
-    #[inline] fn cmp_lt(self, other: Self) -> Self::Mask { self.simd_lt(other) }
-    #[inline] fn cmp_le(self, other: Self) -> Self::Mask { self.simd_le(other) }
-    #[inline] fn cmp_gt(self, other: Self) -> Self::Mask { self.simd_gt(other) }
-    #[inline] fn cmp_ge(self, other: Self) -> Self::Mask { self.simd_ge(other) }
-    #[inline] fn cmp_eq(self, other: Self) -> Self::Mask { self.simd_eq(other) }
+    #[inline]
+    fn from_f32(v: f32) -> Self {
+        v as f64
+    }
+    #[inline]
+    fn to_i32(self) -> i32 {
+        self as i32
+    }
+    #[inline]
+    fn powf(self, n: Self) -> Self {
+        libm::pow(self, n)
+    }
+    #[inline]
+    fn sin(self) -> Self {
+        libm::sin(self)
+    }
+    #[inline]
+    fn cos(self) -> Self {
+        libm::cos(self)
+    }
+    #[inline]
+    fn pi() -> Self {
+        core::f64::consts::PI
+    }
 }
 
 // --- Core Generic Implementations ---
@@ -89,23 +73,21 @@ fn bounce_time<T: SsFloat>(rate: T) -> T {
 
     let mul_7_5625 = T::from_f32(7.5625);
 
-    let val1 = mul_7_5625 * rate * rate;
-
-    let rate_modify2 = rate - T::from_f32(1.5 / 2.75);
-    let val2 = mul_7_5625 * rate_modify2 * rate_modify2 + T::from_f32(0.75);
-
-    let rate_modify3 = rate - T::from_f32(2.25 / 2.75);
-    let val3 = mul_7_5625 * rate_modify3 * rate_modify3 + T::from_f32(0.9375);
-
-    let rate_modify4 = rate - T::from_f32(2.625 / 2.75);
-    let val4 = mul_7_5625 * rate_modify4 * rate_modify4 + T::from_f32(0.984375);
-
-    let cond1 = rate.cmp_lt(div_2_75);
-    let cond2 = rate.cmp_lt(div_2_0_2_75);
-    let cond3 = rate.cmp_lt(div_2_5_2_75);
-
-    cond1.blend(val1, cond2.blend(val2, cond3.blend(val3, val4)))
+    if rate < div_2_75 {
+        mul_7_5625 * rate * rate
+    } else if rate < div_2_0_2_75 {
+        let rate_modify = rate - T::from_f32(1.5 / 2.75);
+        mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.75)
+    } else if rate < div_2_5_2_75 {
+        let rate_modify = rate - T::from_f32(2.25 / 2.75);
+        mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.9375)
+    } else {
+        let rate_modify = rate - T::from_f32(2.625 / 2.75);
+        mul_7_5625 * rate_modify * rate_modify + T::from_f32(0.984375)
+    }
 }
+
+use wide::f32x4;
 
 #[inline]
 fn linear_batch_f32x4(start: f32x4, end: f32x4, rate: f32x4) -> f32x4 {
@@ -215,7 +197,11 @@ pub fn bezier<T: SsFloat>(value_start_x: T, value_start_y: T, value_end_x: T, va
         let frame_temp = (base_now_pow3 * value_start_x) + (three * base_now_pow2 * area_now * (vector_start_x + value_start_x)) + (three * base_now * area_now_pow2 * (vector_end_x + value_end_x)) + (area_now * area_now_pow2 * value_end_x);
 
         range_now *= half;
-        area_now = frame_temp.cmp_gt(frame).blend(area_now - range_now, area_now + range_now);
+        if frame_temp > frame {
+            area_now -= range_now;
+        } else {
+            area_now += range_now;
+        }
     }
 
     area_now_pow2 = area_now * area_now;
@@ -236,38 +222,30 @@ pub fn rate_ease_out<T: SsFloat>(rate: T, power_easing: T) -> T {
 
 pub fn rate_ease_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
     let rate_mul_2 = rate * T::from_f32(2.0);
-    let val1 = T::from_f32(0.5) * rate_mul_2.powf(power_easing);
-    let val2 = T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate_mul_2).powf(power_easing));
-    rate_mul_2.cmp_lt(T::from_f32(1.0)).blend(val1, val2)
+    if rate_mul_2 < T::from_f32(1.0) { T::from_f32(0.5) * rate_mul_2.powf(power_easing) } else { T::from_f32(1.0) - (T::from_f32(0.5) * (T::from_f32(2.0) - rate_mul_2).powf(power_easing)) }
 }
 
 pub fn rate_ease_exponential_in<T: SsFloat>(rate: T) -> T {
-    let val1 = T::from_f32(0.0);
-    let val2 = T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0)));
-    rate.cmp_le(T::from_f32(0.0)).blend(val1, val2)
+    if rate <= T::from_f32(0.0) { T::from_f32(0.0) } else { T::from_f32(2.0).powf(T::from_f32(10.0) * (rate - T::from_f32(1.0))) }
 }
 
 pub fn rate_ease_exponential_out<T: SsFloat>(rate: T) -> T {
-    let val1 = T::from_f32(1.0);
-    let val2 = T::from_f32(1.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * rate);
-    rate.cmp_ge(T::from_f32(1.0)).blend(val1, val2)
+    if rate >= T::from_f32(1.0) { T::from_f32(1.0) } else { T::from_f32(1.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) }
 }
 
 pub fn rate_ease_exponential_inout<T: SsFloat>(rate: T) -> T {
-    let zero = T::from_f32(0.0);
-    let one = T::from_f32(1.0);
+    if rate <= T::from_f32(0.0) {
+        return T::from_f32(0.0);
+    }
+    if rate >= T::from_f32(1.0) {
+        return T::from_f32(1.0);
+    }
     let rate_mul_2 = rate * T::from_f32(2.0);
-
-    let cond_le_0 = rate.cmp_le(zero);
-    let cond_ge_1 = rate.cmp_ge(one);
-    let cond_lt_1_mul = rate_mul_2.cmp_lt(one);
-
-    let val_lt_1 = T::from_f32(0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * (rate_mul_2 - one));
-    let val_ge_1 = T::from_f32(0.5) * (T::from_f32(2.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * (rate_mul_2 - one)));
-
-    let inner_blend = cond_lt_1_mul.blend(val_lt_1, val_ge_1);
-
-    cond_le_0.blend(zero, cond_ge_1.blend(one, inner_blend))
+    if rate_mul_2 < T::from_f32(1.0) {
+        T::from_f32(0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * (rate_mul_2 - T::from_f32(1.0)))
+    } else {
+        T::from_f32(0.5) * (T::from_f32(2.0) - T::from_f32(2.0).powf(T::from_f32(-10.0) * (rate_mul_2 - T::from_f32(1.0))))
+    }
 }
 
 pub fn rate_ease_sine_in<T: SsFloat>(rate: T) -> T {
@@ -285,51 +263,46 @@ pub fn rate_ease_sine_inout<T: SsFloat>(rate: T) -> T {
 pub fn rate_ease_elastic_in<T: SsFloat>(rate: T, power_easing: T) -> T {
     let zero = T::from_f32(0.0);
     let one = T::from_f32(1.0);
-
-    let s = power_easing * T::from_f32(0.25);
-    let rate_slide = rate - one;
-    let val = T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_slide) * ((rate_slide - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin();
-
-    let cond1 = rate.cmp_le(zero);
-    let cond2 = rate.cmp_ge(one);
-    let cond_out = cond1.blend(T::from_f32(1.0), cond2.blend(T::from_f32(1.0), T::from_f32(0.0))).cmp_eq(T::from_f32(1.0));
-
-    cond_out.blend(rate, val)
+    if rate <= zero || rate >= one {
+        rate
+    } else {
+        let s = power_easing * T::from_f32(0.25);
+        let rate_slide = rate - one;
+        T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_slide) * ((rate_slide - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin()
+    }
 }
 
 pub fn rate_ease_elastic_out<T: SsFloat>(rate: T, power_easing: T) -> T {
     let zero = T::from_f32(0.0);
     let one = T::from_f32(1.0);
-
-    let s = power_easing * T::from_f32(0.25);
-    let val = T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin() + one;
-
-    let cond1 = rate.cmp_le(zero);
-    let cond2 = rate.cmp_ge(one);
-    let cond_out = cond1.blend(T::from_f32(1.0), cond2.blend(T::from_f32(1.0), T::from_f32(0.0))).cmp_eq(T::from_f32(1.0));
-
-    cond_out.blend(rate, val)
+    if rate <= zero || rate >= one {
+        rate
+    } else {
+        let s = power_easing * T::from_f32(0.25);
+        T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin() + one
+    }
 }
 
 pub fn rate_ease_elastic_inout<T: SsFloat>(rate: T, power_easing: T) -> T {
     let zero = T::from_f32(0.0);
     let one = T::from_f32(1.0);
+    if rate <= zero || rate >= one {
+        rate
+    } else {
+        let mut rate_mul_2 = rate * T::from_f32(2.0);
+        let mut power_easing_modify = power_easing;
+        if power_easing_modify == zero {
+            power_easing_modify = T::from_f32(0.3 * 1.5);
+        }
 
-    let rate_mul_2 = rate * T::from_f32(2.0) - one;
-    let power_easing_modify = power_easing.cmp_eq(zero).blend(T::from_f32(0.3 * 1.5), power_easing);
-
-    let s = power_easing_modify * T::from_f32(0.25);
-
-    let val1 = T::from_f32(-0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_mul_2) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin();
-    let val2 = T::from_f32(2.0).powf(T::from_f32(-10.0) * rate_mul_2) * ((rate_mul_2 - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin() * T::from_f32(0.5) + one;
-
-    let val = rate_mul_2.cmp_lt(zero).blend(val1, val2);
-
-    let cond1 = rate.cmp_le(zero);
-    let cond2 = rate.cmp_ge(one);
-    let cond_out = cond1.blend(T::from_f32(1.0), cond2.blend(T::from_f32(1.0), T::from_f32(0.0))).cmp_eq(T::from_f32(1.0));
-
-    cond_out.blend(rate, val)
+        let s = power_easing_modify * T::from_f32(0.25);
+        rate_mul_2 -= one;
+        if rate_mul_2 < zero {
+            T::from_f32(-0.5) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_mul_2) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin()
+        } else {
+            T::from_f32(2.0).powf(T::from_f32(-10.0) * rate_mul_2) * ((rate_mul_2 - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin() * T::from_f32(0.5) + one
+        }
+    }
 }
 
 pub fn rate_ease_bounce_in<T: SsFloat>(rate: T) -> T {
@@ -341,9 +314,7 @@ pub fn rate_ease_bounce_out<T: SsFloat>(rate: T) -> T {
 }
 
 pub fn rate_ease_bounce_inout<T: SsFloat>(rate: T) -> T {
-    let val1 = (T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate))) * T::from_f32(0.5);
-    let val2 = bounce_time(rate * T::from_f32(2.0) - T::from_f32(1.0)) * T::from_f32(0.5) + T::from_f32(0.5);
-    rate.cmp_lt(T::from_f32(0.5)).blend(val1, val2)
+    if rate < T::from_f32(0.5) { (T::from_f32(1.0) - bounce_time(T::from_f32(1.0) - (T::from_f32(2.0) * rate))) * T::from_f32(0.5) } else { bounce_time(rate * T::from_f32(2.0) - T::from_f32(1.0)) * T::from_f32(0.5) + T::from_f32(0.5) }
 }
 
 pub fn rate_ease_back_in<T: SsFloat>(rate: T) -> T {
@@ -359,15 +330,13 @@ pub fn rate_ease_back_out<T: SsFloat>(rate: T) -> T {
 
 pub fn rate_ease_back_inout<T: SsFloat>(rate: T) -> T {
     let overshoot = T::from_f32(1.70158 * 1.525);
-    let rate_mul_2 = rate * T::from_f32(2.0);
-
-    let cond = rate_mul_2.cmp_lt(T::from_f32(1.0));
-    let val1 = (rate_mul_2 * rate_mul_2 * ((overshoot + T::from_f32(1.0)) * rate_mul_2 - overshoot)) * T::from_f32(0.5);
-
-    let rate_mul_2_sub = rate_mul_2 - T::from_f32(2.0);
-    let val2 = (rate_mul_2_sub * rate_mul_2_sub * ((overshoot + T::from_f32(1.0)) * rate_mul_2_sub + overshoot)) * T::from_f32(0.5) + T::from_f32(1.0);
-
-    cond.blend(val1, val2)
+    let mut rate_mul_2 = rate * T::from_f32(2.0);
+    if rate_mul_2 < T::from_f32(1.0) {
+        (rate_mul_2 * rate_mul_2 * ((overshoot + T::from_f32(1.0)) * rate_mul_2 - overshoot)) * T::from_f32(0.5)
+    } else {
+        rate_mul_2 -= T::from_f32(2.0);
+        (rate_mul_2 * rate_mul_2 * ((overshoot + T::from_f32(1.0)) * rate_mul_2 + overshoot)) * T::from_f32(0.5) + T::from_f32(1.0)
+    }
 }
 
 #[cfg(test)]
@@ -528,81 +497,5 @@ mod tests {
         for val in out {
             assert_near(val, 0.5);
         }
-    }
-}
-
-pub fn interpolate_array_bezier(
-    start: &[f32],
-    end: &[f32],
-    frame_no: f32,
-    prev_frame: f32,
-    next_frame: f32,
-    c_start_time: f32,
-    c_start_value: f32,
-    c_end_time: f32,
-    c_end_value: f32,
-    out: &mut [f32],
-) {
-    let rate = rate_linear(frame_no, prev_frame, next_frame);
-    let rate_v = f32x4::splat(rate);
-    let prev_f_v = f32x4::splat(prev_frame);
-    let next_f_v = f32x4::splat(next_frame);
-    let c_st_v = f32x4::splat(c_start_time);
-    let c_sv_v = f32x4::splat(c_start_value);
-    let c_et_v = f32x4::splat(c_end_time);
-    let c_ev_v = f32x4::splat(c_end_value);
-
-    let mut start_chunks = start.chunks_exact(4);
-    let mut end_chunks = end.chunks_exact(4);
-    let mut out_chunks = out.chunks_exact_mut(4);
-
-    for ((s, e), o) in start_chunks.by_ref().zip(end_chunks.by_ref()).zip(out_chunks.by_ref()) {
-        let s_v = f32x4::from([s[0], s[1], s[2], s[3]]);
-        let e_v = f32x4::from([e[0], e[1], e[2], e[3]]);
-        let res = bezier(prev_f_v, s_v, next_f_v, e_v, rate_v, c_st_v, c_sv_v, c_et_v, c_ev_v);
-        o.copy_from_slice(&res.to_array());
-    }
-
-    let start_rem = start_chunks.remainder();
-    let end_rem = end_chunks.remainder();
-    let out_rem = out_chunks.into_remainder();
-
-    for i in 0..start_rem.len() {
-        out_rem[i] = bezier(prev_frame, start_rem[i], next_frame, end_rem[i], rate, c_start_time, c_start_value, c_end_time, c_end_value);
-    }
-}
-
-pub fn interpolate_array_hermite(
-    start: &[f32],
-    end: &[f32],
-    frame_no: f32,
-    prev_frame: f32,
-    next_frame: f32,
-    c_start_value: f32,
-    c_end_value: f32,
-    out: &mut [f32],
-) {
-    let rate = rate_linear(frame_no, prev_frame, next_frame);
-    let rate_v = f32x4::splat(rate);
-    let c_sv_v = f32x4::splat(c_start_value);
-    let c_ev_v = f32x4::splat(c_end_value);
-
-    let mut start_chunks = start.chunks_exact(4);
-    let mut end_chunks = end.chunks_exact(4);
-    let mut out_chunks = out.chunks_exact_mut(4);
-
-    for ((s, e), o) in start_chunks.by_ref().zip(end_chunks.by_ref()).zip(out_chunks.by_ref()) {
-        let s_v = f32x4::from([s[0], s[1], s[2], s[3]]);
-        let e_v = f32x4::from([e[0], e[1], e[2], e[3]]);
-        let res = hermite(s_v, e_v, rate_v, c_sv_v, c_ev_v);
-        o.copy_from_slice(&res.to_array());
-    }
-
-    let start_rem = start_chunks.remainder();
-    let end_rem = end_chunks.remainder();
-    let out_rem = out_chunks.into_remainder();
-
-    for i in 0..start_rem.len() {
-        out_rem[i] = hermite(start_rem[i], end_rem[i], rate, c_start_value, c_end_value);
     }
 }
