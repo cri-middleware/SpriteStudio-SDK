@@ -603,11 +603,16 @@ fn get_parts<'a>(
 
             let off = i * LOCAL_VERTICES_STRIDE;
             if off + LOCAL_VERTICES_STRIDE <= local_vertices.len() {
-                local_vertices[off]     = vx[0]; local_vertices[off + 1] = vy[0];
-                local_vertices[off + 2] = vx[1]; local_vertices[off + 3] = vy[1];
-                local_vertices[off + 4] = vx[2]; local_vertices[off + 5] = vy[2];
-                local_vertices[off + 6] = vx[3]; local_vertices[off + 7] = vy[3];
-                local_vertices[off + 8] = vx[4]; local_vertices[off + 9] = vy[4];
+                local_vertices[off] = vx[0];
+                local_vertices[off + 1] = vy[0];
+                local_vertices[off + 2] = vx[1];
+                local_vertices[off + 3] = vy[1];
+                local_vertices[off + 4] = vx[2];
+                local_vertices[off + 5] = vy[2];
+                local_vertices[off + 6] = vx[3];
+                local_vertices[off + 7] = vy[3];
+                local_vertices[off + 8] = vx[4];
+                local_vertices[off + 9] = vy[4];
             }
         }
 

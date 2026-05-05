@@ -290,16 +290,13 @@ impl<'a> AnimationResource<'a> {
                     for (i, p) in parts.iter().enumerate() {
                         let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
                         let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
-                        let shape_kind = fb_parts
-                            .map(|meta| meta.get(i))
-                            .and_then(|part_data| part_data.part_type_as_part_type_shape())
-                            .and_then(|s| match s.shape_type() {
-                                ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
-                                ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
-                                ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
-                                ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
-                                _ => None,
-                            });
+                        let shape_kind = fb_parts.map(|meta| meta.get(i)).and_then(|part_data| part_data.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
+                            ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
+                            ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
+                            ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
+                            ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
+                            _ => None,
+                        });
                         cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind));
                     }
                 }

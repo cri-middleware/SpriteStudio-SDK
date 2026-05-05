@@ -74,11 +74,7 @@ pub fn resolve_frame(diff: f32, start: i32, end: i32, loops: i32, style: Playbac
             // and `phase = length`, matching SS6's nowloop transition where
             // reftime=length plays end again at the start of the reverse
             // loop.
-            if phase < length {
-                phase
-            } else {
-                cycle_len - 1.0 - phase
-            }
+            if phase < length { phase } else { cycle_len - 1.0 - phase }
         }
     };
 
@@ -547,8 +543,8 @@ mod tests {
         assert_eq!(rf(11.0, start, end, -1, s, d), (0.0, false));
         assert_eq!(rf(15.0, start, end, -1, s, d), (4.0, false));
         assert_eq!(rf(22.0, start, end, -1, s, d), (0.0, false));
-        assert_eq!(rf(0.0, start, end, 0, s, d).1, false);
-        assert_eq!(rf(100.0, start, end, 0, s, d).1, false);
+        assert!(!rf(0.0, start, end, 0, s, d).1);
+        assert!(!rf(100.0, start, end, 0, s, d).1);
     }
 
     #[test]

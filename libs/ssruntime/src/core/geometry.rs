@@ -1,4 +1,3 @@
-
 use crate::core::matrix::SsMatrix4x4;
 use wide::{CmpGt, CmpLt, f32x4};
 
