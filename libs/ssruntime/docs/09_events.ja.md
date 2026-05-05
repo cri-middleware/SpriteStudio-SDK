@@ -80,8 +80,10 @@ SE（効果音）の再生指示です。
 
 Player は、利用者がこれらのイベントを容易に検知できるように、以下のようなコールバック API を提供することを推奨します。
 
-- **setAnimationFinishedCallback(callback)**: アニメーションの再生が終了（またはループの終端に到達）した際の通知。
-    - **判定方法**: イベントとしてではなく、`ss_runtime_is_end_frame_reached(context)` が `true` になったタイミングで発火させます。
+- **setAnimationLoopedCallback(callback)**: アニメーションがループした際の通知。
+    - **判定方法**: イベントとしてではなく、毎フレームの更新後に `ss_runtime_is_looped(context)` が `true` になったタイミングで発火させます。
+- **setAnimationFinishedCallback(callback)**: アニメーションの再生が完全に終了し、停止した際の通知。
+    - **判定方法**: イベントとしてではなく、毎フレームの更新後に `ss_runtime_is_end_frame_reached(context)` が `true` になったタイミングで発火させます。
 - **setUserDataCallback(callback)**: タイムライン上のユーザーデータ（UserData）を検出した際の通知。
 - **setSignalCallback(callback)**: シグナルを受信した際の通知。
 - **setAudioCallback(callback)**: 音声再生要求が発生した際の通知。

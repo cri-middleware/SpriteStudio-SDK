@@ -110,6 +110,7 @@ pub struct PlaybackController {
     next_frame_time: f32,
     remain_loops: i32,
     end_frame_reached: bool,
+    is_looped: bool,
 
     passed_frames: Vec<i32>,
     needs_evaluation: bool,
@@ -122,6 +123,10 @@ impl PlaybackController {
 
     pub fn is_end_frame_reached(&self) -> bool {
         self.end_frame_reached
+    }
+
+    pub fn is_looped(&self) -> bool {
+        self.is_looped
     }
 
     pub fn is_playing(&self) -> bool {
@@ -201,6 +206,7 @@ impl PlaybackController {
             loops: -1,
             remain_loops: -1,
             end_frame_reached: false,
+            is_looped: false,
 
             passed_frames: Vec::new(),
             needs_evaluation: false,
@@ -229,6 +235,7 @@ impl PlaybackController {
         self.next_frame_time = 0.0;
         self.current_frame = 0.0;
         self.end_frame_reached = false;
+        self.is_looped = false;
         self.passed_frames.clear();
         self.needs_evaluation = false;
     }
@@ -304,6 +311,7 @@ impl PlaybackController {
 
     pub fn update(&mut self, delta: f32) -> f32 {
         self.passed_frames.clear();
+        self.is_looped = false;
 
         if self.needs_evaluation {
             self.passed_frames.push(floorf(self.current_frame) as i32);
@@ -365,6 +373,7 @@ impl PlaybackController {
                                 if self.remain_loops == -1 {
                                     // infinite loop
                                     frame_no = start_limit;
+                                    self.is_looped = true;
                                 } else {
                                     self.remain_loops -= 1;
                                     if self.remain_loops == 0 {
@@ -379,6 +388,7 @@ impl PlaybackController {
                                     } else {
                                         // continue to play the animation
                                         frame_no = start_limit;
+                                        self.is_looped = true;
                                     }
                                 }
                             }
@@ -402,7 +412,12 @@ impl PlaybackController {
                                             next_frame_decimal = 0.0;
                                             self.passed_frames.push(frame_no);
                                             break;
+                                        } else {
+                                            self.is_looped = true;
                                         }
+                                    } else {
+                                        // infinite loop
+                                        self.is_looped = true;
                                     }
                                 } else {
                                     next_frame_decimal = 1.0 - next_frame_decimal;
@@ -1073,5 +1088,87 @@ mod tests {
         let passed = t.get_passed_frames();
         let expected = vec![0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, 1, 2];
         assert_eq!(passed, expected.as_slice());
+    }
+
+    #[test]
+    fn test_is_looped_flag_normal_infinite() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 5, 30); // 0 to 5 (6 frames)
+        t.set_loops(-1); // Infinite
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::Normal);
+        t.set_skip_frames(false);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // 0..4
+        for _ in 0..5 {
+            t.update(interval);
+            assert!(!t.is_looped(), "Should not be looped yet");
+        }
+
+        // Frame 5 -> 0 (Loop)
+        t.update(interval);
+        assert!(t.is_looped(), "Should be looped at boundary");
+        assert!(!t.is_end_frame_reached(), "Should not reach end frame in infinite loop");
+
+        // Next frame, flag should reset
+        t.update(interval);
+        assert!(!t.is_looped(), "is_looped should reset on next update");
+    }
+
+    #[test]
+    fn test_is_looped_flag_pingpong() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 5, 30); // 0 to 5
+        t.set_loops(2); // 2 loops
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_skip_frames(false);
+        t.play();
+
+        let interval = 1000.0 / 30.0;
+
+        // Forward 0..4
+        for _ in 0..5 {
+            t.update(interval);
+            assert!(!t.is_looped(), "Should not be looped during forward");
+        }
+
+        // Frame 5 -> Start backward
+        t.update(interval);
+        // In ping-pong, hitting the far end doesn't count as a "loop" completion until we return to origin
+        assert!(!t.is_looped(), "Should not loop at far end of pingpong");
+
+        // Backward 4..1
+        for _ in 0..4 {
+            t.update(interval);
+            assert!(!t.is_looped(), "Should not be looped during backward");
+        }
+
+        // Frame 0 -> 1 (Loop 1 complete)
+        t.update(interval);
+        assert!(t.is_looped(), "Should be looped when returning to origin in pingpong");
+        assert!(!t.is_end_frame_reached());
+
+        // Forward 1..4 again
+        for _ in 0..4 {
+            t.update(interval);
+            assert!(!t.is_looped());
+        }
+
+        // Frame 5 -> Start backward again
+        t.update(interval);
+        assert!(!t.is_looped());
+
+        // Backward 4..1
+        for _ in 0..4 {
+            t.update(interval);
+            assert!(!t.is_looped());
+        }
+
+        // Frame 0 -> End
+        t.update(interval);
+        assert!(!t.is_looped(), "Should not loop on final end");
+        assert!(t.is_end_frame_reached(), "Should reach end frame on last loop");
     }
 }

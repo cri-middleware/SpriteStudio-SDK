@@ -599,6 +599,14 @@ pub extern "C" fn ss_runtime_is_end_frame_reached(context: *mut c_void) -> bool 
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_looped(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.is_looped();
+    }
+    false
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_is_playing(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.is_playing();
