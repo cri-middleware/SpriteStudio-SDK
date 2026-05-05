@@ -251,7 +251,8 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             count = 5;
         }
         ShapeType::Star => {
-            // Center + 10 points
+            // Center + 10 outer points + closing vertex (so a TRIANGLE_FAN consumer
+            // gets all 10 wedges).
             out_x[0] = 0.0;
             out_y[0] = 0.0;
             for i in 0..10 {
@@ -262,7 +263,9 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
                 out_x[i + 1] = s * hw * r_scale;
                 out_y[i + 1] = c * hh * r_scale;
             }
-            count = 11;
+            out_x[11] = out_x[1];
+            out_y[11] = out_y[1];
+            count = 12;
         }
         ShapeType::Arrow => {
             // Simplified arrow (7 points)
@@ -549,5 +552,15 @@ mod tests {
         assert_eq!(count, 4);
         assert_approx_eq(x[0], -50.0);
         assert_approx_eq(y[0], 100.0);
+    }
+
+    #[test]
+    fn test_compute_shape_vertices_star_closes_fan() {
+        let (count, x, y) = compute_shape_vertices(ShapeType::Star, (100.0, 200.0));
+        assert_eq!(count, 12);
+        assert_approx_eq(x[0], 0.0);
+        assert_approx_eq(y[0], 0.0);
+        assert_approx_eq(x[11], x[1]);
+        assert_approx_eq(y[11], y[1]);
     }
 }
