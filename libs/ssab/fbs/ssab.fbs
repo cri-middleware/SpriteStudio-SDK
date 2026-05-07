@@ -282,7 +282,8 @@ table EffectNode {
   index: short;
   parent_index: short;
   effect_node_type: EffectNodeType;
-  cell_index: short;
+  cell_name_hash: uint32;
+  cell_map_name_hash: uint32;
   blend_type: RenderBlendType;
   behavior: [EffectNodeBehaviorWrapper];
 }
@@ -384,6 +385,7 @@ table PartAttributeEffect {
   start_time: int;
   speed: float;
   loopflag: int;
+  independent: bool;
 }
 
 table PartAttributeDeform {
@@ -634,6 +636,7 @@ table PartData {
   parent_index: short;
   bounds_type: BoundsType;
   blend_type: BlendType;
+  mask_influence: bool;
 
   part_type: PartType;
 }

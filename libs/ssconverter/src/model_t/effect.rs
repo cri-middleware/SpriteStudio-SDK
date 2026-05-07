@@ -13,7 +13,8 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                 sspj::ssee::SsEffectNodeType::Particle => ssab::ssab::ss::format::EffectNodeType::Particle,
             };
             let behavior = &node.behavior;
-            // effect_node_t.cell_index = ; // TODO: impl
+            effect_node_t.cell_map_name_hash = crate::utils::fnv1a_hash_str(&behavior.cell_map_name);
+            effect_node_t.cell_name_hash = crate::utils::fnv1a_hash_str(&behavior.cell_name);
             effect_node_t.blend_type = match &behavior.blend_type {
                 sspj::sstypes::SsRenderBlendType::Mix => ssab::ssab::ss::format::RenderBlendType::Mix,
                 sspj::sstypes::SsRenderBlendType::Add => ssab::ssab::ss::format::RenderBlendType::Add,

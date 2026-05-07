@@ -845,10 +845,11 @@ pub struct PartAttributeEffectKey {
     pub start_time: i32,
     pub speed: ordered_float::OrderedFloat<f32>,
     pub loopflag: i32,
+    pub independent: bool,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeEffectT> for PartAttributeEffectKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeEffectT) -> Self {
-        Self { cur_keyframe: value.cur_keyframe, start_time: value.start_time, speed: ordered_float::OrderedFloat(value.speed), loopflag: value.loopflag }
+        Self { cur_keyframe: value.cur_keyframe, start_time: value.start_time, speed: ordered_float::OrderedFloat(value.speed), loopflag: value.loopflag, independent: value.independent }
     }
 }
 
@@ -1839,6 +1840,7 @@ impl<'a> SsabCache<'a> {
         args.start_time = part_attribute_effect.start_time;
         args.speed = part_attribute_effect.speed;
         args.loopflag = part_attribute_effect.loopflag;
+        args.independent = part_attribute_effect.independent;
         let offset = ssab::ssab::ss::format::PartAttributeEffect::create(fb, &args);
 
         self.part_attribute_effect_cache.insert(key, offset);
@@ -1935,6 +1937,7 @@ impl<'a> SsabCache<'a> {
                 args.parent_index = part.parent_index;
                 args.bounds_type = part.bounds_type;
                 args.blend_type = part.blend_type;
+                args.mask_influence = part.mask_influence;
                 args.part_type_type = part.part_type.part_type_type();
                 args.part_type = Some(self.create_shared_part_type(fb, &part.part_type));
 
@@ -2207,7 +2210,8 @@ impl<'a> SsabCache<'a> {
                 n_args.index = node.index;
                 n_args.parent_index = node.parent_index;
                 n_args.effect_node_type = node.effect_node_type;
-                n_args.cell_index = node.cell_index;
+                n_args.cell_name_hash = node.cell_name_hash;
+                n_args.cell_map_name_hash = node.cell_map_name_hash;
                 n_args.blend_type = node.blend_type;
                 n_args.behavior = node.behavior.as_ref().map(|behavior| {
                     let v = behavior
