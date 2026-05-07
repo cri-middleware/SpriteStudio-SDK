@@ -1092,9 +1092,9 @@ impl ::core::fmt::Debug for PartAttributeShader {
       .field("param5", &self.param5())
       .field("param6", &self.param6())
       .field("param7", &self.param7())
-      .field("map0_id", &self.map0_id())
+      .field("map0_cellmap_name_hash", &self.map0_cellmap_name_hash())
       .field("map0_name_hash", &self.map0_name_hash())
-      .field("map1_id", &self.map1_id())
+      .field("map1_cellmap_name_hash", &self.map1_cellmap_name_hash())
       .field("map1_name_hash", &self.map1_name_hash())
       .finish()
   }
@@ -1149,9 +1149,9 @@ impl<'a> PartAttributeShader {
     param5: f32,
     param6: f32,
     param7: f32,
-    map0_id: i32,
+    map0_cellmap_name_hash: u32,
     map0_name_hash: u32,
-    map1_id: i32,
+    map1_cellmap_name_hash: u32,
     map1_name_hash: u32,
   ) -> Self {
     let mut s = Self([0; 52]);
@@ -1164,9 +1164,9 @@ impl<'a> PartAttributeShader {
     s.set_param5(param5);
     s.set_param6(param6);
     s.set_param7(param7);
-    s.set_map0_id(map0_id);
+    s.set_map0_cellmap_name_hash(map0_cellmap_name_hash);
     s.set_map0_name_hash(map0_name_hash);
-    s.set_map1_id(map1_id);
+    s.set_map1_cellmap_name_hash(map1_cellmap_name_hash);
     s.set_map1_name_hash(map1_name_hash);
     s
   }
@@ -1432,8 +1432,8 @@ impl<'a> PartAttributeShader {
     }
   }
 
-  pub fn map0_id(&self) -> i32 {
-    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+  pub fn map0_cellmap_name_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
     // Safety:
     // Created from a valid Table for this object
     // Which contains a valid value in this slot
@@ -1441,13 +1441,13 @@ impl<'a> PartAttributeShader {
       ::core::ptr::copy_nonoverlapping(
         self.0[36..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
-        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
       mem.assume_init()
     })
   }
 
-  pub fn set_map0_id(&mut self, x: i32) {
+  pub fn set_map0_cellmap_name_hash(&mut self, x: u32) {
     let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
     // Safety:
     // Created from a valid Table for this object
@@ -1456,7 +1456,7 @@ impl<'a> PartAttributeShader {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
         self.0[36..].as_mut_ptr(),
-        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
   }
@@ -1490,8 +1490,8 @@ impl<'a> PartAttributeShader {
     }
   }
 
-  pub fn map1_id(&self) -> i32 {
-    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+  pub fn map1_cellmap_name_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
     // Safety:
     // Created from a valid Table for this object
     // Which contains a valid value in this slot
@@ -1499,13 +1499,13 @@ impl<'a> PartAttributeShader {
       ::core::ptr::copy_nonoverlapping(
         self.0[44..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
-        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
       mem.assume_init()
     })
   }
 
-  pub fn set_map1_id(&mut self, x: i32) {
+  pub fn set_map1_cellmap_name_hash(&mut self, x: u32) {
     let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
     // Safety:
     // Created from a valid Table for this object
@@ -1514,7 +1514,7 @@ impl<'a> PartAttributeShader {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
         self.0[44..].as_mut_ptr(),
-        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
   }

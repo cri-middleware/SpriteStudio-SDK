@@ -55,7 +55,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.animations = if anime_pack.anime_list.is_empty() {
         None
     } else {
-        let animations = model_t::animedata::convert_animation_data_list(anime_pack, &parts_map, &sound_list_id_to_name_hash);
+        let animations = model_t::animedata::convert_animation_data_list(anime_pack, &parts_map, &sound_list_id_to_name_hash, &anime_pack.cellmap_names);
         if animations.is_empty() { None } else { Some(animations) }
     };
     anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(sspj, &cellmaps, asset_provider)?) };

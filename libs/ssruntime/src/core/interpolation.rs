@@ -432,9 +432,9 @@ pub fn evaluate_shader(
                     out_params[5],
                     out_params[6],
                     out_params[7],
-                    prev_value.map0_id(),
+                    prev_value.map0_cellmap_name_hash(),
                     prev_value.map0_name_hash(),
-                    prev_value.map1_id(),
+                    prev_value.map1_cellmap_name_hash(),
                     prev_value.map1_name_hash(),
                 ),
                 UPDATE_FLAG_ON,
@@ -448,7 +448,21 @@ pub fn evaluate_shader(
 #[inline]
 fn transfer_shader(source: &Option<ssab::ssab::ss::format::PartAttributeShader>) -> runtime::framedata::ss::runtime::PartAttributeShader {
     if let Some(s) = source {
-        runtime::framedata::ss::runtime::PartAttributeShader::new(s.id_hash(), s.param0(), s.param1(), s.param2(), s.param3(), s.param4(), s.param5(), s.param6(), s.param7(), s.map0_id(), s.map0_name_hash(), s.map1_id(), s.map1_name_hash())
+        runtime::framedata::ss::runtime::PartAttributeShader::new(
+            s.id_hash(),
+            s.param0(),
+            s.param1(),
+            s.param2(),
+            s.param3(),
+            s.param4(),
+            s.param5(),
+            s.param6(),
+            s.param7(),
+            s.map0_cellmap_name_hash(),
+            s.map0_name_hash(),
+            s.map1_cellmap_name_hash(),
+            s.map1_name_hash(),
+        )
     } else {
         runtime::framedata::ss::runtime::PartAttributeShader::default()
     }

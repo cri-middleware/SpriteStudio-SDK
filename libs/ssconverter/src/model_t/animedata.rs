@@ -306,13 +306,19 @@ fn convert_events_per_frames(
         Some(vec_map.into_iter().map(|(_, v)| v).collect::<Vec<ssab::ssab::ss::format::EventsPerFrameT>>())
     }
 }
-fn convert_animedatat(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> ssab::ssab::ss::format::AnimationDataT {
+fn convert_animedatat(
+    anime_data: &sspj::ssae::SsAnimation,
+    setup_animation: &sspj::ssae::SsAnimation,
+    parts_map: &HashMap<String, &sspj::ssae::SsPart>,
+    sound_list_id_to_name_hash: &HashMap<i32, u32>,
+    cellmap_names: &[String],
+) -> ssab::ssab::ss::format::AnimationDataT {
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
     anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
-    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation));
-    anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map));
+    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation, cellmap_names));
+    anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmap_names));
     anime_data_t.parts_mesh_data = None;
     anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash);
@@ -361,7 +367,7 @@ fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType
     }
 }
 
-fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind]) {
+fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind], cellmap_names: &[String]) {
     // MEMO: This function. Since only “setup” is targeted, “key.time == 0” might not be necessary.
     //       It's required because the caller is attempting to composite with frame 0,
     //         but that should probably be done during key-frame placement ?    Yuzu.
@@ -542,9 +548,9 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     value.param6 = _key.value.param6;
                     value.param7 = _key.value.param7;
 
-                    value.map0_id = _key.value.map0.map_id;
+                    value.map0_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, _key.value.map0.map_id);
                     value.map0_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map0.name);
-                    value.map1_id = _key.value.map1.map_id;
+                    value.map1_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, _key.value.map1.map_id);
                     value.map1_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map1.name);
 
                     p_args.shader = Some(Box::new(value));
@@ -888,14 +894,14 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
     }
 }
 
-fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
+fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
     anime_data
         .part_animes
         .iter()
         .map(|part_anime| {
             let mut part_attribute_t = ssab::ssab::ss::format::InitialPartAttributesT::default();
             // TODO: impl
-            merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes);
+            merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes, cellmap_names);
 
             part_attribute_t
         })
@@ -995,7 +1001,7 @@ macro_rules! process_simple_attribute {
     }};
 }
 
-fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime) {
+fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime, cellmap_names: &[String]) {
     part_anime.attributes.iter().for_each(|attribute| match attribute {
         sspj::ssattribute::SsAttributeKind::Cell(v) => {
             process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
@@ -1154,9 +1160,9 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 value.param5 = k.value.param5;
                 value.param6 = k.value.param6;
                 value.param7 = k.value.param7;
-                value.map0_id = k.value.map0.map_id;
+                value.map0_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, k.value.map0.map_id);
                 value.map0_name_hash = crate::utils::fnv1a_hash_str(&k.value.map0.name);
-                value.map1_id = k.value.map1.map_id;
+                value.map1_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, k.value.map1.map_id);
                 value.map1_name_hash = crate::utils::fnv1a_hash_str(&k.value.map1.name);
                 Some(Box::new(value))
             });
@@ -1425,7 +1431,7 @@ fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimation
     p_args.texture_array = p_args.texture_array.as_ref().and_then(|v| optimize_part_animation_data_texture(v));
 }
 
-fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
+fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
     let mut parts_animation_data_t = Vec::<ssab::ssab::ss::format::PartAnimationDataT>::new();
     parts_animation_data_t.resize(parts_map.len(), ssab::ssab::ss::format::PartAnimationDataT::default());
 
@@ -1436,7 +1442,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names);
     }
 
     for part_anime in &anime_data.part_animes {
@@ -1446,7 +1452,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names);
         modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, part_anime);
     }
 
@@ -1596,7 +1602,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         .collect::<Vec<_>>()
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
+pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
         return vec![];
@@ -1609,9 +1615,20 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_m
             if anime_data == setup_animation {
                 return None;
             }
-            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash))
+            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash, cellmap_names))
         })
         .collect::<Vec<ssab::ssab::ss::format::AnimationDataT>>()
+}
+
+fn cellmap_id_to_name_hash(cellmap_names: &[String], map_id: i32) -> u32 {
+    if map_id < 0 {
+        return 0;
+    }
+    let Some(file_name) = cellmap_names.get(map_id as usize) else {
+        return 0;
+    };
+    let name = file_name.strip_suffix(".ssce").unwrap_or(file_name);
+    crate::utils::fnv1a_hash_str(name)
 }
 
 #[cfg(test)]
