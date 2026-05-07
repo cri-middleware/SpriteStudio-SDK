@@ -69,9 +69,9 @@ struct PartAttributeShader {
   param5: float;
   param6: float;
   param7: float;
-  map0_id: int;
+  map0_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
   map0_name_hash: uint32; // instead of map0_name: string;
-  map1_id: int;
+  map1_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
   map1_name_hash: uint32; // instead of map1_name: string;
 }
 

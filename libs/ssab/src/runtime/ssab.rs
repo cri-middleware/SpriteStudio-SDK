@@ -7993,9 +7993,9 @@ impl<'a> PartAttributeShader<'a> {
   pub const VT_PARAM5: ::flatbuffers::VOffsetT = 18;
   pub const VT_PARAM6: ::flatbuffers::VOffsetT = 20;
   pub const VT_PARAM7: ::flatbuffers::VOffsetT = 22;
-  pub const VT_MAP0_ID: ::flatbuffers::VOffsetT = 24;
+  pub const VT_MAP0_CELLMAP_NAME_HASH: ::flatbuffers::VOffsetT = 24;
   pub const VT_MAP0_NAME_HASH: ::flatbuffers::VOffsetT = 26;
-  pub const VT_MAP1_ID: ::flatbuffers::VOffsetT = 28;
+  pub const VT_MAP1_CELLMAP_NAME_HASH: ::flatbuffers::VOffsetT = 28;
   pub const VT_MAP1_NAME_HASH: ::flatbuffers::VOffsetT = 30;
 
   #[inline]
@@ -8009,9 +8009,9 @@ impl<'a> PartAttributeShader<'a> {
   ) -> ::flatbuffers::WIPOffset<PartAttributeShader<'bldr>> {
     let mut builder = PartAttributeShaderBuilder::new(_fbb);
     builder.add_map1_name_hash(args.map1_name_hash);
-    builder.add_map1_id(args.map1_id);
+    builder.add_map1_cellmap_name_hash(args.map1_cellmap_name_hash);
     builder.add_map0_name_hash(args.map0_name_hash);
-    builder.add_map0_id(args.map0_id);
+    builder.add_map0_cellmap_name_hash(args.map0_cellmap_name_hash);
     builder.add_param7(args.param7);
     builder.add_param6(args.param6);
     builder.add_param5(args.param5);
@@ -8097,11 +8097,11 @@ impl<'a> PartAttributeShader<'a> {
     unsafe { self._tab.get::<f32>(PartAttributeShader::VT_PARAM7, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn map0_id(&self) -> i32 {
+  pub fn map0_cellmap_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeShader::VT_MAP0_ID, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(PartAttributeShader::VT_MAP0_CELLMAP_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn map0_name_hash(&self) -> u32 {
@@ -8111,11 +8111,11 @@ impl<'a> PartAttributeShader<'a> {
     unsafe { self._tab.get::<u32>(PartAttributeShader::VT_MAP0_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn map1_id(&self) -> i32 {
+  pub fn map1_cellmap_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeShader::VT_MAP1_ID, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(PartAttributeShader::VT_MAP1_CELLMAP_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn map1_name_hash(&self) -> u32 {
@@ -8142,9 +8142,9 @@ impl ::flatbuffers::Verifiable for PartAttributeShader<'_> {
      .visit_field::<f32>("param5", Self::VT_PARAM5, false)?
      .visit_field::<f32>("param6", Self::VT_PARAM6, false)?
      .visit_field::<f32>("param7", Self::VT_PARAM7, false)?
-     .visit_field::<i32>("map0_id", Self::VT_MAP0_ID, false)?
+     .visit_field::<u32>("map0_cellmap_name_hash", Self::VT_MAP0_CELLMAP_NAME_HASH, false)?
      .visit_field::<u32>("map0_name_hash", Self::VT_MAP0_NAME_HASH, false)?
-     .visit_field::<i32>("map1_id", Self::VT_MAP1_ID, false)?
+     .visit_field::<u32>("map1_cellmap_name_hash", Self::VT_MAP1_CELLMAP_NAME_HASH, false)?
      .visit_field::<u32>("map1_name_hash", Self::VT_MAP1_NAME_HASH, false)?
      .finish();
     Ok(())
@@ -8161,9 +8161,9 @@ pub struct PartAttributeShaderArgs<'a> {
     pub param5: f32,
     pub param6: f32,
     pub param7: f32,
-    pub map0_id: i32,
+    pub map0_cellmap_name_hash: u32,
     pub map0_name_hash: u32,
-    pub map1_id: i32,
+    pub map1_cellmap_name_hash: u32,
     pub map1_name_hash: u32,
 }
 impl<'a> Default for PartAttributeShaderArgs<'a> {
@@ -8180,9 +8180,9 @@ impl<'a> Default for PartAttributeShaderArgs<'a> {
       param5: 0.0,
       param6: 0.0,
       param7: 0.0,
-      map0_id: 0,
+      map0_cellmap_name_hash: 0,
       map0_name_hash: 0,
-      map1_id: 0,
+      map1_cellmap_name_hash: 0,
       map1_name_hash: 0,
     }
   }
@@ -8234,16 +8234,16 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeShaderBuilder<'a
     self.fbb_.push_slot::<f32>(PartAttributeShader::VT_PARAM7, param7, 0.0);
   }
   #[inline]
-  pub fn add_map0_id(&mut self, map0_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeShader::VT_MAP0_ID, map0_id, 0);
+  pub fn add_map0_cellmap_name_hash(&mut self, map0_cellmap_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeShader::VT_MAP0_CELLMAP_NAME_HASH, map0_cellmap_name_hash, 0);
   }
   #[inline]
   pub fn add_map0_name_hash(&mut self, map0_name_hash: u32) {
     self.fbb_.push_slot::<u32>(PartAttributeShader::VT_MAP0_NAME_HASH, map0_name_hash, 0);
   }
   #[inline]
-  pub fn add_map1_id(&mut self, map1_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeShader::VT_MAP1_ID, map1_id, 0);
+  pub fn add_map1_cellmap_name_hash(&mut self, map1_cellmap_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeShader::VT_MAP1_CELLMAP_NAME_HASH, map1_cellmap_name_hash, 0);
   }
   #[inline]
   pub fn add_map1_name_hash(&mut self, map1_name_hash: u32) {
@@ -8277,9 +8277,9 @@ impl ::core::fmt::Debug for PartAttributeShader<'_> {
       ds.field("param5", &self.param5());
       ds.field("param6", &self.param6());
       ds.field("param7", &self.param7());
-      ds.field("map0_id", &self.map0_id());
+      ds.field("map0_cellmap_name_hash", &self.map0_cellmap_name_hash());
       ds.field("map0_name_hash", &self.map0_name_hash());
-      ds.field("map1_id", &self.map1_id());
+      ds.field("map1_cellmap_name_hash", &self.map1_cellmap_name_hash());
       ds.field("map1_name_hash", &self.map1_name_hash());
       ds.finish()
   }

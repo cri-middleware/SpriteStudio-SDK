@@ -589,9 +589,9 @@ pub struct PartAttributeShaderKey {
     pub param5: ordered_float::OrderedFloat<f32>,
     pub param6: ordered_float::OrderedFloat<f32>,
     pub param7: ordered_float::OrderedFloat<f32>,
-    pub map0_id: i32,
+    pub map0_cellmap_name_hash: u32,
     pub map0_name_hash: u32,
-    pub map1_id: i32,
+    pub map1_cellmap_name_hash: u32,
     pub map1_name_hash: u32,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeShaderT> for PartAttributeShaderKey {
@@ -607,9 +607,9 @@ impl From<&ssab::ssab::ss::format::PartAttributeShaderT> for PartAttributeShader
             param5: ordered_float::OrderedFloat(value.param5),
             param6: ordered_float::OrderedFloat(value.param6),
             param7: ordered_float::OrderedFloat(value.param7),
-            map0_id: value.map0_id,
+            map0_cellmap_name_hash: value.map0_cellmap_name_hash,
             map0_name_hash: value.map0_name_hash,
-            map1_id: value.map1_id,
+            map1_cellmap_name_hash: value.map1_cellmap_name_hash,
             map1_name_hash: value.map1_name_hash,
         }
     }
@@ -1597,9 +1597,9 @@ impl<'a> SsabCache<'a> {
         args.param5 = part_attribute_shader.param5;
         args.param6 = part_attribute_shader.param6;
         args.param7 = part_attribute_shader.param7;
-        args.map0_id = part_attribute_shader.map0_id;
+        args.map0_cellmap_name_hash = part_attribute_shader.map0_cellmap_name_hash;
         args.map0_name_hash = part_attribute_shader.map0_name_hash;
-        args.map1_id = part_attribute_shader.map1_id;
+        args.map1_cellmap_name_hash = part_attribute_shader.map1_cellmap_name_hash;
         args.map1_name_hash = part_attribute_shader.map1_name_hash;
 
         let offset = ssab::ssab::ss::format::PartAttributeShader::create(fb, &args);
