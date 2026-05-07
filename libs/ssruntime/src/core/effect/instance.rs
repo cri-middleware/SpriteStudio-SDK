@@ -334,13 +334,7 @@ impl EffectInstance {
             let end_idx = self.draw_particles.len();
             if end_idx > start_idx {
                 let e = &self.emitters[i];
-                self.draw_commands.push(EmitterDrawCommand {
-                    cell_name_hash: e.cell_name_hash,
-                    cell_map_name_hash: e.cell_map_name_hash,
-                    blend_type: e.blend_type,
-                    particle_start: start_idx,
-                    particle_end: end_idx,
-                });
+                self.draw_commands.push(EmitterDrawCommand { cell_name_hash: e.cell_name_hash, cell_map_name_hash: e.cell_map_name_hash, blend_type: e.blend_type, particle_start: start_idx, particle_end: end_idx });
             }
         }
 
@@ -465,19 +459,7 @@ impl EffectInstance {
                 emitter_position = Vector2::new(ds.x, ds.y);
             }
 
-            let mut ds = EffectSimulator::calculate_state(
-                time,
-                stime,
-                endtime,
-                p_id_with_cycle,
-                &e.emitter_params,
-                &e.particle_params,
-                e.emitter_seed,
-                self.state.seed_offset,
-                &e.seed_list,
-                emitter_position,
-                if parent_idx >= 0 { slide } else { 0 },
-            );
+            let mut ds = EffectSimulator::calculate_state(time, stime, endtime, p_id_with_cycle, &e.emitter_params, &e.particle_params, e.emitter_seed, self.state.seed_offset, &e.seed_list, emitter_position, if parent_idx >= 0 { slide } else { 0 });
             ds.x *= self.layout_scale.x;
             ds.y *= self.layout_scale.y;
             self.draw_particles.push(ds);
