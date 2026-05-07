@@ -5651,9 +5651,10 @@ impl<'a> EffectNode<'a> {
   pub const VT_INDEX: ::flatbuffers::VOffsetT = 4;
   pub const VT_PARENT_INDEX: ::flatbuffers::VOffsetT = 6;
   pub const VT_EFFECT_NODE_TYPE: ::flatbuffers::VOffsetT = 8;
-  pub const VT_CELL_INDEX: ::flatbuffers::VOffsetT = 10;
-  pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_BEHAVIOR: ::flatbuffers::VOffsetT = 14;
+  pub const VT_CELL_NAME_HASH: ::flatbuffers::VOffsetT = 10;
+  pub const VT_CELL_MAP_NAME_HASH: ::flatbuffers::VOffsetT = 12;
+  pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 14;
+  pub const VT_BEHAVIOR: ::flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -5666,7 +5667,8 @@ impl<'a> EffectNode<'a> {
   ) -> ::flatbuffers::WIPOffset<EffectNode<'bldr>> {
     let mut builder = EffectNodeBuilder::new(_fbb);
     if let Some(x) = args.behavior { builder.add_behavior(x); }
-    builder.add_cell_index(args.cell_index);
+    builder.add_cell_map_name_hash(args.cell_map_name_hash);
+    builder.add_cell_name_hash(args.cell_name_hash);
     builder.add_parent_index(args.parent_index);
     builder.add_index(args.index);
     builder.add_blend_type(args.blend_type);
@@ -5697,11 +5699,18 @@ impl<'a> EffectNode<'a> {
     unsafe { self._tab.get::<EffectNodeType>(EffectNode::VT_EFFECT_NODE_TYPE, Some(EffectNodeType::Root)).unwrap()}
   }
   #[inline]
-  pub fn cell_index(&self) -> i16 {
+  pub fn cell_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(EffectNode::VT_CELL_INDEX, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(EffectNode::VT_CELL_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn cell_map_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(EffectNode::VT_CELL_MAP_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn blend_type(&self) -> RenderBlendType {
@@ -5728,7 +5737,8 @@ impl ::flatbuffers::Verifiable for EffectNode<'_> {
      .visit_field::<i16>("index", Self::VT_INDEX, false)?
      .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
      .visit_field::<EffectNodeType>("effect_node_type", Self::VT_EFFECT_NODE_TYPE, false)?
-     .visit_field::<i16>("cell_index", Self::VT_CELL_INDEX, false)?
+     .visit_field::<u32>("cell_name_hash", Self::VT_CELL_NAME_HASH, false)?
+     .visit_field::<u32>("cell_map_name_hash", Self::VT_CELL_MAP_NAME_HASH, false)?
      .visit_field::<RenderBlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EffectNodeBehaviorWrapper>>>>("behavior", Self::VT_BEHAVIOR, false)?
      .finish();
@@ -5739,7 +5749,8 @@ pub struct EffectNodeArgs<'a> {
     pub index: i16,
     pub parent_index: i16,
     pub effect_node_type: EffectNodeType,
-    pub cell_index: i16,
+    pub cell_name_hash: u32,
+    pub cell_map_name_hash: u32,
     pub blend_type: RenderBlendType,
     pub behavior: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EffectNodeBehaviorWrapper<'a>>>>>,
 }
@@ -5750,7 +5761,8 @@ impl<'a> Default for EffectNodeArgs<'a> {
       index: 0,
       parent_index: 0,
       effect_node_type: EffectNodeType::Root,
-      cell_index: 0,
+      cell_name_hash: 0,
+      cell_map_name_hash: 0,
       blend_type: RenderBlendType::Mix,
       behavior: None,
     }
@@ -5775,8 +5787,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EffectNodeBuilder<'a, 'b, A> 
     self.fbb_.push_slot::<EffectNodeType>(EffectNode::VT_EFFECT_NODE_TYPE, effect_node_type, EffectNodeType::Root);
   }
   #[inline]
-  pub fn add_cell_index(&mut self, cell_index: i16) {
-    self.fbb_.push_slot::<i16>(EffectNode::VT_CELL_INDEX, cell_index, 0);
+  pub fn add_cell_name_hash(&mut self, cell_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(EffectNode::VT_CELL_NAME_HASH, cell_name_hash, 0);
+  }
+  #[inline]
+  pub fn add_cell_map_name_hash(&mut self, cell_map_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(EffectNode::VT_CELL_MAP_NAME_HASH, cell_map_name_hash, 0);
   }
   #[inline]
   pub fn add_blend_type(&mut self, blend_type: RenderBlendType) {
@@ -5807,7 +5823,8 @@ impl ::core::fmt::Debug for EffectNode<'_> {
       ds.field("index", &self.index());
       ds.field("parent_index", &self.parent_index());
       ds.field("effect_node_type", &self.effect_node_type());
-      ds.field("cell_index", &self.cell_index());
+      ds.field("cell_name_hash", &self.cell_name_hash());
+      ds.field("cell_map_name_hash", &self.cell_map_name_hash());
       ds.field("blend_type", &self.blend_type());
       ds.field("behavior", &self.behavior());
       ds.finish()
@@ -7693,6 +7710,7 @@ impl<'a> PartAttributeEffect<'a> {
   pub const VT_START_TIME: ::flatbuffers::VOffsetT = 6;
   pub const VT_SPEED: ::flatbuffers::VOffsetT = 8;
   pub const VT_LOOPFLAG: ::flatbuffers::VOffsetT = 10;
+  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -7708,6 +7726,7 @@ impl<'a> PartAttributeEffect<'a> {
     builder.add_speed(args.speed);
     builder.add_start_time(args.start_time);
     builder.add_cur_keyframe(args.cur_keyframe);
+    builder.add_independent(args.independent);
     builder.finish()
   }
 
@@ -7740,6 +7759,13 @@ impl<'a> PartAttributeEffect<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<i32>(PartAttributeEffect::VT_LOOPFLAG, Some(0)).unwrap()}
   }
+  #[inline]
+  pub fn independent(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartAttributeEffect::VT_INDEPENDENT, Some(false)).unwrap()}
+  }
 }
 
 impl ::flatbuffers::Verifiable for PartAttributeEffect<'_> {
@@ -7752,6 +7778,7 @@ impl ::flatbuffers::Verifiable for PartAttributeEffect<'_> {
      .visit_field::<i32>("start_time", Self::VT_START_TIME, false)?
      .visit_field::<f32>("speed", Self::VT_SPEED, false)?
      .visit_field::<i32>("loopflag", Self::VT_LOOPFLAG, false)?
+     .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
      .finish();
     Ok(())
   }
@@ -7761,6 +7788,7 @@ pub struct PartAttributeEffectArgs {
     pub start_time: i32,
     pub speed: f32,
     pub loopflag: i32,
+    pub independent: bool,
 }
 impl<'a> Default for PartAttributeEffectArgs {
   #[inline]
@@ -7770,6 +7798,7 @@ impl<'a> Default for PartAttributeEffectArgs {
       start_time: 0,
       speed: 0.0,
       loopflag: 0,
+      independent: false,
     }
   }
 }
@@ -7796,6 +7825,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeEffectBuilder<'a
     self.fbb_.push_slot::<i32>(PartAttributeEffect::VT_LOOPFLAG, loopflag, 0);
   }
   #[inline]
+  pub fn add_independent(&mut self, independent: bool) {
+    self.fbb_.push_slot::<bool>(PartAttributeEffect::VT_INDEPENDENT, independent, false);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartAttributeEffectBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     PartAttributeEffectBuilder {
@@ -7817,6 +7850,7 @@ impl ::core::fmt::Debug for PartAttributeEffect<'_> {
       ds.field("start_time", &self.start_time());
       ds.field("speed", &self.speed());
       ds.field("loopflag", &self.loopflag());
+      ds.field("independent", &self.independent());
       ds.finish()
   }
 }
@@ -10662,8 +10696,9 @@ impl<'a> PartData<'a> {
   pub const VT_PARENT_INDEX: ::flatbuffers::VOffsetT = 6;
   pub const VT_BOUNDS_TYPE: ::flatbuffers::VOffsetT = 8;
   pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 10;
-  pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_PART_TYPE: ::flatbuffers::VOffsetT = 14;
+  pub const VT_MASK_INFLUENCE: ::flatbuffers::VOffsetT = 12;
+  pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 14;
+  pub const VT_PART_TYPE: ::flatbuffers::VOffsetT = 16;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -10679,6 +10714,7 @@ impl<'a> PartData<'a> {
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_parent_index(args.parent_index);
     builder.add_part_type_type(args.part_type_type);
+    builder.add_mask_influence(args.mask_influence);
     builder.add_blend_type(args.blend_type);
     builder.add_bounds_type(args.bounds_type);
     builder.finish()
@@ -10712,6 +10748,13 @@ impl<'a> PartData<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<BlendType>(PartData::VT_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
+  }
+  #[inline]
+  pub fn mask_influence(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_MASK_INFLUENCE, Some(false)).unwrap()}
   }
   #[inline]
   pub fn part_type_type(&self) -> PartType {
@@ -10994,6 +11037,7 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
      .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
      .visit_field::<BoundsType>("bounds_type", Self::VT_BOUNDS_TYPE, false)?
      .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
+     .visit_field::<bool>("mask_influence", Self::VT_MASK_INFLUENCE, false)?
      .visit_union::<PartType, _>("part_type_type", Self::VT_PART_TYPE_TYPE, "part_type", Self::VT_PART_TYPE, false, |key, v, pos| {
         match key {
           PartType::PartTypeNull => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<NoneValueEntry>>("PartType::PartTypeNull", pos),
@@ -11025,6 +11069,7 @@ pub struct PartDataArgs<'a> {
     pub parent_index: i16,
     pub bounds_type: BoundsType,
     pub blend_type: BlendType,
+    pub mask_influence: bool,
     pub part_type_type: PartType,
     pub part_type: Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>>,
 }
@@ -11036,6 +11081,7 @@ impl<'a> Default for PartDataArgs<'a> {
       parent_index: 0,
       bounds_type: BoundsType::None,
       blend_type: BlendType::Mix,
+      mask_influence: false,
       part_type_type: PartType::NONE,
       part_type: None,
     }
@@ -11062,6 +11108,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_blend_type(&mut self, blend_type: BlendType) {
     self.fbb_.push_slot::<BlendType>(PartData::VT_BLEND_TYPE, blend_type, BlendType::Mix);
+  }
+  #[inline]
+  pub fn add_mask_influence(&mut self, mask_influence: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_MASK_INFLUENCE, mask_influence, false);
   }
   #[inline]
   pub fn add_part_type_type(&mut self, part_type_type: PartType) {
@@ -11093,6 +11143,7 @@ impl ::core::fmt::Debug for PartData<'_> {
       ds.field("parent_index", &self.parent_index());
       ds.field("bounds_type", &self.bounds_type());
       ds.field("blend_type", &self.blend_type());
+      ds.field("mask_influence", &self.mask_influence());
       ds.field("part_type_type", &self.part_type_type());
       match self.part_type_type() {
         PartType::PartTypeNull => {

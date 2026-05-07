@@ -211,6 +211,7 @@ fn convert_events_per_frames_part(
                         effect_t.start_time = key.value.start_time;
                         effect_t.speed = key.value.speed;
                         effect_t.loopflag; // TODO: implement
+                        effect_t.independent = key.value.independent;
 
                         // Complement for frame 0.
                         if 0 < key.time {
@@ -858,6 +859,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                     let mut value = ssab::ssab::ss::format::PartAttributeEffectT::default();
                     value.start_time = _key.value.start_time;
                     value.speed = _key.value.speed;
+                    value.independent = _key.value.independent;
 
                     initial_event_t.effect = Some(Box::new(value));
                     flag_exist_event = true;
@@ -1507,10 +1509,11 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 sspj::sstypes::SsBoundsType::Quad => ssab::ssab::ss::format::BoundsType::Quad,
                 sspj::sstypes::SsBoundsType::Aabb => ssab::ssab::ss::format::BoundsType::Aabb,
                 sspj::sstypes::SsBoundsType::Circle => ssab::ssab::ss::format::BoundsType::Circle,
-                sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::ss::format::BoundsType::Circle,
-                sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::ss::format::BoundsType::Circle,
+                sspj::sstypes::SsBoundsType::CircleSmin => ssab::ssab::ss::format::BoundsType::CircleSmin,
+                sspj::sstypes::SsBoundsType::CircleSmax => ssab::ssab::ss::format::BoundsType::CircleSmax,
             };
             part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
+            part_data_t.mask_influence = part.mask_influence;
             part_data_t.part_type = match &part.part_type {
                 sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::default()),
                 sspj::sstypes::SsPartType::Normal => ssab::ssab::ss::format::PartTypeT::PartTypeNormal(Box::default()),

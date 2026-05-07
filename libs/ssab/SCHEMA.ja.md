@@ -113,7 +113,6 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 
 - `array_index`, `show`, `locked`, `color_label` (エディタ UI の状態)
 - `inherit_type`, `inherit_rates` (変換時に解決済み)
-- `mask_influence` (エディタ設定)
 - `bone_length`, `bone_position`, `bone_rotation` (ボーン編集データ)
 - `weight_position`, `weight_impact`, `mesh_weight_type`, `mesh_weight_strong` (メッシュウェイト編集データ)
 - `ik_depth`, `ik_rotation_arrow` (IK ソルバーパラメータ)

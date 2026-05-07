@@ -14,7 +14,8 @@ struct ParticleState {
 }
 
 table EmitterState {
-    cell_index: short;
+    cell_name_hash: uint32;
+    cell_map_name_hash: uint32;
     blend_type: int;
     particles: [ParticleState];
 }

@@ -1037,7 +1037,8 @@ impl<'a> EffectContext<'a> {
             let particles_offset = self.fb.create_vector(&fbs_particles);
 
             let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
-            builder.add_cell_index(cmd.cell_index);
+            builder.add_cell_name_hash(cmd.cell_name_hash);
+            builder.add_cell_map_name_hash(cmd.cell_map_name_hash);
             builder.add_blend_type(cmd.blend_type);
             builder.add_particles(particles_offset);
             fbs_emitters.push(builder.finish());

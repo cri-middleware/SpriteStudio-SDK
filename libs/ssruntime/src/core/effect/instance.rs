@@ -14,7 +14,8 @@ pub struct EffectEmitterInstance {
     pub emitter_seed: i32,
     pub parent_index: i32,
     pub uid: i32,
-    pub cell_index: i16,
+    pub cell_name_hash: u32,
+    pub cell_map_name_hash: u32,
     pub blend_type: i32,
 }
 
@@ -187,13 +188,26 @@ impl EffectEmitterInstance {
 
         let (emit_patterns, offset_patterns, seed_list) = EffectSimulator::precalculate_emitter(&emitter_params, &particle_params, emitter_seed);
 
-        Self { emitter_params, particle_params, emit_patterns, offset_patterns, seed_list, emitter_seed, parent_index: node.parent_index() as i32, uid: 0, cell_index: node.cell_index(), blend_type: node.blend_type().0 as i32 }
+        Self {
+            emitter_params,
+            particle_params,
+            emit_patterns,
+            offset_patterns,
+            seed_list,
+            emitter_seed,
+            parent_index: node.parent_index() as i32,
+            uid: 0,
+            cell_name_hash: node.cell_name_hash(),
+            cell_map_name_hash: node.cell_map_name_hash(),
+            blend_type: node.blend_type().0 as i32,
+        }
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct EmitterDrawCommand {
-    pub cell_index: i16,
+    pub cell_name_hash: u32,
+    pub cell_map_name_hash: u32,
     pub blend_type: i32,
     pub particle_start: usize,
     pub particle_end: usize,
@@ -320,7 +334,7 @@ impl EffectInstance {
             let end_idx = self.draw_particles.len();
             if end_idx > start_idx {
                 let e = &self.emitters[i];
-                self.draw_commands.push(EmitterDrawCommand { cell_index: e.cell_index, blend_type: e.blend_type, particle_start: start_idx, particle_end: end_idx });
+                self.draw_commands.push(EmitterDrawCommand { cell_name_hash: e.cell_name_hash, cell_map_name_hash: e.cell_map_name_hash, blend_type: e.blend_type, particle_start: start_idx, particle_end: end_idx });
             }
         }
 
@@ -374,25 +388,27 @@ impl EffectInstance {
                 let parent_s = &self.state.emitter_states[parent_idx as usize];
                 let pp_id = parent_particle_id as usize;
 
-                for (i, &stime) in stimes.iter().enumerate() {
-                    let parent_ds = EffectSimulator::calculate_state(
-                        stime as f32 + parent_s.particle_state.stime[pp_id] as f32,
-                        parent_s.particle_state.stime[pp_id],
-                        parent_s.particle_state.endtime[pp_id],
-                        slide,
-                        &parent_e.emitter_params,
-                        &parent_e.particle_params,
-                        parent_e.emitter_seed,
-                        self.state.seed_offset,
-                        &parent_e.seed_list,
-                        parent_s.position,
-                        parent_s.particle_state.pid[pp_id],
-                    );
-                    emitter_positions[i] = Vector2::new(parent_ds.x, parent_ds.y);
-                }
+                let p_stime = parent_s.particle_state.stime[pp_id];
+                let p_endtime = parent_s.particle_state.endtime[pp_id];
+                let p_ptime = self.state.target_frame - p_stime as f32;
+
+                let ds = EffectSimulator::calculate_state(
+                    p_ptime + p_stime as f32,
+                    p_stime,
+                    p_endtime,
+                    parent_s.particle_state.id[pp_id] + parent_s.particle_state.cycle[pp_id],
+                    &parent_e.emitter_params,
+                    &parent_e.particle_params,
+                    parent_e.emitter_seed,
+                    self.state.seed_offset,
+                    &parent_e.seed_list,
+                    parent_s.position,
+                    parent_s.particle_state.pid[pp_id],
+                );
+                emitter_positions = [Vector2::new(ds.x, ds.y); 4];
             }
 
-            let mut ds_batch = EffectSimulator::calculate_state_batch(
+            let p_draw_batch = EffectSimulator::calculate_state_batch(
                 time,
                 stimes,
                 endtimes,
@@ -405,26 +421,32 @@ impl EffectInstance {
                 emitter_positions,
                 if parent_idx >= 0 { [slide; 4] } else { [0; 4] },
             );
-
-            for ds in &mut ds_batch {
+            for mut ds in p_draw_batch {
                 ds.x *= self.layout_scale.x;
                 ds.y *= self.layout_scale.y;
-                self.draw_particles.push(*ds);
+                self.draw_particles.push(ds);
             }
         }
 
-        // Remainder processing
         for &id in chunks.remainder() {
-            let mut ep_pos = self.state.emitter_states[emitter_idx].position;
+            let p_id_with_cycle = self.state.emitter_states[emitter_idx].particle_state.id[id] + self.state.emitter_states[emitter_idx].particle_state.cycle[id];
+            let stime = self.state.emitter_states[emitter_idx].particle_state.stime[id];
+            let endtime = self.state.emitter_states[emitter_idx].particle_state.endtime[id];
+
+            let mut emitter_position = self.state.emitter_states[emitter_idx].position;
             if parent_idx >= 0 {
                 let parent_e = &self.emitters[parent_idx as usize];
                 let parent_s = &self.state.emitter_states[parent_idx as usize];
                 let pp_id = parent_particle_id as usize;
-                let stime = self.state.emitter_states[emitter_idx].particle_state.stime[id];
-                let parent_ds = EffectSimulator::calculate_state(
-                    stime as f32 + parent_s.particle_state.stime[pp_id] as f32,
-                    parent_s.particle_state.stime[pp_id],
-                    parent_s.particle_state.endtime[pp_id],
+
+                let p_stime = parent_s.particle_state.stime[pp_id];
+                let p_endtime = parent_s.particle_state.endtime[pp_id];
+                let p_ptime = self.state.target_frame - p_stime as f32;
+
+                let ds = EffectSimulator::calculate_state(
+                    p_ptime + p_stime as f32,
+                    p_stime,
+                    p_endtime,
                     parent_s.particle_state.id[pp_id] + parent_s.particle_state.cycle[pp_id],
                     &parent_e.emitter_params,
                     &parent_e.particle_params,
@@ -434,27 +456,12 @@ impl EffectInstance {
                     parent_s.position,
                     parent_s.particle_state.pid[pp_id],
                 );
-                ep_pos = Vector2::new(parent_ds.x, parent_ds.y);
+                emitter_position = Vector2::new(ds.x, ds.y);
             }
 
-            let particle_id_with_cycle = self.state.emitter_states[emitter_idx].particle_state.id[id] + self.state.emitter_states[emitter_idx].particle_state.cycle[id];
-            let mut ds = EffectSimulator::calculate_state(
-                time,
-                self.state.emitter_states[emitter_idx].particle_state.stime[id],
-                self.state.emitter_states[emitter_idx].particle_state.endtime[id],
-                particle_id_with_cycle,
-                &e.emitter_params,
-                &e.particle_params,
-                e.emitter_seed,
-                self.state.seed_offset,
-                &e.seed_list,
-                ep_pos,
-                if parent_idx >= 0 { slide } else { 0 },
-            );
-
+            let mut ds = EffectSimulator::calculate_state(time, stime, endtime, p_id_with_cycle, &e.emitter_params, &e.particle_params, e.emitter_seed, self.state.seed_offset, &e.seed_list, emitter_position, if parent_idx >= 0 { slide } else { 0 });
             ds.x *= self.layout_scale.x;
             ds.y *= self.layout_scale.y;
-
             self.draw_particles.push(ds);
         }
     }
