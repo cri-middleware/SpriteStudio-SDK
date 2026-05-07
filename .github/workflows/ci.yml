@@ -66,40 +66,41 @@ jobs:
             os: macos-latest
             platform: macos
             arch: universal
+            skip_pr: true
 
           - name: 🤖 Android (arm64)
             os: ubuntu-latest
             platform: android
             arch: arm64
+            skip_pr: true
 
           - name: 🍏 iOS (arm64)
             os: macos-latest
             platform: ios
             arch: universal
+            skip_pr: true
 
           - name: 🌐 Web (wasm32)
             os: ubuntu-latest
             platform: web
             arch: wasm32
 
-          - name: ⚙️ no_std (build verification)
-            os: ubuntu-latest
-            platform: no_std
-            arch: x86_64
-
     steps:
       - name: Checkout
+        if: github.event_name != 'pull_request' || !matrix.skip_pr
         uses: actions/checkout@v6
         with:
           submodules: recursive
 
       - name: setup for SpriteStudio7-SDK
+        if: github.event_name != 'pull_request' || !matrix.skip_pr
         uses: ./.github/actions/setup
         with:
           platform: ${{ matrix.platform }}
           os: ${{ matrix.os }}
 
       - name: Install targets (Rust)
+        if: github.event_name != 'pull_request' || !matrix.skip_pr
         run: |
           if [ "${{ matrix.platform }}" == "macos" ]; then
             rustup target add aarch64-apple-darwin
@@ -118,6 +119,7 @@ jobs:
         shell: bash
 
       - name: Build
+        if: github.event_name != 'pull_request' || !matrix.skip_pr
         run: |
           if [ "${{ matrix.platform }}" == "android" ]; then
             cargo ndk --target aarch64-linux-android build --verbose -p ssruntime --features "libc_alloc,panic-handler"
@@ -137,8 +139,6 @@ jobs:
               --no-default-features \
               --features "wasm_alloc,panic-handler" \
               --crate-type staticlib,rlib
-          elif [ "${{ matrix.platform }}" == "no_std" ]; then
-            cargo build --release --verbose -p ssruntime --features "libc_alloc,panic-handler"
           else
             cargo build --verbose
             cargo build --verbose -p ssruntime --features "libc_alloc,panic-handler"
@@ -146,7 +146,7 @@ jobs:
         shell: bash
 
       - name: Test (workspace)
-        if: matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos'
+        if: (github.event_name != 'pull_request' || !matrix.skip_pr) && (matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos')
         run: cargo test --workspace --all-features --verbose -- --test-threads=1
         shell: bash
 
