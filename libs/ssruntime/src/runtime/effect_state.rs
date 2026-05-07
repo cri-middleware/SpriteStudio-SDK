@@ -409,9 +409,10 @@ impl<'a> ::flatbuffers::Follow<'a> for EmitterState<'a> {
 }
 
 impl<'a> EmitterState<'a> {
-  pub const VT_CELL_INDEX: ::flatbuffers::VOffsetT = 4;
-  pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 6;
-  pub const VT_PARTICLES: ::flatbuffers::VOffsetT = 8;
+  pub const VT_CELL_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_CELL_MAP_NAME_HASH: ::flatbuffers::VOffsetT = 6;
+  pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_PARTICLES: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -425,17 +426,25 @@ impl<'a> EmitterState<'a> {
     let mut builder = EmitterStateBuilder::new(_fbb);
     if let Some(x) = args.particles { builder.add_particles(x); }
     builder.add_blend_type(args.blend_type);
-    builder.add_cell_index(args.cell_index);
+    builder.add_cell_map_name_hash(args.cell_map_name_hash);
+    builder.add_cell_name_hash(args.cell_name_hash);
     builder.finish()
   }
 
 
   #[inline]
-  pub fn cell_index(&self) -> i16 {
+  pub fn cell_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i16>(EmitterState::VT_CELL_INDEX, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(EmitterState::VT_CELL_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn cell_map_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(EmitterState::VT_CELL_MAP_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn blend_type(&self) -> i32 {
@@ -459,7 +468,8 @@ impl ::flatbuffers::Verifiable for EmitterState<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<i16>("cell_index", Self::VT_CELL_INDEX, false)?
+     .visit_field::<u32>("cell_name_hash", Self::VT_CELL_NAME_HASH, false)?
+     .visit_field::<u32>("cell_map_name_hash", Self::VT_CELL_MAP_NAME_HASH, false)?
      .visit_field::<i32>("blend_type", Self::VT_BLEND_TYPE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ParticleState>>>("particles", Self::VT_PARTICLES, false)?
      .finish();
@@ -467,7 +477,8 @@ impl ::flatbuffers::Verifiable for EmitterState<'_> {
   }
 }
 pub struct EmitterStateArgs<'a> {
-    pub cell_index: i16,
+    pub cell_name_hash: u32,
+    pub cell_map_name_hash: u32,
     pub blend_type: i32,
     pub particles: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ParticleState>>>,
 }
@@ -475,7 +486,8 @@ impl<'a> Default for EmitterStateArgs<'a> {
   #[inline]
   fn default() -> Self {
     EmitterStateArgs {
-      cell_index: 0,
+      cell_name_hash: 0,
+      cell_map_name_hash: 0,
       blend_type: 0,
       particles: None,
     }
@@ -488,8 +500,12 @@ pub struct EmitterStateBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EmitterStateBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_cell_index(&mut self, cell_index: i16) {
-    self.fbb_.push_slot::<i16>(EmitterState::VT_CELL_INDEX, cell_index, 0);
+  pub fn add_cell_name_hash(&mut self, cell_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(EmitterState::VT_CELL_NAME_HASH, cell_name_hash, 0);
+  }
+  #[inline]
+  pub fn add_cell_map_name_hash(&mut self, cell_map_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(EmitterState::VT_CELL_MAP_NAME_HASH, cell_map_name_hash, 0);
   }
   #[inline]
   pub fn add_blend_type(&mut self, blend_type: i32) {
@@ -517,7 +533,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EmitterStateBuilder<'a, 'b, A
 impl ::core::fmt::Debug for EmitterState<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("EmitterState");
-      ds.field("cell_index", &self.cell_index());
+      ds.field("cell_name_hash", &self.cell_name_hash());
+      ds.field("cell_map_name_hash", &self.cell_map_name_hash());
       ds.field("blend_type", &self.blend_type());
       ds.field("particles", &self.particles());
       ds.finish()
