@@ -824,6 +824,20 @@ table ExternalTexture {
   name: string;
 }
 
+table ExternalInstance {
+  // Sorted by anime_name_hash so the player can LookupByKey when resolving
+  // PartTypeInstance.ref_anime_hash.
+  anime_name_hash: uint32 (key);
+  // fnv1a of the owning anime pack name; matches SsAnimeBinary.name_hash of
+  // the .ssab file that contains the referenced animation.
+  anime_pack_name_hash: uint32;
+  // Anime pack name (matches SsAnimeBinary.name); used to locate the sibling
+  // .ssab file (conventionally `<anime_pack_name>.ssab` next to this one).
+  anime_pack_name: string;
+  // Animation name (diagnostic only).
+  anime_name: string;
+}
+
 table EmbeddedAsset {
   name_hash: uint32 (key);
   name: string;
@@ -846,7 +860,7 @@ table SsAnimeBinary {
   font_bitmaps: [FontBitmap];
 
   external_textures: [ExternalTexture];
-  external_instances: [string];
+  external_instances: [ExternalInstance];
 
   embedded_assets: [EmbeddedAsset];
 }

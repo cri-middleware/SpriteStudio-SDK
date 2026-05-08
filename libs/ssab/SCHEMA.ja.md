@@ -56,7 +56,7 @@
 | `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | パックに Audio タイプのパーツが含まれる場合のみ |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | `text_bitmap == true` の Text タイプパーツが使用するビットマップフォントのみ |
 | `external_textures` | [ExternalTexture] | — | 外部テクスチャ参照 |
-| `external_instances` | [string] | — | クロスパックインスタンス参照（`"パック名/アニメ名"` 形式） |
+| `external_instances` | [ExternalInstance] | — | クロスパックインスタンス参照。`anime_name_hash` でソートされ FlatBuffers の `(key)` になっているため、Player は `LookupByKey(ref_anime_hash)` で直接引ける。各エントリは `anime_pack_name_hash`（参照先 pack の `SsAnimeBinary.name_hash` と一致）、`anime_pack_name`（隣接する `<pack>.ssab` ファイル探索に使用）、`anime_name`（診断用）を持つ。 |
 | `embedded_assets` | [EmbeddedAsset] | — | オプションで埋め込まれるバイナリアセット（画像、サウンドなど） |
 
 ---

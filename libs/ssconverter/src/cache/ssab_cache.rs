@@ -2352,7 +2352,17 @@ impl<'a> SsabCache<'a> {
             fb.create_vector(&vec)
         });
         args.external_instances = ss_anime_binary_t.external_instances.as_ref().map(|external_instances| {
-            let vec = external_instances.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
+            let vec = external_instances
+                .iter()
+                .map(|entry| {
+                    let mut entry_args = ssab::ssab::ss::format::ExternalInstanceArgs::default();
+                    entry_args.anime_name_hash = entry.anime_name_hash;
+                    entry_args.anime_pack_name_hash = entry.anime_pack_name_hash;
+                    entry_args.anime_pack_name = entry.anime_pack_name.as_ref().map(|s| fb.create_shared_string(s));
+                    entry_args.anime_name = entry.anime_name.as_ref().map(|s| fb.create_shared_string(s));
+                    ssab::ssab::ss::format::ExternalInstance::create(fb, &entry_args)
+                })
+                .collect::<Vec<_>>();
             fb.create_vector(&vec)
         });
         args.embedded_assets = ss_anime_binary_t.embedded_assets.as_ref().map(|embedded_assets| {
