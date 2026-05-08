@@ -17,6 +17,15 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
+/// File extension used by sspj cellmap entries.
+pub const CELLMAP_FILE_EXT: &str = ".ssce";
+
+/// Strip the `.ssce` suffix from a cellmap file name. Inputs without the
+/// suffix are returned unchanged so callers can pass either form.
+pub fn cellmap_basename(file_name: &str) -> &str {
+    file_name.strip_suffix(CELLMAP_FILE_EXT).unwrap_or(file_name)
+}
+
 pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate::ConverterError> {
     let file_path_buf = std::path::PathBuf::from(file);
     if file_path_buf.is_absolute() {

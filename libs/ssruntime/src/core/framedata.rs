@@ -68,13 +68,14 @@ pub struct ResolvedCellMeta {
 }
 
 /// Walks a part's `cell_array` keyframes once and resolves each
-/// `(map_id, name_hash)` against the SSAB cellmaps to a `ResolvedCellMeta`.
-/// The returned vector is index-aligned with `cell_array` so the per-frame
-/// path can do an O(1) parallel-index lookup.
+/// `(cellmap_name_hash, name_hash)` against the SSAB cellmaps to a
+/// `ResolvedCellMeta`. The returned vector is index-aligned with `cell_array`
+/// so the per-frame path can do an O(1) parallel-index lookup.
 ///
-/// Cells are stored in `name_hash`-sorted order under each cellmap (FlatBuffers
-/// `key`); we exploit that with a binary search. Keyframes whose `(map_id,
-/// name_hash)` cannot be resolved fall back to a zero-initialized entry.
+/// Both cellmaps and cells are stored in `name_hash`-sorted order (FlatBuffers
+/// `key`); we exploit that with binary search. Keyframes whose
+/// `(cellmap_name_hash, name_hash)` cannot be resolved fall back to a
+/// zero-initialized entry.
 pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>) -> alloc::vec::Vec<ResolvedCellMeta> {
     let Some(cell_array) = cell_array else { return alloc::vec::Vec::new() };
     let Some(cellmaps) = ssab.cellmaps() else { return alloc::vec::Vec::new() };
@@ -83,33 +84,19 @@ pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<
     for key in cell_array {
         let mut meta = ResolvedCellMeta::default();
         if let Some(value) = key.value() {
-            let map_id = value.map_id();
+            let cellmap_name_hash = value.cellmap_name_hash();
             let name_hash = value.name_hash();
-            if map_id >= 0 && (map_id as usize) < cellmaps.len() {
-                let cellmap = cellmaps.get(map_id as usize);
-                if let Some(cells) = cellmap.cells() {
-                    let mut low = 0usize;
-                    let mut high = cells.len();
-                    while low < high {
-                        let mid = (low + high) / 2;
-                        let cell = cells.get(mid);
-                        let h = cell.name_hash();
-                        if h == name_hash {
-                            let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
-                            let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
-                            // Mirror compute_local_uvs's previous fallback: if the
-                            // cellmap doesn't carry size_original (or it's zero),
-                            // treat the cell rect dimensions as the texture size.
-                            let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((size_w, size_h));
-                            meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
-                            break;
-                        } else if h < name_hash {
-                            low = mid + 1;
-                        } else {
-                            high = mid;
-                        }
-                    }
-                }
+            if let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)
+                && let Some(cells) = cellmap.cells()
+                && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, name_hash)
+            {
+                let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+                let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
+                // Mirror compute_local_uvs's previous fallback: if the
+                // cellmap doesn't carry size_original (or it's zero),
+                // treat the cell rect dimensions as the texture size.
+                let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((size_w, size_h));
+                meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
             }
         }
         out.push(meta);
@@ -249,7 +236,7 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cu
     part_state.set_part_index(cached_part.part_index);
 
     if let Some(value) = cached_part.cell_array.and_then(|arr| evaluate_cell(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTECELL])) {
-        result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.map_id(), value.name_hash()));
+        result.cell = Some(runtime::framedata::ss::runtime::PartAttributeCell::new(value.cellmap_name_hash(), value.name_hash()));
         result.cell_meta = cached_part.resolved_cells.get(part_cursors[IDX_ATTRIBUTECELL]).copied();
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell;
     }

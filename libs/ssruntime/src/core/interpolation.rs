@@ -831,10 +831,10 @@ mod tests {
         use ssab::ssab::ss::format::{PartAnimationDataCellValue, PartAnimationDataCellValueArgs, PartAttributeCell, PartAttributeCellArgs};
         let mut builder = flatbuffers::FlatBufferBuilder::new();
 
-        let cell_a = PartAttributeCell::create(&mut builder, &PartAttributeCellArgs { map_id: 1, name_hash: 111 });
+        let cell_a = PartAttributeCell::create(&mut builder, &PartAttributeCellArgs { cellmap_name_hash: 1, name_hash: 111 });
         let v0 = PartAnimationDataCellValue::create(&mut builder, &PartAnimationDataCellValueArgs { index: 0, value: Some(cell_a) });
 
-        let cell_b = PartAttributeCell::create(&mut builder, &PartAttributeCellArgs { map_id: 2, name_hash: 222 });
+        let cell_b = PartAttributeCell::create(&mut builder, &PartAttributeCellArgs { cellmap_name_hash: 2, name_hash: 222 });
         let v10 = PartAnimationDataCellValue::create(&mut builder, &PartAnimationDataCellValueArgs { index: 10, value: Some(cell_b) });
 
         let values_off = builder.create_vector(&[v0, v10]);
@@ -845,17 +845,17 @@ mod tests {
 
         let mut hint = 0;
         let res = evaluate_cell(vector, 5.0, &mut hint).unwrap();
-        assert_eq!(res.map_id(), 1);
+        assert_eq!(res.cellmap_name_hash(), 1);
         assert_eq!(res.name_hash(), 111);
 
         let res = evaluate_cell(vector, 10.0, &mut hint).unwrap();
-        assert_eq!(res.map_id(), 2);
+        assert_eq!(res.cellmap_name_hash(), 2);
         assert_eq!(res.name_hash(), 222);
 
         // Fractional: floor() applied internally — 9.999 → 9 → still cell A
         let mut hint = 0;
         let res = evaluate_cell(vector, 9.999, &mut hint).unwrap();
-        assert_eq!(res.map_id(), 1);
+        assert_eq!(res.cellmap_name_hash(), 1);
     }
 
     #[test]

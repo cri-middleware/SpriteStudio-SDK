@@ -195,7 +195,7 @@ table CellMap {
   name: string;
 
   image_path: string;
-  image_path_hash: uint32;
+  image_path_hash: uint32; // fnv1a(image_path); used as embedded_assets key when embedded
   size_original: Vec2;
 
   wrap_mode: TexWrapMode;
@@ -302,7 +302,7 @@ table SoundFile {
   name_hash: uint32 (key);
   name: string;
   file_path: string;
-  file_path_hash: uint32;
+  file_path_hash: uint32; // fnv1a(file_path); used as embedded_assets key when embedded
   time_total: uint;
 }
 
@@ -339,13 +339,13 @@ table FontBitmap {
   size_texture_original: Vec2;
 
   name_texture: [string];
-  name_texture_hash: [uint32];
+  name_texture_hash: [uint32]; // fnv1a(name_texture[i]); used as embedded_assets key when embedded
   table_data: [FontGlyphBitmap];
 }
 
 table PartAttributeCell {
- map_id: int; // hash or name
- name_hash: uint32; // instead of name: string;
+ cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+ name_hash: uint32; // fnv1a(cell name)
 }
 
 table  SsAttributePartColorKeyValueColor {
@@ -372,9 +372,9 @@ table PartAttributeInstance {
   pingpong: bool;
   independent: bool;
   loop_num: int;
-  start_label_hash: uint32; // instead of start_label: string;
+  start_label_hash: uint32;
   start_offset: int;
-  end_label_hash: uint32; // instead of end_label: string;
+  end_label_hash: uint32;
   end_offset: int;
   speed: float;
   reverse: bool;
@@ -405,9 +405,9 @@ table PartAttributeShader {
   param6: float;
   param7: float;
   map0_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
-  map0_name_hash: uint32; // instead of map0_name: string;
+  map0_name_hash: uint32;
   map1_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
-  map1_name_hash: uint32; // instead of map1_name: string;
+  map1_name_hash: uint32;
 }
 
 table PartAttributeUserData {
@@ -604,11 +604,11 @@ table PartTypeNines {
 }
 
 table PartTypeInstance {
-  ref_anime_hash: uint32; // instead of ref_anime: string;
+  ref_anime_hash: uint32;
 }
 
 table PartTypeEffect {
-  ref_effect_name_hash: uint32; // instead of ref_effect_name: string;
+  ref_effect_name_hash: uint32;
 }
 
 union PartType {

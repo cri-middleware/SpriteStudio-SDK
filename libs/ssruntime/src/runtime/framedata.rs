@@ -235,7 +235,7 @@ impl Default for PartAttributeCell {
 impl ::core::fmt::Debug for PartAttributeCell {
   fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
     f.debug_struct("PartAttributeCell")
-      .field("map_id", &self.map_id())
+      .field("cellmap_name_hash", &self.cellmap_name_hash())
       .field("name_hash", &self.name_hash())
       .finish()
   }
@@ -281,17 +281,17 @@ impl<'a> ::flatbuffers::Verifiable for PartAttributeCell {
 impl<'a> PartAttributeCell {
   #[allow(clippy::too_many_arguments)]
   pub fn new(
-    map_id: i32,
+    cellmap_name_hash: u32,
     name_hash: u32,
   ) -> Self {
     let mut s = Self([0; 8]);
-    s.set_map_id(map_id);
+    s.set_cellmap_name_hash(cellmap_name_hash);
     s.set_name_hash(name_hash);
     s
   }
 
-  pub fn map_id(&self) -> i32 {
-    let mut mem = ::core::mem::MaybeUninit::<<i32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
+  pub fn cellmap_name_hash(&self) -> u32 {
+    let mut mem = ::core::mem::MaybeUninit::<<u32 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
     // Safety:
     // Created from a valid Table for this object
     // Which contains a valid value in this slot
@@ -299,13 +299,13 @@ impl<'a> PartAttributeCell {
       ::core::ptr::copy_nonoverlapping(
         self.0[0..].as_ptr(),
         mem.as_mut_ptr() as *mut u8,
-        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
       mem.assume_init()
     })
   }
 
-  pub fn set_map_id(&mut self, x: i32) {
+  pub fn set_cellmap_name_hash(&mut self, x: u32) {
     let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
     // Safety:
     // Created from a valid Table for this object
@@ -314,7 +314,7 @@ impl<'a> PartAttributeCell {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
         self.0[0..].as_mut_ptr(),
-        ::core::mem::size_of::<<i32 as ::flatbuffers::EndianScalar>::Scalar>(),
+        ::core::mem::size_of::<<u32 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
   }

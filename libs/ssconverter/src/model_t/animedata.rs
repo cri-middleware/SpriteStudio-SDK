@@ -377,7 +377,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeCellT::default();
-                    value.map_id = _key.value.map_id;
+                    value.cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, _key.value.map_id);
                     value.name_hash = crate::utils::fnv1a_hash_str(&_key.value.name);
                     p_args.cell = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeCell;
@@ -1006,7 +1006,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
         sspj::ssattribute::SsAttributeKind::Cell(v) => {
             process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
                 let mut c_args = ssab::ssab::ss::format::PartAttributeCellT::default();
-                c_args.map_id = k.value.map_id;
+                c_args.cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, k.value.map_id);
                 c_args.name_hash = crate::utils::fnv1a_hash_str(&k.value.name);
                 Some(Box::new(c_args))
             });
@@ -1621,14 +1621,15 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_m
 }
 
 fn cellmap_id_to_name_hash(cellmap_names: &[String], map_id: i32) -> u32 {
+    // Negative map_id is the documented "no map" convention in sspj
+    // (e.g. unset shader map slot).
     if map_id < 0 {
         return 0;
     }
-    let Some(file_name) = cellmap_names.get(map_id as usize) else {
-        return 0;
-    };
-    let name = file_name.strip_suffix(".ssce").unwrap_or(file_name);
-    crate::utils::fnv1a_hash_str(name)
+    // map_id indexes into the same ssae cellmap_names list that produced it,
+    // so out-of-range here means the sspj is malformed.
+    let file_name = &cellmap_names[map_id as usize];
+    crate::utils::fnv1a_hash_str(crate::utils::cellmap_basename(file_name))
 }
 
 #[cfg(test)]

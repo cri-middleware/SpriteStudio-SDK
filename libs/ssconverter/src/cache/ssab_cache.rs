@@ -537,12 +537,12 @@ impl From<&ssab::ssab::ss::format::LabelT> for LabelKey {
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeCellKey {
-    pub map_id: i32,
+    pub cellmap_name_hash: u32,
     pub name_hash: u32,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeCellT> for PartAttributeCellKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeCellT) -> Self {
-        Self { map_id: value.map_id, name_hash: value.name_hash }
+        Self { cellmap_name_hash: value.cellmap_name_hash, name_hash: value.name_hash }
     }
 }
 
@@ -1531,7 +1531,7 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::PartAttributeCellArgs::default();
-        args.map_id = part_attribute_cell.map_id;
+        args.cellmap_name_hash = part_attribute_cell.cellmap_name_hash;
         args.name_hash = part_attribute_cell.name_hash;
 
         let offset = ssab::ssab::ss::format::PartAttributeCell::create(fb, &args);
@@ -2301,6 +2301,7 @@ impl<'a> SsabCache<'a> {
                     let a = s.iter().map(|s| fb.create_shared_string(s)).collect::<Vec<_>>();
                     fb.create_vector(&a)
                 });
+                args.name_texture_hash = font_bitmap_t.name_texture_hash.as_ref().map(|h| fb.create_vector(h));
                 args.table_data = font_bitmap_t.table_data.as_ref().map(|table_data| {
                     let v = table_data
                         .iter()

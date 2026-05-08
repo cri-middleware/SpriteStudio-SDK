@@ -298,7 +298,7 @@ ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (
 
 | ssab `PartAttributeCell` | ssae `SsAttributeCellKeyValue` | 備考 |
 |-------------------------|-------------------------------|------|
-| `map_id` (int) | `map_id` (i32) | セルマップインデックス |
+| `cellmap_name_hash` (uint32) | `map_id` (i32) | セルマップ名（`.ssce` を除いたファイル名）の fnv1a ハッシュ。コンバート時に `sspj.cellmap_names[map_id]` から解決するため、ssab に一部のセルマップしか同梱されていない場合でもランタイムがハッシュで参照できる。 |
 | `name_hash` (uint32) | `name` (String) | 文字列の代わりにハッシュ |
 
 ### オーディオ属性
