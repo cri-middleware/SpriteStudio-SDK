@@ -110,6 +110,12 @@ pub struct CachedPartData<'a> {
     pub parent_index: i16,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
+
+    // バッチキー用の静的メタデータ (setup 時に SSAB PartData から1回だけ読む)。
+    // フレームごとの DrawBatch 計算で参照される。
+    pub blend_type: ssab::ssab::ss::format::BlendType,
+    pub part_type_disc: ssab::ssab::ss::format::PartType,
+    pub mask_influence: bool,
     pub cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>,
     pub position_x_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
     pub position_y_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataFloatValue<'a>>>>,
@@ -151,12 +157,24 @@ pub struct CachedPartData<'a> {
 }
 
 impl<'a> CachedPartData<'a> {
-    pub fn new(part: ssab::ssab::ss::format::PartAnimationData<'a>, part_index: i16, parent_index: i16, resolved_cells: alloc::vec::Vec<ResolvedCellMeta>, shape_kind: Option<crate::core::geometry::ShapeType>) -> Self {
+    pub fn new(
+        part: ssab::ssab::ss::format::PartAnimationData<'a>,
+        part_index: i16,
+        parent_index: i16,
+        resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
+        shape_kind: Option<crate::core::geometry::ShapeType>,
+        blend_type: ssab::ssab::ss::format::BlendType,
+        part_type_disc: ssab::ssab::ss::format::PartType,
+        mask_influence: bool,
+    ) -> Self {
         Self {
             part_index,
             parent_index,
             resolved_cells,
             shape_kind,
+            blend_type,
+            part_type_disc,
+            mask_influence,
             cell_array: part.cell_array(),
             position_x_array: part.position_x_array(),
             position_y_array: part.position_y_array(),
@@ -666,10 +684,150 @@ fn get_parts<'a>(
 }
 
 #[allow(clippy::too_many_arguments)]
+/// SSAB PartType discriminator から DrawBatchKind と「他パートと同一バッチに
+/// 入れられるか」フラグへのマッピング。Phase 1 では Normal のみがバッチ可能、
+/// Shape/Instance/Effect はシングルトン化、その他 (Null/Camera/Audio/Mask/Mesh/
+/// Text/Nines 等) は描画対象外として None を返す。
+fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(runtime::framedata::ss::runtime::DrawBatchKind, bool)> {
+    use ssab::ssab::ss::format::PartType as P;
+    use runtime::framedata::ss::runtime::DrawBatchKind as K;
+    if disc == P::PartTypeNormal { return Some((K::Normal, true)); }
+    if disc == P::PartTypeShape { return Some((K::Shape, false)); }
+    if disc == P::PartTypeInstance { return Some((K::Instance, false)); }
+    if disc == P::PartTypeEffect { return Some((K::Effect, false)); }
+    // Phase 2: PartTypeMask (kind=Mask, mask_indices と連携)
+    // Phase 3: PartTypeMesh / Text / Nines
+    None
+}
+
+#[inline]
+fn ssab_blend_to_runtime(b: ssab::ssab::ss::format::BlendType) -> runtime::framedata::ss::runtime::BlendType {
+    runtime::framedata::ss::runtime::BlendType(b.0)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct BatchKey {
+    kind: runtime::framedata::ss::runtime::DrawBatchKind,
+    texture_hash: u32,
+    blend_type: runtime::framedata::ss::runtime::BlendType,
+    flags: u8,
+}
+
+struct InProgressBatch {
+    start_rank: u16,
+    count: u16,
+    vertex_count: u32,
+    index_count: u32,
+    key: BatchKey,
+}
+
+fn finalize_batch(ip: InProgressBatch, out: &mut Vec<runtime::framedata::ss::runtime::DrawBatch>) {
+    out.push(runtime::framedata::ss::runtime::DrawBatch::new(
+        ip.start_rank,
+        ip.count,
+        ip.key.texture_hash,
+        ip.vertex_count.min(u16::MAX as u32) as u16,
+        ip.index_count.min(u16::MAX as u32) as u16,
+        ip.key.blend_type,
+        ip.key.kind,
+        ip.key.flags,
+        0,
+    ));
+}
+
+/// `z_indices` を z-order とみなして、連続する同キーの batchable kind を 1 バッチに畳み、
+/// それ以外 (シングルトン kind / hide / 描画対象外) は適宜区切る。
+/// 戻り値は (draw_order WIPOffset, draw_batches WIPOffset) のペア。
+fn build_draw_order_and_batches<'a>(
+    fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+    z_indices: &[usize],
+    cached_parts: &[CachedPartData<'_>],
+    parts_vec: &[runtime::framedata::ss::runtime::PartState],
+    cell_texture_hashes: &[u32],
+) -> (
+    flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>,
+    flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::DrawBatch>>,
+) {
+    use runtime::framedata::ss::runtime::{DrawBatch, DrawBatchKind, UpdateAttributeFlags};
+
+    let mut draw_order_vec: Vec<u16> = Vec::with_capacity(z_indices.len());
+    for &part_idx in z_indices {
+        draw_order_vec.push(part_idx as u16);
+    }
+
+    let mut batches: Vec<DrawBatch> = Vec::new();
+    let mut in_progress: Option<InProgressBatch> = None;
+
+    for (rank, &part_idx) in z_indices.iter().enumerate() {
+        // Defensive bounds check; z_indices should match parts_vec/cached_parts length.
+        if part_idx >= cached_parts.len() || part_idx >= parts_vec.len() {
+            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+            continue;
+        }
+        let cached = &cached_parts[part_idx];
+        let part_state = &parts_vec[part_idx];
+
+        // Filter: non-rendering kinds break runs and emit nothing.
+        let Some((kind, batchable)) = classify_for_draw_batch(cached.part_type_disc) else {
+            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+            continue;
+        };
+
+        // Filter: hidden parts are excluded from draw_batches entirely (Phase 1).
+        if part_state.hide() {
+            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+            continue;
+        }
+
+        let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
+        let blend_type = ssab_blend_to_runtime(cached.blend_type);
+        let flags: u8 = 0; // Phase 1: mask_influence/shader 未配線
+
+        // Phase 1: vertex/index_count は Normal のみ算出 (4 quad / 5 fan)。
+        // Shape/Instance/Effect は形状が動的 or サブツリーのため 0 (Player は
+        // shape_vertex_counts 等を別途参照する)。
+        let (vc, ic): (u32, u32) = if kind == DrawBatchKind::Normal {
+            let f = part_state.update_flag();
+            let needs_center = f.contains(UpdateAttributeFlags::AttributeVertex) || f.contains(UpdateAttributeFlags::AttributePartColor);
+            if needs_center { (5, 12) } else { (4, 6) }
+        } else {
+            (0, 0)
+        };
+
+        let key = BatchKey { kind, texture_hash, blend_type, flags };
+
+        // Extend current batch if compatible.
+        if let Some(ip) = in_progress.as_mut() {
+            if batchable && ip.key == key {
+                ip.count = ip.count.saturating_add(1);
+                ip.vertex_count = ip.vertex_count.saturating_add(vc);
+                ip.index_count = ip.index_count.saturating_add(ic);
+                continue;
+            }
+            finalize_batch(in_progress.take().unwrap(), &mut batches);
+        }
+
+        in_progress = Some(InProgressBatch {
+            start_rank: rank as u16,
+            count: 1,
+            vertex_count: vc,
+            index_count: ic,
+            key,
+        });
+    }
+
+    if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+
+    let draw_order_off = fb.create_vector(&draw_order_vec);
+    let draw_batches_off = fb.create_vector(&batches);
+    (draw_order_off, draw_batches_off)
+}
+
 pub fn get_frame_data<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     cached_parts: &[CachedPartData<'a>],
     frame_no: f32,
+    z_order: &mut crate::core::z_order::ZOrderTable,
     parts_vec: &mut Vec<runtime::framedata::ss::runtime::PartState>,
     cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
     parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
@@ -727,6 +885,21 @@ pub fn get_frame_data<'a>(
     args.shaders = shaders_off;
     args.vertices = vertices_off;
     args.deforms = deforms_off;
+
+    // z_order と batch 計算は parts_vec / cell_texture_hashes が満たされた後で行う。
+    // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
+    // ここで実行する (lib.rs から z_order.update を移譲)。
+    z_order.update(parts_vec);
+    let (draw_order_off, draw_batches_off) = build_draw_order_and_batches(
+        fb,
+        z_order.indices(),
+        cached_parts,
+        parts_vec,
+        cell_texture_hashes,
+    );
+    args.draw_order = Some(draw_order_off);
+    args.draw_batches = Some(draw_batches_off);
+
     runtime::framedata::ss::runtime::FrameData::create(fb, &args)
 }
 

@@ -426,33 +426,6 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-/// Per-part FNV-1a hash of the cellmap name owning the current cell, written
-/// by `ss_runtime_get_frame_data`. Indexed by `part_index`. Matches the
-/// resolved `CellMap.name_hash` in the SSAB binary (looked up from
-/// `PartAttributeCell.cellmap_name_hash`), so a Player can resolve its
-/// texture table directly without walking `FrameData::cells` and
-/// `SsAnimeBinary::cellmaps`. Parts without a current cell carry zero.
-///
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
-pub unsafe extern "C" fn ss_runtime_get_cell_texture_hashes(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
-        unsafe {
-            if !out_data.is_null() {
-                *out_data = ffi_context.ctx.get_cell_texture_hashes_ptr();
-            }
-            if !out_len.is_null() {
-                *out_len = ffi_context.ctx.get_cell_texture_hashes_len();
-            }
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part local-space vertex positions for the current frame, written by
 /// `ss_runtime_get_frame_data`. Layout per part:
 /// `[lt.x, lt.y, rt.x, rt.y, lb.x, lb.y, rb.x, rb.y, center.x, center.y]`
@@ -557,26 +530,6 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
             }
             if !out_len.is_null() {
                 *out_len = ffi_context.ctx.get_shape_vertex_counts_len();
-            }
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-/// # Safety
-///
-/// This function is unsafe because it dereferences raw pointers for output.
-/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
-pub unsafe extern "C" fn ss_runtime_get_z_order(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
-    if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
-        unsafe {
-            if !out_data.is_null() {
-                *out_data = ffi_context.ctx.get_z_order_ptr();
-            }
-            if !out_len.is_null() {
-                *out_len = ffi_context.ctx.get_z_order_len();
             }
         }
     }
