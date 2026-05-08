@@ -43,11 +43,12 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         .iter()
         .filter(|part| part.part_type == sspj::sstypes::SsPartType::Instance)
         .filter(|part| part.ref_anime_pack != anime_pack.name)
-        .map(|part| [part.ref_anime_pack.as_str(), part.ref_anime.as_str()].join("/"))
-        .collect::<HashSet<String>>();
+        .map(|part| (part.ref_anime_pack.clone(), part.ref_anime.clone()))
+        .collect::<HashSet<(String, String)>>();
 
     let mut anime_binary = ssab::ssab::ss::format::SsAnimeBinaryT::default();
     anime_binary.name = if anime_pack.name.is_empty() { None } else { Some(anime_pack.name.to_string()) };
+    anime_binary.name_hash = crate::utils::fnv1a_hash_str(&anime_pack.name);
     anime_binary.parts = if anime_pack.model.part_list.is_empty() { None } else { Some(model_t::animedata::convert_part_list(anime_pack)) };
     let parts_map: HashMap<String, &sspj::ssae::SsPart> = anime_pack.model.part_list.iter().map(|part| (part.name.to_string(), part)).collect();
     anime_binary.animations = if anime_pack.anime_list.is_empty() {
@@ -79,7 +80,23 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         v.sort_by_key(|external_texture| external_texture.name_hash);
         Some(v)
     };
-    anime_binary.external_instances = if external_instances.is_empty() { None } else { Some(external_instances.iter().cloned().collect::<Vec<_>>()) };
+    anime_binary.external_instances = if external_instances.is_empty() {
+        None
+    } else {
+        let mut v = external_instances
+            .iter()
+            .map(|(pack, anime)| {
+                let mut entry = ssab::ssab::ss::format::ExternalInstanceT::default();
+                entry.anime_name_hash = crate::utils::fnv1a_hash_str(anime);
+                entry.anime_pack_name_hash = crate::utils::fnv1a_hash_str(pack);
+                entry.anime_pack_name = Some(pack.clone());
+                entry.anime_name = Some(anime.clone());
+                entry
+            })
+            .collect::<Vec<_>>();
+        v.sort_by_key(|e| e.anime_name_hash);
+        Some(v)
+    };
     anime_binary.embedded_assets = if embedded {
         let asset_files = crate::utils::get_assets_of_ssab_object_class(&anime_binary, sspj);
         let mut v = asset_files

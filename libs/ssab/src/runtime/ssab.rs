@@ -14596,6 +14596,163 @@ impl ::core::fmt::Debug for ExternalTexture<'_> {
       ds.finish()
   }
 }
+pub enum ExternalInstanceOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct ExternalInstance<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for ExternalInstance<'a> {
+  type Inner = ExternalInstance<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> ExternalInstance<'a> {
+  pub const VT_ANIME_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_ANIME_PACK_NAME_HASH: ::flatbuffers::VOffsetT = 6;
+  pub const VT_ANIME_PACK_NAME: ::flatbuffers::VOffsetT = 8;
+  pub const VT_ANIME_NAME: ::flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    ExternalInstance { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args ExternalInstanceArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<ExternalInstance<'bldr>> {
+    let mut builder = ExternalInstanceBuilder::new(_fbb);
+    if let Some(x) = args.anime_name { builder.add_anime_name(x); }
+    if let Some(x) = args.anime_pack_name { builder.add_anime_pack_name(x); }
+    builder.add_anime_pack_name_hash(args.anime_pack_name_hash);
+    builder.add_anime_name_hash(args.anime_name_hash);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn anime_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(ExternalInstance::VT_ANIME_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn key_compare_less_than(&self, o: &ExternalInstance) -> bool {
+    self.anime_name_hash() < o.anime_name_hash()
+  }
+
+  #[inline]
+  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
+    let key = self.anime_name_hash();
+    key.cmp(&val)
+  }
+  #[inline]
+  pub fn anime_pack_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(ExternalInstance::VT_ANIME_PACK_NAME_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn anime_pack_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(ExternalInstance::VT_ANIME_PACK_NAME, None)}
+  }
+  #[inline]
+  pub fn anime_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(ExternalInstance::VT_ANIME_NAME, None)}
+  }
+}
+
+impl ::flatbuffers::Verifiable for ExternalInstance<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<u32>("anime_name_hash", Self::VT_ANIME_NAME_HASH, false)?
+     .visit_field::<u32>("anime_pack_name_hash", Self::VT_ANIME_PACK_NAME_HASH, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("anime_pack_name", Self::VT_ANIME_PACK_NAME, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("anime_name", Self::VT_ANIME_NAME, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct ExternalInstanceArgs<'a> {
+    pub anime_name_hash: u32,
+    pub anime_pack_name_hash: u32,
+    pub anime_pack_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub anime_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+}
+impl<'a> Default for ExternalInstanceArgs<'a> {
+  #[inline]
+  fn default() -> Self {
+    ExternalInstanceArgs {
+      anime_name_hash: 0,
+      anime_pack_name_hash: 0,
+      anime_pack_name: None,
+      anime_name: None,
+    }
+  }
+}
+
+pub struct ExternalInstanceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> ExternalInstanceBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_anime_name_hash(&mut self, anime_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(ExternalInstance::VT_ANIME_NAME_HASH, anime_name_hash, 0);
+  }
+  #[inline]
+  pub fn add_anime_pack_name_hash(&mut self, anime_pack_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(ExternalInstance::VT_ANIME_PACK_NAME_HASH, anime_pack_name_hash, 0);
+  }
+  #[inline]
+  pub fn add_anime_pack_name(&mut self, anime_pack_name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(ExternalInstance::VT_ANIME_PACK_NAME, anime_pack_name);
+  }
+  #[inline]
+  pub fn add_anime_name(&mut self, anime_name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(ExternalInstance::VT_ANIME_NAME, anime_name);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> ExternalInstanceBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    ExternalInstanceBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<ExternalInstance<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for ExternalInstance<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("ExternalInstance");
+      ds.field("anime_name_hash", &self.anime_name_hash());
+      ds.field("anime_pack_name_hash", &self.anime_pack_name_hash());
+      ds.field("anime_pack_name", &self.anime_pack_name());
+      ds.field("anime_name", &self.anime_name());
+      ds.finish()
+  }
+}
 pub enum EmbeddedAssetOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -14862,11 +15019,11 @@ impl<'a> SsAnimeBinary<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalTexture>>>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, None)}
   }
   #[inline]
-  pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>> {
+  pub fn external_instances(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalInstance<'a>>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalInstance>>>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, None)}
   }
   #[inline]
   pub fn embedded_assets(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'a>>>> {
@@ -14893,7 +15050,7 @@ impl ::flatbuffers::Verifiable for SsAnimeBinary<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<SoundList>>>>("sound_lists", Self::VT_SOUND_LISTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<FontBitmap>>>>("font_bitmaps", Self::VT_FONT_BITMAPS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<ExternalTexture>>>>("external_textures", Self::VT_EXTERNAL_TEXTURES, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<&'_ str>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<ExternalInstance>>>>("external_instances", Self::VT_EXTERNAL_INSTANCES, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EmbeddedAsset>>>>("embedded_assets", Self::VT_EMBEDDED_ASSETS, false)?
      .finish();
     Ok(())
@@ -14910,7 +15067,7 @@ pub struct SsAnimeBinaryArgs<'a> {
     pub sound_lists: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<SoundList<'a>>>>>,
     pub font_bitmaps: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<FontBitmap<'a>>>>>,
     pub external_textures: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalTexture<'a>>>>>,
-    pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<&'a str>>>>,
+    pub external_instances: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ExternalInstance<'a>>>>>,
     pub embedded_assets: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EmbeddedAsset<'a>>>>>,
 }
 impl<'a> Default for SsAnimeBinaryArgs<'a> {
@@ -14979,7 +15136,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, 
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_TEXTURES, external_textures);
   }
   #[inline]
-  pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<&'b  str>>>) {
+  pub fn add_external_instances(&mut self, external_instances: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<ExternalInstance<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SsAnimeBinary::VT_EXTERNAL_INSTANCES, external_instances);
   }
   #[inline]

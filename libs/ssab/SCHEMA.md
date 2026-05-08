@@ -56,7 +56,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Included only if the pack contains Audio-type parts |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | Only bitmap fonts used by Text-type parts with `text_bitmap == true` |
 | `external_textures` | [ExternalTexture] | — | External texture references |
-| `external_instances` | [string] | — | `"pack_name/anime_name"` for cross-pack instance references |
+| `external_instances` | [ExternalInstance] | — | Cross-pack instance references; sorted by `anime_name_hash` (the FlatBuffers `(key)`) so the player can `LookupByKey(ref_anime_hash)` directly. Each entry carries `anime_pack_name_hash` (matches `SsAnimeBinary.name_hash` of the target pack), `anime_pack_name` (used to locate the sibling `<pack>.ssab` file), and `anime_name` (diagnostic). |
 | `embedded_assets` | [EmbeddedAsset] | — | Optionally embedded binary assets (images, sounds, etc.) |
 
 ---
