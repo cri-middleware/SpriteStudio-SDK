@@ -1622,15 +1622,13 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_m
 
 fn cellmap_id_to_name_hash(cellmap_names: &[String], map_id: i32) -> u32 {
     // Negative map_id is the documented "no map" convention in sspj
-    // (e.g. unset shader map slot); fall through silently.
+    // (e.g. unset shader map slot).
     if map_id < 0 {
         return 0;
     }
-    let Some(file_name) = cellmap_names.get(map_id as usize) else {
-        eprintln!("cellmap_id_to_name_hash: map_id {} is out of range (cellmap_names.len() = {}); falling back to 0", map_id, cellmap_names.len());
-        debug_assert!(false, "cellmap map_id out of range: {} (len={})", map_id, cellmap_names.len());
-        return 0;
-    };
+    // map_id indexes into the same ssae cellmap_names list that produced it,
+    // so out-of-range here means the sspj is malformed.
+    let file_name = &cellmap_names[map_id as usize];
     crate::utils::fnv1a_hash_str(crate::utils::cellmap_basename(file_name))
 }
 
