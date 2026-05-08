@@ -688,13 +688,23 @@ fn get_parts<'a>(
 
 #[allow(clippy::too_many_arguments)]
 fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(runtime::framedata::ss::runtime::DrawBatchKind, bool)> {
-    use ssab::ssab::ss::format::PartType as P;
     use runtime::framedata::ss::runtime::DrawBatchKind as K;
-    if disc == P::PartTypeNormal { return Some((K::Normal, true)); }
-    if disc == P::PartTypeShape { return Some((K::Shape, false)); }
-    if disc == P::PartTypeInstance { return Some((K::Instance, false)); }
-    if disc == P::PartTypeEffect { return Some((K::Effect, false)); }
-    if disc == P::PartTypeMask { return Some((K::Mask, false)); }
+    use ssab::ssab::ss::format::PartType as P;
+    if disc == P::PartTypeNormal {
+        return Some((K::Normal, true));
+    }
+    if disc == P::PartTypeShape {
+        return Some((K::Shape, false));
+    }
+    if disc == P::PartTypeInstance {
+        return Some((K::Instance, false));
+    }
+    if disc == P::PartTypeEffect {
+        return Some((K::Effect, false));
+    }
+    if disc == P::PartTypeMask {
+        return Some((K::Mask, false));
+    }
     None
 }
 
@@ -722,17 +732,7 @@ struct InProgressBatch {
 }
 
 fn finalize_batch(ip: InProgressBatch, out: &mut Vec<runtime::framedata::ss::runtime::DrawBatch>) {
-    out.push(runtime::framedata::ss::runtime::DrawBatch::new(
-        ip.start_rank,
-        ip.count,
-        ip.key.texture_hash,
-        ip.vertex_count.min(u16::MAX as u32) as u16,
-        ip.index_count.min(u16::MAX as u32) as u16,
-        ip.key.blend_type,
-        ip.key.kind,
-        ip.key.flags,
-        0,
-    ));
+    out.push(runtime::framedata::ss::runtime::DrawBatch::new(ip.start_rank, ip.count, ip.key.texture_hash, ip.vertex_count.min(u16::MAX as u32) as u16, ip.index_count.min(u16::MAX as u32) as u16, ip.key.blend_type, ip.key.kind, ip.key.flags, 0));
 }
 
 fn build_draw_order_and_batches<'a>(
@@ -741,11 +741,7 @@ fn build_draw_order_and_batches<'a>(
     cached_parts: &[CachedPartData<'_>],
     parts_vec: &[runtime::framedata::ss::runtime::PartState],
     cell_texture_hashes: &[u32],
-) -> (
-    flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>,
-    flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::DrawBatch>>,
-    flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>,
-) {
+) -> (flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>, flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::DrawBatch>>, flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>) {
     use runtime::framedata::ss::runtime::{DrawBatch, DrawBatchKind, UpdateAttributeFlags};
 
     let mut draw_order_vec: Vec<u16> = Vec::with_capacity(z_indices.len());
@@ -759,14 +755,18 @@ fn build_draw_order_and_batches<'a>(
 
     for (rank, &part_idx) in z_indices.iter().enumerate() {
         if part_idx >= cached_parts.len() || part_idx >= parts_vec.len() {
-            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+            if let Some(ip) = in_progress.take() {
+                finalize_batch(ip, &mut batches);
+            }
             continue;
         }
         let cached = &cached_parts[part_idx];
         let part_state = &parts_vec[part_idx];
 
         let Some((kind, batchable)) = classify_for_draw_batch(cached.part_type_disc) else {
-            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+            if let Some(ip) = in_progress.take() {
+                finalize_batch(ip, &mut batches);
+            }
             continue;
         };
 
@@ -776,21 +776,22 @@ fn build_draw_order_and_batches<'a>(
 
         let blend_type = ssab_blend_to_runtime(cached.blend_type);
         let mut flags: u8 = 0;
-        if cached.mask_influence { flags |= FLAG_MASK_INFLUENCE; }
+        if cached.mask_influence {
+            flags |= FLAG_MASK_INFLUENCE;
+        }
 
         let is_pure_mask = kind == DrawBatchKind::Mask;
         if cached.is_mask_contributor && !is_pure_mask {
-            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
-            batches.push(DrawBatch::new(
-                rank as u16, 1, 0, 0, 0,
-                blend_type,
-                DrawBatchKind::Mask,
-                flags, 0,
-            ));
+            if let Some(ip) = in_progress.take() {
+                finalize_batch(ip, &mut batches);
+            }
+            batches.push(DrawBatch::new(rank as u16, 1, 0, 0, 0, blend_type, DrawBatchKind::Mask, flags, 0));
         }
 
         if part_state.hide() && !is_pure_mask {
-            if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+            if let Some(ip) = in_progress.take() {
+                finalize_batch(ip, &mut batches);
+            }
             continue;
         }
 
@@ -816,16 +817,12 @@ fn build_draw_order_and_batches<'a>(
             finalize_batch(in_progress.take().unwrap(), &mut batches);
         }
 
-        in_progress = Some(InProgressBatch {
-            start_rank: rank as u16,
-            count: 1,
-            vertex_count: vc,
-            index_count: ic,
-            key,
-        });
+        in_progress = Some(InProgressBatch { start_rank: rank as u16, count: 1, vertex_count: vc, index_count: ic, key });
     }
 
-    if let Some(ip) = in_progress.take() { finalize_batch(ip, &mut batches); }
+    if let Some(ip) = in_progress.take() {
+        finalize_batch(ip, &mut batches);
+    }
 
     let draw_order_off = fb.create_vector(&draw_order_vec);
     let draw_batches_off = fb.create_vector(&batches);
@@ -900,13 +897,7 @@ pub fn get_frame_data<'a>(
     // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
     // ここで実行する (lib.rs から z_order.update を移譲)。
     z_order.update(parts_vec);
-    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(
-        fb,
-        z_order.indices(),
-        cached_parts,
-        parts_vec,
-        cell_texture_hashes,
-    );
+    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(fb, z_order.indices(), cached_parts, parts_vec, cell_texture_hashes);
     args.draw_order = Some(draw_order_off);
     args.draw_batches = Some(draw_batches_off);
     args.mask_indices = Some(mask_indices_off);
