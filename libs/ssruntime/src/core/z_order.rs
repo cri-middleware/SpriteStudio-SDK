@@ -3,8 +3,11 @@ use alloc::vec::Vec;
 use crate::core::framedata::CachedPartData;
 use crate::runtime::framedata::ss::runtime::PartState;
 
+/// 描画順 (z-order) を保持するテーブル。`indices` には part_idx を rank 昇順で
+/// 並べた permutation を持ち、これが `FrameData.draw_order` の元データとなる。
+/// 旧 API には rank-per-part_idx の逆引き表 (`order: Vec<i32>`) もあったが、
+/// バッチ描画契約 (chapter 9) への移行に伴い廃止 (FFI も同時に削除)。
 pub struct ZOrderTable {
-    order: Vec<i32>,
     indices: Vec<usize>,
     is_static: bool,
     computed: bool,
@@ -18,13 +21,11 @@ impl Default for ZOrderTable {
 
 impl ZOrderTable {
     pub fn new() -> Self {
-        Self { order: Vec::new(), indices: Vec::new(), is_static: false, computed: false }
+        Self { indices: Vec::new(), is_static: false, computed: false }
     }
 
     pub fn setup(&mut self, cached_parts: &[CachedPartData<'_>]) {
         let num_parts = cached_parts.len();
-        self.order.clear();
-        self.order.resize(num_parts, 0);
         self.indices.clear();
         self.indices.extend(0..num_parts);
 
@@ -32,7 +33,6 @@ impl ZOrderTable {
         if self.is_static {
             // Without priority animation, priority() is uniformly 0.0 — sort reduces to part_index ascending.
             self.indices.sort_by_key(|&i| cached_parts[i].part_index);
-            self.write_ranks();
             self.computed = true;
         } else {
             self.computed = false;
@@ -45,8 +45,7 @@ impl ZOrderTable {
         }
 
         let num_parts = parts.len();
-        if self.order.len() != num_parts || self.indices.len() != num_parts {
-            self.order.resize(num_parts, 0);
+        if self.indices.len() != num_parts {
             self.indices.clear();
             self.indices.extend(0..num_parts);
         } else {
@@ -61,29 +60,12 @@ impl ZOrderTable {
             if pa.priority() == pb.priority() { pa.part_index().cmp(&pb.part_index()) } else { pa.priority().partial_cmp(&pb.priority()).unwrap_or(::core::cmp::Ordering::Equal) }
         });
 
-        self.write_ranks();
         self.computed = true;
     }
 
-    fn write_ranks(&mut self) {
-        for (rank, &part_idx) in self.indices.iter().enumerate() {
-            self.order[part_idx] = rank as i32;
-        }
-    }
-
-    pub fn as_slice(&self) -> &[i32] {
-        &self.order
-    }
-
-    pub fn as_ptr(&self) -> *const i32 {
-        self.order.as_ptr()
-    }
-
-    pub fn len(&self) -> usize {
-        self.order.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.order.is_empty()
+    /// part_idx 列を「描画順」(rank 昇順) に並べたスライス。
+    /// FrameData.draw_order の元データとして使用する。
+    pub fn indices(&self) -> &[usize] {
+        &self.indices
     }
 }

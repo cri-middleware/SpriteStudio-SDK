@@ -170,6 +170,29 @@ struct PartState {
   img_flip_v: bool;
 }
 
+enum DrawBatchKind: ubyte {
+  Normal,
+  Shape,
+  Instance,
+  Effect,
+  Mesh,
+  Text,
+  Nines,
+  Mask,
+}
+
+struct DrawBatch {
+  start_rank: ushort;
+  count: ushort;
+  texture_hash: uint32;
+  vertex_count: ushort;
+  index_count: ushort;
+  blend_type: BlendType;
+  kind: DrawBatchKind;
+  flags: ubyte;
+  _reserved: ubyte;
+}
+
 table FrameData {
   parts: [PartState];
 
@@ -178,6 +201,10 @@ table FrameData {
   shaders: [PartAttributeShader];
   vertices: [PartAttributeVertex];
   deforms: [PartAttributeDeform];
+
+  draw_order: [ushort];
+  draw_batches: [DrawBatch];
+  mask_indices: [ushort];
 }
 
 root_type FrameData;

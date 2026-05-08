@@ -25,12 +25,13 @@
 よりリッチなアニメーションを再現するための追加実装です。
 
 8. [高度な機能と描画ループの拡張](./08_advanced_rendering.ja.md)
-9. [イベント処理 (UserData / Signal / サウンド)](./09_events.ja.md)
-10. [Optional な機能の実装](./10_optional_features.ja.md)
+9. [バッチ描画と cross-engine 移植契約](./09_batched_rendering.ja.md)
+10. [イベント処理 (UserData / Signal / サウンド)](./10_events.ja.md)
+11. [Optional な機能の実装](./11_optional_features.ja.md)
 
 ### 第4章：リファレンス (Reference)
-11. [`no_std` 組み込み環境への統合](./11_no_std_integration.ja.md)
-12. [トラブルシューティングと制限事項](./12_troubleshooting.ja.md)
+12. [`no_std` 組み込み環境への統合](./12_no_std_integration.ja.md)
+13. [トラブルシューティングと制限事項](./13_troubleshooting.ja.md)
 
 ---
 [SpriteStudio7-SDK Top](../../README.ja.md) / [libssruntime Top](../README.ja.md)

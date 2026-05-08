@@ -288,16 +288,31 @@ impl<'a> AnimationResource<'a> {
                 if let Some(parts) = anim.parts_animation_data() {
                     let fb_parts = ssab.parts();
                     for (i, p) in parts.iter().enumerate() {
-                        let parent_index = if let Some(parts_meta) = fb_parts { parts_meta.get(i).parent_index() } else { -1 };
+                        let part_meta = fb_parts.map(|meta| meta.get(i));
+                        let parent_index = part_meta.map(|pm| pm.parent_index()).unwrap_or(-1);
+                        let blend_type = part_meta.map(|pm| pm.blend_type()).unwrap_or(ssab::ssab::ss::format::BlendType::Mix);
+                        let part_type_disc = part_meta.map(|pm| pm.part_type_type()).unwrap_or(ssab::ssab::ss::format::PartType::NONE);
+                        let mask_influence = part_meta.map(|pm| pm.mask_influence()).unwrap_or(false);
+                        let is_mask_contributor = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask {
+                            true
+                        } else if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeShape {
+                            part_meta.and_then(|pm| pm.part_type_as_part_type_shape()).map(|s| s.shape_mask()).unwrap_or(false)
+                        } else if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeText {
+                            part_meta.and_then(|pm| pm.part_type_as_part_type_text()).map(|t| t.text_mask()).unwrap_or(false)
+                        } else if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeNines {
+                            part_meta.and_then(|pm| pm.part_type_as_part_type_nines()).map(|n| n.nines_mask()).unwrap_or(false)
+                        } else {
+                            false
+                        };
                         let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
-                        let shape_kind = fb_parts.map(|meta| meta.get(i)).and_then(|part_data| part_data.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
+                        let shape_kind = part_meta.and_then(|pm| pm.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
                             ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
                             ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
                             ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
                             ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
                             _ => None,
                         });
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind));
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, blend_type, part_type_disc, mask_influence, is_mask_contributor));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -566,6 +581,7 @@ impl<'a> Context<'a> {
             &mut self.fb,
             &metadata.cached_parts,
             frame_no,
+            &mut self.z_order,
             &mut self.buffers.parts_vec,
             &mut self.buffers.cell_vec,
             &mut self.buffers.parts_color_vec,
@@ -590,8 +606,6 @@ impl<'a> Context<'a> {
         self.compute_local_uvs(&metadata.cached_parts);
 
         self.compute_shape_vertices(&metadata.cached_parts);
-
-        self.z_order.update(&self.buffers.parts_vec);
 
         self.fb.finish_minimal(offset);
         Ok(self.fb.finished_data())
@@ -741,14 +755,6 @@ impl<'a> Context<'a> {
         self.buffers.world_matrices.len() * 16
     }
 
-    pub fn get_z_order_ptr(&self) -> *const i32 {
-        self.z_order.as_ptr()
-    }
-
-    pub fn get_z_order_len(&self) -> usize {
-        self.z_order.len()
-    }
-
     pub fn get_local_uvs_ptr(&self) -> *const f32 {
         self.buffers.local_uvs.as_ptr()
     }
@@ -787,14 +793,6 @@ impl<'a> Context<'a> {
 
     pub fn get_cell_meta_len(&self) -> usize {
         self.buffers.cell_meta_per_part.len()
-    }
-
-    pub fn get_cell_texture_hashes_ptr(&self) -> *const u32 {
-        self.buffers.cell_texture_hashes.as_ptr()
-    }
-
-    pub fn get_cell_texture_hashes_len(&self) -> usize {
-        self.buffers.cell_texture_hashes.len()
     }
 
     pub fn get_local_vertices_ptr(&self) -> *const f32 {
