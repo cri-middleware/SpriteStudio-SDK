@@ -204,6 +204,7 @@ table FrameData {
 
   draw_order: [ushort];
   draw_batches: [DrawBatch];
+  mask_indices: [ushort];
 }
 
 root_type FrameData;

@@ -3521,6 +3521,7 @@ impl<'a> FrameData<'a> {
   pub const VT_DEFORMS: ::flatbuffers::VOffsetT = 14;
   pub const VT_DRAW_ORDER: ::flatbuffers::VOffsetT = 16;
   pub const VT_DRAW_BATCHES: ::flatbuffers::VOffsetT = 18;
+  pub const VT_MASK_INDICES: ::flatbuffers::VOffsetT = 20;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -3532,6 +3533,7 @@ impl<'a> FrameData<'a> {
     args: &'args FrameDataArgs<'args>
   ) -> ::flatbuffers::WIPOffset<FrameData<'bldr>> {
     let mut builder = FrameDataBuilder::new(_fbb);
+    if let Some(x) = args.mask_indices { builder.add_mask_indices(x); }
     if let Some(x) = args.draw_batches { builder.add_draw_batches(x); }
     if let Some(x) = args.draw_order { builder.add_draw_order(x); }
     if let Some(x) = args.deforms { builder.add_deforms(x); }
@@ -3600,6 +3602,13 @@ impl<'a> FrameData<'a> {
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, DrawBatch>>>(FrameData::VT_DRAW_BATCHES, None)}
   }
+  #[inline]
+  pub fn mask_indices(&self) -> Option<::flatbuffers::Vector<'a, u16>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u16>>>(FrameData::VT_MASK_INDICES, None)}
+  }
 }
 
 impl ::flatbuffers::Verifiable for FrameData<'_> {
@@ -3616,6 +3625,7 @@ impl ::flatbuffers::Verifiable for FrameData<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeDeform>>>>("deforms", Self::VT_DEFORMS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("draw_order", Self::VT_DRAW_ORDER, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, DrawBatch>>>("draw_batches", Self::VT_DRAW_BATCHES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("mask_indices", Self::VT_MASK_INDICES, false)?
      .finish();
     Ok(())
   }
@@ -3629,6 +3639,7 @@ pub struct FrameDataArgs<'a> {
     pub deforms: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeDeform<'a>>>>>,
     pub draw_order: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, u16>>>,
     pub draw_batches: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, DrawBatch>>>,
+    pub mask_indices: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, u16>>>,
 }
 impl<'a> Default for FrameDataArgs<'a> {
   #[inline]
@@ -3642,6 +3653,7 @@ impl<'a> Default for FrameDataArgs<'a> {
       deforms: None,
       draw_order: None,
       draw_batches: None,
+      mask_indices: None,
     }
   }
 }
@@ -3684,6 +3696,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> FrameDataBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FrameData::VT_DRAW_BATCHES, draw_batches);
   }
   #[inline]
+  pub fn add_mask_indices(&mut self, mask_indices: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , u16>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(FrameData::VT_MASK_INDICES, mask_indices);
+  }
+  #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> FrameDataBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
     FrameDataBuilder {
@@ -3709,6 +3725,7 @@ impl ::core::fmt::Debug for FrameData<'_> {
       ds.field("deforms", &self.deforms());
       ds.field("draw_order", &self.draw_order());
       ds.field("draw_batches", &self.draw_batches());
+      ds.field("mask_indices", &self.mask_indices());
       ds.finish()
   }
 }
