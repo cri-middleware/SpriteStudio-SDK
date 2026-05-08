@@ -12,10 +12,8 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     let cellmaps = cellmap_names
         .iter()
         .filter_map(|cellmap_name| {
-            sspj.cellmap_list.iter().find(|cellmap| {
-                let cell_file_name = cellmap.name.to_string() + ".ssce";
-                cell_file_name == *cellmap_name
-            })
+            let basename = crate::utils::cellmap_basename(cellmap_name);
+            sspj.cellmap_list.iter().find(|cellmap| cellmap.name == basename)
         })
         .collect::<Vec<_>>();
 

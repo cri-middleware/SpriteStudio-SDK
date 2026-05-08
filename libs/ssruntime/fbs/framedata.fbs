@@ -1,8 +1,8 @@
 namespace ss.runtime;
 
 struct PartAttributeCell {
- map_id: int; // hash or name
- name_hash: uint32; // instead of name: string;
+ cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
+ name_hash: uint32; // fnv1a(cell name)
 }
 
 struct Vec2 {
@@ -60,7 +60,7 @@ table PartAttributeDeform {
 }
 
 struct PartAttributeShader {
-  id_hash: uint32; // instead of id: string;
+  id_hash: uint32;
   param0: float;
   param1: float;
   param2: float;
@@ -70,9 +70,9 @@ struct PartAttributeShader {
   param6: float;
   param7: float;
   map0_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
-  map0_name_hash: uint32; // instead of map0_name: string;
+  map0_name_hash: uint32;
   map1_cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
-  map1_name_hash: uint32; // instead of map1_name: string;
+  map1_name_hash: uint32;
 }
 
 enum UpdateAttributeFlags: ulong (bit_flags) {

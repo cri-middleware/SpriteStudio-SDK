@@ -427,9 +427,10 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Per-part FNV-1a hash of the cellmap name owning the current cell, written
-/// by `ss_runtime_get_frame_data`. Indexed by `part_index`. Matches
-/// `cellmaps[map_id].name_hash` in the SSAB binary, so a Player can resolve
-/// its texture table directly without walking `FrameData::cells` and
+/// by `ss_runtime_get_frame_data`. Indexed by `part_index`. Matches the
+/// resolved `CellMap.name_hash` in the SSAB binary (looked up from
+/// `PartAttributeCell.cellmap_name_hash`), so a Player can resolve its
+/// texture table directly without walking `FrameData::cells` and
 /// `SsAnimeBinary::cellmaps`. Parts without a current cell carry zero.
 ///
 /// # Safety

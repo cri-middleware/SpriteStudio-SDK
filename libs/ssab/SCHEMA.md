@@ -298,7 +298,7 @@ In ssae, keyframes can also carry `curve` data (`SsCurve`) for Bezier/Hermite in
 
 | ssab `PartAttributeCell` | ssae `SsAttributeCellKeyValue` | Notes |
 |-------------------------|-------------------------------|-------|
-| `map_id` (int) | `map_id` (i32) | Cell map index |
+| `cellmap_name_hash` (uint32) | `map_id` (i32) | fnv1a hash of the cellmap name (without `.ssce`). Resolved from `sspj.cellmap_names[map_id]` at convert time so the runtime can look up the cellmap by hash even when only a subset is bundled. |
 | `name_hash` (uint32) | `name` (String) | Hash instead of string |
 
 ### Audio Attribute

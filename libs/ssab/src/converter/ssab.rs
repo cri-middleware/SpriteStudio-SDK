@@ -9721,7 +9721,7 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeCell<'a> {
 }
 
 impl<'a> PartAttributeCell<'a> {
-  pub const VT_MAP_ID: ::flatbuffers::VOffsetT = 4;
+  pub const VT_CELLMAP_NAME_HASH: ::flatbuffers::VOffsetT = 4;
   pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 6;
 
   #[inline]
@@ -9735,25 +9735,25 @@ impl<'a> PartAttributeCell<'a> {
   ) -> ::flatbuffers::WIPOffset<PartAttributeCell<'bldr>> {
     let mut builder = PartAttributeCellBuilder::new(_fbb);
     builder.add_name_hash(args.name_hash);
-    builder.add_map_id(args.map_id);
+    builder.add_cellmap_name_hash(args.cellmap_name_hash);
     builder.finish()
   }
 
   pub fn unpack(&self) -> PartAttributeCellT {
-    let map_id = self.map_id();
+    let cellmap_name_hash = self.cellmap_name_hash();
     let name_hash = self.name_hash();
     PartAttributeCellT {
-      map_id,
+      cellmap_name_hash,
       name_hash,
     }
   }
 
   #[inline]
-  pub fn map_id(&self) -> i32 {
+  pub fn cellmap_name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeCell::VT_MAP_ID, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u32>(PartAttributeCell::VT_CELLMAP_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn name_hash(&self) -> u32 {
@@ -9770,21 +9770,21 @@ impl ::flatbuffers::Verifiable for PartAttributeCell<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<i32>("map_id", Self::VT_MAP_ID, false)?
+     .visit_field::<u32>("cellmap_name_hash", Self::VT_CELLMAP_NAME_HASH, false)?
      .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .finish();
     Ok(())
   }
 }
 pub struct PartAttributeCellArgs {
-    pub map_id: i32,
+    pub cellmap_name_hash: u32,
     pub name_hash: u32,
 }
 impl<'a> Default for PartAttributeCellArgs {
   #[inline]
   fn default() -> Self {
     PartAttributeCellArgs {
-      map_id: 0,
+      cellmap_name_hash: 0,
       name_hash: 0,
     }
   }
@@ -9796,8 +9796,8 @@ pub struct PartAttributeCellBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeCellBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_map_id(&mut self, map_id: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeCell::VT_MAP_ID, map_id, 0);
+  pub fn add_cellmap_name_hash(&mut self, cellmap_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartAttributeCell::VT_CELLMAP_NAME_HASH, cellmap_name_hash, 0);
   }
   #[inline]
   pub fn add_name_hash(&mut self, name_hash: u32) {
@@ -9821,7 +9821,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeCellBuilder<'a, 
 impl ::core::fmt::Debug for PartAttributeCell<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeCell");
-      ds.field("map_id", &self.map_id());
+      ds.field("cellmap_name_hash", &self.cellmap_name_hash());
       ds.field("name_hash", &self.name_hash());
       ds.finish()
   }
@@ -9829,13 +9829,13 @@ impl ::core::fmt::Debug for PartAttributeCell<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributeCellT {
-  pub map_id: i32,
+  pub cellmap_name_hash: u32,
   pub name_hash: u32,
 }
 impl Default for PartAttributeCellT {
   fn default() -> Self {
     Self {
-      map_id: 0,
+      cellmap_name_hash: 0,
       name_hash: 0,
     }
   }
@@ -9845,10 +9845,10 @@ impl PartAttributeCellT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<PartAttributeCell<'b>> {
-    let map_id = self.map_id;
+    let cellmap_name_hash = self.cellmap_name_hash;
     let name_hash = self.name_hash;
     PartAttributeCell::create(_fbb, &PartAttributeCellArgs{
-      map_id,
+      cellmap_name_hash,
       name_hash,
     })
   }

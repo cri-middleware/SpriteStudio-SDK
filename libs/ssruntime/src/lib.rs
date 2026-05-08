@@ -996,7 +996,7 @@ impl<'a> EffectContext<'a> {
         let Some(effects) = ssab.effects() else {
             return Err(error::SSRuntimeError::AnimationNotFound);
         };
-        let Some(effect) = effects.iter().find(|e| e.name_hash() == effect_name_hash) else {
+        let Some(effect) = crate::core::ssab_lookup::find_effect(&effects, effect_name_hash) else {
             return Err(error::SSRuntimeError::AnimationNotFound);
         };
         // The effect was located by name_hash, but its data is malformed

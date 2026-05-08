@@ -4,6 +4,7 @@ pub mod interpolation;
 pub mod math;
 pub mod matrix;
 pub mod playback_controller;
+pub mod ssab_lookup;
 pub mod util;
 pub mod z_order;
 
