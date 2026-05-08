@@ -745,28 +745,18 @@ fn build_draw_order_and_batches<'a>(
     use runtime::framedata::ss::runtime::{DrawBatch, DrawBatchKind, UpdateAttributeFlags};
 
     let mut draw_order_vec: Vec<u16> = Vec::with_capacity(z_indices.len());
-    for &part_idx in z_indices {
-        draw_order_vec.push(part_idx as u16);
-    }
-
     let mut batches: Vec<DrawBatch> = Vec::new();
     let mut mask_indices_vec: Vec<u16> = Vec::new();
     let mut in_progress: Option<InProgressBatch> = None;
 
-    for (rank, &part_idx) in z_indices.iter().enumerate() {
+    for &part_idx in z_indices.iter() {
         if part_idx >= cached_parts.len() || part_idx >= parts_vec.len() {
-            if let Some(ip) = in_progress.take() {
-                finalize_batch(ip, &mut batches);
-            }
             continue;
         }
         let cached = &cached_parts[part_idx];
         let part_state = &parts_vec[part_idx];
 
         let Some((kind, batchable)) = classify_for_draw_batch(cached.part_type_disc) else {
-            if let Some(ip) = in_progress.take() {
-                finalize_batch(ip, &mut batches);
-            }
             continue;
         };
 
@@ -781,21 +771,28 @@ fn build_draw_order_and_batches<'a>(
         }
 
         let is_pure_mask = kind == DrawBatchKind::Mask;
-        if cached.is_mask_contributor && !is_pure_mask {
-            if let Some(ip) = in_progress.take() {
-                finalize_batch(ip, &mut batches);
-            }
-            batches.push(DrawBatch::new(rank as u16, 1, 0, 0, 0, blend_type, DrawBatchKind::Mask, flags, 0));
-        }
+        let needs_mask_twin = cached.is_mask_contributor && !is_pure_mask;
+        let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
+        let normal_no_cell = kind == DrawBatchKind::Normal && texture_hash == 0;
+        let drawn_as_self = !(part_state.hide() && !is_pure_mask) && !normal_no_cell;
 
-        if part_state.hide() && !is_pure_mask {
-            if let Some(ip) = in_progress.take() {
-                finalize_batch(ip, &mut batches);
-            }
+        if !needs_mask_twin && !drawn_as_self {
             continue;
         }
 
-        let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
+        let rank = draw_order_vec.len() as u16;
+        draw_order_vec.push(part_idx as u16);
+
+        if needs_mask_twin {
+            if let Some(ip) = in_progress.take() {
+                finalize_batch(ip, &mut batches);
+            }
+            batches.push(DrawBatch::new(rank, 1, 0, 0, 0, blend_type, DrawBatchKind::Mask, flags, 0));
+        }
+
+        if !drawn_as_self {
+            continue;
+        }
 
         let (vc, ic): (u32, u32) = if kind == DrawBatchKind::Normal {
             let f = part_state.update_flag();
@@ -817,7 +814,7 @@ fn build_draw_order_and_batches<'a>(
             finalize_batch(in_progress.take().unwrap(), &mut batches);
         }
 
-        in_progress = Some(InProgressBatch { start_rank: rank as u16, count: 1, vertex_count: vc, index_count: ic, key });
+        in_progress = Some(InProgressBatch { start_rank: rank, count: 1, vertex_count: vc, index_count: ic, key });
     }
 
     if let Some(ip) = in_progress.take() {
