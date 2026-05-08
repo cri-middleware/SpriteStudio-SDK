@@ -735,13 +735,15 @@ fn finalize_batch(ip: InProgressBatch, out: &mut Vec<runtime::framedata::ss::run
     out.push(runtime::framedata::ss::runtime::DrawBatch::new(ip.start_rank, ip.count, ip.key.texture_hash, ip.vertex_count.min(u16::MAX as u32) as u16, ip.index_count.min(u16::MAX as u32) as u16, ip.key.blend_type, ip.key.kind, ip.key.flags, 0));
 }
 
+type DrawOrderAndBatchesOffsets<'a> = (flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>, flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::DrawBatch>>, flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>);
+
 fn build_draw_order_and_batches<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     z_indices: &[usize],
     cached_parts: &[CachedPartData<'_>],
     parts_vec: &[runtime::framedata::ss::runtime::PartState],
     cell_texture_hashes: &[u32],
-) -> (flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>, flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::DrawBatch>>, flatbuffers::WIPOffset<flatbuffers::Vector<'a, u16>>) {
+) -> DrawOrderAndBatchesOffsets<'a> {
     use runtime::framedata::ss::runtime::{DrawBatch, DrawBatchKind, UpdateAttributeFlags};
 
     let mut draw_order_vec: Vec<u16> = Vec::with_capacity(z_indices.len());
@@ -774,7 +776,7 @@ fn build_draw_order_and_batches<'a>(
         let needs_mask_twin = cached.is_mask_contributor && !is_pure_mask;
         let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
         let normal_no_cell = kind == DrawBatchKind::Normal && texture_hash == 0;
-        let drawn_as_self = !(part_state.hide() && !is_pure_mask) && !normal_no_cell;
+        let drawn_as_self = (!part_state.hide() || is_pure_mask) && !normal_no_cell;
 
         if !needs_mask_twin && !drawn_as_self {
             continue;
