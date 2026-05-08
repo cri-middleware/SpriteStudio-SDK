@@ -19678,16 +19678,6 @@ impl<'a> AnimationData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(AnimationData::VT_NAME, None).unwrap()}
   }
   #[inline]
-  pub fn key_compare_less_than(&self, o: &AnimationData) -> bool {
-    self.name() < o.name()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: & str) -> ::core::cmp::Ordering {
-    let key = self.name();
-    key.cmp(val)
-  }
-  #[inline]
   pub fn name_hash(&self) -> u32 {
     // Safety:
     // Created from valid Table for this object

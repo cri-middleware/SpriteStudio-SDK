@@ -160,8 +160,8 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 
 | ssab フィールド | 型 | ssae フィールド | 備考 |
 |---------------|------|---------------|------|
-| `name` | string (key) | `name` | アニメーション名 |
-| `name_hash` | uint32 | — | 高速検索用ハッシュ |
+| `name` | string (required) | `name` | アニメーション名。`(required)` で verify 時に存在を強制するが `(key)` は付けない: 配列は sspj のソース順序を保持して "最初のアニメーション" の意味を決定的にする必要があり、`LookupByKey` のためのキー順ソートと両立しないため。 |
+| `name_hash` | uint32 | — | fnv1a(name)。ハッシュベースのルックアップはリニアスキャンで行う。 |
 | `start_frame` | short | `settings.start_frame` | 開始フレーム |
 | `end_frame` | short | `settings.end_frame` | 終了フレーム |
 | `total_frame` | short | `settings.frame_count` | 総フレーム数 |

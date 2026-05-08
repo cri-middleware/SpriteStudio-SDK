@@ -1353,7 +1353,7 @@ mod tests {
 
         // Find a part that has deform animation
         let mut deform_part_idx = -1;
-        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.key_compare_with_value("anime_1") == ::core::cmp::Ordering::Equal))
+        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.name() == "anime_1"))
             && let Some(parts_anime) = animation.parts_animation_data()
         {
             for (idx, p_anime) in parts_anime.iter().enumerate() {

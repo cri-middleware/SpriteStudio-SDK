@@ -160,8 +160,8 @@ The following ssae `SsPart` fields are editor-only and not included in ssab:
 
 | ssab field | Type | ssae field | Notes |
 |-----------|------|-----------|-------|
-| `name` | string (key) | `name` | Animation name |
-| `name_hash` | uint32 | — | Hash for fast lookup |
+| `name` | string (required) | `name` | Animation name. `(required)` enforces presence at verify time, but no `(key)` because the array preserves sspj source order so "first animation" semantics stay deterministic — sorting by key for `LookupByKey` would break that. |
+| `name_hash` | uint32 | — | fnv1a(name). Use linear scan for hash-based lookup. |
 | `start_frame` | short | `settings.start_frame` | Start frame |
 | `end_frame` | short | `settings.end_frame` | End frame |
 | `total_frame` | short | `settings.frame_count` | Total frame count |

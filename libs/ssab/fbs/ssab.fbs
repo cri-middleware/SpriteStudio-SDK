@@ -799,7 +799,7 @@ table PartMeshData {
 }
 
 table AnimationData {
-  name: string (key);
+  name: string (required);
   name_hash: uint32;
 
   parts_initial_attributes: [InitialPartAttributes];
