@@ -82,6 +82,7 @@ impl EffectSimulator {
             emit_patterns.push(EmitPattern { uid: i, life, cycle: p_cycle });
         }
 
+        let mut rng = XorShift32::new(emitter_seed as u32);
         let seed_table_len = (emitter_params.emitmax as usize) * 3;
         let mut seed_list = Vec::with_capacity(seed_table_len);
         for _ in 0..seed_table_len {

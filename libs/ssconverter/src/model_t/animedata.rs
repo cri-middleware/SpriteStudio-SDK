@@ -222,7 +222,7 @@ fn convert_events_per_frames_part(
                             });
 
                             if events_per_frame_0.effects.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
-                                let effect_t_frame_0 = effect_t.clone();
+                                let effect_t_frame_0 = ssab::ssab::ss::format::PartAttributeEffectT::default();
 
                                 let mut e_args_frame_0 = ssab::ssab::ss::format::EventEffectT::default();
                                 e_args_frame_0.part_index = part_index;
