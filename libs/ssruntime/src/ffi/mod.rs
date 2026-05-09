@@ -1,6 +1,9 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::doc_lazy_continuation)]
 
+pub mod types;
+pub use types::*;
+
 use alloc::boxed::Box;
 use alloc::sync::Arc;
 use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
@@ -983,6 +986,36 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
         return event_idx;
     }
     -1
+}
+
+/// Resolve the active `EventInstance` for `slot_index` on the parent's
+/// currently selected animation, at the current frame. Returns SS6
+/// default semantics (`is_synthetic_default = true`, `loop_num = 1`,
+/// `speed = 1.0`) when no event is active, so callers don't need to
+/// branch on the no-event case.
+///
+/// `start_label_hash` / `end_label_hash` are returned raw — resolve them
+/// against the *child* runtime context (the one currently bound to the
+/// Instance slot) via `ss_runtime_resolve_label_time` so that dynamic
+/// child-ssab swaps stay correct.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slot_index: u32) -> ss_event_instance_info {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.get_active_event_instance(slot_index);
+    }
+    ss_event_instance_info::synthetic_default()
+}
+
+/// Look up a label by `label_hash` in this runtime's currently selected
+/// animation and return its `time`. `label_hash == 0` (caller convention
+/// for "unset"), no bound animation, or no-such-label all return
+/// `fallback`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_resolve_label_time(context: *mut c_void, label_hash: u32, fallback: i32) -> i32 {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.resolve_label_time(label_hash, fallback);
+    }
+    fallback
 }
 
 /// Computes the local vertex coordinates for a part.
