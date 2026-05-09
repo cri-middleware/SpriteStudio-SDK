@@ -58,12 +58,9 @@ struct DrawBatch {
   blend_type: BlendType;  // 既存 BlendType enum
   kind: DrawBatchKind;
   flags: ubyte;           // 属性ヒント (2.4 節参照)
-  _reserved: ubyte;       // 明示パディング — 将来の flags 拡張で使用可
 }
 ```
 
-- FlatBuffers `struct` のため固定レイアウト・per-element オーバーヘッドゼロ。サイズは **16 bytes** (4-byte 境界に揃えるため `_reserved` を末尾に確保)。
-- フィールド順は 4-byte → 2-byte → 1-byte の自然アラインメント順に並べてあり、flatc が暗黙パディングを挿入しない。
 - `texture_hash` は SSAB の `cellmaps[i].name_hash` または `external_textures[i].name_hash` と一致。Player は Setup 時に作った `name_hash → Texture` テーブルで解決する。
 - `vertex_count` / `index_count` は WebGPU/WebGL2 の事前バッファ確保サイズや Unity の `Mesh.SetVertexBufferParams` で活用できる。これがあれば毎フレームの buffer サイズ算出は不要。
 
