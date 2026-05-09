@@ -10773,11 +10773,9 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeEffect<'a> {
 }
 
 impl<'a> PartAttributeEffect<'a> {
-  pub const VT_CUR_KEYFRAME: ::flatbuffers::VOffsetT = 4;
-  pub const VT_START_TIME: ::flatbuffers::VOffsetT = 6;
-  pub const VT_SPEED: ::flatbuffers::VOffsetT = 8;
-  pub const VT_LOOPFLAG: ::flatbuffers::VOffsetT = 10;
-  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 12;
+  pub const VT_START_TIME: ::flatbuffers::VOffsetT = 4;
+  pub const VT_SPEED: ::flatbuffers::VOffsetT = 6;
+  pub const VT_INDEPENDENT: ::flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -10789,36 +10787,23 @@ impl<'a> PartAttributeEffect<'a> {
     args: &'args PartAttributeEffectArgs
   ) -> ::flatbuffers::WIPOffset<PartAttributeEffect<'bldr>> {
     let mut builder = PartAttributeEffectBuilder::new(_fbb);
-    builder.add_loopflag(args.loopflag);
     builder.add_speed(args.speed);
     builder.add_start_time(args.start_time);
-    builder.add_cur_keyframe(args.cur_keyframe);
     builder.add_independent(args.independent);
     builder.finish()
   }
 
   pub fn unpack(&self) -> PartAttributeEffectT {
-    let cur_keyframe = self.cur_keyframe();
     let start_time = self.start_time();
     let speed = self.speed();
-    let loopflag = self.loopflag();
     let independent = self.independent();
     PartAttributeEffectT {
-      cur_keyframe,
       start_time,
       speed,
-      loopflag,
       independent,
     }
   }
 
-  #[inline]
-  pub fn cur_keyframe(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeEffect::VT_CUR_KEYFRAME, Some(0)).unwrap()}
-  }
   #[inline]
   pub fn start_time(&self) -> i32 {
     // Safety:
@@ -10832,13 +10817,6 @@ impl<'a> PartAttributeEffect<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<f32>(PartAttributeEffect::VT_SPEED, Some(0.0)).unwrap()}
-  }
-  #[inline]
-  pub fn loopflag(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartAttributeEffect::VT_LOOPFLAG, Some(0)).unwrap()}
   }
   #[inline]
   pub fn independent(&self) -> bool {
@@ -10855,30 +10833,24 @@ impl ::flatbuffers::Verifiable for PartAttributeEffect<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<i32>("cur_keyframe", Self::VT_CUR_KEYFRAME, false)?
      .visit_field::<i32>("start_time", Self::VT_START_TIME, false)?
      .visit_field::<f32>("speed", Self::VT_SPEED, false)?
-     .visit_field::<i32>("loopflag", Self::VT_LOOPFLAG, false)?
      .visit_field::<bool>("independent", Self::VT_INDEPENDENT, false)?
      .finish();
     Ok(())
   }
 }
 pub struct PartAttributeEffectArgs {
-    pub cur_keyframe: i32,
     pub start_time: i32,
     pub speed: f32,
-    pub loopflag: i32,
     pub independent: bool,
 }
 impl<'a> Default for PartAttributeEffectArgs {
   #[inline]
   fn default() -> Self {
     PartAttributeEffectArgs {
-      cur_keyframe: 0,
       start_time: 0,
       speed: 0.0,
-      loopflag: 0,
       independent: false,
     }
   }
@@ -10890,20 +10862,12 @@ pub struct PartAttributeEffectBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeEffectBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_cur_keyframe(&mut self, cur_keyframe: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeEffect::VT_CUR_KEYFRAME, cur_keyframe, 0);
-  }
-  #[inline]
   pub fn add_start_time(&mut self, start_time: i32) {
     self.fbb_.push_slot::<i32>(PartAttributeEffect::VT_START_TIME, start_time, 0);
   }
   #[inline]
   pub fn add_speed(&mut self, speed: f32) {
     self.fbb_.push_slot::<f32>(PartAttributeEffect::VT_SPEED, speed, 0.0);
-  }
-  #[inline]
-  pub fn add_loopflag(&mut self, loopflag: i32) {
-    self.fbb_.push_slot::<i32>(PartAttributeEffect::VT_LOOPFLAG, loopflag, 0);
   }
   #[inline]
   pub fn add_independent(&mut self, independent: bool) {
@@ -10927,10 +10891,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeEffectBuilder<'a
 impl ::core::fmt::Debug for PartAttributeEffect<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeEffect");
-      ds.field("cur_keyframe", &self.cur_keyframe());
       ds.field("start_time", &self.start_time());
       ds.field("speed", &self.speed());
-      ds.field("loopflag", &self.loopflag());
       ds.field("independent", &self.independent());
       ds.finish()
   }
@@ -10938,19 +10900,15 @@ impl ::core::fmt::Debug for PartAttributeEffect<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributeEffectT {
-  pub cur_keyframe: i32,
   pub start_time: i32,
   pub speed: f32,
-  pub loopflag: i32,
   pub independent: bool,
 }
 impl Default for PartAttributeEffectT {
   fn default() -> Self {
     Self {
-      cur_keyframe: 0,
       start_time: 0,
       speed: 0.0,
-      loopflag: 0,
       independent: false,
     }
   }
@@ -10960,16 +10918,12 @@ impl PartAttributeEffectT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<PartAttributeEffect<'b>> {
-    let cur_keyframe = self.cur_keyframe;
     let start_time = self.start_time;
     let speed = self.speed;
-    let loopflag = self.loopflag;
     let independent = self.independent;
     PartAttributeEffect::create(_fbb, &PartAttributeEffectArgs{
-      cur_keyframe,
       start_time,
       speed,
-      loopflag,
       independent,
     })
   }

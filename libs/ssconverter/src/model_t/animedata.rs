@@ -207,10 +207,8 @@ fn convert_events_per_frames_part(
                     // MEMO: "Effect" is complemented by backfilling.
                     v.keys.iter().for_each(|key| {
                         let mut effect_t = ssab::ssab::ss::format::PartAttributeEffectT::default();
-                        effect_t.cur_keyframe; // TODO: implement
                         effect_t.start_time = key.value.start_time;
                         effect_t.speed = key.value.speed;
-                        effect_t.loopflag; // TODO: implement
                         effect_t.independent = key.value.independent;
 
                         // Complement for frame 0.

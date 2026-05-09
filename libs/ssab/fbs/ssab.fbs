@@ -381,10 +381,8 @@ table PartAttributeInstance {
 }
 
 table PartAttributeEffect {
-  cur_keyframe: int;
   start_time: int;
   speed: float;
-  loopflag: int;
   independent: bool;
 }
 
