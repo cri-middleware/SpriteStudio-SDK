@@ -153,6 +153,7 @@ pub struct AnimationMetadata<'a> {
     pub canvas_height: f32,
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
+    pub labels: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::Label<'a>>>>,
 }
 
 pub struct SsabData {
@@ -317,7 +318,7 @@ impl<'a> AnimationResource<'a> {
                 }
                 let name_hash = anim.name_hash();
                 let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
-                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events() });
+                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events(), labels: anim.labels() });
             }
         }
 
@@ -943,6 +944,84 @@ impl<'a> Context<'a> {
 
     pub fn get_passed_event_indices(&self) -> &[i32] {
         &self.buffers.collected_event_indices
+    }
+
+    /// Resolve the most-recent `EventInstance` whose `frame_index <= current frame`
+    /// for `slot_index` on the *currently selected animation*. Returns
+    /// `synthetic_default()` when no event has fired yet (SS6 default semantics).
+    /// Designed to live behind the `ss_runtime_get_active_event_instance` FFI.
+    pub fn get_active_event_instance(&self, slot_index: u32) -> crate::ffi::types::ss_event_instance_info {
+        let mut info = crate::ffi::types::ss_event_instance_info::synthetic_default();
+        let Some(resource) = self.resource else { return info };
+        if self.animation_idx < 0 {
+            return info;
+        }
+        let metadata = &resource.animations[self.animation_idx as usize];
+        let Some(events) = metadata.events else { return info };
+
+        let frame_no = self.controller.get_frame_no();
+        let frame_int = if frame_no < 0.0 {
+            -1
+        } else if frame_no >= u16::MAX as f32 {
+            u16::MAX as i32
+        } else {
+            frame_no as i32
+        };
+
+        // Forward scan: events are sorted by frame_index. Later matches override
+        // earlier ones, so the loop naturally lands on the most-recent
+        // EventInstance for `slot_index`.
+        for i in 0..events.len() {
+            let epf = events.get(i);
+            if (epf.frame_index() as i32) > frame_int {
+                break;
+            }
+            let Some(instances) = epf.instances() else { continue };
+            for j in 0..instances.len() {
+                let ev = instances.get(j);
+                if ev.part_index() as u32 != slot_index {
+                    continue;
+                }
+                let Some(attr) = ev.value() else { continue };
+                info = crate::ffi::types::ss_event_instance_info {
+                    event_frame: epf.frame_index() as i32,
+                    start_label_hash: attr.start_label_hash(),
+                    start_offset: attr.start_offset(),
+                    end_label_hash: attr.end_label_hash(),
+                    end_offset: attr.end_offset(),
+                    loop_num: attr.loop_num(),
+                    speed: attr.speed(),
+                    independent: attr.independent(),
+                    reverse: attr.reverse(),
+                    pingpong: attr.pingpong(),
+                    is_synthetic_default: false,
+                };
+            }
+        }
+        info
+    }
+
+    /// Look up `label_hash` in the currently selected animation's `labels`
+    /// table and return its `time`. Returns `fallback` when `label_hash == 0`
+    /// (caller convention for "unset"), no animation is bound, or the hash
+    /// is not found. Linear scan — labels per animation are typically <50.
+    pub fn resolve_label_time(&self, label_hash: u32, fallback: i32) -> i32 {
+        if label_hash == 0 {
+            return fallback;
+        }
+        let Some(resource) = self.resource else { return fallback };
+        if self.animation_idx < 0 {
+            return fallback;
+        }
+        let metadata = &resource.animations[self.animation_idx as usize];
+        let Some(labels) = metadata.labels else { return fallback };
+        for i in 0..labels.len() {
+            let label = labels.get(i);
+            if label.name_hash() == label_hash {
+                return label.time();
+            }
+        }
+        fallback
     }
 
     pub fn play(&mut self) {

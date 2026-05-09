@@ -1,3 +1,16 @@
+//! Wasm bindings for ssruntime.
+//!
+//! Pending additions (deferred to JS/TS Player integration):
+//! - `is_looped`, `set_frame_relative` — required to drive Instance child players
+//!   (parent-loop detection, synced child seek).
+//! - `get_active_event_instance`, `resolve_label_time` — Instance event resolution
+//!   without leaking ssab schema knowledge to the JS side.
+//! - `update_animation`, `set_log_callback` — currently absent or shaped differently.
+//!
+//! These will be wired up alongside the JS/TS Player so the API shape
+//! (typed-array views vs. JS objects vs. getter functions) can be decided
+//! against an actual consumer rather than mirroring `src/ffi/mod.rs` 1:1.
+
 use crate::{Context, SsabData, SsabResource};
 use alloc::boxed::Box;
 use alloc::string::ToString;
