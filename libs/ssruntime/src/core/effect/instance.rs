@@ -270,11 +270,7 @@ impl EffectInstance {
         let mut is_infinite = false;
         let mut effect_time_length = 0;
 
-        let final_seed = if effect.is_lock_rand_seed() {
-            (effect.lock_rand_seed() as u32).wrapping_add(1).wrapping_mul(SEED_MAGIC as u32)
-        } else {
-            my_seed.wrapping_mul(SEED_MAGIC as u32)
-        };
+        let final_seed = if effect.is_lock_rand_seed() { (effect.lock_rand_seed() as u32).wrapping_add(1).wrapping_mul(SEED_MAGIC as u32) } else { my_seed.wrapping_mul(SEED_MAGIC as u32) };
 
         for (node_idx, node) in nodes.iter().enumerate() {
             if node.effect_node_type() != ssab_fbs::EffectNodeType::Emitter {

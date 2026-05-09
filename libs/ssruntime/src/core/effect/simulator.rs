@@ -170,10 +170,7 @@ impl EffectSimulator {
         let lifeper = t / life;
         let seed_table_len = seed_list.len();
         let pseed = seed_list[particle_id as usize % seed_table_len];
-        let seed = pseed
-            .wrapping_add(emitter_seed as u32)
-            .wrapping_add(pid as u32)
-            .wrapping_add(seed_offset as u32);
+        let seed = pseed.wrapping_add(emitter_seed as u32).wrapping_add(pid as u32).wrapping_add(seed_offset as u32);
 
         let mut rng = XorShift32::new(seed);
         let mut gen_rand = || rng.gen_float();
