@@ -190,7 +190,6 @@ struct DrawBatch {
   blend_type: BlendType;
   kind: DrawBatchKind;
   flags: ubyte;
-  _reserved: ubyte;
 }
 
 table FrameData {

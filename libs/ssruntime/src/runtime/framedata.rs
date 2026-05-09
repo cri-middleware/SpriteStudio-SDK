@@ -3053,7 +3053,6 @@ impl ::core::fmt::Debug for DrawBatch {
       .field("blend_type", &self.blend_type())
       .field("kind", &self.kind())
       .field("flags", &self.flags())
-      .field("_reserved", &self._reserved())
       .finish()
   }
 }
@@ -3106,7 +3105,6 @@ impl<'a> DrawBatch {
     blend_type: BlendType,
     kind: DrawBatchKind,
     flags: u8,
-    _reserved: u8,
   ) -> Self {
     let mut s = Self([0; 16]);
     s.set_start_rank(start_rank);
@@ -3117,7 +3115,6 @@ impl<'a> DrawBatch {
     s.set_blend_type(blend_type);
     s.set_kind(kind);
     s.set_flags(flags);
-    s.set__reserved(_reserved);
     s
   }
 
@@ -3348,35 +3345,6 @@ impl<'a> DrawBatch {
       ::core::ptr::copy_nonoverlapping(
         &x_le as *const _ as *const u8,
         self.0[14..].as_mut_ptr(),
-        ::core::mem::size_of::<<u8 as ::flatbuffers::EndianScalar>::Scalar>(),
-      );
-    }
-  }
-
-  pub fn _reserved(&self) -> u8 {
-    let mut mem = ::core::mem::MaybeUninit::<<u8 as ::flatbuffers::EndianScalar>::Scalar>::uninit();
-    // Safety:
-    // Created from a valid Table for this object
-    // Which contains a valid value in this slot
-    ::flatbuffers::EndianScalar::from_little_endian(unsafe {
-      ::core::ptr::copy_nonoverlapping(
-        self.0[15..].as_ptr(),
-        mem.as_mut_ptr() as *mut u8,
-        ::core::mem::size_of::<<u8 as ::flatbuffers::EndianScalar>::Scalar>(),
-      );
-      mem.assume_init()
-    })
-  }
-
-  pub fn set__reserved(&mut self, x: u8) {
-    let x_le = ::flatbuffers::EndianScalar::to_little_endian(x);
-    // Safety:
-    // Created from a valid Table for this object
-    // Which contains a valid value in this slot
-    unsafe {
-      ::core::ptr::copy_nonoverlapping(
-        &x_le as *const _ as *const u8,
-        self.0[15..].as_mut_ptr(),
         ::core::mem::size_of::<<u8 as ::flatbuffers::EndianScalar>::Scalar>(),
       );
     }
