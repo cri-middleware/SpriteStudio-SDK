@@ -841,15 +841,13 @@ impl From<&ssab::ssab::ss::format::PartAttributeAudioT> for PartAttributeAudioKe
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeEffectKey {
-    pub cur_keyframe: i32,
     pub start_time: i32,
     pub speed: ordered_float::OrderedFloat<f32>,
-    pub loopflag: i32,
     pub independent: bool,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeEffectT> for PartAttributeEffectKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeEffectT) -> Self {
-        Self { cur_keyframe: value.cur_keyframe, start_time: value.start_time, speed: ordered_float::OrderedFloat(value.speed), loopflag: value.loopflag, independent: value.independent }
+        Self { start_time: value.start_time, speed: ordered_float::OrderedFloat(value.speed), independent: value.independent }
     }
 }
 
@@ -1836,10 +1834,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::PartAttributeEffectArgs::default();
-        args.cur_keyframe = part_attribute_effect.cur_keyframe;
         args.start_time = part_attribute_effect.start_time;
         args.speed = part_attribute_effect.speed;
-        args.loopflag = part_attribute_effect.loopflag;
         args.independent = part_attribute_effect.independent;
         let offset = ssab::ssab::ss::format::PartAttributeEffect::create(fb, &args);
 

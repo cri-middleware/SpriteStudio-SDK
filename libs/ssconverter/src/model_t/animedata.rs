@@ -207,10 +207,8 @@ fn convert_events_per_frames_part(
                     // MEMO: "Effect" is complemented by backfilling.
                     v.keys.iter().for_each(|key| {
                         let mut effect_t = ssab::ssab::ss::format::PartAttributeEffectT::default();
-                        effect_t.cur_keyframe; // TODO: implement
                         effect_t.start_time = key.value.start_time;
                         effect_t.speed = key.value.speed;
-                        effect_t.loopflag; // TODO: implement
                         effect_t.independent = key.value.independent;
 
                         // Complement for frame 0.
@@ -222,7 +220,7 @@ fn convert_events_per_frames_part(
                             });
 
                             if events_per_frame_0.effects.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
-                                let effect_t_frame_0 = effect_t.clone();
+                                let effect_t_frame_0 = ssab::ssab::ss::format::PartAttributeEffectT::default();
 
                                 let mut e_args_frame_0 = ssab::ssab::ss::format::EventEffectT::default();
                                 e_args_frame_0.part_index = part_index;

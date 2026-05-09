@@ -13,14 +13,14 @@ impl XorShift32 {
         let mut x = self.state;
         x ^= x << 13;
         x ^= x >> 17;
-        x ^= x << 5;
+        x ^= x << 15;
         self.state = x;
         x
     }
 
     pub fn gen_float(&mut self) -> f32 {
         let x = self.gen_u32();
-        let bits = (x & 0x007F_FFFF) | 0x3F80_0000;
+        let bits = (x >> 9) | 0x3F80_0000;
         f32::from_bits(bits) - 1.0
     }
 }
@@ -45,7 +45,7 @@ impl XorShift32x4 {
         let mut x = self.state;
         x = x ^ (x << 13);
         x = x ^ (x >> 17);
-        x = x ^ (x << 5);
+        x = x ^ (x << 15);
         self.state = x;
         x
     }
@@ -53,16 +53,11 @@ impl XorShift32x4 {
     pub fn gen_float(&mut self) -> f32x4 {
         let x = self.gen_u32();
 
-        // Generate float in range [1.0, 2.0)
-        let mask = u32x4::splat(0x007F_FFFF);
         let exp = u32x4::splat(0x3F80_0000);
-        let bits = (x & mask) | exp;
+        let bits = (x >> 9) | exp;
 
-        // SAFETY: Both u32x4 and f32x4 have the same size and alignment (16 bytes).
-        // Transmuting from an array of bits representing IEEE-754 floats to SIMD floats is safe.
         let f: f32x4 = unsafe { core::mem::transmute(bits) };
 
-        // Return float in range [0.0, 1.0)
         f - f32x4::splat(1.0)
     }
 }

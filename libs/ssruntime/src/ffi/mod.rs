@@ -796,6 +796,15 @@ pub extern "C" fn ss_effect_reset(effect_ctx: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_set_loop(effect_ctx: *mut c_void, loop_flag: bool) {
+    if effect_ctx.is_null() {
+        return;
+    }
+    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
+    ctx.set_loop(loop_flag);
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_effect_get_lifetime(effect_ctx: *mut c_void) -> i32 {
     if effect_ctx.is_null() {
         return 0;

@@ -82,6 +82,7 @@ impl EffectSimulator {
             emit_patterns.push(EmitPattern { uid: i, life, cycle: p_cycle });
         }
 
+        let mut rng = XorShift32::new(emitter_seed as u32);
         let seed_table_len = (emitter_params.emitmax as usize) * 3;
         let mut seed_list = Vec::with_capacity(seed_table_len);
         for _ in 0..seed_table_len {
@@ -169,7 +170,7 @@ impl EffectSimulator {
         let lifeper = t / life;
         let seed_table_len = seed_list.len();
         let pseed = seed_list[particle_id as usize % seed_table_len];
-        let seed = (pseed as u64 + emitter_seed as u64 + pid as u64 + seed_offset as u64) as u32;
+        let seed = pseed.wrapping_add(emitter_seed as u32).wrapping_add(pid as u32).wrapping_add(seed_offset as u32);
 
         let mut rng = XorShift32::new(seed);
         let mut gen_rand = || rng.gen_float();
@@ -433,10 +434,10 @@ impl EffectSimulator {
         let seed_table_len = seed_list.len();
         let pseeds = [seed_list[particle_ids[0] as usize % seed_table_len], seed_list[particle_ids[1] as usize % seed_table_len], seed_list[particle_ids[2] as usize % seed_table_len], seed_list[particle_ids[3] as usize % seed_table_len]];
         let seeds = [
-            (pseeds[0] as u64 + emitter_seed as u64 + pids[0] as u64 + seed_offset as u64) as u32,
-            (pseeds[1] as u64 + emitter_seed as u64 + pids[1] as u64 + seed_offset as u64) as u32,
-            (pseeds[2] as u64 + emitter_seed as u64 + pids[2] as u64 + seed_offset as u64) as u32,
-            (pseeds[3] as u64 + emitter_seed as u64 + pids[3] as u64 + seed_offset as u64) as u32,
+            pseeds[0].wrapping_add(emitter_seed as u32).wrapping_add(pids[0] as u32).wrapping_add(seed_offset as u32),
+            pseeds[1].wrapping_add(emitter_seed as u32).wrapping_add(pids[1] as u32).wrapping_add(seed_offset as u32),
+            pseeds[2].wrapping_add(emitter_seed as u32).wrapping_add(pids[2] as u32).wrapping_add(seed_offset as u32),
+            pseeds[3].wrapping_add(emitter_seed as u32).wrapping_add(pids[3] as u32).wrapping_add(seed_offset as u32),
         ];
         let mut rng = XorShift32x4::new(seeds);
 

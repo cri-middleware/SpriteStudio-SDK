@@ -1090,6 +1090,10 @@ impl<'a> EffectContext<'a> {
         self.instance.reset();
     }
 
+    pub fn set_loop(&mut self, loop_flag: bool) {
+        self.instance.set_loop(loop_flag);
+    }
+
     pub fn get_lifetime(&self) -> i32 {
         self.instance.effect_time_length
     }
