@@ -20,7 +20,7 @@ fn main() {
 
     config.write_to_file(output_file);
 
-    match csbindgen::Builder::default().input_extern_file("src/ffi/mod.rs").input_extern_file("src/ffi/types.rs").csharp_dll_name("ssruntime").generate_csharp_file("target/SSRuntimeMethods.g.cs") {
+    match csbindgen::Builder::default().input_extern_file("src/ffi/mod.rs").input_extern_file("src/types.rs").csharp_dll_name("ssruntime").generate_csharp_file("target/SSRuntimeMethods.g.cs") {
         Ok(_) => {}
         Err(e) => {
             eprintln!("Error generating C# bindings: {:?}", e);

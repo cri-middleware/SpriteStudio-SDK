@@ -1,8 +1,7 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::doc_lazy_continuation)]
 
-pub mod types;
-pub use types::*;
+pub use crate::types::*;
 
 use alloc::boxed::Box;
 use alloc::sync::Arc;
