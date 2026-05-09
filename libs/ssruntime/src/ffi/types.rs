@@ -42,19 +42,7 @@ pub struct ss_event_instance_info {
 
 impl ss_event_instance_info {
     pub const fn synthetic_default() -> Self {
-        Self {
-            event_frame: 0,
-            start_label_hash: 0,
-            start_offset: 0,
-            end_label_hash: 0,
-            end_offset: 0,
-            loop_num: 1,
-            speed: 1.0,
-            independent: false,
-            reverse: false,
-            pingpong: false,
-            is_synthetic_default: true,
-        }
+        Self { event_frame: 0, start_label_hash: 0, start_offset: 0, end_label_hash: 0, end_offset: 0, loop_num: 1, speed: 1.0, independent: false, reverse: false, pingpong: false, is_synthetic_default: true }
     }
 }
 

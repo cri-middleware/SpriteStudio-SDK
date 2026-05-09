@@ -999,10 +999,7 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// Instance slot) via `ss_runtime_resolve_label_time` so that dynamic
 /// child-ssab swaps stay correct.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_active_event_instance(
-    context: *mut c_void,
-    slot_index: u32,
-) -> ss_event_instance_info {
+pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slot_index: u32) -> ss_event_instance_info {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.get_active_event_instance(slot_index);
     }
@@ -1014,11 +1011,7 @@ pub extern "C" fn ss_runtime_get_active_event_instance(
 /// for "unset"), no bound animation, or no-such-label all return
 /// `fallback`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_resolve_label_time(
-    context: *mut c_void,
-    label_hash: u32,
-    fallback: i32,
-) -> i32 {
+pub extern "C" fn ss_runtime_resolve_label_time(context: *mut c_void, label_hash: u32, fallback: i32) -> i32 {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.resolve_label_time(label_hash, fallback);
     }
