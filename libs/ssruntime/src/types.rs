@@ -1,9 +1,13 @@
-//! POD return types for the runtime FFI.
+//! POD return types shared across the runtime API surface.
 //!
-//! These are plain `#[repr(C)]` structs returned by value across the FFI
-//! boundary. They are intentionally separate from ssab/effect_state
-//! FlatBuffers data — FB is for persistent or zero-copy bulk data, POD
-//! is for ephemeral per-call return values.
+//! These are plain `#[repr(C)]` structs designed for return-by-value across
+//! the FFI boundary, but the definitions live at the crate root (not under
+//! `ffi/`) so they are also reachable from the `Context` API and from the
+//! `web` feature without dragging in the C extern "C" surface.
+//!
+//! They are intentionally separate from ssab/effect_state FlatBuffers data —
+//! FB is for persistent or zero-copy bulk data, POD is for ephemeral per-call
+//! return values.
 
 #![allow(non_camel_case_types)]
 

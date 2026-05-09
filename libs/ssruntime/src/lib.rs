@@ -104,6 +104,8 @@ pub mod error;
 
 pub use crate::core::SsCoordinateSystem;
 
+pub mod types;
+
 #[cfg(feature = "ffi")]
 pub mod ffi;
 
@@ -950,8 +952,8 @@ impl<'a> Context<'a> {
     /// for `slot_index` on the *currently selected animation*. Returns
     /// `synthetic_default()` when no event has fired yet (SS6 default semantics).
     /// Designed to live behind the `ss_runtime_get_active_event_instance` FFI.
-    pub fn get_active_event_instance(&self, slot_index: u32) -> crate::ffi::types::ss_event_instance_info {
-        let mut info = crate::ffi::types::ss_event_instance_info::synthetic_default();
+    pub fn get_active_event_instance(&self, slot_index: u32) -> crate::types::ss_event_instance_info {
+        let mut info = crate::types::ss_event_instance_info::synthetic_default();
         let Some(resource) = self.resource else { return info };
         if self.animation_idx < 0 {
             return info;
@@ -983,7 +985,7 @@ impl<'a> Context<'a> {
                     continue;
                 }
                 let Some(attr) = ev.value() else { continue };
-                info = crate::ffi::types::ss_event_instance_info {
+                info = crate::types::ss_event_instance_info {
                     event_frame: epf.frame_index() as i32,
                     start_label_hash: attr.start_label_hash(),
                     start_offset: attr.start_offset(),
