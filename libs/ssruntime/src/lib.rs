@@ -1564,8 +1564,6 @@ impl InstanceSlot {
                 end_frame = start_frame;
             }
 
-            child_ctx.set_animation_section(start_frame, end_frame);
-            child_ctx.set_loop(ev.loop_num);
             let dir = if ev.reverse {
                 crate::core::playback_controller::PlaybackDirection::Backward
             } else {
@@ -1577,6 +1575,8 @@ impl InstanceSlot {
                 crate::core::playback_controller::PlaybackStyle::Normal
             };
             child_ctx.set_playback_direction(dir, style);
+            child_ctx.set_animation_section(start_frame, end_frame);
+            child_ctx.set_loop(ev.loop_num);
 
             self.last_event_frame = ev.event_frame;
             self.last_is_synthetic = ev.is_synthetic_default;
