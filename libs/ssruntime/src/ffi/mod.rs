@@ -823,6 +823,15 @@ pub extern "C" fn ss_effect_is_infinite(effect_ctx: *mut c_void) -> bool {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_get_seed(effect_ctx: *mut c_void) -> u32 {
+    if effect_ctx.is_null() {
+        return 0;
+    }
+    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
+    ctx.get_seed()
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_effect_get_state(effect_ctx: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if effect_ctx.is_null() {
         return;

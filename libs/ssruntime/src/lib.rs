@@ -1067,6 +1067,7 @@ impl<'a> Context<'a> {
 pub struct EffectContext<'a> {
     pub instance: crate::core::effect::instance::EffectInstance,
     fb: flatbuffers::FlatBufferBuilder<'a>,
+    seed: u32,
 }
 
 impl<'a> EffectContext<'a> {
@@ -1083,7 +1084,11 @@ impl<'a> EffectContext<'a> {
         let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed) else {
             return Err(error::SSRuntimeError::MalformedEffect);
         };
-        Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new() })
+        Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new(), seed })
+    }
+
+    pub fn get_seed(&self) -> u32 {
+        self.seed
     }
 
     pub fn reset(&mut self) {

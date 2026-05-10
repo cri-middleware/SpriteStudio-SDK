@@ -440,6 +440,10 @@ impl SSRuntimeEffectContext {
         self.inner.is_infinite()
     }
 
+    pub fn get_seed(&self) -> u32 {
+        self.inner.get_seed()
+    }
+
     pub fn get_state_buf(&mut self) -> Result<*const u8, JsValue> {
         self.inner.get_state().map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
