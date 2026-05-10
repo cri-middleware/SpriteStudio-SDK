@@ -101,6 +101,7 @@ Player の API を設計する際は、上記のライブラリ挙動をラッ�
 ### 基本設定
 - **setSpeed(speed) / getSpeed()**: `ss_runtime_set_animation_speed(context, speed)` / `1.0f` が等倍。
 - **setFrame(frame) / getFrame()**: `ss_runtime_set_frame_no(context, frame)` / `ss_runtime_get_frame_no(context)`
+    - ⚠️ `set_frame_no` でジャンプした場合、現在フレームから移動先フレームまでの間にあるイベントは発火されません ([制限事項](./00_limitations.ja.md#シーク-set_frame_no-はスキップしたフレーム上のイベントを発火しない))。
 - **getTotalFrames()**: `ss_runtime_get_total_frames(context)`
 - **フレームレート**: `ss_runtime_set_frame_rate(context, fps)` / ssab のデフォルト値以外を使いたい場合に設定。
 - **再生範囲**: `ss_runtime_set_animation_section(context, start, end)`

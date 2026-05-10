@@ -4,7 +4,15 @@
 
 機能の検証には、テストプロジェクト **`tests/overall/overall.sspj`** の利用を推奨しています。第1章のロードマップに沿って実装を進めることで、効率的に開発を行うことができます。
 
+> [!IMPORTANT]
+> 実装に着手する前に **[⚠️ 制限事項 (Limitations)](./00_limitations.ja.md)** を必ず確認してください。
+> ssruntime / ssab の仕様上の制約 (テキスト描画・サウンド再生のサポート範囲、WASM SIMD 要件、`independent=true` の制限、ssab embedded の制約など) を集約しています。
+
 ## 目次
+
+### ⚠️ 実装前に必読
+
+0. [**制限事項 (Limitations)**](./00_limitations.ja.md)
 
 ### 第1章：概要と準備 (Overview & Preparation)
 実装を始める前に読むべき「概念」と「準備」についてです。
@@ -31,7 +39,7 @@
 
 ### 第4章：リファレンス (Reference)
 12. [`no_std` 組み込み環境への統合](./12_no_std_integration.ja.md)
-13. [トラブルシューティングと制限事項](./13_troubleshooting.ja.md)
+13. [トラブルシューティング](./13_troubleshooting.ja.md)
 
 ---
 [SpriteStudio7-SDK Top](../../README.ja.md) / [libssruntime Top](../README.ja.md)
