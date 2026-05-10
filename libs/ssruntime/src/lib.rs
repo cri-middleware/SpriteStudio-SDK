@@ -1131,14 +1131,13 @@ impl<'a> Context<'a> {
     }
 }
 
-pub struct EffectContext<'a> {
+pub struct EffectContext {
     pub instance: crate::core::effect::instance::EffectInstance,
-    fb: flatbuffers::FlatBufferBuilder<'a>,
     seed: u32,
 }
 
-impl<'a> EffectContext<'a> {
-    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+impl EffectContext {
+    pub fn new(resource: &AnimationResource<'_>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let Some(effects) = ssab.effects() else {
             return Err(error::SSRuntimeError::AnimationNotFound);
@@ -1151,7 +1150,7 @@ impl<'a> EffectContext<'a> {
         let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed) else {
             return Err(error::SSRuntimeError::MalformedEffect);
         };
-        Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new(), seed })
+        Ok(Self { instance, seed })
     }
 
     pub fn get_seed(&self) -> u32 {
@@ -1176,37 +1175,6 @@ impl<'a> EffectContext<'a> {
 
     pub fn update(&mut self, frame: f32) {
         self.instance.update(frame);
-    }
-
-    pub fn get_state(&mut self) -> Result<&[u8], error::SSRuntimeError> {
-        let (draw_commands, draw_particles) = self.instance.get_draw_commands();
-
-        self.fb.reset();
-
-        let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
-        for cmd in draw_commands {
-            let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
-            for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
-                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
-            }
-            let particles_offset = self.fb.create_vector(&fbs_particles);
-
-            let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
-            builder.add_cell_name_hash(cmd.cell_name_hash);
-            builder.add_cell_map_name_hash(cmd.cell_map_name_hash);
-            builder.add_blend_type(cmd.blend_type);
-            builder.add_particles(particles_offset);
-            fbs_emitters.push(builder.finish());
-        }
-
-        let emitters_offset = self.fb.create_vector(&fbs_emitters);
-
-        let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
-        builder.add_emitters(emitters_offset);
-        let root = builder.finish();
-
-        self.fb.finish_minimal(root);
-        Ok(self.fb.finished_data())
     }
 }
 
@@ -1242,7 +1210,7 @@ struct EmitterResourceEntry {
 }
 
 pub struct EffectSlot<'a> {
-    ctx: EffectContext<'a>,
+    ctx: EffectContext,
     // SSAB root, kept for cellmap lookup during draw-plan build. Borrows from
     // the same resource as `ctx`; lifetime tied to the surrounding `'a`.
     ssab: ssab::ssab::ss::format::SsAnimeBinary<'a>,

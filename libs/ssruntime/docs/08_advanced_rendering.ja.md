@@ -70,52 +70,63 @@ if (part->type() == PartTypeInstance) {
 SpriteStudio 6/7 のエフェクトシミュレータはステートレス・決定論的なアルゴリズムであるため、指定したフレームの状態を瞬時に計算でき、逆再生にも対応可能です。
 
 ### エフェクトの更新と描画
-Player 側で `ss_effect_create` を用いて Context を作成しておき、毎フレーム `ss_effect_update` に相対フレームを渡してパーティクル群を取得します。
+Player 側で `ss_effect_slot_create` を用いて per-Effect-part の slot を作成しておき、毎フレーム `ss_effect_slot_step` に親の現在フレームと delta を渡します。slot は内部で event 解決 / transition 検出 / シミュレータ更新 / cellmap・cell・UV 解決 / particle quad 生成までを行い、結果は `EffectDrawPlan` FlatBuffer として返ります。Player 側はその plan に従って Texture lookup と canvas/material 設定をするだけで描画できます。
 
 ```cpp
+// 初回（Effect part を見つけたとき）
+slot.effect_slot = ss_effect_slot_create(resource, ref_effect_name_hash, seed);
+
 // 毎フレームの描画ループ内
 if (part->type() == PartTypeEffect) {
-    // 1. エフェクトの発生開始フレームからの相対フレームを計算
-    float relative_frame = current_parent_frame - effect_start_frame;
+    // 1. 親 Context から active event 情報を取得
+    ss_effect_event_info ev = ss_runtime_get_active_effect_event(parent_ctx, part_index);
 
-    if (relative_frame >= 0.0f) {
-        // 2. 絶対的なフレーム時間を指定してシミュレータを更新
-        // ※delta_time ではなくフレーム値を渡すことで、逆再生やシーク時も一意の結果が得られます
-        ss_effect_update(effect_ctx, relative_frame);
+    // 2. slot を 1 ステップ進める。返される EffectDrawPlan は
+    //    "describes how to draw the slot this frame" で完結。
+    //    y_flip = true は Y-down レンダリング（Godot/pixi.js）、
+    //    vert_stride = 2 は (x,y) 連結（3 にすると (x,y,0) — Unity Mesh 等）。
+    ss_effect_step_result r = ss_effect_slot_step(
+        slot.effect_slot, ev,
+        parent_frame, delta_seconds, fps,
+        parent_looped,
+        /*y_flip*/ true, /*vert_stride*/ 2);
 
-        // 3. パーティクルの状態（FlatBuffersチャンク）を取得
-        const uint8_t* state_buf = nullptr;
-        size_t state_len = 0;
-        ss_effect_get_state(effect_ctx, &state_buf, &state_len);
+    if (!r.visible) { /* hide and return */ }
 
-        if (state_buf) {
-            auto effect_state = ss::runtime::GetEffectState(state_buf);
-            
-            // 4. パーティクルの描画（エミッターの描画コマンドごとにループ）
-            if (effect_state->emitters()) {
-                for (auto emitter : *effect_state->emitters()) {
-                    int cell_index = emitter->cell_index();
-                    int blend_type = emitter->blend_type(); // 加算・通常などの合成モード
-                    
-                    if (emitter->particles()) {
-                        for (auto particle : *emitter->particles()) {
-                            // パーティクル個別の座標・スケール・回転・カラーを取得して描画
-                            DrawParticle(
-                                parent_world_matrix, 
-                                particle->x(), particle->y(), 
-                                particle->scale_x(), particle->scale_y(), 
-                                particle->rotation(), 
-                                particle->color_a(), particle->color_r(), particle->color_g(), particle->color_b(),
-                                cell_index, blend_type
-                            );
-                        }
-                    }
-                }
-            }
-        }
+    // 3. EffectDrawPlan を読んで描画コマンドを実行
+    auto plan = ss::runtime::GetEffectDrawPlan(r.draw_plan_buf);
+    const float*  V = plan->verts()->data();
+    const float*  U = plan->uvs()->data();
+    const float*  C = plan->colors()->data();
+    const int32_t* I = plan->indices()->data();
+
+    for (uint32_t e = 0; e < plan->commands()->size(); e++) {
+        const auto* cmd = plan->commands()->Get(e);
+        if (cmd->quad_count() == 0) continue;
+
+        // cellmap_hash → engine の Texture へ。マップは SSAB ロード時に構築。
+        Texture tex = textures.lookup(cmd->cellmap_hash());
+        BlendMode blend = (cmd->blend() == 1) ? BlendMode::Add : BlendMode::Mix;
+
+        // 連結バッファから自分の quad 範囲だけスライスして描画
+        const uint32_t qc  = cmd->quad_count();
+        const uint32_t off = cmd->particle_offset();
+        DrawTriangles(
+            tex, blend,
+            V + off * 8,  qc * 4,    // verts (x,y per corner)
+            U + off * 8,             // uvs
+            C + off * 16,            // colors (rgba per corner)
+            I + off * 6,  qc * 6);   // indices (quad-local 0..qc*4)
     }
 }
 ```
+
+slot 側でキャッシュされる項目:
+- effect 全体の lifetime / is_infinite (作成時)
+- cellmap_hash + cell_hash + blend ごとの geometry/UV (初回参照時)
+- transition state (last_event_frame, accumulated_time 等)
+
+Player 側に残るのは Texture 管理 と canvas/blend material のエンジン依存ロジックのみです。
 
 ## 3. 頂点配列 (AttributeVertex)
 通常パーツ（スプライトパーツ）の描画に使う **算出済みローカル頂点座標** です。

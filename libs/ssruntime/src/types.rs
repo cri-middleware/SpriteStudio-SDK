@@ -5,7 +5,7 @@
 //! `ffi/`) so they are also reachable from the `Context` API and from the
 //! `web` feature without dragging in the C extern "C" surface.
 //!
-//! They are intentionally separate from ssab/effect_state FlatBuffers data —
+//! They are intentionally separate from ssab/effect_draw_plan FlatBuffers data —
 //! FB is for persistent or zero-copy bulk data, POD is for ephemeral per-call
 //! return values.
 
