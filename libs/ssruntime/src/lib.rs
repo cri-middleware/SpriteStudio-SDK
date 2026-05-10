@@ -1210,6 +1210,115 @@ impl<'a> EffectContext<'a> {
     }
 }
 
+/// High-level effect slot: wraps `EffectContext` with the per-slot lifecycle
+/// state that previously lived in each Player's effect-slot table. Callers
+/// resolve the active effect event externally (via `Context::get_active_effect_event`)
+/// and feed it to `step()` along with frame timing — `step` owns transition
+/// detection, accumulator, dead-effect skip, simulator update, and state
+/// serialization in one call.
+///
+/// The cross-language contract is identical in Rust / C / Web: 1) construct
+/// once per effect part, 2) call `step()` per frame with the resolved event
+/// and timing, 3) read `state_buf` only when `visible == true` and only
+/// before the next `step()`.
+pub struct EffectSlot<'a> {
+    ctx: EffectContext<'a>,
+    // Cached at create time — never changes for a given effect resource.
+    lifetime: i32,
+    is_infinite: bool,
+    // Transition detection: any change in (event_frame, is_synthetic, independent)
+    // triggers reset/set_loop and re-seeds `accumulated_time`.
+    last_event_frame: i32,
+    last_is_synthetic: bool,
+    last_independent: bool,
+    // Independent-mode time accumulator (frame units, includes start_time bias).
+    accumulated_time: f32,
+}
+
+impl<'a> EffectSlot<'a> {
+    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+        let ctx = EffectContext::new(resource, effect_name_hash, seed)?;
+        let lifetime = ctx.get_lifetime();
+        let is_infinite = ctx.is_infinite();
+        Ok(Self { ctx, lifetime, is_infinite, last_event_frame: -1, last_is_synthetic: false, last_independent: false, accumulated_time: 0.0 })
+    }
+
+    pub fn get_seed(&self) -> u32 {
+        self.ctx.get_seed()
+    }
+
+    /// Whether the slot is currently running independently of the parent's
+    /// frame. Reflects the most recently seen `EventEffect.independent`;
+    /// used by callers to decide whether to schedule continuous tick updates.
+    pub fn is_independent(&self) -> bool {
+        self.last_independent
+    }
+
+    pub fn step(&mut self, ev: crate::types::ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool) -> crate::types::ss_effect_step_result {
+        // Parent loop edge re-arms transition detection: the same EventEffect
+        // identity (event_frame + is_synthetic) re-fires on the next playthrough,
+        // and without this reset the equality check below would treat the loop
+        // edge as a no-op (effect frozen at end of previous cycle).
+        if parent_looped {
+            self.last_event_frame = -1;
+            self.last_is_synthetic = false;
+        }
+
+        let event_frame = ev.event_frame;
+        let start_time = ev.start_time;
+        let speed = ev.speed;
+        let independent = ev.independent;
+        let is_synthetic = ev.is_synthetic_default;
+
+        let transitioned = self.last_event_frame != event_frame || self.last_is_synthetic != is_synthetic || self.last_independent != independent;
+
+        if transitioned {
+            self.ctx.reset();
+            // Set-loop semantics carried over from the SS6 player: independent
+            // effects loop within their lifetime, dependent effects play once
+            // and the C++ caller previously checked elapsed-vs-lifetime. The
+            // dead-effect early-return below covers the dependent finite case.
+            self.ctx.set_loop(independent);
+            self.last_event_frame = event_frame;
+            self.last_is_synthetic = is_synthetic;
+            self.last_independent = independent;
+            self.accumulated_time = start_time as f32;
+        }
+
+        let relative_frame: f32 = if independent {
+            // Skip the first tick after transition — `play()` snaps to start_time
+            // and stepping on the same tick would visibly overshoot frame 1.
+            if !transitioned && delta_seconds > 0.0 {
+                let delta_frames = delta_seconds * fps;
+                self.accumulated_time += delta_frames * speed;
+            }
+            self.accumulated_time
+        } else {
+            let elapsed = parent_frame - event_frame as f32;
+            if elapsed < 0.0 {
+                return crate::types::ss_effect_step_result::not_visible();
+            }
+            elapsed * speed + start_time as f32
+        };
+
+        if relative_frame < 0.0 {
+            return crate::types::ss_effect_step_result::not_visible();
+        }
+
+        // Dead-effect skip: dependent finite effect past its last particle's death.
+        // Independent effects loop (set_loop above) so they never drift past lifetime.
+        if !self.is_infinite && !independent && self.lifetime > 0 && relative_frame > self.lifetime as f32 {
+            return crate::types::ss_effect_step_result::not_visible();
+        }
+
+        self.ctx.update(relative_frame);
+        match self.ctx.get_state() {
+            Ok(buf) if !buf.is_empty() => crate::types::ss_effect_step_result { visible: true, state_buf: buf.as_ptr(), state_len: buf.len() },
+            _ => crate::types::ss_effect_step_result::not_visible(),
+        }
+    }
+}
+
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use std::path::PathBuf;

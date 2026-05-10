@@ -90,3 +90,28 @@ impl Default for ss_effect_event_info {
         Self::synthetic_default()
     }
 }
+
+/// Result of `EffectSlot::step` / `ss_effect_slot_step`.
+///
+/// `state_buf` / `state_len` are valid only when `visible == true`, and only
+/// until the next `step` call on the same slot — callers must consume the
+/// state within the same frame and not retain pointers across calls.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_effect_step_result {
+    pub visible: bool,
+    pub state_buf: *const u8,
+    pub state_len: usize,
+}
+
+impl ss_effect_step_result {
+    pub const fn not_visible() -> Self {
+        Self { visible: false, state_buf: core::ptr::null(), state_len: 0 }
+    }
+}
+
+impl Default for ss_effect_step_result {
+    fn default() -> Self {
+        Self::not_visible()
+    }
+}

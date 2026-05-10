@@ -402,54 +402,62 @@ impl SSRuntimeContext {
     }
 }
 
+/// JS-friendly wrapper of `EffectSlot`. Same conceptual flow as the C FFI:
+/// 1) construct via `create`, 2) call `step` per frame with the resolved
+/// active event and timing, 3) read `state_buf`/`state_len` only when `step`
+/// returned `true` and only before the next call.
 #[wasm_bindgen]
-pub struct SSRuntimeEffectContext {
-    inner: crate::EffectContext<'static>,
+pub struct SSRuntimeEffectSlot {
+    inner: crate::EffectSlot<'static>,
     #[allow(dead_code)]
     resource_handle: Arc<SsabResource>,
+    last_state_ptr: *const u8,
+    last_state_len: usize,
 }
 
 #[wasm_bindgen]
-impl SSRuntimeEffectContext {
-    pub fn create(resource: &SSRuntimeResource, effect_name_hash: u32, seed: u32) -> Result<SSRuntimeEffectContext, JsValue> {
+impl SSRuntimeEffectSlot {
+    pub fn create(resource: &SSRuntimeResource, effect_name_hash: u32, seed: u32) -> Result<SSRuntimeEffectSlot, JsValue> {
         let res_ptr = resource.inner.resource_static_ptr();
         if res_ptr.is_null() {
             return Err(JsValue::from_str("Resource not initialized"));
         }
-        // Safety: resource_handle holds the Arc, keeping the buffer alive.
         let resource_handle = resource.inner.clone();
-        match crate::EffectContext::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-            Ok(inner) => Ok(SSRuntimeEffectContext { inner, resource_handle }),
+        match crate::EffectSlot::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
+            Ok(inner) => Ok(SSRuntimeEffectSlot { inner, resource_handle, last_state_ptr: core::ptr::null(), last_state_len: 0 }),
             Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
         }
     }
 
-    pub fn update(&mut self, frame: f32) {
-        self.inner.update(frame);
+    /// Advance one frame. `event_*` parameters are the fields of the event
+    /// info returned by `Context::get_active_effect_event` (passed flat for
+    /// JS-side ergonomics — wasm-bindgen does not expose `#[repr(C)]` POD
+    /// structs as constructible classes).
+    /// Returns `true` if visible; on `true` callers must read state via
+    /// `get_state_buf` / `get_state_len` before the next step.
+    #[allow(clippy::too_many_arguments)]
+    pub fn step(&mut self, event_frame: i32, start_time: i32, speed: f32, independent: bool, is_synthetic_default: bool, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool) -> bool {
+        let ev = crate::types::ss_effect_event_info { event_frame, start_time, speed, independent, is_synthetic_default };
+        let r = self.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped);
+        self.last_state_ptr = r.state_buf;
+        self.last_state_len = r.state_len;
+        r.visible
     }
 
-    pub fn reset(&mut self) {
-        self.inner.reset();
+    pub fn get_state_buf(&self) -> *const u8 {
+        self.last_state_ptr
     }
 
-    pub fn get_lifetime(&self) -> i32 {
-        self.inner.get_lifetime()
-    }
-
-    pub fn is_infinite(&self) -> bool {
-        self.inner.is_infinite()
+    pub fn get_state_len(&self) -> usize {
+        self.last_state_len
     }
 
     pub fn get_seed(&self) -> u32 {
         self.inner.get_seed()
     }
 
-    pub fn get_state_buf(&mut self) -> Result<*const u8, JsValue> {
-        self.inner.get_state().map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
-    pub fn get_state_len(&mut self) -> Result<usize, JsValue> {
-        self.inner.get_state().map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn is_independent(&self) -> bool {
+        self.inner.is_independent()
     }
 }
 

@@ -766,97 +766,70 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
     }
 }
 
+/// Create a new EffectSlot bound to `resource`. Returns null on failure
+/// (resource not loaded, effect_name_hash not found, malformed effect data).
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
+pub extern "C" fn ss_effect_slot_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
+    if resource.is_null() {
+        return core::ptr::null_mut();
+    }
     let res = unsafe { &*(resource as *const crate::SsabResource) };
-    if let Some(r) = res.resource()
-        && let Ok(effect_ctx) = crate::EffectContext::new(r, effect_name_hash, seed)
-    {
-        return Box::into_raw(Box::new(effect_ctx)) as *mut c_void;
-    }
-    core::ptr::null_mut()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_update(effect_ctx: *mut c_void, frame: f32) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    ctx.update(frame);
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_reset(effect_ctx: *mut c_void) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    ctx.reset();
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_set_loop(effect_ctx: *mut c_void, loop_flag: bool) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    ctx.set_loop(loop_flag);
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_get_lifetime(effect_ctx: *mut c_void) -> i32 {
-    if effect_ctx.is_null() {
-        return 0;
-    }
-    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
-    ctx.get_lifetime()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_is_infinite(effect_ctx: *mut c_void) -> bool {
-    if effect_ctx.is_null() {
-        return false;
-    }
-    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
-    ctx.is_infinite()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_get_seed(effect_ctx: *mut c_void) -> u32 {
-    if effect_ctx.is_null() {
-        return 0;
-    }
-    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
-    ctx.get_seed()
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_effect_get_state(effect_ctx: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    if let Ok(ret) = ctx.get_state() {
-        unsafe {
-            if !out_data.is_null() {
-                *out_data = ret.as_ptr() as *mut c_uchar;
-            }
-            if !out_len.is_null() {
-                *out_len = ret.len();
-            }
-        }
+    let Some(r) = res.resource() else { return core::ptr::null_mut() };
+    // SAFETY: Lifetime widening matches the existing `EffectContext` FFI pattern.
+    // The caller owns `resource` and must keep it alive for the slot's lifetime
+    // (the underlying `Arc<SsabResource>` ensures the SSAB buffer outlives the slot).
+    let r_static: &'static crate::AnimationResource<'static> = unsafe { core::mem::transmute(r) };
+    match crate::EffectSlot::new(r_static, effect_name_hash, seed) {
+        Ok(slot) => Box::into_raw(Box::new(slot)) as *mut c_void,
+        Err(_) => core::ptr::null_mut(),
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_destroy(effect_ctx: *mut c_void) {
-    if effect_ctx.is_null() {
+pub extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
+    if slot.is_null() {
         return;
     }
     unsafe {
-        let _ = Box::from_raw(effect_ctx as *mut crate::EffectContext);
+        let _ = Box::from_raw(slot as *mut crate::EffectSlot);
     }
+}
+
+/// Advance the slot one frame. The caller resolves the active effect event
+/// (via `ss_runtime_get_active_effect_event`) and feeds it here together with
+/// timing inputs. `parent_looped` re-arms transition detection across the
+/// parent's loop edge. Returns visibility + state buffer pointer/len;
+/// `state_buf` is valid only when `visible == true` and only until the next
+/// call on the same slot.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool) -> ss_effect_step_result {
+    if slot.is_null() {
+        return ss_effect_step_result::not_visible();
+    }
+    let slot = unsafe { &mut *(slot as *mut crate::EffectSlot) };
+    slot.step(ev, parent_frame, delta_seconds, fps, parent_looped)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_slot_get_seed(slot: *mut c_void) -> u32 {
+    if slot.is_null() {
+        return 0;
+    }
+    let slot = unsafe { &*(slot as *const crate::EffectSlot) };
+    slot.get_seed()
+}
+
+/// Whether the slot is currently running independently of the parent's frame.
+/// Reflects the most recently seen `EventEffect.independent`. Callers use
+/// this to decide whether to schedule continuous tick updates regardless of
+/// parent frame change.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_slot_is_independent(slot: *mut c_void) -> bool {
+    if slot.is_null() {
+        return false;
+    }
+    let slot = unsafe { &*(slot as *const crate::EffectSlot) };
+    slot.is_independent()
 }
 
 /// Set the render mode. `mode` is interpreted as:
