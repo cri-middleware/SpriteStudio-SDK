@@ -7,7 +7,7 @@
 SpriteStudio のインスタンス機能は、別のアニメーションを部品として参照し再生する機能です。
 親の再生時間（フレーム）に完全に同期させるため、**毎フレーム親の現在のフレームから子のローカルフレームを算出し、子Playerの時間を強制的に合わせる**手法をとります。これにより、逆再生やフレームスキップ時でも常に正しい状態が描画されます。
 
-> **【制限事項】 `independent=true` は逆再生 / シークでは動作しません**
+> **【制限事項】 `independent=true` は逆再生 / シークでは動作しません** ([制限事項一覧](./00_limitations.ja.md#independenttrue-パーツの逆再生--シーク))
 >
 > `PartAttributeInstance.independent` を `true` にすると、子インスタンスは親の timeline から切り離されてリアルタイム (delta_time) で進行する仕様です。これは設計上、親フレームから子フレームを deterministic に逆算できないため、以下のような操作で破綻します:
 >
@@ -158,7 +158,7 @@ if (vertex_idx >= 0) {
 `update_flag & AttributeVertex` は **ソース SSAB に頂点変形アニメ（raw deform）が含まれていたか** を示すヒントとして引き続き機能します。フラグが立っていなくても 4 隅の `vertex()` 値は有効で、Player は「center を使う / 使わない」の判定にこのフラグと `AttributePartColor` を使います。
 
 ## 3.5 メッシュとデフォーム (Mesh / Deform) — 未実装
-`PartTypeMesh` パーツのサポートは現在 **未実装** です（[ロードマップ](./04_roadmap.ja.md)参照）。
+`PartTypeMesh` パーツのサポートは現在 **未実装** です（[ロードマップ](./04_roadmap.ja.md) / [制限事項一覧](./00_limitations.ja.md#現時点で未実装の機能) 参照）。
 `PartAttributeDeform`（`FrameData::deforms`）はメッシュパーツの可変数頂点向けに予約された構造で、現時点ではプレイヤー実装の対象外です。実装は今後のフェーズで行います。
 
 ## 4. パーツカラー (PartsColor)
