@@ -3515,11 +3515,11 @@ impl<'a> FrameData<'a> {
 
 
   #[inline]
-  pub fn parts(&self) -> Option<::flatbuffers::Vector<'a, PartState>> {
+  pub fn parts(&self) -> ::flatbuffers::Vector<'a, PartState> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, PartState>>>(FrameData::VT_PARTS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, PartState>>>(FrameData::VT_PARTS, None).unwrap()}
   }
   #[inline]
   pub fn cells(&self) -> Option<::flatbuffers::Vector<'a, PartAttributeCell>> {
@@ -3557,25 +3557,25 @@ impl<'a> FrameData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAttributeDeform>>>>(FrameData::VT_DEFORMS, None)}
   }
   #[inline]
-  pub fn draw_order(&self) -> Option<::flatbuffers::Vector<'a, u16>> {
+  pub fn draw_order(&self) -> ::flatbuffers::Vector<'a, u16> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u16>>>(FrameData::VT_DRAW_ORDER, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u16>>>(FrameData::VT_DRAW_ORDER, None).unwrap()}
   }
   #[inline]
-  pub fn draw_batches(&self) -> Option<::flatbuffers::Vector<'a, DrawBatch>> {
+  pub fn draw_batches(&self) -> ::flatbuffers::Vector<'a, DrawBatch> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, DrawBatch>>>(FrameData::VT_DRAW_BATCHES, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, DrawBatch>>>(FrameData::VT_DRAW_BATCHES, None).unwrap()}
   }
   #[inline]
-  pub fn mask_indices(&self) -> Option<::flatbuffers::Vector<'a, u16>> {
+  pub fn mask_indices(&self) -> ::flatbuffers::Vector<'a, u16> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u16>>>(FrameData::VT_MASK_INDICES, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, u16>>>(FrameData::VT_MASK_INDICES, None).unwrap()}
   }
 }
 
@@ -3585,15 +3585,15 @@ impl ::flatbuffers::Verifiable for FrameData<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartState>>>("parts", Self::VT_PARTS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartState>>>("parts", Self::VT_PARTS, true)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartAttributeCell>>>("cells", Self::VT_CELLS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartAttributePartColor>>>("parts_color", Self::VT_PARTS_COLOR, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartAttributeShader>>>("shaders", Self::VT_SHADERS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, PartAttributeVertex>>>("vertices", Self::VT_VERTICES, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAttributeDeform>>>>("deforms", Self::VT_DEFORMS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("draw_order", Self::VT_DRAW_ORDER, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, DrawBatch>>>("draw_batches", Self::VT_DRAW_BATCHES, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("mask_indices", Self::VT_MASK_INDICES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("draw_order", Self::VT_DRAW_ORDER, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, DrawBatch>>>("draw_batches", Self::VT_DRAW_BATCHES, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("mask_indices", Self::VT_MASK_INDICES, true)?
      .finish();
     Ok(())
   }
@@ -3613,15 +3613,15 @@ impl<'a> Default for FrameDataArgs<'a> {
   #[inline]
   fn default() -> Self {
     FrameDataArgs {
-      parts: None,
+      parts: None, // required field
       cells: None,
       parts_color: None,
       shaders: None,
       vertices: None,
       deforms: None,
-      draw_order: None,
-      draw_batches: None,
-      mask_indices: None,
+      draw_order: None, // required field
+      draw_batches: None, // required field
+      mask_indices: None, // required field
     }
   }
 }
@@ -3678,6 +3678,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> FrameDataBuilder<'a, 'b, A> {
   #[inline]
   pub fn finish(self) -> ::flatbuffers::WIPOffset<FrameData<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, FrameData::VT_PARTS,"parts");
+    self.fbb_.required(o, FrameData::VT_DRAW_ORDER,"draw_order");
+    self.fbb_.required(o, FrameData::VT_DRAW_BATCHES,"draw_batches");
+    self.fbb_.required(o, FrameData::VT_MASK_INDICES,"mask_indices");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
