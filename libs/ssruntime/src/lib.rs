@@ -321,7 +321,18 @@ impl<'a> AnimationResource<'a> {
                 }
                 let name_hash = anim.name_hash();
                 let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
-                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events(), initial_events: anim.initial_events(), labels: anim.labels() });
+                animations.push(AnimationMetadata {
+                    name_hash,
+                    start_frame: anim.start_frame() as i32,
+                    end_frame: anim.end_frame() as i32,
+                    fps: anim.fps() as i32,
+                    canvas_width,
+                    canvas_height,
+                    cached_parts,
+                    events: anim.events(),
+                    initial_events: anim.initial_events(),
+                    labels: anim.labels(),
+                });
             }
         }
 
@@ -1058,13 +1069,7 @@ impl<'a> Context<'a> {
                 }
                 let Some(attr) = ev.value() else { continue };
                 let s = attr.speed();
-                info = crate::types::ss_effect_event_info {
-                    event_frame: epf.frame_index() as i32,
-                    start_time: attr.start_time(),
-                    speed: if s == 0.0 { 1.0 } else { s },
-                    independent: attr.independent(),
-                    is_synthetic_default: false,
-                };
+                info = crate::types::ss_effect_event_info { event_frame: epf.frame_index() as i32, start_time: attr.start_time(), speed: if s == 0.0 { 1.0 } else { s }, independent: attr.independent(), is_synthetic_default: false };
             }
         }
         info
@@ -1237,18 +1242,7 @@ impl<'a> EffectSlot<'a> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let lifetime = ctx.get_lifetime();
         let is_infinite = ctx.is_infinite();
-        Ok(Self {
-            ctx,
-            ssab,
-            fb: flatbuffers::FlatBufferBuilder::new(),
-            emitter_resource_cache: alloc::vec::Vec::new(),
-            lifetime,
-            is_infinite,
-            last_event_frame: -1,
-            last_is_synthetic: false,
-            last_independent: false,
-            accumulated_time: 0.0,
-        })
+        Ok(Self { ctx, ssab, fb: flatbuffers::FlatBufferBuilder::new(), emitter_resource_cache: alloc::vec::Vec::new(), lifetime, is_infinite, last_event_frame: -1, last_is_synthetic: false, last_independent: false, accumulated_time: 0.0 })
     }
 
     pub fn get_seed(&self) -> u32 {
@@ -1369,11 +1363,7 @@ impl<'a> EffectSlot<'a> {
 
         self.ctx.instance.update(relative_frame);
         let buf = self.build_draw_plan(y_flip, vert_stride);
-        if buf.is_empty() {
-            crate::types::ss_effect_step_result::not_visible()
-        } else {
-            crate::types::ss_effect_step_result { visible: true, draw_plan_buf: buf.as_ptr(), draw_plan_len: buf.len() }
-        }
+        if buf.is_empty() { crate::types::ss_effect_step_result::not_visible() } else { crate::types::ss_effect_step_result { visible: true, draw_plan_buf: buf.as_ptr(), draw_plan_len: buf.len() } }
     }
 
     /// Build the `EffectDrawPlan` FlatBuffer from the simulator's current
@@ -1384,7 +1374,7 @@ impl<'a> EffectSlot<'a> {
     fn build_draw_plan(&mut self, y_flip: bool, vert_stride: u8) -> &[u8] {
         // 180/π — avoid `core::f32::consts::PI` (the path is shadowed in this
         // crate's no_std + libc_alloc build).
-        const DEG_TO_RAD: f32 = 0.017_453_292_5;
+        const DEG_TO_RAD: f32 = 0.017_453_292;
         let stride = if vert_stride == 3 { 3usize } else { 2usize };
         let y_sign: f32 = if y_flip { -1.0 } else { 1.0 };
 
@@ -1415,11 +1405,26 @@ impl<'a> EffectSlot<'a> {
 
         // Snapshot resolved entries to avoid re-borrowing self.emitter_resource_cache
         // while writing into self.fb.
-        struct Resolved { ok: bool, blend_byte: u8, quad_origin_x: f32, quad_origin_y: f32, sw: f32, sh: f32, u0: f32, v0: f32, u1: f32, v1: f32, cellmap_hash: u32 }
-        let resolved: alloc::vec::Vec<Resolved> = entries.iter().map(|(i, _, _)| {
-            let e = &self.emitter_resource_cache[*i];
-            Resolved { ok: e.resolved_ok, blend_byte: e.blend_byte, quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y, sw: e.sw, sh: e.sh, u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1, cellmap_hash: e.cellmap_hash }
-        }).collect();
+        struct Resolved {
+            ok: bool,
+            blend_byte: u8,
+            quad_origin_x: f32,
+            quad_origin_y: f32,
+            sw: f32,
+            sh: f32,
+            u0: f32,
+            v0: f32,
+            u1: f32,
+            v1: f32,
+            cellmap_hash: u32,
+        }
+        let resolved: alloc::vec::Vec<Resolved> = entries
+            .iter()
+            .map(|(i, _, _)| {
+                let e = &self.emitter_resource_cache[*i];
+                Resolved { ok: e.resolved_ok, blend_byte: e.blend_byte, quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y, sw: e.sw, sh: e.sh, u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1, cellmap_hash: e.cellmap_hash }
+            })
+            .collect();
 
         let mut command_meta: alloc::vec::Vec<(u32, u8, u32, u32)> = alloc::vec::Vec::with_capacity(entries.len());
 
@@ -1479,9 +1484,8 @@ impl<'a> EffectSlot<'a> {
         // we collect them as POD then create the vector in one shot — no
         // per-element vtable/offset overhead.
         self.fb.reset();
-        let cmds: alloc::vec::Vec<crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand> = command_meta.iter().map(|(hash, blend, qc, off)| {
-            crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand::new(*hash, *qc, *off, *blend)
-        }).collect();
+        let cmds: alloc::vec::Vec<crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand> =
+            command_meta.iter().map(|(hash, blend, qc, off)| crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand::new(*hash, *qc, *off, *blend)).collect();
         let commands_off = self.fb.create_vector(&cmds);
         let verts_off = self.fb.create_vector(&verts);
         let uvs_off = self.fb.create_vector(&uvs);
@@ -1533,15 +1537,7 @@ impl InstanceSlot {
     /// Drive the slot for one tick. Configures `child_ctx` on transition
     /// edges and advances its frame either by parent-relative seek or by
     /// delta-time update depending on `independent`.
-    pub fn step(
-        &mut self,
-        ev: crate::types::ss_event_instance_info,
-        child_ctx: &mut Context<'_>,
-        previous_child_frame: f32,
-        parent_frame: f32,
-        delta_seconds: f32,
-        parent_looped: bool,
-    ) -> crate::types::ss_instance_step_result {
+    pub fn step(&mut self, ev: crate::types::ss_event_instance_info, child_ctx: &mut Context<'_>, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> crate::types::ss_instance_step_result {
         if parent_looped {
             self.last_event_frame = -1;
             self.last_is_synthetic = false;
@@ -1564,16 +1560,8 @@ impl InstanceSlot {
                 end_frame = start_frame;
             }
 
-            let dir = if ev.reverse {
-                crate::core::playback_controller::PlaybackDirection::Backward
-            } else {
-                crate::core::playback_controller::PlaybackDirection::Forward
-            };
-            let style = if ev.pingpong {
-                crate::core::playback_controller::PlaybackStyle::PingPong
-            } else {
-                crate::core::playback_controller::PlaybackStyle::Normal
-            };
+            let dir = if ev.reverse { crate::core::playback_controller::PlaybackDirection::Backward } else { crate::core::playback_controller::PlaybackDirection::Forward };
+            let style = if ev.pingpong { crate::core::playback_controller::PlaybackStyle::PingPong } else { crate::core::playback_controller::PlaybackStyle::Normal };
             child_ctx.set_playback_direction(dir, style);
             child_ctx.set_animation_section(start_frame, end_frame);
             child_ctx.set_loop(ev.loop_num);

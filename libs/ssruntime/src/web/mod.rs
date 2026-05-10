@@ -490,7 +490,25 @@ impl SSRuntimeInstanceSlot {
     /// Returns `true` if visible. Inspect `transitioned`, `independent`,
     /// `child_frame_no`, `child_looped` via the corresponding getters.
     #[allow(clippy::too_many_arguments)]
-    pub fn step(&mut self, child_ctx: &mut SSRuntimeContext, event_frame: i32, start_label_hash: u32, start_offset: i32, end_label_hash: u32, end_offset: i32, loop_num: i32, speed: f32, independent: bool, reverse: bool, pingpong: bool, is_synthetic_default: bool, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> bool {
+    pub fn step(
+        &mut self,
+        child_ctx: &mut SSRuntimeContext,
+        event_frame: i32,
+        start_label_hash: u32,
+        start_offset: i32,
+        end_label_hash: u32,
+        end_offset: i32,
+        loop_num: i32,
+        speed: f32,
+        independent: bool,
+        reverse: bool,
+        pingpong: bool,
+        is_synthetic_default: bool,
+        previous_child_frame: f32,
+        parent_frame: f32,
+        delta_seconds: f32,
+        parent_looped: bool,
+    ) -> bool {
         let ev = crate::types::ss_event_instance_info { event_frame, start_label_hash, start_offset, end_label_hash, end_offset, loop_num, speed, independent, reverse, pingpong, is_synthetic_default };
         let r = self.inner.step(ev, &mut child_ctx.inner, previous_child_frame, parent_frame, delta_seconds, parent_looped);
         self.last_visible = r.visible;
@@ -521,4 +539,3 @@ impl SSRuntimeInstanceSlot {
         self.inner.is_independent()
     }
 }
-
