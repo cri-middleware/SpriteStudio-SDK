@@ -193,7 +193,7 @@ struct DrawBatch {
 }
 
 table FrameData {
-  parts: [PartState];
+  parts: [PartState] (required);
 
   cells: [PartAttributeCell];
   parts_color: [PartAttributePartColor];
@@ -201,9 +201,9 @@ table FrameData {
   vertices: [PartAttributeVertex];
   deforms: [PartAttributeDeform];
 
-  draw_order: [ushort];
-  draw_batches: [DrawBatch];
-  mask_indices: [ushort];
+  draw_order: [ushort] (required);
+  draw_batches: [DrawBatch] (required);
+  mask_indices: [ushort] (required);
 }
 
 root_type FrameData;

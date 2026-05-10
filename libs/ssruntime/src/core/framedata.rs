@@ -882,9 +882,7 @@ pub fn get_frame_data<'a>(
         canvas_width,
         canvas_height,
     );
-    if !parts_vec.is_empty() {
-        args.parts = Some(fb.create_vector(parts_vec));
-    }
+    args.parts = Some(fb.create_vector(parts_vec));
 
     args.cells = cells_off;
     args.parts_color = parts_color_off;
