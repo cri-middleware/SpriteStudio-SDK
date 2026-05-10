@@ -245,11 +245,11 @@ impl<'a> EffectDrawPlan<'a> {
 
 
   #[inline]
-  pub fn commands(&self) -> Option<::flatbuffers::Vector<'a, EffectDrawCommand>> {
+  pub fn commands(&self) -> ::flatbuffers::Vector<'a, EffectDrawCommand> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, EffectDrawCommand>>>(EffectDrawPlan::VT_COMMANDS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, EffectDrawCommand>>>(EffectDrawPlan::VT_COMMANDS, None).unwrap()}
   }
   #[inline]
   pub fn vert_stride(&self) -> u8 {
@@ -259,32 +259,32 @@ impl<'a> EffectDrawPlan<'a> {
     unsafe { self._tab.get::<u8>(EffectDrawPlan::VT_VERT_STRIDE, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn verts(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
+  pub fn verts(&self) -> ::flatbuffers::Vector<'a, f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(EffectDrawPlan::VT_VERTS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(EffectDrawPlan::VT_VERTS, None).unwrap()}
   }
   #[inline]
-  pub fn uvs(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
+  pub fn uvs(&self) -> ::flatbuffers::Vector<'a, f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(EffectDrawPlan::VT_UVS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(EffectDrawPlan::VT_UVS, None).unwrap()}
   }
   #[inline]
-  pub fn colors(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
+  pub fn colors(&self) -> ::flatbuffers::Vector<'a, f32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(EffectDrawPlan::VT_COLORS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(EffectDrawPlan::VT_COLORS, None).unwrap()}
   }
   #[inline]
-  pub fn indices(&self) -> Option<::flatbuffers::Vector<'a, i32>> {
+  pub fn indices(&self) -> ::flatbuffers::Vector<'a, i32> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, i32>>>(EffectDrawPlan::VT_INDICES, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, i32>>>(EffectDrawPlan::VT_INDICES, None).unwrap()}
   }
 }
 
@@ -294,12 +294,12 @@ impl ::flatbuffers::Verifiable for EffectDrawPlan<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, EffectDrawCommand>>>("commands", Self::VT_COMMANDS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, EffectDrawCommand>>>("commands", Self::VT_COMMANDS, true)?
      .visit_field::<u8>("vert_stride", Self::VT_VERT_STRIDE, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("verts", Self::VT_VERTS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("uvs", Self::VT_UVS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("colors", Self::VT_COLORS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, i32>>>("indices", Self::VT_INDICES, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("verts", Self::VT_VERTS, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("uvs", Self::VT_UVS, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("colors", Self::VT_COLORS, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, i32>>>("indices", Self::VT_INDICES, true)?
      .finish();
     Ok(())
   }
@@ -316,12 +316,12 @@ impl<'a> Default for EffectDrawPlanArgs<'a> {
   #[inline]
   fn default() -> Self {
     EffectDrawPlanArgs {
-      commands: None,
+      commands: None, // required field
       vert_stride: 0,
-      verts: None,
-      uvs: None,
-      colors: None,
-      indices: None,
+      verts: None, // required field
+      uvs: None, // required field
+      colors: None, // required field
+      indices: None, // required field
     }
   }
 }
@@ -366,6 +366,11 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> EffectDrawPlanBuilder<'a, 'b,
   #[inline]
   pub fn finish(self) -> ::flatbuffers::WIPOffset<EffectDrawPlan<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, EffectDrawPlan::VT_COMMANDS,"commands");
+    self.fbb_.required(o, EffectDrawPlan::VT_VERTS,"verts");
+    self.fbb_.required(o, EffectDrawPlan::VT_UVS,"uvs");
+    self.fbb_.required(o, EffectDrawPlan::VT_COLORS,"colors");
+    self.fbb_.required(o, EffectDrawPlan::VT_INDICES,"indices");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }

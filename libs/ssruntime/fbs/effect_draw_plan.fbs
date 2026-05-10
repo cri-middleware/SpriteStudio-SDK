@@ -36,12 +36,12 @@ struct EffectDrawCommand {
 // engines pass true so authored Y-up content composes correctly without an
 // engine-side transform reversal.
 table EffectDrawPlan {
-    commands: [EffectDrawCommand];
+    commands: [EffectDrawCommand] (required);
     vert_stride: ubyte;     // 2 or 3
-    verts:   [float];       // total_quads * 4 * vert_stride
-    uvs:     [float];       // total_quads * 4 * 2
-    colors:  [float];       // total_quads * 4 * 4 (RGBA, normalized 0..1)
-    indices: [int];         // total_quads * 6, quad-local indices
+    verts:   [float] (required);   // total_quads * 4 * vert_stride
+    uvs:     [float] (required);   // total_quads * 4 * 2
+    colors:  [float] (required);   // total_quads * 4 * 4 (RGBA, normalized 0..1)
+    indices: [int]   (required);   // total_quads * 6, quad-local indices
 }
 
 root_type EffectDrawPlan;
