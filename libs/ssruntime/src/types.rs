@@ -93,20 +93,21 @@ impl Default for ss_effect_event_info {
 
 /// Result of `EffectSlot::step` / `ss_effect_slot_step`.
 ///
-/// `state_buf` / `state_len` are valid only when `visible == true`, and only
-/// until the next `step` call on the same slot — callers must consume the
-/// state within the same frame and not retain pointers across calls.
+/// `draw_plan_buf` is a FlatBuffer-encoded `EffectDrawPlan` (see
+/// `runtime/effect_draw_plan.fbs`). It is valid only when `visible == true`,
+/// and only until the next `step` call on the same slot — callers must consume
+/// it within the same frame and not retain pointers across calls.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct ss_effect_step_result {
     pub visible: bool,
-    pub state_buf: *const u8,
-    pub state_len: usize,
+    pub draw_plan_buf: *const u8,
+    pub draw_plan_len: usize,
 }
 
 impl ss_effect_step_result {
     pub const fn not_visible() -> Self {
-        Self { visible: false, state_buf: core::ptr::null(), state_len: 0 }
+        Self { visible: false, draw_plan_buf: core::ptr::null(), draw_plan_len: 0 }
     }
 }
 

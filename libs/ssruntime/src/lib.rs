@@ -1221,8 +1221,36 @@ impl<'a> EffectContext<'a> {
 /// once per effect part, 2) call `step()` per frame with the resolved event
 /// and timing, 3) read `state_buf` only when `visible == true` and only
 /// before the next `step()`.
+/// Resolved emitter render resources, cached on first encounter and reused
+/// across frames. Identified by (cellmap_hash, cell_hash, blend_in) — the
+/// effect simulator may reorder emitters when siblings go silent, so the
+/// cache is keyed by content not slot index.
+struct EmitterResourceEntry {
+    cellmap_hash: u32,
+    cell_hash: u32,
+    blend_in: i32,
+    resolved_ok: bool,
+    blend_byte: u8,
+    quad_origin_x: f32,
+    quad_origin_y: f32,
+    sw: f32,
+    sh: f32,
+    u0: f32,
+    v0: f32,
+    u1: f32,
+    v1: f32,
+}
+
 pub struct EffectSlot<'a> {
     ctx: EffectContext<'a>,
+    // SSAB root, kept for cellmap lookup during draw-plan build. Borrows from
+    // the same resource as `ctx`; lifetime tied to the surrounding `'a`.
+    ssab: ssab::ssab::ss::format::SsAnimeBinary<'a>,
+    // FlatBufferBuilder owned by the slot for `EffectDrawPlan` output.
+    // Reset each `step`; buffer pointer stays valid until the next call.
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+    // Resolved emitter resources keyed by (cellmap_hash, cell_hash, blend_in).
+    emitter_resource_cache: alloc::vec::Vec<EmitterResourceEntry>,
     // Cached at create time — never changes for a given effect resource.
     lifetime: i32,
     is_infinite: bool,
@@ -1238,9 +1266,21 @@ pub struct EffectSlot<'a> {
 impl<'a> EffectSlot<'a> {
     pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
         let ctx = EffectContext::new(resource, effect_name_hash, seed)?;
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let lifetime = ctx.get_lifetime();
         let is_infinite = ctx.is_infinite();
-        Ok(Self { ctx, lifetime, is_infinite, last_event_frame: -1, last_is_synthetic: false, last_independent: false, accumulated_time: 0.0 })
+        Ok(Self {
+            ctx,
+            ssab,
+            fb: flatbuffers::FlatBufferBuilder::new(),
+            emitter_resource_cache: alloc::vec::Vec::new(),
+            lifetime,
+            is_infinite,
+            last_event_frame: -1,
+            last_is_synthetic: false,
+            last_independent: false,
+            accumulated_time: 0.0,
+        })
     }
 
     pub fn get_seed(&self) -> u32 {
@@ -1254,7 +1294,55 @@ impl<'a> EffectSlot<'a> {
         self.last_independent
     }
 
-    pub fn step(&mut self, ev: crate::types::ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool) -> crate::types::ss_effect_step_result {
+    /// Resolve `(cellmap_hash, cell_hash, blend_in)` to render geometry/UV,
+    /// caching the result in `emitter_resource_cache`. Linear search — typical
+    /// effects have 1-3 unique tuples and the cache survives across frames.
+    /// Free-standing form so callers can split-borrow `cache` and `ssab`
+    /// independently of other `self` fields (the simulator output borrow lives
+    /// on `self.ctx.instance` simultaneously inside `build_draw_plan`).
+    fn ensure_emitter_resource_in(cache: &mut alloc::vec::Vec<EmitterResourceEntry>, ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cellmap_hash: u32, cell_hash: u32, blend_in: i32) -> usize {
+        if let Some(idx) = cache.iter().position(|c| c.cellmap_hash == cellmap_hash && c.cell_hash == cell_hash && c.blend_in == blend_in) {
+            return idx;
+        }
+        let mut entry = EmitterResourceEntry { cellmap_hash, cell_hash, blend_in, resolved_ok: false, blend_byte: 0, quad_origin_x: 0.0, quad_origin_y: 0.0, sw: 0.0, sh: 0.0, u0: 0.0, v0: 0.0, u1: 0.0, v1: 0.0 };
+
+        if cellmap_hash != 0
+            && let Some(cellmaps) = ssab.cellmaps()
+            && let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_hash)
+            && let Some(cells) = cellmap.cells()
+            && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, cell_hash)
+        {
+            // SS6-style blend mapping: 0=Mix, 1=Add. Anything else falls back to Mix.
+            entry.blend_byte = if blend_in == 1 { 1 } else { 0 };
+
+            let (src_x, src_y, sw, sh) = if let Some(rect) = cell.rectangle() { (rect.x1(), rect.y1(), rect.x2(), rect.y2()) } else { (0.0, 0.0, 0.0, 0.0) };
+            // Pivot Y is negated to match Godot's prior emit_effect_slot behavior;
+            // the Y-flip logic on the per-particle pass handles the rest of the
+            // axis convention difference.
+            let (pivot_x, pivot_y) = if let Some(p) = cell.pivot() { (p.v1(), -p.v2()) } else { (0.0, 0.0) };
+            entry.sw = sw;
+            entry.sh = sh;
+            entry.quad_origin_x = -sw * 0.5 + pivot_x * sw;
+            entry.quad_origin_y = -sh * 0.5 + pivot_y * sh;
+
+            // UV uses cellmap.size_original — the texture dimensions at SSAB build time.
+            // Atlas / scaled-texture pipelines must remap UVs engine-side.
+            let (tex_w, tex_h) = if let Some(s) = cellmap.size_original() { (s.v1(), s.v2()) } else { (1.0, 1.0) };
+            let tex_w = if tex_w > 0.0 { tex_w } else { 1.0 };
+            let tex_h = if tex_h > 0.0 { tex_h } else { 1.0 };
+            entry.u0 = src_x / tex_w;
+            entry.v0 = src_y / tex_h;
+            entry.u1 = (src_x + sw) / tex_w;
+            entry.v1 = (src_y + sh) / tex_h;
+            entry.resolved_ok = true;
+        }
+
+        let idx = cache.len();
+        cache.push(entry);
+        idx
+    }
+
+    pub fn step(&mut self, ev: crate::types::ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> crate::types::ss_effect_step_result {
         // Parent loop edge re-arms transition detection: the same EventEffect
         // identity (event_frame + is_synthetic) re-fires on the next playthrough,
         // and without this reset the equality check below would treat the loop
@@ -1311,11 +1399,137 @@ impl<'a> EffectSlot<'a> {
             return crate::types::ss_effect_step_result::not_visible();
         }
 
-        self.ctx.update(relative_frame);
-        match self.ctx.get_state() {
-            Ok(buf) if !buf.is_empty() => crate::types::ss_effect_step_result { visible: true, state_buf: buf.as_ptr(), state_len: buf.len() },
-            _ => crate::types::ss_effect_step_result::not_visible(),
+        self.ctx.instance.update(relative_frame);
+        let buf = self.build_draw_plan(y_flip, vert_stride);
+        if buf.is_empty() {
+            crate::types::ss_effect_step_result::not_visible()
+        } else {
+            crate::types::ss_effect_step_result { visible: true, draw_plan_buf: buf.as_ptr(), draw_plan_len: buf.len() }
         }
+    }
+
+    /// Build the `EffectDrawPlan` FlatBuffer from the simulator's current
+    /// draw_commands + draw_particles. Resolves per-emitter resources via
+    /// `ensure_emitter_resource` (cached) and writes verts/uvs/colors/indices
+    /// concatenated for all emitters in one pass. Returns the FlatBuffer slice;
+    /// valid until the next call on this slot.
+    fn build_draw_plan(&mut self, y_flip: bool, vert_stride: u8) -> &[u8] {
+        // 180/π — avoid `core::f32::consts::PI` (the path is shadowed in this
+        // crate's no_std + libc_alloc build).
+        const DEG_TO_RAD: f32 = 0.017_453_292_5;
+        let stride = if vert_stride == 3 { 3usize } else { 2usize };
+        let y_sign: f32 = if y_flip { -1.0 } else { 1.0 };
+
+        // Drive the simulator and copy command keys out before we touch other
+        // `self` fields — the slices returned by `get_draw_commands` borrow from
+        // `self.ctx.instance`, so we narrow the borrow to a tight scope.
+        let cmd_keys: alloc::vec::Vec<(u32, u32, i32, usize, usize)> = {
+            let (commands, _particles) = self.ctx.instance.get_draw_commands();
+            commands.iter().map(|c| (c.cell_map_name_hash, c.cell_name_hash, c.blend_type, c.particle_start, c.particle_end)).collect()
+        };
+
+        // Phase 1: resolve resources via split-borrow on disjoint self fields.
+        let entries: alloc::vec::Vec<(usize, usize, usize)> = {
+            let cache = &mut self.emitter_resource_cache;
+            let ssab = &self.ssab;
+            cmd_keys.into_iter().map(|(cmh, ch, bi, ps, pe)| (Self::ensure_emitter_resource_in(cache, ssab, cmh, ch, bi), ps, pe)).collect()
+        };
+
+        let total_quads: usize = entries.iter().map(|(_, s, e)| e - s).sum();
+        if total_quads == 0 {
+            return &[];
+        }
+
+        let mut verts: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * stride);
+        let mut uvs: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * 2);
+        let mut colors: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * 4);
+        let mut indices: alloc::vec::Vec<i32> = alloc::vec::Vec::with_capacity(total_quads * 6);
+
+        // Snapshot resolved entries to avoid re-borrowing self.emitter_resource_cache
+        // while writing into self.fb.
+        struct Resolved { ok: bool, blend_byte: u8, quad_origin_x: f32, quad_origin_y: f32, sw: f32, sh: f32, u0: f32, v0: f32, u1: f32, v1: f32, cellmap_hash: u32 }
+        let resolved: alloc::vec::Vec<Resolved> = entries.iter().map(|(i, _, _)| {
+            let e = &self.emitter_resource_cache[*i];
+            Resolved { ok: e.resolved_ok, blend_byte: e.blend_byte, quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y, sw: e.sw, sh: e.sh, u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1, cellmap_hash: e.cellmap_hash }
+        }).collect();
+
+        let mut command_meta: alloc::vec::Vec<(u32, u8, u32, u32)> = alloc::vec::Vec::with_capacity(entries.len());
+
+        // Particles live on `self.ctx.instance.draw_particles`; borrow inline.
+        let particles = &self.ctx.instance.draw_particles;
+
+        for (cmd_idx, (_, p_start, p_end)) in entries.iter().enumerate() {
+            let r = &resolved[cmd_idx];
+            let particle_offset = (verts.len() / (4 * stride)) as u32;
+            let particle_count = (p_end - p_start) as u32;
+
+            if !r.ok {
+                command_meta.push((r.cellmap_hash, r.blend_byte, 0, particle_offset));
+                continue;
+            }
+
+            let lx = [r.quad_origin_x, r.quad_origin_x + r.sw, r.quad_origin_x, r.quad_origin_x + r.sw];
+            let ly = [r.quad_origin_y, r.quad_origin_y, r.quad_origin_y + r.sh, r.quad_origin_y + r.sh];
+            let uvs_corner = [r.u0, r.v0, r.u1, r.v0, r.u0, r.v1, r.u1, r.v1];
+
+            for (i, p) in particles[*p_start..*p_end].iter().enumerate() {
+                let angle = y_sign * (p.rotation * DEG_TO_RAD + p.direction);
+                let c = libm::cosf(angle);
+                let s = libm::sinf(angle);
+                let py = y_sign * p.y;
+
+                for v in 0..4 {
+                    let xx = lx[v] * p.scale_x;
+                    let yy = ly[v] * p.scale_y;
+                    let wx = c * xx - s * yy + p.x;
+                    let wy = s * xx + c * yy + py;
+                    verts.push(wx);
+                    verts.push(wy);
+                    if stride == 3 {
+                        verts.push(0.0);
+                    }
+                }
+                uvs.extend_from_slice(&uvs_corner);
+                let r_f = p.color.r as f32 / 255.0;
+                let g_f = p.color.g as f32 / 255.0;
+                let b_f = p.color.b as f32 / 255.0;
+                let a_f = p.color.a as f32 / 255.0;
+                for _ in 0..4 {
+                    colors.extend_from_slice(&[r_f, g_f, b_f, a_f]);
+                }
+                // Quad-local indices: command consumers slice [off*6 .. (off+qc)*6]
+                // and pair it with the verts slice [off*4*stride .. (off+qc)*4*stride],
+                // so values must be 0..qc*4 within the command, not global.
+                let v = (i * 4) as i32;
+                indices.extend_from_slice(&[v, v + 1, v + 2, v + 2, v + 1, v + 3]);
+            }
+
+            command_meta.push((r.cellmap_hash, r.blend_byte, particle_count, particle_offset));
+        }
+
+        // Build the FlatBuffer. Commands are inlined fixed-size structs, so
+        // we collect them as POD then create the vector in one shot — no
+        // per-element vtable/offset overhead.
+        self.fb.reset();
+        let cmds: alloc::vec::Vec<crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand> = command_meta.iter().map(|(hash, blend, qc, off)| {
+            crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand::new(*hash, *qc, *off, *blend)
+        }).collect();
+        let commands_off = self.fb.create_vector(&cmds);
+        let verts_off = self.fb.create_vector(&verts);
+        let uvs_off = self.fb.create_vector(&uvs);
+        let colors_off = self.fb.create_vector(&colors);
+        let indices_off = self.fb.create_vector(&indices);
+
+        let mut plan_b = crate::runtime::effect_draw_plan::ss::runtime::EffectDrawPlanBuilder::new(&mut self.fb);
+        plan_b.add_commands(commands_off);
+        plan_b.add_vert_stride(stride as u8);
+        plan_b.add_verts(verts_off);
+        plan_b.add_uvs(uvs_off);
+        plan_b.add_colors(colors_off);
+        plan_b.add_indices(indices_off);
+        let root = plan_b.finish();
+        self.fb.finish_minimal(root);
+        self.fb.finished_data()
     }
 }
 

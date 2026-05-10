@@ -404,15 +404,15 @@ impl SSRuntimeContext {
 
 /// JS-friendly wrapper of `EffectSlot`. Same conceptual flow as the C FFI:
 /// 1) construct via `create`, 2) call `step` per frame with the resolved
-/// active event and timing, 3) read `state_buf`/`state_len` only when `step`
-/// returned `true` and only before the next call.
+/// active event and timing, 3) read `draw_plan_buf`/`draw_plan_len` only
+/// when `step` returned `true` and only before the next call.
 #[wasm_bindgen]
 pub struct SSRuntimeEffectSlot {
     inner: crate::EffectSlot<'static>,
     #[allow(dead_code)]
     resource_handle: Arc<SsabResource>,
-    last_state_ptr: *const u8,
-    last_state_len: usize,
+    last_draw_plan_ptr: *const u8,
+    last_draw_plan_len: usize,
 }
 
 #[wasm_bindgen]
@@ -424,7 +424,7 @@ impl SSRuntimeEffectSlot {
         }
         let resource_handle = resource.inner.clone();
         match crate::EffectSlot::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-            Ok(inner) => Ok(SSRuntimeEffectSlot { inner, resource_handle, last_state_ptr: core::ptr::null(), last_state_len: 0 }),
+            Ok(inner) => Ok(SSRuntimeEffectSlot { inner, resource_handle, last_draw_plan_ptr: core::ptr::null(), last_draw_plan_len: 0 }),
             Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
         }
     }
@@ -433,23 +433,25 @@ impl SSRuntimeEffectSlot {
     /// info returned by `Context::get_active_effect_event` (passed flat for
     /// JS-side ergonomics — wasm-bindgen does not expose `#[repr(C)]` POD
     /// structs as constructible classes).
-    /// Returns `true` if visible; on `true` callers must read state via
-    /// `get_state_buf` / `get_state_len` before the next step.
+    /// `y_flip = true` for Y-down rendering (pixi.js); `vert_stride = 2` packs
+    /// (x,y) verts, `3` packs (x,y,0) for engines requiring 3-component verts.
+    /// Returns `true` if visible; on `true` callers read the plan via
+    /// `get_draw_plan_buf` / `get_draw_plan_len` before the next step.
     #[allow(clippy::too_many_arguments)]
-    pub fn step(&mut self, event_frame: i32, start_time: i32, speed: f32, independent: bool, is_synthetic_default: bool, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool) -> bool {
+    pub fn step(&mut self, event_frame: i32, start_time: i32, speed: f32, independent: bool, is_synthetic_default: bool, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> bool {
         let ev = crate::types::ss_effect_event_info { event_frame, start_time, speed, independent, is_synthetic_default };
-        let r = self.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped);
-        self.last_state_ptr = r.state_buf;
-        self.last_state_len = r.state_len;
+        let r = self.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride);
+        self.last_draw_plan_ptr = r.draw_plan_buf;
+        self.last_draw_plan_len = r.draw_plan_len;
         r.visible
     }
 
-    pub fn get_state_buf(&self) -> *const u8 {
-        self.last_state_ptr
+    pub fn get_draw_plan_buf(&self) -> *const u8 {
+        self.last_draw_plan_ptr
     }
 
-    pub fn get_state_len(&self) -> usize {
-        self.last_state_len
+    pub fn get_draw_plan_len(&self) -> usize {
+        self.last_draw_plan_len
     }
 
     pub fn get_seed(&self) -> u32 {

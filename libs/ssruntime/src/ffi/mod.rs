@@ -798,16 +798,25 @@ pub extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
 /// Advance the slot one frame. The caller resolves the active effect event
 /// (via `ss_runtime_get_active_effect_event`) and feeds it here together with
 /// timing inputs. `parent_looped` re-arms transition detection across the
-/// parent's loop edge. Returns visibility + state buffer pointer/len;
-/// `state_buf` is valid only when `visible == true` and only until the next
-/// call on the same slot.
+/// parent's loop edge.
+///
+/// `y_flip = true` mirrors particle Y position and rotation sign, for Y-down
+/// rendering of Y-up authored content (Godot, pixi.js). Pass `false` for
+/// Y-up engines (Unity 2D).
+///
+/// `vert_stride` selects the vertex layout of the returned `EffectDrawPlan`:
+/// `2` packs (x, y) pairs (Godot, pixi.js, wgpu); `3` packs (x, y, 0) triples
+/// (Unity Mesh, Unreal procedural mesh). Other values fall back to `2`.
+///
+/// Returns `EffectDrawPlan` FlatBuffer pointer + length when visible. Buffer
+/// is valid only until the next call on the same slot.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool) -> ss_effect_step_result {
+pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> ss_effect_step_result {
     if slot.is_null() {
         return ss_effect_step_result::not_visible();
     }
     let slot = unsafe { &mut *(slot as *mut crate::EffectSlot) };
-    slot.step(ev, parent_frame, delta_seconds, fps, parent_looped)
+    slot.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride)
 }
 
 #[unsafe(no_mangle)]
@@ -966,54 +975,6 @@ pub unsafe extern "C" fn ss_context_get_unit(context: *mut c_void) -> i32 {
     } else {
         0
     }
-}
-
-/// Generate ready-to-render quad geometry for a `ParticleState` array.
-///
-/// For each of `count` particles, writes 4 vertices in TL/TR/BL/BR order. Buffers:
-/// - `out_verts`:  `count * 8`  floats  (4 corners × x, y)
-/// - `out_uvs`:    `count * 8`  floats  (4 corners × u, v) — same UVs every particle
-/// - `out_colors`: `count * 16` floats  (4 corners × r, g, b, a, normalized 0..1)
-///
-/// Per-particle rotation = `rotation_deg * deg_to_rad + direction_rad` (matches
-/// the effect-state schema's mixed-units convention). When `y_flip` is true,
-/// the per-particle translation Y and rotation sign are mirrored — caller
-/// passes `true` for Godot-style Y-down rendering of Y-up effect content
-/// (consumer applies any further slot transform downstream).
-///
-/// Single scalar pass, no allocations.
-///
-/// # Safety
-/// - `particles_ptr` must point to `count * 28` valid bytes (ParticleState array).
-/// - `out_verts` / `out_uvs` / `out_colors` must be writable for their respective sizes.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_effect_emit_particle_quads(
-    particles_ptr: *const c_void,
-    count: i32,
-    quad_origin_x: f32, quad_origin_y: f32,
-    quad_w: f32, quad_h: f32,
-    u0: f32, v0: f32, u1: f32, v1: f32,
-    y_flip: bool,
-    out_verts: *mut f32,
-    out_uvs: *mut f32,
-    out_colors: *mut f32,
-) {
-    if particles_ptr.is_null() || out_verts.is_null() || out_uvs.is_null() || out_colors.is_null() || count <= 0 {
-        return;
-    }
-    let n = count as usize;
-    let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr as *const u8, n * 28) };
-    let verts = unsafe { core::slice::from_raw_parts_mut(out_verts, n * 8) };
-    let uvs = unsafe { core::slice::from_raw_parts_mut(out_uvs, n * 8) };
-    let colors = unsafe { core::slice::from_raw_parts_mut(out_colors, n * 16) };
-    crate::core::util::emit_particle_quads(
-        particles_raw,
-        quad_origin_x, quad_origin_y,
-        quad_w, quad_h,
-        u0, v0, u1, v1,
-        y_flip,
-        verts, uvs, colors,
-    );
 }
 
 #[unsafe(no_mangle)]
