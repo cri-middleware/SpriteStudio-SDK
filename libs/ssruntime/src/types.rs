@@ -55,3 +55,38 @@ impl Default for ss_event_instance_info {
         Self::synthetic_default()
     }
 }
+
+/// Resolved per-slot Effect event state, returned by
+/// `ss_runtime_get_active_effect_event`.
+///
+/// The runtime forward-scans the parent's `EventsPerFrame` and reports the
+/// most recent `EventEffect` whose `frame_index <= current parent frame`
+/// for `slot_index`. When no event is active, the runtime falls back to the
+/// part's `InitialEvents.effect` (if present); if neither exists, returns
+/// SS6 default semantics: `is_synthetic_default = true`, `start_time = 0`,
+/// `speed = 1.0`, `independent = false`.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_effect_event_info {
+    /// Parent `frame_index` this `EventEffect` was emitted at; 0 for synthetic default
+    /// or `InitialEvents.effect` fallback.
+    pub event_frame: i32,
+    pub start_time: i32,
+    pub speed: f32,
+    pub independent: bool,
+    /// `true` = no real `EventEffect` matched (either `InitialEvents.effect` fallback
+    /// or full SS6 default), `false` = real `EventEffect` matched.
+    pub is_synthetic_default: bool,
+}
+
+impl ss_effect_event_info {
+    pub const fn synthetic_default() -> Self {
+        Self { event_frame: 0, start_time: 0, speed: 1.0, independent: false, is_synthetic_default: true }
+    }
+}
+
+impl Default for ss_effect_event_info {
+    fn default() -> Self {
+        Self::synthetic_default()
+    }
+}

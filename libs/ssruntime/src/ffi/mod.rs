@@ -987,6 +987,54 @@ pub unsafe extern "C" fn ss_effect_transform_particles(matrix_ptr: *const f32, p
     }
 }
 
+/// Generate ready-to-render quad geometry for a `ParticleState` array.
+///
+/// For each of `count` particles, writes 4 vertices in TL/TR/BL/BR order. Buffers:
+/// - `out_verts`:  `count * 8`  floats  (4 corners × x, y)
+/// - `out_uvs`:    `count * 8`  floats  (4 corners × u, v) — same UVs every particle
+/// - `out_colors`: `count * 16` floats  (4 corners × r, g, b, a, normalized 0..1)
+///
+/// Per-particle rotation = `rotation_deg * deg_to_rad + direction_rad` (matches
+/// the effect-state schema's mixed-units convention). When `y_flip` is true,
+/// the per-particle translation Y and rotation sign are mirrored — caller
+/// passes `true` for Godot-style Y-down rendering of Y-up effect content
+/// (consumer applies any further slot transform downstream).
+///
+/// Single scalar pass, no allocations.
+///
+/// # Safety
+/// - `particles_ptr` must point to `count * 28` valid bytes (ParticleState array).
+/// - `out_verts` / `out_uvs` / `out_colors` must be writable for their respective sizes.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_effect_emit_particle_quads(
+    particles_ptr: *const c_void,
+    count: i32,
+    quad_origin_x: f32, quad_origin_y: f32,
+    quad_w: f32, quad_h: f32,
+    u0: f32, v0: f32, u1: f32, v1: f32,
+    y_flip: bool,
+    out_verts: *mut f32,
+    out_uvs: *mut f32,
+    out_colors: *mut f32,
+) {
+    if particles_ptr.is_null() || out_verts.is_null() || out_uvs.is_null() || out_colors.is_null() || count <= 0 {
+        return;
+    }
+    let n = count as usize;
+    let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr as *const u8, n * 28) };
+    let verts = unsafe { core::slice::from_raw_parts_mut(out_verts, n * 8) };
+    let uvs = unsafe { core::slice::from_raw_parts_mut(out_uvs, n * 8) };
+    let colors = unsafe { core::slice::from_raw_parts_mut(out_colors, n * 16) };
+    crate::core::util::emit_particle_quads(
+        particles_raw,
+        quad_origin_x, quad_origin_y,
+        quad_w, quad_h,
+        u0, v0, u1, v1,
+        y_flip,
+        verts, uvs, colors,
+    );
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
@@ -1021,6 +1069,19 @@ pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slo
         return ffi_context.ctx.get_active_event_instance(slot_index);
     }
     ss_event_instance_info::synthetic_default()
+}
+
+/// Resolve the active `EventEffect` for `slot_index` on the parent's
+/// currently selected animation, at the current frame. When no real event
+/// has fired yet, falls back to `InitialEvents.effect` for the slot (with
+/// `is_synthetic_default = true`); if neither exists, returns full SS6
+/// defaults (`start_time = 0`, `speed = 1.0`, `independent = false`).
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_active_effect_event(context: *mut c_void, slot_index: u32) -> ss_effect_event_info {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.get_active_effect_event(slot_index);
+    }
+    ss_effect_event_info::synthetic_default()
 }
 
 /// Look up a label by `label_hash` in this runtime's currently selected

@@ -155,6 +155,7 @@ pub struct AnimationMetadata<'a> {
     pub canvas_height: f32,
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
+    pub initial_events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>,
     pub labels: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::Label<'a>>>>,
 }
 
@@ -320,7 +321,7 @@ impl<'a> AnimationResource<'a> {
                 }
                 let name_hash = anim.name_hash();
                 let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
-                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events(), labels: anim.labels() });
+                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events(), initial_events: anim.initial_events(), labels: anim.labels() });
             }
         }
 
@@ -996,6 +997,72 @@ impl<'a> Context<'a> {
                     independent: attr.independent(),
                     reverse: attr.reverse(),
                     pingpong: attr.pingpong(),
+                    is_synthetic_default: false,
+                };
+            }
+        }
+        info
+    }
+
+    /// Resolve the most-recent `EventEffect` whose `frame_index <= current frame`
+    /// for `slot_index` on the *currently selected animation*. When no event has
+    /// fired yet, falls back to `InitialEvents.effect` for that slot (still flagged
+    /// `is_synthetic_default = true`); if neither exists returns full SS6 defaults.
+    /// Designed to live behind the `ss_runtime_get_active_effect_event` FFI.
+    pub fn get_active_effect_event(&self, slot_index: u32) -> crate::types::ss_effect_event_info {
+        let mut info = crate::types::ss_effect_event_info::synthetic_default();
+        let Some(resource) = self.resource else { return info };
+        if self.animation_idx < 0 {
+            return info;
+        }
+        let metadata = &resource.animations[self.animation_idx as usize];
+
+        // Fallback first: InitialEvents.effect for this slot. Real EventEffect
+        // matches override below; the synthetic-default flag stays `true` for
+        // initial-only state so callers don't treat it as an event edge.
+        if let Some(inits) = metadata.initial_events
+            && (slot_index as usize) < inits.len()
+        {
+            let entry = inits.get(slot_index as usize);
+            if let Some(eff) = entry.effect() {
+                info.event_frame = 0;
+                info.start_time = eff.start_time();
+                let s = eff.speed();
+                info.speed = if s == 0.0 { 1.0 } else { s };
+                info.independent = eff.independent();
+                info.is_synthetic_default = true;
+            }
+        }
+
+        let Some(events) = metadata.events else { return info };
+
+        let frame_no = self.controller.get_frame_no();
+        let frame_int = if frame_no < 0.0 {
+            -1
+        } else if frame_no >= u16::MAX as f32 {
+            u16::MAX as i32
+        } else {
+            frame_no as i32
+        };
+
+        for i in 0..events.len() {
+            let epf = events.get(i);
+            if (epf.frame_index() as i32) > frame_int {
+                break;
+            }
+            let Some(effects) = epf.effects() else { continue };
+            for j in 0..effects.len() {
+                let ev = effects.get(j);
+                if ev.part_index() as u32 != slot_index {
+                    continue;
+                }
+                let Some(attr) = ev.value() else { continue };
+                let s = attr.speed();
+                info = crate::types::ss_effect_event_info {
+                    event_frame: epf.frame_index() as i32,
+                    start_time: attr.start_time(),
+                    speed: if s == 0.0 { 1.0 } else { s },
+                    independent: attr.independent(),
                     is_synthetic_default: false,
                 };
             }
