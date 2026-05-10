@@ -859,14 +859,6 @@ pub extern "C" fn ss_effect_destroy(effect_ctx: *mut c_void) {
     }
 }
 
-// --- Utilities ---
-
-#[unsafe(no_mangle)]
-/// Calculate the target frame for a child instance animation.
-pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
-    crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
-}
-
 /// Set the render mode. `mode` is interpreted as:
 ///   0 = Direct       (pre-bake world matrices; default)
 ///   1 = SceneGraph   (skip world matrix pre-computation)
@@ -952,38 +944,6 @@ pub unsafe extern "C" fn ss_context_get_unit(context: *mut c_void) -> i32 {
         }
     } else {
         0
-    }
-}
-
-#[unsafe(no_mangle)]
-/// Transform multiple particle positions by a matrix.
-/// matrix_ptr: pointer to float array of size 16.
-/// particles_ptr: pointer to ParticleState array from ss_effect_get_state.
-/// count: number of particles.
-/// out_pos_ptr: pointer to float array (x, y, x, y, ...) to store transformed 2D coordinates.
-pub unsafe extern "C" fn ss_effect_transform_particles(matrix_ptr: *const f32, particles_ptr: *const c_void, count: i32, out_pos_ptr: *mut f32) {
-    if matrix_ptr.is_null() || particles_ptr.is_null() || out_pos_ptr.is_null() {
-        return;
-    }
-
-    let mut m_arr = [0.0f32; 16];
-    unsafe {
-        core::ptr::copy_nonoverlapping(matrix_ptr, m_arr.as_mut_ptr(), 16);
-    }
-    let matrix = crate::core::SsMatrix4x4::from_array(m_arr);
-
-    // particles_ptr is a pointer to [ParticleState; count]
-    // Layout from effect_state.fbs: stride = 28
-    let len = (count as usize) * 28;
-    let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr as *const u8, len) };
-
-    let transformed = crate::core::util::transform_particles(&matrix, particles_raw);
-
-    for (i, (tx, ty)) in transformed.into_iter().enumerate() {
-        unsafe {
-            *(out_pos_ptr.add(i * 2)) = tx;
-            *(out_pos_ptr.add(i * 2 + 1)) = ty;
-        }
     }
 }
 

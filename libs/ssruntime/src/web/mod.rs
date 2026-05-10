@@ -453,33 +453,3 @@ impl SSRuntimeEffectContext {
     }
 }
 
-#[wasm_bindgen]
-pub struct SSRuntimeUtils;
-
-#[wasm_bindgen]
-impl SSRuntimeUtils {
-    pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
-        crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
-    }
-
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn transform_particles(matrix_arr: &[f32], particles_ptr: *const u8, count: i32) -> Result<Box<[f32]>, JsValue> {
-        if matrix_arr.len() < 16 {
-            return Err(JsValue::from_str("Invalid matrix size"));
-        }
-        let mut m_arr = [0.0f32; 16];
-        m_arr.copy_from_slice(&matrix_arr[0..16]);
-        let matrix = crate::core::SsMatrix4x4::from_array(m_arr);
-
-        let len = (count as usize) * 28;
-        let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr, len) };
-
-        let transformed = crate::core::util::transform_particles(&matrix, particles_raw);
-        let mut result = alloc::vec::Vec::with_capacity(transformed.len() * 2);
-        for (x, y) in transformed {
-            result.push(x);
-            result.push(y);
-        }
-        Ok(result.into_boxed_slice())
-    }
-}
