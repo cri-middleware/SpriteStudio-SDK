@@ -115,3 +115,31 @@ impl Default for ss_effect_step_result {
         Self::not_visible()
     }
 }
+
+/// Result of `InstanceSlot::step` / `ss_instance_slot_step`.
+///
+/// `transitioned == true` indicates a new EventInstance edge — the caller
+/// should run any side effects tied to the child's `play()` (event-sink
+/// notifications, etc.) on this tick. Frame stepping is already applied
+/// inside `step`, so callers only consume `child_frame_no` to redraw.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct ss_instance_step_result {
+    pub visible: bool,
+    pub transitioned: bool,
+    pub independent: bool,
+    pub child_frame_no: f32,
+    pub child_looped: bool,
+}
+
+impl ss_instance_step_result {
+    pub const fn not_visible() -> Self {
+        Self { visible: false, transitioned: false, independent: false, child_frame_no: 0.0, child_looped: false }
+    }
+}
+
+impl Default for ss_instance_step_result {
+    fn default() -> Self {
+        Self::not_visible()
+    }
+}

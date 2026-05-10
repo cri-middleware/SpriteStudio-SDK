@@ -832,6 +832,54 @@ pub extern "C" fn ss_effect_slot_is_independent(slot: *mut c_void) -> bool {
     slot.is_independent()
 }
 
+/// Create a fresh InstanceSlot. Slots are stateless at construction (no
+/// resource binding) — `step` operates against a child runtime context
+/// supplied per call.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_create() -> *mut c_void {
+    Box::into_raw(Box::new(crate::InstanceSlot::new())) as *mut c_void
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_destroy(slot: *mut c_void) {
+    if slot.is_null() {
+        return;
+    }
+    unsafe {
+        let _ = Box::from_raw(slot as *mut crate::InstanceSlot);
+    }
+}
+
+/// Drive the instance slot for one tick. The caller resolves the active
+/// EventInstance (via `ss_runtime_get_active_event_instance` against the
+/// *parent* runtime context) and passes the *child* runtime context here so
+/// that label resolution and frame stepping happen against the right Context.
+/// `previous_child_frame` is the child's frame_no before this tick — used
+/// only to detect independent-mode loop edges.
+/// Returns `transitioned == true` on EventInstance edges; the caller is
+/// responsible for any side effects tied to `play()` (event-sink notifications)
+/// since those are host-side concerns.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
+    if slot.is_null() {
+        return ss_instance_step_result::not_visible();
+    }
+    let Some(child_ffi) = get_context(child_ctx) else {
+        return ss_instance_step_result::not_visible();
+    };
+    let slot = unsafe { &mut *(slot as *mut crate::InstanceSlot) };
+    slot.step(ev, &mut child_ffi.ctx, previous_child_frame, parent_frame, delta_seconds, parent_looped)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> bool {
+    if slot.is_null() {
+        return false;
+    }
+    let slot = unsafe { &*(slot as *const crate::InstanceSlot) };
+    slot.is_independent()
+}
+
 /// Set the render mode. `mode` is interpreted as:
 ///   0 = Direct       (pre-bake world matrices; default)
 ///   1 = SceneGraph   (skip world matrix pre-computation)

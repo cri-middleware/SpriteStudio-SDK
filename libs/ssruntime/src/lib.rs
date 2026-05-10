@@ -1319,6 +1319,114 @@ impl<'a> EffectSlot<'a> {
     }
 }
 
+/// High-level instance-child slot: tracks the per-slot transition state
+/// previously kept in each Player's instance-children table. `step()` resolves
+/// labels against the *child* runtime context, configures the child's
+/// playback (animation section, loop, direction), and advances the child's
+/// frame — leaving only the C++/host-side `play()` event sink and the
+/// redraw call to the caller.
+pub struct InstanceSlot {
+    last_event_frame: i32,
+    last_is_synthetic: bool,
+    last_independent: bool,
+}
+
+impl Default for InstanceSlot {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl InstanceSlot {
+    pub const fn new() -> Self {
+        Self { last_event_frame: -1, last_is_synthetic: false, last_independent: false }
+    }
+
+    /// Whether the slot is currently driving its child independently of the
+    /// parent's frame. Reflects the most recently seen `EventInstance.independent`.
+    pub fn is_independent(&self) -> bool {
+        self.last_independent
+    }
+
+    /// Drive the slot for one tick. Configures `child_ctx` on transition
+    /// edges and advances its frame either by parent-relative seek or by
+    /// delta-time update depending on `independent`.
+    pub fn step(
+        &mut self,
+        ev: crate::types::ss_event_instance_info,
+        child_ctx: &mut Context<'_>,
+        previous_child_frame: f32,
+        parent_frame: f32,
+        delta_seconds: f32,
+        parent_looped: bool,
+    ) -> crate::types::ss_instance_step_result {
+        if parent_looped {
+            self.last_event_frame = -1;
+            self.last_is_synthetic = false;
+        }
+
+        let transitioned = self.last_event_frame == -1 || self.last_event_frame != ev.event_frame || self.last_is_synthetic != ev.is_synthetic_default;
+
+        if transitioned {
+            // `default_end` mirrors the original C++ fallback: `getTotalFrames()-1`,
+            // i.e. (end - start). Labels resolve against absolute frame time, so
+            // the fallback is only used when label_hash == 0 — preserving the
+            // pre-refactor behavior.
+            let child_total = child_ctx.get_end_frame() - child_ctx.get_start_frame() + 1;
+            let default_end = if child_total > 0 { child_total - 1 } else { 0 };
+            let start_label_time = child_ctx.resolve_label_time(ev.start_label_hash, 0);
+            let end_label_time = child_ctx.resolve_label_time(ev.end_label_hash, default_end);
+            let start_frame = start_label_time + ev.start_offset;
+            let mut end_frame = end_label_time + ev.end_offset;
+            if end_frame < start_frame {
+                end_frame = start_frame;
+            }
+
+            child_ctx.set_animation_section(start_frame, end_frame);
+            child_ctx.set_loop(ev.loop_num);
+            let dir = if ev.reverse {
+                crate::core::playback_controller::PlaybackDirection::Backward
+            } else {
+                crate::core::playback_controller::PlaybackDirection::Forward
+            };
+            let style = if ev.pingpong {
+                crate::core::playback_controller::PlaybackStyle::PingPong
+            } else {
+                crate::core::playback_controller::PlaybackStyle::Normal
+            };
+            child_ctx.set_playback_direction(dir, style);
+
+            self.last_event_frame = ev.event_frame;
+            self.last_is_synthetic = ev.is_synthetic_default;
+        }
+
+        // Branch on `independent`. Synced children are seeked deterministically
+        // from the parent's frame each tick — same `parent_frame` always yields
+        // the same `child_frame`. Independent children own their own controller
+        // time: forward `delta_seconds` to `update`, except on the transition
+        // tick itself where `play()` will snap to start_frame (any further step
+        // here would visibly skip the first frame).
+        let child_frame_no = if ev.independent {
+            if delta_seconds > 0.0 && !transitioned {
+                let d_ms = delta_seconds * 1000.0 * ev.speed;
+                child_ctx.update(d_ms)
+            } else {
+                child_ctx.get_frame_no()
+            }
+        } else {
+            let diff = (parent_frame - ev.event_frame as f32) * ev.speed;
+            child_ctx.set_frame_relative(diff);
+            child_ctx.get_frame_no()
+        };
+
+        let child_looped = ev.independent && delta_seconds > 0.0 && child_frame_no < previous_child_frame && !transitioned;
+
+        self.last_independent = ev.independent;
+
+        crate::types::ss_instance_step_result { visible: true, transitioned, independent: ev.independent, child_frame_no, child_looped }
+    }
+}
+
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use std::path::PathBuf;

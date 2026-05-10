@@ -461,3 +461,62 @@ impl SSRuntimeEffectSlot {
     }
 }
 
+/// JS-friendly wrapper of `InstanceSlot`. Same conceptual flow as the C FFI:
+/// 1) construct via `create`, 2) call `step` per frame with the resolved
+/// active event, child context, and timing, 3) on `transitioned == true`
+/// fire any host-side `play()` side effects (event sinks etc.).
+#[wasm_bindgen]
+pub struct SSRuntimeInstanceSlot {
+    inner: crate::InstanceSlot,
+    last_visible: bool,
+    last_transitioned: bool,
+    last_independent: bool,
+    last_child_frame_no: f32,
+    last_child_looped: bool,
+}
+
+#[wasm_bindgen]
+impl SSRuntimeInstanceSlot {
+    pub fn create() -> SSRuntimeInstanceSlot {
+        SSRuntimeInstanceSlot { inner: crate::InstanceSlot::new(), last_visible: false, last_transitioned: false, last_independent: false, last_child_frame_no: 0.0, last_child_looped: false }
+    }
+
+    /// Advance one tick. `event_*` parameters are the fields of the event
+    /// info returned by `Context::get_active_event_instance` (passed flat for
+    /// JS-side ergonomics). `child_ctx` must be the *child* runtime — label
+    /// resolution and frame stepping run against it.
+    /// Returns `true` if visible. Inspect `transitioned`, `independent`,
+    /// `child_frame_no`, `child_looped` via the corresponding getters.
+    #[allow(clippy::too_many_arguments)]
+    pub fn step(&mut self, child_ctx: &mut SSRuntimeContext, event_frame: i32, start_label_hash: u32, start_offset: i32, end_label_hash: u32, end_offset: i32, loop_num: i32, speed: f32, independent: bool, reverse: bool, pingpong: bool, is_synthetic_default: bool, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> bool {
+        let ev = crate::types::ss_event_instance_info { event_frame, start_label_hash, start_offset, end_label_hash, end_offset, loop_num, speed, independent, reverse, pingpong, is_synthetic_default };
+        let r = self.inner.step(ev, &mut child_ctx.inner, previous_child_frame, parent_frame, delta_seconds, parent_looped);
+        self.last_visible = r.visible;
+        self.last_transitioned = r.transitioned;
+        self.last_independent = r.independent;
+        self.last_child_frame_no = r.child_frame_no;
+        self.last_child_looped = r.child_looped;
+        r.visible
+    }
+
+    pub fn transitioned(&self) -> bool {
+        self.last_transitioned
+    }
+
+    pub fn independent(&self) -> bool {
+        self.last_independent
+    }
+
+    pub fn child_frame_no(&self) -> f32 {
+        self.last_child_frame_no
+    }
+
+    pub fn child_looped(&self) -> bool {
+        self.last_child_looped
+    }
+
+    pub fn is_independent(&self) -> bool {
+        self.inner.is_independent()
+    }
+}
+
