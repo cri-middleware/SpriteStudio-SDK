@@ -155,6 +155,7 @@ pub struct AnimationMetadata<'a> {
     pub canvas_height: f32,
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
+    pub initial_events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>,
     pub labels: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::Label<'a>>>>,
 }
 
@@ -320,7 +321,18 @@ impl<'a> AnimationResource<'a> {
                 }
                 let name_hash = anim.name_hash();
                 let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
-                animations.push(AnimationMetadata { name_hash, start_frame: anim.start_frame() as i32, end_frame: anim.end_frame() as i32, fps: anim.fps() as i32, canvas_width, canvas_height, cached_parts, events: anim.events(), labels: anim.labels() });
+                animations.push(AnimationMetadata {
+                    name_hash,
+                    start_frame: anim.start_frame() as i32,
+                    end_frame: anim.end_frame() as i32,
+                    fps: anim.fps() as i32,
+                    canvas_width,
+                    canvas_height,
+                    cached_parts,
+                    events: anim.events(),
+                    initial_events: anim.initial_events(),
+                    labels: anim.labels(),
+                });
             }
         }
 
@@ -1003,6 +1015,66 @@ impl<'a> Context<'a> {
         info
     }
 
+    /// Resolve the most-recent `EventEffect` whose `frame_index <= current frame`
+    /// for `slot_index` on the *currently selected animation*. When no event has
+    /// fired yet, falls back to `InitialEvents.effect` for that slot (still flagged
+    /// `is_synthetic_default = true`); if neither exists returns full SS6 defaults.
+    /// Designed to live behind the `ss_runtime_get_active_effect_event` FFI.
+    pub fn get_active_effect_event(&self, slot_index: u32) -> crate::types::ss_effect_event_info {
+        let mut info = crate::types::ss_effect_event_info::synthetic_default();
+        let Some(resource) = self.resource else { return info };
+        if self.animation_idx < 0 {
+            return info;
+        }
+        let metadata = &resource.animations[self.animation_idx as usize];
+
+        // Fallback first: InitialEvents.effect for this slot. Real EventEffect
+        // matches override below; the synthetic-default flag stays `true` for
+        // initial-only state so callers don't treat it as an event edge.
+        if let Some(inits) = metadata.initial_events
+            && (slot_index as usize) < inits.len()
+        {
+            let entry = inits.get(slot_index as usize);
+            if let Some(eff) = entry.effect() {
+                info.event_frame = 0;
+                info.start_time = eff.start_time();
+                let s = eff.speed();
+                info.speed = if s == 0.0 { 1.0 } else { s };
+                info.independent = eff.independent();
+                info.is_synthetic_default = true;
+            }
+        }
+
+        let Some(events) = metadata.events else { return info };
+
+        let frame_no = self.controller.get_frame_no();
+        let frame_int = if frame_no < 0.0 {
+            -1
+        } else if frame_no >= u16::MAX as f32 {
+            u16::MAX as i32
+        } else {
+            frame_no as i32
+        };
+
+        for i in 0..events.len() {
+            let epf = events.get(i);
+            if (epf.frame_index() as i32) > frame_int {
+                break;
+            }
+            let Some(effects) = epf.effects() else { continue };
+            for j in 0..effects.len() {
+                let ev = effects.get(j);
+                if ev.part_index() as u32 != slot_index {
+                    continue;
+                }
+                let Some(attr) = ev.value() else { continue };
+                let s = attr.speed();
+                info = crate::types::ss_effect_event_info { event_frame: epf.frame_index() as i32, start_time: attr.start_time(), speed: if s == 0.0 { 1.0 } else { s }, independent: attr.independent(), is_synthetic_default: false };
+            }
+        }
+        info
+    }
+
     /// Look up `label_hash` in the currently selected animation's `labels`
     /// table and return its `time`. Returns `fallback` when `label_hash == 0`
     /// (caller convention for "unset"), no animation is bound, or the hash
@@ -1064,14 +1136,13 @@ impl<'a> Context<'a> {
     }
 }
 
-pub struct EffectContext<'a> {
+pub struct EffectContext {
     pub instance: crate::core::effect::instance::EffectInstance,
-    fb: flatbuffers::FlatBufferBuilder<'a>,
     seed: u32,
 }
 
-impl<'a> EffectContext<'a> {
-    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+impl EffectContext {
+    pub fn new(resource: &AnimationResource<'_>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let Some(effects) = ssab.effects() else {
             return Err(error::SSRuntimeError::AnimationNotFound);
@@ -1084,7 +1155,7 @@ impl<'a> EffectContext<'a> {
         let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed) else {
             return Err(error::SSRuntimeError::MalformedEffect);
         };
-        Ok(Self { instance, fb: flatbuffers::FlatBufferBuilder::new(), seed })
+        Ok(Self { instance, seed })
     }
 
     pub fn get_seed(&self) -> u32 {
@@ -1110,36 +1181,419 @@ impl<'a> EffectContext<'a> {
     pub fn update(&mut self, frame: f32) {
         self.instance.update(frame);
     }
+}
 
-    pub fn get_state(&mut self) -> Result<&[u8], error::SSRuntimeError> {
-        let (draw_commands, draw_particles) = self.instance.get_draw_commands();
+/// High-level effect slot: wraps `EffectContext` with the per-slot lifecycle
+/// state that previously lived in each Player's effect-slot table. Callers
+/// resolve the active effect event externally (via `Context::get_active_effect_event`)
+/// and feed it to `step()` along with frame timing — `step` owns transition
+/// detection, accumulator, dead-effect skip, simulator update, and state
+/// serialization in one call.
+///
+/// The cross-language contract is identical in Rust / C / Web: 1) construct
+/// once per effect part, 2) call `step()` per frame with the resolved event
+/// and timing, 3) read `state_buf` only when `visible == true` and only
+/// before the next `step()`.
+/// Resolved emitter render resources, cached on first encounter and reused
+/// across frames. Identified by (cellmap_hash, cell_hash, blend_in) — the
+/// effect simulator may reorder emitters when siblings go silent, so the
+/// cache is keyed by content not slot index.
+struct EmitterResourceEntry {
+    cellmap_hash: u32,
+    cell_hash: u32,
+    blend_in: i32,
+    resolved_ok: bool,
+    blend_byte: u8,
+    quad_origin_x: f32,
+    quad_origin_y: f32,
+    sw: f32,
+    sh: f32,
+    u0: f32,
+    v0: f32,
+    u1: f32,
+    v1: f32,
+}
 
-        self.fb.reset();
+pub struct EffectSlot<'a> {
+    ctx: EffectContext,
+    // SSAB root, kept for cellmap lookup during draw-plan build. Borrows from
+    // the same resource as `ctx`; lifetime tied to the surrounding `'a`.
+    ssab: ssab::ssab::ss::format::SsAnimeBinary<'a>,
+    // FlatBufferBuilder owned by the slot for `EffectDrawPlan` output.
+    // Reset each `step`; buffer pointer stays valid until the next call.
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+    // Resolved emitter resources keyed by (cellmap_hash, cell_hash, blend_in).
+    emitter_resource_cache: alloc::vec::Vec<EmitterResourceEntry>,
+    // Cached at create time — never changes for a given effect resource.
+    lifetime: i32,
+    is_infinite: bool,
+    // Transition detection: any change in (event_frame, is_synthetic, independent)
+    // triggers reset/set_loop and re-seeds `accumulated_time`.
+    last_event_frame: i32,
+    last_is_synthetic: bool,
+    last_independent: bool,
+    // Independent-mode time accumulator (frame units, includes start_time bias).
+    accumulated_time: f32,
+}
 
-        let mut fbs_emitters = Vec::with_capacity(draw_commands.len());
-        for cmd in draw_commands {
-            let mut fbs_particles = Vec::with_capacity(cmd.particle_end - cmd.particle_start);
-            for p in &draw_particles[cmd.particle_start..cmd.particle_end] {
-                fbs_particles.push(crate::runtime::effect_state::ss::runtime::ParticleState::new(p.x, p.y, p.scale_x, p.scale_y, p.rotation, p.direction, p.color.a, p.color.r, p.color.g, p.color.b));
-            }
-            let particles_offset = self.fb.create_vector(&fbs_particles);
+impl<'a> EffectSlot<'a> {
+    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+        let ctx = EffectContext::new(resource, effect_name_hash, seed)?;
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
+        let lifetime = ctx.get_lifetime();
+        let is_infinite = ctx.is_infinite();
+        Ok(Self { ctx, ssab, fb: flatbuffers::FlatBufferBuilder::new(), emitter_resource_cache: alloc::vec::Vec::new(), lifetime, is_infinite, last_event_frame: -1, last_is_synthetic: false, last_independent: false, accumulated_time: 0.0 })
+    }
 
-            let mut builder = crate::runtime::effect_state::ss::runtime::EmitterStateBuilder::new(&mut self.fb);
-            builder.add_cell_name_hash(cmd.cell_name_hash);
-            builder.add_cell_map_name_hash(cmd.cell_map_name_hash);
-            builder.add_blend_type(cmd.blend_type);
-            builder.add_particles(particles_offset);
-            fbs_emitters.push(builder.finish());
+    pub fn get_seed(&self) -> u32 {
+        self.ctx.get_seed()
+    }
+
+    /// Whether the slot is currently running independently of the parent's
+    /// frame. Reflects the most recently seen `EventEffect.independent`;
+    /// used by callers to decide whether to schedule continuous tick updates.
+    pub fn is_independent(&self) -> bool {
+        self.last_independent
+    }
+
+    /// Resolve `(cellmap_hash, cell_hash, blend_in)` to render geometry/UV,
+    /// caching the result in `emitter_resource_cache`. Linear search — typical
+    /// effects have 1-3 unique tuples and the cache survives across frames.
+    /// Free-standing form so callers can split-borrow `cache` and `ssab`
+    /// independently of other `self` fields (the simulator output borrow lives
+    /// on `self.ctx.instance` simultaneously inside `build_draw_plan`).
+    fn ensure_emitter_resource_in(cache: &mut alloc::vec::Vec<EmitterResourceEntry>, ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cellmap_hash: u32, cell_hash: u32, blend_in: i32) -> usize {
+        if let Some(idx) = cache.iter().position(|c| c.cellmap_hash == cellmap_hash && c.cell_hash == cell_hash && c.blend_in == blend_in) {
+            return idx;
+        }
+        let mut entry = EmitterResourceEntry { cellmap_hash, cell_hash, blend_in, resolved_ok: false, blend_byte: 0, quad_origin_x: 0.0, quad_origin_y: 0.0, sw: 0.0, sh: 0.0, u0: 0.0, v0: 0.0, u1: 0.0, v1: 0.0 };
+
+        if cellmap_hash != 0
+            && let Some(cellmaps) = ssab.cellmaps()
+            && let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_hash)
+            && let Some(cells) = cellmap.cells()
+            && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, cell_hash)
+        {
+            // SS6-style blend mapping: 0=Mix, 1=Add. Anything else falls back to Mix.
+            entry.blend_byte = if blend_in == 1 { 1 } else { 0 };
+
+            let (src_x, src_y, sw, sh) = if let Some(rect) = cell.rectangle() { (rect.x1(), rect.y1(), rect.x2(), rect.y2()) } else { (0.0, 0.0, 0.0, 0.0) };
+            // Pivot Y is negated to match Godot's prior emit_effect_slot behavior;
+            // the Y-flip logic on the per-particle pass handles the rest of the
+            // axis convention difference.
+            let (pivot_x, pivot_y) = if let Some(p) = cell.pivot() { (p.v1(), -p.v2()) } else { (0.0, 0.0) };
+            entry.sw = sw;
+            entry.sh = sh;
+            entry.quad_origin_x = -sw * 0.5 + pivot_x * sw;
+            entry.quad_origin_y = -sh * 0.5 + pivot_y * sh;
+
+            // UV uses cellmap.size_original — the texture dimensions at SSAB build time.
+            // Atlas / scaled-texture pipelines must remap UVs engine-side.
+            let (tex_w, tex_h) = if let Some(s) = cellmap.size_original() { (s.v1(), s.v2()) } else { (1.0, 1.0) };
+            let tex_w = if tex_w > 0.0 { tex_w } else { 1.0 };
+            let tex_h = if tex_h > 0.0 { tex_h } else { 1.0 };
+            entry.u0 = src_x / tex_w;
+            entry.v0 = src_y / tex_h;
+            entry.u1 = (src_x + sw) / tex_w;
+            entry.v1 = (src_y + sh) / tex_h;
+            entry.resolved_ok = true;
         }
 
-        let emitters_offset = self.fb.create_vector(&fbs_emitters);
+        let idx = cache.len();
+        cache.push(entry);
+        idx
+    }
 
-        let mut builder = crate::runtime::effect_state::ss::runtime::EffectStateBuilder::new(&mut self.fb);
-        builder.add_emitters(emitters_offset);
-        let root = builder.finish();
+    pub fn step(&mut self, ev: crate::types::ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> crate::types::ss_effect_step_result {
+        // Parent loop edge re-arms transition detection: the same EventEffect
+        // identity (event_frame + is_synthetic) re-fires on the next playthrough,
+        // and without this reset the equality check below would treat the loop
+        // edge as a no-op (effect frozen at end of previous cycle).
+        if parent_looped {
+            self.last_event_frame = -1;
+            self.last_is_synthetic = false;
+        }
 
+        let event_frame = ev.event_frame;
+        let start_time = ev.start_time;
+        let speed = ev.speed;
+        let independent = ev.independent;
+        let is_synthetic = ev.is_synthetic_default;
+
+        let transitioned = self.last_event_frame != event_frame || self.last_is_synthetic != is_synthetic || self.last_independent != independent;
+
+        if transitioned {
+            self.ctx.reset();
+            // Set-loop semantics carried over from the SS6 player: independent
+            // effects loop within their lifetime, dependent effects play once
+            // and the C++ caller previously checked elapsed-vs-lifetime. The
+            // dead-effect early-return below covers the dependent finite case.
+            self.ctx.set_loop(independent);
+            self.last_event_frame = event_frame;
+            self.last_is_synthetic = is_synthetic;
+            self.last_independent = independent;
+            self.accumulated_time = start_time as f32;
+        }
+
+        let relative_frame: f32 = if independent {
+            // Skip the first tick after transition — `play()` snaps to start_time
+            // and stepping on the same tick would visibly overshoot frame 1.
+            if !transitioned && delta_seconds > 0.0 {
+                let delta_frames = delta_seconds * fps;
+                self.accumulated_time += delta_frames * speed;
+            }
+            self.accumulated_time
+        } else {
+            let elapsed = parent_frame - event_frame as f32;
+            if elapsed < 0.0 {
+                return crate::types::ss_effect_step_result::not_visible();
+            }
+            elapsed * speed + start_time as f32
+        };
+
+        if relative_frame < 0.0 {
+            return crate::types::ss_effect_step_result::not_visible();
+        }
+
+        // Dead-effect skip: dependent finite effect past its last particle's death.
+        // Independent effects loop (set_loop above) so they never drift past lifetime.
+        if !self.is_infinite && !independent && self.lifetime > 0 && relative_frame > self.lifetime as f32 {
+            return crate::types::ss_effect_step_result::not_visible();
+        }
+
+        self.ctx.instance.update(relative_frame);
+        let buf = self.build_draw_plan(y_flip, vert_stride);
+        if buf.is_empty() { crate::types::ss_effect_step_result::not_visible() } else { crate::types::ss_effect_step_result { visible: true, draw_plan_buf: buf.as_ptr(), draw_plan_len: buf.len() } }
+    }
+
+    /// Build the `EffectDrawPlan` FlatBuffer from the simulator's current
+    /// draw_commands + draw_particles. Resolves per-emitter resources via
+    /// `ensure_emitter_resource` (cached) and writes verts/uvs/colors/indices
+    /// concatenated for all emitters in one pass. Returns the FlatBuffer slice;
+    /// valid until the next call on this slot.
+    fn build_draw_plan(&mut self, y_flip: bool, vert_stride: u8) -> &[u8] {
+        // 180/π — avoid `core::f32::consts::PI` (the path is shadowed in this
+        // crate's no_std + libc_alloc build).
+        const DEG_TO_RAD: f32 = 0.017_453_292;
+        let stride = if vert_stride == 3 { 3usize } else { 2usize };
+        let y_sign: f32 = if y_flip { -1.0 } else { 1.0 };
+
+        // Drive the simulator and copy command keys out before we touch other
+        // `self` fields — the slices returned by `get_draw_commands` borrow from
+        // `self.ctx.instance`, so we narrow the borrow to a tight scope.
+        let cmd_keys: alloc::vec::Vec<(u32, u32, i32, usize, usize)> = {
+            let (commands, _particles) = self.ctx.instance.get_draw_commands();
+            commands.iter().map(|c| (c.cell_map_name_hash, c.cell_name_hash, c.blend_type, c.particle_start, c.particle_end)).collect()
+        };
+
+        // Phase 1: resolve resources via split-borrow on disjoint self fields.
+        let entries: alloc::vec::Vec<(usize, usize, usize)> = {
+            let cache = &mut self.emitter_resource_cache;
+            let ssab = &self.ssab;
+            cmd_keys.into_iter().map(|(cmh, ch, bi, ps, pe)| (Self::ensure_emitter_resource_in(cache, ssab, cmh, ch, bi), ps, pe)).collect()
+        };
+
+        let total_quads: usize = entries.iter().map(|(_, s, e)| e - s).sum();
+        if total_quads == 0 {
+            return &[];
+        }
+
+        let mut verts: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * stride);
+        let mut uvs: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * 2);
+        let mut colors: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * 4);
+        let mut indices: alloc::vec::Vec<i32> = alloc::vec::Vec::with_capacity(total_quads * 6);
+
+        // Snapshot resolved entries to avoid re-borrowing self.emitter_resource_cache
+        // while writing into self.fb.
+        struct Resolved {
+            ok: bool,
+            blend_byte: u8,
+            quad_origin_x: f32,
+            quad_origin_y: f32,
+            sw: f32,
+            sh: f32,
+            u0: f32,
+            v0: f32,
+            u1: f32,
+            v1: f32,
+            cellmap_hash: u32,
+        }
+        let resolved: alloc::vec::Vec<Resolved> = entries
+            .iter()
+            .map(|(i, _, _)| {
+                let e = &self.emitter_resource_cache[*i];
+                Resolved { ok: e.resolved_ok, blend_byte: e.blend_byte, quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y, sw: e.sw, sh: e.sh, u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1, cellmap_hash: e.cellmap_hash }
+            })
+            .collect();
+
+        let mut command_meta: alloc::vec::Vec<(u32, u8, u32, u32)> = alloc::vec::Vec::with_capacity(entries.len());
+
+        // Particles live on `self.ctx.instance.draw_particles`; borrow inline.
+        let particles = &self.ctx.instance.draw_particles;
+
+        for (cmd_idx, (_, p_start, p_end)) in entries.iter().enumerate() {
+            let r = &resolved[cmd_idx];
+            let particle_offset = (verts.len() / (4 * stride)) as u32;
+            let particle_count = (p_end - p_start) as u32;
+
+            if !r.ok {
+                command_meta.push((r.cellmap_hash, r.blend_byte, 0, particle_offset));
+                continue;
+            }
+
+            let lx = [r.quad_origin_x, r.quad_origin_x + r.sw, r.quad_origin_x, r.quad_origin_x + r.sw];
+            let ly = [r.quad_origin_y, r.quad_origin_y, r.quad_origin_y + r.sh, r.quad_origin_y + r.sh];
+            let uvs_corner = [r.u0, r.v0, r.u1, r.v0, r.u0, r.v1, r.u1, r.v1];
+
+            for (i, p) in particles[*p_start..*p_end].iter().enumerate() {
+                let angle = y_sign * (p.rotation * DEG_TO_RAD + p.direction);
+                let c = libm::cosf(angle);
+                let s = libm::sinf(angle);
+                let py = y_sign * p.y;
+
+                for v in 0..4 {
+                    let xx = lx[v] * p.scale_x;
+                    let yy = ly[v] * p.scale_y;
+                    let wx = c * xx - s * yy + p.x;
+                    let wy = s * xx + c * yy + py;
+                    verts.push(wx);
+                    verts.push(wy);
+                    if stride == 3 {
+                        verts.push(0.0);
+                    }
+                }
+                uvs.extend_from_slice(&uvs_corner);
+                let r_f = p.color.r as f32 / 255.0;
+                let g_f = p.color.g as f32 / 255.0;
+                let b_f = p.color.b as f32 / 255.0;
+                let a_f = p.color.a as f32 / 255.0;
+                for _ in 0..4 {
+                    colors.extend_from_slice(&[r_f, g_f, b_f, a_f]);
+                }
+                // Quad-local indices: command consumers slice [off*6 .. (off+qc)*6]
+                // and pair it with the verts slice [off*4*stride .. (off+qc)*4*stride],
+                // so values must be 0..qc*4 within the command, not global.
+                let v = (i * 4) as i32;
+                indices.extend_from_slice(&[v, v + 1, v + 2, v + 2, v + 1, v + 3]);
+            }
+
+            command_meta.push((r.cellmap_hash, r.blend_byte, particle_count, particle_offset));
+        }
+
+        // Build the FlatBuffer. Commands are inlined fixed-size structs, so
+        // we collect them as POD then create the vector in one shot — no
+        // per-element vtable/offset overhead.
+        self.fb.reset();
+        let cmds: alloc::vec::Vec<crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand> =
+            command_meta.iter().map(|(hash, blend, qc, off)| crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand::new(*hash, *qc, *off, *blend)).collect();
+        let commands_off = self.fb.create_vector(&cmds);
+        let verts_off = self.fb.create_vector(&verts);
+        let uvs_off = self.fb.create_vector(&uvs);
+        let colors_off = self.fb.create_vector(&colors);
+        let indices_off = self.fb.create_vector(&indices);
+
+        let mut plan_b = crate::runtime::effect_draw_plan::ss::runtime::EffectDrawPlanBuilder::new(&mut self.fb);
+        plan_b.add_commands(commands_off);
+        plan_b.add_vert_stride(stride as u8);
+        plan_b.add_verts(verts_off);
+        plan_b.add_uvs(uvs_off);
+        plan_b.add_colors(colors_off);
+        plan_b.add_indices(indices_off);
+        let root = plan_b.finish();
         self.fb.finish_minimal(root);
-        Ok(self.fb.finished_data())
+        self.fb.finished_data()
+    }
+}
+
+/// High-level instance-child slot: tracks the per-slot transition state
+/// previously kept in each Player's instance-children table. `step()` resolves
+/// labels against the *child* runtime context, configures the child's
+/// playback (animation section, loop, direction), and advances the child's
+/// frame — leaving only the C++/host-side `play()` event sink and the
+/// redraw call to the caller.
+pub struct InstanceSlot {
+    last_event_frame: i32,
+    last_is_synthetic: bool,
+    last_independent: bool,
+}
+
+impl Default for InstanceSlot {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl InstanceSlot {
+    pub const fn new() -> Self {
+        Self { last_event_frame: -1, last_is_synthetic: false, last_independent: false }
+    }
+
+    /// Whether the slot is currently driving its child independently of the
+    /// parent's frame. Reflects the most recently seen `EventInstance.independent`.
+    pub fn is_independent(&self) -> bool {
+        self.last_independent
+    }
+
+    /// Drive the slot for one tick. Configures `child_ctx` on transition
+    /// edges and advances its frame either by parent-relative seek or by
+    /// delta-time update depending on `independent`.
+    pub fn step(&mut self, ev: crate::types::ss_event_instance_info, child_ctx: &mut Context<'_>, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> crate::types::ss_instance_step_result {
+        if parent_looped {
+            self.last_event_frame = -1;
+            self.last_is_synthetic = false;
+        }
+
+        let transitioned = self.last_event_frame == -1 || self.last_event_frame != ev.event_frame || self.last_is_synthetic != ev.is_synthetic_default;
+
+        if transitioned {
+            // `default_end` mirrors the original C++ fallback: `getTotalFrames()-1`,
+            // i.e. (end - start). Labels resolve against absolute frame time, so
+            // the fallback is only used when label_hash == 0 — preserving the
+            // pre-refactor behavior.
+            let child_total = child_ctx.get_end_frame() - child_ctx.get_start_frame() + 1;
+            let default_end = if child_total > 0 { child_total - 1 } else { 0 };
+            let start_label_time = child_ctx.resolve_label_time(ev.start_label_hash, 0);
+            let end_label_time = child_ctx.resolve_label_time(ev.end_label_hash, default_end);
+            let start_frame = start_label_time + ev.start_offset;
+            let mut end_frame = end_label_time + ev.end_offset;
+            if end_frame < start_frame {
+                end_frame = start_frame;
+            }
+
+            let dir = if ev.reverse { crate::core::playback_controller::PlaybackDirection::Backward } else { crate::core::playback_controller::PlaybackDirection::Forward };
+            let style = if ev.pingpong { crate::core::playback_controller::PlaybackStyle::PingPong } else { crate::core::playback_controller::PlaybackStyle::Normal };
+            child_ctx.set_playback_direction(dir, style);
+            child_ctx.set_animation_section(start_frame, end_frame);
+            child_ctx.set_loop(ev.loop_num);
+
+            self.last_event_frame = ev.event_frame;
+            self.last_is_synthetic = ev.is_synthetic_default;
+        }
+
+        // Branch on `independent`. Synced children are seeked deterministically
+        // from the parent's frame each tick — same `parent_frame` always yields
+        // the same `child_frame`. Independent children own their own controller
+        // time: forward `delta_seconds` to `update`, except on the transition
+        // tick itself where `play()` will snap to start_frame (any further step
+        // here would visibly skip the first frame).
+        let child_frame_no = if ev.independent {
+            if delta_seconds > 0.0 && !transitioned {
+                let d_ms = delta_seconds * 1000.0 * ev.speed;
+                child_ctx.update(d_ms)
+            } else {
+                child_ctx.get_frame_no()
+            }
+        } else {
+            let diff = (parent_frame - ev.event_frame as f32) * ev.speed;
+            child_ctx.set_frame_relative(diff);
+            child_ctx.get_frame_no()
+        };
+
+        let child_looped = ev.independent && delta_seconds > 0.0 && child_frame_no < previous_child_frame && !transitioned;
+
+        self.last_independent = ev.independent;
+
+        crate::types::ss_instance_step_result { visible: true, transitioned, independent: ev.independent, child_frame_no, child_looped }
     }
 }
 

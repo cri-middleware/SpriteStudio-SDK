@@ -766,105 +766,127 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
     }
 }
 
+/// Create a new EffectSlot bound to `resource`. Returns null on failure
+/// (resource not loaded, effect_name_hash not found, malformed effect data).
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
+pub extern "C" fn ss_effect_slot_create(resource: *const c_void, effect_name_hash: u32, seed: u32) -> *mut c_void {
+    if resource.is_null() {
+        return core::ptr::null_mut();
+    }
     let res = unsafe { &*(resource as *const crate::SsabResource) };
-    if let Some(r) = res.resource()
-        && let Ok(effect_ctx) = crate::EffectContext::new(r, effect_name_hash, seed)
-    {
-        return Box::into_raw(Box::new(effect_ctx)) as *mut c_void;
-    }
-    core::ptr::null_mut()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_update(effect_ctx: *mut c_void, frame: f32) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    ctx.update(frame);
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_reset(effect_ctx: *mut c_void) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    ctx.reset();
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_set_loop(effect_ctx: *mut c_void, loop_flag: bool) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    ctx.set_loop(loop_flag);
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_get_lifetime(effect_ctx: *mut c_void) -> i32 {
-    if effect_ctx.is_null() {
-        return 0;
-    }
-    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
-    ctx.get_lifetime()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_is_infinite(effect_ctx: *mut c_void) -> bool {
-    if effect_ctx.is_null() {
-        return false;
-    }
-    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
-    ctx.is_infinite()
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_get_seed(effect_ctx: *mut c_void) -> u32 {
-    if effect_ctx.is_null() {
-        return 0;
-    }
-    let ctx = unsafe { &*(effect_ctx as *const crate::EffectContext) };
-    ctx.get_seed()
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_effect_get_state(effect_ctx: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
-    if effect_ctx.is_null() {
-        return;
-    }
-    let ctx = unsafe { &mut *(effect_ctx as *mut crate::EffectContext) };
-    if let Ok(ret) = ctx.get_state() {
-        unsafe {
-            if !out_data.is_null() {
-                *out_data = ret.as_ptr() as *mut c_uchar;
-            }
-            if !out_len.is_null() {
-                *out_len = ret.len();
-            }
-        }
+    let Some(r) = res.resource() else { return core::ptr::null_mut() };
+    // SAFETY: Lifetime widening matches the existing `EffectContext` FFI pattern.
+    // The caller owns `resource` and must keep it alive for the slot's lifetime
+    // (the underlying `Arc<SsabResource>` ensures the SSAB buffer outlives the slot).
+    let r_static: &'static crate::AnimationResource<'static> = unsafe { core::mem::transmute(r) };
+    match crate::EffectSlot::new(r_static, effect_name_hash, seed) {
+        Ok(slot) => Box::into_raw(Box::new(slot)) as *mut c_void,
+        Err(_) => core::ptr::null_mut(),
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_effect_destroy(effect_ctx: *mut c_void) {
-    if effect_ctx.is_null() {
+pub extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
+    if slot.is_null() {
         return;
     }
     unsafe {
-        let _ = Box::from_raw(effect_ctx as *mut crate::EffectContext);
+        let _ = Box::from_raw(slot as *mut crate::EffectSlot);
     }
 }
 
-// --- Utilities ---
+/// Advance the slot one frame. The caller resolves the active effect event
+/// (via `ss_runtime_get_active_effect_event`) and feeds it here together with
+/// timing inputs. `parent_looped` re-arms transition detection across the
+/// parent's loop edge.
+///
+/// `y_flip = true` mirrors particle Y position and rotation sign, for Y-down
+/// rendering of Y-up authored content (Godot, pixi.js). Pass `false` for
+/// Y-up engines (Unity 2D).
+///
+/// `vert_stride` selects the vertex layout of the returned `EffectDrawPlan`:
+/// `2` packs (x, y) pairs (Godot, pixi.js, wgpu); `3` packs (x, y, 0) triples
+/// (Unity Mesh, Unreal procedural mesh). Other values fall back to `2`.
+///
+/// Returns `EffectDrawPlan` FlatBuffer pointer + length when visible. Buffer
+/// is valid only until the next call on the same slot.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_slot_step(slot: *mut c_void, ev: ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> ss_effect_step_result {
+    if slot.is_null() {
+        return ss_effect_step_result::not_visible();
+    }
+    let slot = unsafe { &mut *(slot as *mut crate::EffectSlot) };
+    slot.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride)
+}
 
 #[unsafe(no_mangle)]
-/// Calculate the target frame for a child instance animation.
-pub extern "C" fn ss_util_calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
-    crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
+pub extern "C" fn ss_effect_slot_get_seed(slot: *mut c_void) -> u32 {
+    if slot.is_null() {
+        return 0;
+    }
+    let slot = unsafe { &*(slot as *const crate::EffectSlot) };
+    slot.get_seed()
+}
+
+/// Whether the slot is currently running independently of the parent's frame.
+/// Reflects the most recently seen `EventEffect.independent`. Callers use
+/// this to decide whether to schedule continuous tick updates regardless of
+/// parent frame change.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_slot_is_independent(slot: *mut c_void) -> bool {
+    if slot.is_null() {
+        return false;
+    }
+    let slot = unsafe { &*(slot as *const crate::EffectSlot) };
+    slot.is_independent()
+}
+
+/// Create a fresh InstanceSlot. Slots are stateless at construction (no
+/// resource binding) — `step` operates against a child runtime context
+/// supplied per call.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_create() -> *mut c_void {
+    Box::into_raw(Box::new(crate::InstanceSlot::new())) as *mut c_void
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_destroy(slot: *mut c_void) {
+    if slot.is_null() {
+        return;
+    }
+    unsafe {
+        let _ = Box::from_raw(slot as *mut crate::InstanceSlot);
+    }
+}
+
+/// Drive the instance slot for one tick. The caller resolves the active
+/// EventInstance (via `ss_runtime_get_active_event_instance` against the
+/// *parent* runtime context) and passes the *child* runtime context here so
+/// that label resolution and frame stepping happen against the right Context.
+/// `previous_child_frame` is the child's frame_no before this tick — used
+/// only to detect independent-mode loop edges.
+/// Returns `transitioned == true` on EventInstance edges; the caller is
+/// responsible for any side effects tied to `play()` (event-sink notifications)
+/// since those are host-side concerns.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
+    if slot.is_null() {
+        return ss_instance_step_result::not_visible();
+    }
+    let Some(child_ffi) = get_context(child_ctx) else {
+        return ss_instance_step_result::not_visible();
+    };
+    let slot = unsafe { &mut *(slot as *mut crate::InstanceSlot) };
+    slot.step(ev, &mut child_ffi.ctx, previous_child_frame, parent_frame, delta_seconds, parent_looped)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_is_independent(slot: *mut c_void) -> bool {
+    if slot.is_null() {
+        return false;
+    }
+    let slot = unsafe { &*(slot as *const crate::InstanceSlot) };
+    slot.is_independent()
 }
 
 /// Set the render mode. `mode` is interpreted as:
@@ -956,38 +978,6 @@ pub unsafe extern "C" fn ss_context_get_unit(context: *mut c_void) -> i32 {
 }
 
 #[unsafe(no_mangle)]
-/// Transform multiple particle positions by a matrix.
-/// matrix_ptr: pointer to float array of size 16.
-/// particles_ptr: pointer to ParticleState array from ss_effect_get_state.
-/// count: number of particles.
-/// out_pos_ptr: pointer to float array (x, y, x, y, ...) to store transformed 2D coordinates.
-pub unsafe extern "C" fn ss_effect_transform_particles(matrix_ptr: *const f32, particles_ptr: *const c_void, count: i32, out_pos_ptr: *mut f32) {
-    if matrix_ptr.is_null() || particles_ptr.is_null() || out_pos_ptr.is_null() {
-        return;
-    }
-
-    let mut m_arr = [0.0f32; 16];
-    unsafe {
-        core::ptr::copy_nonoverlapping(matrix_ptr, m_arr.as_mut_ptr(), 16);
-    }
-    let matrix = crate::core::SsMatrix4x4::from_array(m_arr);
-
-    // particles_ptr is a pointer to [ParticleState; count]
-    // Layout from effect_state.fbs: stride = 28
-    let len = (count as usize) * 28;
-    let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr as *const u8, len) };
-
-    let transformed = crate::core::util::transform_particles(&matrix, particles_raw);
-
-    for (i, (tx, ty)) in transformed.into_iter().enumerate() {
-        unsafe {
-            *(out_pos_ptr.add(i * 2)) = tx;
-            *(out_pos_ptr.add(i * 2 + 1)) = ty;
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_passed_event_count(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.get_passed_event_indices().len() as i32;
@@ -1021,6 +1011,19 @@ pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slo
         return ffi_context.ctx.get_active_event_instance(slot_index);
     }
     ss_event_instance_info::synthetic_default()
+}
+
+/// Resolve the active `EventEffect` for `slot_index` on the parent's
+/// currently selected animation, at the current frame. When no real event
+/// has fired yet, falls back to `InitialEvents.effect` for the slot (with
+/// `is_synthetic_default = true`); if neither exists, returns full SS6
+/// defaults (`start_time = 0`, `speed = 1.0`, `independent = false`).
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_active_effect_event(context: *mut c_void, slot_index: u32) -> ss_effect_event_info {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.get_active_effect_event(slot_index);
+    }
+    ss_effect_event_info::synthetic_default()
 }
 
 /// Look up a label by `label_hash` in this runtime's currently selected

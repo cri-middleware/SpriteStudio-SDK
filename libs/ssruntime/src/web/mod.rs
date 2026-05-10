@@ -402,84 +402,140 @@ impl SSRuntimeContext {
     }
 }
 
+/// JS-friendly wrapper of `EffectSlot`. Same conceptual flow as the C FFI:
+/// 1) construct via `create`, 2) call `step` per frame with the resolved
+/// active event and timing, 3) read `draw_plan_buf`/`draw_plan_len` only
+/// when `step` returned `true` and only before the next call.
 #[wasm_bindgen]
-pub struct SSRuntimeEffectContext {
-    inner: crate::EffectContext<'static>,
+pub struct SSRuntimeEffectSlot {
+    inner: crate::EffectSlot<'static>,
     #[allow(dead_code)]
     resource_handle: Arc<SsabResource>,
+    last_draw_plan_ptr: *const u8,
+    last_draw_plan_len: usize,
 }
 
 #[wasm_bindgen]
-impl SSRuntimeEffectContext {
-    pub fn create(resource: &SSRuntimeResource, effect_name_hash: u32, seed: u32) -> Result<SSRuntimeEffectContext, JsValue> {
+impl SSRuntimeEffectSlot {
+    pub fn create(resource: &SSRuntimeResource, effect_name_hash: u32, seed: u32) -> Result<SSRuntimeEffectSlot, JsValue> {
         let res_ptr = resource.inner.resource_static_ptr();
         if res_ptr.is_null() {
             return Err(JsValue::from_str("Resource not initialized"));
         }
-        // Safety: resource_handle holds the Arc, keeping the buffer alive.
         let resource_handle = resource.inner.clone();
-        match crate::EffectContext::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
-            Ok(inner) => Ok(SSRuntimeEffectContext { inner, resource_handle }),
+        match crate::EffectSlot::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
+            Ok(inner) => Ok(SSRuntimeEffectSlot { inner, resource_handle, last_draw_plan_ptr: core::ptr::null(), last_draw_plan_len: 0 }),
             Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
         }
     }
 
-    pub fn update(&mut self, frame: f32) {
-        self.inner.update(frame);
+    /// Advance one frame. `event_*` parameters are the fields of the event
+    /// info returned by `Context::get_active_effect_event` (passed flat for
+    /// JS-side ergonomics — wasm-bindgen does not expose `#[repr(C)]` POD
+    /// structs as constructible classes).
+    /// `y_flip = true` for Y-down rendering (pixi.js); `vert_stride = 2` packs
+    /// (x,y) verts, `3` packs (x,y,0) for engines requiring 3-component verts.
+    /// Returns `true` if visible; on `true` callers read the plan via
+    /// `get_draw_plan_buf` / `get_draw_plan_len` before the next step.
+    #[allow(clippy::too_many_arguments)]
+    pub fn step(&mut self, event_frame: i32, start_time: i32, speed: f32, independent: bool, is_synthetic_default: bool, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> bool {
+        let ev = crate::types::ss_effect_event_info { event_frame, start_time, speed, independent, is_synthetic_default };
+        let r = self.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride);
+        self.last_draw_plan_ptr = r.draw_plan_buf;
+        self.last_draw_plan_len = r.draw_plan_len;
+        r.visible
     }
 
-    pub fn reset(&mut self) {
-        self.inner.reset();
+    pub fn get_draw_plan_buf(&self) -> *const u8 {
+        self.last_draw_plan_ptr
     }
 
-    pub fn get_lifetime(&self) -> i32 {
-        self.inner.get_lifetime()
-    }
-
-    pub fn is_infinite(&self) -> bool {
-        self.inner.is_infinite()
+    pub fn get_draw_plan_len(&self) -> usize {
+        self.last_draw_plan_len
     }
 
     pub fn get_seed(&self) -> u32 {
         self.inner.get_seed()
     }
 
-    pub fn get_state_buf(&mut self) -> Result<*const u8, JsValue> {
-        self.inner.get_state().map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
-    pub fn get_state_len(&mut self) -> Result<usize, JsValue> {
-        self.inner.get_state().map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn is_independent(&self) -> bool {
+        self.inner.is_independent()
     }
 }
 
+/// JS-friendly wrapper of `InstanceSlot`. Same conceptual flow as the C FFI:
+/// 1) construct via `create`, 2) call `step` per frame with the resolved
+/// active event, child context, and timing, 3) on `transitioned == true`
+/// fire any host-side `play()` side effects (event sinks etc.).
 #[wasm_bindgen]
-pub struct SSRuntimeUtils;
+pub struct SSRuntimeInstanceSlot {
+    inner: crate::InstanceSlot,
+    last_visible: bool,
+    last_transitioned: bool,
+    last_independent: bool,
+    last_child_frame_no: f32,
+    last_child_looped: bool,
+}
 
 #[wasm_bindgen]
-impl SSRuntimeUtils {
-    pub fn calculate_instance_frame(parent_frame: f32, key_frame: i32, start_offset: i32, speed: f32, independent: bool, accumulated_time: f32) -> f32 {
-        crate::core::util::calculate_instance_frame(parent_frame, key_frame, start_offset, speed, independent, accumulated_time)
+impl SSRuntimeInstanceSlot {
+    pub fn create() -> SSRuntimeInstanceSlot {
+        SSRuntimeInstanceSlot { inner: crate::InstanceSlot::new(), last_visible: false, last_transitioned: false, last_independent: false, last_child_frame_no: 0.0, last_child_looped: false }
     }
 
-    #[allow(clippy::not_unsafe_ptr_arg_deref)]
-    pub fn transform_particles(matrix_arr: &[f32], particles_ptr: *const u8, count: i32) -> Result<Box<[f32]>, JsValue> {
-        if matrix_arr.len() < 16 {
-            return Err(JsValue::from_str("Invalid matrix size"));
-        }
-        let mut m_arr = [0.0f32; 16];
-        m_arr.copy_from_slice(&matrix_arr[0..16]);
-        let matrix = crate::core::SsMatrix4x4::from_array(m_arr);
+    /// Advance one tick. `event_*` parameters are the fields of the event
+    /// info returned by `Context::get_active_event_instance` (passed flat for
+    /// JS-side ergonomics). `child_ctx` must be the *child* runtime — label
+    /// resolution and frame stepping run against it.
+    /// Returns `true` if visible. Inspect `transitioned`, `independent`,
+    /// `child_frame_no`, `child_looped` via the corresponding getters.
+    #[allow(clippy::too_many_arguments)]
+    pub fn step(
+        &mut self,
+        child_ctx: &mut SSRuntimeContext,
+        event_frame: i32,
+        start_label_hash: u32,
+        start_offset: i32,
+        end_label_hash: u32,
+        end_offset: i32,
+        loop_num: i32,
+        speed: f32,
+        independent: bool,
+        reverse: bool,
+        pingpong: bool,
+        is_synthetic_default: bool,
+        previous_child_frame: f32,
+        parent_frame: f32,
+        delta_seconds: f32,
+        parent_looped: bool,
+    ) -> bool {
+        let ev = crate::types::ss_event_instance_info { event_frame, start_label_hash, start_offset, end_label_hash, end_offset, loop_num, speed, independent, reverse, pingpong, is_synthetic_default };
+        let r = self.inner.step(ev, &mut child_ctx.inner, previous_child_frame, parent_frame, delta_seconds, parent_looped);
+        self.last_visible = r.visible;
+        self.last_transitioned = r.transitioned;
+        self.last_independent = r.independent;
+        self.last_child_frame_no = r.child_frame_no;
+        self.last_child_looped = r.child_looped;
+        r.visible
+    }
 
-        let len = (count as usize) * 28;
-        let particles_raw = unsafe { core::slice::from_raw_parts(particles_ptr, len) };
+    pub fn transitioned(&self) -> bool {
+        self.last_transitioned
+    }
 
-        let transformed = crate::core::util::transform_particles(&matrix, particles_raw);
-        let mut result = alloc::vec::Vec::with_capacity(transformed.len() * 2);
-        for (x, y) in transformed {
-            result.push(x);
-            result.push(y);
-        }
-        Ok(result.into_boxed_slice())
+    pub fn independent(&self) -> bool {
+        self.last_independent
+    }
+
+    pub fn child_frame_no(&self) -> f32 {
+        self.last_child_frame_no
+    }
+
+    pub fn child_looped(&self) -> bool {
+        self.last_child_looped
+    }
+
+    pub fn is_independent(&self) -> bool {
+        self.inner.is_independent()
     }
 }

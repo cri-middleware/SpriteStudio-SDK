@@ -1,0 +1,47 @@
+namespace ss.runtime;
+
+// Per-emitter draw command. The caller (engine adapter) resolves
+// `cellmap_hash` to its own Texture handle and maps `blend` to the engine's
+// blend mode. Geometry, UV, and per-vertex color all live in the parent
+// `EffectDrawPlan`'s flat arrays — this command points at a contiguous slice.
+//
+// Slice indexing (with vert_stride read off the parent plan):
+//   verts[particle_offset * 4 * vert_stride .. (particle_offset + quad_count) * 4 * vert_stride]
+//   uvs   [particle_offset * 4 * 2          .. (particle_offset + quad_count) * 4 * 2]
+//   colors[particle_offset * 4 * 4          .. (particle_offset + quad_count) * 4 * 4]
+//   indices[particle_offset * 6             .. (particle_offset + quad_count) * 6]
+//     ↑ values are quad-local (0..quad_count*4), engine slices the buffer and
+//     passes it alongside the slot-relative verts; no rebasing needed.
+//
+// Declared as a struct (fixed-size, inline, no vtable) since all fields are
+// required, the wire layout is stable, and we want zero overhead per element
+// for tight per-emitter arrays. Layout: 4+4+4+1 + 3 padding = 16 bytes.
+struct EffectDrawCommand {
+    cellmap_hash: uint32;
+    quad_count: uint32;
+    particle_offset: uint32;
+    blend: ubyte;          // raw EmitterState.blend_type (0=Mix 1=Add)
+}
+
+// Whole-slot rendering plan, returned by `EffectSlot::step` /
+// `ss_effect_slot_step`. All emitters are concatenated into single flat
+// buffers (verts/uvs/colors/indices) so consumers can render with one
+// `memcpy + draw` per command.
+//
+// `vert_stride` is 2 (XY) for 2D-native engines (Godot, pixi.js) or 3 (XYZ
+// with z=0) for engines that demand 3-component verts (Unity Mesh, Unreal
+// FProcMeshVertex). Selected per `step` call.
+//
+// `y_flip` was applied during emission per the caller's request — Y-down
+// engines pass true so authored Y-up content composes correctly without an
+// engine-side transform reversal.
+table EffectDrawPlan {
+    commands: [EffectDrawCommand];
+    vert_stride: ubyte;     // 2 or 3
+    verts:   [float];       // total_quads * 4 * vert_stride
+    uvs:     [float];       // total_quads * 4 * 2
+    colors:  [float];       // total_quads * 4 * 4 (RGBA, normalized 0..1)
+    indices: [int];         // total_quads * 6, quad-local indices
+}
+
+root_type EffectDrawPlan;
