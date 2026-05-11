@@ -618,7 +618,7 @@ pub extern "C" fn ss_runtime_get_remain_loops(context: *mut c_void) -> i32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_start_frame(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.controller.get_start_frame();
+        return ffi_context.ctx.get_start_frame();
     }
     0
 }

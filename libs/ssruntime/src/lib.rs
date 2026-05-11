@@ -375,7 +375,15 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
-struct ContextBuffers<'a> {
+/// Per-layer pose buffers — the immediate output of `extract_local_pose`,
+/// before any cross-layer composition. SRT / Color / Cell ID / Vertex /
+/// Deform / Cursor live here, as do the pose-derived per-part buffers
+/// (`cell_meta_per_part`, `cell_texture_hashes`, `local_vertices`) that
+/// are written in lockstep with the pose evaluation.
+///
+/// Phase 3 will introduce a second `LayerState` per instance and a
+/// `mix_poses()` stage between Phase 1 and Phase 2.
+struct LayerState<'a> {
     parts_vec: Vec<crate::runtime::framedata::ss::runtime::PartState>,
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
     parts_color_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
@@ -383,19 +391,12 @@ struct ContextBuffers<'a> {
     vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
-    collected_event_indices: Vec<i32>,
-    world_matrices: Vec<crate::core::SsMatrix4x4>,
-    inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
-    local_uvs: Vec<f32>,
     cell_meta_per_part: Vec<f32>,
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
-    shape_vertices: Vec<f32>,
-    shape_vertex_box_coords: Vec<f32>,
-    shape_vertex_counts: Vec<i32>,
 }
 
-impl<'a> ContextBuffers<'a> {
+impl<'a> LayerState<'a> {
     fn new() -> Self {
         Self {
             parts_vec: Vec::new(),
@@ -405,31 +406,86 @@ impl<'a> ContextBuffers<'a> {
             vertice_vec: Vec::new(),
             deform_vec: Vec::new(),
             cursors: Vec::new(),
-            collected_event_indices: Vec::new(),
-            world_matrices: Vec::new(),
-            inheritance_matrices: Vec::new(),
-            local_uvs: Vec::new(),
             cell_meta_per_part: Vec::new(),
             cell_texture_hashes: Vec::new(),
             local_vertices: Vec::new(),
-            shape_vertices: Vec::new(),
-            shape_vertex_box_coords: Vec::new(),
-            shape_vertex_counts: Vec::new(),
+        }
+    }
+}
+
+/// Per-instance global buffers — the output of `resolve_global_state`.
+/// World matrices, UVs, and shape vertices are composited from the
+/// (possibly Phase 3-blended) `LayerState` pose; they are not per-layer.
+struct GlobalBuffers {
+    world_matrices: Vec<crate::core::SsMatrix4x4>,
+    inheritance_matrices: Vec<crate::core::SsMatrix4x4>,
+    local_uvs: Vec<f32>,
+    shape_vertices: Vec<f32>,
+    shape_vertex_box_coords: Vec<f32>,
+    shape_vertex_counts: Vec<i32>,
+}
+
+impl GlobalBuffers {
+    fn new() -> Self {
+        Self { world_matrices: Vec::new(), inheritance_matrices: Vec::new(), local_uvs: Vec::new(), shape_vertices: Vec::new(), shape_vertex_box_coords: Vec::new(), shape_vertex_counts: Vec::new() }
+    }
+}
+
+/// Static / shareable evaluation context. The resource borrow and the
+/// FlatBufferBuilder workspace live here because they are candidates for
+/// inter-instance sharing in Phase 3 (group instancing: one resource +
+/// one fb workspace driving N lightweight instances serially).
+struct EvaluationContext<'a> {
+    resource: Option<&'a AnimationResource<'a>>,
+    fb: flatbuffers::FlatBufferBuilder<'a>,
+}
+
+impl<'a> EvaluationContext<'a> {
+    fn new() -> Self {
+        Self { resource: None, fb: flatbuffers::FlatBufferBuilder::new() }
+    }
+}
+
+/// Per-instance playback state. Owns the playback controller, the
+/// active layer's pose data, the resolved global buffers, and the
+/// configuration knobs that influence frame evaluation. Designed to
+/// be the "Lightweight Instance" of Phase 3 — many of these can coexist
+/// against a single shared `EvaluationContext`.
+struct InstanceState<'a> {
+    controller: core::playback_controller::PlaybackController,
+    animation_idx: i32,
+    z_order: crate::core::z_order::ZOrderTable,
+    /// Currently a single layer; Phase 3 will widen this into an array
+    /// (or array wrapper) so blend sources can each own a pose buffer.
+    layer: LayerState<'a>,
+    globals: GlobalBuffers,
+    collected_event_indices: Vec<i32>,
+    coordinate_system: crate::core::SsCoordinateSystem,
+    origin: crate::core::SsOrigin,
+    unit: crate::core::SsUnit,
+    render_mode: crate::core::RenderMode,
+}
+
+impl<'a> InstanceState<'a> {
+    fn new() -> Self {
+        Self {
+            controller: core::playback_controller::PlaybackController::new(),
+            animation_idx: -1,
+            z_order: crate::core::z_order::ZOrderTable::new(),
+            layer: LayerState::new(),
+            globals: GlobalBuffers::new(),
+            collected_event_indices: Vec::new(),
+            coordinate_system: crate::core::SsCoordinateSystem::default(),
+            origin: crate::core::SsOrigin::default(),
+            unit: crate::core::SsUnit::default(),
+            render_mode: crate::core::RenderMode::default(),
         }
     }
 }
 
 pub struct Context<'a> {
-    resource: Option<&'a AnimationResource<'a>>,
-    fb: flatbuffers::FlatBufferBuilder<'a>,
-    controller: core::playback_controller::PlaybackController,
-    animation_idx: i32,
-    buffers: ContextBuffers<'a>,
-    coordinate_system: crate::core::SsCoordinateSystem,
-    origin: crate::core::SsOrigin,
-    unit: crate::core::SsUnit,
-    render_mode: crate::core::RenderMode,
-    z_order: crate::core::z_order::ZOrderTable,
+    eval: EvaluationContext<'a>,
+    instance: InstanceState<'a>,
 }
 
 impl<'a> Default for Context<'a> {
@@ -440,52 +496,41 @@ impl<'a> Default for Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new() -> Self {
-        Context {
-            resource: None,
-            fb: flatbuffers::FlatBufferBuilder::new(),
-            controller: core::playback_controller::PlaybackController::new(),
-            animation_idx: -1,
-            buffers: ContextBuffers::new(),
-            coordinate_system: crate::core::SsCoordinateSystem::default(),
-            origin: crate::core::SsOrigin::default(),
-            unit: crate::core::SsUnit::default(),
-            render_mode: crate::core::RenderMode::default(),
-            z_order: crate::core::z_order::ZOrderTable::new(),
-        }
+        Context { eval: EvaluationContext::new(), instance: InstanceState::new() }
     }
 
     pub fn reset(&mut self) {
-        self.resource = None;
-        self.controller.reset_setup();
-        self.fb.reset();
-        self.animation_idx = -1;
-        self.buffers.cursors.clear();
-        self.coordinate_system = crate::core::SsCoordinateSystem::default();
-        self.origin = crate::core::SsOrigin::default();
-        self.unit = crate::core::SsUnit::default();
-        self.render_mode = crate::core::RenderMode::default();
-        self.z_order = crate::core::z_order::ZOrderTable::new();
+        self.eval.resource = None;
+        self.eval.fb.reset();
+        self.instance.controller.reset_setup();
+        self.instance.animation_idx = -1;
+        self.instance.layer.cursors.clear();
+        self.instance.coordinate_system = crate::core::SsCoordinateSystem::default();
+        self.instance.origin = crate::core::SsOrigin::default();
+        self.instance.unit = crate::core::SsUnit::default();
+        self.instance.render_mode = crate::core::RenderMode::default();
+        self.instance.z_order = crate::core::z_order::ZOrderTable::new();
     }
 
     pub fn set_render_mode(&mut self, mode: crate::core::RenderMode) {
-        self.render_mode = mode;
+        self.instance.render_mode = mode;
     }
 
     pub fn render_mode(&self) -> crate::core::RenderMode {
-        self.render_mode
+        self.instance.render_mode
     }
 
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
-        self.resource = Some(resource);
-        self.controller.reset_setup();
-        self.fb.reset();
-        self.animation_idx = -1;
-        self.buffers.cursors.clear();
+        self.eval.resource = Some(resource);
+        self.eval.fb.reset();
+        self.instance.controller.reset_setup();
+        self.instance.animation_idx = -1;
+        self.instance.layer.cursors.clear();
         // Configuration (coordinate_system, origin, unit) is preserved.
     }
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
-        self.resource.map(|r| r.get_ssab_data())
+        self.eval.resource.map(|r| r.get_ssab_data())
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -494,7 +539,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn setup_animation_by_hash(&mut self, hash: u32) -> Result<(), error::SSRuntimeError> {
-        let Some(resource) = self.resource else {
+        let Some(resource) = self.eval.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
 
@@ -503,8 +548,8 @@ impl<'a> Context<'a> {
         };
 
         let metadata = &resource.animations[index];
-        self.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
-        self.animation_idx = index as i32;
+        self.instance.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
+        self.instance.animation_idx = index as i32;
 
         let num_parts = metadata.cached_parts.len();
 
@@ -532,135 +577,165 @@ impl<'a> Context<'a> {
             }
         }
 
-        self.buffers.parts_vec.clear();
-        self.buffers.parts_vec.reserve(num_parts);
-        self.buffers.cell_vec.clear();
-        self.buffers.cell_vec.reserve(cell_c);
-        self.buffers.parts_color_vec.clear();
-        self.buffers.parts_color_vec.reserve(color_c);
-        self.buffers.shader_vec.clear();
-        self.buffers.shader_vec.reserve(shader_c);
-        self.buffers.vertice_vec.clear();
-        self.buffers.vertice_vec.reserve(vertex_c);
-        self.buffers.deform_vec.clear();
-        self.buffers.deform_vec.reserve(deform_c);
+        let layer = &mut self.instance.layer;
+        layer.parts_vec.clear();
+        layer.parts_vec.reserve(num_parts);
+        layer.cell_vec.clear();
+        layer.cell_vec.reserve(cell_c);
+        layer.parts_color_vec.clear();
+        layer.parts_color_vec.reserve(color_c);
+        layer.shader_vec.clear();
+        layer.shader_vec.reserve(shader_c);
+        layer.vertice_vec.clear();
+        layer.vertice_vec.reserve(vertex_c);
+        layer.deform_vec.clear();
+        layer.deform_vec.reserve(deform_c);
 
-        self.buffers.cursors.clear();
-        self.buffers.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+        layer.cursors.clear();
+        layer.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+        layer.cell_meta_per_part.clear();
+        layer.cell_meta_per_part.resize(num_parts * 6, 0.0);
+        layer.cell_texture_hashes.clear();
+        layer.cell_texture_hashes.resize(num_parts, 0);
+        layer.local_vertices.clear();
+        layer.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
 
-        self.buffers.world_matrices.clear();
-        self.buffers.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
-        self.buffers.inheritance_matrices.clear();
-        self.buffers.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
-        self.buffers.local_uvs.clear();
-        self.buffers.local_uvs.resize(num_parts * 10, 0.0);
-        self.buffers.cell_meta_per_part.clear();
-        self.buffers.cell_meta_per_part.resize(num_parts * 6, 0.0);
-        self.buffers.cell_texture_hashes.clear();
-        self.buffers.cell_texture_hashes.resize(num_parts, 0);
-        self.buffers.local_vertices.clear();
-        self.buffers.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
-        self.buffers.shape_vertices.clear();
-        self.buffers.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
-        self.buffers.shape_vertex_box_coords.clear();
-        self.buffers.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
-        self.buffers.shape_vertex_counts.clear();
-        self.buffers.shape_vertex_counts.resize(num_parts, 0);
+        let globals = &mut self.instance.globals;
+        globals.world_matrices.clear();
+        globals.world_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        globals.inheritance_matrices.clear();
+        globals.inheritance_matrices.resize(num_parts, crate::core::SsMatrix4x4::IDENTITY);
+        globals.local_uvs.clear();
+        globals.local_uvs.resize(num_parts * 10, 0.0);
+        globals.shape_vertices.clear();
+        globals.shape_vertices.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        globals.shape_vertex_box_coords.clear();
+        globals.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
+        globals.shape_vertex_counts.clear();
+        globals.shape_vertex_counts.resize(num_parts, 0);
 
-        self.z_order.setup(&metadata.cached_parts);
+        self.instance.z_order.setup(&metadata.cached_parts);
 
         Ok(())
     }
 
     pub fn update_animation(&mut self, delta_time: f32) {
-        self.controller.update(delta_time);
+        self.instance.controller.update(delta_time);
     }
 
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
-        let Some(resource) = self.resource else {
+        let Some(resource) = self.eval.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
         };
 
-        if self.animation_idx < 0 {
+        if self.instance.animation_idx < 0 {
             return Err(error::SSRuntimeError::AnimationNotFound);
         }
 
-        let metadata = &resource.animations[self.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.animation_idx as usize];
         if !((metadata.start_frame as f32) <= frame_no && frame_no <= (metadata.end_frame as f32)) {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
-        self.fb.reset();
+        self.eval.fb.reset();
 
-        let offset = core::framedata::get_frame_data(
-            &mut self.fb,
+        // Phase 1: extract local pose from the SSAB frame data.
+        let offset = Self::extract_local_pose(&mut self.eval, &mut self.instance, metadata, frame_no);
+
+        // Phase 3 hook: blend layers via `mix_poses(...)` between phase 1 and 2
+        // once a second `LayerState` is available. The pipeline shape is the
+        // intentional surface for that hand-off.
+
+        // Phase 2: resolve global state (matrices / UVs / shape vertices)
+        // from the (already-composed) local pose.
+        Self::resolve_global_state(&mut self.instance, metadata);
+
+        self.eval.fb.finish_minimal(offset);
+        Ok(self.eval.fb.finished_data())
+    }
+
+    /// Phase 1 of the frame pipeline. Walks the cached SSAB part data and
+    /// fills the active layer's pose buffer (`parts_vec` / `cell_vec` / …)
+    /// plus the pose-derived per-part buffers (`cell_meta_per_part`,
+    /// `cell_texture_hashes`, `local_vertices`). Returns the in-flight
+    /// `FrameData` WIPOffset so the caller can finish the FlatBuffer once
+    /// any future blend step has run.
+    fn extract_local_pose(eval: &mut EvaluationContext<'a>, instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>, frame_no: f32) -> flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::FrameData<'a>> {
+        let layer = &mut instance.layer;
+        core::framedata::get_frame_data(
+            &mut eval.fb,
             &metadata.cached_parts,
             frame_no,
-            &mut self.z_order,
-            &mut self.buffers.parts_vec,
-            &mut self.buffers.cell_vec,
-            &mut self.buffers.parts_color_vec,
-            &mut self.buffers.shader_vec,
-            &mut self.buffers.vertice_vec,
-            &mut self.buffers.deform_vec,
-            &mut self.buffers.cursors,
-            &mut self.buffers.cell_meta_per_part,
-            &mut self.buffers.cell_texture_hashes,
-            &mut self.buffers.local_vertices,
-            self.coordinate_system,
-            self.origin,
-            self.unit,
+            &mut instance.z_order,
+            &mut layer.parts_vec,
+            &mut layer.cell_vec,
+            &mut layer.parts_color_vec,
+            &mut layer.shader_vec,
+            &mut layer.vertice_vec,
+            &mut layer.deform_vec,
+            &mut layer.cursors,
+            &mut layer.cell_meta_per_part,
+            &mut layer.cell_texture_hashes,
+            &mut layer.local_vertices,
+            instance.coordinate_system,
+            instance.origin,
+            instance.unit,
             metadata.canvas_width,
             metadata.canvas_height,
-        );
+        )
+    }
 
-        if self.render_mode == crate::core::RenderMode::Direct {
-            self.compute_matrices(&metadata.cached_parts);
+    /// Phase 2 of the frame pipeline. Consumes the (post-mix) local pose
+    /// in `instance.layer` and writes per-instance global outputs in
+    /// `instance.globals` — world / inheritance matrices, local UVs,
+    /// and shape vertex buffers.
+    fn resolve_global_state(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
+        if instance.render_mode == crate::core::RenderMode::Direct {
+            Self::compute_matrices(instance, &metadata.cached_parts);
         }
-
-        self.compute_local_uvs(&metadata.cached_parts);
-
-        self.compute_shape_vertices(&metadata.cached_parts);
-
-        self.fb.finish_minimal(offset);
-        Ok(self.fb.finished_data())
+        Self::compute_local_uvs(instance, &metadata.cached_parts);
+        Self::compute_shape_vertices(instance, &metadata.cached_parts);
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn compute_matrices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        for i in 0..self.buffers.parts_vec.len() {
+    fn compute_matrices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let layer = &instance.layer;
+        let globals = &mut instance.globals;
+        for i in 0..layer.parts_vec.len() {
             let parent_idx = cached_parts[i].parent_index;
             let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
 
-            let parent_world = valid_parent_idx.map(|p_idx| &self.buffers.inheritance_matrices[p_idx]);
+            let parent_world = valid_parent_idx.map(|p_idx| &globals.inheritance_matrices[p_idx]);
             let parent_size = valid_parent_idx.map(|p_idx| {
-                let p_state = &self.buffers.parts_vec[p_idx];
+                let p_state = &layer.parts_vec[p_idx];
                 (p_state.size_x(), p_state.size_y())
             });
 
-            let part_state = &self.buffers.parts_vec[i];
+            let part_state = &layer.parts_vec[i];
             let (inh_m, draw_m) = crate::core::SsMatrix4x4::compute_world_matrix(part_state, parent_world, parent_size);
-            self.buffers.inheritance_matrices[i] = inh_m;
-            self.buffers.world_matrices[i] = draw_m;
+            globals.inheritance_matrices[i] = inh_m;
+            globals.world_matrices[i] = draw_m;
         }
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn compute_local_uvs(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let num_parts = self.buffers.parts_vec.len();
-        if self.buffers.local_uvs.len() != num_parts * 10 {
-            self.buffers.local_uvs.resize(num_parts * 10, 0.0);
+    fn compute_local_uvs(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let layer = &instance.layer;
+        let globals = &mut instance.globals;
+        let num_parts = layer.parts_vec.len();
+        if globals.local_uvs.len() != num_parts * 10 {
+            globals.local_uvs.resize(num_parts * 10, 0.0);
         }
-        for slot in self.buffers.local_uvs.iter_mut() {
+        for slot in globals.local_uvs.iter_mut() {
             *slot = 0.0;
         }
 
         for i in 0..num_parts {
-            let state = &self.buffers.parts_vec[i];
+            let state = &layer.parts_vec[i];
             if state.cell() < 0 {
                 continue;
             }
-            let cursor = self.buffers.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
+            let cursor = layer.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
             let Some(meta) = cached_parts[i].resolved_cells.get(cursor) else { continue };
             if meta.size_w == 0.0 && meta.size_h == 0.0 {
                 continue;
@@ -676,40 +751,41 @@ impl<'a> Context<'a> {
 
             let offset = i * 10;
             for k in 0..5 {
-                self.buffers.local_uvs[offset + k * 2] = us[k];
-                self.buffers.local_uvs[offset + k * 2 + 1] = vs[k];
+                globals.local_uvs[offset + k * 2] = us[k];
+                globals.local_uvs[offset + k * 2 + 1] = vs[k];
             }
         }
     }
 
     #[allow(clippy::needless_range_loop)]
-    fn compute_shape_vertices(&mut self, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let num_parts = self.buffers.parts_vec.len();
+    fn compute_shape_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let coordinate_system = instance.coordinate_system;
+        let layer = &instance.layer;
+        let globals = &mut instance.globals;
+        let num_parts = layer.parts_vec.len();
         let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
-        if self.buffers.shape_vertices.len() != num_parts * stride {
-            self.buffers.shape_vertices.resize(num_parts * stride, 0.0);
+        if globals.shape_vertices.len() != num_parts * stride {
+            globals.shape_vertices.resize(num_parts * stride, 0.0);
         }
-        if self.buffers.shape_vertex_box_coords.len() != num_parts * stride {
-            self.buffers.shape_vertex_box_coords.resize(num_parts * stride, 0.0);
+        if globals.shape_vertex_box_coords.len() != num_parts * stride {
+            globals.shape_vertex_box_coords.resize(num_parts * stride, 0.0);
         }
-        if self.buffers.shape_vertex_counts.len() != num_parts {
-            self.buffers.shape_vertex_counts.resize(num_parts, 0);
+        if globals.shape_vertex_counts.len() != num_parts {
+            globals.shape_vertex_counts.resize(num_parts, 0);
         }
-        for slot in self.buffers.shape_vertices.iter_mut() {
+        for slot in globals.shape_vertices.iter_mut() {
             *slot = 0.0;
         }
-        for slot in self.buffers.shape_vertex_box_coords.iter_mut() {
+        for slot in globals.shape_vertex_box_coords.iter_mut() {
             *slot = 0.0;
         }
-        for slot in self.buffers.shape_vertex_counts.iter_mut() {
+        for slot in globals.shape_vertex_counts.iter_mut() {
             *slot = 0;
         }
 
-        let coordinate_system = self.coordinate_system;
-
         for i in 0..num_parts {
             let Some(shape_kind) = cached_parts[i].shape_kind else { continue };
-            let state = &self.buffers.parts_vec[i];
+            let state = &layer.parts_vec[i];
             let size_x = state.size_x();
             let size_y = state.size_y();
             if size_x <= 0.0 || size_y <= 0.0 {
@@ -736,183 +812,183 @@ impl<'a> Context<'a> {
                 if coordinate_system == crate::core::SsCoordinateSystem::YDown {
                     y = -y;
                 }
-                self.buffers.shape_vertices[offset + 2 * v] = vx[v] + tx;
-                self.buffers.shape_vertices[offset + 2 * v + 1] = y;
+                globals.shape_vertices[offset + 2 * v] = vx[v] + tx;
+                globals.shape_vertices[offset + 2 * v + 1] = y;
 
                 let fx = (vx[v] + hw) / size_x;
                 let fy = (hh - vy[v]) / size_y;
-                self.buffers.shape_vertex_box_coords[offset + 2 * v] = fx;
-                self.buffers.shape_vertex_box_coords[offset + 2 * v + 1] = fy;
+                globals.shape_vertex_box_coords[offset + 2 * v] = fx;
+                globals.shape_vertex_box_coords[offset + 2 * v + 1] = fy;
             }
-            self.buffers.shape_vertex_counts[i] = count as i32;
+            globals.shape_vertex_counts[i] = count as i32;
         }
     }
 
     // Frame Number getter functions
 
     pub fn get_frame_no(&self) -> f32 {
-        self.controller.get_frame_no()
+        self.instance.controller.get_frame_no()
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
-        self.controller.is_end_frame_reached()
+        self.instance.controller.is_end_frame_reached()
     }
 
     pub fn is_looped(&self) -> bool {
-        self.controller.is_looped()
+        self.instance.controller.is_looped()
     }
 
     pub fn get_world_matrices_ptr(&self) -> *const f32 {
-        self.buffers.world_matrices.as_ptr() as *const f32
+        self.instance.globals.world_matrices.as_ptr() as *const f32
     }
 
     pub fn get_world_matrices_len(&self) -> usize {
-        self.buffers.world_matrices.len() * 16
+        self.instance.globals.world_matrices.len() * 16
     }
 
     pub fn get_local_uvs_ptr(&self) -> *const f32 {
-        self.buffers.local_uvs.as_ptr()
+        self.instance.globals.local_uvs.as_ptr()
     }
 
     pub fn get_local_uvs_len(&self) -> usize {
-        self.buffers.local_uvs.len()
+        self.instance.globals.local_uvs.len()
     }
 
     pub fn get_shape_vertices_ptr(&self) -> *const f32 {
-        self.buffers.shape_vertices.as_ptr()
+        self.instance.globals.shape_vertices.as_ptr()
     }
 
     pub fn get_shape_vertices_len(&self) -> usize {
-        self.buffers.shape_vertices.len()
+        self.instance.globals.shape_vertices.len()
     }
 
     pub fn get_shape_vertex_box_coords_ptr(&self) -> *const f32 {
-        self.buffers.shape_vertex_box_coords.as_ptr()
+        self.instance.globals.shape_vertex_box_coords.as_ptr()
     }
 
     pub fn get_shape_vertex_box_coords_len(&self) -> usize {
-        self.buffers.shape_vertex_box_coords.len()
+        self.instance.globals.shape_vertex_box_coords.len()
     }
 
     pub fn get_shape_vertex_counts_ptr(&self) -> *const i32 {
-        self.buffers.shape_vertex_counts.as_ptr()
+        self.instance.globals.shape_vertex_counts.as_ptr()
     }
 
     pub fn get_shape_vertex_counts_len(&self) -> usize {
-        self.buffers.shape_vertex_counts.len()
+        self.instance.globals.shape_vertex_counts.len()
     }
 
     pub fn get_cell_meta_ptr(&self) -> *const f32 {
-        self.buffers.cell_meta_per_part.as_ptr()
+        self.instance.layer.cell_meta_per_part.as_ptr()
     }
 
     pub fn get_cell_meta_len(&self) -> usize {
-        self.buffers.cell_meta_per_part.len()
+        self.instance.layer.cell_meta_per_part.len()
     }
 
     pub fn get_local_vertices_ptr(&self) -> *const f32 {
-        self.buffers.local_vertices.as_ptr()
+        self.instance.layer.local_vertices.as_ptr()
     }
 
     pub fn get_local_vertices_len(&self) -> usize {
-        self.buffers.local_vertices.len()
+        self.instance.layer.local_vertices.len()
     }
 
     // setting getter functions
     pub fn is_playing(&self) -> bool {
-        self.controller.is_playing()
+        self.instance.controller.is_playing()
     }
 
     pub fn is_pausing(&self) -> bool {
-        self.controller.is_pausing()
+        self.instance.controller.is_pausing()
     }
 
     pub fn get_skip_frames(&self) -> bool {
-        self.controller.get_skip_frames()
+        self.instance.controller.get_skip_frames()
     }
 
     pub fn get_playback_direction(&self) -> core::playback_controller::PlaybackDirection {
-        self.controller.get_playback_direction()
+        self.instance.controller.get_playback_direction()
     }
 
     pub fn get_playback_style(&self) -> core::playback_controller::PlaybackStyle {
-        self.controller.get_playback_style()
+        self.instance.controller.get_playback_style()
     }
 
     pub fn get_loops(&self) -> i32 {
-        self.controller.get_loops()
+        self.instance.controller.get_loops()
     }
 
     pub fn get_remain_loops(&self) -> i32 {
-        self.controller.get_remain_loops()
+        self.instance.controller.get_remain_loops()
     }
 
     pub fn get_start_frame(&self) -> i32 {
-        self.controller.get_start_frame()
+        self.instance.controller.get_start_frame()
     }
 
     pub fn get_end_frame(&self) -> i32 {
-        self.controller.get_end_frame()
+        self.instance.controller.get_end_frame()
     }
 
     pub fn get_fps(&self) -> i32 {
-        self.controller.get_fps()
+        self.instance.controller.get_fps()
     }
 
     // Playback setup
 
     pub fn set_skip_frames(&mut self, skip: bool) {
-        self.controller.set_skip_frames(skip);
+        self.instance.controller.set_skip_frames(skip);
     }
 
     pub fn set_loop(&mut self, loops: i32) {
-        self.controller.set_loops(loops);
+        self.instance.controller.set_loops(loops);
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {
-        self.controller.set_frame_rate(fps);
+        self.instance.controller.set_frame_rate(fps);
     }
 
     pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
-        self.controller.set_playback_direction(direction, style);
+        self.instance.controller.set_playback_direction(direction, style);
     }
 
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.controller.set_animation_speed(speed_rate);
+        self.instance.controller.set_animation_speed(speed_rate);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.controller.set_animation_section(start_frame, end_frame);
+        self.instance.controller.set_animation_section(start_frame, end_frame);
     }
 
     pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
-        self.coordinate_system = coordinate_system;
+        self.instance.coordinate_system = coordinate_system;
     }
 
     pub fn get_coordinate_system(&self) -> crate::core::SsCoordinateSystem {
-        self.coordinate_system
+        self.instance.coordinate_system
     }
 
     pub fn set_origin(&mut self, origin: crate::core::SsOrigin) {
-        self.origin = origin;
+        self.instance.origin = origin;
     }
 
     pub fn get_origin(&self) -> crate::core::SsOrigin {
-        self.origin
+        self.instance.origin
     }
 
     pub fn set_unit(&mut self, unit: crate::core::SsUnit) {
-        self.unit = unit;
+        self.instance.unit = unit;
     }
 
     pub fn get_unit(&self) -> crate::core::SsUnit {
-        self.unit
+        self.instance.unit
     }
 
     // Playback control
 
     pub fn update(&mut self, delta: f32) -> f32 {
-        let res = self.controller.update(delta);
+        let res = self.instance.controller.update(delta);
 
         self.collect_events();
 
@@ -920,19 +996,19 @@ impl<'a> Context<'a> {
     }
 
     fn collect_events(&mut self) {
-        self.buffers.collected_event_indices.clear();
-        let Some(resource) = self.resource else {
+        self.instance.collected_event_indices.clear();
+        let Some(resource) = self.eval.resource else {
             return;
         };
-        if self.animation_idx < 0 {
+        if self.instance.animation_idx < 0 {
             return;
         }
-        let metadata = &resource.animations[self.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.animation_idx as usize];
         let Some(events_vec) = metadata.events else {
             return;
         };
 
-        for &frame_no in self.controller.get_passed_frames() {
+        for &frame_no in self.instance.controller.get_passed_frames() {
             if frame_no < 0 || frame_no > u16::MAX as i32 {
                 continue;
             }
@@ -946,7 +1022,7 @@ impl<'a> Context<'a> {
                 let mid = low + (high - low) / 2;
                 match events_vec.get(mid).frame_index().cmp(&target_frame) {
                     ::core::cmp::Ordering::Equal => {
-                        self.buffers.collected_event_indices.push(mid as i32);
+                        self.instance.collected_event_indices.push(mid as i32);
                         break;
                     }
                     ::core::cmp::Ordering::Less => low = mid + 1,
@@ -957,7 +1033,7 @@ impl<'a> Context<'a> {
     }
 
     pub fn get_passed_event_indices(&self) -> &[i32] {
-        &self.buffers.collected_event_indices
+        &self.instance.collected_event_indices
     }
 
     /// Resolve the most-recent `EventInstance` whose `frame_index <= current frame`
@@ -966,14 +1042,14 @@ impl<'a> Context<'a> {
     /// Designed to live behind the `ss_runtime_get_active_event_instance` FFI.
     pub fn get_active_event_instance(&self, slot_index: u32) -> crate::types::ss_event_instance_info {
         let mut info = crate::types::ss_event_instance_info::synthetic_default();
-        let Some(resource) = self.resource else { return info };
-        if self.animation_idx < 0 {
+        let Some(resource) = self.eval.resource else { return info };
+        if self.instance.animation_idx < 0 {
             return info;
         }
-        let metadata = &resource.animations[self.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.animation_idx as usize];
         let Some(events) = metadata.events else { return info };
 
-        let frame_no = self.controller.get_frame_no();
+        let frame_no = self.instance.controller.get_frame_no();
         let frame_int = if frame_no < 0.0 {
             -1
         } else if frame_no >= u16::MAX as f32 {
@@ -1022,11 +1098,11 @@ impl<'a> Context<'a> {
     /// Designed to live behind the `ss_runtime_get_active_effect_event` FFI.
     pub fn get_active_effect_event(&self, slot_index: u32) -> crate::types::ss_effect_event_info {
         let mut info = crate::types::ss_effect_event_info::synthetic_default();
-        let Some(resource) = self.resource else { return info };
-        if self.animation_idx < 0 {
+        let Some(resource) = self.eval.resource else { return info };
+        if self.instance.animation_idx < 0 {
             return info;
         }
-        let metadata = &resource.animations[self.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.animation_idx as usize];
 
         // Fallback first: InitialEvents.effect for this slot. Real EventEffect
         // matches override below; the synthetic-default flag stays `true` for
@@ -1047,7 +1123,7 @@ impl<'a> Context<'a> {
 
         let Some(events) = metadata.events else { return info };
 
-        let frame_no = self.controller.get_frame_no();
+        let frame_no = self.instance.controller.get_frame_no();
         let frame_int = if frame_no < 0.0 {
             -1
         } else if frame_no >= u16::MAX as f32 {
@@ -1083,11 +1159,11 @@ impl<'a> Context<'a> {
         if label_hash == 0 {
             return fallback;
         }
-        let Some(resource) = self.resource else { return fallback };
-        if self.animation_idx < 0 {
+        let Some(resource) = self.eval.resource else { return fallback };
+        if self.instance.animation_idx < 0 {
             return fallback;
         }
-        let metadata = &resource.animations[self.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.animation_idx as usize];
         let Some(labels) = metadata.labels else { return fallback };
         for i in 0..labels.len() {
             let label = labels.get(i);
@@ -1099,23 +1175,23 @@ impl<'a> Context<'a> {
     }
 
     pub fn play(&mut self) {
-        self.controller.play();
+        self.instance.controller.play();
     }
 
     pub fn play_with_start_frame(&mut self, frame_no: f32) {
-        self.controller.play_with_start_frame(frame_no);
+        self.instance.controller.play_with_start_frame(frame_no);
     }
 
     pub fn pause(&mut self) {
-        self.controller.pause();
+        self.instance.controller.pause();
     }
 
     pub fn stop(&mut self) {
-        self.controller.stop();
+        self.instance.controller.stop();
     }
 
     pub fn set_frame_no(&mut self, frame: f32) {
-        self.controller.set_frame_no(frame);
+        self.instance.controller.set_frame_no(frame);
     }
 
     /// Sets the playback position based on `diff` (frames elapsed since
@@ -1124,15 +1200,15 @@ impl<'a> Context<'a> {
     /// Players to drive child Instance / Effect Players deterministically
     /// across reverse, seek, and frame-skip operations.
     pub fn set_frame_relative(&mut self, diff: f32) {
-        self.controller.set_frame_relative(diff);
+        self.instance.controller.set_frame_relative(diff);
     }
 
     pub fn next_frame(&mut self) {
-        self.controller.next_frame();
+        self.instance.controller.next_frame();
     }
 
     pub fn prev_frame(&mut self) {
-        self.controller.prev_frame();
+        self.instance.controller.prev_frame();
     }
 }
 
@@ -1680,7 +1756,7 @@ mod tests {
         {
             let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data at frame 0");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
-            let parts = frame_data.parts().expect("No parts in frame data");
+            let parts = frame_data.parts();
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 0.0);
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
@@ -1690,7 +1766,7 @@ mod tests {
         {
             let frame_data_buf = context.get_frame_data(5.0).expect("Failed to get frame data at frame 5");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
-            let parts = frame_data.parts().expect("No parts in frame data");
+            let parts = frame_data.parts();
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 16.0);
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
@@ -1700,7 +1776,7 @@ mod tests {
         {
             let frame_data_buf = context.get_frame_data(10.0).expect("Failed to get frame data at frame 10");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
-            let parts = frame_data.parts().expect("No parts in frame data");
+            let parts = frame_data.parts();
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
@@ -1715,7 +1791,7 @@ mod tests {
         {
             let frame_data_buf = context.get_frame_data(11.0).expect("Failed to get frame data at frame 11");
             let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
-            let parts = frame_data.parts().expect("No parts in frame data");
+            let parts = frame_data.parts();
             let part_state = parts.iter().find(|p| p.part_index() == pos_xyz_idx).expect("Part state not found");
             assert_eq!(part_state.position_x(), 32.0);
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
@@ -1752,13 +1828,13 @@ mod tests {
         // Frame 0: Not hidden
         let frame_0_buf = context.get_frame_data(0.0).unwrap();
         let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
-        let hide_state_0 = frame_0.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
+        let hide_state_0 = frame_0.parts().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert!(!hide_state_0.hide());
 
         // Frame 2: Hidden
         let frame_2_buf = context.get_frame_data(2.0).unwrap();
         let frame_2 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_2_buf) };
-        let hide_state_2 = frame_2.parts().unwrap().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
+        let hide_state_2 = frame_2.parts().iter().find(|p| p.part_index() == hide_part_idx).unwrap();
         assert!(hide_state_2.hide());
     }
 
@@ -1782,7 +1858,7 @@ mod tests {
         let world_matrices_len = context.get_world_matrices_len();
 
         // Length should be 16 floats per part
-        let num_parts = context.buffers.parts_vec.len();
+        let num_parts = context.instance.layer.parts_vec.len();
         assert_eq!(world_matrices_len, num_parts * 16);
 
         let world_matrices = unsafe { ::core::slice::from_raw_parts(world_matrices_ptr, world_matrices_len) };
@@ -1807,7 +1883,7 @@ mod tests {
 
         let uvs_ptr = context.get_local_uvs_ptr();
         let uvs_len = context.get_local_uvs_len();
-        let num_parts = context.buffers.parts_vec.len();
+        let num_parts = context.instance.layer.parts_vec.len();
         // 5 vertices * 2 floats per part.
         assert_eq!(uvs_len, num_parts * 10);
 
@@ -1859,7 +1935,7 @@ mod tests {
 
         let meta_ptr = context.get_cell_meta_ptr();
         let meta_len = context.get_cell_meta_len();
-        let num_parts = context.buffers.parts_vec.len();
+        let num_parts = context.instance.layer.parts_vec.len();
         assert_eq!(meta_len, num_parts * 6);
 
         let meta = unsafe { ::core::slice::from_raw_parts(meta_ptr, meta_len) };
@@ -1911,7 +1987,7 @@ mod tests {
         {
             let frame_0_buf = context.get_frame_data(0.0).unwrap();
             let frame_0 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_0_buf) };
-            let parts = frame_0.parts().unwrap();
+            let parts = frame_0.parts();
             let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 0");
 
             if deform_state.deform() >= 0 {
@@ -1927,7 +2003,7 @@ mod tests {
         {
             let frame_10_buf = context.get_frame_data(10.0).unwrap();
             let frame_10 = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_10_buf) };
-            let parts = frame_10.parts().unwrap();
+            let parts = frame_10.parts();
             let deform_state = parts.iter().find(|p| p.part_index() == deform_part_idx as i16).expect("Deform part not found in frame 10");
 
             println!("Frame 10 Deform index: {}", deform_state.deform());
@@ -1964,7 +2040,7 @@ mod tests {
 
         let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data");
         let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };
-        let parts = frame_data.parts().expect("No parts in frame data");
+        let parts = frame_data.parts();
         let state = parts.iter().find(|p| p.part_index() == shape_idx).expect("shape_1 state not found");
 
         assert_eq!(state.size_x(), 64.0, "Shape part default size_x must be 64.0");
