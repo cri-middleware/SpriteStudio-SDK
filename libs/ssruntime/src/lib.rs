@@ -438,11 +438,34 @@ impl GlobalBuffers {
 struct EvaluationContext<'a> {
     resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
+
+    // Workspace buffers to avoid per-frame allocations
+    draw_order_workspace: Vec<u16>,
+    batches_workspace: Vec<crate::runtime::framedata::ss::runtime::DrawBatch>,
+    mask_indices_workspace: Vec<u16>,
+    deform_interpolation_start_workspace: Vec<f32>,
+    deform_interpolation_end_workspace: Vec<f32>,
+    deform_interpolation_out_workspace: Vec<f32>,
+    deform_result_coordinate_workspace: Vec<crate::runtime::framedata::ss::runtime::Vec2>,
+    deform_result_index_workspace: Vec<i16>,
+    inheritance_alphas_workspace: Vec<f32>,
 }
 
 impl<'a> EvaluationContext<'a> {
     fn new() -> Self {
-        Self { resource: None, fb: flatbuffers::FlatBufferBuilder::new() }
+        Self {
+            resource: None,
+            fb: flatbuffers::FlatBufferBuilder::new(),
+            draw_order_workspace: Vec::new(),
+            batches_workspace: Vec::new(),
+            mask_indices_workspace: Vec::new(),
+            deform_interpolation_start_workspace: Vec::new(),
+            deform_interpolation_end_workspace: Vec::new(),
+            deform_interpolation_out_workspace: Vec::new(),
+            deform_result_coordinate_workspace: Vec::new(),
+            deform_result_index_workspace: Vec::new(),
+            inheritance_alphas_workspace: Vec::new(),
+        }
     }
 }
 
@@ -640,7 +663,36 @@ impl<'a> Context<'a> {
         self.eval.fb.reset();
 
         // Phase 1: extract local pose from the SSAB frame data.
-        let offset = Self::extract_local_pose(&mut self.eval, &mut self.instance, metadata, frame_no);
+        let offset = core::framedata::get_frame_data(
+            &mut self.eval.fb,
+            &metadata.cached_parts,
+            frame_no,
+            &mut self.instance.z_order,
+            &mut self.instance.layer.parts_vec,
+            &mut self.instance.layer.cell_vec,
+            &mut self.instance.layer.parts_color_vec,
+            &mut self.instance.layer.shader_vec,
+            &mut self.instance.layer.vertice_vec,
+            &mut self.instance.layer.deform_vec,
+            &mut self.instance.layer.cursors,
+            &mut self.instance.layer.cell_meta_per_part,
+            &mut self.instance.layer.cell_texture_hashes,
+            &mut self.instance.layer.local_vertices,
+            self.instance.coordinate_system,
+            self.instance.origin,
+            self.instance.unit,
+            metadata.canvas_width,
+            metadata.canvas_height,
+            &mut self.eval.draw_order_workspace,
+            &mut self.eval.batches_workspace,
+            &mut self.eval.mask_indices_workspace,
+            &mut self.eval.deform_interpolation_start_workspace,
+            &mut self.eval.deform_interpolation_end_workspace,
+            &mut self.eval.deform_interpolation_out_workspace,
+            &mut self.eval.deform_result_coordinate_workspace,
+            &mut self.eval.deform_result_index_workspace,
+            &mut self.eval.inheritance_alphas_workspace,
+        );
 
         // Phase 3 hook: blend layers via `mix_poses(...)` between phase 1 and 2
         // once a second `LayerState` is available. The pipeline shape is the
@@ -652,37 +704,6 @@ impl<'a> Context<'a> {
 
         self.eval.fb.finish_minimal(offset);
         Ok(self.eval.fb.finished_data())
-    }
-
-    /// Phase 1 of the frame pipeline. Walks the cached SSAB part data and
-    /// fills the active layer's pose buffer (`parts_vec` / `cell_vec` / …)
-    /// plus the pose-derived per-part buffers (`cell_meta_per_part`,
-    /// `cell_texture_hashes`, `local_vertices`). Returns the in-flight
-    /// `FrameData` WIPOffset so the caller can finish the FlatBuffer once
-    /// any future blend step has run.
-    fn extract_local_pose(eval: &mut EvaluationContext<'a>, instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>, frame_no: f32) -> flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::FrameData<'a>> {
-        let layer = &mut instance.layer;
-        core::framedata::get_frame_data(
-            &mut eval.fb,
-            &metadata.cached_parts,
-            frame_no,
-            &mut instance.z_order,
-            &mut layer.parts_vec,
-            &mut layer.cell_vec,
-            &mut layer.parts_color_vec,
-            &mut layer.shader_vec,
-            &mut layer.vertice_vec,
-            &mut layer.deform_vec,
-            &mut layer.cursors,
-            &mut layer.cell_meta_per_part,
-            &mut layer.cell_texture_hashes,
-            &mut layer.local_vertices,
-            instance.coordinate_system,
-            instance.origin,
-            instance.unit,
-            metadata.canvas_width,
-            metadata.canvas_height,
-        )
     }
 
     /// Phase 2 of the frame pipeline. Consumes the (post-mix) local pose

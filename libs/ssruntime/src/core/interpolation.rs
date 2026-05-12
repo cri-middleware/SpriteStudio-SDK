@@ -573,91 +573,108 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
     })
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct DeformEvaluationData {
-    pub coordinate: Vec<runtime::framedata::ss::runtime::Vec2>,
-    pub index: Vec<i16>,
-}
-
+/// Evaluates a deform attribute at `frame_no`, writing the interpolated
+/// coordinates into `coord_out` and the (non-interpolated) indices into
+/// `index_out`. Both output buffers are cleared at entry, so the caller
+/// can reuse them across parts without manual reset.
+///
+/// Returns `Some(flags)` if a key was found at/before `frame_no`. The
+/// flags mirror the same on/off semantics as the scalar `evaluate_*`
+/// helpers — `UPDATE_FLAG_OFF` when the matching key had no payload.
 #[inline]
 pub fn evaluate_deform(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
     frame_no: f32,
     hint: &mut usize,
-) -> Option<(DeformEvaluationData, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+    start_workspace: &mut Vec<f32>,
+    end_workspace: &mut Vec<f32>,
+    out_workspace: &mut Vec<f32>,
+    coord_out: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
+    index_out: &mut Vec<i16>,
+) -> Option<runtime::framedata::ss::runtime::UpdateAttributeFlags> {
+    coord_out.clear();
+    index_out.clear();
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
-                return (transfer_deform(&prev.value()), UPDATE_FLAG_ON);
+                transfer_deform(&prev.value(), coord_out, index_out);
+                return UPDATE_FLAG_ON;
             }
 
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
-            let mut current = DeformEvaluationData::default();
             let Some(prev_val) = prev.value() else {
-                return (current, UPDATE_FLAG_OFF);
+                return UPDATE_FLAG_OFF;
             };
             let Some(next_val) = next.value() else {
-                return (current, UPDATE_FLAG_OFF);
+                return UPDATE_FLAG_OFF;
             };
 
-            if let (Some(prev_coodinate), Some(next_coodinate)) = (prev_val.coordinate(), next_val.coordinate()) {
-                let length_full = prev_coodinate.len();
-                current.coordinate.reserve(length_full);
-                let length = core::cmp::min(length_full, next_coodinate.len());
+            if let (Some(prev_coordinate), Some(next_coordinate)) = (prev_val.coordinate(), next_val.coordinate()) {
+                let length_full = prev_coordinate.len();
+                coord_out.reserve(length_full);
+                let length = core::cmp::min(length_full, next_coordinate.len());
 
-                let mut start_vec = alloc::vec::Vec::with_capacity(length * 2);
-                let mut end_vec = alloc::vec::Vec::with_capacity(length * 2);
+                start_workspace.clear();
+                start_workspace.reserve(length * 2);
+                end_workspace.clear();
+                end_workspace.reserve(length * 2);
                 for i in 0..length {
-                    let p = prev_coodinate.get(i);
-                    let n = next_coodinate.get(i);
-                    start_vec.push(p.v1());
-                    start_vec.push(p.v2());
-                    end_vec.push(n.v1());
-                    end_vec.push(n.v2());
+                    let p = prev_coordinate.get(i);
+                    let n = next_coordinate.get(i);
+                    start_workspace.push(p.v1());
+                    start_workspace.push(p.v2());
+                    end_workspace.push(n.v1());
+                    end_workspace.push(n.v2());
                 }
 
-                let mut out_vec = alloc::vec![0.0; length * 2];
-                interpolate_array_linear(&start_vec, &end_vec, rate, &mut out_vec);
+                out_workspace.clear();
+                out_workspace.resize(length * 2, 0.0);
+                interpolate_array_linear(start_workspace, end_workspace, rate, out_workspace);
 
                 for i in 0..length {
-                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(out_vec[i * 2], out_vec[i * 2 + 1]));
+                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(out_workspace[i * 2], out_workspace[i * 2 + 1]));
                 }
                 // Overrun use the value of `prev` as is.
                 for i in length..length_full {
-                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(prev_coodinate.get(i).v1(), prev_coodinate.get(i).v2()));
+                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(prev_coordinate.get(i).v1(), prev_coordinate.get(i).v2()));
                 }
 
                 // "index" is not interpolated.
                 if let Some(index) = prev_val.index() {
-                    current.index = index.iter().collect();
+                    index_out.reserve(index.len());
+                    index_out.extend(index.iter());
                 }
 
-                (current, UPDATE_FLAG_ON)
+                UPDATE_FLAG_ON
             } else {
-                (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
+                transfer_deform(&prev.value(), coord_out, index_out);
+                UPDATE_FLAG_ON
             }
         } else {
-            (transfer_deform(&prev.value()), UPDATE_FLAG_ON)
+            transfer_deform(&prev.value(), coord_out, index_out);
+            UPDATE_FLAG_ON
         }
     })
 }
 
 #[inline]
-fn transfer_deform(source: &Option<ssab::ssab::ss::format::PartAttributeDeform>) -> DeformEvaluationData {
-    let mut destination = DeformEvaluationData::default();
+fn transfer_deform(source: &Option<ssab::ssab::ss::format::PartAttributeDeform>, coord_out: &mut Vec<runtime::framedata::ss::runtime::Vec2>, index_out: &mut Vec<i16>) {
     if let Some(s) = source {
         if let Some(coordinate) = s.coordinate() {
-            destination.coordinate = coordinate.iter().map(|v| runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2())).collect();
+            coord_out.reserve(coordinate.len());
+            for v in coordinate.iter() {
+                coord_out.push(runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2()));
+            }
         }
         if let Some(index) = s.index() {
-            destination.index = index.iter().collect();
+            index_out.reserve(index.len());
+            index_out.extend(index.iter());
         }
     }
-    destination
 }
 
 #[inline]
@@ -1003,6 +1020,23 @@ mod tests {
         flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform>>>(buf).unwrap()
     }
 
+    /// Owning wrapper used only by tests so assertions can read back the
+    /// produced coordinate / index buffers without having to declare and
+    /// thread workspace `Vec`s through every call site.
+    struct DeformOut {
+        coordinate: alloc::vec::Vec<runtime::framedata::ss::runtime::Vec2>,
+        index: alloc::vec::Vec<i16>,
+    }
+
+    fn eval_deform_owned(arr: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>, frame_no: f32, hint: &mut usize) -> Option<(DeformOut, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
+        let mut start = alloc::vec::Vec::new();
+        let mut end = alloc::vec::Vec::new();
+        let mut out = alloc::vec::Vec::new();
+        let mut coordinate = alloc::vec::Vec::new();
+        let mut index = alloc::vec::Vec::new();
+        evaluate_deform(arr, frame_no, hint, &mut start, &mut end, &mut out, &mut coordinate, &mut index).map(|flags| (DeformOut { coordinate, index }, flags))
+    }
+
     #[test]
     fn test_evaluate_deform_simd_chunk_aligned() {
         // 8 vertices = exactly 2 SIMD chunks, no tail.
@@ -1013,7 +1047,7 @@ mod tests {
 
         // At rate=0.5, lerp(prev, next, 0.5) = (prev + next) / 2.
         let mut hint = 0;
-        let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, flags) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         assert_eq!(data.coordinate.len(), 8);
         assert!(!flags.is_empty());
         for i in 0..8 {
@@ -1033,7 +1067,7 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, _) = evaluate_deform(vec, 2.5, &mut hint).unwrap();
+        let (data, _) = eval_deform_owned(vec, 2.5, &mut hint).unwrap();
         assert_eq!(data.coordinate.len(), 7);
         // rate = 0.25
         for i in 0..7 {
@@ -1053,7 +1087,7 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, _) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         assert_eq!(data.coordinate.len(), 3);
         for i in 0..3 {
             let exp_x = (prev[i].0 + next[i].0) / 2.0;
@@ -1072,7 +1106,7 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, _) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         assert_eq!(data.coordinate.len(), 6, "output length should match prev_full");
         // First 4 are interpolated.
         for i in 0..4 {
@@ -1097,7 +1131,7 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, flags) = evaluate_deform(vec, 0.0, &mut hint).unwrap();
+        let (data, flags) = eval_deform_owned(vec, 0.0, &mut hint).unwrap();
         assert!(!flags.is_empty(), "exact keyframe match must set ON");
         assert_eq!(data.coordinate[0].x(), prev[0].0);
         assert_eq!(data.coordinate[0].y(), prev[0].1);
@@ -1115,7 +1149,7 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, flags) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         assert!(!flags.is_empty(), "off-keyframe None still derives from a key, must set ON");
         assert_eq!(data.coordinate[0].x(), prev[0].0);
     }
@@ -1129,12 +1163,12 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, flags) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, flags) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         assert!(!flags.is_empty());
         assert_eq!(data.coordinate[0].x(), 7.0);
 
         let mut hint = 0;
-        let (data, flags) = evaluate_deform(vec, 9.0, &mut hint).unwrap();
+        let (data, flags) = eval_deform_owned(vec, 9.0, &mut hint).unwrap();
         assert!(!flags.is_empty(), "held value past last key must set ON");
         assert_eq!(data.coordinate[0].x(), 7.0);
     }
@@ -1149,7 +1183,7 @@ mod tests {
         let vec = deform_root(&buf);
 
         let mut hint = 0;
-        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, _) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         assert_eq!(data.index, alloc::vec![5, 6, 7, 8], "index must come from prev key, not next");
     }
 
@@ -1178,7 +1212,7 @@ mod tests {
         let vec = flatbuffers::root::<flatbuffers::Vector<flatbuffers::ForwardsUOffset<PartAnimationDataDeform>>>(buf).unwrap();
 
         let mut hint = 0;
-        let (data, _) = evaluate_deform(vec, 5.0, &mut hint).unwrap();
+        let (data, _) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
         // Zero-tangent Hermite at midpoint = 0.5 → x = prev + (next-prev) * 0.5
         for i in 0..4 {
             let exp = (i as f32) + 5.0;

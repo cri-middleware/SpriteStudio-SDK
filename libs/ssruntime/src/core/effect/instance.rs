@@ -241,6 +241,9 @@ pub struct EffectInstanceState {
     pub state: RenderState,
     pub draw_commands: Vec<EmitterDrawCommand>,
     pub draw_particles: Vec<ParticleDrawState>,
+    /// Reused across `collect_emitter_particles` calls so the per-frame
+    /// scan over `particle_state.exist[..]` does not allocate.
+    active_indices_workspace: Vec<usize>,
 }
 
 impl<'a> EffectEvaluationContext<'a> {
@@ -311,7 +314,7 @@ impl<'a> EffectEvaluationContext<'a> {
         let layout_scale = if let Some(ls) = effect.layout_scale() { Vector2::new(ls.v1() / 100.0, ls.v2() / 100.0) } else { Vector2::new(1.0, 1.0) };
 
         let eval = Self { emitters, is_infinite, layout_scale, effect_time_length, fps: if effect.fps() == 0 { 30 } else { effect.fps() as i32 }, _marker: PhantomData };
-        let instance = EffectInstanceState { state: RenderState { emitter_states, is_playing: true, ..Default::default() }, draw_commands: Vec::new(), draw_particles: Vec::new() };
+        let instance = EffectInstanceState { state: RenderState { emitter_states, is_playing: true, ..Default::default() }, draw_commands: Vec::new(), draw_particles: Vec::new(), active_indices_workspace: Vec::new() };
         Some((eval, instance))
     }
 }
@@ -356,21 +359,16 @@ impl EffectInstanceState {
             let start_idx = self.draw_particles.len();
 
             if pi >= 0 && (pi as usize) < i {
-                let parent_info: Vec<(i32, f32)> = {
-                    let parent = &eval.emitters[pi as usize];
-                    let parent_state = &self.state.emitter_states[pi as usize];
-                    let mut info = Vec::new();
-                    for n in 0..parent.offset_patterns.len() {
-                        if parent_state.particle_state.born[n] {
-                            let p_stime = parent_state.particle_state.stime[n];
-                            let p_ptime = self.state.target_frame - p_stime as f32;
-                            info.push((n as i32, p_ptime));
-                        }
+                let parent = &eval.emitters[pi as usize];
+                for n in 0..parent.offset_patterns.len() {
+                    let (born, stime) = {
+                        let parent_state = &self.state.emitter_states[pi as usize];
+                        (parent_state.particle_state.born[n], parent_state.particle_state.stime[n])
+                    };
+                    if born {
+                        let p_ptime = self.state.target_frame - stime as f32;
+                        self.collect_emitter_particles(eval, i, p_ptime, pi, n as i32);
                     }
-                    info
-                };
-                for (n, p_ptime) in parent_info {
-                    self.collect_emitter_particles(eval, i, p_ptime, pi, n);
                 }
             } else {
                 self.collect_emitter_particles(eval, i, self.state.target_frame, -1, 0);
@@ -398,15 +396,16 @@ impl EffectInstanceState {
 
         EffectSimulator::update_emitter(&mut self.state.emitter_states[emitter_idx], &e.emitter_params, &e.emit_patterns, &e.offset_patterns, time, slide);
 
-        let mut active_indices = Vec::with_capacity(e.offset_patterns.len());
+        self.active_indices_workspace.clear();
+        self.active_indices_workspace.reserve(e.offset_patterns.len());
         for id in 0..e.offset_patterns.len() {
             if self.state.emitter_states[emitter_idx].particle_state.exist[id] {
-                active_indices.push(id);
+                self.active_indices_workspace.push(id);
             }
         }
 
         // SIMD batch processing
-        let mut chunks = active_indices.chunks_exact(4);
+        let mut chunks = self.active_indices_workspace.chunks_exact(4);
         for chunk in &mut chunks {
             let p_ids_with_cycle = [
                 self.state.emitter_states[emitter_idx].particle_state.id[chunk[0]] + self.state.emitter_states[emitter_idx].particle_state.cycle[chunk[0]],
