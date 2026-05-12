@@ -4,6 +4,7 @@ use super::types::*;
 use crate::core::math::*;
 use alloc::vec;
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 use ssab::ssab::ss::format as ssab_fbs;
 
 pub struct EffectEmitterInstance {
@@ -227,20 +228,23 @@ pub struct EmitterDrawCommand {
     pub particle_end: usize,
 }
 
-pub struct EffectInstance {
+pub struct EffectEvaluationContext<'a> {
     pub emitters: Vec<EffectEmitterInstance>,
-    pub state: RenderState,
     pub is_infinite: bool,
     pub layout_scale: Vector2,
     pub effect_time_length: i32,
     pub fps: i32,
+    _marker: PhantomData<&'a ()>,
+}
 
+pub struct EffectInstanceState {
+    pub state: RenderState,
     pub draw_commands: Vec<EmitterDrawCommand>,
     pub draw_particles: Vec<ParticleDrawState>,
 }
 
-impl EffectInstance {
-    pub fn from_ssab(effect: &ssab_fbs::Effect, my_seed: u32) -> Option<Self> {
+impl<'a> EffectEvaluationContext<'a> {
+    pub fn from_ssab(effect: &ssab_fbs::Effect, my_seed: u32) -> Option<(Self, EffectInstanceState)> {
         let nodes = effect.effect_node()?;
         let node_count = nodes.len();
 
@@ -306,18 +310,13 @@ impl EffectInstance {
 
         let layout_scale = if let Some(ls) = effect.layout_scale() { Vector2::new(ls.v1() / 100.0, ls.v2() / 100.0) } else { Vector2::new(1.0, 1.0) };
 
-        Some(Self {
-            emitters,
-            state: RenderState { emitter_states, is_playing: true, ..Default::default() },
-            is_infinite,
-            layout_scale,
-            effect_time_length,
-            fps: if effect.fps() == 0 { 30 } else { effect.fps() as i32 },
-            draw_commands: Vec::new(),
-            draw_particles: Vec::new(),
-        })
+        let eval = Self { emitters, is_infinite, layout_scale, effect_time_length, fps: if effect.fps() == 0 { 30 } else { effect.fps() as i32 }, _marker: PhantomData };
+        let instance = EffectInstanceState { state: RenderState { emitter_states, is_playing: true, ..Default::default() }, draw_commands: Vec::new(), draw_particles: Vec::new() };
+        Some((eval, instance))
     }
+}
 
+impl EffectInstanceState {
     pub fn reset(&mut self) {
         self.state.reset();
         self.draw_commands.clear();
@@ -328,7 +327,7 @@ impl EffectInstance {
         self.state.is_loop = loop_flag;
     }
 
-    pub fn update(&mut self, frame: f32) {
+    pub fn update(&mut self, eval: &EffectEvaluationContext<'_>, frame: f32) {
         if !self.state.is_playing || self.state.is_pausing {
             return;
         }
@@ -336,13 +335,13 @@ impl EffectInstance {
         self.state.current_frame = frame;
         self.state.target_frame = frame;
 
-        if !self.is_infinite && self.state.is_loop && self.effect_time_length > 0 && self.state.current_frame > self.effect_time_length as f32 {
-            self.state.target_frame = fmodf(self.state.current_frame, self.effect_time_length as f32);
-            self.state.seed_offset = (self.state.current_frame / self.effect_time_length as f32) as i32;
+        if !eval.is_infinite && self.state.is_loop && eval.effect_time_length > 0 && self.state.current_frame > eval.effect_time_length as f32 {
+            self.state.target_frame = fmodf(self.state.current_frame, eval.effect_time_length as f32);
+            self.state.seed_offset = (self.state.current_frame / eval.effect_time_length as f32) as i32;
         }
     }
 
-    pub fn get_draw_commands(&mut self) -> (&[EmitterDrawCommand], &[ParticleDrawState]) {
+    pub fn get_draw_commands(&mut self, eval: &EffectEvaluationContext<'_>) -> (&[EmitterDrawCommand], &[ParticleDrawState]) {
         self.draw_commands.clear();
         self.draw_particles.clear();
 
@@ -350,15 +349,15 @@ impl EffectInstance {
             return (&self.draw_commands, &self.draw_particles);
         }
 
-        let num_emitters = self.emitters.len();
+        let num_emitters = eval.emitters.len();
 
         for i in 0..num_emitters {
-            let pi = self.emitters[i].parent_index;
+            let pi = eval.emitters[i].parent_index;
             let start_idx = self.draw_particles.len();
 
             if pi >= 0 && (pi as usize) < i {
                 let parent_info: Vec<(i32, f32)> = {
-                    let parent = &self.emitters[pi as usize];
+                    let parent = &eval.emitters[pi as usize];
                     let parent_state = &self.state.emitter_states[pi as usize];
                     let mut info = Vec::new();
                     for n in 0..parent.offset_patterns.len() {
@@ -371,15 +370,15 @@ impl EffectInstance {
                     info
                 };
                 for (n, p_ptime) in parent_info {
-                    self.collect_emitter_particles(i, p_ptime, pi, n);
+                    self.collect_emitter_particles(eval, i, p_ptime, pi, n);
                 }
             } else {
-                self.collect_emitter_particles(i, self.state.target_frame, -1, 0);
+                self.collect_emitter_particles(eval, i, self.state.target_frame, -1, 0);
             }
 
             let end_idx = self.draw_particles.len();
             if end_idx > start_idx {
-                let e = &self.emitters[i];
+                let e = &eval.emitters[i];
                 self.draw_commands.push(EmitterDrawCommand { cell_name_hash: e.cell_name_hash, cell_map_name_hash: e.cell_map_name_hash, blend_type: e.blend_type, particle_start: start_idx, particle_end: end_idx });
             }
         }
@@ -387,8 +386,8 @@ impl EffectInstance {
         (&self.draw_commands, &self.draw_particles)
     }
 
-    fn collect_emitter_particles(&mut self, emitter_idx: usize, time: f32, parent_idx: i32, parent_particle_id: i32) {
-        let e = &self.emitters[emitter_idx];
+    fn collect_emitter_particles(&mut self, eval: &EffectEvaluationContext<'_>, emitter_idx: usize, time: f32, parent_idx: i32, parent_particle_id: i32) {
+        let e = &eval.emitters[emitter_idx];
 
         let mut slide = 0;
         if parent_idx >= 0 {
@@ -430,7 +429,7 @@ impl EffectInstance {
 
             let mut emitter_positions = [self.state.emitter_states[emitter_idx].position; 4];
             if parent_idx >= 0 {
-                let parent_e = &self.emitters[parent_idx as usize];
+                let parent_e = &eval.emitters[parent_idx as usize];
                 let parent_s = &self.state.emitter_states[parent_idx as usize];
                 let pp_id = parent_particle_id as usize;
 
@@ -468,8 +467,8 @@ impl EffectInstance {
                 if parent_idx >= 0 { [slide; 4] } else { [0; 4] },
             );
             for mut ds in p_draw_batch {
-                ds.x *= self.layout_scale.x;
-                ds.y *= self.layout_scale.y;
+                ds.x *= eval.layout_scale.x;
+                ds.y *= eval.layout_scale.y;
                 self.draw_particles.push(ds);
             }
         }
@@ -481,7 +480,7 @@ impl EffectInstance {
 
             let mut emitter_position = self.state.emitter_states[emitter_idx].position;
             if parent_idx >= 0 {
-                let parent_e = &self.emitters[parent_idx as usize];
+                let parent_e = &eval.emitters[parent_idx as usize];
                 let parent_s = &self.state.emitter_states[parent_idx as usize];
                 let pp_id = parent_particle_id as usize;
 
@@ -506,8 +505,8 @@ impl EffectInstance {
             }
 
             let mut ds = EffectSimulator::calculate_state(time, stime, endtime, p_id_with_cycle, &e.emitter_params, &e.particle_params, e.emitter_seed, self.state.seed_offset, &e.seed_list, emitter_position, if parent_idx >= 0 { slide } else { 0 });
-            ds.x *= self.layout_scale.x;
-            ds.y *= self.layout_scale.y;
+            ds.x *= eval.layout_scale.x;
+            ds.y *= eval.layout_scale.y;
             self.draw_particles.push(ds);
         }
     }
