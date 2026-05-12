@@ -227,9 +227,14 @@ pub struct PartEvaluationResult {
     pub part_color: Option<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     pub shader: Option<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     pub vertex: Option<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
-    pub deform: Option<DeformEvaluationData>,
+    /// Set when `evaluate_deform` produced a key. Coordinates / indices
+    /// live in the caller-owned workspaces — they are valid until the
+    /// next `evaluate_part` overwrites them, so the caller must consume
+    /// them within the same loop iteration.
+    pub deform_present: bool,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn evaluate_part(
     cached_part: &CachedPartData,
     frame_no: f32,
@@ -242,6 +247,8 @@ pub(crate) fn evaluate_part(
     start_workspace: &mut Vec<f32>,
     end_workspace: &mut Vec<f32>,
     out_workspace: &mut Vec<f32>,
+    deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
+    deform_index_workspace: &mut Vec<i16>,
 ) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
@@ -264,7 +271,7 @@ pub(crate) fn evaluate_part(
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
-    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform: None };
+    let mut result = PartEvaluationResult { state: runtime::framedata::ss::runtime::PartState::default(), cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform_present: false };
 
     part_state.set_part_index(cached_part.part_index);
 
@@ -459,15 +466,13 @@ pub(crate) fn evaluate_part(
         part_state.set_skew_y(val_y);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
-    if let Some((mut val, mask)) = cached_part.deform_array.and_then(|arr| {
-        evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace)
-    }) {
+    if let Some(mask) = cached_part.deform_array.and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace)) {
         if coordinate_system == SsCoordinateSystem::YDown {
-            for v in val.coordinate.iter_mut() {
+            for v in deform_coord_workspace.iter_mut() {
                 v.set_y(-v.y());
             }
         }
-        result.deform = Some(val);
+        result.deform_present = true;
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform & mask;
     }
     if let Some(val) = cached_part.texture_array.and_then(|arr| evaluate_texture(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTETEXTURE])) {
@@ -508,6 +513,8 @@ fn get_parts<'a>(
     start_workspace: &mut Vec<f32>,
     end_workspace: &mut Vec<f32>,
     out_workspace: &mut Vec<f32>,
+    deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
+    deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
 ) {
     parts_vec.clear();
@@ -531,19 +538,7 @@ fn get_parts<'a>(
 
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
-        let mut result = evaluate_part(
-            part,
-            frame_no,
-            part_cursors,
-            coordinate_system,
-            origin,
-            unit,
-            canvas_width,
-            canvas_height,
-            start_workspace,
-            end_workspace,
-            out_workspace,
-        );
+        let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height, start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace);
 
         let cell_meta = result.cell_meta.unwrap_or_default();
         let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = (cell_meta.pivot_x, cell_meta.pivot_y, cell_meta.size_w, cell_meta.size_h);
@@ -671,13 +666,13 @@ fn get_parts<'a>(
             vertice_vec.push(vertex);
             result.state.set_vertex((vertice_vec.len() - 1) as i16);
         }
-        if let Some(deform_data) = result.deform {
+        if result.deform_present {
             let mut args = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
-            if !deform_data.coordinate.is_empty() {
-                args.coordinate = Some(fb.create_vector(&deform_data.coordinate));
+            if !deform_coord_workspace.is_empty() {
+                args.coordinate = Some(fb.create_vector(deform_coord_workspace));
             }
-            if !deform_data.index.is_empty() {
-                args.index = Some(fb.create_vector(&deform_data.index));
+            if !deform_index_workspace.is_empty() {
+                args.index = Some(fb.create_vector(deform_index_workspace));
             }
             let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &args);
             deform_vec.push(deform_off);
@@ -892,6 +887,8 @@ pub fn get_frame_data<'a>(
     deform_start_workspace: &mut Vec<f32>,
     deform_end_workspace: &mut Vec<f32>,
     deform_out_workspace: &mut Vec<f32>,
+    deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
+    deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
@@ -928,6 +925,8 @@ pub fn get_frame_data<'a>(
         deform_start_workspace,
         deform_end_workspace,
         deform_out_workspace,
+        deform_coord_workspace,
+        deform_index_workspace,
         inheritance_alphas_workspace,
     );
     args.parts = Some(fb.create_vector(parts_vec));
@@ -942,16 +941,7 @@ pub fn get_frame_data<'a>(
     // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
     // ここで実行する (lib.rs から z_order.update を移譲)。
     z_order.update(parts_vec);
-    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(
-        fb,
-        z_order.indices(),
-        cached_parts,
-        parts_vec,
-        cell_texture_hashes,
-        draw_order_workspace,
-        batches_workspace,
-        mask_indices_workspace,
-    );
+    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(fb, z_order.indices(), cached_parts, parts_vec, cell_texture_hashes, draw_order_workspace, batches_workspace, mask_indices_workspace);
     args.draw_order = Some(draw_order_off);
     args.draw_batches = Some(draw_batches_off);
     args.mask_indices = Some(mask_indices_off);
@@ -1029,7 +1019,7 @@ mod tests {
         let mut part_state = runtime::framedata::ss::runtime::PartState::default();
         part_state.set_part_index(5);
 
-        let result = PartEvaluationResult { state: part_state, cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform: None };
+        let result = PartEvaluationResult { state: part_state, cell: None, cell_meta: None, part_color: None, shader: None, vertex: None, deform_present: false };
 
         assert_eq!(result.state.part_index(), 5);
         assert!(result.cell.is_none());
