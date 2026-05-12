@@ -230,7 +230,19 @@ pub struct PartEvaluationResult {
     pub deform: Option<DeformEvaluationData>,
 }
 
-pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cursors: &mut [usize], coordinate_system: SsCoordinateSystem, origin: SsOrigin, unit: SsUnit, canvas_width: f32, canvas_height: f32) -> PartEvaluationResult {
+pub(crate) fn evaluate_part(
+    cached_part: &CachedPartData,
+    frame_no: f32,
+    part_cursors: &mut [usize],
+    coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
+    start_workspace: &mut Vec<f32>,
+    end_workspace: &mut Vec<f32>,
+    out_workspace: &mut Vec<f32>,
+) -> PartEvaluationResult {
     let mut part_state = runtime::framedata::ss::runtime::PartState::default();
 
     // default values
@@ -447,7 +459,9 @@ pub(crate) fn evaluate_part(cached_part: &CachedPartData, frame_no: f32, part_cu
         part_state.set_skew_y(val_y);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
-    if let Some((mut val, mask)) = cached_part.deform_array.and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM])) {
+    if let Some((mut val, mask)) = cached_part.deform_array.and_then(|arr| {
+        evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace)
+    }) {
         if coordinate_system == SsCoordinateSystem::YDown {
             for v in val.coordinate.iter_mut() {
                 v.set_y(-v.y());
@@ -491,6 +505,10 @@ fn get_parts<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
+    start_workspace: &mut Vec<f32>,
+    end_workspace: &mut Vec<f32>,
+    out_workspace: &mut Vec<f32>,
+    inheritance_alphas_workspace: &mut Vec<f32>,
 ) {
     parts_vec.clear();
     cell_vec.clear();
@@ -508,11 +526,24 @@ fn get_parts<'a>(
         *slot = 0.0;
     }
 
-    let mut inheritance_alphas: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(cached_parts.len());
+    inheritance_alphas_workspace.clear();
+    inheritance_alphas_workspace.reserve(cached_parts.len());
 
     for (i, part) in cached_parts.iter().enumerate() {
         let part_cursors = &mut cursors[i * NUM_PART_ATTRIBUTES..(i + 1) * NUM_PART_ATTRIBUTES];
-        let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height);
+        let mut result = evaluate_part(
+            part,
+            frame_no,
+            part_cursors,
+            coordinate_system,
+            origin,
+            unit,
+            canvas_width,
+            canvas_height,
+            start_workspace,
+            end_workspace,
+            out_workspace,
+        );
 
         let cell_meta = result.cell_meta.unwrap_or_default();
         let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = (cell_meta.pivot_x, cell_meta.pivot_y, cell_meta.size_w, cell_meta.size_h);
@@ -541,11 +572,11 @@ fn get_parts<'a>(
         let parent_idx = part.parent_index;
         let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
 
-        let parent_inh_alpha = valid_parent_idx.and_then(|p_idx| inheritance_alphas.get(p_idx).copied()).unwrap_or(1.0);
+        let parent_inh_alpha = valid_parent_idx.and_then(|p_idx| inheritance_alphas_workspace.get(p_idx).copied()).unwrap_or(1.0);
         let parent_hide = valid_parent_idx.and_then(|p_idx| parts_vec.get(p_idx).map(|p| p.hide())).unwrap_or(false);
 
         let inh_alpha = result.state.alpha() * parent_inh_alpha;
-        inheritance_alphas.push(inh_alpha);
+        inheritance_alphas_workspace.push(inh_alpha);
 
         let has_local_alpha = result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeLoAlpha);
         let effective_alpha = if has_local_alpha { result.state.local_alpha() } else { inh_alpha };
@@ -743,12 +774,17 @@ fn build_draw_order_and_batches<'a>(
     cached_parts: &[CachedPartData<'_>],
     parts_vec: &[runtime::framedata::ss::runtime::PartState],
     cell_texture_hashes: &[u32],
+    draw_order_workspace: &mut Vec<u16>,
+    batches_workspace: &mut Vec<runtime::framedata::ss::runtime::DrawBatch>,
+    mask_indices_workspace: &mut Vec<u16>,
 ) -> DrawOrderAndBatchesOffsets<'a> {
-    use runtime::framedata::ss::runtime::{DrawBatch, DrawBatchKind, UpdateAttributeFlags};
+    use runtime::framedata::ss::runtime::{DrawBatchKind, UpdateAttributeFlags};
 
-    let mut draw_order_vec: Vec<u16> = Vec::with_capacity(z_indices.len());
-    let mut batches: Vec<DrawBatch> = Vec::new();
-    let mut mask_indices_vec: Vec<u16> = Vec::new();
+    draw_order_workspace.clear();
+    draw_order_workspace.reserve(z_indices.len());
+    batches_workspace.clear();
+    mask_indices_workspace.clear();
+
     let mut in_progress: Option<InProgressBatch> = None;
 
     for &part_idx in z_indices.iter() {
@@ -763,7 +799,7 @@ fn build_draw_order_and_batches<'a>(
         };
 
         if cached.is_mask_contributor {
-            mask_indices_vec.push(part_idx as u16);
+            mask_indices_workspace.push(part_idx as u16);
         }
 
         let blend_type = ssab_blend_to_runtime(cached.blend_type);
@@ -782,14 +818,14 @@ fn build_draw_order_and_batches<'a>(
             continue;
         }
 
-        let rank = draw_order_vec.len() as u16;
-        draw_order_vec.push(part_idx as u16);
+        let rank = draw_order_workspace.len() as u16;
+        draw_order_workspace.push(part_idx as u16);
 
         if needs_mask_twin {
             if let Some(ip) = in_progress.take() {
-                finalize_batch(ip, &mut batches);
+                finalize_batch(ip, batches_workspace);
             }
-            batches.push(DrawBatch::new(rank, 1, 0, 0, 0, blend_type, DrawBatchKind::Mask, flags));
+            batches_workspace.push(runtime::framedata::ss::runtime::DrawBatch::new(rank, 1, 0, 0, 0, blend_type, DrawBatchKind::Mask, flags));
         }
 
         if !drawn_as_self {
@@ -813,22 +849,23 @@ fn build_draw_order_and_batches<'a>(
                 ip.index_count = ip.index_count.saturating_add(ic);
                 continue;
             }
-            finalize_batch(in_progress.take().unwrap(), &mut batches);
+            finalize_batch(in_progress.take().unwrap(), batches_workspace);
         }
 
         in_progress = Some(InProgressBatch { start_rank: rank, count: 1, vertex_count: vc, index_count: ic, key });
     }
 
-    if let Some(ip) = in_progress.take() {
-        finalize_batch(ip, &mut batches);
+    if let Some(ip) = in_progress {
+        finalize_batch(ip, batches_workspace);
     }
 
-    let draw_order_off = fb.create_vector(&draw_order_vec);
-    let draw_batches_off = fb.create_vector(&batches);
-    let mask_indices_off = fb.create_vector(&mask_indices_vec);
-    (draw_order_off, draw_batches_off, mask_indices_off)
+    let draw_order_off = fb.create_vector(draw_order_workspace);
+    let batches_off = fb.create_vector(batches_workspace);
+    let mask_indices_off = fb.create_vector(mask_indices_workspace);
+    (draw_order_off, batches_off, mask_indices_off)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn get_frame_data<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     cached_parts: &[CachedPartData<'a>],
@@ -849,6 +886,13 @@ pub fn get_frame_data<'a>(
     unit: SsUnit,
     canvas_width: f32,
     canvas_height: f32,
+    draw_order_workspace: &mut Vec<u16>,
+    batches_workspace: &mut Vec<runtime::framedata::ss::runtime::DrawBatch>,
+    mask_indices_workspace: &mut Vec<u16>,
+    deform_start_workspace: &mut Vec<f32>,
+    deform_end_workspace: &mut Vec<f32>,
+    deform_out_workspace: &mut Vec<f32>,
+    inheritance_alphas_workspace: &mut Vec<f32>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -881,6 +925,10 @@ pub fn get_frame_data<'a>(
         unit,
         canvas_width,
         canvas_height,
+        deform_start_workspace,
+        deform_end_workspace,
+        deform_out_workspace,
+        inheritance_alphas_workspace,
     );
     args.parts = Some(fb.create_vector(parts_vec));
 
@@ -894,7 +942,16 @@ pub fn get_frame_data<'a>(
     // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
     // ここで実行する (lib.rs から z_order.update を移譲)。
     z_order.update(parts_vec);
-    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(fb, z_order.indices(), cached_parts, parts_vec, cell_texture_hashes);
+    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(
+        fb,
+        z_order.indices(),
+        cached_parts,
+        parts_vec,
+        cell_texture_hashes,
+        draw_order_workspace,
+        batches_workspace,
+        mask_indices_workspace,
+    );
     args.draw_order = Some(draw_order_off);
     args.draw_batches = Some(draw_batches_off);
     args.mask_indices = Some(mask_indices_off);

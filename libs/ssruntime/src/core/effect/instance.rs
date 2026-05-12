@@ -356,21 +356,16 @@ impl EffectInstanceState {
             let start_idx = self.draw_particles.len();
 
             if pi >= 0 && (pi as usize) < i {
-                let parent_info: Vec<(i32, f32)> = {
-                    let parent = &eval.emitters[pi as usize];
-                    let parent_state = &self.state.emitter_states[pi as usize];
-                    let mut info = Vec::new();
-                    for n in 0..parent.offset_patterns.len() {
-                        if parent_state.particle_state.born[n] {
-                            let p_stime = parent_state.particle_state.stime[n];
-                            let p_ptime = self.state.target_frame - p_stime as f32;
-                            info.push((n as i32, p_ptime));
-                        }
+                let parent = &eval.emitters[pi as usize];
+                for n in 0..parent.offset_patterns.len() {
+                    let (born, stime) = {
+                        let parent_state = &self.state.emitter_states[pi as usize];
+                        (parent_state.particle_state.born[n], parent_state.particle_state.stime[n])
+                    };
+                    if born {
+                        let p_ptime = self.state.target_frame - stime as f32;
+                        self.collect_emitter_particles(eval, i, p_ptime, pi, n as i32);
                     }
-                    info
-                };
-                for (n, p_ptime) in parent_info {
-                    self.collect_emitter_particles(eval, i, p_ptime, pi, n);
                 }
             } else {
                 self.collect_emitter_particles(eval, i, self.state.target_frame, -1, 0);

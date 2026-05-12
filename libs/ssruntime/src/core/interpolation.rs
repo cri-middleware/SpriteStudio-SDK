@@ -584,6 +584,9 @@ pub fn evaluate_deform(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
     frame_no: f32,
     hint: &mut usize,
+    start_workspace: &mut Vec<f32>,
+    end_workspace: &mut Vec<f32>,
+    out_workspace: &mut Vec<f32>,
 ) -> Option<(DeformEvaluationData, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
@@ -609,22 +612,25 @@ pub fn evaluate_deform(
                 current.coordinate.reserve(length_full);
                 let length = core::cmp::min(length_full, next_coodinate.len());
 
-                let mut start_vec = alloc::vec::Vec::with_capacity(length * 2);
-                let mut end_vec = alloc::vec::Vec::with_capacity(length * 2);
+                start_workspace.clear();
+                start_workspace.reserve(length * 2);
+                end_workspace.clear();
+                end_workspace.reserve(length * 2);
                 for i in 0..length {
                     let p = prev_coodinate.get(i);
                     let n = next_coodinate.get(i);
-                    start_vec.push(p.v1());
-                    start_vec.push(p.v2());
-                    end_vec.push(n.v1());
-                    end_vec.push(n.v2());
+                    start_workspace.push(p.v1());
+                    start_workspace.push(p.v2());
+                    end_workspace.push(n.v1());
+                    end_workspace.push(n.v2());
                 }
 
-                let mut out_vec = alloc::vec![0.0; length * 2];
-                interpolate_array_linear(&start_vec, &end_vec, rate, &mut out_vec);
+                out_workspace.clear();
+                out_workspace.resize(length * 2, 0.0);
+                interpolate_array_linear(start_workspace, end_workspace, rate, out_workspace);
 
                 for i in 0..length {
-                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(out_vec[i * 2], out_vec[i * 2 + 1]));
+                    current.coordinate.push(runtime::framedata::ss::runtime::Vec2::new(out_workspace[i * 2], out_workspace[i * 2 + 1]));
                 }
                 // Overrun use the value of `prev` as is.
                 for i in length..length_full {
