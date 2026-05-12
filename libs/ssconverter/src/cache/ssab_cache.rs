@@ -851,6 +851,46 @@ impl From<&ssab::ssab::ss::format::PartAttributeEffectT> for PartAttributeEffect
     }
 }
 
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartMeshBindingInfluenceKey {
+    pub bone: u16,
+    pub weight: ordered_float::OrderedFloat<f32>,
+    pub coordinate: Option<Vec2Key>,
+}
+impl From<&ssab::ssab::ss::format::PartMeshBindingInfluenceT> for PartMeshBindingInfluenceKey {
+    fn from(value: &ssab::ssab::ss::format::PartMeshBindingInfluenceT) -> Self {
+        Self {
+            bone: value.bone,
+            weight: ordered_float::OrderedFloat(value.weight),
+            coordinate: value.coordinate.as_ref().map(|c| Vec2Key::from(c.as_ref())),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartMeshBindingVertexKey {
+    pub influence: Option<Vec<PartMeshBindingInfluenceKey>>,
+}
+impl From<&ssab::ssab::ss::format::PartMeshBindingVertexT> for PartMeshBindingVertexKey {
+    fn from(value: &ssab::ssab::ss::format::PartMeshBindingVertexT) -> Self {
+        Self {
+            influence: value.influence.as_ref().map(|v| v.iter().map(PartMeshBindingInfluenceKey::from).collect()),
+        }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartMeshBindingKey {
+    pub vertex: Option<Vec<PartMeshBindingVertexKey>>,
+}
+impl From<&ssab::ssab::ss::format::PartMeshBindingT> for PartMeshBindingKey {
+    fn from(value: &ssab::ssab::ss::format::PartMeshBindingT) -> Self {
+        Self {
+            vertex: value.vertex.as_ref().map(|v| v.iter().map(PartMeshBindingVertexKey::from).collect()),
+        }
+    }
+}
+
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Rect<'a>>>,
@@ -903,6 +943,10 @@ pub struct SsabCache<'a> {
     pub part_animation_data_deform_cache: HashMap<PartAnimationDataDeformKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>,
     pub part_animation_data_deform_vec_cache: HashMap<PartAnimationDataDeformVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'a>>>>>,
     pub part_animation_data_cache: HashMap<PartAnimationDataKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationData<'a>>>,
+
+    pub part_mesh_binding_influence_cache: HashMap<PartMeshBindingInfluenceKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingInfluence<'a>>>,
+    pub part_mesh_binding_vertex_cache: HashMap<PartMeshBindingVertexKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingVertex<'a>>>,
+    pub part_mesh_binding_cache: HashMap<PartMeshBindingKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBinding<'a>>>,
 }
 impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
@@ -958,6 +1002,10 @@ impl<'a> SsabCache<'a> {
             part_animation_data_deform_cache: HashMap::new(),
             part_animation_data_deform_vec_cache: HashMap::new(),
             part_animation_data_cache: HashMap::new(),
+
+            part_mesh_binding_influence_cache: HashMap::new(),
+            part_mesh_binding_vertex_cache: HashMap::new(),
+            part_mesh_binding_cache: HashMap::new(),
         }
     }
     fn create_shared_vec2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, vec2t: &ssab::ssab::ss::format::Vec2T) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>> {
@@ -1924,6 +1972,48 @@ impl<'a> SsabCache<'a> {
         }
     }
 
+    fn create_shared_mesh_binding_influence(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, t: &ssab::ssab::ss::format::PartMeshBindingInfluenceT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingInfluence<'a>> {
+        let key = PartMeshBindingInfluenceKey::from(t);
+        if let Some(&offset) = self.part_mesh_binding_influence_cache.get(&key) {
+            return offset;
+        }
+        let coordinate = t.coordinate.as_ref().map(|c| self.create_shared_vec2(fb, c));
+        let args = ssab::ssab::ss::format::PartMeshBindingInfluenceArgs { bone: t.bone, weight: t.weight, coordinate };
+        let offset = ssab::ssab::ss::format::PartMeshBindingInfluence::create(fb, &args);
+        self.part_mesh_binding_influence_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_mesh_binding_vertex(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, t: &ssab::ssab::ss::format::PartMeshBindingVertexT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingVertex<'a>> {
+        let key = PartMeshBindingVertexKey::from(t);
+        if let Some(&offset) = self.part_mesh_binding_vertex_cache.get(&key) {
+            return offset;
+        }
+        let influence = t.influence.as_ref().map(|v| {
+            let items = v.iter().map(|inf| self.create_shared_mesh_binding_influence(fb, inf)).collect::<Vec<_>>();
+            fb.create_vector(&items)
+        });
+        let args = ssab::ssab::ss::format::PartMeshBindingVertexArgs { influence };
+        let offset = ssab::ssab::ss::format::PartMeshBindingVertex::create(fb, &args);
+        self.part_mesh_binding_vertex_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_mesh_binding(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, t: &ssab::ssab::ss::format::PartMeshBindingT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBinding<'a>> {
+        let key = PartMeshBindingKey::from(t);
+        if let Some(&offset) = self.part_mesh_binding_cache.get(&key) {
+            return offset;
+        }
+        let vertex = t.vertex.as_ref().map(|v| {
+            let items = v.iter().map(|vtx| self.create_shared_mesh_binding_vertex(fb, vtx)).collect::<Vec<_>>();
+            fb.create_vector(&items)
+        });
+        let args = ssab::ssab::ss::format::PartMeshBindingArgs { vertex };
+        let offset = ssab::ssab::ss::format::PartMeshBinding::create(fb, &args);
+        self.part_mesh_binding_cache.insert(key, offset);
+        offset
+    }
+
     fn create_shared_part_list(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, ps: &[ssab::ssab::ss::format::PartDataT]) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartData<'a>>>> {
         let parts = ps
             .iter()
@@ -1934,6 +2024,7 @@ impl<'a> SsabCache<'a> {
                 args.bounds_type = part.bounds_type;
                 args.blend_type = part.blend_type;
                 args.mask_influence = part.mask_influence;
+                args.mesh_binding = part.mesh_binding.as_ref().map(|b| self.create_shared_mesh_binding(fb, b));
                 args.part_type_type = part.part_type.part_type_type();
                 args.part_type = Some(self.create_shared_part_type(fb, &part.part_type));
 

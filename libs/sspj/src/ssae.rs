@@ -205,8 +205,8 @@ impl FromStr for SsMeshBindInfo {
         for idx in 0..num {
             let offset: usize = (1 + idx * 4) as usize;
 
-            let weight: i32 = array[offset] as i32;
-            let bone_index: i32 = array[offset + 1] as i32;
+            let bone_index: i32 = array[offset] as i32;
+            let weight: i32 = array[offset + 1] as i32;
             let x: f32 = array[offset + 2];
             let y: f32 = array[offset + 3];
             weight_vec.push(weight);
@@ -272,6 +272,7 @@ pub struct SsModel {
 
     #[serde(deserialize_with = "parse_mesh_list")]
     pub mesh_list: Vec<SsMeshBind>,
+    #[serde(deserialize_with = "parse_bone_list")]
     pub bone_list: HashMap<String, i32>,
 
     #[serde(default)]
@@ -288,6 +289,25 @@ where
         value: Vec<SsPart>,
     }
     Ok(PartList::deserialize(deserializer)?.value)
+}
+
+fn parse_bone_list<'de, D>(deserializer: D) -> Result<HashMap<String, i32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    struct BoneListItem {
+        #[serde(rename = "@key")]
+        key: String,
+        #[serde(rename = "$text")]
+        value: i32,
+    }
+    #[derive(Deserialize)]
+    struct BoneList {
+        #[serde(default)]
+        item: Vec<BoneListItem>,
+    }
+    Ok(BoneList::deserialize(deserializer)?.item.into_iter().map(|e| (e.key, e.value)).collect())
 }
 
 fn parse_mesh_list<'de, D>(deserializer: D) -> Result<Vec<SsMeshBind>, D::Error>
