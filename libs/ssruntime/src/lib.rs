@@ -1212,13 +1212,14 @@ impl<'a> Context<'a> {
     }
 }
 
-pub struct EffectContext {
-    pub instance: crate::core::effect::instance::EffectInstance,
+pub struct EffectContext<'a> {
+    pub eval: crate::core::effect::instance::EffectEvaluationContext<'a>,
+    pub instance: crate::core::effect::instance::EffectInstanceState,
     seed: u32,
 }
 
-impl EffectContext {
-    pub fn new(resource: &AnimationResource<'_>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
+impl<'a> EffectContext<'a> {
+    pub fn new(resource: &'a AnimationResource<'a>, effect_name_hash: u32, seed: u32) -> Result<Self, error::SSRuntimeError> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let Some(effects) = ssab.effects() else {
             return Err(error::SSRuntimeError::AnimationNotFound);
@@ -1228,10 +1229,10 @@ impl EffectContext {
         };
         // The effect was located by name_hash, but its data is malformed
         // (e.g. missing required `effect_node` table).
-        let Some(instance) = crate::core::effect::instance::EffectInstance::from_ssab(&effect, seed) else {
+        let Some((eval, instance)) = crate::core::effect::instance::EffectEvaluationContext::from_ssab(&effect, seed) else {
             return Err(error::SSRuntimeError::MalformedEffect);
         };
-        Ok(Self { instance, seed })
+        Ok(Self { eval, instance, seed })
     }
 
     pub fn get_seed(&self) -> u32 {
@@ -1247,15 +1248,19 @@ impl EffectContext {
     }
 
     pub fn get_lifetime(&self) -> i32 {
-        self.instance.effect_time_length
+        self.eval.effect_time_length
     }
 
     pub fn is_infinite(&self) -> bool {
-        self.instance.is_infinite
+        self.eval.is_infinite
     }
 
     pub fn update(&mut self, frame: f32) {
-        self.instance.update(frame);
+        self.instance.update(&self.eval, frame);
+    }
+
+    pub fn get_draw_commands(&mut self) -> (&[crate::core::effect::instance::EmitterDrawCommand], &[crate::core::effect::types::ParticleDrawState]) {
+        self.instance.get_draw_commands(&self.eval)
     }
 }
 
@@ -1291,7 +1296,7 @@ struct EmitterResourceEntry {
 }
 
 pub struct EffectSlot<'a> {
-    ctx: EffectContext,
+    ctx: EffectContext<'a>,
     // SSAB root, kept for cellmap lookup during draw-plan build. Borrows from
     // the same resource as `ctx`; lifetime tied to the surrounding `'a`.
     ssab: ssab::ssab::ss::format::SsAnimeBinary<'a>,
@@ -1437,7 +1442,7 @@ impl<'a> EffectSlot<'a> {
             return crate::types::ss_effect_step_result::not_visible();
         }
 
-        self.ctx.instance.update(relative_frame);
+        self.ctx.update(relative_frame);
         let buf = self.build_draw_plan(y_flip, vert_stride);
         if buf.is_empty() { crate::types::ss_effect_step_result::not_visible() } else { crate::types::ss_effect_step_result { visible: true, draw_plan_buf: buf.as_ptr(), draw_plan_len: buf.len() } }
     }
@@ -1458,7 +1463,7 @@ impl<'a> EffectSlot<'a> {
         // `self` fields — the slices returned by `get_draw_commands` borrow from
         // `self.ctx.instance`, so we narrow the borrow to a tight scope.
         let cmd_keys: alloc::vec::Vec<(u32, u32, i32, usize, usize)> = {
-            let (commands, _particles) = self.ctx.instance.get_draw_commands();
+            let (commands, _particles) = self.ctx.get_draw_commands();
             commands.iter().map(|c| (c.cell_map_name_hash, c.cell_name_hash, c.blend_type, c.particle_start, c.particle_end)).collect()
         };
 
