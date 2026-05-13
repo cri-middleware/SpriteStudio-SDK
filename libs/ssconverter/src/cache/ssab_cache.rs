@@ -859,11 +859,7 @@ pub struct PartMeshBindingInfluenceKey {
 }
 impl From<&ssab::ssab::ss::format::PartMeshBindingInfluenceT> for PartMeshBindingInfluenceKey {
     fn from(value: &ssab::ssab::ss::format::PartMeshBindingInfluenceT) -> Self {
-        Self {
-            bone: value.bone,
-            weight: ordered_float::OrderedFloat(value.weight),
-            coordinate: value.coordinate.as_ref().map(|c| Vec2Key::from(c.as_ref())),
-        }
+        Self { bone: value.bone, weight: ordered_float::OrderedFloat(value.weight), coordinate: value.coordinate.as_ref().map(|c| Vec2Key::from(c.as_ref())) }
     }
 }
 
@@ -873,9 +869,7 @@ pub struct PartMeshBindingVertexKey {
 }
 impl From<&ssab::ssab::ss::format::PartMeshBindingVertexT> for PartMeshBindingVertexKey {
     fn from(value: &ssab::ssab::ss::format::PartMeshBindingVertexT) -> Self {
-        Self {
-            influence: value.influence.as_ref().map(|v| v.iter().map(PartMeshBindingInfluenceKey::from).collect()),
-        }
+        Self { influence: value.influence.as_ref().map(|v| v.iter().map(PartMeshBindingInfluenceKey::from).collect()) }
     }
 }
 
@@ -885,9 +879,7 @@ pub struct PartMeshBindingKey {
 }
 impl From<&ssab::ssab::ss::format::PartMeshBindingT> for PartMeshBindingKey {
     fn from(value: &ssab::ssab::ss::format::PartMeshBindingT) -> Self {
-        Self {
-            vertex: value.vertex.as_ref().map(|v| v.iter().map(PartMeshBindingVertexKey::from).collect()),
-        }
+        Self { vertex: value.vertex.as_ref().map(|v| v.iter().map(PartMeshBindingVertexKey::from).collect()) }
     }
 }
 

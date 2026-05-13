@@ -1500,16 +1500,15 @@ fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ss
 }
 
 pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab::ss::format::PartDataT> {
-    let bone_index_to_part_index: std::collections::HashMap<i32, u16> =
-        anime_pack.model.bone_list
-            .iter()
-            .filter_map(|(part_name, &bone_idx)| {
-                let part_idx = anime_pack.model.part_list
-                    .iter()
-                    .position(|p| &p.name == part_name)?;
-                Some((bone_idx, part_idx as u16))
-            })
-            .collect();
+    let bone_index_to_part_index: std::collections::HashMap<i32, u16> = anime_pack
+        .model
+        .bone_list
+        .iter()
+        .filter_map(|(part_name, &bone_idx)| {
+            let part_idx = anime_pack.model.part_list.iter().position(|p| &p.name == part_name)?;
+            Some((bone_idx, part_idx as u16))
+        })
+        .collect();
 
     anime_pack
         .model
@@ -1531,20 +1530,17 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
             part_data_t.mask_influence = part.mask_influence;
 
-            part_data_t.mesh_binding = anime_pack.model.mesh_list
-                .get(part_index)
-                .filter(|mesh_bind| !mesh_bind.mesh_vertices_bind_array.is_empty())
-                .map(|mesh_bind| {
-                    let vertex = mesh_bind.mesh_vertices_bind_array.iter()
-                        .map(|bind_info| {
-                            let influence = if bind_info.bind_bone_num > 0 {
-                                Some((0..bind_info.bind_bone_num as usize)
+            part_data_t.mesh_binding = anime_pack.model.mesh_list.get(part_index).filter(|mesh_bind| !mesh_bind.mesh_vertices_bind_array.is_empty()).map(|mesh_bind| {
+                let vertex = mesh_bind
+                    .mesh_vertices_bind_array
+                    .iter()
+                    .map(|bind_info| {
+                        let influence = if bind_info.bind_bone_num > 0 {
+                            Some(
+                                (0..bind_info.bind_bone_num as usize)
                                     .map(|i| {
                                         let mut inf = ssab::ssab::ss::format::PartMeshBindingInfluenceT::default();
-                                        inf.bone = bone_index_to_part_index
-                                            .get(&bind_info.bone_index[i])
-                                            .copied()
-                                            .unwrap_or(0);
+                                        inf.bone = bone_index_to_part_index.get(&bind_info.bone_index[i]).copied().unwrap_or(0);
                                         inf.weight = bind_info.weight[i] as f32 / 100.0;
                                         let mut coord = ssab::ssab::ss::format::Vec2T::default();
                                         coord.v1 = bind_info.offset[i].x;
@@ -1552,19 +1548,20 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                                         inf.coordinate = Some(Box::new(coord));
                                         inf
                                     })
-                                    .collect::<Vec<_>>())
-                            } else {
-                                None
-                            };
-                            let mut vtx = ssab::ssab::ss::format::PartMeshBindingVertexT::default();
-                            vtx.influence = influence;
-                            vtx
-                        })
-                        .collect::<Vec<_>>();
-                    let mut binding = ssab::ssab::ss::format::PartMeshBindingT::default();
-                    binding.vertex = Some(vertex);
-                    Box::new(binding)
-                });
+                                    .collect::<Vec<_>>(),
+                            )
+                        } else {
+                            None
+                        };
+                        let mut vtx = ssab::ssab::ss::format::PartMeshBindingVertexT::default();
+                        vtx.influence = influence;
+                        vtx
+                    })
+                    .collect::<Vec<_>>();
+                let mut binding = ssab::ssab::ss::format::PartMeshBindingT::default();
+                binding.vertex = Some(vertex);
+                Box::new(binding)
+            });
 
             part_data_t.part_type = match &part.part_type {
                 sspj::sstypes::SsPartType::Null => ssab::ssab::ss::format::PartTypeT::PartTypeNull(Box::default()),
