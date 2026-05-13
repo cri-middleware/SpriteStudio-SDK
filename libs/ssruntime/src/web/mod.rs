@@ -1,15 +1,16 @@
 //! Wasm bindings for ssruntime.
 //!
-//! Pending additions (deferred to JS/TS Player integration):
-//! - `is_looped`, `set_frame_relative` — required to drive Instance child players
-//!   (parent-loop detection, synced child seek).
-//! - `get_active_event_instance`, `resolve_label_time` — Instance event resolution
-//!   without leaking ssab schema knowledge to the JS side.
-//! - `update_animation`, `set_log_callback` — currently absent or shaped differently.
+//! This module mirrors the C FFI surface in `src/ffi/mod.rs` 1:1 for JS/TS
+//! Players. The FFI side is authoritative — when adding or modifying public
+//! API, update `src/ffi/mod.rs` first and reflect the change here. POD return
+//! types (`ss_event_instance_info`, `ss_effect_event_info`) are exposed as
+//! wasm-bindgen wrapper classes (`WebEventInstanceInfo`,
+//! `WebEffectEventInfo`) because wasm-bindgen cannot expose `#[repr(C)]`
+//! structs by value.
 //!
-//! These will be wired up alongside the JS/TS Player so the API shape
-//! (typed-array views vs. JS objects vs. getter functions) can be decided
-//! against an actual consumer rather than mirroring `src/ffi/mod.rs` 1:1.
+//! Not yet exposed (deferred): `ss_runtime_set_log_callback` requires
+//! bridging a JS `Function` and a `js-sys` dependency, which is held off
+//! until the JS/TS Player needs it.
 
 use crate::{Context, SsabData, SsabResource};
 use alloc::boxed::Box;
@@ -142,6 +143,112 @@ impl From<WebPlaybackStyle> for crate::core::playback_controller::PlaybackStyle 
     }
 }
 
+/// JS-friendly mirror of `ss_event_instance_info` (`src/types.rs`).
+///
+/// Returned by `SSRuntimeContext::get_active_event_instance` and consumed by
+/// `SSRuntimeInstanceSlot::step`. Construct directly via the
+/// `WebEventInstanceInfo` constructor when bridging from raw values, or call
+/// `synthetic_default` to obtain SS6 defaults.
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug)]
+pub struct WebEventInstanceInfo {
+    pub event_frame: i32,
+    pub start_label_hash: u32,
+    pub start_offset: i32,
+    pub end_label_hash: u32,
+    pub end_offset: i32,
+    pub loop_num: i32,
+    pub speed: f32,
+    pub independent: bool,
+    pub reverse: bool,
+    pub pingpong: bool,
+    pub is_synthetic_default: bool,
+}
+
+#[wasm_bindgen]
+impl WebEventInstanceInfo {
+    #[wasm_bindgen(constructor)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(event_frame: i32, start_label_hash: u32, start_offset: i32, end_label_hash: u32, end_offset: i32, loop_num: i32, speed: f32, independent: bool, reverse: bool, pingpong: bool, is_synthetic_default: bool) -> WebEventInstanceInfo {
+        WebEventInstanceInfo { event_frame, start_label_hash, start_offset, end_label_hash, end_offset, loop_num, speed, independent, reverse, pingpong, is_synthetic_default }
+    }
+
+    pub fn synthetic_default() -> WebEventInstanceInfo {
+        crate::types::ss_event_instance_info::synthetic_default().into()
+    }
+}
+
+impl From<crate::types::ss_event_instance_info> for WebEventInstanceInfo {
+    fn from(v: crate::types::ss_event_instance_info) -> Self {
+        WebEventInstanceInfo {
+            event_frame: v.event_frame,
+            start_label_hash: v.start_label_hash,
+            start_offset: v.start_offset,
+            end_label_hash: v.end_label_hash,
+            end_offset: v.end_offset,
+            loop_num: v.loop_num,
+            speed: v.speed,
+            independent: v.independent,
+            reverse: v.reverse,
+            pingpong: v.pingpong,
+            is_synthetic_default: v.is_synthetic_default,
+        }
+    }
+}
+
+impl From<WebEventInstanceInfo> for crate::types::ss_event_instance_info {
+    fn from(v: WebEventInstanceInfo) -> Self {
+        crate::types::ss_event_instance_info {
+            event_frame: v.event_frame,
+            start_label_hash: v.start_label_hash,
+            start_offset: v.start_offset,
+            end_label_hash: v.end_label_hash,
+            end_offset: v.end_offset,
+            loop_num: v.loop_num,
+            speed: v.speed,
+            independent: v.independent,
+            reverse: v.reverse,
+            pingpong: v.pingpong,
+            is_synthetic_default: v.is_synthetic_default,
+        }
+    }
+}
+
+/// JS-friendly mirror of `ss_effect_event_info` (`src/types.rs`).
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug)]
+pub struct WebEffectEventInfo {
+    pub event_frame: i32,
+    pub start_time: i32,
+    pub speed: f32,
+    pub independent: bool,
+    pub is_synthetic_default: bool,
+}
+
+#[wasm_bindgen]
+impl WebEffectEventInfo {
+    #[wasm_bindgen(constructor)]
+    pub fn new(event_frame: i32, start_time: i32, speed: f32, independent: bool, is_synthetic_default: bool) -> WebEffectEventInfo {
+        WebEffectEventInfo { event_frame, start_time, speed, independent, is_synthetic_default }
+    }
+
+    pub fn synthetic_default() -> WebEffectEventInfo {
+        crate::types::ss_effect_event_info::synthetic_default().into()
+    }
+}
+
+impl From<crate::types::ss_effect_event_info> for WebEffectEventInfo {
+    fn from(v: crate::types::ss_effect_event_info) -> Self {
+        WebEffectEventInfo { event_frame: v.event_frame, start_time: v.start_time, speed: v.speed, independent: v.independent, is_synthetic_default: v.is_synthetic_default }
+    }
+}
+
+impl From<WebEffectEventInfo> for crate::types::ss_effect_event_info {
+    fn from(v: WebEffectEventInfo) -> Self {
+        crate::types::ss_effect_event_info { event_frame: v.event_frame, start_time: v.start_time, speed: v.speed, independent: v.independent, is_synthetic_default: v.is_synthetic_default }
+    }
+}
+
 #[wasm_bindgen]
 pub struct SSRuntimeResource {
     pub(crate) inner: Arc<SsabResource>,
@@ -193,22 +300,22 @@ impl SSRuntimeContext {
         self.bound_resource = None;
     }
 
-    pub fn bind_resource(&mut self, resource: &SSRuntimeResource) {
+    pub fn bind_resource(&mut self, resource: &SSRuntimeResource) -> bool {
         let res_ptr = resource.inner.resource_static_ptr();
         if res_ptr.is_null() {
-            return;
+            return false;
         }
         // Safety: We clone the Arc into bound_resource, keeping the buffer alive.
         self.bound_resource = Some(resource.inner.clone());
         self.inner.bind_resource(unsafe { &*res_ptr });
+        true
     }
 
     pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
         if let Ok(ssab_data) = SsabData::load_copy(data) {
             let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
             if res.inner.resource().is_some() {
-                self.bind_resource(&res);
-                return true;
+                return self.bind_resource(&res);
             }
         }
         false
@@ -218,8 +325,7 @@ impl SSRuntimeContext {
         if let Ok(ssab_data) = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) } {
             let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
             if res.inner.resource().is_some() {
-                self.bind_resource(&res);
-                return true;
+                return self.bind_resource(&res);
             }
         }
         false
@@ -254,6 +360,54 @@ impl SSRuntimeContext {
         self.inner.get_world_matrices_len()
     }
 
+    pub fn get_local_uvs_buf(&self) -> *const f32 {
+        self.inner.get_local_uvs_ptr()
+    }
+
+    pub fn get_local_uvs_len(&self) -> usize {
+        self.inner.get_local_uvs_len()
+    }
+
+    pub fn get_cell_meta_buf(&self) -> *const f32 {
+        self.inner.get_cell_meta_ptr()
+    }
+
+    pub fn get_cell_meta_len(&self) -> usize {
+        self.inner.get_cell_meta_len()
+    }
+
+    pub fn get_local_vertices_buf(&self) -> *const f32 {
+        self.inner.get_local_vertices_ptr()
+    }
+
+    pub fn get_local_vertices_len(&self) -> usize {
+        self.inner.get_local_vertices_len()
+    }
+
+    pub fn get_shape_vertices_buf(&self) -> *const f32 {
+        self.inner.get_shape_vertices_ptr()
+    }
+
+    pub fn get_shape_vertices_len(&self) -> usize {
+        self.inner.get_shape_vertices_len()
+    }
+
+    pub fn get_shape_vertex_box_coords_buf(&self) -> *const f32 {
+        self.inner.get_shape_vertex_box_coords_ptr()
+    }
+
+    pub fn get_shape_vertex_box_coords_len(&self) -> usize {
+        self.inner.get_shape_vertex_box_coords_len()
+    }
+
+    pub fn get_shape_vertex_counts_buf(&self) -> *const i32 {
+        self.inner.get_shape_vertex_counts_ptr()
+    }
+
+    pub fn get_shape_vertex_counts_len(&self) -> usize {
+        self.inner.get_shape_vertex_counts_len()
+    }
+
     pub fn get_ssab_buf(&self) -> Result<*const u8, JsValue> {
         self.inner.get_ssab_data().map(|s| s.as_ptr()).ok_or_else(|| JsValue::from_str("SSAB data not found"))
     }
@@ -269,6 +423,10 @@ impl SSRuntimeContext {
 
     pub fn is_end_frame_reached(&self) -> bool {
         self.inner.is_end_frame_reached()
+    }
+
+    pub fn is_looped(&self) -> bool {
+        self.inner.is_looped()
     }
 
     // setting getter functions
@@ -400,6 +558,19 @@ impl SSRuntimeContext {
     pub fn get_passed_event_index(&self, index: i32) -> i32 {
         self.inner.get_passed_event_indices().get(index as usize).copied().unwrap_or(-1)
     }
+
+    /// Mirror of `ss_runtime_get_active_event_instance`. Returns SS6 defaults
+    /// (`is_synthetic_default = true`, `loop_num = 1`, `speed = 1.0`) when no
+    /// event is active. Most Players should pass the returned value directly
+    /// to `SSRuntimeInstanceSlot::step`, which resolves the labels internally.
+    pub fn get_active_event_instance(&mut self, slot_index: u32) -> WebEventInstanceInfo {
+        self.inner.get_active_event_instance(slot_index).into()
+    }
+
+    /// Mirror of `ss_runtime_get_active_effect_event`.
+    pub fn get_active_effect_event(&mut self, slot_index: u32) -> WebEffectEventInfo {
+        self.inner.get_active_effect_event(slot_index).into()
+    }
 }
 
 /// JS-friendly wrapper of `EffectSlot`. Same conceptual flow as the C FFI:
@@ -429,18 +600,17 @@ impl SSRuntimeEffectSlot {
         }
     }
 
-    /// Advance one frame. `event_*` parameters are the fields of the event
-    /// info returned by `Context::get_active_effect_event` (passed flat for
-    /// JS-side ergonomics — wasm-bindgen does not expose `#[repr(C)]` POD
-    /// structs as constructible classes).
+    /// Advance one frame. `ev` is the event info returned by
+    /// `SSRuntimeContext::get_active_effect_event` (or built manually via
+    /// `WebEffectEventInfo`).
+    ///
     /// `y_flip = true` for Y-down rendering (pixi.js); `vert_stride = 2` packs
     /// (x,y) verts, `3` packs (x,y,0) for engines requiring 3-component verts.
     /// Returns `true` if visible; on `true` callers read the plan via
     /// `get_draw_plan_buf` / `get_draw_plan_len` before the next step.
     #[allow(clippy::too_many_arguments)]
-    pub fn step(&mut self, event_frame: i32, start_time: i32, speed: f32, independent: bool, is_synthetic_default: bool, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> bool {
-        let ev = crate::types::ss_effect_event_info { event_frame, start_time, speed, independent, is_synthetic_default };
-        let r = self.inner.step(ev, parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride);
+    pub fn step(&mut self, ev: &WebEffectEventInfo, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> bool {
+        let r = self.inner.step((*ev).into(), parent_frame, delta_seconds, fps, parent_looped, y_flip, vert_stride);
         self.last_draw_plan_ptr = r.draw_plan_buf;
         self.last_draw_plan_len = r.draw_plan_len;
         r.visible
@@ -483,34 +653,15 @@ impl SSRuntimeInstanceSlot {
         SSRuntimeInstanceSlot { inner: crate::InstanceSlot::new(), last_visible: false, last_transitioned: false, last_independent: false, last_child_frame_no: 0.0, last_child_looped: false }
     }
 
-    /// Advance one tick. `event_*` parameters are the fields of the event
-    /// info returned by `Context::get_active_event_instance` (passed flat for
-    /// JS-side ergonomics). `child_ctx` must be the *child* runtime — label
-    /// resolution and frame stepping run against it.
+    /// Advance one tick. `ev` is the event info returned by
+    /// `SSRuntimeContext::get_active_event_instance` (or built manually via
+    /// `WebEventInstanceInfo`). `child_ctx` must be the *child* runtime —
+    /// label resolution and frame stepping run against it.
     /// Returns `true` if visible. Inspect `transitioned`, `independent`,
     /// `child_frame_no`, `child_looped` via the corresponding getters.
     #[allow(clippy::too_many_arguments)]
-    pub fn step(
-        &mut self,
-        child_ctx: &mut SSRuntimeContext,
-        event_frame: i32,
-        start_label_hash: u32,
-        start_offset: i32,
-        end_label_hash: u32,
-        end_offset: i32,
-        loop_num: i32,
-        speed: f32,
-        independent: bool,
-        reverse: bool,
-        pingpong: bool,
-        is_synthetic_default: bool,
-        previous_child_frame: f32,
-        parent_frame: f32,
-        delta_seconds: f32,
-        parent_looped: bool,
-    ) -> bool {
-        let ev = crate::types::ss_event_instance_info { event_frame, start_label_hash, start_offset, end_label_hash, end_offset, loop_num, speed, independent, reverse, pingpong, is_synthetic_default };
-        let r = self.inner.step(ev, &mut child_ctx.inner, previous_child_frame, parent_frame, delta_seconds, parent_looped);
+    pub fn step(&mut self, ev: &WebEventInstanceInfo, child_ctx: &mut SSRuntimeContext, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> bool {
+        let r = self.inner.step((*ev).into(), &mut child_ctx.inner, previous_child_frame, parent_frame, delta_seconds, parent_looped);
         self.last_visible = r.visible;
         self.last_transitioned = r.transitioned;
         self.last_independent = r.independent;

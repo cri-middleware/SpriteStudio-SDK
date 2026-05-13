@@ -695,15 +695,6 @@ pub extern "C" fn ss_runtime_update(context: *mut c_void, delta: f32) -> c_float
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_update_animation(context: *mut c_void, delta: f32) -> c_float {
-    if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.update_animation(delta);
-        return ffi_context.ctx.get_frame_no();
-    }
-    0.0
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_play(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.play();
@@ -735,20 +726,6 @@ pub extern "C" fn ss_runtime_stop(context: *mut c_void) {
 pub extern "C" fn ss_runtime_set_frame_no(context: *mut c_void, frame: c_float) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.set_frame_no(frame);
-    }
-}
-
-/// Sets the playback position based on `diff` (frames elapsed since playback
-/// started, with per-instance speed already applied), applying the configured
-/// `set_animation_section`, `set_loops`, and `set_playback_direction` values.
-///
-/// This is the entry point a parent Player uses to drive a child Instance or
-/// Effect Player deterministically: it works correctly under reverse, seek,
-/// and frame-skip because the same `diff` always produces the same frame.
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_frame_relative(context: *mut c_void, diff: c_float) {
-    if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.set_frame_relative(diff);
     }
 }
 
@@ -1001,10 +978,10 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// `speed = 1.0`) when no event is active, so callers don't need to
 /// branch on the no-event case.
 ///
-/// `start_label_hash` / `end_label_hash` are returned raw — resolve them
-/// against the *child* runtime context (the one currently bound to the
-/// Instance slot) via `ss_runtime_resolve_label_time` so that dynamic
-/// child-ssab swaps stay correct.
+/// `start_label_hash` / `end_label_hash` are returned raw. They are
+/// already resolved internally by `ss_instance_slot_step` for the
+/// child runtime — most Players should consume the slot helper rather
+/// than resolving labels themselves.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_active_event_instance(context: *mut c_void, slot_index: u32) -> ss_event_instance_info {
     if let Some(ffi_context) = get_context(context) {
@@ -1024,149 +1001,4 @@ pub extern "C" fn ss_runtime_get_active_effect_event(context: *mut c_void, slot_
         return ffi_context.ctx.get_active_effect_event(slot_index);
     }
     ss_effect_event_info::synthetic_default()
-}
-
-/// Look up a label by `label_hash` in this runtime's currently selected
-/// animation and return its `time`. `label_hash == 0` (caller convention
-/// for "unset"), no bound animation, or no-such-label all return
-/// `fallback`.
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_resolve_label_time(context: *mut c_void, label_hash: u32, fallback: i32) -> i32 {
-    if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.resolve_label_time(label_hash, fallback);
-    }
-    fallback
-}
-
-/// Computes the local vertex coordinates for a part.
-///
-/// # Safety
-/// - `input_data`: Must point to an array of at least 6 floats if `has_deform` (flag 4) is false,
-///   or 14 floats if `has_deform` is true.
-///   Layout: [size_x, size_y, pivot_x, pivot_y, pivot_offset_x, pivot_offset_y, (optional) dx0..3, dy0..3]
-/// - `out_x`, `out_y`: Must point to buffers with at least 5 floats.
-#[unsafe(no_mangle)]
-/// Computes the local vertices for a part using primitive parameters.
-/// deform_x_ptr, deform_y_ptr: optional pointers to float arrays of size 4.
-/// out_x, out_y: pointers to float arrays of size 5 to store results.
-/// # Safety
-/// This function is unsafe because it dereferences raw pointers.
-pub unsafe extern "C" fn ss_vertex_compute_local(
-    size_w: f32,
-    size_h: f32,
-    pivot_x: f32,
-    pivot_y: f32,
-    pivot_offset_x: f32,
-    pivot_offset_y: f32,
-    h_flip: bool,
-    v_flip: bool,
-    deform_x_ptr: *const f32,
-    deform_y_ptr: *const f32,
-    out_x: *mut f32,
-    out_y: *mut f32,
-) -> bool {
-    if out_x.is_null() || out_y.is_null() {
-        return false;
-    }
-
-    let deform = if !deform_x_ptr.is_null() && !deform_y_ptr.is_null() {
-        let dx = unsafe { &*deform_x_ptr.cast::<[f32; 4]>() };
-        let dy = unsafe { &*deform_y_ptr.cast::<[f32; 4]>() };
-        Some((dx, dy))
-    } else {
-        None
-    };
-
-    let (vx, vy) = crate::core::geometry::compute_local_vertices((size_w, size_h), (pivot_x, pivot_y), (pivot_offset_x, pivot_offset_y), (h_flip, v_flip), deform);
-
-    unsafe {
-        *out_x.cast::<[f32; 5]>() = vx;
-        *out_y.cast::<[f32; 5]>() = vy;
-    }
-    true
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_geometry_is_point_in_rect(px: f32, py: f32, size_w: f32, size_h: f32) -> bool {
-    crate::core::geometry::is_point_in_rect((px, py), (size_w, size_h))
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_geometry_is_point_in_quad(
-    tx: f32,
-    ty: f32,
-    vx: *const f32, // Array of 4 floats
-    vy: *const f32, // Array of 4 floats
-) -> bool {
-    if vx.is_null() || vy.is_null() {
-        return false;
-    }
-    let vxa = unsafe { &*(vx as *const [f32; 4]) };
-    let vya = unsafe { &*(vy as *const [f32; 4]) };
-    crate::core::geometry::is_point_in_quad((tx, ty), vxa, vya)
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_nineslice_compute_local(
-    size_w: f32,
-    size_h: f32,
-    u_left: f32,
-    v_top: f32,
-    u_right: f32,
-    v_bottom: f32,
-    margin_l: f32,
-    margin_t: f32,
-    margin_r: f32,
-    margin_b: f32,
-    source_w: f32,
-    source_h: f32,
-    out_vx: *mut f32, // Array of 16 floats
-    out_vy: *mut f32, // Array of 16 floats
-    out_uv: *mut f32, // Array of 16 floats
-    out_vv: *mut f32, // Array of 16 floats
-) -> bool {
-    if out_vx.is_null() || out_vy.is_null() || out_uv.is_null() || out_vv.is_null() {
-        return false;
-    }
-
-    let grid = crate::core::geometry::compute_nineslice_geometry((size_w, size_h), (u_left, v_top, u_right, v_bottom), (margin_l, margin_t, margin_r, margin_b), (source_w, source_h));
-
-    unsafe {
-        *out_vx.cast::<[f32; 16]>() = grid.vertices_x;
-        *out_vy.cast::<[f32; 16]>() = grid.vertices_y;
-        *out_uv.cast::<[f32; 16]>() = grid.uvs_u;
-        *out_vv.cast::<[f32; 16]>() = grid.uvs_v;
-    }
-    true
-}
-
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_shape_compute_local(
-    shape_type: i32,
-    size_w: f32,
-    size_h: f32,
-    out_vx: *mut f32, // Array of 16 floats
-    out_vy: *mut f32, // Array of 16 floats
-    out_count: *mut i32,
-) -> bool {
-    if out_vx.is_null() || out_vy.is_null() || out_count.is_null() {
-        return false;
-    }
-
-    let shape = match shape_type {
-        0 => crate::core::geometry::ShapeType::Rectangle,
-        1 => crate::core::geometry::ShapeType::Triangle,
-        2 => crate::core::geometry::ShapeType::Star,
-        3 => crate::core::geometry::ShapeType::Arrow,
-        _ => return false,
-    };
-
-    let (count, vx, vy) = crate::core::geometry::compute_shape_vertices(shape, (size_w, size_h));
-
-    unsafe {
-        *out_vx.cast::<[f32; 16]>() = vx;
-        *out_vy.cast::<[f32; 16]>() = vy;
-        *out_count = count as i32;
-    }
-    true
 }

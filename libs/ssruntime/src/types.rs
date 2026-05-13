@@ -20,9 +20,10 @@
 /// default semantics: `is_synthetic_default = true`, `loop_num = 1`,
 /// `speed = 1.0`, all label hashes 0 (caller falls back), all flags false.
 ///
-/// `start_label_hash` / `end_label_hash` are returned raw — resolve them
-/// against the *child* runtime context with `ss_runtime_resolve_label_time`.
-/// This keeps late binding intact across dynamic-swap of the child ssab.
+/// `start_label_hash` / `end_label_hash` are returned raw. They are
+/// already resolved internally by `ss_instance_slot_step` against the
+/// child runtime context, which keeps late binding intact across
+/// dynamic-swap of the child ssab.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct ss_event_instance_info {
