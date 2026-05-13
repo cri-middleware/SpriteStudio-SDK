@@ -104,12 +104,68 @@ pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<
     out
 }
 
+/// Pre-decoded skinned mesh bind-pose data for a single part.
+///
+/// Built once at SSAB load time from `PartData.mesh_binding()` (AoS in the
+/// FlatBuffer) and stored on `CachedPartData`. CSR layout for influence
+/// offsets + SoA for weights / bind coords so the per-frame skinning pass
+/// (`compute_skinned_mesh_vertices`) can stream the data SIMD-friendly.
+///
+/// Bone indices are part-resolved: ssconverter has already mapped each
+/// `TableIDPartsBone` slot to its owning part index, so the runtime can
+/// directly index `bone_world_matrices[bone_indices[i]]`.
+#[derive(Clone, Default)]
+pub struct MeshBindingCache {
+    pub influence_offsets: alloc::vec::Vec<u32>,
+    pub bone_indices: alloc::vec::Vec<u16>,
+    pub weights: alloc::vec::Vec<f32>,
+    pub coords_x: alloc::vec::Vec<f32>,
+    pub coords_y: alloc::vec::Vec<f32>,
+}
+
+impl MeshBindingCache {
+    #[inline]
+    pub fn num_vertices(&self) -> usize {
+        self.influence_offsets.len().saturating_sub(1)
+    }
+}
+
+/// Builds a [`MeshBindingCache`] from the SSAB-side `PartMeshBinding` table.
+/// Returns `None` when the part has no mesh binding or the vertex list is empty.
+pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::PartMeshBinding<'_>>) -> Option<MeshBindingCache> {
+    let vertices = mesh_binding?.vertex()?;
+    if vertices.is_empty() {
+        return None;
+    }
+
+    let num_vertices = vertices.len();
+    let mut cache = MeshBindingCache::default();
+    cache.influence_offsets.reserve(num_vertices + 1);
+    cache.influence_offsets.push(0);
+
+    for vertex in vertices {
+        if let Some(influences) = vertex.influence() {
+            for inf in influences {
+                cache.bone_indices.push(inf.bone());
+                cache.weights.push(inf.weight());
+                let (cx, cy) = inf.coordinate().map(|c| (c.v1(), c.v2())).unwrap_or((0.0, 0.0));
+                cache.coords_x.push(cx);
+                cache.coords_y.push(cy);
+            }
+        }
+        cache.influence_offsets.push(cache.bone_indices.len() as u32);
+    }
+
+    Some(cache)
+}
+
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
+    pub mesh_binding: Option<MeshBindingCache>,
 
     // バッチキー用の静的メタデータ (setup 時に SSAB PartData から1回だけ読む)。
     // フレームごとの DrawBatch 計算で参照される。
@@ -158,12 +214,14 @@ pub struct CachedPartData<'a> {
 }
 
 impl<'a> CachedPartData<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         part: ssab::ssab::ss::format::PartAnimationData<'a>,
         part_index: i16,
         parent_index: i16,
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
+        mesh_binding: Option<MeshBindingCache>,
         blend_type: ssab::ssab::ss::format::BlendType,
         part_type_disc: ssab::ssab::ss::format::PartType,
         mask_influence: bool,
@@ -174,6 +232,7 @@ impl<'a> CachedPartData<'a> {
             parent_index,
             resolved_cells,
             shape_kind,
+            mesh_binding,
             blend_type,
             part_type_disc,
             mask_influence,

@@ -537,6 +537,81 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
     }
 }
 
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Skinned mesh per-vertex X coordinates in world space, concatenated across all
+/// parts. Pair with `ss_runtime_get_mesh_vertex_offsets` to slice per-part
+/// ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
+/// Non-mesh parts contribute an empty range. Indirect render mode leaves the
+/// buffer empty (length 0).
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_mesh_vertices_x_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_mesh_vertices_x_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Skinned mesh per-vertex Y coordinates. SoA companion to
+/// `ss_runtime_get_mesh_vertices_x`; sliced identically via
+/// `ss_runtime_get_mesh_vertex_offsets`.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_mesh_vertices_y_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_mesh_vertices_y_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// CSR-style prefix sum (length = `num_parts + 1`) describing where each
+/// part's skinned mesh vertices live inside `ss_runtime_get_mesh_vertices_x`
+/// / `_y`. Part `p` occupies indices `[offsets[p], offsets[p + 1])`; non-mesh
+/// parts have `offsets[p] == offsets[p + 1]`.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_mesh_vertex_offsets_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_mesh_vertex_offsets_len();
+            }
+        }
+    }
+}
+
 // Frame Number getter functions
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {

@@ -316,7 +316,8 @@ impl<'a> AnimationResource<'a> {
                             ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
                             _ => None,
                         });
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+                        let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.and_then(|pm| pm.mesh_binding()));
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, blend_type, part_type_disc, mask_influence, is_mask_contributor));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -423,11 +424,29 @@ struct GlobalBuffers {
     shape_vertices: Vec<f32>,
     shape_vertex_box_coords: Vec<f32>,
     shape_vertex_counts: Vec<i32>,
+    /// Skinned mesh world-space vertex positions, concatenated across all parts.
+    /// Use `mesh_vertex_offsets` to slice per-part ranges:
+    ///   part `p` occupies `mesh_vertex_offsets[p]..mesh_vertex_offsets[p + 1]`.
+    /// Non-mesh parts contribute an empty range.
+    mesh_vertices_x: Vec<f32>,
+    mesh_vertices_y: Vec<f32>,
+    /// CSR-style prefix sum, length = `num_parts + 1`.
+    mesh_vertex_offsets: Vec<u32>,
 }
 
 impl GlobalBuffers {
     fn new() -> Self {
-        Self { world_matrices: Vec::new(), inheritance_matrices: Vec::new(), local_uvs: Vec::new(), shape_vertices: Vec::new(), shape_vertex_box_coords: Vec::new(), shape_vertex_counts: Vec::new() }
+        Self {
+            world_matrices: Vec::new(),
+            inheritance_matrices: Vec::new(),
+            local_uvs: Vec::new(),
+            shape_vertices: Vec::new(),
+            shape_vertex_box_coords: Vec::new(),
+            shape_vertex_counts: Vec::new(),
+            mesh_vertices_x: Vec::new(),
+            mesh_vertices_y: Vec::new(),
+            mesh_vertex_offsets: Vec::new(),
+        }
     }
 }
 
@@ -713,9 +732,90 @@ impl<'a> Context<'a> {
     fn resolve_global_state(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         if instance.render_mode == crate::core::RenderMode::Direct {
             Self::compute_matrices(instance, &metadata.cached_parts);
+            // Skinned mesh skinning depends on world matrices, so it lives in the
+            // Direct path. Mesh parts in Indirect mode get empty per-part ranges.
+            Self::compute_mesh_vertices(instance, &metadata.cached_parts);
+        } else {
+            Self::clear_mesh_vertices(instance, metadata.cached_parts.len());
         }
         Self::compute_local_uvs(instance, &metadata.cached_parts);
         Self::compute_shape_vertices(instance, &metadata.cached_parts);
+    }
+
+    /// Writes per-part skinned mesh world-space vertex positions to
+    /// `globals.mesh_vertices_x` / `_y`, using the prebuilt
+    /// [`MeshBindingCache`](crate::core::framedata::MeshBindingCache) and the
+    /// current frame's world matrices.
+    ///
+    /// Layout: x/y are SoA. `mesh_vertex_offsets` is a CSR prefix sum of length
+    /// `num_parts + 1`; non-mesh parts contribute an empty range.
+    ///
+    /// Deform deltas are intentionally not consumed here yet — wiring the
+    /// per-part deform workspace through Phase 2 is a follow-up. Deform-aware
+    /// skinning would call `compute_skinned_mesh_vertices` with the optional
+    /// `SkinnedMeshDeform` tuple populated from `LayerState`.
+    #[allow(clippy::needless_range_loop)]
+    fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let layer = &instance.layer;
+        let globals = &mut instance.globals;
+        let num_parts = layer.parts_vec.len();
+
+        if globals.mesh_vertex_offsets.len() != num_parts + 1 {
+            globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
+        }
+
+        // First pass: build the CSR offsets so we can size the SoA buffers.
+        globals.mesh_vertex_offsets[0] = 0;
+        for i in 0..num_parts {
+            let part_vertex_count = cached_parts.get(i).and_then(|c| c.mesh_binding.as_ref()).map(|b| b.num_vertices()).unwrap_or(0);
+            globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + part_vertex_count as u32;
+        }
+        let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
+
+        if globals.mesh_vertices_x.len() != total_vertices {
+            globals.mesh_vertices_x.resize(total_vertices, 0.0);
+        }
+        if globals.mesh_vertices_y.len() != total_vertices {
+            globals.mesh_vertices_y.resize(total_vertices, 0.0);
+        }
+        for slot in globals.mesh_vertices_x.iter_mut() {
+            *slot = 0.0;
+        }
+        for slot in globals.mesh_vertices_y.iter_mut() {
+            *slot = 0.0;
+        }
+
+        if total_vertices == 0 {
+            return;
+        }
+
+        for i in 0..num_parts {
+            let Some(binding) = cached_parts.get(i).and_then(|c| c.mesh_binding.as_ref()) else {
+                continue;
+            };
+            if binding.num_vertices() == 0 {
+                continue;
+            }
+
+            let start = globals.mesh_vertex_offsets[i] as usize;
+            let end = globals.mesh_vertex_offsets[i + 1] as usize;
+
+            let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
+
+            crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, None, out_x, out_y);
+        }
+    }
+
+    fn clear_mesh_vertices(instance: &mut InstanceState<'a>, num_parts: usize) {
+        let globals = &mut instance.globals;
+        if globals.mesh_vertex_offsets.len() != num_parts + 1 {
+            globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
+        }
+        for slot in globals.mesh_vertex_offsets.iter_mut() {
+            *slot = 0;
+        }
+        globals.mesh_vertices_x.clear();
+        globals.mesh_vertices_y.clear();
     }
 
     #[allow(clippy::needless_range_loop)]
@@ -893,6 +993,30 @@ impl<'a> Context<'a> {
 
     pub fn get_shape_vertex_counts_ptr(&self) -> *const i32 {
         self.instance.globals.shape_vertex_counts.as_ptr()
+    }
+
+    pub fn get_mesh_vertices_x_ptr(&self) -> *const f32 {
+        self.instance.globals.mesh_vertices_x.as_ptr()
+    }
+
+    pub fn get_mesh_vertices_x_len(&self) -> usize {
+        self.instance.globals.mesh_vertices_x.len()
+    }
+
+    pub fn get_mesh_vertices_y_ptr(&self) -> *const f32 {
+        self.instance.globals.mesh_vertices_y.as_ptr()
+    }
+
+    pub fn get_mesh_vertices_y_len(&self) -> usize {
+        self.instance.globals.mesh_vertices_y.len()
+    }
+
+    pub fn get_mesh_vertex_offsets_ptr(&self) -> *const u32 {
+        self.instance.globals.mesh_vertex_offsets.as_ptr()
+    }
+
+    pub fn get_mesh_vertex_offsets_len(&self) -> usize {
+        self.instance.globals.mesh_vertex_offsets.len()
     }
 
     pub fn get_shape_vertex_counts_len(&self) -> usize {

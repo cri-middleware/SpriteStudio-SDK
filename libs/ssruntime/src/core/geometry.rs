@@ -291,6 +291,109 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
     (count, out_x, out_y)
 }
 
+/// Optional per-frame deform delta passed to [`compute_skinned_mesh_vertices`].
+///
+/// Tuple layout: `(changed_vertex_indices, delta_x, delta_y, part_world_matrix)`.
+/// `changed_vertex_indices[k]` selects which output vertex receives `(delta_x[k], delta_y[k])`.
+pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4x4);
+
+/// Computes skinned (bone-weighted) mesh vertex positions in world space.
+///
+/// For each vertex `v`:
+/// 1. **Skeletal** — accumulate `Σ bone_world_matrices[bone_indices[i]] · (coords_x[i], coords_y[i]) · weights[i]`
+///    over the CSR influence slice `influence_offsets[v]..influence_offsets[v + 1]`.
+///    Translation IS applied (MultiplyPoint3x4 — m[12], m[13] terms).
+/// 2. **Deform delta** (optional) — for each entry in `deform.0`, add
+///    `part_world_mat · (delta_x, delta_y)` (rotation/scale only — MultiplyVector).
+///
+/// Bone indices are expected to be pre-resolved to **part indices** by ssconverter;
+/// no further `TableIDPartsBone` lookup is performed at runtime.
+///
+/// Layout: CSR for `influence_offsets`, SoA for `weights`/`coords_x`/`coords_y`.
+/// The common case (≤4 influences per vertex) is computed with `f32x4`: lanes are
+/// gathered into stack-local arrays, multiplied as SIMD, then reduced. The rare
+/// >4-influence path falls back to a scalar accumulator.
+pub fn compute_skinned_mesh_vertices(influence_offsets: &[u32], bone_indices: &[u16], weights: &[f32], coords_x: &[f32], coords_y: &[f32], bone_world_matrices: &[SsMatrix4x4], deform: Option<SkinnedMeshDeform<'_>>, out_x: &mut [f32], out_y: &mut [f32]) {
+    let num_vertices = out_x.len();
+    debug_assert_eq!(out_y.len(), num_vertices);
+    debug_assert_eq!(influence_offsets.len(), num_vertices + 1);
+
+    // 1. Skeletal: per-vertex weighted bone transform sum (MultiplyPoint3x4 — translation included).
+    for v in 0..num_vertices {
+        let start = influence_offsets[v] as usize;
+        let end = influence_offsets[v + 1] as usize;
+        let count = end - start;
+
+        if count <= 4 {
+            // Fast path: gather up to 4 influences into f32x4 lanes (zero-padded).
+            let mut w_lanes = [0.0f32; 4];
+            let mut cx_lanes = [0.0f32; 4];
+            let mut cy_lanes = [0.0f32; 4];
+            let mut m0_lanes = [0.0f32; 4];
+            let mut m4_lanes = [0.0f32; 4];
+            let mut m12_lanes = [0.0f32; 4];
+            let mut m1_lanes = [0.0f32; 4];
+            let mut m5_lanes = [0.0f32; 4];
+            let mut m13_lanes = [0.0f32; 4];
+
+            for k in 0..count {
+                let i = start + k;
+                w_lanes[k] = weights[i];
+                cx_lanes[k] = coords_x[i];
+                cy_lanes[k] = coords_y[i];
+                let mat = &bone_world_matrices[bone_indices[i] as usize];
+                m0_lanes[k] = mat.m[0];
+                m4_lanes[k] = mat.m[4];
+                m12_lanes[k] = mat.m[12];
+                m1_lanes[k] = mat.m[1];
+                m5_lanes[k] = mat.m[5];
+                m13_lanes[k] = mat.m[13];
+            }
+
+            let w = f32x4::from(w_lanes);
+            let cx = f32x4::from(cx_lanes);
+            let cy = f32x4::from(cy_lanes);
+
+            let px = f32x4::from(m0_lanes) * cx + f32x4::from(m4_lanes) * cy + f32x4::from(m12_lanes);
+            let py = f32x4::from(m1_lanes) * cx + f32x4::from(m5_lanes) * cy + f32x4::from(m13_lanes);
+
+            out_x[v] = (px * w).reduce_add();
+            out_y[v] = (py * w).reduce_add();
+        } else {
+            // Slow path: >4 influences (rare in SS data). Scalar accumulator.
+            let mut acc_x = 0.0f32;
+            let mut acc_y = 0.0f32;
+            for i in start..end {
+                let w = weights[i];
+                let cx = coords_x[i];
+                let cy = coords_y[i];
+                let mat = &bone_world_matrices[bone_indices[i] as usize];
+                let px = mat.m[0] * cx + mat.m[4] * cy + mat.m[12];
+                let py = mat.m[1] * cx + mat.m[5] * cy + mat.m[13];
+                acc_x += px * w;
+                acc_y += py * w;
+            }
+            out_x[v] = acc_x;
+            out_y[v] = acc_y;
+        }
+    }
+
+    // 2. Deform delta: MultiplyVector — rotation/scale only, NO translation.
+    //    Kept scalar: writes are randomly-indexed (scatter), so SIMD wouldn't help.
+    if let Some((indices, dx, dy, part_mat)) = deform {
+        debug_assert_eq!(dx.len(), indices.len());
+        debug_assert_eq!(dy.len(), indices.len());
+
+        for k in 0..indices.len() {
+            let v = indices[k] as usize;
+            let tx = part_mat.m[0] * dx[k] + part_mat.m[4] * dy[k];
+            let ty = part_mat.m[1] * dx[k] + part_mat.m[5] * dy[k];
+            out_x[v] += tx;
+            out_y[v] += ty;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -571,5 +674,158 @@ mod tests {
         assert_approx_eq(y[0], 0.0);
         assert_approx_eq(x[11], x[1]);
         assert_approx_eq(y[11], y[1]);
+    }
+
+    #[test]
+    fn test_skinned_mesh_identity_single_influence() {
+        // Two vertices, each with one influence to bone 0 (identity), weight 1.0 →
+        // output should equal the bind-pose coordinates.
+        let offsets = [0u32, 1, 2];
+        let bone_indices = [0u16, 0];
+        let weights = [1.0f32, 1.0];
+        let coords_x = [3.0f32, -4.0];
+        let coords_y = [5.0f32, 7.0];
+        let bones = [SsMatrix4x4::IDENTITY];
+
+        let mut out_x = [0.0f32; 2];
+        let mut out_y = [0.0f32; 2];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[3.0, -4.0], 2);
+        assert_arr_approx_eq(&out_y, &[5.0, 7.0], 2);
+    }
+
+    #[test]
+    fn test_skinned_mesh_translation_applied() {
+        // MultiplyPoint3x4 must include translation: bone translates (10, 20),
+        // bind coord (3, 5) → output (13, 25).
+        let offsets = [0u32, 1];
+        let bone_indices = [0u16];
+        let weights = [1.0f32];
+        let coords_x = [3.0f32];
+        let coords_y = [5.0f32];
+        let bones = [SsMatrix4x4::create_translation(10.0, 20.0, 0.0)];
+
+        let mut out_x = [0.0f32];
+        let mut out_y = [0.0f32];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[13.0], 1);
+        assert_arr_approx_eq(&out_y, &[25.0], 1);
+    }
+
+    #[test]
+    fn test_skinned_mesh_two_bone_blend() {
+        // One vertex weighted 50/50 between identity-bone and translated-bone,
+        // both viewing bind coord (0, 0) → output (50, 0).
+        let offsets = [0u32, 2];
+        let bone_indices = [0u16, 1];
+        let weights = [0.5f32, 0.5];
+        let coords_x = [0.0f32, 0.0];
+        let coords_y = [0.0f32, 0.0];
+        let bones = [SsMatrix4x4::IDENTITY, SsMatrix4x4::create_translation(100.0, 0.0, 0.0)];
+
+        let mut out_x = [0.0f32];
+        let mut out_y = [0.0f32];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[50.0], 1);
+        assert_arr_approx_eq(&out_y, &[0.0], 1);
+    }
+
+    #[test]
+    fn test_skinned_mesh_rotation() {
+        // 90deg Z rotation applied to bone, bind coord (1, 0) → output (0, 1).
+        let offsets = [0u32, 1];
+        let bone_indices = [0u16];
+        let weights = [1.0f32];
+        let coords_x = [1.0f32];
+        let coords_y = [0.0f32];
+        let bones = [SsMatrix4x4::create_rotation_z(core::f32::consts::FRAC_PI_2)];
+
+        let mut out_x = [0.0f32];
+        let mut out_y = [0.0f32];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[0.0], 1);
+        assert_arr_approx_eq(&out_y, &[1.0], 1);
+    }
+
+    #[test]
+    fn test_skinned_mesh_deform_delta_ignores_translation() {
+        // Verifies deform uses MultiplyVector (no translation).
+        // part_mat = T(1000,1000) * R(90°), delta = (1, 0) →
+        // skeletal yields (0, 0) (identity bone, zero bind), deform adds R·(1,0) = (0, 1).
+        let offsets = [0u32, 1];
+        let bone_indices = [0u16];
+        let weights = [1.0f32];
+        let coords_x = [0.0f32];
+        let coords_y = [0.0f32];
+        let bones = [SsMatrix4x4::IDENTITY];
+
+        let rot = SsMatrix4x4::create_rotation_z(core::f32::consts::FRAC_PI_2);
+        let trans = SsMatrix4x4::create_translation(1000.0, 1000.0, 0.0);
+        let part_mat = trans * rot;
+
+        let indices = [0i16];
+        let dx = [1.0f32];
+        let dy = [0.0f32];
+
+        let mut out_x = [0.0f32];
+        let mut out_y = [0.0f32];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, Some((&indices, &dx, &dy, &part_mat)), &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[0.0], 1);
+        assert_arr_approx_eq(&out_y, &[1.0], 1);
+    }
+
+    #[test]
+    fn test_skinned_mesh_partial_deform() {
+        // Three vertices, only vertex 1 receives a deform delta;
+        // vertices 0 and 2 must remain at their skeletal-only positions.
+        let offsets = [0u32, 1, 2, 3];
+        let bone_indices = [0u16; 3];
+        let weights = [1.0f32; 3];
+        let coords_x = [1.0f32, 2.0, 3.0];
+        let coords_y = [10.0f32, 20.0, 30.0];
+        let bones = [SsMatrix4x4::IDENTITY];
+
+        let indices = [1i16];
+        let dx = [100.0f32];
+        let dy = [200.0f32];
+        let part_mat = SsMatrix4x4::IDENTITY;
+
+        let mut out_x = [0.0f32; 3];
+        let mut out_y = [0.0f32; 3];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, Some((&indices, &dx, &dy, &part_mat)), &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[1.0, 102.0, 3.0], 3);
+        assert_arr_approx_eq(&out_y, &[10.0, 220.0, 30.0], 3);
+    }
+
+    #[test]
+    fn test_skinned_mesh_five_influences_scalar_fallback() {
+        // Exercises the >4-influence scalar path. Five identity bones, equal weights,
+        // bind coord (10, 20) seen by every influence → output equals (10, 20).
+        let offsets = [0u32, 5];
+        let bone_indices = [0u16; 5];
+        let weights = [0.2f32; 5];
+        let coords_x = [10.0f32; 5];
+        let coords_y = [20.0f32; 5];
+        let bones = [SsMatrix4x4::IDENTITY];
+
+        let mut out_x = [0.0f32];
+        let mut out_y = [0.0f32];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+
+        assert_arr_approx_eq(&out_x, &[10.0], 1);
+        assert_arr_approx_eq(&out_y, &[20.0], 1);
     }
 }
