@@ -71,6 +71,8 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `parent_index` | short | `parent_index` | Parent part index |
 | `bounds_type` | BoundsType | `bounds_type` | Bounding calculation mode |
 | `blend_type` | BlendType | `alpha_blend_type` | Renamed field |
+| `mask_influence` | bool | `mask_influence` | Whether the part participates in mask influence |
+| `mesh_binding` | PartMeshBinding | (computed) | Per-vertex bone influences for `PartTypeMesh`. See [Mesh Binding](#mesh-binding) below. Optional; absent for non-mesh parts. |
 | `part_type` | PartType (union) | `part_type` + type-specific fields | See below |
 
 ### Part Type Union
@@ -116,6 +118,20 @@ The following ssae `SsPart` fields are editor-only and not included in ssab:
 - `bone_length`, `bone_position`, `bone_rotation` (bone editing data)
 - `weight_position`, `weight_impact`, `mesh_weight_type`, `mesh_weight_strong` (mesh weight editing)
 - `ik_depth`, `ik_rotation_arrow` (IK solver parameters)
+
+### Mesh Binding
+
+For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into a flat per-vertex influence list and stores it on `PartData.mesh_binding`. Other part types omit the field.
+
+| ssab table | Field | Type | Notes |
+|-----------|-------|------|-------|
+| `PartMeshBinding` | `vertex` | [PartMeshBindingVertex] | One entry per mesh vertex; outer index matches the mesh vertex order. |
+| `PartMeshBindingVertex` | `influence` | [PartMeshBindingInfluence] | All bones that affect this vertex. |
+| `PartMeshBindingInfluence` | `bone` | ushort | Part index of the influencing bone — already remapped from the ssae bone-list index to the corresponding part index, so the runtime can index `parts` directly. |
+| `PartMeshBindingInfluence` | `weight` | float | Influence weight. |
+| `PartMeshBindingInfluence` | `coordinate` | Vec2 | Bind-pose offset of the vertex relative to the influencing bone. |
+
+> **Note:** ssae stores `bone` as an index into `SsModel.bone_list`. The converter remaps this to a part index at convert time so the runtime never needs `bone_list`.
 
 ---
 
@@ -321,12 +337,15 @@ The `InitialPartAttributes` table stores the default/setup state for each part. 
 A 64-bit bitmask indicating which attributes have been set to non-default values. This allows the runtime to skip unchanged attributes during initialization.
 
 ```
-Bit 0:  AttributeCell
-Bit 1:  AttributePosX
-Bit 2:  AttributePosY
+Bit  0: AttributeCell
+Bit  1: AttributePosX
+Bit  2: AttributePosY
 ...
-Bit 36: AttributeTexture
+Bit 36: AttributeDeform
+Bit 37: AttributeTexture
 ```
+
+38 flags are defined in total; the bit assignment order matches the declaration order in `PartAttributesUpdateFlags`.
 
 ### Default Values
 
@@ -375,10 +394,11 @@ Bit 36: AttributeTexture
 |-----------|-----------|-------|
 | `index` | `array_index` | Node index |
 | `parent_index` | `parent_index` | Parent node index |
-| `effect_node_type` | `node_type` | Root / Emitter / Particle |
-| `cell_index` | `behavior.cell_name` + `behavior.cell_map_name` | Resolved to index |
-| `blend_type` | `behavior.blend_type` | Render blend mode |
-| `behavior` | `behavior.list` | Particle behaviors (as union array) |
+| `effect_node_type` | `node_type` | Root / Emitter / Particle (`EffectNodeType` enum) |
+| `cell_name_hash` | `behavior.cell_name` | fnv1a hash of the cell name |
+| `cell_map_name_hash` | `behavior.cell_map_name` | fnv1a hash of the cellmap name (without `.ssce`) |
+| `blend_type` | `behavior.blend_type` | `RenderBlendType` enum — restricted to `Mix` / `Add` (not the full `BlendType` set used by parts) |
+| `behavior` | `behavior.list` | Particle behaviors (as union array, wrapped by `EffectNodeBehaviorWrapper`) |
 
 ### Effect Node Behaviors
 
@@ -458,6 +478,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `base` | `common.base` | Baseline |
 | `height_line` | `common.line_height` | Line height |
 | `scale` | `common.scale_w/h` | Texture scale |
+| `spacing` | `info.spacing` | Glyph spacing (x, y) |
 | `size_texture_original` | — | Original texture size |
 | `name_texture` | `pages[*].file` | Texture file names |
 | `name_texture_hash` | — | Hash array of texture file names |
