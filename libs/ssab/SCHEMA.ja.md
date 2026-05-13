@@ -71,6 +71,8 @@
 | `parent_index` | short | `parent_index` | 親パーツのインデックス |
 | `bounds_type` | BoundsType | `bounds_type` | バウンディング計算方式 |
 | `blend_type` | BlendType | `alpha_blend_type` | フィールド名変更 |
+| `mask_influence` | bool | `mask_influence` | パーツがマスク影響に参加するか |
+| `mesh_binding` | PartMeshBinding | (変換時生成) | `PartTypeMesh` 用の頂点ごとのボーン影響値。下記 [メッシュバインディング](#メッシュバインディング) 参照。メッシュ以外のパーツでは省略。 |
 | `part_type` | PartType (union) | `part_type` + 型固有フィールド | 後述 |
 
 ### パーツタイプ Union
@@ -116,6 +118,20 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 - `bone_length`, `bone_position`, `bone_rotation` (ボーン編集データ)
 - `weight_position`, `weight_impact`, `mesh_weight_type`, `mesh_weight_strong` (メッシュウェイト編集データ)
 - `ik_depth`, `ik_rotation_arrow` (IK ソルバーパラメータ)
+
+### メッシュバインディング
+
+`PartTypeMesh` の場合、コンバータは ssae のメッシュウェイト記述を頂点単位のフラットな影響値リストに解決し、`PartData.mesh_binding` に格納します。それ以外のパーツタイプではこのフィールドは省略されます。
+
+| ssab テーブル | フィールド | 型 | 備考 |
+|--------------|----------|----|------|
+| `PartMeshBinding` | `vertex` | [PartMeshBindingVertex] | メッシュ頂点1つにつき1エントリ。外側のインデックスはメッシュ頂点の並びと一致。 |
+| `PartMeshBindingVertex` | `influence` | [PartMeshBindingInfluence] | この頂点に影響する全ボーン。 |
+| `PartMeshBindingInfluence` | `bone` | ushort | 影響を与えるボーンのパーツインデックス。ssae のボーンリスト上のインデックスから対応するパーツインデックスに変換済みで、ランタイムはそのまま `parts` を引ける。 |
+| `PartMeshBindingInfluence` | `weight` | float | 影響度。 |
+| `PartMeshBindingInfluence` | `coordinate` | Vec2 | バインドポーズ時の、影響ボーンからの頂点相対オフセット。 |
+
+> **注:** ssae では `bone` は `SsModel.bone_list` のインデックスとして格納されます。コンバータが変換時にこれをパーツインデックスへ再マップするため、ランタイム側で `bone_list` を参照する必要はありません。
 
 ---
 
@@ -321,12 +337,15 @@ ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (
 64ビットのビットマスクで、デフォルト値以外に設定された属性を示します。これにより、ランタイムは初期化時に変更されていない属性をスキップできます。
 
 ```
-Bit 0:  AttributeCell
-Bit 1:  AttributePosX
-Bit 2:  AttributePosY
+Bit  0: AttributeCell
+Bit  1: AttributePosX
+Bit  2: AttributePosY
 ...
-Bit 36: AttributeTexture
+Bit 36: AttributeDeform
+Bit 37: AttributeTexture
 ```
+
+合計 38 個のフラグが定義されており、ビット割り当ては `PartAttributesUpdateFlags` の宣言順と一致します。
 
 ### デフォルト値
 
@@ -375,10 +394,11 @@ Bit 36: AttributeTexture
 |---------------|---------------|------|
 | `index` | `array_index` | ノードインデックス |
 | `parent_index` | `parent_index` | 親ノードインデックス |
-| `effect_node_type` | `node_type` | Root / Emitter / Particle |
-| `cell_index` | `behavior.cell_name` + `behavior.cell_map_name` | インデックスに解決済み |
-| `blend_type` | `behavior.blend_type` | レンダリングブレンドモード |
-| `behavior` | `behavior.list` | パーティクルの振る舞い（union 配列として） |
+| `effect_node_type` | `node_type` | Root / Emitter / Particle (`EffectNodeType` 列挙型) |
+| `cell_name_hash` | `behavior.cell_name` | セル名の fnv1a ハッシュ |
+| `cell_map_name_hash` | `behavior.cell_map_name` | セルマップ名（`.ssce` を除く）の fnv1a ハッシュ |
+| `blend_type` | `behavior.blend_type` | `RenderBlendType` 列挙型 — `Mix` / `Add` のみ (パーツで使う `BlendType` フルセットとは別) |
+| `behavior` | `behavior.list` | パーティクルの振る舞い（`EffectNodeBehaviorWrapper` でラップされた union 配列） |
 
 ### エフェクトノードの振る舞い
 
@@ -458,6 +478,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | `base` | `common.base` | ベースライン |
 | `height_line` | `common.line_height` | 行の高さ |
 | `scale` | `common.scale_w/h` | テクスチャスケール |
+| `spacing` | `info.spacing` | グリフのスペーシング (x, y) |
 | `size_texture_original` | — | 元のテクスチャサイズ |
 | `name_texture` | `pages[*].file` | テクスチャファイル名 |
 | `name_texture_hash` | — | テクスチャファイル名のハッシュ配列 |

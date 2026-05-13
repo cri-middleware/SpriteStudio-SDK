@@ -70,9 +70,15 @@ FrameData (FFI を介したメモリバッファ)
 
 ---
 
+## `PartState` の同定
+
+`PartState.part_index` は、ソース SSAB の `parts` 配列（および `AnimationData.parts_animation_data`）上のインデックスです。現在のランタイムは `FrameData.parts` を SSAB と同じ順序で出力するため `parts[i].part_index() == i` ですが、ID の権威は `part_index` 側として扱ってください — `EventsPerFrame.users[i].part_index` などのイベントペイロードは SSAB パーツインデックス空間を参照しており、それらを `FrameData` に結びつけるのがこのフィールドです。
+
+---
+
 ## 複雑な属性のマッピング（プーリング）
 
-複雑なデータ構造の重複を避けるため、複雑な属性は `FrameData` 内のプールに格納されます。これらは `PartState` 内で `short` 型のインデックスとして参照されます。
+複雑なデータ構造の重複を避けるため、複雑な属性は `FrameData` 内のプールに格納されます。これらは `PartState` 内で `short` 型のインデックスとして参照されます。インデックスが `-1` の場合は「このフレームにこの属性のエントリは無い」ことを意味します。
 
 | PartState 参照フィールド | ソース: SSAB `PartAnimationData` 配列 | FrameData 内のテーブル | 説明 |
 |:---|:---|:---|:---|
@@ -81,6 +87,72 @@ FrameData (FFI を介したメモリバッファ)
 | `shader` | `shader_array` | `shaders` | 補間済みのシェーダーパラメータとマップ ID。 |
 | `vertex` | `vertex_array` | `vertices` | **算出済みのローカル頂点座標**。4 隅 (`lt`/`rt`/`lb`/`rb`) は常に `pivot` / `size` / `img_flip_h/v` および補間済みの raw deform オフセット適用済みで、Player はそのままワールド行列を掛けて描画できます。5 番目の `center` 頂点は **`update_flag` に `AttributeVertex` か `AttributePartColor` が立っているときのみ** 設定されます (頂点変形やパーツカラーのグラデーションを center 起点の三角形ファンで滑らかに描画するため)。それ以外のケースでは `center = (0, 0)` で、Player は 4 隅から 2 三角形を組むだけで描画できます。生の deform オフセットは公開されません。`update_flag` 内の `AttributeVertex` フラグは、ソース SSAB に実際に頂点変形アニメがあるかどうかを引き続き示します。 |
 | `deform` | `deform_array` | `deforms` | 補間済みのメッシュ変形座標。 |
+
+---
+
+## 描画プラン: 順序・バッチ・マスクスライス
+
+`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これは `CLAUDE.md` および [Batched Rendering Contract](./docs/09_batched_rendering.ja.md) で言及している「DrawBatch コントラクト」です。
+
+| FrameData フィールド | 型 | 説明 |
+|:---|:---|:---|
+| `draw_order` | `[ushort]` (required) | 描画順に並んだパーツ。値は **`FrameData.parts` のインデックス** （`part_index` ではない）。非表示・マスクで除外されたパーツなど、描画対象外のパーツは含まれません。 |
+| `draw_batches` | `[DrawBatch]` (required) | マージ済みの描画コマンド列。各バッチは `draw_order` の連続スライスを覆い、スライス内で描画種別・ブレンドモード・テクスチャが共通になります。Player は バッチごとに 1 ドローコールを発行します。 |
+| `mask_indices` | `[ushort]` (required) | 現在のフレームでアクティブなマスクパーツの **`FrameData.parts` インデックス** を、ステンシル書き込み順に並べたもの。`DrawBatchKind::Mask` バッチと併用してステンシル／クリッピングを設定します。 |
+
+### `DrawBatch`
+
+インライン `struct` (固定サイズ、vtable なし)。`draw_batches` 上の位置で参照されます:
+
+| フィールド | 型 | 説明 |
+|:---|:---|:---|
+| `start_rank` | ushort | このバッチが指す `draw_order` の開始インデックス。 |
+| `count` | ushort | このバッチに含まれる `draw_order` 連続エントリ数。 |
+| `texture_hash` | uint32 | バッチがバインドするテクスチャ（セルマップの画像パス、または外部テクスチャ名）の fnv1a ハッシュ。テクスチャ不要な種別（`Shape` 等）では `0`。 |
+| `vertex_count` | ushort | スライス内の全パーツが寄与する頂点数の合計。 |
+| `index_count` | ushort | スライス内の全パーツが寄与するインデックス数の合計。 |
+| `blend_type` | BlendType | スライス共通のブレンドモード。各パーツの `part_color.blend_type` と一致。 |
+| `kind` | DrawBatchKind | 描画カテゴリ（下表）。Player がスライス内パーツについてどのジオメトリ／データを取り出すかを決定。 |
+| `flags` | ubyte | バッチごとのフラグビット。現状定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [Batched Rendering Contract](./docs/09_batched_rendering.ja.md) を参照。 |
+
+### `DrawBatchKind`
+
+| バリアント | パーツごとのジオメトリソース |
+|:---|:---|
+| `Normal` | 標準スプライト矩形 — `vertex` プール + `cell` プール（テクスチャは `cellmap_name_hash` 経由）。 |
+| `Shape` | `PartTypeShape` から生成される手続き的シェイプ（テクスチャ無し）。 |
+| `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player Guide](./docs/README.ja.md) を参照。 |
+| `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |
+| `Mesh` | `PartMeshBinding` によるボーンスキニング済みインデックス付きメッシュ。 |
+| `Text` | ビットマップフォントのグリフ矩形。 |
+| `Nines` | 9 パッチ / 9 スライスの矩形。 |
+| `Mask` | ステンシル書き込み専用バッチ。色出力は行わず、対象パーツは `mask_indices` にも列挙される。 |
+
+> **プランの走査:** `draw_batches` の各 `batch` について、`draw_order[batch.start_rank .. batch.start_rank + batch.count]` をイテレートし、`PartState` を取り出して `batch.kind` のジオメトリを発行する。GPU ステート（テクスチャ・ブレンド）の切替はパーツごとではなくバッチごとに 1 回だけ行う。
+
+---
+
+## 関連スキーマ: `EffectDrawPlan`
+
+エフェクトレンダラーは独立したルートバッファ（`effect_draw_plan.fbs`、ルート `EffectDrawPlan`）で提供され、`EffectSlot::step` / `ss_effect_slot_step` から返されます。`FrameData` からは `DrawBatchKind::Effect` バッチを通じて間接的に参照されるのみで、実際の頂点ジオメトリは `EffectDrawPlan` 側に乗ります。同じフレームの `FrameData` と組で消費する想定です。
+
+| フィールド | 型 | 説明 |
+|:---|:---|:---|
+| `commands` | `[EffectDrawCommand]` (required) | エミッタごとの描画コマンド。`cellmap_hash`, `quad_count`, `particle_offset`, `blend` (`0=Mix`, `1=Add` — `EmitterState.blend_type` の生値) を保持。 |
+| `vert_stride` | ubyte | 2D ネイティブエンジン (Godot, pixi.js) では `2`、XYZ 頂点が必要なエンジン (Unity Mesh, Unreal FProcMeshVertex) では `3`。`step` 呼び出しごとに選択。 |
+| `verts` | `[float]` (required) | 長さは `total_quads * 4 * vert_stride`。Y フリップは呼び出し側の要求に応じて適用済み。 |
+| `uvs` | `[float]` (required) | 長さは `total_quads * 4 * 2`。 |
+| `colors` | `[float]` (required) | 長さは `total_quads * 4 * 4` (RGBA, 0..1 に正規化済み)。 |
+| `indices` | `[int]` (required) | 長さは `total_quads * 6`。値は **quad ローカル** (`0..quad_count*4`)。エンジンはスロット相対の verts と共にスライスを渡すだけでよく、再ベースは不要。 |
+
+コマンド `c` のスライス計算 (`vs = vert_stride`):
+
+```
+verts  : c.particle_offset * 4 * vs .. (c.particle_offset + c.quad_count) * 4 * vs
+uvs    : c.particle_offset * 4 * 2  .. (c.particle_offset + c.quad_count) * 4 * 2
+colors : c.particle_offset * 4 * 4  .. (c.particle_offset + c.quad_count) * 4 * 4
+indices: c.particle_offset * 6      .. (c.particle_offset + c.quad_count) * 6
+```
 
 ---
 
