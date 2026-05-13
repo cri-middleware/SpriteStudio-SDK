@@ -343,6 +343,20 @@ table FontBitmap {
   table_data: [FontGlyphBitmap];
 }
 
+table PartMeshBindingInfluence {
+  bone: ushort;
+  weight: float;
+  coordinate: Vec2;
+}
+
+table PartMeshBindingVertex {
+  influence: [PartMeshBindingInfluence];
+}
+
+table PartMeshBinding {
+  vertex: [PartMeshBindingVertex];
+}
+
 table PartAttributeCell {
  cellmap_name_hash: uint32; // fnv1a(cellmap name without .ssce)
  name_hash: uint32; // fnv1a(cell name)
@@ -635,6 +649,7 @@ table PartData {
   bounds_type: BoundsType;
   blend_type: BlendType;
   mask_influence: bool;
+  mesh_binding: PartMeshBinding;
 
   part_type: PartType;
 }
