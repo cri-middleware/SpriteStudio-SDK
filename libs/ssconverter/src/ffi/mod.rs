@@ -1,5 +1,5 @@
 use crate::{ConverterConfig, ConverterError};
-use std::ffi::{CStr, CString, OsString, c_char};
+use std::ffi::{CStr, CString, c_char};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -8,6 +8,7 @@ use std::thread::JoinHandle;
 // #[repr(C)]
 pub struct Context {
     error: Option<String>,
+    error_c: Option<CString>,
 
     handler: Option<JoinHandle<Result<(), crate::ConverterError>>>,
     should_stop: Arc<AtomicBool>,
@@ -20,7 +21,7 @@ impl Default for Context {
 
 impl Context {
     pub fn new() -> Self {
-        Self { error: None, handler: None, should_stop: Arc::new(AtomicBool::new(false)) }
+        Self { error: None, error_c: None, handler: None, should_stop: Arc::new(AtomicBool::new(false)) }
     }
 }
 
@@ -72,6 +73,8 @@ type LogCallback = Option<extern "C" fn(*const c_char)>;
 pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, callback: LogCallback) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
+        context.error = None;
+        context.error_c = None;
 
         if sspj.is_null() || output_dir.is_null() {
             return;
@@ -81,7 +84,7 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
         let sspj_path = std::path::PathBuf::from(&sspj_str);
 
         let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
-        let output_dir_str = Some(OsString::from(output_dir_buf.to_string_lossy().into_owned()));
+        let output_dir_str = Some(std::ffi::OsString::from(output_dir_buf.to_string_lossy().into_owned()));
         let mut config = ConverterConfig::default();
         config.output = output_dir_str;
 
@@ -112,6 +115,8 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
 pub unsafe extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
+        context.error = None;
+        context.error_c = None;
 
         if sspj.is_null() || output_dir.is_null() {
             return;
@@ -122,7 +127,7 @@ pub unsafe extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_ch
         let sspj_path = std::path::PathBuf::from(&sspj_str);
 
         let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
-        let output_dir_str = Some(OsString::from(output_dir_buf.to_string_lossy().into_owned()));
+        let output_dir_str = Some(std::ffi::OsString::from(output_dir_buf.to_string_lossy().into_owned()));
         let mut config = ConverterConfig::default();
         config.output = output_dir_str.clone();
 
@@ -166,7 +171,9 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
                 Ok(result) => match result {
                     Ok(_) => CConverterError::Success,
                     Err(e) => {
-                        context.error = Some(e.to_string());
+                        let err_str = e.to_string();
+                        context.error_c = CString::new(err_str.clone()).ok();
+                        context.error = Some(err_str);
                         match e {
                             ConverterError::IoError(_) => CConverterError::ErrorIo,
                             ConverterError::SspjError(_) => CConverterError::ErrorSspj,
@@ -175,7 +182,9 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
                     }
                 },
                 Err(_) => {
-                    context.error = Some("Converter thread panicked".to_string());
+                    let err_str = "Converter thread panicked".to_string();
+                    context.error_c = CString::new(err_str.clone()).ok();
+                    context.error = Some(err_str);
                     CConverterError::ErrorUnknown
                 }
             }
@@ -187,12 +196,12 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data: *mut *mut c_char, out_len: *mut usize) {
+pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data: *mut *const c_char, out_len: *mut usize) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
         unsafe {
             if !out_data.is_null() {
-                *out_data = context.error.as_ref().map(|s| s.as_ptr() as *mut c_char).unwrap_or(std::ptr::null_mut());
+                *out_data = context.error_c.as_ref().map(|s| s.as_ptr()).unwrap_or(std::ptr::null());
             }
             if !out_len.is_null() {
                 *out_len = context.error.as_ref().map(|s| s.len()).unwrap_or(0);
