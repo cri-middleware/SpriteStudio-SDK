@@ -2,9 +2,9 @@
 
 # ssconverter-cli
 
-A command-line tool that parses SpriteStudio 7 project files (`.sspj`) and converts them into optimized runtime binary files (`.ssab`, `.ssqb`).
+The build-time tool of the [SpriteStudio7-SDK](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.md) workflow: parses SpriteStudio 7 project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
 
-This tool wraps [libssconverter](../libs/ssconverter) and provides easy access to its features via the command line.
+This CLI wraps [libssconverter](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime).
 
 # Usage
 
@@ -36,7 +36,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 
 Converts multiple `.sspj` projects at once.
 You can pass multiple file paths or directories containing `.sspj` files.
-In this mode, the `--out-dir` option is ignored; output files are generated alongside the source files (or in a default directory).
+In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj` in `<name>_ssab/`.
 
 ```bash
 # Convert multiple specific files
@@ -54,10 +54,15 @@ _Note: The `--out-dir` and `--watch` options are not available in batch mode._
 
 # Installation
 
-To install `ssconverter-cli` on your system, you can use `cargo install`:
+## Prebuilt binaries (recommended)
+
+Download a release for **Windows**, **macOS**, or **Linux** from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page. No build environment required.
+
+## Build from source
+
+Requires a Rust toolchain ([rustup](https://rustup.rs/)). From the repository root:
 
 ```bash
-# From the repository root
 $ cargo install --path cli
 ```
 
@@ -87,6 +92,19 @@ Creates a single binary containing all textures, useful for simple distribution.
 ```bash
 $ ssconverter-cli my_game/project.sspj --embedded
 ```
+
+# Output
+
+For each `.sspj` converted, a directory is produced next to the source file (unless `--out-dir` is set in single mode):
+
+| Mode | Output directory | Contents |
+|---|---|---|
+| Default | `<name>_ssab/` | `.ssab` (one per animation), `.ssqb` (per sequence pack, if `.ssqe` is referenced), and copies of referenced textures |
+| `--embedded` | `<name>_emb_ssab/` | Same as above, but referenced assets are inlined into each `.ssab` (no separate texture copies) |
+
+# Next Steps
+
+Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime). For integration guidance, see the [Player Implementation Guide](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/libs/ssruntime/docs/README.ja.md) (Japanese).
 
 # For Developers
 ## Build

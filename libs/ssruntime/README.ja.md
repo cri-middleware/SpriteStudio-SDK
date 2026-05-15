@@ -2,21 +2,19 @@
 
 # libssruntime
 
-SpriteStudio 7 のアニメーションデータを再生するためのランタイムライブラリです。
-バイナリデータ (`.ssab`) を読み込み、アニメーションの更新、キーフレームの抽出、補間計算などのコアロジックを提供します。
+[SpriteStudio7-SDK](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.ja.md) のワークフローにおける再生の **Brain（中枢）** です。[ssconverter-cli](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/cli/README.ja.md) が生成した `.ssab` バイナリを読み込み、レンダラーがフレーム毎に必要とするすべて — パーツの状態（トランスフォーム、メッシュ変形、カラー）、エンジン非依存の `DrawBatch` プラン、イベント信号 — を出力します。
 
-> **Note**
-> このライブラリ自体は描画機能 (レンダリング) を持っていません。
-> 各ゲームエンジンやプラットフォーム向けの「Player (描画部分)」を実装するためのバックエンドとして機能します。
+> **エンジン非依存設計**
+> `libssruntime` 自体は描画を一切行いません。各「Player」（エンジン / プラットフォーム統合）が出力された状態を受け取り、ネイティブの描画 API で実際の描画を行います。この分離設計こそが、エンジン間で一貫した再生結果を生む根拠です — 詳細はトップ README の「[なぜこの SDK を選ぶべきか？](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.ja.md)」を参照してください。
 
 # 主な機能
 
-- **再生制御**: 再生、一時停止、シーク、ループ設定など。
-- **データ管理**: アニメーションデータ (`SsAnimeBinary`) とシーケンスデータ (`SsSequenceBinary`) の保持。
-- **更新ロジック**: デルタタイムに基づいたフレーム更新。
-- **補間計算**: キーフレーム間の値を曲線やイージング関数に基づいて補間。
-- **インスタンス機能**: 親パーツから別のアニメーションを呼び出す機能のサポート。
-- **乱数シード管理**: パーティクルエフェクトなどの再現性を保つためのシード制御。
+- **SpriteStudio 7 の全機能対応**: ボーン階層、メッシュウェイトと頂点変形、パーティクルエフェクト、シーケンスパック (`.ssqe` → `.ssqb`)、サブアニメーションのインスタンス、ステンシルマスク、フレーム単位で正確なイベント / ユーザーデータ。
+- **サブフレーム補間**: ソースのフレームレートを超えた滑らかな再生 — Hermite、Bezier、Linear、各種イージング曲線をサポート。
+- **`DrawBatch` プランの出力**: フレーム毎の出力にエンジン非依存のバッチプラン（頂点、マスク列、パーティクル quad スロット、インスタンス / エフェクトスロット）を含みます。詳細は [Batched Rendering Contract](./docs/09_batched_rendering.ja.md) を参照してください。
+- **決定論的な再生**: パーティクル等の再現性のための明示的な乱数シード制御。
+- **詳細な再生制御** (`PlaybackController`): 再生 / 一時停止 / 停止、1 フレーム単位のステップ（前進 / 後退）、任意フレームへのサブフレーム精度シーク、再生範囲と FPS のカスタマイズ、ループ回数 (`-1` で無限)、`Normal` / `PingPong` スタイル、`Forward` / `Reverse` 方向、リアルタイム / 固定ステップの時間進行モード。
+- **`no_std` ファースト**: コアは純粋な `no_std`。`std` は開発時の利便性のためだけのオプトイン。全環境で SIMD (`f32x4`) を活用。
 
 # `no_std` サポート
 
@@ -75,7 +73,7 @@ graph TD
     RAW -->|1. ss_resource_create_borrow| RES
     RES -->|2. ss_runtime_bind_resource| CTX
     DT -->|"3. ss_runtime_update -> frame"| CTX
-    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" パーツの状態 / メッシュ情報 "]
+    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" パーツの状態 / メッシュ情報<br/>+ DrawBatch プラン "]
     STATE --> DRAW
 ```
 

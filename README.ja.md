@@ -12,7 +12,7 @@
 ## ワークフロー (The Workflow)
 
 1. **変換 (Convert):** 同梱の CLI ツール (`ssconverter-cli`) を使用して、SpriteStudio のプロジェクト (`.sspj`) を極限まで最適化されたバイナリフォーマット (`.ssab`) に変換します。
-2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルの再生を保証しており**、SpriteStudio 7 の全機能を箱から出してすぐに完全にサポートします。
+2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio 7 の全機能を標準でサポートします。
 
 この SDK を使用してアセットを変換し、アニメーションを再生する際の流れを以下の図に示します：
 
@@ -24,7 +24,7 @@
 ```mermaid
 graph LR
     subgraph Assets ["プロジェクトアセット"]
-        SS[" .sspj / .ssae / .ssce "]
+        SS[" .sspj (ルート)<br/>+ .ssae / .ssce / .ssee / .ssqe "]
         IMG[" 画像ファイル / .png "]
     end
 
@@ -39,7 +39,7 @@ graph LR
     subgraph Runtime ["ランタイム (再生)"]
         BIN --> RT(" libssruntime ")
         RT -.-> INT(" libssinterpolate ")
-        RT --> STATE[" パーツの状態 / メッシュ情報 "]
+        RT --> STATE[" パーツの状態 / メッシュ情報<br/>+ DrawBatch プラン "]
     end
 
     subgraph Engine ["ゲームエンジン"]
@@ -61,10 +61,10 @@ graph LR
 * **インスタンス＆マスク:** サブアニメーションのインスタンス化と、ステンシルマスクによるクリッピング。
 * **イベント＆ユーザーデータ:** オーディオ、シグナル、ユーザーデータに対する、フレーム単位で正確なコールバック。
 
-## なぜこの SDK を選ぶべきか？ (The Architecture)
+## なぜこの SDK を選ぶべきか？
 
-* **1. 数学不要の組み込みと、100% 同一の視覚的出力 (Zero-Math Integration & 100% Visual Consistency)**
-  SDK はすべての複雑な状態計算（ボーン行列、メッシュ変形、階層カラー/不透明度）を内部で処理し、最適化された描画プラン (`DrawBatch`) を出力します。あなたのエンジンは生成された頂点データを読み取り、プリミティブを描画するだけです。これにより、どのようなレンダリングフレームワークでも **100% 同一の視覚的出力** が保証されます。エンジンごとの描画仕様の違いによる「見た目のブレ」を構造的に排除します。
+* **1. 数学不要の組み込みと、エンジン間の視覚的整合性 (Zero-Math Integration & Cross-Engine Visual Consistency)**
+  SDK はすべての複雑な状態計算（ボーン行列、メッシュ変形、階層カラー/不透明度）を内部で処理し、最適化された描画プラン (`DrawBatch`) を出力します。あなたのエンジンは生成された頂点データを読み取り、プリミティブを描画するだけです。どのレンダラーも同じ `DrawBatch` プランを消費するため、エンジンごとの描画仕様の違いによる「見た目のブレ」を構造的に排除できます。
 * **2. 極小のデータサイズと全環境での SIMD パフォーマンス (Ultra-Compact Payload & Universal SIMD Performance)**
   私たちはデータのフットプリントを最小化するために `.ssab` バイナリフォーマットを設計しました。カラム指向（Columnar）のデータレイアウトとハッシュベースのルックアップを利用することで、パース負荷がゼロの極小ファイルサイズを実現しています。このデータ指向の設計は、全環境で **SIMD (f32x4)** を活用するランタイムのアーキテクチャと完璧に噛み合っています。結果として、最小のメモリおよび CPU キャッシュフットプリントで、最大のアニメーション再生パフォーマンスを叩き出します。
 * **3. 極限のポータビリティ (Extreme Portability via `#![no_std]` Rust)**
@@ -77,7 +77,7 @@ graph LR
     - [libssab](./libs/ssab/README.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
     - [libssinterpolate](./libs/ssinterpolate/README.ja.md): アニメーション補間計算のためのプラットフォーム非依存な数学ライブラリです。
     - [libssconverter](./libs/ssconverter/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。
-    - [libssruntime](./libs/ssruntime/README.md): アニメーションプレーヤーの実装を支援するライブラリです。再生の制御、キーフレームの抽出、補間などの機能を備えています。
+    - [libssruntime](./libs/ssruntime/README.md): 再生の "Brain"。フレーム毎にパーツの状態（トランスフォーム、メッシュ変形、カラー）を計算し、エンジン非依存の `DrawBatch` プランを出力します。
 - ツール
     - [ssconverter-cli](./cli/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
 
@@ -118,10 +118,6 @@ graph LR
 - `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。
 
 これらは Player の実装時や動作確認の際の参照用データとして自由にご利用いただけます。
-
-## ツールの使用方法
-### ssconverter-cli
-[ssconverter-cli](./cli/README.md) を参考してください。
 
 ## SDK 開発者向け
 ### 準備
