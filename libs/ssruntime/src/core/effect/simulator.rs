@@ -39,7 +39,7 @@ fn blend_float(a: f32, b: f32, rate: f32) -> f32 {
 }
 
 fn blend_float_simd(a: f32x4, b: f32x4, rate: f32x4) -> f32x4 {
-    a + (b - a) * rate
+    (b - a).mul_add(rate, a)
 }
 
 // Vectorized PRNG using wide
@@ -522,22 +522,22 @@ impl EffectSimulator {
         let mut color_b = f32x4::splat(255.0);
 
         if particle_params.use_color {
-            color_a = (f32x4::splat(particle_params.init_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.a as f32))).trunc_int().round_float();
-            color_r = (f32x4::splat(particle_params.init_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.r as f32))).trunc_int().round_float();
-            color_g = (f32x4::splat(particle_params.init_color.g as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.g as f32))).trunc_int().round_float();
-            color_b = (f32x4::splat(particle_params.init_color.b as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.b as f32))).trunc_int().round_float();
+            color_a = (f32x4::splat(particle_params.init_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.a as f32))).trunc();
+            color_r = (f32x4::splat(particle_params.init_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.r as f32))).trunc();
+            color_g = (f32x4::splat(particle_params.init_color.g as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.g as f32))).trunc();
+            color_b = (f32x4::splat(particle_params.init_color.b as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.b as f32))).trunc();
         }
 
         if particle_params.use_trans_color {
-            let ecolor_a = (f32x4::splat(particle_params.trans_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.a as f32))).trunc_int().round_float();
-            let ecolor_r = (f32x4::splat(particle_params.trans_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.r as f32))).trunc_int().round_float();
-            let ecolor_g = (f32x4::splat(particle_params.trans_color.g as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.g as f32))).trunc_int().round_float();
-            let ecolor_b = (f32x4::splat(particle_params.trans_color.b as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.b as f32))).trunc_int().round_float();
+            let ecolor_a = (f32x4::splat(particle_params.trans_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.a as f32))).trunc();
+            let ecolor_r = (f32x4::splat(particle_params.trans_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.r as f32))).trunc();
+            let ecolor_g = (f32x4::splat(particle_params.trans_color.g as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.g as f32))).trunc();
+            let ecolor_b = (f32x4::splat(particle_params.trans_color.b as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.b as f32))).trunc();
 
-            color_a = blend_float_simd(color_a, ecolor_a, lifeper).trunc_int().round_float();
-            color_r = blend_float_simd(color_r, ecolor_r, lifeper).trunc_int().round_float();
-            color_g = blend_float_simd(color_g, ecolor_g, lifeper).trunc_int().round_float();
-            color_b = blend_float_simd(color_b, ecolor_b, lifeper).trunc_int().round_float();
+            color_a = blend_float_simd(color_a, ecolor_a, lifeper).trunc();
+            color_r = blend_float_simd(color_r, ecolor_r, lifeper).trunc();
+            color_g = blend_float_simd(color_g, ecolor_g, lifeper).trunc();
+            color_b = blend_float_simd(color_b, ecolor_b, lifeper).trunc();
         }
 
         if particle_params.use_alpha_fade {
@@ -554,7 +554,7 @@ impl EffectSimulator {
             let alpha_end = ((per - end) / (f32x4::splat(100.0) - end)).min(f32x4::splat(1.0));
             let color_a_end = end_ge_100.blend(f32x4::splat(0.0), color_a * (f32x4::splat(1.0) - alpha_end));
 
-            color_a = cond_start.blend(color_a_start, cond_end.blend(color_a_end, color_a)).trunc_int().round_float();
+            color_a = cond_start.blend(color_a_start, cond_end.blend(color_a_end, color_a)).trunc();
         }
 
         let mut scale_x = f32x4::splat(1.0);
