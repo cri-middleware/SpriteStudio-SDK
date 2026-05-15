@@ -317,7 +317,12 @@ impl<'a> AnimationResource<'a> {
                             _ => None,
                         });
                         let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.and_then(|pm| pm.mesh_binding()));
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+                        let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh {
+                            crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array())
+                        } else {
+                            None
+                        };
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -432,6 +437,13 @@ struct GlobalBuffers {
     mesh_vertices_y: Vec<f32>,
     /// CSR-style prefix sum, length = `num_parts + 1`.
     mesh_vertex_offsets: Vec<u32>,
+    /// Static mesh UV (interleaved `[u, v, ...]`, texture-pixel space) and
+    /// triangle indices, resolved once from each mesh part's frame-0 Cell.
+    /// `mesh_uvs` is sliced per-part by `mesh_vertex_offsets`; `mesh_indices`
+    /// by `mesh_index_offsets` (CSR, length `num_parts + 1`).
+    mesh_uvs: Vec<f32>,
+    mesh_indices: Vec<i32>,
+    mesh_index_offsets: Vec<u32>,
 }
 
 impl GlobalBuffers {
@@ -446,6 +458,9 @@ impl GlobalBuffers {
             mesh_vertices_x: Vec::new(),
             mesh_vertices_y: Vec::new(),
             mesh_vertex_offsets: Vec::new(),
+            mesh_uvs: Vec::new(),
+            mesh_indices: Vec::new(),
+            mesh_index_offsets: Vec::new(),
         }
     }
 }
@@ -785,6 +800,37 @@ impl<'a> Context<'a> {
             *slot = 0.0;
         }
 
+        // Static mesh UV / triangle-index buffers — resolved once from each
+        // mesh part's frame-0 Cell (the cell is fixed per the SS mesh spec).
+        // Guarded by the index-offset length so the build runs a single time.
+        if globals.mesh_index_offsets.len() != num_parts + 1 {
+            globals.mesh_index_offsets.resize(num_parts + 1, 0);
+            globals.mesh_index_offsets[0] = 0;
+            for i in 0..num_parts {
+                let index_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.indices.len()).unwrap_or(0);
+                globals.mesh_index_offsets[i + 1] = globals.mesh_index_offsets[i] + index_count as u32;
+            }
+            let total_indices = *globals.mesh_index_offsets.last().unwrap_or(&0) as usize;
+
+            globals.mesh_indices.clear();
+            globals.mesh_indices.reserve(total_indices);
+            globals.mesh_uvs.clear();
+            globals.mesh_uvs.resize(total_vertices * 2, 0.0);
+            for i in 0..num_parts {
+                let Some(mesh_cell) = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()) else {
+                    continue;
+                };
+                globals.mesh_indices.extend_from_slice(&mesh_cell.indices);
+                // UVs share the position CSR; copy only when the cell vertex
+                // count matches the slot (true for well-formed skeletal meshes).
+                let start = globals.mesh_vertex_offsets[i] as usize;
+                let end = globals.mesh_vertex_offsets[i + 1] as usize;
+                if mesh_cell.uvs.len() == (end - start) * 2 {
+                    globals.mesh_uvs[start * 2..end * 2].copy_from_slice(&mesh_cell.uvs);
+                }
+            }
+        }
+
         if total_vertices == 0 {
             return;
         }
@@ -816,6 +862,9 @@ impl<'a> Context<'a> {
         }
         globals.mesh_vertices_x.clear();
         globals.mesh_vertices_y.clear();
+        globals.mesh_uvs.clear();
+        globals.mesh_indices.clear();
+        globals.mesh_index_offsets.clear();
     }
 
     #[allow(clippy::needless_range_loop)]
@@ -1017,6 +1066,30 @@ impl<'a> Context<'a> {
 
     pub fn get_mesh_vertex_offsets_len(&self) -> usize {
         self.instance.globals.mesh_vertex_offsets.len()
+    }
+
+    pub fn get_mesh_uvs_ptr(&self) -> *const f32 {
+        self.instance.globals.mesh_uvs.as_ptr()
+    }
+
+    pub fn get_mesh_uvs_len(&self) -> usize {
+        self.instance.globals.mesh_uvs.len()
+    }
+
+    pub fn get_mesh_indices_ptr(&self) -> *const i32 {
+        self.instance.globals.mesh_indices.as_ptr()
+    }
+
+    pub fn get_mesh_indices_len(&self) -> usize {
+        self.instance.globals.mesh_indices.len()
+    }
+
+    pub fn get_mesh_index_offsets_ptr(&self) -> *const u32 {
+        self.instance.globals.mesh_index_offsets.as_ptr()
+    }
+
+    pub fn get_mesh_index_offsets_len(&self) -> usize {
+        self.instance.globals.mesh_index_offsets.len()
     }
 
     pub fn get_shape_vertex_counts_len(&self) -> usize {

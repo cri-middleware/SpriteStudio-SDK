@@ -159,6 +159,61 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
     Some(cache)
 }
 
+/// Per-part static mesh geometry resolved from the part's Cell.
+///
+/// Mesh parts may not change their cell after frame 0 (SS spec), so this is
+/// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
+/// cellmap texture-pixel space (the cell rectangle origin is already added —
+/// divide by the texture size to normalize). `indices` are triangle indices
+/// widened from the SSAB-side `u16` `table_index_vertex`.
+#[derive(Clone, Default)]
+pub struct MeshCellData {
+    pub uvs: alloc::vec::Vec<f32>,
+    pub indices: alloc::vec::Vec<i32>,
+}
+
+impl MeshCellData {
+    #[inline]
+    pub fn num_vertices(&self) -> usize {
+        self.uvs.len() / 2
+    }
+}
+
+/// Resolves a mesh part's Cell — fixed at frame 0 per the SS mesh spec, so the
+/// first `cell_array` keyframe is authoritative — and extracts its triangulated
+/// geometry. Returns `None` when the part has no cell or the cell carries no
+/// mesh tables (i.e. it is not a mesh cell).
+pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>) -> Option<MeshCellData> {
+    let cell_array = cell_array?;
+    if cell_array.is_empty() {
+        return None;
+    }
+    let value = cell_array.get(0).value()?;
+
+    let cellmaps = ssab.cellmaps()?;
+    let cellmap = crate::core::ssab_lookup::find_cellmap(&cellmaps, value.cellmap_name_hash())?;
+    let cells = cellmap.cells()?;
+    let cell = crate::core::ssab_lookup::find_cell(&cells, value.name_hash())?;
+
+    let coords = cell.table_coordinate()?;
+    let tri = cell.table_index_vertex()?;
+    if coords.is_empty() || tri.is_empty() {
+        return None;
+    }
+
+    // Cell-local mesh coordinates are pixel offsets within the cell; add the
+    // cell rectangle origin to land in cellmap texture-pixel space.
+    let (rect_left, rect_top) = cell.rectangle().map(|r| (r.x1(), r.y1())).unwrap_or((0.0, 0.0));
+    let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
+    for c in coords {
+        uvs.push(c.v1() + rect_left);
+        uvs.push(c.v2() + rect_top);
+    }
+    let indices: alloc::vec::Vec<i32> = tri.iter().map(|i| i as i32).collect();
+
+    Some(MeshCellData { uvs, indices })
+}
+
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
     pub part_index: i16,
@@ -166,6 +221,7 @@ pub struct CachedPartData<'a> {
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
     pub mesh_binding: Option<MeshBindingCache>,
+    pub mesh_cell: Option<MeshCellData>,
 
     // バッチキー用の静的メタデータ (setup 時に SSAB PartData から1回だけ読む)。
     // フレームごとの DrawBatch 計算で参照される。
@@ -222,6 +278,7 @@ impl<'a> CachedPartData<'a> {
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
         mesh_binding: Option<MeshBindingCache>,
+        mesh_cell: Option<MeshCellData>,
         blend_type: ssab::ssab::ss::format::BlendType,
         part_type_disc: ssab::ssab::ss::format::PartType,
         mask_influence: bool,
@@ -233,6 +290,7 @@ impl<'a> CachedPartData<'a> {
             resolved_cells,
             shape_kind,
             mesh_binding,
+            mesh_cell,
             blend_type,
             part_type_disc,
             mask_influence,
@@ -780,6 +838,11 @@ fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(ru
     }
     if disc == P::PartTypeShape {
         return Some((K::Shape, false));
+    }
+    if disc == P::PartTypeMesh {
+        // Mesh parts each carry their own vertex topology / index buffer, so
+        // they are not batchable — emitted as singleton Mesh batches like Shape.
+        return Some((K::Mesh, false));
     }
     if disc == P::PartTypeInstance {
         return Some((K::Instance, false));
