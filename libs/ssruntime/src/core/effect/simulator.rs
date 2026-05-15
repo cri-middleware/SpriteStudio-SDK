@@ -24,7 +24,7 @@ pub fn out_quad_simd(t: f32x4, total_time: f32x4, max: f32x4, min: f32x4) -> f32
 
     let range = max - min;
     let t_norm = t / total_time;
-    let res = -range * t_norm * (t_norm - f32x4::splat(2.0)) + min;
+    let res = (-range * t_norm).mul_add(t_norm - f32x4::splat(2.0), min);
 
     let total_time_zero = total_time.simd_eq(f32x4::splat(0.0));
     total_time_zero.blend(f32x4::splat(0.0), res)
@@ -444,12 +444,12 @@ impl EffectSimulator {
         let out_x;
         let out_y;
         {
-            let rad = f32x4::splat(particle_params.angle) + (rng.gen_float() * f32x4::splat(particle_params.angle_variance) - f32x4::splat(particle_params.angle_variance / 2.0));
-            let speed = f32x4::splat(particle_params.speed) + (f32x4::splat(particle_params.speed2) * rng.gen_float());
+            let rad = rng.gen_float().mul_add(f32x4::splat(particle_params.angle_variance), f32x4::splat(particle_params.angle - particle_params.angle_variance / 2.0));
+            let speed = rng.gen_float().mul_add(f32x4::splat(particle_params.speed2), f32x4::splat(particle_params.speed));
 
             let mut addr = f32x4::splat(0.0);
             if particle_params.use_tan_accel {
-                let accel = f32x4::splat(particle_params.tangential_accel) + (rng.gen_float() * f32x4::splat(particle_params.tangential_accel2));
+                let accel = rng.gen_float().mul_add(f32x4::splat(particle_params.tangential_accel2), f32x4::splat(particle_params.tangential_accel));
                 let speed_safe = speed.simd_le(f32x4::splat(0.0)).blend(f32x4::splat(0.1), speed);
                 let l = life_safe * speed_safe * f32x4::splat(0.2);
                 let c = f32x4::splat(core::f32::consts::PI) * l;
@@ -461,23 +461,23 @@ impl EffectSimulator {
             let mut y = rad_addr.sin() * speed * t;
 
             if particle_params.use_trans_speed {
-                let transspeed = f32x4::splat(particle_params.trans_speed) + (f32x4::splat(particle_params.trans_speed2) * rng.gen_float());
+                let transspeed = rng.gen_float().mul_add(f32x4::splat(particle_params.trans_speed2), f32x4::splat(particle_params.trans_speed));
                 let speedadd = transspeed / life_safe;
                 let cos_rad_addr = rad_addr.cos();
                 let sin_rad_addr = rad_addr.sin();
                 let addtx = cos_rad_addr * speed;
                 let addtx_trans = cos_rad_addr * speedadd;
-                x = ((addtx_trans * t) + addtx) * (t + f32x4::splat(1.0)) / f32x4::splat(2.0);
+                x = addtx_trans.mul_add(t, addtx) * (t + f32x4::splat(1.0)) / f32x4::splat(2.0);
 
                 let addty = sin_rad_addr * speed;
                 let addty_trans = sin_rad_addr * speedadd;
-                y = ((addty_trans * t) + addty) * (t + f32x4::splat(1.0)) / f32x4::splat(2.0);
+                y = addty_trans.mul_add(t, addty) * (t + f32x4::splat(1.0)) / f32x4::splat(2.0);
             }
 
             if particle_params.use_gravity {
                 let t2 = t * t;
-                x += f32x4::splat(0.5 * particle_params.gravity.x) * t2;
-                y += f32x4::splat(0.5 * particle_params.gravity.y) * t2;
+                x = f32x4::splat(0.5 * particle_params.gravity.x).mul_add(t2, x);
+                y = f32x4::splat(0.5 * particle_params.gravity.y).mul_add(t2, y);
             }
             out_x = x;
             out_y = y;
@@ -486,33 +486,33 @@ impl EffectSimulator {
         let mut ox = f32x4::splat(0.0);
         let mut oy = f32x4::splat(0.0);
         if particle_params.use_offset {
-            ox = f32x4::splat(particle_params.offset.x) + (f32x4::splat(particle_params.offset2.x) * rng.gen_float());
-            oy = f32x4::splat(particle_params.offset.y) + (f32x4::splat(particle_params.offset2.y) * rng.gen_float());
+            ox = rng.gen_float().mul_add(f32x4::splat(particle_params.offset2.x), f32x4::splat(particle_params.offset.x));
+            oy = rng.gen_float().mul_add(f32x4::splat(particle_params.offset2.y), f32x4::splat(particle_params.offset.y));
         }
 
         let mut rotation = f32x4::splat(0.0);
         if particle_params.use_rotation {
-            let rot = f32x4::splat(particle_params.rotation) + (rng.gen_float() * f32x4::splat(particle_params.rotation2));
-            let add = f32x4::splat(particle_params.rotation_add) + (rng.gen_float() * f32x4::splat(particle_params.rotation_add2));
+            let rot = rng.gen_float().mul_add(f32x4::splat(particle_params.rotation2), f32x4::splat(particle_params.rotation));
+            let add = rng.gen_float().mul_add(f32x4::splat(particle_params.rotation_add2), f32x4::splat(particle_params.rotation_add));
 
             if particle_params.use_rotation_trans {
                 let lastt = life_safe * f32x4::splat(particle_params.end_life_time_per);
 
                 let lastt_zero = lastt.simd_eq(f32x4::splat(0.0));
-                let res_zero = rot + (add * f32x4::splat(particle_params.rotation_factor)) * t;
+                let res_zero = (add * f32x4::splat(particle_params.rotation_factor)).mul_add(t, rot);
 
-                let addf = (add * f32x4::splat(particle_params.rotation_factor) - add) / lastt;
+                let addf = add.mul_sub(f32x4::splat(particle_params.rotation_factor), add) / lastt;
                 let mod_t = t.simd_gt(lastt).blend(t - lastt, f32x4::splat(0.0));
                 let nowt = t.simd_lt(lastt).blend(t, lastt);
-                let final_soul = add + addf * nowt;
+                let final_soul = addf.mul_add(nowt, add);
                 let mut addrf = (final_soul + add) * (nowt + f32x4::splat(1.0)) / f32x4::splat(2.0);
                 addrf -= add;
-                addrf += mod_t * final_soul;
+                addrf = mod_t.mul_add(final_soul, addrf);
                 let res_normal = rot + addrf;
 
                 rotation = lastt_zero.blend(res_zero, res_normal);
             } else {
-                rotation = rot + (add * t);
+                rotation = add.mul_add(t, rot);
             }
         }
 
@@ -522,17 +522,17 @@ impl EffectSimulator {
         let mut color_b = f32x4::splat(255.0);
 
         if particle_params.use_color {
-            color_a = (f32x4::splat(particle_params.init_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.a as f32))).trunc();
-            color_r = (f32x4::splat(particle_params.init_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.r as f32))).trunc();
-            color_g = (f32x4::splat(particle_params.init_color.g as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.g as f32))).trunc();
-            color_b = (f32x4::splat(particle_params.init_color.b as f32) + (rng.gen_float() * f32x4::splat(particle_params.init_color2.b as f32))).trunc();
+            color_a = rng.gen_float().mul_add(f32x4::splat(particle_params.init_color2.a as f32), f32x4::splat(particle_params.init_color.a as f32)).trunc();
+            color_r = rng.gen_float().mul_add(f32x4::splat(particle_params.init_color2.r as f32), f32x4::splat(particle_params.init_color.r as f32)).trunc();
+            color_g = rng.gen_float().mul_add(f32x4::splat(particle_params.init_color2.g as f32), f32x4::splat(particle_params.init_color.g as f32)).trunc();
+            color_b = rng.gen_float().mul_add(f32x4::splat(particle_params.init_color2.b as f32), f32x4::splat(particle_params.init_color.b as f32)).trunc();
         }
 
         if particle_params.use_trans_color {
-            let ecolor_a = (f32x4::splat(particle_params.trans_color.a as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.a as f32))).trunc();
-            let ecolor_r = (f32x4::splat(particle_params.trans_color.r as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.r as f32))).trunc();
-            let ecolor_g = (f32x4::splat(particle_params.trans_color.g as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.g as f32))).trunc();
-            let ecolor_b = (f32x4::splat(particle_params.trans_color.b as f32) + (rng.gen_float() * f32x4::splat(particle_params.trans_color2.b as f32))).trunc();
+            let ecolor_a = rng.gen_float().mul_add(f32x4::splat(particle_params.trans_color2.a as f32), f32x4::splat(particle_params.trans_color.a as f32)).trunc();
+            let ecolor_r = rng.gen_float().mul_add(f32x4::splat(particle_params.trans_color2.r as f32), f32x4::splat(particle_params.trans_color.r as f32)).trunc();
+            let ecolor_g = rng.gen_float().mul_add(f32x4::splat(particle_params.trans_color2.g as f32), f32x4::splat(particle_params.trans_color.g as f32)).trunc();
+            let ecolor_b = rng.gen_float().mul_add(f32x4::splat(particle_params.trans_color2.b as f32), f32x4::splat(particle_params.trans_color.b as f32)).trunc();
 
             color_a = blend_float_simd(color_a, ecolor_a, lifeper).trunc();
             color_r = blend_float_simd(color_r, ecolor_r, lifeper).trunc();
@@ -561,14 +561,14 @@ impl EffectSimulator {
         let mut scale_y = f32x4::splat(1.0);
         let mut scalefactor = f32x4::splat(1.0);
         if particle_params.use_init_scale {
-            scale_x = f32x4::splat(particle_params.scale.x) + (rng.gen_float() * f32x4::splat(particle_params.scale_range.x));
-            scale_y = f32x4::splat(particle_params.scale.y) + (rng.gen_float() * f32x4::splat(particle_params.scale_range.y));
-            scalefactor = f32x4::splat(particle_params.scale_factor) + (rng.gen_float() * f32x4::splat(particle_params.scale_factor2));
+            scale_x = rng.gen_float().mul_add(f32x4::splat(particle_params.scale_range.x), f32x4::splat(particle_params.scale.x));
+            scale_y = rng.gen_float().mul_add(f32x4::splat(particle_params.scale_range.y), f32x4::splat(particle_params.scale.y));
+            scalefactor = rng.gen_float().mul_add(f32x4::splat(particle_params.scale_factor2), f32x4::splat(particle_params.scale_factor));
         }
         if particle_params.use_trans_scale {
-            let s2_x = f32x4::splat(particle_params.transscale.x) + (rng.gen_float() * f32x4::splat(particle_params.scale_range2.x));
-            let s2_y = f32x4::splat(particle_params.transscale.y) + (rng.gen_float() * f32x4::splat(particle_params.scale_range2.y));
-            let sf2 = f32x4::splat(particle_params.transscale_factor) + (rng.gen_float() * f32x4::splat(particle_params.transscale_factor2));
+            let s2_x = rng.gen_float().mul_add(f32x4::splat(particle_params.scale_range2.x), f32x4::splat(particle_params.transscale.x));
+            let s2_y = rng.gen_float().mul_add(f32x4::splat(particle_params.scale_range2.y), f32x4::splat(particle_params.transscale.y));
+            let sf2 = rng.gen_float().mul_add(f32x4::splat(particle_params.transscale_factor2), f32x4::splat(particle_params.transscale_factor));
             scale_x = blend_float_simd(scale_x, s2_x, lifeper);
             scale_y = blend_float_simd(scale_y, s2_y, lifeper);
             scalefactor = blend_float_simd(scalefactor, sf2, lifeper);
@@ -585,7 +585,7 @@ impl EffectSimulator {
         if particle_params.use_p_gravity {
             let vx = f32x4::splat(particle_params.gravity_pos.x) - (ox + emitter_pos_x);
             let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + emitter_pos_y);
-            let dist = (vx * vx + vy * vy).sqrt();
+            let dist = vx.mul_add(vx, vy * vy).sqrt();
             let inv_dist = dist.simd_eq(f32x4::splat(0.0)).blend(f32x4::splat(0.0), f32x4::splat(1.0) / dist);
             let nvx = vx * inv_dist;
             let nvy = vy * inv_dist;
@@ -597,15 +597,15 @@ impl EffectSimulator {
             let len = dist.max(f32x4::splat(0.1));
             let et = (len / gp) * f32x4::splat(0.90);
             let gt = t.min(et * f32x4::splat(0.90));
-            let res_pos_x_gt = final_x + nvx * gp * gt;
-            let res_pos_y_gt = final_y + nvy * gp * gt;
+            let res_pos_x_gt = (nvx * gp).mul_add(gt, final_x);
+            let res_pos_y_gt = (nvy * gp).mul_add(gt, final_y);
             let blend = out_quad_simd(gt, et, f32x4::splat(0.9), f32x4::splat(0.0)) + (t / life_safe * f32x4::splat(0.1));
             let final_x_gt = blend_float_simd(res_pos_x_gt, f32x4::splat(particle_params.gravity_pos.x), blend);
             let final_y_gt = blend_float_simd(res_pos_y_gt, f32x4::splat(particle_params.gravity_pos.y), blend);
 
             // gp <= 0 case
-            let final_x_le = final_x + nvx * gp * t;
-            let final_y_le = final_y + nvy * gp * t;
+            let final_x_le = (nvx * gp).mul_add(t, final_x);
+            let final_y_le = (nvy * gp).mul_add(t, final_y);
 
             final_x = gp_gt_zero.blend(final_x_gt, final_x_le);
             final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
@@ -617,12 +617,12 @@ impl EffectSimulator {
             let mut rng_next = XorShift32x4::new(seeds);
             let mut gen_rand_next = || rng_next.gen_float();
 
-            let rad = f32x4::splat(particle_params.angle) + (gen_rand_next() * f32x4::splat(particle_params.angle_variance) - f32x4::splat(particle_params.angle_variance / 2.0));
-            let speed = f32x4::splat(particle_params.speed) + (f32x4::splat(particle_params.speed2) * gen_rand_next());
+            let rad = gen_rand_next().mul_add(f32x4::splat(particle_params.angle_variance), f32x4::splat(particle_params.angle - particle_params.angle_variance / 2.0));
+            let speed = gen_rand_next().mul_add(f32x4::splat(particle_params.speed2), f32x4::splat(particle_params.speed));
 
             let mut addr = f32x4::splat(0.0);
             if particle_params.use_tan_accel {
-                let accel = f32x4::splat(particle_params.tangential_accel) + (gen_rand_next() * f32x4::splat(particle_params.tangential_accel2));
+                let accel = gen_rand_next().mul_add(f32x4::splat(particle_params.tangential_accel2), f32x4::splat(particle_params.tangential_accel));
                 let speed_safe = speed.simd_le(f32x4::splat(0.0)).blend(f32x4::splat(0.1), speed);
                 let l = life_safe * speed_safe * f32x4::splat(0.2);
                 let c = f32x4::splat(core::f32::consts::PI) * l;
@@ -634,30 +634,30 @@ impl EffectSimulator {
             let mut y = rad_addr.sin() * speed * next_t;
 
             if particle_params.use_trans_speed {
-                let transspeed = f32x4::splat(particle_params.trans_speed) + (f32x4::splat(particle_params.trans_speed2) * gen_rand_next());
+                let transspeed = gen_rand_next().mul_add(f32x4::splat(particle_params.trans_speed2), f32x4::splat(particle_params.trans_speed));
                 let speedadd = transspeed / life_safe;
                 let cos_rad_addr = rad_addr.cos();
                 let sin_rad_addr = rad_addr.sin();
                 let addtx = cos_rad_addr * speed;
                 let addtx_trans = cos_rad_addr * speedadd;
-                x = ((addtx_trans * next_t) + addtx) * (next_t + f32x4::splat(1.0)) / f32x4::splat(2.0);
+                x = addtx_trans.mul_add(next_t, addtx) * (next_t + f32x4::splat(1.0)) / f32x4::splat(2.0);
 
                 let addty = sin_rad_addr * speed;
                 let addty_trans = sin_rad_addr * speedadd;
-                y = ((addty_trans * next_t) + addty) * (next_t + f32x4::splat(1.0)) / f32x4::splat(2.0);
+                y = addty_trans.mul_add(next_t, addty) * (next_t + f32x4::splat(1.0)) / f32x4::splat(2.0);
             }
 
             if particle_params.use_gravity {
                 let t2 = next_t * next_t;
-                x += f32x4::splat(0.5 * particle_params.gravity.x) * t2;
-                y += f32x4::splat(0.5 * particle_params.gravity.y) * t2;
+                x = f32x4::splat(0.5 * particle_params.gravity.x).mul_add(t2, x);
+                y = f32x4::splat(0.5 * particle_params.gravity.y).mul_add(t2, y);
             }
 
             let mut ox = f32x4::splat(0.0);
             let mut oy = f32x4::splat(0.0);
             if particle_params.use_offset {
-                ox = f32x4::splat(particle_params.offset.x) + (f32x4::splat(particle_params.offset2.x) * gen_rand_next());
-                oy = f32x4::splat(particle_params.offset.y) + (f32x4::splat(particle_params.offset2.y) * gen_rand_next());
+                ox = gen_rand_next().mul_add(f32x4::splat(particle_params.offset2.x), f32x4::splat(particle_params.offset.x));
+                oy = gen_rand_next().mul_add(f32x4::splat(particle_params.offset2.y), f32x4::splat(particle_params.offset.y));
             }
 
             let mut next_final_x = x + ox + emitter_pos_x;
@@ -666,7 +666,7 @@ impl EffectSimulator {
             if particle_params.use_p_gravity {
                 let vx = f32x4::splat(particle_params.gravity_pos.x) - (ox + emitter_pos_x);
                 let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + emitter_pos_y);
-                let dist = (vx * vx + vy * vy).sqrt();
+                let dist = vx.mul_add(vx, vy * vy).sqrt();
                 let inv_dist = dist.simd_eq(f32x4::splat(0.0)).blend(f32x4::splat(0.0), f32x4::splat(1.0) / dist);
                 let nvx = vx * inv_dist;
                 let nvy = vy * inv_dist;
@@ -677,14 +677,14 @@ impl EffectSimulator {
                 let len = dist.max(f32x4::splat(0.1));
                 let et = (len / gp) * f32x4::splat(0.90);
                 let gt = next_t.min(et * f32x4::splat(0.90));
-                let res_pos_x_gt = next_final_x + nvx * gp * gt;
-                let res_pos_y_gt = next_final_y + nvy * gp * gt;
+                let res_pos_x_gt = (nvx * gp).mul_add(gt, next_final_x);
+                let res_pos_y_gt = (nvy * gp).mul_add(gt, next_final_y);
                 let blend = out_quad_simd(gt, et, f32x4::splat(0.9), f32x4::splat(0.0)) + (next_t / life_safe * f32x4::splat(0.1));
                 let final_x_gt = blend_float_simd(res_pos_x_gt, f32x4::splat(particle_params.gravity_pos.x), blend);
                 let final_y_gt = blend_float_simd(res_pos_y_gt, f32x4::splat(particle_params.gravity_pos.y), blend);
 
-                let final_x_le = next_final_x + nvx * gp * next_t;
-                let final_y_le = next_final_y + nvy * gp * next_t;
+                let final_x_le = (nvx * gp).mul_add(next_t, next_final_x);
+                let final_y_le = (nvy * gp).mul_add(next_t, next_final_y);
 
                 next_final_x = gp_gt_zero.blend(final_x_gt, final_x_le);
                 next_final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
