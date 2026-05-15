@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-pub use libm::{atan2f, cosf, fabsf, floorf, fmodf, roundf, sinf, sqrtf, tanf};
+pub use libm::{atan2f, cosf, fabsf, floorf, fmodf, roundf, sincosf, sinf, sqrtf, tanf};
 
 #[cfg(feature = "std")]
 #[inline]
@@ -17,6 +17,12 @@ pub fn cosf(f: f32) -> f32 {
 #[inline]
 pub fn sinf(f: f32) -> f32 {
     f.sin()
+}
+
+#[cfg(feature = "std")]
+#[inline]
+pub fn sincosf(f: f32) -> (f32, f32) {
+    f.sin_cos()
 }
 
 #[cfg(feature = "std")]

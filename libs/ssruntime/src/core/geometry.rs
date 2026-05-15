@@ -1,4 +1,3 @@
-use crate::core::matrix::SsMatrix4x4;
 use wide::{CmpGt, CmpLt, f32x4};
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
@@ -62,32 +61,21 @@ pub fn compute_local_uvs(
     let fy = if part_flip.1 { -1.0 } else { 1.0 };
 
     let rot_rad = rot_deg * core::f32::consts::PI / 180.0;
-    let (sin_v, cos_v) = f32x4::splat(rot_rad).sin_cos();
-    let sin_r = sin_v.to_array()[0];
-    let cos_r = cos_v.to_array()[0];
+    let (sin_r, cos_r) = crate::core::math::sincosf(rot_rad);
 
     let ou = center_u + tu;
     let ov = center_v + tv;
 
-    let mut mat = SsMatrix4x4::IDENTITY;
-    if !rotated {
-        mat.m[0] = cos_r * su_scaled * fx;
-        mat.m[1] = sin_r * su_scaled * fx;
-        mat.m[4] = -sin_r * sv_scaled * fy;
-        mat.m[5] = cos_r * sv_scaled * fy;
-    } else {
-        mat.m[0] = sin_r * sv_scaled * fx;
-        mat.m[1] = -cos_r * sv_scaled * fx;
-        mat.m[4] = cos_r * su_scaled * fy;
-        mat.m[5] = sin_r * su_scaled * fy;
-    }
-    mat.m[12] = ou;
-    mat.m[13] = ov;
+    // 2D affine entries laid out as
+    //   [ m00  m01 ] [ x ]   [ u - ou ]
+    //   [ m10  m11 ] [ y ] = [ v - ov ]
+    let (m00, m10, m01, m11) = if !rotated { (cos_r * su_scaled * fx, sin_r * su_scaled * fx, -sin_r * sv_scaled * fy, cos_r * sv_scaled * fy) } else { (sin_r * sv_scaled * fx, -cos_r * sv_scaled * fx, cos_r * su_scaled * fy, sin_r * su_scaled * fy) };
 
     let x = f32x4::from([-1.0, 1.0, -1.0, 1.0]);
     let y = f32x4::from([-1.0, -1.0, 1.0, 1.0]);
 
-    let (u_simd, v_simd) = mat.transform_v4_2d(x, y);
+    let u_simd = f32x4::splat(m00).mul_add(x, f32x4::splat(m01).mul_add(y, f32x4::splat(ou)));
+    let v_simd = f32x4::splat(m10).mul_add(x, f32x4::splat(m11).mul_add(y, f32x4::splat(ov)));
 
     let u_arr: [f32; 4] = u_simd.to_array();
     let v_arr: [f32; 4] = v_simd.to_array();
