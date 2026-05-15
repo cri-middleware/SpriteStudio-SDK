@@ -2,9 +2,9 @@
 
 # ssconverter-cli
 
-SpriteStudio 7 のプロジェクトファイル (`.sspj`) を解析し、ランタイムに最適化されたバイナリファイル (`.ssab`, `.ssqb`) に変換するコマンドラインツールです。
+[SpriteStudio7-SDK](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio 7 のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
 
-[libssconverter](../libs/ssconverter) のラッパーとして機能し、コマンドラインから手軽に変換機能を利用できます。
+本 CLI は [libssconverter](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssconverter) のラッパーであり、SDK のリリース成果物のビルドに使われているのと同じ変換パイプラインを公開しています。ランタイム側は [libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime) を参照してください。
 
 # 使い方
 
@@ -36,7 +36,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 
 複数の `.sspj` プロジェクトをまとめて変換します。
 複数の file パス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。
-このモードでは `--out-dir` オプションは無視され、出力ファイルはソースファイルの横（またはデフォルトのディレクトリ）に生成されます。
+このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に `<name>_ssab/` として生成されます。
 
 ```bash
 # 特定の複数ファイルを変換
@@ -54,10 +54,15 @@ _注意: バッチモードでは `--out-dir` および `--watch` オプショ�
 
 # インストール
 
-システムに `ssconverter-cli` をインストールするには、`cargo install` を使用します。
+## ビルド済みバイナリ（推奨）
+
+[GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
+
+## ソースからビルド
+
+Rust ツールチェイン（[rustup](https://rustup.rs/)）が必要です。リポジトリのルートから:
 
 ```bash
-# リポジトリのルートから
 $ cargo install --path cli
 ```
 
@@ -83,6 +88,19 @@ $ ssconverter-cli my_game/project.sspj --watch
 ```bash
 $ ssconverter-cli my_game/project.sspj --embedded
 ```
+
+# 出力
+
+`.sspj` を変換するたびに、ソースファイルの隣にディレクトリが生成されます（シングルモードで `--out-dir` を指定した場合を除く）:
+
+| モード | 出力ディレクトリ | 中身 |
+|---|---|---|
+| デフォルト | `<name>_ssab/` | `.ssab`（アニメーションごとに 1 つ）、`.ssqb`（`.ssqe` が参照されている場合のシーケンスパック）、参照されているテクスチャのコピー |
+| `--embedded` | `<name>_emb_ssab/` | 同上ですが、参照アセットは各 `.ssab` 内に埋め込まれます（テクスチャの別ファイルは生成されません） |
+
+# 次のステップ
+
+`.ssab` ファイルが生成できたら、[libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime) を通じてゲームエンジンに組み込みます。実装手順は [Player 移植ガイド](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/libs/ssruntime/docs/README.ja.md) を参照してください。
 
 # 開発者向け
 ## ビルド
