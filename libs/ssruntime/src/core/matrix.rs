@@ -162,9 +162,7 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn create_rotation_x(radians: f32) -> Self {
         let mut res = Self::IDENTITY;
-        let (sv, cv) = f32x4::splat(radians).sin_cos();
-        let s = sv.to_array()[0];
-        let c = cv.to_array()[0];
+        let (s, c) = sincosf(radians);
         res.m[5] = c;
         res.m[6] = s;
         res.m[9] = -s;
@@ -176,9 +174,7 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn create_rotation_y(radians: f32) -> Self {
         let mut res = Self::IDENTITY;
-        let (sv, cv) = f32x4::splat(radians).sin_cos();
-        let s = sv.to_array()[0];
-        let c = cv.to_array()[0];
+        let (s, c) = sincosf(radians);
         res.m[0] = c;
         res.m[2] = -s;
         res.m[8] = s;
@@ -190,9 +186,7 @@ impl SsMatrix4x4 {
     #[must_use]
     pub fn create_rotation_z(radians: f32) -> Self {
         let mut res = Self::IDENTITY;
-        let (sv, cv) = f32x4::splat(radians).sin_cos();
-        let s = sv.to_array()[0];
-        let c = cv.to_array()[0];
+        let (s, c) = sincosf(radians);
         res.m[0] = c;
         res.m[1] = s;
         res.m[4] = -s;
@@ -240,15 +234,17 @@ impl SsMatrix4x4 {
 
         // Translation
         if pos_x != 0.0 || pos_y != 0.0 || pos_z != 0.0 {
-            col3 = (col0 * f32x4::splat(pos_x)) + (col1 * f32x4::splat(pos_y)) + (col2 * f32x4::splat(pos_z)) + col3;
+            col3 = col0.mul_add(f32x4::splat(pos_x), col1.mul_add(f32x4::splat(pos_y), col2.mul_add(f32x4::splat(pos_z), col3)));
         }
 
         // Rotation X
         let rx = state.rotation_x() * core::f32::consts::PI / 180.0;
         if rx != 0.0 {
-            let (s, c) = f32x4::splat(rx).sin_cos();
-            let new_col1 = (col1 * c) + (col2 * s);
-            let new_col2 = (col1 * -s) + (col2 * c);
+            let (sf, cf) = sincosf(rx);
+            let s = f32x4::splat(sf);
+            let c = f32x4::splat(cf);
+            let new_col1 = col1.mul_add(c, col2 * s);
+            let new_col2 = col1.mul_add(-s, col2 * c);
             col1 = new_col1;
             col2 = new_col2;
         }
@@ -256,9 +252,11 @@ impl SsMatrix4x4 {
         // Rotation Y
         let ry = state.rotation_y() * core::f32::consts::PI / 180.0;
         if ry != 0.0 {
-            let (s, c) = f32x4::splat(ry).sin_cos();
-            let new_col0 = (col0 * c) + (col2 * -s);
-            let new_col2 = (col0 * s) + (col2 * c);
+            let (sf, cf) = sincosf(ry);
+            let s = f32x4::splat(sf);
+            let c = f32x4::splat(cf);
+            let new_col0 = col0.mul_add(c, col2 * -s);
+            let new_col2 = col0.mul_add(s, col2 * c);
             col0 = new_col0;
             col2 = new_col2;
         }
@@ -266,9 +264,11 @@ impl SsMatrix4x4 {
         // Rotation Z
         let rz = state.rotation_z() * core::f32::consts::PI / 180.0;
         if rz != 0.0 {
-            let (s, c) = f32x4::splat(rz).sin_cos();
-            let new_col0 = (col0 * c) + (col1 * s);
-            let new_col1 = (col0 * -s) + (col1 * c);
+            let (sf, cf) = sincosf(rz);
+            let s = f32x4::splat(sf);
+            let c = f32x4::splat(cf);
+            let new_col0 = col0.mul_add(c, col1 * s);
+            let new_col1 = col0.mul_add(-s, col1 * c);
             col0 = new_col0;
             col1 = new_col1;
         }
@@ -279,8 +279,8 @@ impl SsMatrix4x4 {
         if skew_x != 0.0 || skew_y != 0.0 {
             let sx = tanf(skew_x);
             let sy = tanf(skew_y);
-            let new_col0 = col0 + (col1 * f32x4::splat(sy));
-            let new_col1 = col1 + (col0 * f32x4::splat(sx));
+            let new_col0 = col1.mul_add(f32x4::splat(sy), col0);
+            let new_col1 = col0.mul_add(f32x4::splat(sx), col1);
             col0 = new_col0;
             col1 = new_col1;
         }
@@ -315,7 +315,7 @@ impl SsMatrix4x4 {
             let b2j = f32x4::splat(rhs.m[offset + 2]);
             let b3j = f32x4::splat(rhs.m[offset + 3]);
 
-            let res_col_j = (a_col0 * b0j) + (a_col1 * b1j) + (a_col2 * b2j) + (a_col3 * b3j);
+            let res_col_j = a_col0.mul_add(b0j, a_col1.mul_add(b1j, a_col2.mul_add(b2j, a_col3 * b3j)));
             let res_arr: [f32; 4] = res_col_j.into();
             res[offset..offset + 4].copy_from_slice(&res_arr);
         }
@@ -335,23 +335,10 @@ impl SsMatrix4x4 {
         let vz = f32x4::splat(v.z);
         let vw = f32x4::splat(1.0);
 
-        let res_vec = (a_col0 * vx) + (a_col1 * vy) + (a_col2 * vz) + (a_col3 * vw);
+        let res_vec = a_col0.mul_add(vx, a_col1.mul_add(vy, a_col2.mul_add(vz, a_col3 * vw)));
         let res_arr: [f32; 4] = res_vec.into();
 
         SsVector3 { x: res_arr[0], y: res_arr[1], z: res_arr[2] }
-    }
-
-    /// Transforms four 3D vectors at once using SIMD.
-    /// `vx`, `vy`, `vz` are f32x4 containing the x, y, and z components of the four vectors.
-    /// `vw` is the w component, typically all 1.0 for positions.
-    #[inline]
-    #[must_use]
-    pub fn transform_v4(&self, vx: f32x4, vy: f32x4, vz: f32x4, vw: f32x4) -> (f32x4, f32x4, f32x4, f32x4) {
-        let out_x = (f32x4::splat(self.m[0]) * vx) + (f32x4::splat(self.m[4]) * vy) + (f32x4::splat(self.m[8]) * vz) + (f32x4::splat(self.m[12]) * vw);
-        let out_y = (f32x4::splat(self.m[1]) * vx) + (f32x4::splat(self.m[5]) * vy) + (f32x4::splat(self.m[9]) * vz) + (f32x4::splat(self.m[13]) * vw);
-        let out_z = (f32x4::splat(self.m[2]) * vx) + (f32x4::splat(self.m[6]) * vy) + (f32x4::splat(self.m[10]) * vz) + (f32x4::splat(self.m[14]) * vw);
-        let out_w = (f32x4::splat(self.m[3]) * vx) + (f32x4::splat(self.m[7]) * vy) + (f32x4::splat(self.m[11]) * vz) + (f32x4::splat(self.m[15]) * vw);
-        (out_x, out_y, out_z, out_w)
     }
 
     /// Transforms four 2D vectors at once using SIMD, ignoring Z and W for performance.
@@ -360,8 +347,8 @@ impl SsMatrix4x4 {
     #[inline]
     #[must_use]
     pub fn transform_v4_2d(&self, vx: f32x4, vy: f32x4) -> (f32x4, f32x4) {
-        let out_x = (f32x4::splat(self.m[0]) * vx) + (f32x4::splat(self.m[4]) * vy) + f32x4::splat(self.m[12]);
-        let out_y = (f32x4::splat(self.m[1]) * vx) + (f32x4::splat(self.m[5]) * vy) + f32x4::splat(self.m[13]);
+        let out_x = f32x4::splat(self.m[0]).mul_add(vx, f32x4::splat(self.m[4]).mul_add(vy, f32x4::splat(self.m[12])));
+        let out_y = f32x4::splat(self.m[1]).mul_add(vx, f32x4::splat(self.m[5]).mul_add(vy, f32x4::splat(self.m[13])));
         (out_x, out_y)
     }
 

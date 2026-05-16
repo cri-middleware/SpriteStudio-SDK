@@ -13,6 +13,16 @@ Please refer to [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 ## How Can I Contribute?
 
+### Technical Constraints & Guiding Principles
+To maintain the high-performance and portable nature of this SDK, all code contributions must adhere to the following core principles:
+
+- **Strict `no_std` Compliance:** The core runtime (`libssruntime`, `libssab`, `libssinterpolate`) must remain `#![no_std]`. We do not allow dependencies on `std` or any platform-specific libraries that break portability.
+- **Zero-Allocation in Playback Hot Path:** Dynamic memory allocation (heap allocation) is strictly prohibited during the animation playback loop. All necessary memory must be pre-allocated or provided by the caller.
+- **Performance over Convenience:** We prioritize runtime execution speed and memory efficiency over "easy-to-use" helper functions if they introduce overhead.
+- **SIMD-Friendly Design:** Data structures (especially in `ssab`) must be designed with SIMD (f32x4) vectorization in mind. Prefer columnar layouts and flat arrays.
+- **Stateless Brain (Separation of Concerns):** The runtime (Brain) calculates states but must not have knowledge of the rendering engine (Body). Keep the interface primitive and deterministic.
+- **Explicit over Implicit:** Avoid "magic" or hidden behaviors. Code should be predictable, traceable, and explicit in its intent.
+
 ### Reporting Bugs
 If you find a bug, please open an issue and include:
 - A clear, descriptive title.
@@ -85,6 +95,16 @@ SpriteStudio7-SDK にご関心をお寄せいただき、ありがとうござ�
 [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) を参照してください。
 
 ## 貢献する方法
+
+### 技術的制約と設計原則
+本 SDK の高いパフォーマンスとポータビリティを維持するため、すべてのコード貢献は以下の核心的な原則に従う必要があります。
+
+- **厳格な `no_std` 遵守:** コアランタイム (`libssruntime`, `libssab`, `libssinterpolate`) は `#![no_std]` を維持しなければなりません。ポータビリティを損なう `std` やプラットフォーム依存のライブラリへの依存は許可されません。
+- **再生パスでのゼロ・アロケーション:** アニメーションの再生ループ（ホットパス）内での動的なメモリ割り当て（ヒープ確保）は厳禁です。必要なメモリはすべて事前確保するか、呼び出し側から提供される必要があります。
+- **便利さよりもパフォーマンス:** オーバーヘッドを導入するような「使いやすいヘルパー関数」よりも、実行速度とメモリ効率を常に優先します。
+- **SIMD フレンドリーな設計:** データ構造（特に `ssab`）は、SIMD (f32x4) によるベクトル化を念頭に設計される必要があります。カラム指向のレイアウトやフラットな配列を優先してください。
+- **ステートレスな Brain（関心の分離）:** ランタイム（Brain）は状態の計算に徹し、レンダリングエンジン（Body）に関する知識を持ってはなりません。インターフェースはプリミティブかつ決定論的（Deterministic）に保ってください。
+- **暗黙的より明示的:** 「マジック」や隠れた挙動を避けてください。コードは意図が明示的であり、予測可能でトレース可能である必要があります。
 
 ### バグの報告
 バグを発見した場合は、Issue を作成し、以下の情報を含めてください：

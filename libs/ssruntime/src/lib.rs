@@ -679,10 +679,6 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn update_animation(&mut self, delta_time: f32) {
-        self.instance.controller.update(delta_time);
-    }
-
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(resource) = self.eval.resource else {
             return Err(error::SSRuntimeError::NotLoaded);

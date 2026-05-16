@@ -2,34 +2,36 @@
 
 # libssruntime
 
-A runtime library for playing SpriteStudio 7 animation data.
-It loads binary data (`.ssab`) and provides core logic such as animation updates, keyframe extraction, and interpolation calculations.
+The playback **Brain** of the [SpriteStudio7-SDK](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.md) workflow. Loads `.ssab` binaries produced by [ssconverter-cli](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/cli/README.md) and emits everything a renderer needs per frame — part states (transforms, mesh deformations, color), cross-engine `DrawBatch` plans, and event signals.
 
-> **Note**
-> This library itself does not have rendering capabilities.
-> It functions as a backend for implementing "Players (rendering parts)" for various game engines and platforms.
+> **Engine-agnostic by design**
+> `libssruntime` performs no rendering itself. Each "Player" (engine/platform integration) consumes the emitted state and draws using its native API. This separation is what makes playback consistent across engines — see [Why choose this SDK?](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.md#why-choose-this-sdk) in the top-level README for the rationale.
 
 # Key Features
 
-- **Playback Control**: Play, pause, seek, loop settings, etc.
-- **Data Management**: Holds animation data (`SsAnimeBinary`) and sequence data (`SsSequenceBinary`).
-- **Update Logic**: Frame updates based on delta time.
-- **Interpolation**: Interpolates values between keyframes based on curves or easing functions.
-- **Instance Feature**: Supports calling other animations from parent parts.
-- **Random Seed Management**: Seed control to ensure reproducibility for particle effects, etc.
+- **Full SpriteStudio 7 feature set**: bone hierarchies, mesh weights and vertex deformations, particle effects, sequence packs (`.ssqe` → `.ssqb`), sub-animation instances, stencil masks, frame-accurate events and user data.
+- **Sub-frame interpolation**: smooth playback beyond the source framerate — Hermite, Bezier, Linear, and easing curves.
+- **`DrawBatch` plan emission**: each frame's output includes a cross-engine batch plan (vertices, mask sequences, particle quad slots, instance / effect slots). See the [Batched Rendering Contract (Japanese)](./docs/09_batched_rendering.ja.md).
+- **Deterministic playback**: explicit random-seed control for reproducible particle simulation.
+- **Rich playback control** (`PlaybackController`): transport (play / pause / stop), single-frame stepping (forward / backward), seek to any frame at sub-frame precision, custom playback range and FPS, loop count (`-1` = infinite), `Normal` / `PingPong` styles, `Forward` / `Reverse` direction, and real-time vs. fixed-step time advancement.
+- **`no_std`-first**: pure `no_std` core; `std` is opt-in for developer ergonomics only. SIMD (`f32x4`) on every target.
 
 # `no_std` Support
 
-`libssruntime` is designed to be compatible with `no_std` environments, making it suitable for embedded systems or custom game engine cores.
-
-To use it in a `no_std` environment, disable the default features in your `Cargo.toml`:
+`libssruntime` is `no_std`-first. `std` is opt-in (developer ergonomics only) and is never used by release scripts. Pick the feature set that matches your target:
 
 ```toml
-[dependencies]
-ssruntime = { path = "libs/ssruntime", default-features = false }
+# Mobile / Console / Desktop no_std (C-API)
+ssruntime = { version = "7.0", default-features = false, features = ["ffi", "libc_alloc", "panic-handler"] }
+
+# Web Wasm (browser / wasm-bindgen)
+ssruntime = { version = "7.0", default-features = false, features = ["web"] }
+
+# Pure Wasm (WASI / custom Wasm engine)
+ssruntime = { version = "7.0", default-features = false, features = ["wasm_alloc", "panic-handler"] }
 ```
 
-*Note: In `no_std` mode, an allocator (`alloc` crate) is still required for managing animation state and metadata.*
+*Note: An allocator (`alloc` crate) is still required even in `no_std` mode — animation state and metadata are heap-allocated.*
 
 # ⚠️ Limitations and Security Notes
 
@@ -69,7 +71,7 @@ graph TD
     RAW -->|1. ss_resource_create_borrow| RES
     RES -->|2. ss_runtime_bind_resource| CTX
     DT -->|"3. ss_runtime_update -> frame"| CTX
-    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" Part States / Mesh Info "]
+    CTX -->|"4. ss_runtime_get_frame_data(frame)"| STATE[" Part States / Mesh Info<br/>+ DrawBatch Plan "]
     STATE --> DRAW
 ```
 

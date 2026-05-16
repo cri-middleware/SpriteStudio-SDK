@@ -3,12 +3,16 @@
 
 [![CI](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml)
 
-The repository is in experimental and unstable phase.
-No guarantee, No support and can't reply any requests and any bug reports regarding the repository.
+This repository is in an experimental and unstable phase.
+No guarantees or support are provided, and we cannot respond to requests or bug reports at this time.
 
-A Software Development Kit for sspj projects that are created by [OPTPiX SpriteStudio](https://www.webtech.co.jp/eng/spritestudio/) 7 or higher flexibly to implement an animation player on any game engines or platforms.
+A high-performance, engine-agnostic animation player SDK for **OPTPiX SpriteStudio 7**.
+This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
-## Overview
+## The Workflow (How it works)
+
+1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
+2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the full SpriteStudio 7 feature set out of the box.
 
 The following diagram shows the workflow of converting assets and playing animations using this SDK:
 
@@ -20,7 +24,7 @@ The following diagram shows the workflow of converting assets and playing animat
 ```mermaid
 graph LR
     subgraph Assets ["Project Assets"]
-        SS[" .sspj / .ssae / .ssce "]
+        SS[" .sspj (root)<br/>+ .ssae / .ssce / .ssee / .ssqe "]
         IMG[" Images / .png "]
     end
 
@@ -35,7 +39,7 @@ graph LR
     subgraph Runtime ["Runtime (Playback)"]
         BIN --> RT(" libssruntime ")
         RT -.-> INT(" libssinterpolate ")
-        RT --> STATE[" Part States / Mesh Info "]
+        RT --> STATE[" Part States / Mesh Info<br/>+ DrawBatch Plan "]
     end
 
     subgraph Engine ["Your Game Engine"]
@@ -47,12 +51,33 @@ graph LR
     class BIN generated;
 ```
 
+## Key Supported Features
+
+* **Standard Animations:** Bone hierarchies, transforms, and full keyframe interpolations (Bezier, Hermite, Linear, etc.).
+* **Sub-frame Interpolation:** Smooth, continuous playback beyond the base framerate. Perfect for high-refresh-rate displays (144Hz+) and slow-motion effects.
+* **Mesh & Deform:** Fully supported mesh weights and vertex deformations for raster images.
+* **Particle Effects:** High-performance particle simulation matching the SpriteStudio editor.
+* **Sequences (`.ssqe`):** Playback of sequence packs.
+* **Instance & Masks:** Sub-animation instancing and stencil mask clipping.
+* **Events & User Data:** Frame-accurate callbacks for audio, signals, and user data.
+
+## Why choose this SDK?
+
+* **1. Zero-Math Integration & Cross-Engine Visual Consistency**
+  The SDK handles all complex state computations (bone matrices, mesh deformations, and hierarchical opacity/colors) and outputs an optimized `DrawBatch` plan. Your engine just reads the generated vertices and renders the primitives. Every renderer consumes the same `DrawBatch` plan, structurally eliminating the most common source of engine-specific visual drift.
+* **2. Ultra-Compact Payload & Universal SIMD Performance**
+  We designed the `.ssab` binary format to minimize the data footprint. By utilizing a columnar data layout and hash-based lookups, we achieved an ultra-compact file size that requires zero parsing overhead. This data-oriented design perfectly aligns with our runtime architecture, which leverages **SIMD (f32x4)** across all environments. The result is maximum playback performance with minimal memory and CPU cache footprint.
+* **3. Extreme Portability (Built with `#![no_std]` Rust)**
+  The core runtime is written in strictly `#![no_std]` Rust, meaning it has zero dependencies on operating systems or standard libraries. It integrates seamlessly via C-API or WASM, allowing it to run anywhere—from memory-constrained mobile/embedded devices to web browsers—with rock-solid stability and zero unpredictable allocations.
+
+## Libraries & Tools
+
 - Libraries
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
     - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
     - [libssinterpolate](./libs/ssinterpolate/README.md): a platform-agnostic math library for animation interpolations.
     - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` files.
-    - [libssruntime](./libs/ssruntime/README.md): a library that helps implement an animation player. The features are controlling playback, extracting keyframes, and doing interpolation.
+    - [libssruntime](./libs/ssruntime/README.md): the playback Brain. Computes per-frame part states (transforms, mesh deformations, color) and emits a cross-engine `DrawBatch` plan that any renderer can consume.
 - Tool
     - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
@@ -93,10 +118,6 @@ This repository includes several sample projects in the `tests/` directory to ve
 - `tests/ParticleEffect/ParticleEffect.sspj`: Verifies particle effects.
 
 You can use these projects as references when implementing your own player or verifying the SDK's behavior.
-
-## Tools Usage
-### ssconverter-cli
-reference: [ssconverter-cli](./cli/README.md)
 
 ## For SDK Developers
 ### Prepare
