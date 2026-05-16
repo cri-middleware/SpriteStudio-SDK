@@ -887,8 +887,8 @@ impl<'a> Context<'a> {
                 globals.mesh_vertices_x[start + v] = m0 * rx + m4 * ry + m12;
                 globals.mesh_vertices_y[start + v] = m1 * rx + m5 * ry + m13;
             }
-            // Apply deform deltas — offsets are authored in the target's
-            // orientation and applied unflipped (see evaluate_part).
+            // Apply deform deltas as-is — evaluate_part has already applied
+            // any coordinate-system Y conversion.
             if let Some(deform) = layer.mesh_deform.get(i) {
                 let vert_count = end - start;
                 for k in 0..deform.indices.len() {
