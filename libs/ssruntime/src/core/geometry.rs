@@ -1,3 +1,4 @@
+use crate::core::SsMatrix4x4;
 use wide::{CmpGt, CmpLt, f32x4};
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
