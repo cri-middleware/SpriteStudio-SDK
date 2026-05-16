@@ -613,40 +613,66 @@ pub fn evaluate_deform(
                 return UPDATE_FLAG_OFF;
             };
 
-            if let (Some(prev_coordinate), Some(next_coordinate)) = (prev_val.coordinate(), next_val.coordinate()) {
-                let length_full = prev_coordinate.len();
-                coord_out.reserve(length_full);
-                let length = core::cmp::min(length_full, next_coordinate.len());
+            if let (Some(prev_coordinate), Some(next_coordinate), Some(prev_idx), Some(next_idx)) =
+                (prev_val.coordinate(), next_val.coordinate(), prev_val.index(), next_val.index())
+            {
+                // Deform keyframes store a sparse, vertex-keyed set of offsets:
+                // `index[k]` is the changed vertex and `coordinate[k]` its
+                // offset. The changed-vertex set differs between keyframes
+                // (e.g. an empty rest keyframe vs a deformed one), so the two
+                // sides cannot be interpolated position-by-position. Merge by
+                // vertex index instead — a vertex absent on one side
+                // interpolates against a zero offset. Authored index arrays
+                // are ascending, so a two-pointer merge keeps the output
+                // ascending and allocation-free.
+                let prev_len = core::cmp::min(prev_idx.len(), prev_coordinate.len());
+                let next_len = core::cmp::min(next_idx.len(), next_coordinate.len());
 
                 start_workspace.clear();
-                start_workspace.reserve(length * 2);
                 end_workspace.clear();
-                end_workspace.reserve(length * 2);
-                for i in 0..length {
-                    let p = prev_coordinate.get(i);
-                    let n = next_coordinate.get(i);
-                    start_workspace.push(p.v1());
-                    start_workspace.push(p.v2());
-                    end_workspace.push(n.v1());
-                    end_workspace.push(n.v2());
+                index_out.reserve(prev_len + next_len);
+
+                let mut i = 0usize;
+                let mut j = 0usize;
+                while i < prev_len || j < next_len {
+                    let pv = if i < prev_len { prev_idx.get(i) } else { i16::MAX };
+                    let nv = if j < next_len { next_idx.get(j) } else { i16::MAX };
+                    if pv == nv {
+                        let p = prev_coordinate.get(i);
+                        let n = next_coordinate.get(j);
+                        start_workspace.push(p.v1());
+                        start_workspace.push(p.v2());
+                        end_workspace.push(n.v1());
+                        end_workspace.push(n.v2());
+                        index_out.push(pv);
+                        i += 1;
+                        j += 1;
+                    } else if pv < nv {
+                        let p = prev_coordinate.get(i);
+                        start_workspace.push(p.v1());
+                        start_workspace.push(p.v2());
+                        end_workspace.push(0.0);
+                        end_workspace.push(0.0);
+                        index_out.push(pv);
+                        i += 1;
+                    } else {
+                        let n = next_coordinate.get(j);
+                        start_workspace.push(0.0);
+                        start_workspace.push(0.0);
+                        end_workspace.push(n.v1());
+                        end_workspace.push(n.v2());
+                        index_out.push(nv);
+                        j += 1;
+                    }
                 }
 
                 out_workspace.clear();
-                out_workspace.resize(length * 2, 0.0);
+                out_workspace.resize(start_workspace.len(), 0.0);
                 interpolate_array_linear(start_workspace, end_workspace, rate, out_workspace);
 
-                for i in 0..length {
-                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(out_workspace[i * 2], out_workspace[i * 2 + 1]));
-                }
-                // Overrun use the value of `prev` as is.
-                for i in length..length_full {
-                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(prev_coordinate.get(i).v1(), prev_coordinate.get(i).v2()));
-                }
-
-                // "index" is not interpolated.
-                if let Some(index) = prev_val.index() {
-                    index_out.reserve(index.len());
-                    index_out.extend(index.iter());
+                coord_out.reserve(index_out.len());
+                for k in 0..index_out.len() {
+                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(out_workspace[k * 2], out_workspace[k * 2 + 1]));
                 }
 
                 UPDATE_FLAG_ON

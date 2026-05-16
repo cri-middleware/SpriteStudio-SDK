@@ -29,10 +29,10 @@ pub extern "C" fn ss_runtime_set_log_callback(callback: SsLogCallback) {
 macro_rules! ss_log {
     ($level:expr, $($arg:tt)*) => {
         unsafe {
-            let cb_ptr = $crate::ffi::LOG_CALLBACK.load(core::sync::atomic::Ordering::Relaxed);
+            let cb_ptr = $crate::ffi::LOG_CALLBACK.load(::core::sync::atomic::Ordering::Relaxed);
             if !cb_ptr.is_null() {
-                let cb: $crate::ffi::SsLogCallback = core::mem::transmute(cb_ptr);
-                if let Ok(s) = alloc::ffi::CString::new(alloc::format!($($arg)*)) {
+                let cb: $crate::ffi::SsLogCallback = ::core::mem::transmute(cb_ptr);
+                if let Ok(s) = ::alloc::ffi::CString::new(::alloc::format!($($arg)*)) {
                     cb($level, s.as_ptr());
                 }
             }

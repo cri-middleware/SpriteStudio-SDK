@@ -164,11 +164,14 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
 /// Mesh parts may not change their cell after frame 0 (SS spec), so this is
 /// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
 /// cellmap texture-pixel space (the cell rectangle origin is already added —
-/// divide by the texture size to normalize). `indices` are triangle indices
-/// widened from the SSAB-side `u16` `table_index_vertex`.
+/// divide by the texture size to normalize). `rest` are interleaved
+/// `[x, y, ...]` rest-pose positions (cell coordinate minus cell pivot, Y-up
+/// native), consumed by the non-skeletal (Deform-only) mesh path. `indices`
+/// are triangle indices widened from the SSAB-side `u16` `table_index_vertex`.
 #[derive(Clone, Default)]
 pub struct MeshCellData {
     pub uvs: alloc::vec::Vec<f32>,
+    pub rest: alloc::vec::Vec<f32>,
     pub indices: alloc::vec::Vec<i32>,
 }
 
@@ -176,6 +179,27 @@ impl MeshCellData {
     #[inline]
     pub fn num_vertices(&self) -> usize {
         self.uvs.len() / 2
+    }
+}
+
+/// Per-frame mesh deform for one part, retained from Phase 1's `evaluate_deform`
+/// so the Phase 2 mesh-vertex pass can consume it. `indices` selects which mesh
+/// vertices are deformed; `dx`/`dy` are the matching SoA deltas in part-local
+/// space (Y-down flip already applied). All three empty when the part has no
+/// deform this frame.
+#[derive(Clone, Default)]
+pub struct PartDeformFrame {
+    pub indices: alloc::vec::Vec<i16>,
+    pub dx: alloc::vec::Vec<f32>,
+    pub dy: alloc::vec::Vec<f32>,
+}
+
+impl PartDeformFrame {
+    #[inline]
+    pub fn clear(&mut self) {
+        self.indices.clear();
+        self.dx.clear();
+        self.dy.clear();
     }
 }
 
@@ -201,17 +225,23 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
         return None;
     }
 
-    // Cell-local mesh coordinates are pixel offsets within the cell; add the
-    // cell rectangle origin to land in cellmap texture-pixel space.
+    // Cell-local mesh coordinates are pixel offsets within the cell. For UVs
+    // add the cell rectangle origin (→ cellmap texture-pixel space); for rest
+    // positions subtract the cell pivot (Y-up native — the Y-down flip is
+    // applied at vertex-computation time).
     let (rect_left, rect_top) = cell.rectangle().map(|r| (r.x1(), r.y1())).unwrap_or((0.0, 0.0));
+    let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
     let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
+    let mut rest = alloc::vec::Vec::with_capacity(coords.len() * 2);
     for c in coords {
         uvs.push(c.v1() + rect_left);
         uvs.push(c.v2() + rect_top);
+        rest.push(c.v1() - pivot_x);
+        rest.push(c.v2() - pivot_y);
     }
     let indices: alloc::vec::Vec<i32> = tri.iter().map(|i| i as i32).collect();
 
-    Some(MeshCellData { uvs, indices })
+    Some(MeshCellData { uvs, indices, rest })
 }
 
 #[derive(Clone)]
@@ -584,11 +614,13 @@ pub(crate) fn evaluate_part(
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
     if let Some(mask) = cached_part.deform_array.and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace)) {
-        if coordinate_system == SsCoordinateSystem::YDown {
-            for v in deform_coord_workspace.iter_mut() {
-                v.set_y(-v.y());
-            }
-        }
+        // NOTE: deform offsets are intentionally NOT Y-flipped for YDown.
+        // Unlike position/pivot/anchor, the SSAB deform `coordinate` combines
+        // correctly with the mesh only when applied unflipped — verified
+        // numerically against SpriteStudio output (frames 0/5/10). The mesh
+        // rest (`table_coordinate`) is Y-up and flipped in compute_mesh_vertices;
+        // the deform delta is already in the opposite orientation, so flipping
+        // it here inverts the deformation's vertical direction.
         result.deform_present = true;
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeDeform & mask;
     }
@@ -633,7 +665,14 @@ fn get_parts<'a>(
     deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
     deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
+    mesh_deform: &mut Vec<PartDeformFrame>,
 ) {
+    if mesh_deform.len() != cached_parts.len() {
+        mesh_deform.resize(cached_parts.len(), PartDeformFrame::default());
+    }
+    for d in mesh_deform.iter_mut() {
+        d.clear();
+    }
     parts_vec.clear();
     cell_vec.clear();
     parts_color_vec.clear();
@@ -794,6 +833,12 @@ fn get_parts<'a>(
             let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &args);
             deform_vec.push(deform_off);
             result.state.set_deform((deform_vec.len() - 1) as i16);
+            // Retain per-part deform so the Phase 2 mesh-vertex pass can apply it.
+            mesh_deform[i].indices.extend_from_slice(deform_index_workspace.as_slice());
+            for c in deform_coord_workspace.iter() {
+                mesh_deform[i].dx.push(c.x());
+                mesh_deform[i].dy.push(c.y());
+            }
         }
         parts_vec.push(result.state);
     }
@@ -1012,6 +1057,7 @@ pub fn get_frame_data<'a>(
     deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
     deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
+    mesh_deform: &mut Vec<PartDeformFrame>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -1050,6 +1096,7 @@ pub fn get_frame_data<'a>(
         deform_coord_workspace,
         deform_index_workspace,
         inheritance_alphas_workspace,
+        mesh_deform,
     );
     args.parts = Some(fb.create_vector(parts_vec));
 

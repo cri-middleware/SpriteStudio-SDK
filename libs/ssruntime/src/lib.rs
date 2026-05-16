@@ -400,6 +400,8 @@ struct LayerState<'a> {
     cell_meta_per_part: Vec<f32>,
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
+    /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
+    mesh_deform: Vec<crate::core::framedata::PartDeformFrame>,
 }
 
 impl<'a> LayerState<'a> {
@@ -415,6 +417,7 @@ impl<'a> LayerState<'a> {
             cell_meta_per_part: Vec::new(),
             cell_texture_hashes: Vec::new(),
             local_vertices: Vec::new(),
+            mesh_deform: Vec::new(),
         }
     }
 }
@@ -726,6 +729,7 @@ impl<'a> Context<'a> {
             &mut self.eval.deform_result_coordinate_workspace,
             &mut self.eval.deform_result_index_workspace,
             &mut self.eval.inheritance_alphas_workspace,
+            &mut self.instance.layer.mesh_deform,
         );
 
         // Phase 3 hook: blend layers via `mix_poses(...)` between phase 1 and 2
@@ -783,9 +787,11 @@ impl<'a> Context<'a> {
         }
 
         // First pass: build the CSR offsets so we can size the SoA buffers.
+        // The Cell is the authoritative geometry source (it covers both
+        // skeletal and Deform-only meshes); the bind cache only adds skinning.
         globals.mesh_vertex_offsets[0] = 0;
         for i in 0..num_parts {
-            let part_vertex_count = cached_parts.get(i).and_then(|c| c.mesh_binding.as_ref()).map(|b| b.num_vertices()).unwrap_or(0);
+            let part_vertex_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.num_vertices()).unwrap_or(0);
             globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + part_vertex_count as u32;
         }
         let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
@@ -839,19 +845,60 @@ impl<'a> Context<'a> {
         }
 
         for i in 0..num_parts {
-            let Some(binding) = cached_parts.get(i).and_then(|c| c.mesh_binding.as_ref()) else {
+            let Some(cached) = cached_parts.get(i) else {
                 continue;
             };
-            if binding.num_vertices() == 0 {
+            let start = globals.mesh_vertex_offsets[i] as usize;
+            let end = globals.mesh_vertex_offsets[i + 1] as usize;
+            if end <= start {
+                continue; // not a mesh part
+            }
+
+            // Skeletal mesh: a bone-weighted binding drives the vertices.
+            let skeletal = cached.mesh_binding.as_ref().map(|b| !b.bone_indices.is_empty()).unwrap_or(false);
+            if skeletal {
+                let binding = cached.mesh_binding.as_ref().unwrap();
+                if binding.num_vertices() != end - start {
+                    continue; // malformed: bind vertex count != cell vertex count
+                }
+                let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| {
+                    (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i])
+                });
+                let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
+                crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
                 continue;
             }
 
-            let start = globals.mesh_vertex_offsets[i] as usize;
-            let end = globals.mesh_vertex_offsets[i + 1] as usize;
-
-            let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
-
-            crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, None, flip_y, out_x, out_y);
+            // Deform-only mesh: no bones — rigidly transform the cell's rest
+            // mesh by the part's own world matrix.
+            let Some(mesh_cell) = cached.mesh_cell.as_ref() else {
+                continue;
+            };
+            if mesh_cell.rest.len() != (end - start) * 2 || i >= globals.world_matrices.len() {
+                continue;
+            }
+            let (m0, m1, m4, m5, m12, m13) = {
+                let mat = &globals.world_matrices[i];
+                (mat.m[0], mat.m[1], mat.m[4], mat.m[5], mat.m[12], mat.m[13])
+            };
+            for v in 0..(end - start) {
+                let rx = mesh_cell.rest[v * 2];
+                let ry = if flip_y { -mesh_cell.rest[v * 2 + 1] } else { mesh_cell.rest[v * 2 + 1] };
+                globals.mesh_vertices_x[start + v] = m0 * rx + m4 * ry + m12;
+                globals.mesh_vertices_y[start + v] = m1 * rx + m5 * ry + m13;
+            }
+            // Apply deform deltas — offsets are authored in the target's
+            // orientation and applied unflipped (see evaluate_part).
+            if let Some(deform) = layer.mesh_deform.get(i) {
+                let vert_count = end - start;
+                for k in 0..deform.indices.len() {
+                    let v = deform.indices[k] as usize;
+                    if v < vert_count {
+                        globals.mesh_vertices_x[start + v] += m0 * deform.dx[k] + m4 * deform.dy[k];
+                        globals.mesh_vertices_y[start + v] += m1 * deform.dx[k] + m5 * deform.dy[k];
+                    }
+                }
+            }
         }
     }
 
