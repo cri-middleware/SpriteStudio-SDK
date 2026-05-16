@@ -674,6 +674,42 @@ pub fn evaluate_deform(
                 }
 
                 UPDATE_FLAG_ON
+            } else if let (Some(prev_coordinate), Some(next_coordinate)) = (prev_val.coordinate(), next_val.coordinate()) {
+                // No per-vertex index array on one or both keyframes: the
+                // coordinate arrays are positionally aligned, so interpolate
+                // vertex-by-vertex. When prev is longer than next, its
+                // trailing vertices pass through unchanged.
+                let length_full = prev_coordinate.len();
+                let length = core::cmp::min(length_full, next_coordinate.len());
+
+                start_workspace.clear();
+                end_workspace.clear();
+                for i in 0..length {
+                    let p = prev_coordinate.get(i);
+                    let n = next_coordinate.get(i);
+                    start_workspace.push(p.v1());
+                    start_workspace.push(p.v2());
+                    end_workspace.push(n.v1());
+                    end_workspace.push(n.v2());
+                }
+
+                out_workspace.clear();
+                out_workspace.resize(length * 2, 0.0);
+                interpolate_array_linear(start_workspace, end_workspace, rate, out_workspace);
+
+                coord_out.reserve(length_full);
+                for i in 0..length {
+                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(out_workspace[i * 2], out_workspace[i * 2 + 1]));
+                }
+                for i in length..length_full {
+                    let p = prev_coordinate.get(i);
+                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(p.v1(), p.v2()));
+                }
+                if let Some(index) = prev_val.index() {
+                    index_out.extend(index.iter());
+                }
+
+                UPDATE_FLAG_ON
             } else {
                 transfer_deform(&prev.value(), coord_out, index_out);
                 UPDATE_FLAG_ON
@@ -1198,17 +1234,27 @@ mod tests {
     }
 
     #[test]
-    fn test_evaluate_deform_index_preserved() {
-        // The "index" array is not interpolated; runtime must copy from prev key.
-        let prev = [(0.0, 0.0), (1.0, 1.0), (2.0, 2.0), (3.0, 3.0)];
-        let next = [(10.0, 10.0); 4];
-        let prev_indices: [i16; 4] = [5, 6, 7, 8];
-        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &prev_indices), (10, InterpolationType::None, &next, &[42, 43, 44, 45])]);
+    fn test_evaluate_deform_index_merged() {
+        // Deform keyframes may change different vertex sets. evaluate_deform
+        // merges prev and next by vertex index; a vertex present on only one
+        // side interpolates against a zero offset.
+        let prev = [(6.0, 6.0), (2.0, 2.0)];
+        let next = [(8.0, 8.0), (4.0, 4.0)];
+        let prev_indices: [i16; 2] = [1, 3];
+        let next_indices: [i16; 2] = [3, 5];
+        let buf = deform_buf(&[(0, InterpolationType::Linear, &prev, &prev_indices), (10, InterpolationType::None, &next, &next_indices)]);
         let vec = deform_root(&buf);
 
         let mut hint = 0;
         let (data, _) = eval_deform_owned(vec, 5.0, &mut hint).unwrap();
-        assert_eq!(data.index, alloc::vec![5, 6, 7, 8], "index must come from prev key, not next");
+        // Ascending union of {1,3} and {3,5}.
+        assert_eq!(data.index, alloc::vec![1, 3, 5]);
+        // rate = 0.5. v1: prev-only  -> lerp((6,6), 0)      = (3,3).
+        //             v3: both       -> lerp((2,2), (8,8))  = (5,5).
+        //             v5: next-only  -> lerp(0,     (4,4))  = (2,2).
+        assert!((data.coordinate[0].x() - 3.0).abs() < 1e-6, "v1 x: got {}", data.coordinate[0].x());
+        assert!((data.coordinate[1].x() - 5.0).abs() < 1e-6, "v3 x: got {}", data.coordinate[1].x());
+        assert!((data.coordinate[2].x() - 2.0).abs() < 1e-6, "v5 x: got {}", data.coordinate[2].x());
     }
 
     #[test]
