@@ -613,9 +613,7 @@ pub fn evaluate_deform(
                 return UPDATE_FLAG_OFF;
             };
 
-            if let (Some(prev_coordinate), Some(next_coordinate), Some(prev_idx), Some(next_idx)) =
-                (prev_val.coordinate(), next_val.coordinate(), prev_val.index(), next_val.index())
-            {
+            if let (Some(prev_coordinate), Some(next_coordinate), Some(prev_idx), Some(next_idx)) = (prev_val.coordinate(), next_val.coordinate(), prev_val.index(), next_val.index()) {
                 // Deform keyframes store a sparse, vertex-keyed set of offsets:
                 // `index[k]` is the changed vertex and `coordinate[k]` its
                 // offset. The changed-vertex set differs between keyframes

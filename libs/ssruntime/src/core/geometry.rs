@@ -306,7 +306,18 @@ pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4
 /// `flip_y` negates the bind `coords_y`. SSAB-side bind coordinates are authored
 /// Y-up; set `flip_y` when the bone world matrices are Y-down so the bind-pose
 /// invariant (each influence resolves to the same rest position) holds.
-pub fn compute_skinned_mesh_vertices(influence_offsets: &[u32], bone_indices: &[u16], weights: &[f32], coords_x: &[f32], coords_y: &[f32], bone_world_matrices: &[SsMatrix4x4], deform: Option<SkinnedMeshDeform<'_>>, flip_y: bool, out_x: &mut [f32], out_y: &mut [f32]) {
+pub fn compute_skinned_mesh_vertices(
+    influence_offsets: &[u32],
+    bone_indices: &[u16],
+    weights: &[f32],
+    coords_x: &[f32],
+    coords_y: &[f32],
+    bone_world_matrices: &[SsMatrix4x4],
+    deform: Option<SkinnedMeshDeform<'_>>,
+    flip_y: bool,
+    out_x: &mut [f32],
+    out_y: &mut [f32],
+) {
     let num_vertices = out_x.len();
     debug_assert_eq!(out_y.len(), num_vertices);
     debug_assert_eq!(influence_offsets.len(), num_vertices + 1);

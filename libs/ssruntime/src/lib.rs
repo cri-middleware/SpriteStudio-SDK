@@ -317,11 +317,7 @@ impl<'a> AnimationResource<'a> {
                             _ => None,
                         });
                         let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.and_then(|pm| pm.mesh_binding()));
-                        let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh {
-                            crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array())
-                        } else {
-                            None
-                        };
+                        let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array()) } else { None };
                         cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
                     }
                 }
@@ -857,9 +853,7 @@ impl<'a> Context<'a> {
                 if binding.num_vertices() != end - start {
                     continue; // malformed: bind vertex count != cell vertex count
                 }
-                let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| {
-                    (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i])
-                });
+                let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
                 let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
                 crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
                 continue;
