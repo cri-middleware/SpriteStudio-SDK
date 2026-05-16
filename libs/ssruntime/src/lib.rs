@@ -772,6 +772,9 @@ impl<'a> Context<'a> {
     #[allow(clippy::needless_range_loop)]
     fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
         let layer = &instance.layer;
+        // SSAB bind coordinates are authored Y-up; flip when the instance
+        // (hence the bone world matrices) runs Y-down.
+        let flip_y = instance.coordinate_system == crate::core::SsCoordinateSystem::YDown;
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
 
@@ -848,7 +851,7 @@ impl<'a> Context<'a> {
 
             let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
 
-            crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, None, out_x, out_y);
+            crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, None, flip_y, out_x, out_y);
         }
     }
 

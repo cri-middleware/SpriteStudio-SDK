@@ -313,7 +313,11 @@ pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4
 /// The common case (≤4 influences per vertex) is computed with `f32x4`: lanes are
 /// gathered into stack-local arrays, multiplied as SIMD, then reduced. The rare
 /// >4-influence path falls back to a scalar accumulator.
-pub fn compute_skinned_mesh_vertices(influence_offsets: &[u32], bone_indices: &[u16], weights: &[f32], coords_x: &[f32], coords_y: &[f32], bone_world_matrices: &[SsMatrix4x4], deform: Option<SkinnedMeshDeform<'_>>, out_x: &mut [f32], out_y: &mut [f32]) {
+///
+/// `flip_y` negates the bind `coords_y`. SSAB-side bind coordinates are authored
+/// Y-up; set `flip_y` when the bone world matrices are Y-down so the bind-pose
+/// invariant (each influence resolves to the same rest position) holds.
+pub fn compute_skinned_mesh_vertices(influence_offsets: &[u32], bone_indices: &[u16], weights: &[f32], coords_x: &[f32], coords_y: &[f32], bone_world_matrices: &[SsMatrix4x4], deform: Option<SkinnedMeshDeform<'_>>, flip_y: bool, out_x: &mut [f32], out_y: &mut [f32]) {
     let num_vertices = out_x.len();
     debug_assert_eq!(out_y.len(), num_vertices);
     debug_assert_eq!(influence_offsets.len(), num_vertices + 1);
@@ -340,7 +344,7 @@ pub fn compute_skinned_mesh_vertices(influence_offsets: &[u32], bone_indices: &[
                 let i = start + k;
                 w_lanes[k] = weights[i];
                 cx_lanes[k] = coords_x[i];
-                cy_lanes[k] = coords_y[i];
+                cy_lanes[k] = if flip_y { -coords_y[i] } else { coords_y[i] };
                 let mat = &bone_world_matrices[bone_indices[i] as usize];
                 m0_lanes[k] = mat.m[0];
                 m4_lanes[k] = mat.m[4];
@@ -366,7 +370,7 @@ pub fn compute_skinned_mesh_vertices(influence_offsets: &[u32], bone_indices: &[
             for i in start..end {
                 let w = weights[i];
                 let cx = coords_x[i];
-                let cy = coords_y[i];
+                let cy = if flip_y { -coords_y[i] } else { coords_y[i] };
                 let mat = &bone_world_matrices[bone_indices[i] as usize];
                 let px = mat.m[0] * cx + mat.m[4] * cy + mat.m[12];
                 let py = mat.m[1] * cx + mat.m[5] * cy + mat.m[13];
@@ -690,7 +694,7 @@ mod tests {
         let mut out_x = [0.0f32; 2];
         let mut out_y = [0.0f32; 2];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[3.0, -4.0], 2);
         assert_arr_approx_eq(&out_y, &[5.0, 7.0], 2);
@@ -710,7 +714,7 @@ mod tests {
         let mut out_x = [0.0f32];
         let mut out_y = [0.0f32];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[13.0], 1);
         assert_arr_approx_eq(&out_y, &[25.0], 1);
@@ -730,7 +734,7 @@ mod tests {
         let mut out_x = [0.0f32];
         let mut out_y = [0.0f32];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[50.0], 1);
         assert_arr_approx_eq(&out_y, &[0.0], 1);
@@ -749,7 +753,7 @@ mod tests {
         let mut out_x = [0.0f32];
         let mut out_y = [0.0f32];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[0.0], 1);
         assert_arr_approx_eq(&out_y, &[1.0], 1);
@@ -778,7 +782,7 @@ mod tests {
         let mut out_x = [0.0f32];
         let mut out_y = [0.0f32];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, Some((&indices, &dx, &dy, &part_mat)), &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, Some((&indices, &dx, &dy, &part_mat)), false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[0.0], 1);
         assert_arr_approx_eq(&out_y, &[1.0], 1);
@@ -803,7 +807,7 @@ mod tests {
         let mut out_x = [0.0f32; 3];
         let mut out_y = [0.0f32; 3];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, Some((&indices, &dx, &dy, &part_mat)), &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, Some((&indices, &dx, &dy, &part_mat)), false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[1.0, 102.0, 3.0], 3);
         assert_arr_approx_eq(&out_y, &[10.0, 220.0, 30.0], 3);
@@ -823,7 +827,7 @@ mod tests {
         let mut out_x = [0.0f32];
         let mut out_y = [0.0f32];
 
-        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, &mut out_x, &mut out_y);
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
 
         assert_arr_approx_eq(&out_x, &[10.0], 1);
         assert_arr_approx_eq(&out_y, &[20.0], 1);

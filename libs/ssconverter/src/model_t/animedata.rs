@@ -1510,12 +1510,14 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         })
         .collect();
 
+    // Running counter into the compact, mesh-part-ordered `mesh_list`.
+    let mut mesh_part_index = 0usize;
     anime_pack
         .model
         .part_list
         .iter()
         .enumerate()
-        .map(|(part_index, part)| {
+        .map(|(_part_index, part)| {
             let mut part_data_t = ssab::ssab::ss::format::PartDataT::default();
             part_data_t.name = Some(part.name.to_string());
             part_data_t.parent_index = part.parent_index as i16;
@@ -1530,7 +1532,18 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
             part_data_t.mask_influence = part.mask_influence;
 
-            part_data_t.mesh_binding = anime_pack.model.mesh_list.get(part_index).filter(|mesh_bind| !mesh_bind.mesh_vertices_bind_array.is_empty()).map(|mesh_bind| {
+            // `mesh_list` is a compact list ordered by Mesh part (one SsMeshBind
+            // per Mesh part — it carries no part identity), so index it by a
+            // running mesh-part counter, not the global part index.
+            part_data_t.mesh_binding = matches!(&part.part_type, sspj::sstypes::SsPartType::Mesh)
+                .then(|| {
+                    let i = mesh_part_index;
+                    mesh_part_index += 1;
+                    anime_pack.model.mesh_list.get(i)
+                })
+                .flatten()
+                .filter(|mesh_bind| !mesh_bind.mesh_vertices_bind_array.is_empty())
+                .map(|mesh_bind| {
                 let vertex = mesh_bind
                     .mesh_vertices_bind_array
                     .iter()
