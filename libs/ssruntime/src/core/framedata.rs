@@ -165,8 +165,9 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
 /// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
 /// cellmap texture-pixel space (the cell rectangle origin is already added —
 /// divide by the texture size to normalize). `rest` are interleaved
-/// `[x, y, ...]` rest-pose positions (cell coordinate minus cell pivot, Y-up
-/// native), consumed by the non-skeletal (Deform-only) mesh path. `indices`
+/// `[x, y, ...]` rest-pose positions (cell coordinate minus the cell pivot's
+/// pixel position, so the mesh is centred; Y-up native), consumed by the
+/// non-skeletal (Deform-only) mesh path. `indices`
 /// are triangle indices widened from the SSAB-side `u16` `table_index_vertex`.
 #[derive(Clone, Default)]
 pub struct MeshCellData {
@@ -227,17 +228,23 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
 
     // Cell-local mesh coordinates are pixel offsets within the cell. For UVs
     // add the cell rectangle origin (→ cellmap texture-pixel space); for rest
-    // positions subtract the cell pivot (Y-up native — the Y-down flip is
-    // applied at vertex-computation time).
-    let (rect_left, rect_top) = cell.rectangle().map(|r| (r.x1(), r.y1())).unwrap_or((0.0, 0.0));
-    let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+    // positions subtract the cell pivot so the mesh sits centred on the part
+    // origin (Y-up native — the Y-down flip is applied at vertex-computation
+    // time). `cell.pivot()` is normalized (offset from the cell centre,
+    // 0 = centre); convert to a pixel position via `(pivot + 0.5) * size`,
+    // mirroring compute_local_vertices. Without this the mesh is offset by
+    // half its cell size.
+    let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
+    let (pivot_norm_x, pivot_norm_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+    let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
+    let pivot_px_y = (pivot_norm_y + 0.5) * size_h;
     let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
     let mut rest = alloc::vec::Vec::with_capacity(coords.len() * 2);
     for c in coords {
         uvs.push(c.v1() + rect_left);
         uvs.push(c.v2() + rect_top);
-        rest.push(c.v1() - pivot_x);
-        rest.push(c.v2() - pivot_y);
+        rest.push(c.v1() - pivot_px_x);
+        rest.push(c.v2() - pivot_px_y);
     }
     let indices: alloc::vec::Vec<i32> = tri.iter().map(|i| i as i32).collect();
 
