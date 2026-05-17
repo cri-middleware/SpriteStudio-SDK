@@ -315,7 +315,7 @@ fn convert_animedatat(
 
     anime_data_t.name = anime_data.name.to_string();
     anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
-    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation, cellmap_names));
+    anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation, parts_map, cellmap_names));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmap_names));
     anime_data_t.parts_mesh_data = None;
     anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
@@ -892,18 +892,38 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
     }
 }
 
-fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
-    anime_data
-        .part_animes
-        .iter()
-        .map(|part_anime| {
-            let mut part_attribute_t = ssab::ssab::ss::format::InitialPartAttributesT::default();
-            // TODO: impl
-            merge_setup_attributes_to_part_attribute_t(&mut part_attribute_t, &part_anime.attributes, cellmap_names);
+fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
+    // Index-aligned with the part list (same convention as `convert_parts_animation_data`):
+    // size to the part count and place each entry by `array_index`, so the runtime can
+    // address `parts_initial_attributes[part_index]` directly. Parts absent from the
+    // setup animation keep `InitialPartAttributesT::default()`.
+    let mut parts_initial_attributes_t = Vec::<ssab::ssab::ss::format::InitialPartAttributesT>::new();
+    parts_initial_attributes_t.resize(parts_map.len(), ssab::ssab::ss::format::InitialPartAttributesT::default());
 
-            part_attribute_t
-        })
-        .collect::<Vec<_>>()
+    for part_anime in &anime_data.part_animes {
+        let Some(p) = parts_map.get(&part_anime.part_name) else {
+            // not found part (an illegal case)
+            continue;
+        };
+
+        let index_part = p.array_index as usize;
+        merge_setup_attributes_to_part_attribute_t(&mut parts_initial_attributes_t[index_part], &part_anime.attributes, cellmap_names);
+
+        // A bone's rest pose lives in the ssae `bonePosition`/`boneRotation` tags
+        // rather than in setup keyframes; reflect it into the setup-pose transform
+        // so the bone's rest frame is represented like any other part.
+        if matches!(p.part_type, sspj::sstypes::SsPartType::Armature) {
+            let attr = &mut parts_initial_attributes_t[index_part];
+            attr.position_x = p.bone_position.x;
+            attr.position_y = p.bone_position.y;
+            attr.rotation_z = p.bone_rotation;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosX;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePosY;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeRotZ;
+        }
+    }
+
+    parts_initial_attributes_t
 }
 
 fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
@@ -1456,21 +1476,39 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
 
     for part in parts_map.values() {
         let index_part = part.array_index as usize;
-        apply_part_type_defaults(&mut parts_animation_data_t[index_part], &part.part_type);
+        apply_part_type_defaults(&mut parts_animation_data_t[index_part], part);
     }
 
     parts_animation_data_t
 }
 
-fn apply_part_type_defaults(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part_type: &sspj::sstypes::SsPartType) {
-    if matches!(part_type, sspj::sstypes::SsPartType::Shape) {
-        const SHAPE_DEFAULT_SIZE: f32 = 64.0;
-        if p_args.size_x_array.as_ref().is_none_or(|v| v.is_empty()) {
-            p_args.size_x_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+fn apply_part_type_defaults(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part: &sspj::ssae::SsPart) {
+    match &part.part_type {
+        sspj::sstypes::SsPartType::Shape => {
+            const SHAPE_DEFAULT_SIZE: f32 = 64.0;
+            if p_args.size_x_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.size_x_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+            }
+            if p_args.size_y_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.size_y_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+            }
         }
-        if p_args.size_y_array.as_ref().is_none_or(|v| v.is_empty()) {
-            p_args.size_y_array = Some(vec![float_value_constant_key(SHAPE_DEFAULT_SIZE)]);
+        sspj::sstypes::SsPartType::Armature => {
+            // A bone's rest pose is authored in the ssae `bonePosition`/`boneRotation`
+            // tags, not as setup keyframes. Reflect them as the bone's default
+            // transform so the runtime poses the bone correctly on animations that
+            // do not key it; an animation that does key the bone overrides these.
+            if p_args.position_x_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.position_x_array = Some(vec![float_value_constant_key(part.bone_position.x)]);
+            }
+            if p_args.position_y_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.position_y_array = Some(vec![float_value_constant_key(part.bone_position.y)]);
+            }
+            if p_args.rotation_z_array.as_ref().is_none_or(|v| v.is_empty()) {
+                p_args.rotation_z_array = Some(vec![float_value_constant_key(part.bone_rotation)]);
+            }
         }
+        _ => {}
     }
 }
 
