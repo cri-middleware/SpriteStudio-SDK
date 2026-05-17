@@ -864,12 +864,32 @@ impl From<&ssab::ssab::ss::format::PartMeshBindingInfluenceT> for PartMeshBindin
 }
 
 #[derive(Hash, Eq, PartialEq)]
+pub struct PartMeshBindingInfluenceVecKey {
+    pub v: Vec<PartMeshBindingInfluenceKey>,
+}
+impl From<&[ssab::ssab::ss::format::PartMeshBindingInfluenceT]> for PartMeshBindingInfluenceVecKey {
+    fn from(value: &[ssab::ssab::ss::format::PartMeshBindingInfluenceT]) -> Self {
+        Self { v: value.iter().map(PartMeshBindingInfluenceKey::from).collect() }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
 pub struct PartMeshBindingVertexKey {
     pub influence: Option<Vec<PartMeshBindingInfluenceKey>>,
 }
 impl From<&ssab::ssab::ss::format::PartMeshBindingVertexT> for PartMeshBindingVertexKey {
     fn from(value: &ssab::ssab::ss::format::PartMeshBindingVertexT) -> Self {
         Self { influence: value.influence.as_ref().map(|v| v.iter().map(PartMeshBindingInfluenceKey::from).collect()) }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq)]
+pub struct PartMeshBindingVertexVecKey {
+    pub v: Vec<PartMeshBindingVertexKey>,
+}
+impl From<&[ssab::ssab::ss::format::PartMeshBindingVertexT]> for PartMeshBindingVertexVecKey {
+    fn from(value: &[ssab::ssab::ss::format::PartMeshBindingVertexT]) -> Self {
+        Self { v: value.iter().map(PartMeshBindingVertexKey::from).collect() }
     }
 }
 
@@ -937,7 +957,9 @@ pub struct SsabCache<'a> {
     pub part_animation_data_cache: HashMap<PartAnimationDataKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartAnimationData<'a>>>,
 
     pub part_mesh_binding_influence_cache: HashMap<PartMeshBindingInfluenceKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingInfluence<'a>>>,
+    pub part_mesh_binding_influence_vec_cache: HashMap<PartMeshBindingInfluenceVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartMeshBindingInfluence<'a>>>>>,
     pub part_mesh_binding_vertex_cache: HashMap<PartMeshBindingVertexKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingVertex<'a>>>,
+    pub part_mesh_binding_vertex_vec_cache: HashMap<PartMeshBindingVertexVecKey, flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartMeshBindingVertex<'a>>>>>,
     pub part_mesh_binding_cache: HashMap<PartMeshBindingKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBinding<'a>>>,
 }
 impl<'a> SsabCache<'a> {
@@ -996,7 +1018,9 @@ impl<'a> SsabCache<'a> {
             part_animation_data_cache: HashMap::new(),
 
             part_mesh_binding_influence_cache: HashMap::new(),
+            part_mesh_binding_influence_vec_cache: HashMap::new(),
             part_mesh_binding_vertex_cache: HashMap::new(),
+            part_mesh_binding_vertex_vec_cache: HashMap::new(),
             part_mesh_binding_cache: HashMap::new(),
         }
     }
@@ -1976,18 +2000,45 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
+    fn create_shared_mesh_binding_influence_list(
+        &mut self,
+        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+        influences: &[ssab::ssab::ss::format::PartMeshBindingInfluenceT],
+    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartMeshBindingInfluence<'a>>>> {
+        let key = PartMeshBindingInfluenceVecKey::from(influences);
+        if let Some(&offset) = self.part_mesh_binding_influence_vec_cache.get(&key) {
+            return offset;
+        }
+        let items = influences.iter().map(|inf| self.create_shared_mesh_binding_influence(fb, inf)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&items);
+        self.part_mesh_binding_influence_vec_cache.insert(key, offset);
+        offset
+    }
+
     fn create_shared_mesh_binding_vertex(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, t: &ssab::ssab::ss::format::PartMeshBindingVertexT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::PartMeshBindingVertex<'a>> {
         let key = PartMeshBindingVertexKey::from(t);
         if let Some(&offset) = self.part_mesh_binding_vertex_cache.get(&key) {
             return offset;
         }
-        let influence = t.influence.as_ref().map(|v| {
-            let items = v.iter().map(|inf| self.create_shared_mesh_binding_influence(fb, inf)).collect::<Vec<_>>();
-            fb.create_vector(&items)
-        });
+        let influence = t.influence.as_ref().map(|v| self.create_shared_mesh_binding_influence_list(fb, v));
         let args = ssab::ssab::ss::format::PartMeshBindingVertexArgs { influence };
         let offset = ssab::ssab::ss::format::PartMeshBindingVertex::create(fb, &args);
         self.part_mesh_binding_vertex_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_mesh_binding_vertex_list(
+        &mut self,
+        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+        vertices: &[ssab::ssab::ss::format::PartMeshBindingVertexT],
+    ) -> flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartMeshBindingVertex<'a>>>> {
+        let key = PartMeshBindingVertexVecKey::from(vertices);
+        if let Some(&offset) = self.part_mesh_binding_vertex_vec_cache.get(&key) {
+            return offset;
+        }
+        let items = vertices.iter().map(|vtx| self.create_shared_mesh_binding_vertex(fb, vtx)).collect::<Vec<_>>();
+        let offset = fb.create_vector(&items);
+        self.part_mesh_binding_vertex_vec_cache.insert(key, offset);
         offset
     }
 
@@ -1996,10 +2047,7 @@ impl<'a> SsabCache<'a> {
         if let Some(&offset) = self.part_mesh_binding_cache.get(&key) {
             return offset;
         }
-        let vertex = t.vertex.as_ref().map(|v| {
-            let items = v.iter().map(|vtx| self.create_shared_mesh_binding_vertex(fb, vtx)).collect::<Vec<_>>();
-            fb.create_vector(&items)
-        });
+        let vertex = t.vertex.as_ref().map(|v| self.create_shared_mesh_binding_vertex_list(fb, v));
         let args = ssab::ssab::ss::format::PartMeshBindingArgs { vertex };
         let offset = ssab::ssab::ss::format::PartMeshBinding::create(fb, &args);
         self.part_mesh_binding_cache.insert(key, offset);
