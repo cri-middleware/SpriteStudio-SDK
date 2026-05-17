@@ -97,6 +97,7 @@ where
 {
     #[derive(Deserialize)]
     struct Cells {
+        #[serde(default)]
         cell: Vec<SsCell>,
     }
     Ok(Cells::deserialize(deserializer)?.cell)
