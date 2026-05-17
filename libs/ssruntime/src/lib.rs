@@ -316,7 +316,9 @@ impl<'a> AnimationResource<'a> {
                             ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
                             _ => None,
                         });
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+                        let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.and_then(|pm| pm.mesh_binding()));
+                        let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array()) } else { None };
+                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
                     }
                 }
                 let name_hash = anim.name_hash();
@@ -394,6 +396,8 @@ struct LayerState<'a> {
     cell_meta_per_part: Vec<f32>,
     cell_texture_hashes: Vec<u32>,
     local_vertices: Vec<f32>,
+    /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
+    mesh_deform: Vec<crate::core::framedata::PartDeformFrame>,
 }
 
 impl<'a> LayerState<'a> {
@@ -409,6 +413,7 @@ impl<'a> LayerState<'a> {
             cell_meta_per_part: Vec::new(),
             cell_texture_hashes: Vec::new(),
             local_vertices: Vec::new(),
+            mesh_deform: Vec::new(),
         }
     }
 }
@@ -423,11 +428,39 @@ struct GlobalBuffers {
     shape_vertices: Vec<f32>,
     shape_vertex_box_coords: Vec<f32>,
     shape_vertex_counts: Vec<i32>,
+    /// Skinned mesh world-space vertex positions, concatenated across all parts.
+    /// Use `mesh_vertex_offsets` to slice per-part ranges:
+    ///   part `p` occupies `mesh_vertex_offsets[p]..mesh_vertex_offsets[p + 1]`.
+    /// Non-mesh parts contribute an empty range.
+    mesh_vertices_x: Vec<f32>,
+    mesh_vertices_y: Vec<f32>,
+    /// CSR-style prefix sum, length = `num_parts + 1`.
+    mesh_vertex_offsets: Vec<u32>,
+    /// Static mesh UV (interleaved `[u, v, ...]`, texture-pixel space) and
+    /// triangle indices, resolved once from each mesh part's frame-0 Cell.
+    /// `mesh_uvs` is sliced per-part by `mesh_vertex_offsets`; `mesh_indices`
+    /// by `mesh_index_offsets` (CSR, length `num_parts + 1`).
+    mesh_uvs: Vec<f32>,
+    mesh_indices: Vec<i32>,
+    mesh_index_offsets: Vec<u32>,
 }
 
 impl GlobalBuffers {
     fn new() -> Self {
-        Self { world_matrices: Vec::new(), inheritance_matrices: Vec::new(), local_uvs: Vec::new(), shape_vertices: Vec::new(), shape_vertex_box_coords: Vec::new(), shape_vertex_counts: Vec::new() }
+        Self {
+            world_matrices: Vec::new(),
+            inheritance_matrices: Vec::new(),
+            local_uvs: Vec::new(),
+            shape_vertices: Vec::new(),
+            shape_vertex_box_coords: Vec::new(),
+            shape_vertex_counts: Vec::new(),
+            mesh_vertices_x: Vec::new(),
+            mesh_vertices_y: Vec::new(),
+            mesh_vertex_offsets: Vec::new(),
+            mesh_uvs: Vec::new(),
+            mesh_indices: Vec::new(),
+            mesh_index_offsets: Vec::new(),
+        }
     }
 }
 
@@ -688,6 +721,7 @@ impl<'a> Context<'a> {
             &mut self.eval.deform_result_coordinate_workspace,
             &mut self.eval.deform_result_index_workspace,
             &mut self.eval.inheritance_alphas_workspace,
+            &mut self.instance.layer.mesh_deform,
         );
 
         // Phase 3 hook: blend layers via `mix_poses(...)` between phase 1 and 2
@@ -709,9 +743,168 @@ impl<'a> Context<'a> {
     fn resolve_global_state(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         if instance.render_mode == crate::core::RenderMode::Direct {
             Self::compute_matrices(instance, &metadata.cached_parts);
+            // Skinned mesh skinning depends on world matrices, so it lives in the
+            // Direct path. Mesh parts in Indirect mode get empty per-part ranges.
+            Self::compute_mesh_vertices(instance, &metadata.cached_parts);
+        } else {
+            Self::clear_mesh_vertices(instance, metadata.cached_parts.len());
         }
         Self::compute_local_uvs(instance, &metadata.cached_parts);
         Self::compute_shape_vertices(instance, &metadata.cached_parts);
+    }
+
+    /// Writes per-part skinned mesh world-space vertex positions to
+    /// `globals.mesh_vertices_x` / `_y`, using the prebuilt
+    /// [`MeshBindingCache`](crate::core::framedata::MeshBindingCache) and the
+    /// current frame's world matrices.
+    ///
+    /// Layout: x/y are SoA. `mesh_vertex_offsets` is a CSR prefix sum of length
+    /// `num_parts + 1`; non-mesh parts contribute an empty range.
+    ///
+    /// Deform deltas are intentionally not consumed here yet — wiring the
+    /// per-part deform workspace through Phase 2 is a follow-up. Deform-aware
+    /// skinning would call `compute_skinned_mesh_vertices` with the optional
+    /// `SkinnedMeshDeform` tuple populated from `LayerState`.
+    #[allow(clippy::needless_range_loop)]
+    fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let layer = &instance.layer;
+        // SSAB bind coordinates are authored Y-up; flip when the instance
+        // (hence the bone world matrices) runs Y-down.
+        let flip_y = instance.coordinate_system == crate::core::SsCoordinateSystem::YDown;
+        let globals = &mut instance.globals;
+        let num_parts = layer.parts_vec.len();
+
+        if globals.mesh_vertex_offsets.len() != num_parts + 1 {
+            globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
+        }
+
+        // First pass: build the CSR offsets so we can size the SoA buffers.
+        // The Cell is the authoritative geometry source (it covers both
+        // skeletal and Deform-only meshes); the bind cache only adds skinning.
+        globals.mesh_vertex_offsets[0] = 0;
+        for i in 0..num_parts {
+            let part_vertex_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.num_vertices()).unwrap_or(0);
+            globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + part_vertex_count as u32;
+        }
+        let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
+
+        if globals.mesh_vertices_x.len() != total_vertices {
+            globals.mesh_vertices_x.resize(total_vertices, 0.0);
+        }
+        if globals.mesh_vertices_y.len() != total_vertices {
+            globals.mesh_vertices_y.resize(total_vertices, 0.0);
+        }
+        for slot in globals.mesh_vertices_x.iter_mut() {
+            *slot = 0.0;
+        }
+        for slot in globals.mesh_vertices_y.iter_mut() {
+            *slot = 0.0;
+        }
+
+        // Static mesh UV / triangle-index buffers — resolved once from each
+        // mesh part's frame-0 Cell (the cell is fixed per the SS mesh spec).
+        // Guarded by the index-offset length so the build runs a single time.
+        if globals.mesh_index_offsets.len() != num_parts + 1 {
+            globals.mesh_index_offsets.resize(num_parts + 1, 0);
+            globals.mesh_index_offsets[0] = 0;
+            for i in 0..num_parts {
+                let index_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.indices.len()).unwrap_or(0);
+                globals.mesh_index_offsets[i + 1] = globals.mesh_index_offsets[i] + index_count as u32;
+            }
+            let total_indices = *globals.mesh_index_offsets.last().unwrap_or(&0) as usize;
+
+            globals.mesh_indices.clear();
+            globals.mesh_indices.reserve(total_indices);
+            globals.mesh_uvs.clear();
+            globals.mesh_uvs.resize(total_vertices * 2, 0.0);
+            for i in 0..num_parts {
+                let Some(mesh_cell) = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()) else {
+                    continue;
+                };
+                globals.mesh_indices.extend_from_slice(&mesh_cell.indices);
+                // UVs share the position CSR; copy only when the cell vertex
+                // count matches the slot (true for well-formed skeletal meshes).
+                let start = globals.mesh_vertex_offsets[i] as usize;
+                let end = globals.mesh_vertex_offsets[i + 1] as usize;
+                if mesh_cell.uvs.len() == (end - start) * 2 {
+                    globals.mesh_uvs[start * 2..end * 2].copy_from_slice(&mesh_cell.uvs);
+                }
+            }
+        }
+
+        if total_vertices == 0 {
+            return;
+        }
+
+        for i in 0..num_parts {
+            let Some(cached) = cached_parts.get(i) else {
+                continue;
+            };
+            let start = globals.mesh_vertex_offsets[i] as usize;
+            let end = globals.mesh_vertex_offsets[i + 1] as usize;
+            if end <= start {
+                continue; // not a mesh part
+            }
+
+            // Skeletal mesh: a bone-weighted binding drives the vertices.
+            let skeletal = cached.mesh_binding.as_ref().map(|b| !b.bone_indices.is_empty()).unwrap_or(false);
+            if skeletal {
+                let binding = cached.mesh_binding.as_ref().unwrap();
+                if binding.num_vertices() != end - start {
+                    continue; // malformed: bind vertex count != cell vertex count
+                }
+                let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
+                let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
+                crate::core::geometry::compute_skinned_mesh_vertices(&binding.influence_offsets, &binding.bone_indices, &binding.weights, &binding.coords_x, &binding.coords_y, &globals.world_matrices, deform, flip_y, out_x, out_y);
+                continue;
+            }
+
+            // Deform-only mesh: no bones — rigidly transform the cell's rest
+            // mesh by the part's own world matrix.
+            let Some(mesh_cell) = cached.mesh_cell.as_ref() else {
+                continue;
+            };
+            if mesh_cell.rest.len() != (end - start) * 2 || i >= globals.world_matrices.len() {
+                continue;
+            }
+            let (m0, m1, m4, m5, m12, m13) = {
+                let mat = &globals.world_matrices[i];
+                (mat.m[0], mat.m[1], mat.m[4], mat.m[5], mat.m[12], mat.m[13])
+            };
+            for v in 0..(end - start) {
+                let rx = mesh_cell.rest[v * 2];
+                let ry = if flip_y { -mesh_cell.rest[v * 2 + 1] } else { mesh_cell.rest[v * 2 + 1] };
+                globals.mesh_vertices_x[start + v] = m0 * rx + m4 * ry + m12;
+                globals.mesh_vertices_y[start + v] = m1 * rx + m5 * ry + m13;
+            }
+            // Apply deform deltas as-is — evaluate_part has already applied
+            // any coordinate-system Y conversion.
+            if let Some(deform) = layer.mesh_deform.get(i) {
+                let vert_count = end - start;
+                for k in 0..deform.indices.len() {
+                    let v = deform.indices[k] as usize;
+                    if v < vert_count {
+                        globals.mesh_vertices_x[start + v] += m0 * deform.dx[k] + m4 * deform.dy[k];
+                        globals.mesh_vertices_y[start + v] += m1 * deform.dx[k] + m5 * deform.dy[k];
+                    }
+                }
+            }
+        }
+    }
+
+    fn clear_mesh_vertices(instance: &mut InstanceState<'a>, num_parts: usize) {
+        let globals = &mut instance.globals;
+        if globals.mesh_vertex_offsets.len() != num_parts + 1 {
+            globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
+        }
+        for slot in globals.mesh_vertex_offsets.iter_mut() {
+            *slot = 0;
+        }
+        globals.mesh_vertices_x.clear();
+        globals.mesh_vertices_y.clear();
+        globals.mesh_uvs.clear();
+        globals.mesh_indices.clear();
+        globals.mesh_index_offsets.clear();
     }
 
     #[allow(clippy::needless_range_loop)]
@@ -889,6 +1082,54 @@ impl<'a> Context<'a> {
 
     pub fn get_shape_vertex_counts_ptr(&self) -> *const i32 {
         self.instance.globals.shape_vertex_counts.as_ptr()
+    }
+
+    pub fn get_mesh_vertices_x_ptr(&self) -> *const f32 {
+        self.instance.globals.mesh_vertices_x.as_ptr()
+    }
+
+    pub fn get_mesh_vertices_x_len(&self) -> usize {
+        self.instance.globals.mesh_vertices_x.len()
+    }
+
+    pub fn get_mesh_vertices_y_ptr(&self) -> *const f32 {
+        self.instance.globals.mesh_vertices_y.as_ptr()
+    }
+
+    pub fn get_mesh_vertices_y_len(&self) -> usize {
+        self.instance.globals.mesh_vertices_y.len()
+    }
+
+    pub fn get_mesh_vertex_offsets_ptr(&self) -> *const u32 {
+        self.instance.globals.mesh_vertex_offsets.as_ptr()
+    }
+
+    pub fn get_mesh_vertex_offsets_len(&self) -> usize {
+        self.instance.globals.mesh_vertex_offsets.len()
+    }
+
+    pub fn get_mesh_uvs_ptr(&self) -> *const f32 {
+        self.instance.globals.mesh_uvs.as_ptr()
+    }
+
+    pub fn get_mesh_uvs_len(&self) -> usize {
+        self.instance.globals.mesh_uvs.len()
+    }
+
+    pub fn get_mesh_indices_ptr(&self) -> *const i32 {
+        self.instance.globals.mesh_indices.as_ptr()
+    }
+
+    pub fn get_mesh_indices_len(&self) -> usize {
+        self.instance.globals.mesh_indices.len()
+    }
+
+    pub fn get_mesh_index_offsets_ptr(&self) -> *const u32 {
+        self.instance.globals.mesh_index_offsets.as_ptr()
+    }
+
+    pub fn get_mesh_index_offsets_len(&self) -> usize {
+        self.instance.globals.mesh_index_offsets.len()
     }
 
     pub fn get_shape_vertex_counts_len(&self) -> usize {

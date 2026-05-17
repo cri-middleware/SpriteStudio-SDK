@@ -104,12 +104,161 @@ pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<
     out
 }
 
+/// Pre-decoded skinned mesh bind-pose data for a single part.
+///
+/// Built once at SSAB load time from `PartData.mesh_binding()` (AoS in the
+/// FlatBuffer) and stored on `CachedPartData`. CSR layout for influence
+/// offsets + SoA for weights / bind coords so the per-frame skinning pass
+/// (`compute_skinned_mesh_vertices`) can stream the data SIMD-friendly.
+///
+/// Bone indices are part-resolved: ssconverter has already mapped each
+/// `TableIDPartsBone` slot to its owning part index, so the runtime can
+/// directly index `bone_world_matrices[bone_indices[i]]`.
+#[derive(Clone, Default)]
+pub struct MeshBindingCache {
+    pub influence_offsets: alloc::vec::Vec<u32>,
+    pub bone_indices: alloc::vec::Vec<u16>,
+    pub weights: alloc::vec::Vec<f32>,
+    pub coords_x: alloc::vec::Vec<f32>,
+    pub coords_y: alloc::vec::Vec<f32>,
+}
+
+impl MeshBindingCache {
+    #[inline]
+    pub fn num_vertices(&self) -> usize {
+        self.influence_offsets.len().saturating_sub(1)
+    }
+}
+
+/// Builds a [`MeshBindingCache`] from the SSAB-side `PartMeshBinding` table.
+/// Returns `None` when the part has no mesh binding or the vertex list is empty.
+pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::PartMeshBinding<'_>>) -> Option<MeshBindingCache> {
+    let vertices = mesh_binding?.vertex()?;
+    if vertices.is_empty() {
+        return None;
+    }
+
+    let num_vertices = vertices.len();
+    let mut cache = MeshBindingCache::default();
+    cache.influence_offsets.reserve(num_vertices + 1);
+    cache.influence_offsets.push(0);
+
+    for vertex in vertices {
+        if let Some(influences) = vertex.influence() {
+            for inf in influences {
+                cache.bone_indices.push(inf.bone());
+                cache.weights.push(inf.weight());
+                let (cx, cy) = inf.coordinate().map(|c| (c.v1(), c.v2())).unwrap_or((0.0, 0.0));
+                cache.coords_x.push(cx);
+                cache.coords_y.push(cy);
+            }
+        }
+        cache.influence_offsets.push(cache.bone_indices.len() as u32);
+    }
+
+    Some(cache)
+}
+
+/// Per-part static mesh geometry resolved from the part's Cell.
+///
+/// Mesh parts may not change their cell after frame 0 (SS spec), so this is
+/// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
+/// cellmap texture-pixel space (the cell rectangle origin is already added —
+/// divide by the texture size to normalize). `rest` are interleaved
+/// `[x, y, ...]` rest-pose positions (cell coordinate minus the cell pivot's
+/// pixel position, so the mesh is centred; Y-up native), consumed by the
+/// non-skeletal (Deform-only) mesh path. `indices`
+/// are triangle indices widened from the SSAB-side `u16` `table_index_vertex`.
+#[derive(Clone, Default)]
+pub struct MeshCellData {
+    pub uvs: alloc::vec::Vec<f32>,
+    pub rest: alloc::vec::Vec<f32>,
+    pub indices: alloc::vec::Vec<i32>,
+}
+
+impl MeshCellData {
+    #[inline]
+    pub fn num_vertices(&self) -> usize {
+        self.uvs.len() / 2
+    }
+}
+
+/// Per-frame mesh deform for one part, retained from Phase 1's `evaluate_deform`
+/// so the Phase 2 mesh-vertex pass can consume it. `indices` selects which mesh
+/// vertices are deformed; `dx`/`dy` are the matching SoA deltas in part-local
+/// space (Y-down flip already applied). All three empty when the part has no
+/// deform this frame.
+#[derive(Clone, Default)]
+pub struct PartDeformFrame {
+    pub indices: alloc::vec::Vec<i16>,
+    pub dx: alloc::vec::Vec<f32>,
+    pub dy: alloc::vec::Vec<f32>,
+}
+
+impl PartDeformFrame {
+    #[inline]
+    pub fn clear(&mut self) {
+        self.indices.clear();
+        self.dx.clear();
+        self.dy.clear();
+    }
+}
+
+/// Resolves a mesh part's Cell — fixed at frame 0 per the SS mesh spec, so the
+/// first `cell_array` keyframe is authoritative — and extracts its triangulated
+/// geometry. Returns `None` when the part has no cell or the cell carries no
+/// mesh tables (i.e. it is not a mesh cell).
+pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>) -> Option<MeshCellData> {
+    let cell_array = cell_array?;
+    if cell_array.is_empty() {
+        return None;
+    }
+    let value = cell_array.get(0).value()?;
+
+    let cellmaps = ssab.cellmaps()?;
+    let cellmap = crate::core::ssab_lookup::find_cellmap(&cellmaps, value.cellmap_name_hash())?;
+    let cells = cellmap.cells()?;
+    let cell = crate::core::ssab_lookup::find_cell(&cells, value.name_hash())?;
+
+    let coords = cell.table_coordinate()?;
+    let tri = cell.table_index_vertex()?;
+    if coords.is_empty() || tri.is_empty() {
+        return None;
+    }
+
+    // Cell-local mesh coordinates are pixel offsets within the cell. For UVs
+    // add the cell rectangle origin (→ cellmap texture-pixel space); for rest
+    // positions subtract the cell pivot so the mesh sits centred on the part
+    // origin (Y-up native — the Y-down flip is applied at vertex-computation
+    // time). `cell.pivot()` is normalized (offset from the cell centre,
+    // 0 = centre); convert to a pixel position via `(pivot + 0.5) * size`,
+    // mirroring compute_local_vertices. Without this the mesh is offset by
+    // half its cell size.
+    let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
+    let (pivot_norm_x, pivot_norm_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+    let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
+    let pivot_px_y = (pivot_norm_y + 0.5) * size_h;
+    let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
+    let mut rest = alloc::vec::Vec::with_capacity(coords.len() * 2);
+    for c in coords {
+        uvs.push(c.v1() + rect_left);
+        uvs.push(c.v2() + rect_top);
+        rest.push(c.v1() - pivot_px_x);
+        rest.push(c.v2() - pivot_px_y);
+    }
+    let indices: alloc::vec::Vec<i32> = tri.iter().map(|i| i as i32).collect();
+
+    Some(MeshCellData { uvs, indices, rest })
+}
+
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
+    pub mesh_binding: Option<MeshBindingCache>,
+    pub mesh_cell: Option<MeshCellData>,
 
     // バッチキー用の静的メタデータ (setup 時に SSAB PartData から1回だけ読む)。
     // フレームごとの DrawBatch 計算で参照される。
@@ -158,12 +307,15 @@ pub struct CachedPartData<'a> {
 }
 
 impl<'a> CachedPartData<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         part: ssab::ssab::ss::format::PartAnimationData<'a>,
         part_index: i16,
         parent_index: i16,
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
+        mesh_binding: Option<MeshBindingCache>,
+        mesh_cell: Option<MeshCellData>,
         blend_type: ssab::ssab::ss::format::BlendType,
         part_type_disc: ssab::ssab::ss::format::PartType,
         mask_influence: bool,
@@ -174,6 +326,8 @@ impl<'a> CachedPartData<'a> {
             parent_index,
             resolved_cells,
             shape_kind,
+            mesh_binding,
+            mesh_cell,
             blend_type,
             part_type_disc,
             mask_influence,
@@ -467,7 +621,15 @@ pub(crate) fn evaluate_part(
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
     if let Some(mask) = cached_part.deform_array.and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace)) {
-        if coordinate_system == SsCoordinateSystem::YDown {
+        // Deform offsets flip on YUp — the OPPOSITE of position/pivot/anchor
+        // (which flip on YDown). The SSAB deform `coordinate` Y is stored in
+        // the opposite convention to `table_coordinate`: for a YDown target
+        // the mesh rest is Y-flipped (in compute_mesh_vertices) while the
+        // deform is applied as-is, so for a YUp target the deform must be
+        // flipped instead to stay consistent with the (unflipped) rest.
+        // The YDown path is verified against SpriteStudio (frames 0/5/10);
+        // the YUp branch is the reasoned complement (no YUp test data yet).
+        if coordinate_system == SsCoordinateSystem::YUp {
             for v in deform_coord_workspace.iter_mut() {
                 v.set_y(-v.y());
             }
@@ -516,7 +678,14 @@ fn get_parts<'a>(
     deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
     deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
+    mesh_deform: &mut Vec<PartDeformFrame>,
 ) {
+    if mesh_deform.len() != cached_parts.len() {
+        mesh_deform.resize(cached_parts.len(), PartDeformFrame::default());
+    }
+    for d in mesh_deform.iter_mut() {
+        d.clear();
+    }
     parts_vec.clear();
     cell_vec.clear();
     parts_color_vec.clear();
@@ -677,6 +846,12 @@ fn get_parts<'a>(
             let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(fb, &args);
             deform_vec.push(deform_off);
             result.state.set_deform((deform_vec.len() - 1) as i16);
+            // Retain per-part deform so the Phase 2 mesh-vertex pass can apply it.
+            mesh_deform[i].indices.extend_from_slice(deform_index_workspace.as_slice());
+            for c in deform_coord_workspace.iter() {
+                mesh_deform[i].dx.push(c.x());
+                mesh_deform[i].dy.push(c.y());
+            }
         }
         parts_vec.push(result.state);
     }
@@ -721,6 +896,11 @@ fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(ru
     }
     if disc == P::PartTypeShape {
         return Some((K::Shape, false));
+    }
+    if disc == P::PartTypeMesh {
+        // Mesh parts each carry their own vertex topology / index buffer, so
+        // they are not batchable — emitted as singleton Mesh batches like Shape.
+        return Some((K::Mesh, false));
     }
     if disc == P::PartTypeInstance {
         return Some((K::Instance, false));
@@ -890,6 +1070,7 @@ pub fn get_frame_data<'a>(
     deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
     deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
+    mesh_deform: &mut Vec<PartDeformFrame>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
     let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
@@ -928,6 +1109,7 @@ pub fn get_frame_data<'a>(
         deform_coord_workspace,
         deform_index_workspace,
         inheritance_alphas_workspace,
+        mesh_deform,
     );
     args.parts = Some(fb.create_vector(parts_vec));
 
