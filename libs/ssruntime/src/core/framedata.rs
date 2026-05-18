@@ -164,16 +164,18 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
 /// Mesh parts may not change their cell after frame 0 (SS spec), so this is
 /// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
 /// cellmap texture-pixel space (the cell rectangle origin is already added —
-/// divide by the texture size to normalize). `rest` are interleaved
-/// `[x, y, ...]` rest-pose positions (cell coordinate minus the cell pivot's
-/// pixel position, so the mesh is centred; Y-down native — same texture-pixel
+/// divide by the texture size to normalize). `rest_x` / `rest_y` are SoA
+/// rest-pose positions (cell coordinate minus the cell pivot's pixel
+/// position, so the mesh is centred; Y-down native — same texture-pixel
 /// space as `uvs`), consumed by the non-skeletal (Deform-only) mesh path.
-/// `indices` are triangle indices widened from the SSAB-side `u16`
+/// SoA so the per-frame `W · rest` transform vectorizes with contiguous
+/// loads. `indices` are triangle indices widened from the SSAB-side `u16`
 /// `table_index_vertex`.
 #[derive(Clone, Default)]
 pub struct MeshCellData {
     pub uvs: alloc::vec::Vec<f32>,
-    pub rest: alloc::vec::Vec<f32>,
+    pub rest_x: alloc::vec::Vec<f32>,
+    pub rest_y: alloc::vec::Vec<f32>,
     pub indices: alloc::vec::Vec<i32>,
 }
 
@@ -242,16 +244,17 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
     let pivot_px_y = (-pivot_norm_y + 0.5) * size_h;
     let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
-    let mut rest = alloc::vec::Vec::with_capacity(coords.len() * 2);
+    let mut rest_x = alloc::vec::Vec::with_capacity(coords.len());
+    let mut rest_y = alloc::vec::Vec::with_capacity(coords.len());
     for c in coords {
         uvs.push(c.v1() + rect_left);
         uvs.push(c.v2() + rect_top);
-        rest.push(c.v1() - pivot_px_x);
-        rest.push(c.v2() - pivot_px_y);
+        rest_x.push(c.v1() - pivot_px_x);
+        rest_y.push(c.v2() - pivot_px_y);
     }
     let indices: alloc::vec::Vec<i32> = tri.iter().map(|i| i as i32).collect();
 
-    Some(MeshCellData { uvs, indices, rest })
+    Some(MeshCellData { uvs, indices, rest_x, rest_y })
 }
 
 #[derive(Clone)]

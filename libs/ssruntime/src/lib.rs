@@ -822,23 +822,20 @@ impl<'a> Context<'a> {
             let Some(mesh_cell) = cached.mesh_cell.as_ref() else {
                 continue;
             };
-            if mesh_cell.rest.len() != (end - start) * 2 || i >= globals.world_matrices.len() {
+            if mesh_cell.rest_x.len() != (end - start) || i >= globals.world_matrices.len() {
                 continue;
             }
-            let (m0, m1, m4, m5, m12, m13) = {
-                let mat = &globals.world_matrices[i];
-                (mat.m[0], mat.m[1], mat.m[4], mat.m[5], mat.m[12], mat.m[13])
-            };
-            for v in 0..(end - start) {
-                let rx = mesh_cell.rest[v * 2];
-                let ry = if flip_rest { -mesh_cell.rest[v * 2 + 1] } else { mesh_cell.rest[v * 2 + 1] };
-                globals.mesh_vertices_x[start + v] = m0 * rx + m4 * ry + m12;
-                globals.mesh_vertices_y[start + v] = m1 * rx + m5 * ry + m13;
+            // Rest transform (W · rest) — SIMD over 4 vertices at a time.
+            {
+                let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
+                crate::core::geometry::compute_rigid_mesh_vertices(&mesh_cell.rest_x, &mesh_cell.rest_y, &globals.world_matrices[i], flip_rest, out_x, out_y);
             }
-            // Apply deform deltas as-is — evaluate_part has already applied
-            // any coordinate-system Y conversion.
+            // Apply deform deltas as-is — evaluate_part has already applied any
+            // coordinate-system Y conversion. Sparse scatter, kept scalar.
             if let Some(deform) = layer.mesh_deform.get(i) {
                 let vert_count = end - start;
+                let mat = &globals.world_matrices[i];
+                let (m0, m1, m4, m5) = (mat.m[0], mat.m[1], mat.m[4], mat.m[5]);
                 for k in 0..deform.indices.len() {
                     let v = deform.indices[k] as usize;
                     if v < vert_count {
