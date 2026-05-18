@@ -185,7 +185,6 @@ For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into
 | `canvas` | Rect | `settings.canvas_size` | Canvas dimensions |
 | `parts_initial_attributes` | [InitialPartAttributes] | Setup animation data | See Initial Attributes section |
 | `parts_animation_data` | [PartAnimationData] | `part_animes` | See Animation Data Layout section |
-| `parts_mesh_data` | [PartMeshData] | `SsModel.mesh_list` | Mesh UV/index data |
 | `events` | [EventsPerFrame] | Event attributes per part | See Events section |
 | `initial_events` | [InitialEvents] | Setup animation events | Initial event state |
 | `labels` | [Label] | `labels` | Animation labels |

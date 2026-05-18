@@ -14295,180 +14295,6 @@ impl ::core::fmt::Debug for PartAnimationData<'_> {
       ds.finish()
   }
 }
-pub enum PartMeshDataOffset {}
-#[derive(Copy, Clone, PartialEq)]
-
-pub struct PartMeshData<'a> {
-  pub _tab: ::flatbuffers::Table<'a>,
-}
-
-impl<'a> ::flatbuffers::Follow<'a> for PartMeshData<'a> {
-  type Inner = PartMeshData<'a>;
-  #[inline]
-  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
-  }
-}
-
-impl<'a> PartMeshData<'a> {
-  pub const VT_PART_INDEX: ::flatbuffers::VOffsetT = 4;
-  pub const VT_UV: ::flatbuffers::VOffsetT = 6;
-  pub const VT_INDICES: ::flatbuffers::VOffsetT = 8;
-  pub const VT_COUNT_COORDINATE_MESH: ::flatbuffers::VOffsetT = 10;
-  pub const VT_INDEX_COORDINATE_DEFORM: ::flatbuffers::VOffsetT = 12;
-
-  #[inline]
-  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    PartMeshData { _tab: table }
-  }
-  #[allow(unused_mut)]
-  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
-    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartMeshDataArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<PartMeshData<'bldr>> {
-    let mut builder = PartMeshDataBuilder::new(_fbb);
-    if let Some(x) = args.index_coordinate_deform { builder.add_index_coordinate_deform(x); }
-    builder.add_count_coordinate_mesh(args.count_coordinate_mesh);
-    if let Some(x) = args.indices { builder.add_indices(x); }
-    if let Some(x) = args.uv { builder.add_uv(x); }
-    builder.add_part_index(args.part_index);
-    builder.finish()
-  }
-
-
-  #[inline]
-  pub fn part_index(&self) -> u16 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<u16>(PartMeshData::VT_PART_INDEX, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn key_compare_less_than(&self, o: &PartMeshData) -> bool {
-    self.part_index() < o.part_index()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: u16) -> ::core::cmp::Ordering {
-    let key = self.part_index();
-    key.cmp(&val)
-  }
-  #[inline]
-  pub fn uv(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(PartMeshData::VT_UV, None)}
-  }
-  #[inline]
-  pub fn indices(&self) -> Option<::flatbuffers::Vector<'a, i32>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, i32>>>(PartMeshData::VT_INDICES, None)}
-  }
-  #[inline]
-  pub fn count_coordinate_mesh(&self) -> i32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<i32>(PartMeshData::VT_COUNT_COORDINATE_MESH, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn index_coordinate_deform(&self) -> Option<::flatbuffers::Vector<'a, i32>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, i32>>>(PartMeshData::VT_INDEX_COORDINATE_DEFORM, None)}
-  }
-}
-
-impl ::flatbuffers::Verifiable for PartMeshData<'_> {
-  #[inline]
-  fn run_verifier(
-    v: &mut ::flatbuffers::Verifier, pos: usize
-  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
-    v.visit_table(pos)?
-     .visit_field::<u16>("part_index", Self::VT_PART_INDEX, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("uv", Self::VT_UV, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, i32>>>("indices", Self::VT_INDICES, false)?
-     .visit_field::<i32>("count_coordinate_mesh", Self::VT_COUNT_COORDINATE_MESH, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, i32>>>("index_coordinate_deform", Self::VT_INDEX_COORDINATE_DEFORM, false)?
-     .finish();
-    Ok(())
-  }
-}
-pub struct PartMeshDataArgs<'a> {
-    pub part_index: u16,
-    pub uv: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
-    pub indices: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, i32>>>,
-    pub count_coordinate_mesh: i32,
-    pub index_coordinate_deform: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, i32>>>,
-}
-impl<'a> Default for PartMeshDataArgs<'a> {
-  #[inline]
-  fn default() -> Self {
-    PartMeshDataArgs {
-      part_index: 0,
-      uv: None,
-      indices: None,
-      count_coordinate_mesh: 0,
-      index_coordinate_deform: None,
-    }
-  }
-}
-
-pub struct PartMeshDataBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
-  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
-  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
-}
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartMeshDataBuilder<'a, 'b, A> {
-  #[inline]
-  pub fn add_part_index(&mut self, part_index: u16) {
-    self.fbb_.push_slot::<u16>(PartMeshData::VT_PART_INDEX, part_index, 0);
-  }
-  #[inline]
-  pub fn add_uv(&mut self, uv: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartMeshData::VT_UV, uv);
-  }
-  #[inline]
-  pub fn add_indices(&mut self, indices: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , i32>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartMeshData::VT_INDICES, indices);
-  }
-  #[inline]
-  pub fn add_count_coordinate_mesh(&mut self, count_coordinate_mesh: i32) {
-    self.fbb_.push_slot::<i32>(PartMeshData::VT_COUNT_COORDINATE_MESH, count_coordinate_mesh, 0);
-  }
-  #[inline]
-  pub fn add_index_coordinate_deform(&mut self, index_coordinate_deform: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , i32>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartMeshData::VT_INDEX_COORDINATE_DEFORM, index_coordinate_deform);
-  }
-  #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartMeshDataBuilder<'a, 'b, A> {
-    let start = _fbb.start_table();
-    PartMeshDataBuilder {
-      fbb_: _fbb,
-      start_: start,
-    }
-  }
-  #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<PartMeshData<'a>> {
-    let o = self.fbb_.end_table(self.start_);
-    ::flatbuffers::WIPOffset::new(o.value())
-  }
-}
-
-impl ::core::fmt::Debug for PartMeshData<'_> {
-  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("PartMeshData");
-      ds.field("part_index", &self.part_index());
-      ds.field("uv", &self.uv());
-      ds.field("indices", &self.indices());
-      ds.field("count_coordinate_mesh", &self.count_coordinate_mesh());
-      ds.field("index_coordinate_deform", &self.index_coordinate_deform());
-      ds.finish()
-  }
-}
 pub enum AnimationDataOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -14489,15 +14315,14 @@ impl<'a> AnimationData<'a> {
   pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 6;
   pub const VT_PARTS_INITIAL_ATTRIBUTES: ::flatbuffers::VOffsetT = 8;
   pub const VT_PARTS_ANIMATION_DATA: ::flatbuffers::VOffsetT = 10;
-  pub const VT_PARTS_MESH_DATA: ::flatbuffers::VOffsetT = 12;
-  pub const VT_EVENTS: ::flatbuffers::VOffsetT = 14;
-  pub const VT_INITIAL_EVENTS: ::flatbuffers::VOffsetT = 16;
-  pub const VT_LABELS: ::flatbuffers::VOffsetT = 18;
-  pub const VT_START_FRAME: ::flatbuffers::VOffsetT = 20;
-  pub const VT_END_FRAME: ::flatbuffers::VOffsetT = 22;
-  pub const VT_TOTAL_FRAME: ::flatbuffers::VOffsetT = 24;
-  pub const VT_FPS: ::flatbuffers::VOffsetT = 26;
-  pub const VT_CANVAS: ::flatbuffers::VOffsetT = 28;
+  pub const VT_EVENTS: ::flatbuffers::VOffsetT = 12;
+  pub const VT_INITIAL_EVENTS: ::flatbuffers::VOffsetT = 14;
+  pub const VT_LABELS: ::flatbuffers::VOffsetT = 16;
+  pub const VT_START_FRAME: ::flatbuffers::VOffsetT = 18;
+  pub const VT_END_FRAME: ::flatbuffers::VOffsetT = 20;
+  pub const VT_TOTAL_FRAME: ::flatbuffers::VOffsetT = 22;
+  pub const VT_FPS: ::flatbuffers::VOffsetT = 24;
+  pub const VT_CANVAS: ::flatbuffers::VOffsetT = 26;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -14513,7 +14338,6 @@ impl<'a> AnimationData<'a> {
     if let Some(x) = args.labels { builder.add_labels(x); }
     if let Some(x) = args.initial_events { builder.add_initial_events(x); }
     if let Some(x) = args.events { builder.add_events(x); }
-    if let Some(x) = args.parts_mesh_data { builder.add_parts_mesh_data(x); }
     if let Some(x) = args.parts_animation_data { builder.add_parts_animation_data(x); }
     if let Some(x) = args.parts_initial_attributes { builder.add_parts_initial_attributes(x); }
     builder.add_name_hash(args.name_hash);
@@ -14553,13 +14377,6 @@ impl<'a> AnimationData<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData>>>>(AnimationData::VT_PARTS_ANIMATION_DATA, None)}
-  }
-  #[inline]
-  pub fn parts_mesh_data(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>(AnimationData::VT_PARTS_MESH_DATA, None)}
   }
   #[inline]
   pub fn events(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>> {
@@ -14629,7 +14446,6 @@ impl ::flatbuffers::Verifiable for AnimationData<'_> {
      .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<InitialPartAttributes>>>>("parts_initial_attributes", Self::VT_PARTS_INITIAL_ATTRIBUTES, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartAnimationData>>>>("parts_animation_data", Self::VT_PARTS_ANIMATION_DATA, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<PartMeshData>>>>("parts_mesh_data", Self::VT_PARTS_MESH_DATA, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<EventsPerFrame>>>>("events", Self::VT_EVENTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<InitialEvents>>>>("initial_events", Self::VT_INITIAL_EVENTS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Label>>>>("labels", Self::VT_LABELS, false)?
@@ -14647,7 +14463,6 @@ pub struct AnimationDataArgs<'a> {
     pub name_hash: u32,
     pub parts_initial_attributes: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<InitialPartAttributes<'a>>>>>,
     pub parts_animation_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartAnimationData<'a>>>>>,
-    pub parts_mesh_data: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<PartMeshData<'a>>>>>,
     pub events: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<EventsPerFrame<'a>>>>>,
     pub initial_events: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<InitialEvents<'a>>>>>,
     pub labels: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Label<'a>>>>>,
@@ -14665,7 +14480,6 @@ impl<'a> Default for AnimationDataArgs<'a> {
       name_hash: 0,
       parts_initial_attributes: None,
       parts_animation_data: None,
-      parts_mesh_data: None,
       events: None,
       initial_events: None,
       labels: None,
@@ -14698,10 +14512,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, 
   #[inline]
   pub fn add_parts_animation_data(&mut self, parts_animation_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartAnimationData<'b >>>>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PARTS_ANIMATION_DATA, parts_animation_data);
-  }
-  #[inline]
-  pub fn add_parts_mesh_data(&mut self, parts_mesh_data: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<PartMeshData<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(AnimationData::VT_PARTS_MESH_DATA, parts_mesh_data);
   }
   #[inline]
   pub fn add_events(&mut self, events: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<EventsPerFrame<'b >>>>) {
@@ -14758,7 +14568,6 @@ impl ::core::fmt::Debug for AnimationData<'_> {
       ds.field("name_hash", &self.name_hash());
       ds.field("parts_initial_attributes", &self.parts_initial_attributes());
       ds.field("parts_animation_data", &self.parts_animation_data());
-      ds.field("parts_mesh_data", &self.parts_mesh_data());
       ds.field("events", &self.events());
       ds.field("initial_events", &self.initial_events());
       ds.field("labels", &self.labels());

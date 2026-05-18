@@ -185,7 +185,6 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 | `canvas` | Rect | `settings.canvas_size` | キャンバスサイズ |
 | `parts_initial_attributes` | [InitialPartAttributes] | セットアップアニメデータ | 初期属性のセクション参照 |
 | `parts_animation_data` | [PartAnimationData] | `part_animes` | アニメーションデータレイアウトのセクション参照 |
-| `parts_mesh_data` | [PartMeshData] | `SsModel.mesh_list` | メッシュ UV/インデックスデータ |
 | `events` | [EventsPerFrame] | パーツごとのイベント属性 | イベントのセクション参照 |
 | `initial_events` | [InitialEvents] | セットアップアニメのイベント | 初期イベント状態 |
 | `labels` | [Label] | `labels` | アニメーションラベル |

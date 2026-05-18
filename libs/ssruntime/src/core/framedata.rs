@@ -164,15 +164,18 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
 /// Mesh parts may not change their cell after frame 0 (SS spec), so this is
 /// resolved once at SSAB load time. `uvs` are interleaved `[u, v, ...]` in
 /// cellmap texture-pixel space (the cell rectangle origin is already added —
-/// divide by the texture size to normalize). `rest` are interleaved
-/// `[x, y, ...]` rest-pose positions (cell coordinate minus the cell pivot's
-/// pixel position, so the mesh is centred; Y-up native), consumed by the
-/// non-skeletal (Deform-only) mesh path. `indices`
-/// are triangle indices widened from the SSAB-side `u16` `table_index_vertex`.
+/// divide by the texture size to normalize). `rest_x` / `rest_y` are SoA
+/// rest-pose positions (cell coordinate minus the cell pivot's pixel
+/// position, so the mesh is centred; Y-down native — same texture-pixel
+/// space as `uvs`), consumed by the non-skeletal (Deform-only) mesh path.
+/// SoA so the per-frame `W · rest` transform vectorizes with contiguous
+/// loads. `indices` are triangle indices widened from the SSAB-side `u16`
+/// `table_index_vertex`.
 #[derive(Clone, Default)]
 pub struct MeshCellData {
     pub uvs: alloc::vec::Vec<f32>,
-    pub rest: alloc::vec::Vec<f32>,
+    pub rest_x: alloc::vec::Vec<f32>,
+    pub rest_y: alloc::vec::Vec<f32>,
     pub indices: alloc::vec::Vec<i32>,
 }
 
@@ -229,26 +232,29 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     // Cell-local mesh coordinates are pixel offsets within the cell. For UVs
     // add the cell rectangle origin (→ cellmap texture-pixel space); for rest
     // positions subtract the cell pivot so the mesh sits centred on the part
-    // origin (Y-up native — the Y-down flip is applied at vertex-computation
-    // time). `cell.pivot()` is normalized (offset from the cell centre,
-    // 0 = centre); convert to a pixel position via `(pivot + 0.5) * size`,
-    // mirroring compute_local_vertices. Without this the mesh is offset by
-    // half its cell size.
+    // origin. `table_coordinate` is the `.ssce` meshPointList verbatim, i.e.
+    // texture-pixel space (Y-down native); the Deform-only mesh path flips it
+    // only for a Y-up target. `cell.pivot()` is normalized (offset from the
+    // cell centre, 0 = centre) and Y-up; convert to a Y-down texture-pixel
+    // position via `(pivot.x + 0.5) * size_w` and `(-pivot.y + 0.5) * size_h`
+    // — the Y pivot is negated to mirror compute_local_vertices (`cpy`) so it
+    // matches the Y-down `table_coordinate`. Without this the mesh is offset.
     let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
     let (pivot_norm_x, pivot_norm_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
     let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
-    let pivot_px_y = (pivot_norm_y + 0.5) * size_h;
+    let pivot_px_y = (-pivot_norm_y + 0.5) * size_h;
     let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
-    let mut rest = alloc::vec::Vec::with_capacity(coords.len() * 2);
+    let mut rest_x = alloc::vec::Vec::with_capacity(coords.len());
+    let mut rest_y = alloc::vec::Vec::with_capacity(coords.len());
     for c in coords {
         uvs.push(c.v1() + rect_left);
         uvs.push(c.v2() + rect_top);
-        rest.push(c.v1() - pivot_px_x);
-        rest.push(c.v2() - pivot_px_y);
+        rest_x.push(c.v1() - pivot_px_x);
+        rest_y.push(c.v2() - pivot_px_y);
     }
     let indices: alloc::vec::Vec<i32> = tri.iter().map(|i| i as i32).collect();
 
-    Some(MeshCellData { uvs, indices, rest })
+    Some(MeshCellData { uvs, indices, rest_x, rest_y })
 }
 
 #[derive(Clone)]
@@ -621,15 +627,13 @@ pub(crate) fn evaluate_part(
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
     if let Some(mask) = cached_part.deform_array.and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace)) {
-        // Deform offsets flip on YUp — the OPPOSITE of position/pivot/anchor
-        // (which flip on YDown). The SSAB deform `coordinate` Y is stored in
-        // the opposite convention to `table_coordinate`: for a YDown target
-        // the mesh rest is Y-flipped (in compute_mesh_vertices) while the
-        // deform is applied as-is, so for a YUp target the deform must be
-        // flipped instead to stay consistent with the (unflipped) rest.
-        // The YDown path is verified against SpriteStudio (frames 0/5/10);
-        // the YUp branch is the reasoned complement (no YUp test data yet).
-        if coordinate_system == SsCoordinateSystem::YUp {
+        // Deform offsets are an ssae animation attribute — Y-up native like
+        // position / pivot / anchor — so they flip for a Y-down target, the
+        // SAME condition as those attributes. The mesh rest, by contrast,
+        // comes from the .ssce cell (`table_coordinate`) and is Y-down native,
+        // so it flips on the opposite (YUp) condition in compute_mesh_vertices.
+        // rest and deform are deliberately mirror-imaged.
+        if coordinate_system == SsCoordinateSystem::YDown {
             for v in deform_coord_workspace.iter_mut() {
                 v.set_y(-v.y());
             }

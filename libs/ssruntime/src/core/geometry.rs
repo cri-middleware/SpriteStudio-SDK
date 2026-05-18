@@ -322,6 +322,12 @@ pub fn compute_skinned_mesh_vertices(
     debug_assert_eq!(out_y.len(), num_vertices);
     debug_assert_eq!(influence_offsets.len(), num_vertices + 1);
 
+    // Bind coords are authored Y-up; negate for a Y-down target. Resolved once
+    // and applied as a sign multiply (SIMD in the fast path) — no per-influence
+    // branch.
+    let y_sign = if flip_y { -1.0f32 } else { 1.0f32 };
+    let y_sign_v = f32x4::from([y_sign; 4]);
+
     // 1. Skeletal: per-vertex weighted bone transform sum (MultiplyPoint3x4 — translation included).
     for v in 0..num_vertices {
         let start = influence_offsets[v] as usize;
@@ -344,7 +350,7 @@ pub fn compute_skinned_mesh_vertices(
                 let i = start + k;
                 w_lanes[k] = weights[i];
                 cx_lanes[k] = coords_x[i];
-                cy_lanes[k] = if flip_y { -coords_y[i] } else { coords_y[i] };
+                cy_lanes[k] = coords_y[i];
                 let mat = &bone_world_matrices[bone_indices[i] as usize];
                 m0_lanes[k] = mat.m[0];
                 m4_lanes[k] = mat.m[4];
@@ -356,7 +362,7 @@ pub fn compute_skinned_mesh_vertices(
 
             let w = f32x4::from(w_lanes);
             let cx = f32x4::from(cx_lanes);
-            let cy = f32x4::from(cy_lanes);
+            let cy = f32x4::from(cy_lanes) * y_sign_v;
 
             let px = f32x4::from(m0_lanes) * cx + f32x4::from(m4_lanes) * cy + f32x4::from(m12_lanes);
             let py = f32x4::from(m1_lanes) * cx + f32x4::from(m5_lanes) * cy + f32x4::from(m13_lanes);
@@ -370,7 +376,7 @@ pub fn compute_skinned_mesh_vertices(
             for i in start..end {
                 let w = weights[i];
                 let cx = coords_x[i];
-                let cy = if flip_y { -coords_y[i] } else { coords_y[i] };
+                let cy = coords_y[i] * y_sign;
                 let mat = &bone_world_matrices[bone_indices[i] as usize];
                 let px = mat.m[0] * cx + mat.m[4] * cy + mat.m[12];
                 let py = mat.m[1] * cx + mat.m[5] * cy + mat.m[13];
@@ -395,6 +401,54 @@ pub fn compute_skinned_mesh_vertices(
             out_x[v] += tx;
             out_y[v] += ty;
         }
+    }
+}
+
+/// Rigidly transforms a Deform-only mesh's rest vertices by the part's world
+/// matrix — `out = W · rest` for every vertex. SoA layout in and out,
+/// computed four vertices at a time with `f32x4`; the contiguous SoA loads
+/// keep the input gather vectorizable. The per-frame deform delta is a sparse
+/// scatter and is applied separately (scalar) by the caller.
+///
+/// `flip_rest_y` negates the rest Y. The rest comes from the cell's
+/// `table_coordinate` (Y-down native), so it flips for a Y-up target — the
+/// opposite of the Y-up-native skinned bind coordinates.
+pub fn compute_rigid_mesh_vertices(rest_x: &[f32], rest_y: &[f32], world: &SsMatrix4x4, flip_rest_y: bool, out_x: &mut [f32], out_y: &mut [f32]) {
+    let count = out_x.len();
+    debug_assert_eq!(out_y.len(), count);
+    debug_assert_eq!(rest_x.len(), count);
+    debug_assert_eq!(rest_y.len(), count);
+
+    let m = &world.m;
+    let m0 = f32x4::from([m[0]; 4]);
+    let m1 = f32x4::from([m[1]; 4]);
+    let m4 = f32x4::from([m[4]; 4]);
+    let m5 = f32x4::from([m[5]; 4]);
+    let m12 = f32x4::from([m[12]; 4]);
+    let m13 = f32x4::from([m[13]; 4]);
+    // Resolved once; applied as a sign multiply (f32x4 in the SIMD body, scalar in the tail).
+    let y_sign = if flip_rest_y { -1.0f32 } else { 1.0f32 };
+    let y_sign_v = f32x4::from([y_sign; 4]);
+
+    // SIMD body: 4 vertices per iteration. `rest_*` are contiguous SoA, so
+    // each lane load is a plain 128-bit read; the output buffers are SoA too.
+    let chunks = count / 4;
+    for c in 0..chunks {
+        let b = c * 4;
+        let rx = f32x4::from([rest_x[b], rest_x[b + 1], rest_x[b + 2], rest_x[b + 3]]);
+        let ry = f32x4::from([rest_y[b], rest_y[b + 1], rest_y[b + 2], rest_y[b + 3]]) * y_sign_v;
+        let ox = m0 * rx + m4 * ry + m12;
+        let oy = m1 * rx + m5 * ry + m13;
+        out_x[b..b + 4].copy_from_slice(&ox.to_array());
+        out_y[b..b + 4].copy_from_slice(&oy.to_array());
+    }
+
+    // Scalar tail: the final < 4 vertices.
+    for v in (chunks * 4)..count {
+        let rx = rest_x[v];
+        let ry = rest_y[v] * y_sign;
+        out_x[v] = m[0] * rx + m[4] * ry + m[12];
+        out_y[v] = m[1] * rx + m[5] * ry + m[13];
     }
 }
 
@@ -811,6 +865,26 @@ mod tests {
 
         assert_arr_approx_eq(&out_x, &[1.0, 102.0, 3.0], 3);
         assert_arr_approx_eq(&out_y, &[10.0, 220.0, 30.0], 3);
+    }
+
+    #[test]
+    fn test_rigid_mesh_vertices_simd_chunk_and_tail() {
+        // 6 vertices = one 4-wide SIMD chunk + a 2-vertex scalar tail.
+        let rest_x = [1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let rest_y = [10.0f32, 20.0, 30.0, 40.0, 50.0, 60.0];
+        // 90° rotation: W · (x, y) = (-y, x).
+        let world = SsMatrix4x4::create_rotation_z(core::f32::consts::FRAC_PI_2);
+        let mut out_x = [0.0f32; 6];
+        let mut out_y = [0.0f32; 6];
+
+        compute_rigid_mesh_vertices(&rest_x, &rest_y, &world, false, &mut out_x, &mut out_y);
+        assert_arr_approx_eq(&out_x, &[-10.0, -20.0, -30.0, -40.0, -50.0, -60.0], 6);
+        assert_arr_approx_eq(&out_y, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 6);
+
+        // flip_rest_y negates rest Y before the transform: out_x = -(-y) = y.
+        compute_rigid_mesh_vertices(&rest_x, &rest_y, &world, true, &mut out_x, &mut out_y);
+        assert_arr_approx_eq(&out_x, &[10.0, 20.0, 30.0, 40.0, 50.0, 60.0], 6);
+        assert_arr_approx_eq(&out_y, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 6);
     }
 
     #[test]

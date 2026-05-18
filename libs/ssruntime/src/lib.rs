@@ -669,6 +669,9 @@ impl<'a> Context<'a> {
         globals.shape_vertex_box_coords.resize(num_parts * crate::core::framedata::SHAPE_VERTICES_STRIDE, 0.0);
         globals.shape_vertex_counts.clear();
         globals.shape_vertex_counts.resize(num_parts, 0);
+        // Invalidate the static mesh buffers so compute_mesh_vertices rebuilds
+        // them for the newly selected animation's Cells.
+        globals.mesh_index_offsets.clear();
 
         self.instance.z_order.setup(&metadata.cached_parts);
 
@@ -753,85 +756,40 @@ impl<'a> Context<'a> {
         Self::compute_shape_vertices(instance, &metadata.cached_parts);
     }
 
-    /// Writes per-part skinned mesh world-space vertex positions to
-    /// `globals.mesh_vertices_x` / `_y`, using the prebuilt
-    /// [`MeshBindingCache`](crate::core::framedata::MeshBindingCache) and the
-    /// current frame's world matrices.
+    /// Writes per-part mesh world-space vertex positions to
+    /// `globals.mesh_vertices_x` / `_y` for the current frame — skeletal
+    /// (bone-weighted) and Deform-only meshes alike, with the frame's deform
+    /// deltas applied.
     ///
-    /// Layout: x/y are SoA. `mesh_vertex_offsets` is a CSR prefix sum of length
-    /// `num_parts + 1`; non-mesh parts contribute an empty range.
-    ///
-    /// Deform deltas are intentionally not consumed here yet — wiring the
-    /// per-part deform workspace through Phase 2 is a follow-up. Deform-aware
-    /// skinning would call `compute_skinned_mesh_vertices` with the optional
-    /// `SkinnedMeshDeform` tuple populated from `LayerState`.
+    /// Layout: x/y are SoA, sliced per part by `mesh_vertex_offsets` (a CSR
+    /// prefix sum of length `num_parts + 1`; non-mesh parts get an empty
+    /// range). The CSR offsets and the static UV / index buffers are built
+    /// once by `setup_static_mesh_buffers`; only the vertex positions are
+    /// recomputed each frame.
     #[allow(clippy::needless_range_loop)]
     fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let num_parts = instance.layer.parts_vec.len();
+
+        // The CSR offsets and the static UV / index buffers depend only on the
+        // chosen animation's per-part Cells (fixed by the SS mesh spec). Build
+        // them — and size the SoA position buffers — once; `play()` clears
+        // `mesh_index_offsets` so a new animation forces the rebuild.
+        if instance.globals.mesh_index_offsets.len() != num_parts + 1 {
+            Self::setup_static_mesh_buffers(instance, cached_parts);
+        }
+
         let layer = &instance.layer;
         // SSAB bind coordinates are authored Y-up; flip when the instance
         // (hence the bone world matrices) runs Y-down.
         let flip_y = instance.coordinate_system == crate::core::SsCoordinateSystem::YDown;
+        // The Deform-only mesh rest comes from the cell's `table_coordinate`,
+        // which ssconverter copies verbatim from the `.ssce` meshPointList —
+        // texture-pixel space, i.e. already Y-down. So it must be flipped for a
+        // Y-up target, the OPPOSITE of the Y-up-native bind coordinates above.
+        let flip_rest = instance.coordinate_system == crate::core::SsCoordinateSystem::YUp;
         let globals = &mut instance.globals;
-        let num_parts = layer.parts_vec.len();
 
-        if globals.mesh_vertex_offsets.len() != num_parts + 1 {
-            globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
-        }
-
-        // First pass: build the CSR offsets so we can size the SoA buffers.
-        // The Cell is the authoritative geometry source (it covers both
-        // skeletal and Deform-only meshes); the bind cache only adds skinning.
-        globals.mesh_vertex_offsets[0] = 0;
-        for i in 0..num_parts {
-            let part_vertex_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.num_vertices()).unwrap_or(0);
-            globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + part_vertex_count as u32;
-        }
-        let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
-
-        if globals.mesh_vertices_x.len() != total_vertices {
-            globals.mesh_vertices_x.resize(total_vertices, 0.0);
-        }
-        if globals.mesh_vertices_y.len() != total_vertices {
-            globals.mesh_vertices_y.resize(total_vertices, 0.0);
-        }
-        for slot in globals.mesh_vertices_x.iter_mut() {
-            *slot = 0.0;
-        }
-        for slot in globals.mesh_vertices_y.iter_mut() {
-            *slot = 0.0;
-        }
-
-        // Static mesh UV / triangle-index buffers — resolved once from each
-        // mesh part's frame-0 Cell (the cell is fixed per the SS mesh spec).
-        // Guarded by the index-offset length so the build runs a single time.
-        if globals.mesh_index_offsets.len() != num_parts + 1 {
-            globals.mesh_index_offsets.resize(num_parts + 1, 0);
-            globals.mesh_index_offsets[0] = 0;
-            for i in 0..num_parts {
-                let index_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.indices.len()).unwrap_or(0);
-                globals.mesh_index_offsets[i + 1] = globals.mesh_index_offsets[i] + index_count as u32;
-            }
-            let total_indices = *globals.mesh_index_offsets.last().unwrap_or(&0) as usize;
-
-            globals.mesh_indices.clear();
-            globals.mesh_indices.reserve(total_indices);
-            globals.mesh_uvs.clear();
-            globals.mesh_uvs.resize(total_vertices * 2, 0.0);
-            for i in 0..num_parts {
-                let Some(mesh_cell) = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()) else {
-                    continue;
-                };
-                globals.mesh_indices.extend_from_slice(&mesh_cell.indices);
-                // UVs share the position CSR; copy only when the cell vertex
-                // count matches the slot (true for well-formed skeletal meshes).
-                let start = globals.mesh_vertex_offsets[i] as usize;
-                let end = globals.mesh_vertex_offsets[i + 1] as usize;
-                if mesh_cell.uvs.len() == (end - start) * 2 {
-                    globals.mesh_uvs[start * 2..end * 2].copy_from_slice(&mesh_cell.uvs);
-                }
-            }
-        }
-
+        let total_vertices = globals.mesh_vertices_x.len();
         if total_vertices == 0 {
             return;
         }
@@ -864,23 +822,20 @@ impl<'a> Context<'a> {
             let Some(mesh_cell) = cached.mesh_cell.as_ref() else {
                 continue;
             };
-            if mesh_cell.rest.len() != (end - start) * 2 || i >= globals.world_matrices.len() {
+            if mesh_cell.rest_x.len() != (end - start) || i >= globals.world_matrices.len() {
                 continue;
             }
-            let (m0, m1, m4, m5, m12, m13) = {
-                let mat = &globals.world_matrices[i];
-                (mat.m[0], mat.m[1], mat.m[4], mat.m[5], mat.m[12], mat.m[13])
-            };
-            for v in 0..(end - start) {
-                let rx = mesh_cell.rest[v * 2];
-                let ry = if flip_y { -mesh_cell.rest[v * 2 + 1] } else { mesh_cell.rest[v * 2 + 1] };
-                globals.mesh_vertices_x[start + v] = m0 * rx + m4 * ry + m12;
-                globals.mesh_vertices_y[start + v] = m1 * rx + m5 * ry + m13;
+            // Rest transform (W · rest) — SIMD over 4 vertices at a time.
+            {
+                let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
+                crate::core::geometry::compute_rigid_mesh_vertices(&mesh_cell.rest_x, &mesh_cell.rest_y, &globals.world_matrices[i], flip_rest, out_x, out_y);
             }
-            // Apply deform deltas as-is — evaluate_part has already applied
-            // any coordinate-system Y conversion.
+            // Apply deform deltas as-is — evaluate_part has already applied any
+            // coordinate-system Y conversion. Sparse scatter, kept scalar.
             if let Some(deform) = layer.mesh_deform.get(i) {
                 let vert_count = end - start;
+                let mat = &globals.world_matrices[i];
+                let (m0, m1, m4, m5) = (mat.m[0], mat.m[1], mat.m[4], mat.m[5]);
                 for k in 0..deform.indices.len() {
                     let v = deform.indices[k] as usize;
                     if v < vert_count {
@@ -890,6 +845,63 @@ impl<'a> Context<'a> {
                 }
             }
         }
+    }
+
+    /// Builds the per-instance static mesh buffers — CSR vertex / index
+    /// offsets, texture-space UVs, triangle indices — and sizes and zeroes the
+    /// SoA position buffers. These depend only on the chosen animation's
+    /// per-part Cells (fixed by the SS mesh spec), so this runs once per
+    /// `play()` rather than every frame. A statically malformed mesh part
+    /// keeps the zeros written here, so the per-frame pass needs no clear.
+    fn setup_static_mesh_buffers(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
+        let num_parts = instance.layer.parts_vec.len();
+        let globals = &mut instance.globals;
+
+        // CSR vertex offsets — non-mesh parts contribute an empty range. The
+        // Cell is the authoritative geometry source for both skeletal and
+        // Deform-only meshes; the bind cache only adds skinning.
+        globals.mesh_vertex_offsets.clear();
+        globals.mesh_vertex_offsets.resize(num_parts + 1, 0);
+        for i in 0..num_parts {
+            let vertex_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.num_vertices()).unwrap_or(0);
+            globals.mesh_vertex_offsets[i + 1] = globals.mesh_vertex_offsets[i] + vertex_count as u32;
+        }
+        let total_vertices = *globals.mesh_vertex_offsets.last().unwrap_or(&0) as usize;
+
+        // CSR triangle-index offsets.
+        globals.mesh_index_offsets.clear();
+        globals.mesh_index_offsets.resize(num_parts + 1, 0);
+        for i in 0..num_parts {
+            let index_count = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()).map(|m| m.indices.len()).unwrap_or(0);
+            globals.mesh_index_offsets[i + 1] = globals.mesh_index_offsets[i] + index_count as u32;
+        }
+        let total_indices = *globals.mesh_index_offsets.last().unwrap_or(&0) as usize;
+
+        // Static UVs (texture-pixel space) and triangle indices, per part.
+        globals.mesh_indices.clear();
+        globals.mesh_indices.reserve(total_indices);
+        globals.mesh_uvs.clear();
+        globals.mesh_uvs.resize(total_vertices * 2, 0.0);
+        for i in 0..num_parts {
+            let Some(mesh_cell) = cached_parts.get(i).and_then(|c| c.mesh_cell.as_ref()) else {
+                continue;
+            };
+            globals.mesh_indices.extend_from_slice(&mesh_cell.indices);
+            // UVs share the position CSR; copy only when the cell vertex count
+            // matches the slot (true for well-formed meshes).
+            let start = globals.mesh_vertex_offsets[i] as usize;
+            let end = globals.mesh_vertex_offsets[i + 1] as usize;
+            if mesh_cell.uvs.len() == (end - start) * 2 {
+                globals.mesh_uvs[start * 2..end * 2].copy_from_slice(&mesh_cell.uvs);
+            }
+        }
+
+        // SoA position buffers — sized and zeroed once. Each valid mesh part
+        // overwrites its whole range every frame.
+        globals.mesh_vertices_x.clear();
+        globals.mesh_vertices_x.resize(total_vertices, 0.0);
+        globals.mesh_vertices_y.clear();
+        globals.mesh_vertices_y.resize(total_vertices, 0.0);
     }
 
     fn clear_mesh_vertices(instance: &mut InstanceState<'a>, num_parts: usize) {
