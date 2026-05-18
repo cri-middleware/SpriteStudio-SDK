@@ -802,22 +802,12 @@ table PartAnimationData {
   texture_array: [PartAnimationDataUIntValue];
 }
 
-table PartMeshData {
-  part_index: ushort (key);
-
-  uv: [float];
-  indices: [int];
-  count_coordinate_mesh: int;
-  index_coordinate_deform: [int];
-}
-
 table AnimationData {
   name: string (required);
   name_hash: uint32;
 
   parts_initial_attributes: [InitialPartAttributes];
   parts_animation_data: [PartAnimationData];
-  parts_mesh_data: [PartMeshData];
 
   events: [EventsPerFrame];
   initial_events: [InitialEvents];

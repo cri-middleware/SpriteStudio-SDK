@@ -2083,27 +2083,6 @@ impl<'a> SsabCache<'a> {
         fb.create_vector(&part_animation_data)
     }
 
-    fn create_shared_parts_mesh_data(
-        &mut self,
-        fb: &mut flatbuffers::FlatBufferBuilder<'a>,
-        pm: &[ssab::ssab::ss::format::PartMeshDataT],
-    ) -> flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartMeshData<'a>>>> {
-        let part_mesh_data = pm
-            .iter()
-            .map(|part| {
-                let mut p_args = ssab::ssab::ss::format::PartMeshDataArgs::default();
-                p_args.part_index = part.part_index;
-                p_args.uv = part.uv.as_ref().map(|uv| fb.create_vector(uv));
-                p_args.indices = part.indices.as_ref().map(|indices| fb.create_vector(indices));
-                p_args.count_coordinate_mesh = part.count_coordinate_mesh;
-                p_args.index_coordinate_deform = part.index_coordinate_deform.as_ref().map(|index_coordinate_deform| fb.create_vector(index_coordinate_deform));
-
-                ssab::ssab::ss::format::PartMeshData::create(fb, &p_args)
-            })
-            .collect::<Vec<_>>();
-        fb.create_vector(&part_mesh_data)
-    }
-
     fn create_shared_events_per_frame(
         &mut self,
         fb: &mut flatbuffers::FlatBufferBuilder<'a>,
@@ -2196,7 +2175,6 @@ impl<'a> SsabCache<'a> {
                 args.name_hash = animation_data_t.name_hash;
                 args.parts_initial_attributes = animation_data_t.parts_initial_attributes.as_ref().map(|parts_initial_attributes| self.create_shared_part_attributes_list(fb, parts_initial_attributes));
                 args.parts_animation_data = animation_data_t.parts_animation_data.as_ref().map(|parts_animation_data| self.create_shared_parts_animation_data(fb, parts_animation_data));
-                args.parts_mesh_data = animation_data_t.parts_mesh_data.as_ref().map(|parts_mesh_data| self.create_shared_parts_mesh_data(fb, parts_mesh_data));
                 args.events = animation_data_t.events.as_ref().map(|events| self.create_shared_events_per_frame(fb, events));
                 args.initial_events = animation_data_t.initial_events.as_ref().map(|initial_events| self.create_shared_initial_events_list(fb, initial_events));
                 args.labels = animation_data_t.labels.as_ref().map(|labels| {

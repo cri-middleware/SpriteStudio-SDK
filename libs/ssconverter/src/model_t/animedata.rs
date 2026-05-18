@@ -317,7 +317,6 @@ fn convert_animedatat(
     anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
     anime_data_t.parts_initial_attributes = Some(convert_parts_initial_attributes(setup_animation, parts_map, cellmap_names));
     anime_data_t.parts_animation_data = Some(convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmap_names));
-    anime_data_t.parts_mesh_data = None;
     anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
