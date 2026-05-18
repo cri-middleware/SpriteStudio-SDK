@@ -426,7 +426,9 @@ pub fn compute_rigid_mesh_vertices(rest_x: &[f32], rest_y: &[f32], world: &SsMat
     let m5 = f32x4::from([m[5]; 4]);
     let m12 = f32x4::from([m[12]; 4]);
     let m13 = f32x4::from([m[13]; 4]);
-    let y_sign = f32x4::from([if flip_rest_y { -1.0f32 } else { 1.0f32 }; 4]);
+    // Resolved once; applied as a sign multiply (f32x4 in the SIMD body, scalar in the tail).
+    let y_sign = if flip_rest_y { -1.0f32 } else { 1.0f32 };
+    let y_sign_v = f32x4::from([y_sign; 4]);
 
     // SIMD body: 4 vertices per iteration. `rest_*` are contiguous SoA, so
     // each lane load is a plain 128-bit read; the output buffers are SoA too.
@@ -434,7 +436,7 @@ pub fn compute_rigid_mesh_vertices(rest_x: &[f32], rest_y: &[f32], world: &SsMat
     for c in 0..chunks {
         let b = c * 4;
         let rx = f32x4::from([rest_x[b], rest_x[b + 1], rest_x[b + 2], rest_x[b + 3]]);
-        let ry = f32x4::from([rest_y[b], rest_y[b + 1], rest_y[b + 2], rest_y[b + 3]]) * y_sign;
+        let ry = f32x4::from([rest_y[b], rest_y[b + 1], rest_y[b + 2], rest_y[b + 3]]) * y_sign_v;
         let ox = m0 * rx + m4 * ry + m12;
         let oy = m1 * rx + m5 * ry + m13;
         out_x[b..b + 4].copy_from_slice(&ox.to_array());
@@ -444,7 +446,7 @@ pub fn compute_rigid_mesh_vertices(rest_x: &[f32], rest_y: &[f32], world: &SsMat
     // Scalar tail: the final < 4 vertices.
     for v in (chunks * 4)..count {
         let rx = rest_x[v];
-        let ry = if flip_rest_y { -rest_y[v] } else { rest_y[v] };
+        let ry = rest_y[v] * y_sign;
         out_x[v] = m[0] * rx + m[4] * ry + m[12];
         out_y[v] = m[1] * rx + m[5] * ry + m[13];
     }
