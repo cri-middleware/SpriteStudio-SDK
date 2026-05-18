@@ -771,6 +771,11 @@ impl<'a> Context<'a> {
         // SSAB bind coordinates are authored Y-up; flip when the instance
         // (hence the bone world matrices) runs Y-down.
         let flip_y = instance.coordinate_system == crate::core::SsCoordinateSystem::YDown;
+        // The Deform-only mesh rest comes from the cell's `table_coordinate`,
+        // which ssconverter copies verbatim from the `.ssce` meshPointList —
+        // texture-pixel space, i.e. already Y-down. So it must be flipped for a
+        // Y-up target, the OPPOSITE of the Y-up-native bind coordinates above.
+        let flip_rest = instance.coordinate_system == crate::core::SsCoordinateSystem::YUp;
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
 
@@ -873,7 +878,7 @@ impl<'a> Context<'a> {
             };
             for v in 0..(end - start) {
                 let rx = mesh_cell.rest[v * 2];
-                let ry = if flip_y { -mesh_cell.rest[v * 2 + 1] } else { mesh_cell.rest[v * 2 + 1] };
+                let ry = if flip_rest { -mesh_cell.rest[v * 2 + 1] } else { mesh_cell.rest[v * 2 + 1] };
                 globals.mesh_vertices_x[start + v] = m0 * rx + m4 * ry + m12;
                 globals.mesh_vertices_y[start + v] = m1 * rx + m5 * ry + m13;
             }

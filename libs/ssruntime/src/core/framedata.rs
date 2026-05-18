@@ -166,9 +166,10 @@ pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::Par
 /// cellmap texture-pixel space (the cell rectangle origin is already added —
 /// divide by the texture size to normalize). `rest` are interleaved
 /// `[x, y, ...]` rest-pose positions (cell coordinate minus the cell pivot's
-/// pixel position, so the mesh is centred; Y-up native), consumed by the
-/// non-skeletal (Deform-only) mesh path. `indices`
-/// are triangle indices widened from the SSAB-side `u16` `table_index_vertex`.
+/// pixel position, so the mesh is centred; Y-down native — same texture-pixel
+/// space as `uvs`), consumed by the non-skeletal (Deform-only) mesh path.
+/// `indices` are triangle indices widened from the SSAB-side `u16`
+/// `table_index_vertex`.
 #[derive(Clone, Default)]
 pub struct MeshCellData {
     pub uvs: alloc::vec::Vec<f32>,
@@ -229,15 +230,17 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     // Cell-local mesh coordinates are pixel offsets within the cell. For UVs
     // add the cell rectangle origin (→ cellmap texture-pixel space); for rest
     // positions subtract the cell pivot so the mesh sits centred on the part
-    // origin (Y-up native — the Y-down flip is applied at vertex-computation
-    // time). `cell.pivot()` is normalized (offset from the cell centre,
-    // 0 = centre); convert to a pixel position via `(pivot + 0.5) * size`,
-    // mirroring compute_local_vertices. Without this the mesh is offset by
-    // half its cell size.
+    // origin. `table_coordinate` is the `.ssce` meshPointList verbatim, i.e.
+    // texture-pixel space (Y-down native); the Deform-only mesh path flips it
+    // only for a Y-up target. `cell.pivot()` is normalized (offset from the
+    // cell centre, 0 = centre) and Y-up; convert to a Y-down texture-pixel
+    // position via `(pivot.x + 0.5) * size_w` and `(-pivot.y + 0.5) * size_h`
+    // — the Y pivot is negated to mirror compute_local_vertices (`cpy`) so it
+    // matches the Y-down `table_coordinate`. Without this the mesh is offset.
     let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
     let (pivot_norm_x, pivot_norm_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
     let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
-    let pivot_px_y = (pivot_norm_y + 0.5) * size_h;
+    let pivot_px_y = (-pivot_norm_y + 0.5) * size_h;
     let mut uvs = alloc::vec::Vec::with_capacity(coords.len() * 2);
     let mut rest = alloc::vec::Vec::with_capacity(coords.len() * 2);
     for c in coords {
