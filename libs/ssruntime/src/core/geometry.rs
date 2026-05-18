@@ -322,6 +322,12 @@ pub fn compute_skinned_mesh_vertices(
     debug_assert_eq!(out_y.len(), num_vertices);
     debug_assert_eq!(influence_offsets.len(), num_vertices + 1);
 
+    // Bind coords are authored Y-up; negate for a Y-down target. Resolved once
+    // and applied as a sign multiply (SIMD in the fast path) — no per-influence
+    // branch.
+    let y_sign = if flip_y { -1.0f32 } else { 1.0f32 };
+    let y_sign_v = f32x4::from([y_sign; 4]);
+
     // 1. Skeletal: per-vertex weighted bone transform sum (MultiplyPoint3x4 — translation included).
     for v in 0..num_vertices {
         let start = influence_offsets[v] as usize;
@@ -344,7 +350,7 @@ pub fn compute_skinned_mesh_vertices(
                 let i = start + k;
                 w_lanes[k] = weights[i];
                 cx_lanes[k] = coords_x[i];
-                cy_lanes[k] = if flip_y { -coords_y[i] } else { coords_y[i] };
+                cy_lanes[k] = coords_y[i];
                 let mat = &bone_world_matrices[bone_indices[i] as usize];
                 m0_lanes[k] = mat.m[0];
                 m4_lanes[k] = mat.m[4];
@@ -356,7 +362,7 @@ pub fn compute_skinned_mesh_vertices(
 
             let w = f32x4::from(w_lanes);
             let cx = f32x4::from(cx_lanes);
-            let cy = f32x4::from(cy_lanes);
+            let cy = f32x4::from(cy_lanes) * y_sign_v;
 
             let px = f32x4::from(m0_lanes) * cx + f32x4::from(m4_lanes) * cy + f32x4::from(m12_lanes);
             let py = f32x4::from(m1_lanes) * cx + f32x4::from(m5_lanes) * cy + f32x4::from(m13_lanes);
@@ -370,7 +376,7 @@ pub fn compute_skinned_mesh_vertices(
             for i in start..end {
                 let w = weights[i];
                 let cx = coords_x[i];
-                let cy = if flip_y { -coords_y[i] } else { coords_y[i] };
+                let cy = coords_y[i] * y_sign;
                 let mat = &bone_world_matrices[bone_indices[i] as usize];
                 let px = mat.m[0] * cx + mat.m[4] * cy + mat.m[12];
                 let py = mat.m[1] * cx + mat.m[5] * cy + mat.m[13];
