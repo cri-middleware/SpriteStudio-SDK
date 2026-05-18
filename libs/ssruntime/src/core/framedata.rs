@@ -624,15 +624,13 @@ pub(crate) fn evaluate_part(
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
     }
     if let Some(mask) = cached_part.deform_array.and_then(|arr| evaluate_deform(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTEDEFORM], start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace)) {
-        // Deform offsets flip on YUp — the OPPOSITE of position/pivot/anchor
-        // (which flip on YDown). The SSAB deform `coordinate` Y is stored in
-        // the opposite convention to `table_coordinate`: for a YDown target
-        // the mesh rest is Y-flipped (in compute_mesh_vertices) while the
-        // deform is applied as-is, so for a YUp target the deform must be
-        // flipped instead to stay consistent with the (unflipped) rest.
-        // The YDown path is verified against SpriteStudio (frames 0/5/10);
-        // the YUp branch is the reasoned complement (no YUp test data yet).
-        if coordinate_system == SsCoordinateSystem::YUp {
+        // Deform offsets are an ssae animation attribute — Y-up native like
+        // position / pivot / anchor — so they flip for a Y-down target, the
+        // SAME condition as those attributes. The mesh rest, by contrast,
+        // comes from the .ssce cell (`table_coordinate`) and is Y-down native,
+        // so it flips on the opposite (YUp) condition in compute_mesh_vertices.
+        // rest and deform are deliberately mirror-imaged.
+        if coordinate_system == SsCoordinateSystem::YDown {
             for v in deform_coord_workspace.iter_mut() {
                 v.set_y(-v.y());
             }
