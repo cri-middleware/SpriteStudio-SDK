@@ -992,7 +992,14 @@ macro_rules! process_interpolatable_attribute {
 }
 
 macro_rules! process_simple_attribute {
-    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr) => {{
+    // A synthesized frame-0 key clones the first frame-1+ key's value.
+    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr) => {
+        process_simple_attribute!($keys, $target_array, $arg_type, $extract_value, frame0_override = |_: &mut $arg_type| {})
+    };
+    // `frame0_override` runs on a synthesized frame-0 key, letting an attribute
+    // adjust the back-filled value (used by Hide; see its match arm).
+    ($keys:expr, $target_array:expr, $arg_type:ty, $extract_value:expr, frame0_override = $frame0_override:expr) => {{
+        let frame0_override = $frame0_override;
         for key in $keys {
             let mut args = <$arg_type>::default();
             args.index = key.time as u16;
@@ -1003,6 +1010,7 @@ macro_rules! process_simple_attribute {
                 if key.time > 0 {
                     let mut args_frame_0 = args.clone();
                     args_frame_0.index = 0;
+                    frame0_override(&mut args_frame_0);
                     array_new.push(args_frame_0);
                 }
                 array_new
@@ -1018,7 +1026,7 @@ macro_rules! process_simple_attribute {
     }};
 }
 
-fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime, cellmap_names: &[String]) {
+fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime, cellmap_names: &[String], is_setup: bool) {
     part_anime.attributes.iter().for_each(|attribute| match attribute {
         sspj::ssattribute::SsAttributeKind::Cell(v) => {
             process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
@@ -1074,7 +1082,22 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             process_simple_attribute!(&v.keys, p_arg.flip_v_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::Hide(v) => {
-            process_simple_attribute!(&v.keys, p_arg.hide_array, ssab::ssab::ss::format::PartAnimationDataBoolValueT, |k: &sspj::ssattribute::SsAttributeBoolKey| k.value);
+            // Hide is special-cased: when no frame-0 key is supplied by the setup
+            // animation, a part defaults to hidden (`true`) rather than back-filling
+            // frame 0 from the first frame-1+ key (the behavior of every other
+            // attribute). A frame-0 key synthesized while processing the setup
+            // animation itself keeps the back-fill behavior.
+            process_simple_attribute!(
+                &v.keys,
+                p_arg.hide_array,
+                ssab::ssab::ss::format::PartAnimationDataBoolValueT,
+                |k: &sspj::ssattribute::SsAttributeBoolKey| k.value,
+                frame0_override = |frame0: &mut ssab::ssab::ss::format::PartAnimationDataBoolValueT| {
+                    if !is_setup {
+                        frame0.value = true;
+                    }
+                }
+            );
         }
         sspj::ssattribute::SsAttributeKind::PivotX(v) => {
             process_interpolatable_attribute!(&v.keys, p_arg.pivot_x_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
@@ -1459,7 +1482,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names, true);
     }
 
     for part_anime in &anime_data.part_animes {
@@ -1469,7 +1492,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names, false);
         modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, part_anime);
     }
 
