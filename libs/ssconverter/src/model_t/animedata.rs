@@ -479,52 +479,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             }
             sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
-                    value.blend_type = convert_alpha_blend_type(&_key.value.blend_type);
-
-                    let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-
-                    //                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    //                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.lt.rgba.a;
-                    rgba.r = _key.value.lt.rgba.r;
-                    rgba.g = _key.value.lt.rgba.g;
-                    rgba.b = _key.value.lt.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.lt.rate;
-                    value.lt = Some(Box::new(color));
-
-                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.rt.rgba.a;
-                    rgba.r = _key.value.rt.rgba.r;
-                    rgba.g = _key.value.rt.rgba.g;
-                    rgba.b = _key.value.rt.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.rt.rate;
-                    value.rt = Some(Box::new(color));
-
-                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.lb.rgba.a;
-                    rgba.r = _key.value.lb.rgba.r;
-                    rgba.g = _key.value.lb.rgba.g;
-                    rgba.b = _key.value.lb.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.lb.rate;
-                    value.lb = Some(Box::new(color));
-
-                    color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                    rgba = ssab::ssab::ss::format::U8RectT::default();
-                    rgba.a = _key.value.rb.rgba.a;
-                    rgba.r = _key.value.rb.rgba.r;
-                    rgba.g = _key.value.rb.rgba.g;
-                    rgba.b = _key.value.rb.rgba.b;
-                    color.rgba = Some(Box::new(rgba));
-                    color.rate = _key.value.rb.rate;
-                    value.rb = Some(Box::new(color));
-
+                    let value = build_part_attribute_part_color_t(&_key.value);
                     p_args.part_color = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePartColor;
                 }
@@ -1193,47 +1148,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             process_interpolatable_attribute!(&v.keys, p_arg.mask_array, ssab::ssab::ss::format::PartAnimationDataFloatValueT, |k: &sspj::ssattribute::SsAttributeFloatKey| k.value);
         }
         sspj::ssattribute::SsAttributeKind::PartsColor(v) => {
-            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, ssab::ssab::ss::format::PartAnimationDataPartColorT, |k: &sspj::ssattribute::SsAttributePartsColorKey| {
-                let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
-                value.blend_type = convert_alpha_blend_type(&k.value.blend_type);
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.lt.rgba.a;
-                rgba.r = k.value.lt.rgba.r;
-                rgba.g = k.value.lt.rgba.g;
-                rgba.b = k.value.lt.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.lt.rate;
-                value.lt = Some(Box::new(key_value));
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.rt.rgba.a;
-                rgba.r = k.value.rt.rgba.r;
-                rgba.g = k.value.rt.rgba.g;
-                rgba.b = k.value.rt.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.rt.rate;
-                value.rt = Some(Box::new(key_value));
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.lb.rgba.a;
-                rgba.r = k.value.lb.rgba.r;
-                rgba.g = k.value.lb.rgba.g;
-                rgba.b = k.value.lb.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.lb.rate;
-                value.lb = Some(Box::new(key_value));
-                let mut key_value = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-                let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-                rgba.a = k.value.rb.rgba.a;
-                rgba.r = k.value.rb.rgba.r;
-                rgba.g = k.value.rb.rgba.g;
-                rgba.b = k.value.rb.rgba.b;
-                key_value.rgba = Some(Box::new(rgba));
-                key_value.rate = k.value.rb.rate;
-                value.rb = Some(Box::new(key_value));
-                Some(Box::new(value))
-            });
+            process_interpolatable_attribute!(&v.keys, p_arg.part_color_array, ssab::ssab::ss::format::PartAnimationDataPartColorT, |k: &sspj::ssattribute::SsAttributePartsColorKey| { Some(Box::new(build_part_attribute_part_color_t(&k.value))) });
         }
         sspj::ssattribute::SsAttributeKind::Shader(v) => {
             process_interpolatable_attribute!(&v.keys, p_arg.shader_array, ssab::ssab::ss::format::PartAnimationDataShaderT, |k: &sspj::ssattribute::SsAttributeShaderKey| {
@@ -1693,6 +1608,42 @@ fn float_value_constant_key(value: f32) -> ssab::ssab::ss::format::PartAnimation
     k.interpolation = ssab::ssab::ss::format::InterpolationType::None;
     k.value = value;
     k
+}
+
+fn build_part_color_key_value_color_t(src: &sspj::ssattribute::SsAttributePartsColorKeyValueColor) -> ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT {
+    let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
+    let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+    rgba.a = src.rgba.a;
+    rgba.r = src.rgba.r;
+    rgba.g = src.rgba.g;
+    rgba.b = src.rgba.b;
+    color.rgba = Some(Box::new(rgba));
+    color.rate = src.rate;
+    color
+}
+
+// SS7 stores PartColor with a `target` of either Whole (single overall color in `color`)
+// or Vertex (four per-corner colors). The `.ssab` schema only carries four corners,
+// so Whole is expanded into four identical corner entries here.
+fn build_part_attribute_part_color_t(src: &sspj::ssattribute::SsAttributePartsColorKeyValue) -> ssab::ssab::ss::format::PartAttributePartColorT {
+    let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
+    value.blend_type = convert_alpha_blend_type(&src.blend_type);
+    match src.target {
+        sspj::sstypes::SsColorBlendTarget::Whole => {
+            let c = build_part_color_key_value_color_t(&src.color);
+            value.lt = Some(Box::new(c.clone()));
+            value.rt = Some(Box::new(c.clone()));
+            value.lb = Some(Box::new(c.clone()));
+            value.rb = Some(Box::new(c));
+        }
+        sspj::sstypes::SsColorBlendTarget::Vertex => {
+            value.lt = Some(Box::new(build_part_color_key_value_color_t(&src.lt)));
+            value.rt = Some(Box::new(build_part_color_key_value_color_t(&src.rt)));
+            value.lb = Some(Box::new(build_part_color_key_value_color_t(&src.lb)));
+            value.rb = Some(Box::new(build_part_color_key_value_color_t(&src.rb)));
+        }
+    }
+    value
 }
 
 fn convert_alpha_blend_type(blend_type: &sspj::sstypes::SsBlendType) -> ssab::ssab::ss::format::BlendType {
