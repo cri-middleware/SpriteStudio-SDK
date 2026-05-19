@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioProject version="2.04.00" editorVersion="7.5.0">
+<SpriteStudioProject version="2.04.00" editorVersion="7.5.1">
 	<name>overall</name>
 	<exportPath></exportPath>
 	<settings>
@@ -97,6 +97,7 @@
 		</availableAttributes>
 		<availableFeatures>
 			<value>bone</value>
+			<value>clippingMask</value>
 			<value>effect</value>
 			<value>mask</value>
 			<value>mesh</value>
@@ -105,6 +106,7 @@
 			<value>sound</value>
 			<value>text</value>
 			<value>v6mask</value>
+			<value>writeMask</value>
 		</availableFeatures>
 		<defaultSetAttributes>
 			<item>POSX</item>
@@ -319,7 +321,6 @@
 		<value>Instance.ssae</value>
 		<value>Instance_SourceAnime.ssae</value>
 		<value>Interpolation.ssae</value>
-		<value>Mask.ssae</value>
 		<value>Mesh.ssae</value>
 		<value>NineSlice.ssae</value>
 		<value>PartsColor.ssae</value>
