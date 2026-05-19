@@ -72,10 +72,10 @@ enum DrawBatchKind: ubyte {
   Shape,     // PartTypeShape — count==1 (シングルトン)
   Instance,  // PartTypeInstance — count==1
   Effect,    // PartTypeEffect — count==1
-  Mesh,      // PartTypeMesh — count==1 (将来実装)
+  Mesh,      // PartTypeMesh — count==1
   Text,      // PartTypeText — count==1 (将来実装)
   Nines,     // PartTypeNines — count==1 (将来実装)
-  Mask,      // PartTypeMask — マスクスコープ境界 — count==1 (将来実装)
+  Mask,      // PartTypeMask — マスクスコープ境界 — count==1
 }
 ```
 
@@ -154,7 +154,7 @@ for (b_idx, batch) in batches.enumerate() {
         Instance => draw_instance_singleton(order[batch.start_rank]),
         Effect   => draw_effect_singleton(order[batch.start_rank]),
         Mask     => begin_or_update_mask_scope(order[batch.start_rank]),
-        _ => { /* TODO: Mesh / Text / Nines */ }
+        _ => { /* TODO: Text / Nines */ }
     }
 }
 ```
@@ -376,13 +376,13 @@ per-batch の resource は per-part 識別を持ちません。パートクリ�
 
 ## 8. 実装ロードマップ
 
-| Phase | スコープ | スキーマ変更 |
-|---:|---|---|
-| 1 | `Normal` バッチ + `texture_hash` / `blend_type` キー | `DrawBatch`, `DrawBatchKind`, `draw_order` / `draw_batches` 追加 |
-| 2 | `PartTypeMask` の expire-on-encounter scope + `mask_influence` フラグ | `FrameData.mask_indices` 追加、`flags` ビット 0 有効化 |
-| 3 | `Shape`/`Text`/`Nines` の `*_mask` を `mask_indices` に追加 (二重役割パーツ) | (スキーマ不変、計算ロジック拡張のみ) |
-| 4 | `Shader` キー (per-frame アニメ対応) | `flags` ビット拡張 |
-| 5 | `Mesh` / `Text` / `Nines` kind 実装 | 既存 kind に処理を実装 |
+| Phase | スコープ | スキーマ変更 | 状態 |
+|---:|---|---|---|
+| 1 | `Normal` バッチ + `texture_hash` / `blend_type` キー | `DrawBatch`, `DrawBatchKind`, `draw_order` / `draw_batches` 追加 | 済 |
+| 2 | `PartTypeMask` の expire-on-encounter scope + `mask_influence` フラグ | `FrameData.mask_indices` 追加、`flags` ビット 0 有効化 | 済 |
+| 3 | `Shape`/`Text`/`Nines` の `*_mask` を `mask_indices` に追加 (二重役割パーツ) | (スキーマ不変、計算ロジック拡張のみ) | |
+| 4 | `Shader` キー (per-frame アニメ対応) | `flags` ビット拡張 | |
+| 5 | `Mesh` / `Text` / `Nines` kind 実装 | 既存 kind に処理を実装 | 済 (Meshのみ) |
 
 破壊的変更が許容される pre-release 期間中に Phase 1〜2 を完了する想定です。Phase 移行ごとに本章の対応セクションを更新してください。
 

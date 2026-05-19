@@ -95,9 +95,7 @@ ssab embedded は、そのアニメーションパックが **実際に利用す
 
 以下の機能は ssab フォーマット上は予約されていますが、ランタイムのロジックは未実装です。Player 側で対応しても表示されません。
 
-- **Mesh パーツ (`PartTypeMesh`) / Deform アトリビュート (`PartAttributeDeform`)**: メッシュ変形アニメーション。実装は今後のフェーズで追加されます。
-
-> 関連章: [8. 高度な機能と描画ループの拡張 §3.5](./08_advanced_rendering.ja.md) / [4. 実装ロードマップ](./04_roadmap.ja.md)
+- **Text パーツ (`PartTypeText`)**: テキスト描画レイアウト。実装は今後のフェーズで追加されます。
 
 ---
 [目次に戻る](./README.ja.md)
