@@ -922,7 +922,55 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_
         }
     }
 
+    bake_hide_inheritance_initial(&mut parts_initial_attributes_t, parts_map);
+
     parts_initial_attributes_t
+}
+
+/// Bakes SS7's per-part HIDE inheritance into the setup-pose `hide` of each
+/// part's [`InitialPartAttributes`] — the scalar counterpart of
+/// `bake_hide_inheritance`, which does the same for the per-frame `hide_array`.
+/// A part that inherits HIDE (`ineheritRates/HIDE`) adopts its parent's
+/// already-resolved setup hidden state, so the setup keys written to the SSAB
+/// reflect inheritance just like the animation keyframes do.
+fn bake_hide_inheritance_initial(parts_initial_attributes_t: &mut [ssab::ssab::ss::format::InitialPartAttributesT], parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
+    let num_parts = parts_initial_attributes_t.len();
+
+    // Index parts by `array_index` for parent lookups.
+    let mut parts_by_index: Vec<Option<&sspj::ssae::SsPart>> = vec![None; num_parts];
+    for part in parts_map.values() {
+        let idx = part.array_index as usize;
+        if idx < num_parts {
+            parts_by_index[idx] = Some(part);
+        }
+    }
+
+    // effective[i] = part i's setup hidden state after resolving inheritance.
+    // Parts are visited in `array_index` order (parent before child), so the
+    // inheritance is transitive down a chain of HIDE-inheriting parts.
+    let mut effective: Vec<bool> = Vec::with_capacity(num_parts);
+
+    for i in 0..num_parts {
+        let own = parts_initial_attributes_t[i].hide;
+
+        let Some(part) = parts_by_index[i] else {
+            effective.push(own);
+            continue;
+        };
+
+        let parent_idx = part.parent_index;
+        let inherits = part.inherit_rates.hide && parent_idx >= 0 && (parent_idx as usize) < i;
+        let eff = if inherits { own || effective[parent_idx as usize] } else { own };
+
+        if eff != own {
+            // Inheritance turned a visible part hidden — record it as an
+            // explicitly-set attribute, matching a real setup HIDE key.
+            let attr = &mut parts_initial_attributes_t[i];
+            attr.hide = true;
+            attr.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeHide;
+        }
+        effective.push(eff);
+    }
 }
 
 fn convert_parts_initial_events(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>) -> Option<Vec<ssab::ssab::ss::format::InitialEventsT>> {
@@ -1501,7 +1549,112 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         apply_part_type_defaults(&mut parts_animation_data_t[index_part], part);
     }
 
+    bake_hide_inheritance(&mut parts_animation_data_t, parts_map);
+
     parts_animation_data_t
+}
+
+/// Bakes SS7's per-part HIDE inheritance into each part's `hide_array`.
+///
+/// In SS7 the `hide` attribute does NOT unconditionally cascade to children:
+/// whether a part follows its parent's hidden state is controlled per-part by
+/// the `ineheritRates/HIDE` flag (`SsPart.inherit_rates.hide`). The runtime
+/// treats `hide` as a pure per-part attribute and never propagates it, so any
+/// inheritance is resolved here at convert time — a part that inherits HIDE has
+/// its parent's already-resolved hidden state OR-ed into its own `hide_array`.
+///
+/// Parts are visited in `array_index` order; SS stores a parent before its
+/// children, so a parent's effective hide is always resolved first, which makes
+/// the inheritance transitive (a grandparent reaches a grandchild only when
+/// every link in the chain has the flag set).
+fn bake_hide_inheritance(parts_animation_data_t: &mut [ssab::ssab::ss::format::PartAnimationDataT], parts_map: &HashMap<String, &sspj::ssae::SsPart>) {
+    let num_parts = parts_animation_data_t.len();
+
+    // Index parts by `array_index` for parent lookups.
+    let mut parts_by_index: Vec<Option<&sspj::ssae::SsPart>> = vec![None; num_parts];
+    for part in parts_map.values() {
+        let idx = part.array_index as usize;
+        if idx < num_parts {
+            parts_by_index[idx] = Some(part);
+        }
+    }
+
+    // effective[i] = minimal `(frame, hidden)` step keyframes for part i after
+    // resolving inheritance. Always non-empty and starting at frame 0.
+    let mut effective: Vec<Vec<(u16, bool)>> = Vec::with_capacity(num_parts);
+
+    for i in 0..num_parts {
+        let own = hide_steps(parts_animation_data_t[i].hide_array.as_deref());
+
+        let Some(part) = parts_by_index[i] else {
+            effective.push(own);
+            continue;
+        };
+
+        let parent_idx = part.parent_index;
+        let inherits = part.inherit_rates.hide && parent_idx >= 0 && (parent_idx as usize) < i;
+        if !inherits {
+            effective.push(own);
+            continue;
+        }
+
+        let eff = or_hide_steps(&own, &effective[parent_idx as usize]);
+        if eff != own {
+            parts_animation_data_t[i].hide_array = Some(
+                eff.iter()
+                    .map(|&(index, value)| {
+                        let mut k = ssab::ssab::ss::format::PartAnimationDataBoolValueT::default();
+                        k.index = index;
+                        k.value = value;
+                        k
+                    })
+                    .collect(),
+            );
+        }
+        effective.push(eff);
+    }
+}
+
+/// Extracts a part's own hide attribute as minimal `(frame, hidden)` step
+/// keyframes. A missing `hide_array` means "never hidden"; the result always
+/// begins at frame 0 so it can be sampled at any frame >= 0.
+fn hide_steps(hide_array: Option<&[ssab::ssab::ss::format::PartAnimationDataBoolValueT]>) -> Vec<(u16, bool)> {
+    match hide_array {
+        Some(keys) if !keys.is_empty() => keys.iter().map(|k| (k.index, k.value)).collect(),
+        _ => vec![(0, false)],
+    }
+}
+
+/// Value of a `(frame, hidden)` step function at `frame`. `steps` is sorted
+/// ascending and begins at frame 0.
+fn hide_value_at(steps: &[(u16, bool)], frame: u16) -> bool {
+    let mut value = steps[0].1;
+    for &(idx, val) in steps {
+        if idx <= frame {
+            value = val;
+        } else {
+            break;
+        }
+    }
+    value
+}
+
+/// OR of two `(frame, hidden)` step functions, returned as minimal keyframes
+/// (frame 0 plus one keyframe per value change — matching the layout produced
+/// by `optimize_part_animation_data_bool`).
+fn or_hide_steps(a: &[(u16, bool)], b: &[(u16, bool)]) -> Vec<(u16, bool)> {
+    let mut frames: Vec<u16> = a.iter().map(|&(i, _)| i).chain(b.iter().map(|&(i, _)| i)).collect();
+    frames.sort_unstable();
+    frames.dedup();
+
+    let mut result: Vec<(u16, bool)> = Vec::new();
+    for frame in frames {
+        let hidden = hide_value_at(a, frame) || hide_value_at(b, frame);
+        if result.last().map(|&(_, v)| v) != Some(hidden) {
+            result.push((frame, hidden));
+        }
+    }
+    result
 }
 
 fn apply_part_type_defaults(p_args: &mut ssab::ssab::ss::format::PartAnimationDataT, part: &sspj::ssae::SsPart) {
@@ -1801,5 +1954,48 @@ mod tests {
         assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Hermite));
         assert!(optimize_part_animation_data_value_changing_range(&InterpolationType::Bezier));
         assert!(!optimize_part_animation_data_value_changing_range(&InterpolationType::None));
+    }
+
+    #[test]
+    fn test_hide_value_at() {
+        let steps = [(0u16, false), (87, true), (213, false)];
+        assert!(!hide_value_at(&steps, 0));
+        assert!(!hide_value_at(&steps, 86));
+        assert!(hide_value_at(&steps, 87));
+        assert!(hide_value_at(&steps, 200));
+        assert!(!hide_value_at(&steps, 213));
+        assert!(!hide_value_at(&steps, 9999));
+    }
+
+    #[test]
+    fn test_or_hide_steps_inherits_parent_window() {
+        // A part that is never hidden on its own takes its parent's hidden window.
+        let own = [(0u16, false)];
+        let parent = [(0u16, false), (87, true), (213, false)];
+        assert_eq!(or_hide_steps(&own, &parent), vec![(0, false), (87, true), (213, false)]);
+    }
+
+    #[test]
+    fn test_or_hide_steps_union_of_windows() {
+        // OR of two overlapping hidden windows, collapsed to minimal keyframes.
+        let own = [(0u16, false), (10, true), (20, false)];
+        let parent = [(0u16, false), (5, true), (15, false)];
+        assert_eq!(or_hide_steps(&own, &parent), vec![(0, false), (5, true), (20, false)]);
+    }
+
+    #[test]
+    fn test_or_hide_steps_collapses_when_always_hidden() {
+        // When the union is hidden at every frame, only the frame-0 keyframe remains.
+        let own = [(0u16, true), (130, false), (199, true)];
+        let parent = [(0u16, false), (87, true), (213, false)];
+        assert_eq!(or_hide_steps(&own, &parent), vec![(0, true)]);
+    }
+
+    #[test]
+    fn test_or_hide_steps_unchanged_when_parent_never_hidden() {
+        // A parent that is never hidden leaves the child's own keyframes intact.
+        let own = [(0u16, false), (130, true), (200, false)];
+        let parent = [(0u16, false)];
+        assert_eq!(or_hide_steps(&own, &parent), own.to_vec());
     }
 }

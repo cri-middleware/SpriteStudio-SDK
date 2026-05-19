@@ -741,7 +741,6 @@ fn get_parts<'a>(
         let valid_parent_idx = (parent_idx >= 0 && (parent_idx as usize) < i).then_some(parent_idx as usize);
 
         let parent_inh_alpha = valid_parent_idx.and_then(|p_idx| inheritance_alphas_workspace.get(p_idx).copied()).unwrap_or(1.0);
-        let parent_hide = valid_parent_idx.and_then(|p_idx| parts_vec.get(p_idx).map(|p| p.hide())).unwrap_or(false);
 
         let inh_alpha = result.state.alpha() * parent_inh_alpha;
         inheritance_alphas_workspace.push(inh_alpha);
@@ -750,9 +749,11 @@ fn get_parts<'a>(
         let effective_alpha = if has_local_alpha { result.state.local_alpha() } else { inh_alpha };
         result.state.set_alpha(effective_alpha);
 
-        if parent_hide {
-            result.state.set_hide(true);
-        }
+        // Hide is per-part in SS7: a hidden parent does NOT hide its children.
+        // The hierarchy is a transform hierarchy, and hidden parts are routinely
+        // used as pure transform anchors with visible children (e.g. a hidden
+        // hand part anchoring a visible weapon). Only alpha inherits down the
+        // tree; `hide` must not be propagated.
 
         // Pre-multiply per-vertex parts color alpha with the hierarchical alpha.
         if let Some(pc) = result.part_color {

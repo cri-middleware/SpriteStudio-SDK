@@ -306,6 +306,11 @@ pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4
 /// `flip_y` negates the bind `coords_y`. SSAB-side bind coordinates are authored
 /// Y-up; set `flip_y` when the bone world matrices are Y-down so the bind-pose
 /// invariant (each influence resolves to the same rest position) holds.
+///
+/// Skins exactly `out_x.len()` vertices from the front of the binding. The SS7
+/// meshList appends 4 unbound placeholder vertices (the cell-quad corners) after
+/// the rendered mesh, so `influence_offsets` may be longer than `out_x.len() + 1`;
+/// the trailing entries are simply never read.
 pub fn compute_skinned_mesh_vertices(
     influence_offsets: &[u32],
     bone_indices: &[u16],
@@ -320,7 +325,7 @@ pub fn compute_skinned_mesh_vertices(
 ) {
     let num_vertices = out_x.len();
     debug_assert_eq!(out_y.len(), num_vertices);
-    debug_assert_eq!(influence_offsets.len(), num_vertices + 1);
+    debug_assert!(influence_offsets.len() > num_vertices);
 
     // Bind coords are authored Y-up; negate for a Y-down target. Resolved once
     // and applied as a sign multiply (SIMD in the fast path) — no per-influence

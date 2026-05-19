@@ -195,10 +195,16 @@ impl FromStr for SsMeshBindInfo {
         if array.is_empty() {
             return Err("SsMeshBindInfo::from_str: array.len() <= 1".to_string());
         }
-        let num: i32 = array[0] as i32;
-        if (1 + num * 4) != array.len() as i32 {
+        // Chunk layout: one header field followed by influence groups of 4
+        // values each (bone, weight, offset_x, offset_y). The header is the
+        // per-vertex influence count in SS7 exports, but the part's total bone
+        // count in older (pre-V7) exports — where each vertex still lists only
+        // the bones that actually influence it. So the header can't be trusted
+        // as the influence count; derive the count from the data length.
+        if !(array.len() - 1).is_multiple_of(4) {
             return Err("SsMeshBindInfo::from_str: invalid array length".to_string());
         }
+        let num: i32 = (array.len() as i32 - 1) / 4;
         let mut weight_vec: Vec<i32> = vec![];
         let mut bone_index_vec: Vec<i32> = vec![];
         let mut offset_vec: Vec<SsPoint2> = vec![];
