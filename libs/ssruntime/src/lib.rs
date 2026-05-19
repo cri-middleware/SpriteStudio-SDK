@@ -808,8 +808,16 @@ impl<'a> Context<'a> {
             let skeletal = cached.mesh_binding.as_ref().map(|b| !b.bone_indices.is_empty()).unwrap_or(false);
             if skeletal {
                 let binding = cached.mesh_binding.as_ref().unwrap();
-                if binding.num_vertices() != end - start {
-                    continue; // malformed: bind vertex count != cell vertex count
+                // The SS7 `.ssae` meshList carries the N rendered mesh vertices
+                // followed by 4 trailing placeholder entries (the cell-quad
+                // corners, bound to no bone), so a well-formed binding has
+                // `cell_count + 4` vertices. `compute_skinned_mesh_vertices`
+                // skins exactly `out_x.len()` (= cell count) vertices from the
+                // front of the binding, so a longer binding is fine — the
+                // trailing extras are simply never read. Only a binding with
+                // *fewer* vertices than the cell is unusable.
+                if binding.num_vertices() < end - start {
+                    continue; // bind has fewer vertices than the cell — cannot skin
                 }
                 let deform = layer.mesh_deform.get(i).filter(|d| !d.indices.is_empty()).map(|d| (d.indices.as_slice(), d.dx.as_slice(), d.dy.as_slice(), &globals.world_matrices[i]));
                 let (out_x, out_y) = (&mut globals.mesh_vertices_x[start..end], &mut globals.mesh_vertices_y[start..end]);
