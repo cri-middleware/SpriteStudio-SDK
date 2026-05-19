@@ -201,7 +201,7 @@ impl FromStr for SsMeshBindInfo {
         // count in older (pre-V7) exports — where each vertex still lists only
         // the bones that actually influence it. So the header can't be trusted
         // as the influence count; derive the count from the data length.
-        if (array.len() - 1) % 4 != 0 {
+        if !(array.len() - 1).is_multiple_of(4) {
             return Err("SsMeshBindInfo::from_str: invalid array length".to_string());
         }
         let num: i32 = (array.len() as i32 - 1) / 4;

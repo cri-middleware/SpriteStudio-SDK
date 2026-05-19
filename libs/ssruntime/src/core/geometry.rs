@@ -325,7 +325,7 @@ pub fn compute_skinned_mesh_vertices(
 ) {
     let num_vertices = out_x.len();
     debug_assert_eq!(out_y.len(), num_vertices);
-    debug_assert!(influence_offsets.len() >= num_vertices + 1);
+    debug_assert!(influence_offsets.len() > num_vertices);
 
     // Bind coords are authored Y-up; negate for a Y-down target. Resolved once
     // and applied as a sign multiply (SIMD in the fast path) — no per-influence
