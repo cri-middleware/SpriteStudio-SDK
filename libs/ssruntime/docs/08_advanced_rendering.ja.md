@@ -168,9 +168,29 @@ if (vertex_idx >= 0) {
 ### update_flag との関係
 `update_flag & AttributeVertex` は **ソース SSAB に頂点変形アニメ（raw deform）が含まれていたか** を示すヒントとして引き続き機能します。フラグが立っていなくても 4 隅の `vertex()` 値は有効で、Player は「center を使う / 使わない」の判定にこのフラグと `AttributePartColor` を使います。
 
-## 3.5 メッシュとデフォーム (Mesh / Deform) — 未実装
-`PartTypeMesh` パーツのサポートは現在 **未実装** です（[ロードマップ](./04_roadmap.ja.md) / [制限事項一覧](./00_limitations.ja.md#現時点で未実装の機能) 参照）。
-`PartAttributeDeform`（`FrameData::deforms`）はメッシュパーツの可変数頂点向けに予約された構造で、現時点ではプレイヤー実装の対象外です。実装は今後のフェーズで行います。
+## 3.5 メッシュとデフォーム (Mesh / Deform)
+`PartTypeMesh` パーツと `PartAttributeDeform` アトリビュート（`FrameData::deforms`）によるメッシュ変形アニメーションをサポートしています。
+
+メッシュパーツは、スプライトのような 4 隅固定の矩形ではなく、任意の頂点数と接続情報（インデックス）を持つジオメトリです。また、ボーンに追従するスキンメッシュ（Skinning）もサポートされます。
+
+### データの取得と更新
+メッシュパーツの描画に必要な情報は `part_state` から取得します：
+
+- `mesh_index()`: `FrameData.meshes` テーブルへのインデックス。頂点座標（rest pose）、UV、三角形インデックスが含まれます。
+- `deform_index()`: `FrameData.deforms` テーブルへのインデックス。現在のフレームでの頂点変形（Deform）の差分が含まれます。
+- `mesh_binding_index()`: SSAB の `PartData.mesh_binding` への参照。スキンメッシュ時のボーン影響度（ウェイト）が含まれます。
+
+### 描画の実行
+メッシュパーツはパーツごとに独自の頂点トポロジを持つため、通常のスプライトパーツのようなバッチング（マージ）の対象にはならず、`DrawBatchKind::Mesh` として独立した描画コマンドが発行されます。
+
+1. `draw_batches` から `kind == Mesh` のバッチを受け取ります。
+2. 対象パーツの `mesh_index()` からベースとなるジオメトリ（頂点・UV・インデックス）を取得します。
+3. `deform_index()` が有効な場合、各頂点にデフォームの差分を適用します。
+4. `mesh_binding_index()` が有効な場合、影響するボーン（パーツ）の行列を用いてスキニング計算（Weighted blending）を行います。
+    - **最適化**: SDK 内部では SIMD を用いた高速なスキニング計算が行われており、Player は算出済みのワールド座標を `FrameData` から受け取ることも検討されています（※現在の実装状況に合わせて調整してください）。
+
+> **【注意】**
+> メッシュパーツの頂点座標は、スキンメッシュの場合はワールド座標系で、デフォームのみの場合は（通常パーツと同様に）ワールド行列を掛ける前のローカル座標系として提供される場合があります。
 
 ## 4. パーツカラー (PartsColor)
 頂点ごとにカラー合成を行うアトリビュートです。`PartAttributePartColor` は 4 隅 (`lt` / `rt` / `lb` / `rb`) ぶんの色情報を保持します。
