@@ -1591,6 +1591,9 @@ pub struct EffectSlot<'a> {
     last_event_frame: i32,
     last_is_synthetic: bool,
     last_independent: bool,
+    // Speed of the last real EventEffect — reused while the implicit frame-0
+    // key is being ignored (independent playback across a parent loop).
+    last_speed: f32,
     // Independent-mode time accumulator (frame units, includes start_time bias).
     accumulated_time: f32,
 }
@@ -1601,7 +1604,19 @@ impl<'a> EffectSlot<'a> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.data) };
         let lifetime = ctx.get_lifetime();
         let is_infinite = ctx.is_infinite();
-        Ok(Self { ctx, ssab, fb: flatbuffers::FlatBufferBuilder::new(), emitter_resource_cache: alloc::vec::Vec::new(), lifetime, is_infinite, last_event_frame: -1, last_is_synthetic: false, last_independent: false, accumulated_time: 0.0 })
+        Ok(Self {
+            ctx,
+            ssab,
+            fb: flatbuffers::FlatBufferBuilder::new(),
+            emitter_resource_cache: alloc::vec::Vec::new(),
+            lifetime,
+            is_infinite,
+            last_event_frame: -1,
+            last_is_synthetic: false,
+            last_independent: false,
+            last_speed: 1.0,
+            accumulated_time: 0.0,
+        })
     }
 
     pub fn get_seed(&self) -> u32 {
@@ -1664,22 +1679,31 @@ impl<'a> EffectSlot<'a> {
     }
 
     pub fn step(&mut self, ev: crate::types::ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> crate::types::ss_effect_step_result {
+        // While the slot is playing independently, the SS7 implicit frame-0
+        // playback key (synthetic default) is ignored — the independent effect
+        // keeps running across the parent's loop instead of being reset to it.
+        // Only a real authored EventEffect re-transitions the slot.
+        let ignore_implicit = self.last_independent && ev.is_synthetic_default;
+
         // Parent loop edge re-arms transition detection: the same EventEffect
         // identity (event_frame + is_synthetic) re-fires on the next playthrough,
         // and without this reset the equality check below would treat the loop
-        // edge as a no-op (effect frozen at end of previous cycle).
-        if parent_looped {
+        // edge as a no-op (effect frozen at end of previous cycle). Skipped when
+        // the implicit key is being ignored, so independent playback persists.
+        if parent_looped && !ignore_implicit {
             self.last_event_frame = -1;
             self.last_is_synthetic = false;
         }
 
-        let event_frame = ev.event_frame;
+        // When ignoring the implicit key, keep stepping with the last real
+        // event's identity / mode / speed rather than the synthetic default's.
+        let event_frame = if ignore_implicit { self.last_event_frame } else { ev.event_frame };
         let start_time = ev.start_time;
-        let speed = ev.speed;
-        let independent = ev.independent;
+        let speed = if ignore_implicit { self.last_speed } else { ev.speed };
+        let independent = if ignore_implicit { true } else { ev.independent };
         let is_synthetic = ev.is_synthetic_default;
 
-        let transitioned = self.last_event_frame != event_frame || self.last_is_synthetic != is_synthetic || self.last_independent != independent;
+        let transitioned = !ignore_implicit && (self.last_event_frame != event_frame || self.last_is_synthetic != is_synthetic || self.last_independent != independent);
 
         if transitioned {
             self.ctx.reset();
@@ -1691,6 +1715,7 @@ impl<'a> EffectSlot<'a> {
             self.last_event_frame = event_frame;
             self.last_is_synthetic = is_synthetic;
             self.last_independent = independent;
+            self.last_speed = speed;
             self.accumulated_time = start_time as f32;
         }
 
@@ -1874,6 +1899,9 @@ pub struct InstanceSlot {
     last_event_frame: i32,
     last_is_synthetic: bool,
     last_independent: bool,
+    // Speed of the last real EventInstance — reused while the implicit frame-0
+    // key is being ignored (independent playback across a parent loop).
+    last_speed: f32,
 }
 
 impl Default for InstanceSlot {
@@ -1884,7 +1912,7 @@ impl Default for InstanceSlot {
 
 impl InstanceSlot {
     pub const fn new() -> Self {
-        Self { last_event_frame: -1, last_is_synthetic: false, last_independent: false }
+        Self { last_event_frame: -1, last_is_synthetic: false, last_independent: false, last_speed: 1.0 }
     }
 
     /// Whether the slot is currently driving its child independently of the
@@ -1897,12 +1925,18 @@ impl InstanceSlot {
     /// edges and advances its frame either by parent-relative seek or by
     /// delta-time update depending on `independent`.
     pub fn step(&mut self, ev: crate::types::ss_event_instance_info, child_ctx: &mut Context<'_>, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> crate::types::ss_instance_step_result {
-        if parent_looped {
+        // While the slot drives its child independently, the SS7 implicit
+        // frame-0 playback key (synthetic default) is ignored — the independent
+        // child keeps running across the parent's loop instead of being
+        // re-seeked to it. Only a real authored EventInstance re-transitions it.
+        let ignore_implicit = self.last_independent && ev.is_synthetic_default;
+
+        if parent_looped && !ignore_implicit {
             self.last_event_frame = -1;
             self.last_is_synthetic = false;
         }
 
-        let transitioned = self.last_event_frame == -1 || self.last_event_frame != ev.event_frame || self.last_is_synthetic != ev.is_synthetic_default;
+        let transitioned = !ignore_implicit && (self.last_event_frame == -1 || self.last_event_frame != ev.event_frame || self.last_is_synthetic != ev.is_synthetic_default);
 
         if transitioned {
             // `default_end` mirrors the original C++ fallback: `getTotalFrames()-1`,
@@ -1927,7 +1961,13 @@ impl InstanceSlot {
 
             self.last_event_frame = ev.event_frame;
             self.last_is_synthetic = ev.is_synthetic_default;
+            self.last_speed = ev.speed;
         }
+
+        // When ignoring the implicit key, keep the child's playback config and
+        // step it with the last real event's independent mode + speed.
+        let independent = if ignore_implicit { true } else { ev.independent };
+        let speed = if ignore_implicit { self.last_speed } else { ev.speed };
 
         // Branch on `independent`. Synced children are seeked deterministically
         // from the parent's frame each tick — same `parent_frame` always yields
@@ -1935,24 +1975,24 @@ impl InstanceSlot {
         // time: forward `delta_seconds` to `update`, except on the transition
         // tick itself where `play()` will snap to start_frame (any further step
         // here would visibly skip the first frame).
-        let child_frame_no = if ev.independent {
+        let child_frame_no = if independent {
             if delta_seconds > 0.0 && !transitioned {
-                let d_ms = delta_seconds * 1000.0 * ev.speed;
+                let d_ms = delta_seconds * 1000.0 * speed;
                 child_ctx.update(d_ms)
             } else {
                 child_ctx.get_frame_no()
             }
         } else {
-            let diff = (parent_frame - ev.event_frame as f32) * ev.speed;
+            let diff = (parent_frame - ev.event_frame as f32) * speed;
             child_ctx.set_frame_relative(diff);
             child_ctx.get_frame_no()
         };
 
-        let child_looped = ev.independent && delta_seconds > 0.0 && child_frame_no < previous_child_frame && !transitioned;
+        let child_looped = independent && delta_seconds > 0.0 && child_frame_no < previous_child_frame && !transitioned;
 
-        self.last_independent = ev.independent;
+        self.last_independent = independent;
 
-        crate::types::ss_instance_step_result { visible: true, transitioned, independent: ev.independent, child_frame_no, child_looped }
+        crate::types::ss_instance_step_result { visible: true, transitioned, independent, child_frame_no, child_looped }
     }
 }
 

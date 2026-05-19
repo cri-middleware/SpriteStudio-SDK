@@ -145,7 +145,10 @@ fn convert_events_per_frames_part(
                     });
                 }
                 sspj::ssattribute::SsAttributeKind::Instance(v) => {
-                    // MEMO: "Instance" is complemented by backfilling.
+                    // MEMO: no frame-0 backfill. When a part's first Instance key
+                    // is after frame 0, no frame-0 event is emitted; the runtime
+                    // supplies the implicit frame-0 playback key (`_start..=_end`,
+                    // speed 1.0, play-once, forward) via `synthetic_default`.
                     v.keys.iter().for_each(|key| {
                         let mut instance_t = ssab::ssab::ss::format::PartAttributeInstanceT::default();
                         instance_t.pingpong = key.value.pingpong;
@@ -163,25 +166,6 @@ fn convert_events_per_frames_part(
                         instance_t.end_label_hash = crate::utils::fnv1a_hash_str(&key.value.end_label);
                         instance_t.end_offset = key.value.end_offset;
                         instance_t.speed = key.value.speed;
-
-                        // Complement for frame 0.
-                        if 0 < key.time {
-                            let events_per_frame_0 = map_events_per_frames.entry(0).or_insert_with(|| {
-                                let mut e_frame_0 = ssab::ssab::ss::format::EventsPerFrameT::default();
-                                e_frame_0.frame_index = 0;
-                                e_frame_0
-                            });
-
-                            if events_per_frame_0.instances.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
-                                let instance_t_frame_0 = instance_t.clone();
-
-                                let mut i_args_frame_0 = ssab::ssab::ss::format::EventInstanceT::default();
-                                i_args_frame_0.part_index = part_index;
-                                i_args_frame_0.value = Some(Box::new(instance_t_frame_0));
-
-                                events_per_frame_0.instances.get_or_insert_with(Vec::new).push(i_args_frame_0);
-                            }
-                        }
 
                         // for target frame.
                         let mut i_args = ssab::ssab::ss::format::EventInstanceT::default();
@@ -204,31 +188,15 @@ fn convert_events_per_frames_part(
                     });
                 }
                 sspj::ssattribute::SsAttributeKind::Effect(v) => {
-                    // MEMO: "Effect" is complemented by backfilling.
+                    // MEMO: no frame-0 backfill. When an effect part's first Effect
+                    // key is after frame 0, no frame-0 event is emitted; the runtime
+                    // supplies the implicit frame-0 playback key (start_time 0,
+                    // speed 1.0) via `synthetic_default`.
                     v.keys.iter().for_each(|key| {
                         let mut effect_t = ssab::ssab::ss::format::PartAttributeEffectT::default();
                         effect_t.start_time = key.value.start_time;
                         effect_t.speed = key.value.speed;
                         effect_t.independent = key.value.independent;
-
-                        // Complement for frame 0.
-                        if 0 < key.time {
-                            let events_per_frame_0 = map_events_per_frames.entry(0).or_insert_with(|| {
-                                let mut e_frame_0 = ssab::ssab::ss::format::EventsPerFrameT::default();
-                                e_frame_0.frame_index = 0;
-                                e_frame_0
-                            });
-
-                            if events_per_frame_0.effects.get_or_insert_with(Vec::new).iter().position(|item| item.part_index == part_index).is_none() {
-                                let effect_t_frame_0 = ssab::ssab::ss::format::PartAttributeEffectT::default();
-
-                                let mut e_args_frame_0 = ssab::ssab::ss::format::EventEffectT::default();
-                                e_args_frame_0.part_index = part_index;
-                                e_args_frame_0.value = Some(Box::new(effect_t_frame_0));
-
-                                events_per_frame_0.effects.get_or_insert_with(Vec::new).push(e_args_frame_0);
-                            }
-                        }
 
                         // for target frame.
                         let mut e_args = ssab::ssab::ss::format::EventEffectT::default();
