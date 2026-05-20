@@ -428,6 +428,11 @@ pub(crate) fn evaluate_part(
     part_state.set_shader(-1);
     part_state.set_vertex(-1);
     part_state.set_deform(-1);
+    // A part with no Hide keys at all is rendered as hidden by default.
+    // hide_array=None leaves this initial state intact; hide_array=Some(..)
+    // overrides it via evaluate_bool below. This is the standard SS authoring
+    // model: a part has to opt in to being shown with a Hide=false key.
+    part_state.set_hide(true);
 
     let mut update_flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
