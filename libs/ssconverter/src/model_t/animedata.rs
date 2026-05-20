@@ -1578,37 +1578,77 @@ fn float_value_constant_key(value: f32) -> ssab::ssab::ss::format::PartAnimation
     k
 }
 
-fn build_part_color_key_value_color_t(src: &sspj::ssattribute::SsAttributePartsColorKeyValueColor) -> ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT {
+// PartColor mediation. The XML carries (rgba, rate) per corner plus a per-attribute
+// (blend_type, target). Older SpriteStudio runtimes encoded the same compatibility
+// quirk that lives here: under Mix+Whole, `rate` and `rgba.a` swap roles. The same
+// pair carries two unrelated semantics (a "blend weight" and a "final-alpha source"),
+// and which XML field carries which depends on (blend_type, target).
+//
+// The `.ssab` schema reuses the same two slots after mediation:
+//   - rgba.a (u8)  ← rateAlpha: source for the final-alpha multiplier (later
+//                     multiplied by the part's overall alpha in the player).
+//   - rate   (f32) ← colorA:    the PartColor blend weight (the renderer's
+//                     ColorOverlay.a equivalent).
+// `r/g/b` pass through unchanged. The `target` distinction is consumed here when
+// the per-attribute is expanded into four corner entries; downstream code never
+// sees it again.
+//
+// Reference: SS6PlayerForUnity/Assets/SpriteStudio6/Editor/Import/SSAE.cs
+//   `ParseAnimationAttributePartsColor` (the C# converter applies the same table).
+//   The C++ SDK applies an equivalent split at draw time in
+//   Common/Drawer/ssplayer_render_gl.cpp, using a fixed-function texture combiner
+//   constant instead of vertex data; we follow the shader-friendly Unity encoding.
+fn build_part_color_key_value_color_t(
+    src: &sspj::ssattribute::SsAttributePartsColorKeyValueColor,
+    blend_type: &sspj::sstypes::SsBlendType,
+    target: &sspj::sstypes::SsColorBlendTarget,
+) -> ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT {
     let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
     let mut rgba = ssab::ssab::ss::format::U8RectT::default();
-    rgba.a = src.rgba.a;
     rgba.r = src.rgba.r;
     rgba.g = src.rgba.g;
     rgba.b = src.rgba.b;
+
+    let (rate_alpha_u8, color_a_f32) = match (blend_type, target) {
+        // Mix + Whole: the XML `rate` carries the blend weight, `rgba.a` the final alpha.
+        (sspj::sstypes::SsBlendType::Mix, sspj::sstypes::SsColorBlendTarget::Whole) => (src.rgba.a, src.rate),
+        // Mix + Vertex: per-corner `rgba.a` carries the blend weight; XML `rate`
+        // is documented to be ~1.0 in this mode and feeds the final alpha.
+        (sspj::sstypes::SsBlendType::Mix, sspj::sstypes::SsColorBlendTarget::Vertex) => {
+            let rate_u8 = (src.rate * 255.0).clamp(0.0, 255.0) as u8;
+            (rate_u8, (src.rgba.a as f32) / 255.0)
+        }
+        // All other blend types (Add/Sub/Mul and the SS7 additions): the blend
+        // weight is implicitly 1.0; XML `rate` is unused; `rgba.a` is the final alpha.
+        _ => (src.rgba.a, 1.0),
+    };
+
+    rgba.a = rate_alpha_u8;
     color.rgba = Some(Box::new(rgba));
-    color.rate = src.rate;
+    color.rate = color_a_f32;
     color
 }
 
 // SS7 stores PartColor with a `target` of either Whole (single overall color in `color`)
 // or Vertex (four per-corner colors). The `.ssab` schema only carries four corners,
-// so Whole is expanded into four identical corner entries here.
+// so Whole is expanded into four identical corner entries here. See
+// `build_part_color_key_value_color_t` for the rate/alpha mediation applied per corner.
 fn build_part_attribute_part_color_t(src: &sspj::ssattribute::SsAttributePartsColorKeyValue) -> ssab::ssab::ss::format::PartAttributePartColorT {
     let mut value = ssab::ssab::ss::format::PartAttributePartColorT::default();
     value.blend_type = convert_alpha_blend_type(&src.blend_type);
     match src.target {
         sspj::sstypes::SsColorBlendTarget::Whole => {
-            let c = build_part_color_key_value_color_t(&src.color);
+            let c = build_part_color_key_value_color_t(&src.color, &src.blend_type, &src.target);
             value.lt = Some(Box::new(c.clone()));
             value.rt = Some(Box::new(c.clone()));
             value.lb = Some(Box::new(c.clone()));
             value.rb = Some(Box::new(c));
         }
         sspj::sstypes::SsColorBlendTarget::Vertex => {
-            value.lt = Some(Box::new(build_part_color_key_value_color_t(&src.lt)));
-            value.rt = Some(Box::new(build_part_color_key_value_color_t(&src.rt)));
-            value.lb = Some(Box::new(build_part_color_key_value_color_t(&src.lb)));
-            value.rb = Some(Box::new(build_part_color_key_value_color_t(&src.rb)));
+            value.lt = Some(Box::new(build_part_color_key_value_color_t(&src.lt, &src.blend_type, &src.target)));
+            value.rt = Some(Box::new(build_part_color_key_value_color_t(&src.rt, &src.blend_type, &src.target)));
+            value.lb = Some(Box::new(build_part_color_key_value_color_t(&src.lb, &src.blend_type, &src.target)));
+            value.rb = Some(Box::new(build_part_color_key_value_color_t(&src.rb, &src.blend_type, &src.target)));
         }
     }
     value
