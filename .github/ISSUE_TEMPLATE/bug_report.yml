@@ -38,22 +38,43 @@ body:
       required: true
 
   - type: input
+    id: target_engine
+    attributes:
+      label: Target Engine / 組み込み先のエンジン
+      description: Unity, Unreal Engine, Web/JS, Custom C++ Engine, etc. / Unity、Unreal Engine、Webブラウザ、独自のC++エンジンなど。
+    validations:
+      required: true
+
+  - type: input
+    id: sdk_version
+    attributes:
+      label: SDK Version / SDK のバージョン
+      description: e.g. v7.0.0-alpha01 or commit hash. / バージョンタグ（v7.0.0-alpha01等）、またはコミットハッシュ。
+    validations:
+      required: true
+
+  - type: input
     id: environment
     attributes:
-      label: Environment / 実行環境
-      description: OS version, Rust version, target platform, etc. / OS バージョン、Rust のバージョン、ターゲットプラットフォームなど。
-      placeholder: e.g. macOS Sonoma, Rust 1.77, target wasm32
+      label: OS / Compiler / Rust Version
+      description: OS version, Rust version, compiler info. / OS バージョン、Rust のバージョン、コンパイラの情報など。
+      placeholder: e.g. macOS Sonoma, Rust 1.77
     validations:
       required: true
 
   - type: textarea
     id: additional_context
     attributes:
-      label: Additional Context / 補足情報
-      description: Add any other context about the problem here. / その他、不具合に関する補足情報があれば記載してください。
+      label: Additional Context & Minimal Code / 補足情報・最小再現コード
+      description: Add any other context or code snippets that reproduce the issue. / その他、不具合に関する補足情報や、不具合が発生する呼び出し部分のコードを記載してください。
 
   - type: markdown
     attributes:
       value: |
         ---
-        **Note:** If possible, please attach a sample project (.sspj) or reproduction data to help us investigate faster. / 可能であれば、調査を早めるためにサンプルプロジェクト (.sspj) や再現データを添付してください。
+        **🚨 WARNING / 警告 🚨**
+        **DO NOT** attach proprietary `.sspj` project files or sensitive data to this public issue. 
+        If you need to share reproduction data, please submit it privately via the [Help Center](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/).
+        
+        **絶対に** 機密情報や非公開の `.sspj` プロジェクトデータをここに添付しないでください。
+        再現データの提供が必要な場合は、[公式ヘルプセンター](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/)から非公開で送信してください。

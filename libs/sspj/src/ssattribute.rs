@@ -557,7 +557,7 @@ pub struct SsDeformValue {
 pub struct SsAttributeDeformKeyValue {
     pub vsize: i32,
     #[serde(deserialize_with = "parse_ss_point3_list")]
-    pub vchg: Vec<SsDeformValue>, // TODO: fix changing from String to SsMeshBindInfo
+    pub vchg: Vec<SsDeformValue>,
 }
 fn parse_ss_point3_list<'de, D>(deserializer: D) -> Result<Vec<SsDeformValue>, D::Error>
 where

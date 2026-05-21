@@ -73,13 +73,13 @@ graph LR
 ## ライブラリとツール
 
 - ライブラリ
-    - [libsspj](./libs/sspj/README.md): `sspj`、`ssae`、`ssee`、`ssse`、`charmap`ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
-    - [libssab](./libs/ssab/README.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
+    - [libsspj](./libs/sspj/README.ja.md): `sspj`、`ssae`、`ssee`、`ssse`、`charmap`ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
+    - [libssab](./libs/ssab/README.ja.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
     - [libssinterpolate](./libs/ssinterpolate/README.ja.md): アニメーション補間計算のためのプラットフォーム非依存な数学ライブラリです。
-    - [libssconverter](./libs/ssconverter/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。
-    - [libssruntime](./libs/ssruntime/README.md): 再生の "Brain"。フレーム毎にパーツの状態（トランスフォーム、メッシュ変形、カラー）を計算し、エンジン非依存の `DrawBatch` プランを出力します。
+    - [libssconverter](./libs/ssconverter/README.ja.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。
+    - [libssruntime](./libs/ssruntime/README.ja.md): 再生の "Brain"。フレーム毎にパーツの状態（トランスフォーム、メッシュ変形、カラー）を計算し、エンジン非依存の `DrawBatch` プランを出力します。
 - ツール
-    - [ssconverter-cli](./cli/README.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
+    - [ssconverter-cli](./cli/README.ja.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するコマンドラインツールです。
 
 ## クイックスタート
 
@@ -118,6 +118,10 @@ graph LR
 - `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。
 
 これらは Player の実装時や動作確認の際の参照用データとして自由にご利用いただけます。
+
+## サポートとフィードバック
+
+不具合の報告、使い方の質問、機能の要望などについては、[サポートガイド (SUPPORT.md)](./SUPPORT.md) を参照してください。
 
 ## SDK 開発者向け
 ### 準備
