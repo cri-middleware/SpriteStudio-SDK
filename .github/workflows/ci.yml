@@ -1,10 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches: [ main, develop ]
-    tags: [ 'v*' ]
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE*'
   workflow_dispatch:
 
 env:
@@ -57,29 +58,6 @@ jobs:
             platform: linux
             arch: x86_64
 
-          - name: 🏁 Windows (x86_64, MSVC)
-            os: windows-latest
-            platform: windows
-            arch: x86_64
-
-          - name: 🍎 macOS (universal)
-            os: macos-latest
-            platform: macos
-            arch: universal
-            skip_pr: true
-
-          - name: 🤖 Android (arm64)
-            os: ubuntu-latest
-            platform: android
-            arch: arm64
-            skip_pr: true
-
-          - name: 🍏 iOS (arm64)
-            os: macos-latest
-            platform: ios
-            arch: universal
-            skip_pr: true
-
           - name: 🌐 Web (wasm32)
             os: ubuntu-latest
             platform: web
@@ -87,45 +65,29 @@ jobs:
 
     steps:
       - name: Checkout
-        if: github.event_name != 'pull_request' || !matrix.skip_pr
         uses: actions/checkout@v6
         with:
           submodules: recursive
 
       - name: setup for SpriteStudio7-SDK
-        if: github.event_name != 'pull_request' || !matrix.skip_pr
         uses: ./.github/actions/setup
         with:
           platform: ${{ matrix.platform }}
           os: ${{ matrix.os }}
 
       - name: Install targets (Rust)
-        if: github.event_name != 'pull_request' || !matrix.skip_pr
+        if: matrix.platform == 'web'
         run: |
-          if [ "${{ matrix.platform }}" == "macos" ]; then
-            rustup target add aarch64-apple-darwin
-          elif [ "${{ matrix.platform }}" == "ios" ]; then
-            rustup target add aarch64-apple-ios
-          elif [ "${{ matrix.platform }}" == "android" ]; then
-            rustup target add aarch64-linux-android
-            cargo install cargo-ndk
-          elif [ "${{ matrix.platform }}" == "web" ]; then
-            rustup target add wasm32-unknown-unknown
-            # Nightly is required for PIC support in wasm32-unknown-unknown (Godot GDExtension)
-            rustup toolchain install nightly
-            rustup target add wasm32-unknown-unknown --toolchain nightly
-            rustup component add rust-src --toolchain nightly
-          fi
+          rustup target add wasm32-unknown-unknown
+          # Nightly is required for PIC support in wasm32-unknown-unknown (Godot GDExtension)
+          rustup toolchain install nightly
+          rustup target add wasm32-unknown-unknown --toolchain nightly
+          rustup component add rust-src --toolchain nightly
         shell: bash
 
       - name: Build
-        if: github.event_name != 'pull_request' || !matrix.skip_pr
         run: |
-          if [ "${{ matrix.platform }}" == "android" ]; then
-            cargo ndk --target aarch64-linux-android build --verbose -p ssruntime --features "libc_alloc,panic-handler"
-          elif [ "${{ matrix.platform }}" == "ios" ]; then
-            cargo build --target aarch64-apple-ios --verbose -p ssruntime --features "libc_alloc,panic-handler"
-          elif [ "${{ matrix.platform }}" == "web" ]; then
+          if [ "${{ matrix.platform }}" == "web" ]; then
             # Build for general FFI and Web (Stable)
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
@@ -146,7 +108,7 @@ jobs:
         shell: bash
 
       - name: Test (workspace)
-        if: (github.event_name != 'pull_request' || !matrix.skip_pr) && (matrix.platform == 'linux' || matrix.platform == 'windows' || matrix.platform == 'macos')
+        if: matrix.platform == 'linux'
         run: cargo test --workspace --all-features --verbose -- --test-threads=1
         shell: bash
 

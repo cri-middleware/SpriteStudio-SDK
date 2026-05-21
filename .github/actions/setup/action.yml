@@ -17,6 +17,9 @@ runs:
       with:
         components: clippy, rustfmt
 
+    - name: Setup Rust cache
+      uses: Swatinem/rust-cache@v2
+
     - name: Setup Android dependencies
       if: inputs.platform == 'android'
       uses: nttld/setup-ndk@v1
