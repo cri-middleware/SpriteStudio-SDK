@@ -389,9 +389,6 @@ pub struct SsEffectModel {
 
     #[serde(default)]
     pub effect_name: String,
-    // TODO: impl
-    // #[serde(default)]
-    // pub root: LinkedList<SsEffectNode>,
 }
 fn parse_node_list<'de, D>(deserializer: D) -> Result<Vec<SsEffectNode>, D::Error>
 where
@@ -424,8 +421,6 @@ impl SsLoader for SsEffectFile {
         if ssee.effect_data.layout_scale_y == 0 {
             ssee.effect_data.layout_scale_y = 100;
         }
-
-        // TODO: impl create a tree
 
         Ok(ssee)
     }
