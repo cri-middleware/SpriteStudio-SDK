@@ -116,6 +116,7 @@ graph LR
 - `tests/allAttributeV7/allAttributeV7.sspj`: 全てのアニメーションアトリビュートを網羅しています。
 - `tests/allPartsV7/allPartsV7.sspj`: 全てのパーツ種別の検証用プロジェクトです。
 - `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。
+- `tests/Ringo/Ringo.sspj`: Ringoのテスト用プロジェクトです。
 
 これらは Player の実装時や動作確認の際の参照用データとして自由にご利用いただけます。
 
