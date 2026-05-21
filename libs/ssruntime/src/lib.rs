@@ -11,7 +11,7 @@ fn panic(_info: &::core::panic::PanicInfo) -> ! {
         libc::abort();
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(all(not(target_arch = "wasm32"), not(feature = "libc_alloc")))]
     loop {}
 }
 
