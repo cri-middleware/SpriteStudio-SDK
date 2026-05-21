@@ -119,6 +119,10 @@ This repository includes several sample projects in the `tests/` directory to ve
 
 You can use these projects as references when implementing your own player or verifying the SDK's behavior.
 
+## Support & Feedback
+
+If you encounter bugs, need help, or want to suggest features, please refer to our [Support Guide](./SUPPORT.md).
+
 ## For SDK Developers
 ### Prepare
 install [rustup](https://rustup.rs/)

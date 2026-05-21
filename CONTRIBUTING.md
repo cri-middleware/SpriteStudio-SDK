@@ -30,6 +30,8 @@ If you find a bug, please open an issue and include:
 - Your environment (OS, Rust version, target platform).
 - Expected vs. actual behavior.
 
+*Note: If you need to send proprietary `.sspj` projects to reproduce the bug, please do not attach them to public issues. See [SUPPORT.md](./SUPPORT.md) for how to contact us privately.*
+
 ### Suggesting Enhancements
 If you have an idea, please open an issue to discuss it before starting work.
 
@@ -112,6 +114,8 @@ SpriteStudio7-SDK にご関心をお寄せいただき、ありがとうござ�
 - 再現手順
 - 実行環境（OS、Rust バージョン、ターゲットプラットフォーム）
 - 期待される動作と実際の動作
+
+*注: バグ再現のために非公開の `.sspj` プロジェクトデータ等を提供いただける場合は、公開 Issue には添付せず、[SUPPORT.md](./SUPPORT.md) に記載のヘルプセンターをご利用ください。*
 
 ### 機能の提案
 SDK を改善するアイデアがある場合は、開発を始める前に Issue を作成して内容を議論しましょう。
