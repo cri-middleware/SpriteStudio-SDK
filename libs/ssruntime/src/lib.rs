@@ -662,8 +662,8 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
             let mut mask = 0.0_f32;
             let mut skew_x = 0.0_f32;
             let mut skew_y = 0.0_f32;
-            let mut dx = [0.0_f32; 4];
-            let mut dy = [0.0_f32; 4];
+            let mut dx_acc = wide::f32x4::splat(0.0);
+            let mut dy_acc = wide::f32x4::splat(0.0);
             let mut deform_present = false;
             let mut flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
@@ -705,10 +705,9 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
                 let rvd = &layers[j].raw_vertex_deform[i];
                 if rvd.present {
                     deform_present = true;
-                    for k in 0..4 {
-                        dx[k] += w * rvd.dx[k];
-                        dy[k] += w * rvd.dy[k];
-                    }
+                    let w_v = wide::f32x4::splat(w);
+                    dx_acc = w_v.mul_add(wide::f32x4::from(rvd.dx), dx_acc);
+                    dy_acc = w_v.mul_add(wide::f32x4::from(rvd.dy), dy_acc);
                 }
             }
 
@@ -742,7 +741,7 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
             mixed.set_update_flag(flag);
 
             if deform_present {
-                resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx, dy };
+                resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx: dx_acc.to_array(), dy: dy_acc.to_array() };
             }
         }
 
