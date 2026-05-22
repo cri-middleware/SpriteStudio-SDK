@@ -418,6 +418,32 @@ impl<'a> LayerState<'a> {
             raw_vertex_deform: Vec::new(),
         }
     }
+
+    fn resize_for_parts(&mut self, num_parts: usize, cell_c: usize, color_c: usize, shader_c: usize, vertex_c: usize, deform_c: usize) {
+        self.parts_vec.clear();
+        self.parts_vec.reserve(num_parts);
+        self.cell_vec.clear();
+        self.cell_vec.reserve(cell_c);
+        self.parts_color_vec.clear();
+        self.parts_color_vec.reserve(color_c);
+        self.shader_vec.clear();
+        self.shader_vec.reserve(shader_c);
+        self.vertice_vec.clear();
+        self.vertice_vec.reserve(vertex_c);
+        self.deform_vec.clear();
+        self.deform_vec.reserve(deform_c);
+
+        self.cursors.clear();
+        self.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
+        self.cell_meta_per_part.clear();
+        self.cell_meta_per_part.resize(num_parts * 6, 0.0);
+        self.cell_texture_hashes.clear();
+        self.cell_texture_hashes.resize(num_parts, 0);
+        self.local_vertices.clear();
+        self.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
+        self.raw_vertex_deform.clear();
+        self.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+    }
 }
 
 /// Per-instance global buffers — the output of `resolve_global_state`.
@@ -504,18 +530,34 @@ impl<'a> EvaluationContext<'a> {
     }
 }
 
-/// Per-instance playback state. Owns the playback controller, the
-/// active layer's pose data, the resolved global buffers, and the
-/// configuration knobs that influence frame evaluation. Designed to
-/// be the "Lightweight Instance" of Phase 3 — many of these can coexist
-/// against a single shared `EvaluationContext`.
-struct InstanceState<'a> {
-    controller: core::playback_controller::PlaybackController,
+struct SourceState {
     animation_idx: i32,
+    controller: core::playback_controller::PlaybackController,
+    weight: f32,
+}
+
+impl SourceState {
+    fn new() -> Self {
+        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), weight: 1.0 }
+    }
+}
+
+/// Per-instance playback state. Owns one playback source per blend layer,
+/// the per-source pose buffers (`layers`), the post-mix pose
+/// (`resolved_layer`) that feeds global resolution, the resolved global
+/// buffers, and the configuration knobs that influence frame evaluation.
+/// Designed to be the "Lightweight Instance" of Phase 3 — many of these
+/// can coexist against a single shared `EvaluationContext`.
+///
+/// `sources` and `layers` are kept length-parallel and always contain at
+/// least one slot (the primary). The `primary` field designates the
+/// authoritative source for events and non-blendable discrete attributes.
+struct InstanceState<'a> {
+    sources: Vec<SourceState>,
+    layers: Vec<LayerState<'a>>,
+    resolved_layer: LayerState<'a>,
+    primary: u32,
     z_order: crate::core::z_order::ZOrderTable,
-    /// Currently a single layer; Phase 3 will widen this into an array
-    /// (or array wrapper) so blend sources can each own a pose buffer.
-    layer: LayerState<'a>,
     globals: GlobalBuffers,
     collected_event_indices: Vec<i32>,
     coordinate_system: crate::core::SsCoordinateSystem,
@@ -527,10 +569,11 @@ struct InstanceState<'a> {
 impl<'a> InstanceState<'a> {
     fn new() -> Self {
         Self {
-            controller: core::playback_controller::PlaybackController::new(),
-            animation_idx: -1,
+            sources: alloc::vec![SourceState::new()],
+            layers: alloc::vec![LayerState::new()],
+            resolved_layer: LayerState::new(),
+            primary: 0,
             z_order: crate::core::z_order::ZOrderTable::new(),
-            layer: LayerState::new(),
             globals: GlobalBuffers::new(),
             collected_event_indices: Vec::new(),
             coordinate_system: crate::core::SsCoordinateSystem::default(),
@@ -538,6 +581,19 @@ impl<'a> InstanceState<'a> {
             unit: crate::core::SsUnit::default(),
             render_mode: crate::core::RenderMode::default(),
         }
+    }
+
+    fn primary_idx(&self) -> usize {
+        self.primary as usize
+    }
+
+    fn primary_source(&self) -> &SourceState {
+        &self.sources[self.primary_idx()]
+    }
+
+    fn primary_source_mut(&mut self) -> &mut SourceState {
+        let idx = self.primary_idx();
+        &mut self.sources[idx]
     }
 }
 
@@ -560,9 +616,14 @@ impl<'a> Context<'a> {
     pub fn reset(&mut self) {
         self.eval.resource = None;
         self.eval.fb.reset();
-        self.instance.controller.reset_setup();
-        self.instance.animation_idx = -1;
-        self.instance.layer.cursors.clear();
+        let primary = self.instance.primary_source_mut();
+        primary.controller.reset_setup();
+        primary.animation_idx = -1;
+        primary.weight = 1.0;
+        for layer in self.instance.layers.iter_mut() {
+            layer.cursors.clear();
+        }
+        self.instance.resolved_layer.cursors.clear();
         self.instance.coordinate_system = crate::core::SsCoordinateSystem::default();
         self.instance.origin = crate::core::SsOrigin::default();
         self.instance.unit = crate::core::SsUnit::default();
@@ -581,9 +642,14 @@ impl<'a> Context<'a> {
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
         self.eval.resource = Some(resource);
         self.eval.fb.reset();
-        self.instance.controller.reset_setup();
-        self.instance.animation_idx = -1;
-        self.instance.layer.cursors.clear();
+        let primary = self.instance.primary_source_mut();
+        primary.controller.reset_setup();
+        primary.animation_idx = -1;
+        primary.weight = 1.0;
+        for layer in self.instance.layers.iter_mut() {
+            layer.cursors.clear();
+        }
+        self.instance.resolved_layer.cursors.clear();
         // Configuration (coordinate_system, origin, unit) is preserved.
     }
 
@@ -606,8 +672,10 @@ impl<'a> Context<'a> {
         };
 
         let metadata = &resource.animations[index];
-        self.instance.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
-        self.instance.animation_idx = index as i32;
+        let primary = self.instance.primary_source_mut();
+        primary.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
+        primary.animation_idx = index as i32;
+        primary.weight = 1.0;
 
         let num_parts = metadata.cached_parts.len();
 
@@ -635,30 +703,10 @@ impl<'a> Context<'a> {
             }
         }
 
-        let layer = &mut self.instance.layer;
-        layer.parts_vec.clear();
-        layer.parts_vec.reserve(num_parts);
-        layer.cell_vec.clear();
-        layer.cell_vec.reserve(cell_c);
-        layer.parts_color_vec.clear();
-        layer.parts_color_vec.reserve(color_c);
-        layer.shader_vec.clear();
-        layer.shader_vec.reserve(shader_c);
-        layer.vertice_vec.clear();
-        layer.vertice_vec.reserve(vertex_c);
-        layer.deform_vec.clear();
-        layer.deform_vec.reserve(deform_c);
-
-        layer.cursors.clear();
-        layer.cursors.resize(num_parts * crate::core::framedata::NUM_PART_ATTRIBUTES, 0);
-        layer.cell_meta_per_part.clear();
-        layer.cell_meta_per_part.resize(num_parts * 6, 0.0);
-        layer.cell_texture_hashes.clear();
-        layer.cell_texture_hashes.resize(num_parts, 0);
-        layer.local_vertices.clear();
-        layer.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
-        layer.raw_vertex_deform.clear();
-        layer.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+        for layer in self.instance.layers.iter_mut() {
+            layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+        }
+        self.instance.resolved_layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
 
         let globals = &mut self.instance.globals;
         globals.world_matrices.clear();
@@ -687,66 +735,99 @@ impl<'a> Context<'a> {
             return Err(error::SSRuntimeError::NotLoaded);
         };
 
-        if self.instance.animation_idx < 0 {
+        let primary_anim_idx = self.instance.primary_source().animation_idx;
+        if primary_anim_idx < 0 {
             return Err(error::SSRuntimeError::AnimationNotFound);
         }
 
-        let metadata = &resource.animations[self.instance.animation_idx as usize];
-        if !((metadata.start_frame as f32) <= frame_no && frame_no <= (metadata.end_frame as f32)) {
+        let primary_metadata = &resource.animations[primary_anim_idx as usize];
+        if !((primary_metadata.start_frame as f32) <= frame_no && frame_no <= (primary_metadata.end_frame as f32)) {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
         self.eval.fb.reset();
 
-        // Phase 1: extract local pose from the SSAB frame data.
-        let offset = core::framedata::get_frame_data(
+        let coordinate_system = self.instance.coordinate_system;
+        let origin = self.instance.origin;
+        let unit = self.instance.unit;
+
+        // Stage A: per-source pose extraction. PR 2 runs this exactly once
+        // (N=1, primary only); PR 3 widens it to all blend sources.
+        let num_sources = self.instance.sources.len();
+        for i in 0..num_sources {
+            let source_anim_idx = self.instance.sources[i].animation_idx;
+            if source_anim_idx < 0 {
+                continue;
+            }
+            let metadata = &resource.animations[source_anim_idx as usize];
+            let layer = &mut self.instance.layers[i];
+            core::framedata::extract_pose(
+                &mut self.eval.fb,
+                &metadata.cached_parts,
+                frame_no,
+                &mut layer.parts_vec,
+                &mut layer.cell_vec,
+                &mut layer.parts_color_vec,
+                &mut layer.shader_vec,
+                &mut layer.deform_vec,
+                &mut layer.raw_vertex_deform,
+                &mut layer.cursors,
+                &mut layer.cell_meta_per_part,
+                &mut layer.cell_texture_hashes,
+                &mut layer.mesh_deform,
+                coordinate_system,
+                origin,
+                unit,
+                metadata.canvas_width,
+                metadata.canvas_height,
+                &mut self.eval.deform_interpolation_start_workspace,
+                &mut self.eval.deform_interpolation_end_workspace,
+                &mut self.eval.deform_interpolation_out_workspace,
+                &mut self.eval.deform_result_coordinate_workspace,
+                &mut self.eval.deform_result_index_workspace,
+                &mut self.eval.inheritance_alphas_workspace,
+            );
+        }
+
+        // "Mix" step. PR 2 swaps primary's per-source pose into
+        // `resolved_layer` (no-op mix for N=1); PR 3 replaces this with
+        // `mix_poses(...)`.
+        let primary_idx = self.instance.primary_idx();
+        ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
+
+        // Stage B + C + draw plan on the resolved pose.
+        let resolved = &mut self.instance.resolved_layer;
+        let offset = core::framedata::compose_frame_data(
             &mut self.eval.fb,
-            &metadata.cached_parts,
-            frame_no,
+            &primary_metadata.cached_parts,
             &mut self.instance.z_order,
-            &mut self.instance.layer.parts_vec,
-            &mut self.instance.layer.cell_vec,
-            &mut self.instance.layer.parts_color_vec,
-            &mut self.instance.layer.shader_vec,
-            &mut self.instance.layer.vertice_vec,
-            &mut self.instance.layer.deform_vec,
-            &mut self.instance.layer.raw_vertex_deform,
-            &mut self.instance.layer.cursors,
-            &mut self.instance.layer.cell_meta_per_part,
-            &mut self.instance.layer.cell_texture_hashes,
-            &mut self.instance.layer.local_vertices,
-            self.instance.coordinate_system,
-            self.instance.origin,
-            self.instance.unit,
-            metadata.canvas_width,
-            metadata.canvas_height,
+            &mut resolved.parts_vec,
+            &resolved.cell_vec,
+            &resolved.parts_color_vec,
+            &resolved.shader_vec,
+            &mut resolved.vertice_vec,
+            &resolved.deform_vec,
+            &resolved.raw_vertex_deform,
+            &resolved.cell_meta_per_part,
+            &resolved.cell_texture_hashes,
+            &mut resolved.local_vertices,
+            coordinate_system,
             &mut self.eval.draw_order_workspace,
             &mut self.eval.batches_workspace,
             &mut self.eval.mask_indices_workspace,
-            &mut self.eval.deform_interpolation_start_workspace,
-            &mut self.eval.deform_interpolation_end_workspace,
-            &mut self.eval.deform_interpolation_out_workspace,
-            &mut self.eval.deform_result_coordinate_workspace,
-            &mut self.eval.deform_result_index_workspace,
-            &mut self.eval.inheritance_alphas_workspace,
-            &mut self.instance.layer.mesh_deform,
         );
 
-        // Phase 3 hook: blend layers via `mix_poses(...)` between phase 1 and 2
-        // once a second `LayerState` is available. The pipeline shape is the
-        // intentional surface for that hand-off.
-
         // Phase 2: resolve global state (matrices / UVs / shape vertices)
-        // from the (already-composed) local pose.
-        Self::resolve_global_state(&mut self.instance, metadata);
+        // from the (post-mix) local pose.
+        Self::resolve_global_state(&mut self.instance, primary_metadata);
 
         self.eval.fb.finish_minimal(offset);
         Ok(self.eval.fb.finished_data())
     }
 
     /// Phase 2 of the frame pipeline. Consumes the (post-mix) local pose
-    /// in `instance.layer` and writes per-instance global outputs in
-    /// `instance.globals` — world / inheritance matrices, local UVs,
+    /// in `instance.resolved_layer` and writes per-instance global outputs
+    /// in `instance.globals` — world / inheritance matrices, local UVs,
     /// and shape vertex buffers.
     fn resolve_global_state(instance: &mut InstanceState<'a>, metadata: &AnimationMetadata<'a>) {
         if instance.render_mode == crate::core::RenderMode::Direct {
@@ -773,7 +854,7 @@ impl<'a> Context<'a> {
     /// recomputed each frame.
     #[allow(clippy::needless_range_loop)]
     fn compute_mesh_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let num_parts = instance.layer.parts_vec.len();
+        let num_parts = instance.resolved_layer.parts_vec.len();
 
         // The CSR offsets and the static UV / index buffers depend only on the
         // chosen animation's per-part Cells (fixed by the SS mesh spec). Build
@@ -783,7 +864,7 @@ impl<'a> Context<'a> {
             Self::setup_static_mesh_buffers(instance, cached_parts);
         }
 
-        let layer = &instance.layer;
+        let layer = &instance.resolved_layer;
         // SSAB bind coordinates are authored Y-up; flip when the instance
         // (hence the bone world matrices) runs Y-down.
         let flip_y = instance.coordinate_system == crate::core::SsCoordinateSystem::YDown;
@@ -867,7 +948,7 @@ impl<'a> Context<'a> {
     /// `play()` rather than every frame. A statically malformed mesh part
     /// keeps the zeros written here, so the per-frame pass needs no clear.
     fn setup_static_mesh_buffers(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let num_parts = instance.layer.parts_vec.len();
+        let num_parts = instance.resolved_layer.parts_vec.len();
         let globals = &mut instance.globals;
 
         // CSR vertex offsets — non-mesh parts contribute an empty range. The
@@ -934,7 +1015,7 @@ impl<'a> Context<'a> {
 
     #[allow(clippy::needless_range_loop)]
     fn compute_matrices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let layer = &instance.layer;
+        let layer = &instance.resolved_layer;
         let globals = &mut instance.globals;
         for i in 0..layer.parts_vec.len() {
             let parent_idx = cached_parts[i].parent_index;
@@ -955,7 +1036,7 @@ impl<'a> Context<'a> {
 
     #[allow(clippy::needless_range_loop)]
     fn compute_local_uvs(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
-        let layer = &instance.layer;
+        let layer = &instance.resolved_layer;
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
         if globals.local_uvs.len() != num_parts * 10 {
@@ -995,7 +1076,7 @@ impl<'a> Context<'a> {
     #[allow(clippy::needless_range_loop)]
     fn compute_shape_vertices(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
         let coordinate_system = instance.coordinate_system;
-        let layer = &instance.layer;
+        let layer = &instance.resolved_layer;
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
         let stride = crate::core::framedata::SHAPE_VERTICES_STRIDE;
@@ -1062,15 +1143,15 @@ impl<'a> Context<'a> {
     // Frame Number getter functions
 
     pub fn get_frame_no(&self) -> f32 {
-        self.instance.controller.get_frame_no()
+        self.instance.primary_source().controller.get_frame_no()
     }
 
     pub fn is_end_frame_reached(&self) -> bool {
-        self.instance.controller.is_end_frame_reached()
+        self.instance.primary_source().controller.is_end_frame_reached()
     }
 
     pub fn is_looped(&self) -> bool {
-        self.instance.controller.is_looped()
+        self.instance.primary_source().controller.is_looped()
     }
 
     pub fn get_world_matrices_ptr(&self) -> *const f32 {
@@ -1162,86 +1243,86 @@ impl<'a> Context<'a> {
     }
 
     pub fn get_cell_meta_ptr(&self) -> *const f32 {
-        self.instance.layer.cell_meta_per_part.as_ptr()
+        self.instance.resolved_layer.cell_meta_per_part.as_ptr()
     }
 
     pub fn get_cell_meta_len(&self) -> usize {
-        self.instance.layer.cell_meta_per_part.len()
+        self.instance.resolved_layer.cell_meta_per_part.len()
     }
 
     pub fn get_local_vertices_ptr(&self) -> *const f32 {
-        self.instance.layer.local_vertices.as_ptr()
+        self.instance.resolved_layer.local_vertices.as_ptr()
     }
 
     pub fn get_local_vertices_len(&self) -> usize {
-        self.instance.layer.local_vertices.len()
+        self.instance.resolved_layer.local_vertices.len()
     }
 
     // setting getter functions
     pub fn is_playing(&self) -> bool {
-        self.instance.controller.is_playing()
+        self.instance.primary_source().controller.is_playing()
     }
 
     pub fn is_pausing(&self) -> bool {
-        self.instance.controller.is_pausing()
+        self.instance.primary_source().controller.is_pausing()
     }
 
     pub fn get_skip_frames(&self) -> bool {
-        self.instance.controller.get_skip_frames()
+        self.instance.primary_source().controller.get_skip_frames()
     }
 
     pub fn get_playback_direction(&self) -> core::playback_controller::PlaybackDirection {
-        self.instance.controller.get_playback_direction()
+        self.instance.primary_source().controller.get_playback_direction()
     }
 
     pub fn get_playback_style(&self) -> core::playback_controller::PlaybackStyle {
-        self.instance.controller.get_playback_style()
+        self.instance.primary_source().controller.get_playback_style()
     }
 
     pub fn get_loops(&self) -> i32 {
-        self.instance.controller.get_loops()
+        self.instance.primary_source().controller.get_loops()
     }
 
     pub fn get_remain_loops(&self) -> i32 {
-        self.instance.controller.get_remain_loops()
+        self.instance.primary_source().controller.get_remain_loops()
     }
 
     pub fn get_start_frame(&self) -> i32 {
-        self.instance.controller.get_start_frame()
+        self.instance.primary_source().controller.get_start_frame()
     }
 
     pub fn get_end_frame(&self) -> i32 {
-        self.instance.controller.get_end_frame()
+        self.instance.primary_source().controller.get_end_frame()
     }
 
     pub fn get_fps(&self) -> i32 {
-        self.instance.controller.get_fps()
+        self.instance.primary_source().controller.get_fps()
     }
 
     // Playback setup
 
     pub fn set_skip_frames(&mut self, skip: bool) {
-        self.instance.controller.set_skip_frames(skip);
+        self.instance.primary_source_mut().controller.set_skip_frames(skip);
     }
 
     pub fn set_loop(&mut self, loops: i32) {
-        self.instance.controller.set_loops(loops);
+        self.instance.primary_source_mut().controller.set_loops(loops);
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {
-        self.instance.controller.set_frame_rate(fps);
+        self.instance.primary_source_mut().controller.set_frame_rate(fps);
     }
 
     pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
-        self.instance.controller.set_playback_direction(direction, style);
+        self.instance.primary_source_mut().controller.set_playback_direction(direction, style);
     }
 
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.instance.controller.set_animation_speed(speed_rate);
+        self.instance.primary_source_mut().controller.set_animation_speed(speed_rate);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
-        self.instance.controller.set_animation_section(start_frame, end_frame);
+        self.instance.primary_source_mut().controller.set_animation_section(start_frame, end_frame);
     }
 
     pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
@@ -1271,7 +1352,7 @@ impl<'a> Context<'a> {
     // Playback control
 
     pub fn update(&mut self, delta: f32) -> f32 {
-        let res = self.instance.controller.update(delta);
+        let res = self.instance.primary_source_mut().controller.update(delta);
 
         self.collect_events();
 
@@ -1283,15 +1364,17 @@ impl<'a> Context<'a> {
         let Some(resource) = self.eval.resource else {
             return;
         };
-        if self.instance.animation_idx < 0 {
+        let primary_idx = self.instance.primary_idx();
+        let primary_anim_idx = self.instance.sources[primary_idx].animation_idx;
+        if primary_anim_idx < 0 {
             return;
         }
-        let metadata = &resource.animations[self.instance.animation_idx as usize];
+        let metadata = &resource.animations[primary_anim_idx as usize];
         let Some(events_vec) = metadata.events else {
             return;
         };
 
-        for &frame_no in self.instance.controller.get_passed_frames() {
+        for &frame_no in self.instance.sources[primary_idx].controller.get_passed_frames() {
             if frame_no < 0 || frame_no > u16::MAX as i32 {
                 continue;
             }
@@ -1326,13 +1409,13 @@ impl<'a> Context<'a> {
     pub fn get_active_event_instance(&self, slot_index: u32) -> crate::types::ss_event_instance_info {
         let mut info = crate::types::ss_event_instance_info::synthetic_default();
         let Some(resource) = self.eval.resource else { return info };
-        if self.instance.animation_idx < 0 {
+        if self.instance.primary_source().animation_idx < 0 {
             return info;
         }
-        let metadata = &resource.animations[self.instance.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.primary_source().animation_idx as usize];
         let Some(events) = metadata.events else { return info };
 
-        let frame_no = self.instance.controller.get_frame_no();
+        let frame_no = self.instance.primary_source().controller.get_frame_no();
         let frame_int = if frame_no < 0.0 {
             -1
         } else if frame_no >= u16::MAX as f32 {
@@ -1382,10 +1465,10 @@ impl<'a> Context<'a> {
     pub fn get_active_effect_event(&self, slot_index: u32) -> crate::types::ss_effect_event_info {
         let mut info = crate::types::ss_effect_event_info::synthetic_default();
         let Some(resource) = self.eval.resource else { return info };
-        if self.instance.animation_idx < 0 {
+        if self.instance.primary_source().animation_idx < 0 {
             return info;
         }
-        let metadata = &resource.animations[self.instance.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.primary_source().animation_idx as usize];
 
         // Fallback first: InitialEvents.effect for this slot. Real EventEffect
         // matches override below; the synthetic-default flag stays `true` for
@@ -1406,7 +1489,7 @@ impl<'a> Context<'a> {
 
         let Some(events) = metadata.events else { return info };
 
-        let frame_no = self.instance.controller.get_frame_no();
+        let frame_no = self.instance.primary_source().controller.get_frame_no();
         let frame_int = if frame_no < 0.0 {
             -1
         } else if frame_no >= u16::MAX as f32 {
@@ -1443,10 +1526,10 @@ impl<'a> Context<'a> {
             return fallback;
         }
         let Some(resource) = self.eval.resource else { return fallback };
-        if self.instance.animation_idx < 0 {
+        if self.instance.primary_source().animation_idx < 0 {
             return fallback;
         }
-        let metadata = &resource.animations[self.instance.animation_idx as usize];
+        let metadata = &resource.animations[self.instance.primary_source().animation_idx as usize];
         let Some(labels) = metadata.labels else { return fallback };
         for i in 0..labels.len() {
             let label = labels.get(i);
@@ -1458,23 +1541,23 @@ impl<'a> Context<'a> {
     }
 
     pub fn play(&mut self) {
-        self.instance.controller.play();
+        self.instance.primary_source_mut().controller.play();
     }
 
     pub fn play_with_start_frame(&mut self, frame_no: f32) {
-        self.instance.controller.play_with_start_frame(frame_no);
+        self.instance.primary_source_mut().controller.play_with_start_frame(frame_no);
     }
 
     pub fn pause(&mut self) {
-        self.instance.controller.pause();
+        self.instance.primary_source_mut().controller.pause();
     }
 
     pub fn stop(&mut self) {
-        self.instance.controller.stop();
+        self.instance.primary_source_mut().controller.stop();
     }
 
     pub fn set_frame_no(&mut self, frame: f32) {
-        self.instance.controller.set_frame_no(frame);
+        self.instance.primary_source_mut().controller.set_frame_no(frame);
     }
 
     /// Sets the playback position based on `diff` (frames elapsed since
@@ -1483,15 +1566,15 @@ impl<'a> Context<'a> {
     /// Players to drive child Instance / Effect Players deterministically
     /// across reverse, seek, and frame-skip operations.
     pub fn set_frame_relative(&mut self, diff: f32) {
-        self.instance.controller.set_frame_relative(diff);
+        self.instance.primary_source_mut().controller.set_frame_relative(diff);
     }
 
     pub fn next_frame(&mut self) {
-        self.instance.controller.next_frame();
+        self.instance.primary_source_mut().controller.next_frame();
     }
 
     pub fn prev_frame(&mut self) {
-        self.instance.controller.prev_frame();
+        self.instance.primary_source_mut().controller.prev_frame();
     }
 }
 
@@ -2186,7 +2269,7 @@ mod tests {
         let world_matrices_len = context.get_world_matrices_len();
 
         // Length should be 16 floats per part
-        let num_parts = context.instance.layer.parts_vec.len();
+        let num_parts = context.instance.resolved_layer.parts_vec.len();
         assert_eq!(world_matrices_len, num_parts * 16);
 
         let world_matrices = unsafe { ::core::slice::from_raw_parts(world_matrices_ptr, world_matrices_len) };
@@ -2211,7 +2294,7 @@ mod tests {
 
         let uvs_ptr = context.get_local_uvs_ptr();
         let uvs_len = context.get_local_uvs_len();
-        let num_parts = context.instance.layer.parts_vec.len();
+        let num_parts = context.instance.resolved_layer.parts_vec.len();
         // 5 vertices * 2 floats per part.
         assert_eq!(uvs_len, num_parts * 10);
 
@@ -2263,7 +2346,7 @@ mod tests {
 
         let meta_ptr = context.get_cell_meta_ptr();
         let meta_len = context.get_cell_meta_len();
-        let num_parts = context.instance.layer.parts_vec.len();
+        let num_parts = context.instance.resolved_layer.parts_vec.len();
         assert_eq!(meta_len, num_parts * 6);
 
         let meta = unsafe { ::core::slice::from_raw_parts(meta_ptr, meta_len) };
