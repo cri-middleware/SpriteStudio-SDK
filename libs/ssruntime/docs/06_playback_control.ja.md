@@ -78,5 +78,8 @@ for (int i = 0; i < count; i++) {
 ### サブフレーム (Sub-frame) 再生
 `libssruntime` はフレーム番号を `f32` で管理しており、整数フレーム間の「補間」が可能です。高リフレッシュレート環境での滑らかな動きを実現するため、Player 側でも `f32` でのフレーム管理をサポートすることを推奨します。
 
+### 複数アニメーションのブレンド (State machine / Locomotion blend)
+クロスフェードや locomotion 合成 (walk + run など) を実装する場合は [13. アニメーションブレンド / ミキシング](./13_animation_blending.ja.md) を参照。各 source の独立した frame・speed 制御、`set_primary` による構造ソースの切替などを解説します。
+
 ---
 [目次に戻る](./README.ja.md)

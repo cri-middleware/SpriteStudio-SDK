@@ -48,6 +48,7 @@ graph LR
 - 08. [**Instance / Effect / Mesh の実装**](./08_advanced_rendering.ja.md)
 - 09. [**パーツカラーと特殊アトリビュート**](./09_parts_color.ja.md)
 - 10. [**外部リソースとオプション機能**](./10_optional_features.ja.md)
+- 13. [**アニメーションブレンド / ミキシング**](./13_animation_blending.ja.md) — クロスフェードと whole-animation 合成 (Phase 3)
 
 ### 🛠️ 第4章：リファレンス
 - 11. [**no_std 組み込み環境への統合**](./11_no_std_integration.ja.md)
