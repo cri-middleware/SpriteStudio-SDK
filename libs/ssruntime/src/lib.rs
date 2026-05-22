@@ -398,6 +398,7 @@ struct LayerState<'a> {
     local_vertices: Vec<f32>,
     /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
     mesh_deform: Vec<crate::core::framedata::PartDeformFrame>,
+    raw_vertex_deform: Vec<crate::core::framedata::RawVertexDeform>,
 }
 
 impl<'a> LayerState<'a> {
@@ -414,6 +415,7 @@ impl<'a> LayerState<'a> {
             cell_texture_hashes: Vec::new(),
             local_vertices: Vec::new(),
             mesh_deform: Vec::new(),
+            raw_vertex_deform: Vec::new(),
         }
     }
 }
@@ -655,6 +657,8 @@ impl<'a> Context<'a> {
         layer.cell_texture_hashes.resize(num_parts, 0);
         layer.local_vertices.clear();
         layer.local_vertices.resize(num_parts * crate::core::framedata::LOCAL_VERTICES_STRIDE, 0.0);
+        layer.raw_vertex_deform.clear();
+        layer.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
 
         let globals = &mut self.instance.globals;
         globals.world_matrices.clear();
@@ -706,6 +710,7 @@ impl<'a> Context<'a> {
             &mut self.instance.layer.shader_vec,
             &mut self.instance.layer.vertice_vec,
             &mut self.instance.layer.deform_vec,
+            &mut self.instance.layer.raw_vertex_deform,
             &mut self.instance.layer.cursors,
             &mut self.instance.layer.cell_meta_per_part,
             &mut self.instance.layer.cell_texture_hashes,

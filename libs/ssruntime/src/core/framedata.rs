@@ -207,6 +207,13 @@ impl PartDeformFrame {
     }
 }
 
+#[derive(Default, Copy, Clone)]
+pub struct RawVertexDeform {
+    pub present: bool,
+    pub dx: [f32; 4],
+    pub dy: [f32; 4],
+}
+
 /// Resolves a mesh part's Cell — fixed at frame 0 per the SS mesh spec, so the
 /// first `cell_array` keyframe is authoritative — and extracts its triangulated
 /// geometry. Returns `None` when the part has no cell or the cell carries no
@@ -657,7 +664,7 @@ pub(crate) fn evaluate_part(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn get_parts<'a>(
+pub fn extract_pose<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
     cached_parts: &[CachedPartData<'a>],
     frame_no: f32,
@@ -665,17 +672,12 @@ fn get_parts<'a>(
     cell_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
     parts_color_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
-    vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
-    cells_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
-    parts_color_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
-    shaders_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
-    vertices_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
-    deforms_off: &mut Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
+    raw_vertex_deform: &mut [RawVertexDeform],
     cursors: &mut [usize],
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
-    local_vertices: &mut [f32],
+    mesh_deform: &mut Vec<PartDeformFrame>,
     coordinate_system: SsCoordinateSystem,
     origin: SsOrigin,
     unit: SsUnit,
@@ -687,7 +689,6 @@ fn get_parts<'a>(
     deform_coord_workspace: &mut Vec<runtime::framedata::ss::runtime::Vec2>,
     deform_index_workspace: &mut Vec<i16>,
     inheritance_alphas_workspace: &mut Vec<f32>,
-    mesh_deform: &mut Vec<PartDeformFrame>,
 ) {
     if mesh_deform.len() != cached_parts.len() {
         mesh_deform.resize(cached_parts.len(), PartDeformFrame::default());
@@ -699,7 +700,6 @@ fn get_parts<'a>(
     cell_vec.clear();
     parts_color_vec.clear();
     shader_vec.clear();
-    vertice_vec.clear();
     deform_vec.clear();
     for slot in cell_meta_per_part.iter_mut() {
         *slot = 0.0;
@@ -707,8 +707,8 @@ fn get_parts<'a>(
     for slot in cell_texture_hashes.iter_mut() {
         *slot = 0;
     }
-    for slot in local_vertices.iter_mut() {
-        *slot = 0.0;
+    for slot in raw_vertex_deform.iter_mut() {
+        *slot = RawVertexDeform::default();
     }
 
     inheritance_alphas_workspace.clear();
@@ -719,12 +719,12 @@ fn get_parts<'a>(
         let mut result = evaluate_part(part, frame_no, part_cursors, coordinate_system, origin, unit, canvas_width, canvas_height, start_workspace, end_workspace, out_workspace, deform_coord_workspace, deform_index_workspace);
 
         let cell_meta = result.cell_meta.unwrap_or_default();
-        let (cell_pivot_x, cell_pivot_y, cell_size_w, cell_size_h) = (cell_meta.pivot_x, cell_meta.pivot_y, cell_meta.size_w, cell_meta.size_h);
+        let (cell_size_w, cell_size_h) = (cell_meta.size_w, cell_meta.size_h);
 
         let off = i * 6;
         if off + 6 <= cell_meta_per_part.len() {
-            cell_meta_per_part[off] = cell_pivot_x;
-            cell_meta_per_part[off + 1] = cell_pivot_y;
+            cell_meta_per_part[off] = cell_meta.pivot_x;
+            cell_meta_per_part[off + 1] = cell_meta.pivot_y;
             cell_meta_per_part[off + 2] = cell_size_w;
             cell_meta_per_part[off + 3] = cell_size_h;
             cell_meta_per_part[off + 4] = cell_meta.rect_left;
@@ -778,55 +778,14 @@ fn get_parts<'a>(
             result.part_color = Some(crate::runtime::framedata::ss::runtime::PartAttributePartColor::new(blend_type, &lt, &rt, &lb, &rb));
         }
 
-        if result.cell.is_none() {
-            // Drop any raw deform we might have evaluated; nothing will read it.
-            result.vertex = None;
-        } else {
-            let pivot = (cell_pivot_x, cell_pivot_y);
-
-            let deform = result.vertex.as_ref().map(|v| {
-                let lt = v.lt();
-                let rt = v.rt();
-                let lb = v.lb();
-                let rb = v.rb();
-                ([lt.x(), rt.x(), lb.x(), rb.x()], [lt.y(), rt.y(), lb.y(), rb.y()])
-            });
-
-            let mut pivot_y = result.state.pivot_y();
-            if coordinate_system == SsCoordinateSystem::YDown {
-                pivot_y = -pivot_y;
-            }
-
-            let (vx, mut vy) =
-                crate::core::geometry::compute_local_vertices((result.state.size_x(), result.state.size_y()), pivot, (result.state.pivot_x(), pivot_y), (result.state.img_flip_h(), result.state.img_flip_v()), deform.as_ref().map(|(x, y)| (x, y)));
-
-            if coordinate_system == SsCoordinateSystem::YDown {
-                for y in vy.iter_mut() {
-                    *y = -*y;
-                }
-            }
-
-            let lt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[0], vy[0]);
-            let rt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[1], vy[1]);
-            let lb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[2], vy[2]);
-            let rb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[3], vy[3]);
-            let needs_center = result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex) || result.state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor);
-            let center = if needs_center { crate::runtime::framedata::ss::runtime::Vec2::new(vx[4], vy[4]) } else { crate::runtime::framedata::ss::runtime::Vec2::default() };
-            result.vertex = Some(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &center));
-
-            let off = i * LOCAL_VERTICES_STRIDE;
-            if off + LOCAL_VERTICES_STRIDE <= local_vertices.len() {
-                local_vertices[off] = vx[0];
-                local_vertices[off + 1] = vy[0];
-                local_vertices[off + 2] = vx[1];
-                local_vertices[off + 3] = vy[1];
-                local_vertices[off + 4] = vx[2];
-                local_vertices[off + 5] = vy[2];
-                local_vertices[off + 6] = vx[3];
-                local_vertices[off + 7] = vy[3];
-                local_vertices[off + 8] = vx[4];
-                local_vertices[off + 9] = vy[4];
-            }
+        if let Some(v) = result.vertex.as_ref()
+            && i < raw_vertex_deform.len()
+        {
+            let lt = v.lt();
+            let rt = v.rt();
+            let lb = v.lb();
+            let rb = v.rb();
+            raw_vertex_deform[i] = RawVertexDeform { present: true, dx: [lt.x(), rt.x(), lb.x(), rb.x()], dy: [lt.y(), rt.y(), lb.y(), rb.y()] };
         }
 
         if let Some(cell) = result.cell {
@@ -840,10 +799,6 @@ fn get_parts<'a>(
         if let Some(shader) = result.shader {
             shader_vec.push(shader);
             result.state.set_shader((shader_vec.len() - 1) as i16);
-        }
-        if let Some(vertex) = result.vertex {
-            vertice_vec.push(vertex);
-            result.state.set_vertex((vertice_vec.len() - 1) as i16);
         }
         if result.deform_present {
             let mut args = runtime::framedata::ss::runtime::PartAttributeDeformArgs::default();
@@ -865,36 +820,92 @@ fn get_parts<'a>(
         }
         parts_vec.push(result.state);
     }
+}
 
-    if !cell_vec.is_empty() {
-        *cells_off = Some(fb.create_vector(cell_vec));
-    } else {
-        *cells_off = None;
+pub fn compute_local_vertices_for_parts(
+    parts_vec: &mut [runtime::framedata::ss::runtime::PartState],
+    cell_meta_per_part: &[f32],
+    raw_vertex_deform: &[RawVertexDeform],
+    vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    local_vertices: &mut [f32],
+    coordinate_system: SsCoordinateSystem,
+) {
+    vertice_vec.clear();
+    for slot in local_vertices.iter_mut() {
+        *slot = 0.0;
     }
 
-    if !parts_color_vec.is_empty() {
-        *parts_color_off = Some(fb.create_vector(parts_color_vec));
-    } else {
-        *parts_color_off = None;
-    }
+    for (i, state) in parts_vec.iter_mut().enumerate() {
+        if state.cell() < 0 {
+            continue;
+        }
 
-    if !shader_vec.is_empty() {
-        *shaders_off = Some(fb.create_vector(shader_vec));
-    } else {
-        *shaders_off = None;
-    }
+        let cell_pivot_x = cell_meta_per_part.get(i * 6).copied().unwrap_or(0.0);
+        let cell_pivot_y = cell_meta_per_part.get(i * 6 + 1).copied().unwrap_or(0.0);
+        let pivot = (cell_pivot_x, cell_pivot_y);
 
-    if !vertice_vec.is_empty() {
-        *vertices_off = Some(fb.create_vector(vertice_vec));
-    } else {
-        *vertices_off = None;
-    }
+        let deform = raw_vertex_deform.get(i).filter(|d| d.present).map(|d| (d.dx, d.dy));
 
-    if !deform_vec.is_empty() {
-        *deforms_off = Some(fb.create_vector(deform_vec));
-    } else {
-        *deforms_off = None;
+        let mut pivot_y = state.pivot_y();
+        if coordinate_system == SsCoordinateSystem::YDown {
+            pivot_y = -pivot_y;
+        }
+
+        let (vx, mut vy) = crate::core::geometry::compute_local_vertices((state.size_x(), state.size_y()), pivot, (state.pivot_x(), pivot_y), (state.img_flip_h(), state.img_flip_v()), deform.as_ref().map(|(x, y)| (x, y)));
+
+        if coordinate_system == SsCoordinateSystem::YDown {
+            for y in vy.iter_mut() {
+                *y = -*y;
+            }
+        }
+
+        let lt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[0], vy[0]);
+        let rt = crate::runtime::framedata::ss::runtime::Vec2::new(vx[1], vy[1]);
+        let lb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[2], vy[2]);
+        let rb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[3], vy[3]);
+        let needs_center = state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex) || state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor);
+        let center = if needs_center { crate::runtime::framedata::ss::runtime::Vec2::new(vx[4], vy[4]) } else { crate::runtime::framedata::ss::runtime::Vec2::default() };
+        vertice_vec.push(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &center));
+        state.set_vertex((vertice_vec.len() - 1) as i16);
+
+        let off = i * LOCAL_VERTICES_STRIDE;
+        if off + LOCAL_VERTICES_STRIDE <= local_vertices.len() {
+            local_vertices[off] = vx[0];
+            local_vertices[off + 1] = vy[0];
+            local_vertices[off + 2] = vx[1];
+            local_vertices[off + 3] = vy[1];
+            local_vertices[off + 4] = vx[2];
+            local_vertices[off + 5] = vy[2];
+            local_vertices[off + 6] = vx[3];
+            local_vertices[off + 7] = vy[3];
+            local_vertices[off + 8] = vx[4];
+            local_vertices[off + 9] = vy[4];
+        }
     }
+}
+
+type PoseFbOffsets<'a> = (
+    Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>>,
+    Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>>,
+    Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>>,
+    Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>>,
+    Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>>,
+);
+
+fn serialize_pose_to_fb<'a>(
+    fb: &mut flatbuffers::FlatBufferBuilder<'a>,
+    cell_vec: &[runtime::framedata::ss::runtime::PartAttributeCell],
+    parts_color_vec: &[runtime::framedata::ss::runtime::PartAttributePartColor],
+    shader_vec: &[runtime::framedata::ss::runtime::PartAttributeShader],
+    vertice_vec: &[runtime::framedata::ss::runtime::PartAttributeVertex],
+    deform_vec: &[flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>],
+) -> PoseFbOffsets<'a> {
+    let cells_off = (!cell_vec.is_empty()).then(|| fb.create_vector(cell_vec));
+    let parts_color_off = (!parts_color_vec.is_empty()).then(|| fb.create_vector(parts_color_vec));
+    let shaders_off = (!shader_vec.is_empty()).then(|| fb.create_vector(shader_vec));
+    let vertices_off = (!vertice_vec.is_empty()).then(|| fb.create_vector(vertice_vec));
+    let deforms_off = (!deform_vec.is_empty()).then(|| fb.create_vector(deform_vec));
+    (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1067,6 +1078,7 @@ pub fn get_frame_data<'a>(
     shader_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
     vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: &mut Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
+    raw_vertex_deform: &mut [RawVertexDeform],
     cursors: &mut [usize],
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
@@ -1087,14 +1099,7 @@ pub fn get_frame_data<'a>(
     inheritance_alphas_workspace: &mut Vec<f32>,
     mesh_deform: &mut Vec<PartDeformFrame>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
-    let mut args = runtime::framedata::ss::runtime::FrameDataArgs::default();
-    let mut cells_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeCell>>> = None;
-    let mut parts_color_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributePartColor>>> = None;
-    let mut shaders_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeShader>>> = None;
-    let mut vertices_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, runtime::framedata::ss::runtime::PartAttributeVertex>>> = None;
-    let mut deforms_off: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>>> = None;
-
-    get_parts(
+    extract_pose(
         fb,
         cached_parts,
         frame_no,
@@ -1102,17 +1107,12 @@ pub fn get_frame_data<'a>(
         cell_vec,
         parts_color_vec,
         shader_vec,
-        vertice_vec,
         deform_vec,
-        &mut cells_off,
-        &mut parts_color_off,
-        &mut shaders_off,
-        &mut vertices_off,
-        &mut deforms_off,
+        raw_vertex_deform,
         cursors,
         cell_meta_per_part,
         cell_texture_hashes,
-        local_vertices,
+        mesh_deform,
         coordinate_system,
         origin,
         unit,
@@ -1124,15 +1124,14 @@ pub fn get_frame_data<'a>(
         deform_coord_workspace,
         deform_index_workspace,
         inheritance_alphas_workspace,
-        mesh_deform,
     );
-    args.parts = Some(fb.create_vector(parts_vec));
 
-    args.cells = cells_off;
-    args.parts_color = parts_color_off;
-    args.shaders = shaders_off;
-    args.vertices = vertices_off;
-    args.deforms = deforms_off;
+    compute_local_vertices_for_parts(parts_vec, cell_meta_per_part, raw_vertex_deform, vertice_vec, local_vertices, coordinate_system);
+
+    let (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off) = serialize_pose_to_fb(fb, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec);
+
+    let mut args = runtime::framedata::ss::runtime::FrameDataArgs { cells: cells_off, parts_color: parts_color_off, shaders: shaders_off, vertices: vertices_off, deforms: deforms_off, ..Default::default() };
+    args.parts = Some(fb.create_vector(parts_vec));
 
     // z_order と batch 計算は parts_vec / cell_texture_hashes が満たされた後で行う。
     // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
@@ -1221,5 +1220,193 @@ mod tests {
         assert_eq!(result.state.part_index(), 5);
         assert!(result.cell.is_none());
         assert!(result.part_color.is_none());
+    }
+
+    fn make_stage_b_state(cell_index: i16, size: (f32, f32), pivot: (f32, f32), flag: UpdateAttributeFlags) -> runtime::framedata::ss::runtime::PartState {
+        let mut s = runtime::framedata::ss::runtime::PartState::default();
+        s.set_cell(cell_index);
+        s.set_vertex(-1);
+        s.set_size_x(size.0);
+        s.set_size_y(size.1);
+        s.set_pivot_x(pivot.0);
+        s.set_pivot_y(pivot.1);
+        s.set_update_flag(flag);
+        s
+    }
+
+    #[test]
+    fn stage_b_skips_cellless_parts() {
+        let mut parts_vec = vec![make_stage_b_state(-1, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::empty())];
+        let cell_meta_per_part = vec![0.0_f32; 6];
+        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
+
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+
+        assert!(vertice_vec.is_empty(), "vertice_vec should not gain entries for cell-less parts");
+        assert_eq!(parts_vec[0].vertex(), -1, "vertex index should remain -1");
+        assert!(local_vertices.iter().all(|&v| v == 0.0), "local_vertices for cell-less parts should stay zero");
+    }
+
+    #[test]
+    fn stage_b_resolves_no_deform_box() {
+        // size (10, 20), cell pivot (0, 0), state pivot (0, 0), Y-Up:
+        // 5-corner box centered at origin: LT(-5,10), RT(5,10), LB(-5,-10), RB(5,-10), center(0,0).
+        let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+        let cell_meta_per_part = vec![0.0_f32; 6];
+        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
+
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+
+        assert_eq!(vertice_vec.len(), 1);
+        assert_eq!(parts_vec[0].vertex(), 0);
+        let v = &vertice_vec[0];
+        assert_eq!((v.lt().x(), v.lt().y()), (-5.0, 10.0));
+        assert_eq!((v.rt().x(), v.rt().y()), (5.0, 10.0));
+        assert_eq!((v.lb().x(), v.lb().y()), (-5.0, -10.0));
+        assert_eq!((v.rb().x(), v.rb().y()), (5.0, -10.0));
+        assert_eq!(&local_vertices[..], &[-5.0, 10.0, 5.0, 10.0, -5.0, -10.0, 5.0, -10.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn stage_b_applies_deform_offsets() {
+        // Same box as above + deform offsets per corner. AttributeVertex flag is set so
+        // the packed `PartAttributeVertex.center` carries the Varignon-mean center.
+        let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
+        let cell_meta_per_part = vec![0.0_f32; 6];
+        let raw_vertex_deform = vec![RawVertexDeform { present: true, dx: [1.0, 2.0, 3.0, 4.0], dy: [10.0, 20.0, 30.0, 40.0] }];
+        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
+
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+
+        let v = &vertice_vec[0];
+        assert_eq!((v.lt().x(), v.lt().y()), (-4.0, 20.0)); // base (-5,10) + (1,10)
+        assert_eq!((v.rt().x(), v.rt().y()), (7.0, 30.0)); //      (5,10) + (2,20)
+        assert_eq!((v.lb().x(), v.lb().y()), (-2.0, 20.0)); // (-5,-10) + (3,30)
+        assert_eq!((v.rb().x(), v.rb().y()), (9.0, 30.0)); //  (5,-10) + (4,40)
+        // Varignon center: ((-4+7-2+9)/4, (20+30+20+30)/4) = (2.5, 25)
+        assert_eq!((v.center().x(), v.center().y()), (2.5, 25.0));
+    }
+
+    #[test]
+    fn stage_b_y_down_flips_vertical() {
+        // Same setup as stage_b_resolves_no_deform_box, but Y-Down flips all vy.
+        let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
+        let cell_meta_per_part = vec![0.0_f32; 6];
+        let raw_vertex_deform = vec![RawVertexDeform::default()];
+        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
+
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YDown);
+
+        let v = &vertice_vec[0];
+        // vx unchanged, vy negated.
+        assert_eq!((v.lt().x(), v.lt().y()), (-5.0, -10.0));
+        assert_eq!((v.rt().x(), v.rt().y()), (5.0, -10.0));
+        assert_eq!((v.lb().x(), v.lb().y()), (-5.0, 10.0));
+        assert_eq!((v.rb().x(), v.rb().y()), (5.0, 10.0));
+        assert_eq!((v.center().x(), v.center().y()), (0.0, 0.0));
+    }
+
+    #[test]
+    fn stage_c_empty_vecs_yield_none() {
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
+        let cell_vec: Vec<runtime::framedata::ss::runtime::PartAttributeCell> = Vec::new();
+        let parts_color_vec: Vec<runtime::framedata::ss::runtime::PartAttributePartColor> = Vec::new();
+        let shader_vec: Vec<runtime::framedata::ss::runtime::PartAttributeShader> = Vec::new();
+        let vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let deform_vec: Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform>> = Vec::new();
+
+        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertice_vec, &deform_vec);
+
+        assert!(c.is_none());
+        assert!(pc.is_none());
+        assert!(s.is_none());
+        assert!(v.is_none());
+        assert!(d.is_none());
+    }
+
+    #[test]
+    fn stage_c_populated_vecs_yield_some() {
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
+        let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(&mut fb, &runtime::framedata::ss::runtime::PartAttributeDeformArgs::default());
+
+        let cell_vec = vec![runtime::framedata::ss::runtime::PartAttributeCell::default()];
+        let parts_color_vec = vec![runtime::framedata::ss::runtime::PartAttributePartColor::default()];
+        let shader_vec = vec![runtime::framedata::ss::runtime::PartAttributeShader::default()];
+        let vertice_vec = vec![runtime::framedata::ss::runtime::PartAttributeVertex::default()];
+        let deform_vec = vec![deform_off];
+
+        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertice_vec, &deform_vec);
+
+        assert!(c.is_some());
+        assert!(pc.is_some());
+        assert!(s.is_some());
+        assert!(v.is_some());
+        assert!(d.is_some());
+    }
+
+    #[test]
+    fn stage_c_emits_only_populated_attributes() {
+        // Only deform_vec is populated; the remaining four attributes are empty
+        // and must yield None — never an empty vector offset.
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
+        let deform_off = runtime::framedata::ss::runtime::PartAttributeDeform::create(&mut fb, &runtime::framedata::ss::runtime::PartAttributeDeformArgs::default());
+
+        let cell_vec: Vec<runtime::framedata::ss::runtime::PartAttributeCell> = Vec::new();
+        let parts_color_vec: Vec<runtime::framedata::ss::runtime::PartAttributePartColor> = Vec::new();
+        let shader_vec: Vec<runtime::framedata::ss::runtime::PartAttributeShader> = Vec::new();
+        let vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let deform_vec = vec![deform_off];
+
+        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertice_vec, &deform_vec);
+
+        assert!(c.is_none());
+        assert!(pc.is_none());
+        assert!(s.is_none());
+        assert!(v.is_none());
+        assert!(d.is_some());
+    }
+
+    #[test]
+    fn raw_vertex_deform_default_is_inert() {
+        // `extract_pose` zero-fills `raw_vertex_deform` at the top of each frame
+        // and Stage B reads `present` to decide whether to apply offsets, so the
+        // Default impl must produce `present == false` and zeroed offsets.
+        let d = RawVertexDeform::default();
+        assert!(!d.present);
+        assert_eq!(d.dx, [0.0; 4]);
+        assert_eq!(d.dy, [0.0; 4]);
+    }
+
+    #[test]
+    fn stage_b_center_is_gated_by_update_flag() {
+        // Cell pivot (0.1, 0.2) produces a non-symmetric box whose Varignon center is (-1, -4).
+        let cell_meta_per_part = vec![0.1_f32, 0.2, 10.0, 20.0, 0.0, 0.0];
+        let raw_vertex_deform = vec![RawVertexDeform::default()];
+
+        // Case A: only AttributeCell — center field in vertice_vec stays at default (0, 0),
+        // but local_vertices always carries the computed center.
+        {
+            let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+            let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+            let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
+            compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+            assert_eq!((vertice_vec[0].center().x(), vertice_vec[0].center().y()), (0.0, 0.0));
+            assert_eq!((local_vertices[8], local_vertices[9]), (-1.0, -4.0));
+        }
+
+        // Case B: AttributeVertex also set — center is populated with the computed value.
+        {
+            let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
+            let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+            let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
+            compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+            assert_eq!((vertice_vec[0].center().x(), vertice_vec[0].center().y()), (-1.0, -4.0));
+        }
     }
 }
