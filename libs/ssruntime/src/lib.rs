@@ -540,6 +540,214 @@ impl SourceState {
     fn new() -> Self {
         Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), weight: 1.0 }
     }
+
+    fn is_active(&self) -> bool {
+        self.animation_idx >= 0 && self.weight > 0.0
+    }
+}
+
+fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize, usize, usize, usize) {
+    let mut cell_c = 0;
+    let mut color_c = 0;
+    let mut shader_c = 0;
+    let mut vertex_c = 0;
+    let mut deform_c = 0;
+    for p in &metadata.cached_parts {
+        if p.cell_array.is_some() {
+            cell_c += 1;
+        }
+        if p.part_color_array.is_some() {
+            color_c += 1;
+        }
+        if p.shader_array.is_some() {
+            shader_c += 1;
+        }
+        if p.vertex_array.is_some() {
+            vertex_c += 1;
+        }
+        if p.deform_array.is_some() {
+            deform_c += 1;
+        }
+    }
+    (cell_c, color_c, shader_c, vertex_c, deform_c)
+}
+
+/// Mix per-source poses in `layers` into `resolved_layer` using each
+/// source's `weight`. Continuous PartState attributes (TRSA, geometry, UV,
+/// skew, mask, bounding_radius) and `raw_vertex_deform` are weighted-summed
+/// across active sources after auto-normalization (sum of weights = 1).
+/// Discrete attributes (cell/part_color/shader/vertex/deform indices, the
+/// per-attribute vecs, flip flags, hide, priority, texture, cell_meta,
+/// mesh_deform) are taken from `layers[primary_idx]`. `update_flag` is
+/// OR-merged across active sources so Stage B sees every attribute that
+/// contributed.
+///
+/// A source is "active" when `animation_idx >= 0 && weight > 0.0`. When no
+/// source is active, the resolved pose equals `layers[primary_idx]`.
+fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx: usize, resolved_layer: &mut LayerState<'b>) {
+    let primary = &layers[primary_idx];
+    let num_parts = primary.parts_vec.len();
+
+    // Discrete structure: copied from primary verbatim.
+    resolved_layer.cell_vec.clone_from(&primary.cell_vec);
+    resolved_layer.parts_color_vec.clone_from(&primary.parts_color_vec);
+    resolved_layer.shader_vec.clone_from(&primary.shader_vec);
+    resolved_layer.deform_vec.clone_from(&primary.deform_vec);
+    resolved_layer.cell_meta_per_part.clone_from(&primary.cell_meta_per_part);
+    resolved_layer.cell_texture_hashes.clone_from(&primary.cell_texture_hashes);
+
+    // mesh_deform holds variable-size per-part deltas; deep-copy from primary.
+    if resolved_layer.mesh_deform.len() != num_parts {
+        resolved_layer.mesh_deform.resize(num_parts, crate::core::framedata::PartDeformFrame::default());
+    }
+    for (dst, src) in resolved_layer.mesh_deform.iter_mut().zip(primary.mesh_deform.iter()) {
+        dst.indices.clear();
+        dst.indices.extend_from_slice(&src.indices);
+        dst.dx.clear();
+        dst.dx.extend_from_slice(&src.dx);
+        dst.dy.clear();
+        dst.dy.extend_from_slice(&src.dy);
+    }
+
+    // Stage B fills these; clear them so stale post-mix data is never read.
+    resolved_layer.vertice_vec.clear();
+    for v in resolved_layer.local_vertices.iter_mut() {
+        *v = 0.0;
+    }
+
+    // Sum of active source weights for auto-normalization.
+    let total_weight: f32 = sources.iter().filter(|s| s.is_active()).map(|s| s.weight).sum();
+
+    resolved_layer.parts_vec.clear();
+    resolved_layer.parts_vec.reserve(num_parts);
+    if resolved_layer.raw_vertex_deform.len() != num_parts {
+        resolved_layer.raw_vertex_deform.clear();
+        resolved_layer.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+    } else {
+        for slot in resolved_layer.raw_vertex_deform.iter_mut() {
+            *slot = crate::core::framedata::RawVertexDeform::default();
+        }
+    }
+
+    for i in 0..num_parts {
+        let primary_state = primary.parts_vec[i];
+        let mut mixed = primary_state;
+
+        if total_weight > 0.0 {
+            let inv_total = 1.0 / total_weight;
+            let mut pos_x = 0.0_f32;
+            let mut pos_y = 0.0_f32;
+            let mut pos_z = 0.0_f32;
+            let mut rot_x = 0.0_f32;
+            let mut rot_y = 0.0_f32;
+            let mut rot_z = 0.0_f32;
+            let mut scl_x = 0.0_f32;
+            let mut scl_y = 0.0_f32;
+            let mut loscl_x = 0.0_f32;
+            let mut loscl_y = 0.0_f32;
+            let mut alpha = 0.0_f32;
+            let mut local_alpha = 0.0_f32;
+            let mut pivot_x = 0.0_f32;
+            let mut pivot_y = 0.0_f32;
+            let mut anchor_x = 0.0_f32;
+            let mut anchor_y = 0.0_f32;
+            let mut size_x = 0.0_f32;
+            let mut size_y = 0.0_f32;
+            let mut uv_tx = 0.0_f32;
+            let mut uv_ty = 0.0_f32;
+            let mut uv_rz = 0.0_f32;
+            let mut uv_sx = 0.0_f32;
+            let mut uv_sy = 0.0_f32;
+            let mut bound_r = 0.0_f32;
+            let mut mask = 0.0_f32;
+            let mut skew_x = 0.0_f32;
+            let mut skew_y = 0.0_f32;
+            let mut dx = [0.0_f32; 4];
+            let mut dy = [0.0_f32; 4];
+            let mut deform_present = false;
+            let mut flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
+
+            for (j, src) in sources.iter().enumerate() {
+                if !src.is_active() {
+                    continue;
+                }
+                let w = src.weight * inv_total;
+                let s = &layers[j].parts_vec[i];
+                pos_x += w * s.position_x();
+                pos_y += w * s.position_y();
+                pos_z += w * s.position_z();
+                rot_x += w * s.rotation_x();
+                rot_y += w * s.rotation_y();
+                rot_z += w * s.rotation_z();
+                scl_x += w * s.scale_x();
+                scl_y += w * s.scale_y();
+                loscl_x += w * s.local_scale_x();
+                loscl_y += w * s.local_scale_y();
+                alpha += w * s.alpha();
+                local_alpha += w * s.local_alpha();
+                pivot_x += w * s.pivot_x();
+                pivot_y += w * s.pivot_y();
+                anchor_x += w * s.anchor_x();
+                anchor_y += w * s.anchor_y();
+                size_x += w * s.size_x();
+                size_y += w * s.size_y();
+                uv_tx += w * s.uv_translation_x();
+                uv_ty += w * s.uv_translation_y();
+                uv_rz += w * s.uv_rotation_z();
+                uv_sx += w * s.uv_scale_x();
+                uv_sy += w * s.uv_scale_y();
+                bound_r += w * s.bounding_radius();
+                mask += w * s.mask();
+                skew_x += w * s.skew_x();
+                skew_y += w * s.skew_y();
+                flag |= s.update_flag();
+
+                let rvd = &layers[j].raw_vertex_deform[i];
+                if rvd.present {
+                    deform_present = true;
+                    for k in 0..4 {
+                        dx[k] += w * rvd.dx[k];
+                        dy[k] += w * rvd.dy[k];
+                    }
+                }
+            }
+
+            mixed.set_position_x(pos_x);
+            mixed.set_position_y(pos_y);
+            mixed.set_position_z(pos_z);
+            mixed.set_rotation_x(rot_x);
+            mixed.set_rotation_y(rot_y);
+            mixed.set_rotation_z(rot_z);
+            mixed.set_scale_x(scl_x);
+            mixed.set_scale_y(scl_y);
+            mixed.set_local_scale_x(loscl_x);
+            mixed.set_local_scale_y(loscl_y);
+            mixed.set_alpha(alpha);
+            mixed.set_local_alpha(local_alpha);
+            mixed.set_pivot_x(pivot_x);
+            mixed.set_pivot_y(pivot_y);
+            mixed.set_anchor_x(anchor_x);
+            mixed.set_anchor_y(anchor_y);
+            mixed.set_size_x(size_x);
+            mixed.set_size_y(size_y);
+            mixed.set_uv_translation_x(uv_tx);
+            mixed.set_uv_translation_y(uv_ty);
+            mixed.set_uv_rotation_z(uv_rz);
+            mixed.set_uv_scale_x(uv_sx);
+            mixed.set_uv_scale_y(uv_sy);
+            mixed.set_bounding_radius(bound_r);
+            mixed.set_mask(mask);
+            mixed.set_skew_x(skew_x);
+            mixed.set_skew_y(skew_y);
+            mixed.set_update_flag(flag);
+
+            if deform_present {
+                resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx, dy };
+            }
+        }
+
+        resolved_layer.parts_vec.push(mixed);
+    }
 }
 
 /// Per-instance playback state. Owns one playback source per blend layer,
@@ -678,30 +886,7 @@ impl<'a> Context<'a> {
         primary.weight = 1.0;
 
         let num_parts = metadata.cached_parts.len();
-
-        let mut cell_c = 0;
-        let mut color_c = 0;
-        let mut shader_c = 0;
-        let mut vertex_c = 0;
-        let mut deform_c = 0;
-
-        for p in &metadata.cached_parts {
-            if p.cell_array.is_some() {
-                cell_c += 1;
-            }
-            if p.part_color_array.is_some() {
-                color_c += 1;
-            }
-            if p.shader_array.is_some() {
-                shader_c += 1;
-            }
-            if p.vertex_array.is_some() {
-                vertex_c += 1;
-            }
-            if p.deform_array.is_some() {
-                deform_c += 1;
-            }
-        }
+        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
 
         for layer in self.instance.layers.iter_mut() {
             layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
@@ -730,6 +915,142 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
+    /// Adds a secondary blend source. Returns a stable `u32` handle (slot
+    /// index) that can be used with `set_source_weight`, `set_primary`,
+    /// `source_set_frame`, `source_set_speed`, and `remove_blend_source`.
+    ///
+    /// The animation must live in the currently bound `AnimationResource`
+    /// (same-SSAB constraint). Call `setup_animation` first to establish
+    /// the primary; this method errors with `AnimationNotFound` until then.
+    pub fn add_blend_source(&mut self, name: &str, weight: f32) -> Result<u32, error::SSRuntimeError> {
+        let hash = fnv1a_hash_str(name);
+        self.add_blend_source_by_hash(hash, weight)
+    }
+
+    pub fn add_blend_source_by_hash(&mut self, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
+        let Some(resource) = self.eval.resource else {
+            return Err(error::SSRuntimeError::NotLoaded);
+        };
+        if self.instance.primary_source().animation_idx < 0 {
+            return Err(error::SSRuntimeError::AnimationNotFound);
+        }
+        let Some(index) = resource.find_animation_index_by_hash(hash) else {
+            return Err(error::SSRuntimeError::AnimationNotFound);
+        };
+
+        let metadata = &resource.animations[index];
+        let num_parts = metadata.cached_parts.len();
+        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+
+        let mut source = SourceState::new();
+        source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
+        source.animation_idx = index as i32;
+        source.weight = weight;
+        self.instance.sources.push(source);
+
+        let mut layer = LayerState::new();
+        layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+        self.instance.layers.push(layer);
+
+        Ok((self.instance.sources.len() - 1) as u32)
+    }
+
+    /// Marks the given slot as inactive. Stable handles: the slot remains
+    /// in `sources`/`layers` (so other handles do not shift), but mix
+    /// iteration skips it. Cannot remove the primary slot; call
+    /// `set_primary` to relocate the primary first.
+    pub fn remove_blend_source(&mut self, handle: u32) -> Result<(), error::SSRuntimeError> {
+        if handle == self.instance.primary {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        let idx = handle as usize;
+        let Some(source) = self.instance.sources.get_mut(idx) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        source.controller.reset_setup();
+        source.animation_idx = -1;
+        source.weight = 0.0;
+        Ok(())
+    }
+
+    /// Deactivates every non-primary slot. The primary stays untouched.
+    pub fn clear_blend_sources(&mut self) {
+        let primary_idx = self.instance.primary_idx();
+        for (i, source) in self.instance.sources.iter_mut().enumerate() {
+            if i == primary_idx {
+                continue;
+            }
+            source.controller.reset_setup();
+            source.animation_idx = -1;
+            source.weight = 0.0;
+        }
+    }
+
+    pub fn blend_source_count(&self) -> u32 {
+        self.instance.sources.iter().filter(|s| s.animation_idx >= 0).count() as u32
+    }
+
+    pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), error::SSRuntimeError> {
+        let idx = handle as usize;
+        let Some(source) = self.instance.sources.get_mut(idx) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        if source.animation_idx < 0 {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        source.weight = weight;
+        Ok(())
+    }
+
+    pub fn source_weight(&self, handle: u32) -> Option<f32> {
+        let source = self.instance.sources.get(handle as usize)?;
+        (source.animation_idx >= 0).then_some(source.weight)
+    }
+
+    pub fn set_primary(&mut self, handle: u32) -> Result<(), error::SSRuntimeError> {
+        let Some(source) = self.instance.sources.get(handle as usize) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        if source.animation_idx < 0 {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        self.instance.primary = handle;
+        Ok(())
+    }
+
+    pub fn primary_handle(&self) -> u32 {
+        self.instance.primary
+    }
+
+    pub fn source_set_frame(&mut self, handle: u32, frame: f32) -> Result<(), error::SSRuntimeError> {
+        let idx = handle as usize;
+        let Some(source) = self.instance.sources.get_mut(idx) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        if source.animation_idx < 0 {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        source.controller.set_frame_no(frame);
+        Ok(())
+    }
+
+    pub fn source_frame(&self, handle: u32) -> Option<f32> {
+        let source = self.instance.sources.get(handle as usize)?;
+        (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
+    }
+
+    pub fn source_set_speed(&mut self, handle: u32, speed: f32) -> Result<(), error::SSRuntimeError> {
+        let idx = handle as usize;
+        let Some(source) = self.instance.sources.get_mut(idx) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        if source.animation_idx < 0 {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        source.controller.set_animation_speed(speed);
+        Ok(())
+    }
+
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
         let Some(resource) = self.eval.resource else {
             return Err(error::SSRuntimeError::NotLoaded);
@@ -751,20 +1072,35 @@ impl<'a> Context<'a> {
         let origin = self.instance.origin;
         let unit = self.instance.unit;
 
-        // Stage A: per-source pose extraction. PR 2 runs this exactly once
-        // (N=1, primary only); PR 3 widens it to all blend sources.
+        // Stage A: per-source pose extraction. Each source uses its own
+        // controller-driven frame; primary uses the explicit `frame_no`
+        // argument to preserve single-animation backward compatibility.
+        // Primary is always extracted regardless of its weight — `mix_poses`
+        // uses it as the discrete-attribute / structure source even when its
+        // continuous-value contribution is zero.
+        // Stage A: per-source pose extraction. Each source uses its own
+        // controller-driven frame; primary uses the explicit `frame_no`
+        // argument to preserve single-animation backward compatibility.
+        // Primary is always extracted regardless of its weight — `mix_poses`
+        // uses it as the discrete-attribute / structure source even when its
+        // continuous-value contribution is zero.
+        let primary_idx = self.instance.primary_idx();
         let num_sources = self.instance.sources.len();
         for i in 0..num_sources {
             let source_anim_idx = self.instance.sources[i].animation_idx;
             if source_anim_idx < 0 {
                 continue;
             }
+            if i != primary_idx && self.instance.sources[i].weight <= 0.0 {
+                continue;
+            }
+            let frame_for_source = if i == primary_idx { frame_no } else { self.instance.sources[i].controller.get_frame_no() };
             let metadata = &resource.animations[source_anim_idx as usize];
             let layer = &mut self.instance.layers[i];
             core::framedata::extract_pose(
                 &mut self.eval.fb,
                 &metadata.cached_parts,
-                frame_no,
+                frame_for_source,
                 &mut layer.parts_vec,
                 &mut layer.cell_vec,
                 &mut layer.parts_color_vec,
@@ -789,11 +1125,7 @@ impl<'a> Context<'a> {
             );
         }
 
-        // "Mix" step. PR 2 swaps primary's per-source pose into
-        // `resolved_layer` (no-op mix for N=1); PR 3 replaces this with
-        // `mix_poses(...)`.
-        let primary_idx = self.instance.primary_idx();
-        ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
+        mix_poses(&self.instance.sources, &self.instance.layers, primary_idx, &mut self.instance.resolved_layer);
 
         // Stage B + C + draw plan on the resolved pose.
         let resolved = &mut self.instance.resolved_layer;
@@ -1352,11 +1684,21 @@ impl<'a> Context<'a> {
     // Playback control
 
     pub fn update(&mut self, delta: f32) -> f32 {
-        let res = self.instance.primary_source_mut().controller.update(delta);
+        let primary_idx = self.instance.primary_idx();
+        let mut primary_frame = 0.0;
+        for (i, source) in self.instance.sources.iter_mut().enumerate() {
+            if source.animation_idx < 0 {
+                continue;
+            }
+            let frame = source.controller.update(delta);
+            if i == primary_idx {
+                primary_frame = frame;
+            }
+        }
 
         self.collect_events();
 
-        res
+        primary_frame
     }
 
     fn collect_events(&mut self) {
@@ -2571,5 +2913,429 @@ mod tests {
         let names = unsafe { (*ptr).get_animation_names() };
         assert!(names.contains(&alloc::string::String::from("anime_1")));
         drop(clone);
+    }
+
+    fn build_mix_layer(parts: &[(f32, f32, f32, f32, f32, Option<([f32; 4], [f32; 4])>)]) -> LayerState<'static> {
+        // tuple: (pos_x, pos_y, rot_z, scale, alpha, optional (dx, dy) deform).
+        let mut layer = LayerState::new();
+        for (i, p) in parts.iter().enumerate() {
+            let mut s = runtime::framedata::ss::runtime::PartState::default();
+            s.set_part_index(i as i16);
+            s.set_cell(-1);
+            s.set_vertex(-1);
+            s.set_position_x(p.0);
+            s.set_position_y(p.1);
+            s.set_rotation_z(p.2);
+            s.set_scale_x(p.3);
+            s.set_scale_y(p.3);
+            s.set_alpha(p.4);
+            s.set_size_x(10.0);
+            s.set_size_y(10.0);
+            s.set_update_flag(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX);
+            layer.parts_vec.push(s);
+            let rvd = match p.5 {
+                Some((dx, dy)) => crate::core::framedata::RawVertexDeform { present: true, dx, dy },
+                None => crate::core::framedata::RawVertexDeform::default(),
+            };
+            layer.raw_vertex_deform.push(rvd);
+        }
+        layer
+    }
+
+    fn mix_source(weight: f32) -> SourceState {
+        let mut s = SourceState::new();
+        s.animation_idx = 0; // any non-negative value makes it active
+        s.weight = weight;
+        s
+    }
+
+    #[test]
+    fn mix_poses_single_source_passthrough() {
+        let layers = vec![build_mix_layer(&[(10.0, 20.0, 1.5, 2.0, 0.5, None)])];
+        let sources = vec![mix_source(1.0)];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        assert_eq!(resolved.parts_vec.len(), 1);
+        let r = &resolved.parts_vec[0];
+        assert_eq!(r.position_x(), 10.0);
+        assert_eq!(r.position_y(), 20.0);
+        assert_eq!(r.rotation_z(), 1.5);
+        assert_eq!(r.scale_x(), 2.0);
+        assert_eq!(r.alpha(), 0.5);
+    }
+
+    #[test]
+    fn mix_poses_50_50_blend_trsa() {
+        let layer_a = build_mix_layer(&[(10.0, 20.0, 0.0, 1.0, 1.0, None)]);
+        let layer_b = build_mix_layer(&[(30.0, 40.0, 1.5708, 2.0, 0.5, None)]);
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let layers = vec![layer_a, layer_b];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        let r = &resolved.parts_vec[0];
+        assert!((r.position_x() - 20.0).abs() < 1e-6);
+        assert!((r.position_y() - 30.0).abs() < 1e-6);
+        assert!((r.rotation_z() - 0.7854).abs() < 1e-4);
+        assert!((r.scale_x() - 1.5).abs() < 1e-6);
+        assert!((r.alpha() - 0.75).abs() < 1e-6);
+    }
+
+    #[test]
+    fn mix_poses_auto_normalizes_weights() {
+        let layer_a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layer_b = build_mix_layer(&[(100.0, 100.0, 0.0, 1.0, 1.0, None)]);
+        let layers = vec![layer_a, layer_b];
+
+        let mut resolved_a = LayerState::new();
+        mix_poses(&vec![mix_source(0.7), mix_source(0.3)], &layers, 0, &mut resolved_a);
+
+        let mut resolved_b = LayerState::new();
+        mix_poses(&vec![mix_source(7.0), mix_source(3.0)], &layers, 0, &mut resolved_b);
+
+        // Same ratio → same mix outcome regardless of absolute magnitudes.
+        assert!((resolved_a.parts_vec[0].position_x() - resolved_b.parts_vec[0].position_x()).abs() < 1e-5);
+        assert!((resolved_a.parts_vec[0].position_x() - 30.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn mix_poses_inactive_animation_idx_skipped() {
+        let layer_a = build_mix_layer(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layer_b = build_mix_layer(&[(90.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layers = vec![layer_a, layer_b];
+
+        let mut src_b = mix_source(1.0);
+        src_b.animation_idx = -1; // removed slot — must be skipped
+        let sources = vec![mix_source(1.0), src_b];
+
+        let mut resolved = LayerState::new();
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        // Only source A contributes; resolved == primary verbatim.
+        assert_eq!(resolved.parts_vec[0].position_x(), 10.0);
+    }
+
+    #[test]
+    fn mix_poses_zero_weight_source_skipped() {
+        let layer_a = build_mix_layer(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layer_b = build_mix_layer(&[(90.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layers = vec![layer_a, layer_b];
+
+        // A active, B weight 0 → only A contributes. inv_total = 1/1 → x = 10.
+        let sources = vec![mix_source(1.0), mix_source(0.0)];
+
+        let mut resolved = LayerState::new();
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        assert_eq!(resolved.parts_vec[0].position_x(), 10.0);
+    }
+
+    #[test]
+    fn mix_poses_total_weight_zero_uses_primary() {
+        let layer_a = build_mix_layer(&[(7.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layer_b = build_mix_layer(&[(99.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layers = vec![layer_a, layer_b];
+
+        // All weights zero. Fall back to primary's pose.
+        let sources = vec![mix_source(0.0), mix_source(0.0)];
+
+        let mut resolved = LayerState::new();
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        assert_eq!(resolved.parts_vec[0].position_x(), 7.0);
+    }
+
+    #[test]
+    fn mix_poses_raw_vertex_deform_weighted() {
+        let layer_a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, Some(([1.0, 2.0, 3.0, 4.0], [10.0, 20.0, 30.0, 40.0])))]);
+        let layer_b = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, Some(([5.0, 6.0, 7.0, 8.0], [50.0, 60.0, 70.0, 80.0])))]);
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let layers = vec![layer_a, layer_b];
+
+        let mut resolved = LayerState::new();
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        let d = &resolved.raw_vertex_deform[0];
+        assert!(d.present);
+        assert!((d.dx[0] - 3.0).abs() < 1e-6);
+        assert!((d.dx[3] - 6.0).abs() < 1e-6);
+        assert!((d.dy[0] - 30.0).abs() < 1e-6);
+        assert!((d.dy[3] - 60.0).abs() < 1e-6);
+    }
+
+    fn load_ringo_resource() -> SsabData {
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo_ssab/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        SsabData::load_copy(&input_buf).expect("Failed to load SsabData")
+    }
+
+    fn evaluate_ringo(resource: &AnimationResource<'_>, anim: &str) -> Vec<(f32, f32, f32, f32)> {
+        let mut ctx = Context::new();
+        ctx.bind_resource(resource);
+        ctx.setup_animation(anim).unwrap_or_else(|_| panic!("setup_animation({anim}) failed"));
+        let start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        let _ = ctx.get_frame_data(start).expect("get_frame_data failed");
+        ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
+    }
+
+    #[test]
+    fn ringo_blend_walk_run_at_50_50_is_midpoint() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let walk = evaluate_ringo(&resource, "walk");
+        let run = evaluate_ringo(&resource, "run");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        let handle = ctx.add_blend_source("run", 1.0).expect("add_blend_source(run) failed");
+        let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame() as f32;
+        ctx.source_set_frame(handle, run_start).unwrap();
+        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
+        let mixed: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
+
+        assert_eq!(walk.len(), run.len());
+        assert_eq!(walk.len(), mixed.len());
+        for i in 0..walk.len() {
+            let (wx, wy, wr, wa) = walk[i];
+            let (rx, ry, rr, ra) = run[i];
+            let (mx, my, mr, ma) = mixed[i];
+            // Auto-normalized 1.0 / 1.0 weights → 50/50 midpoint per attribute.
+            assert!((mx - 0.5 * (wx + rx)).abs() < 1e-3, "part {i} position_x: mixed={mx} expected_midpoint={}", 0.5 * (wx + rx));
+            assert!((my - 0.5 * (wy + ry)).abs() < 1e-3, "part {i} position_y");
+            assert!((mr - 0.5 * (wr + rr)).abs() < 1e-3, "part {i} rotation_z");
+            assert!((ma - 0.5 * (wa + ra)).abs() < 1e-3, "part {i} alpha");
+        }
+    }
+
+    #[test]
+    fn ringo_blend_zero_weight_secondary_equals_primary() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let walk_only = evaluate_ringo(&resource, "walk");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        let _ = ctx.add_blend_source("run", 0.0).expect("add_blend_source(run) failed");
+        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
+        let with_inactive: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
+
+        // Zero-weight secondary contributes nothing; resolved must equal primary verbatim.
+        assert_eq!(walk_only, with_inactive);
+    }
+
+    #[test]
+    fn ringo_blend_removed_source_equals_primary() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let walk_only = evaluate_ringo(&resource, "walk");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        let handle = ctx.add_blend_source("run", 1.0).expect("add_blend_source(run) failed");
+        ctx.remove_blend_source(handle).expect("remove_blend_source failed");
+        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
+        let after_remove: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
+
+        assert_eq!(walk_only, after_remove);
+    }
+
+    #[test]
+    fn ringo_blend_api_validates_state() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        // add_blend_source before setup_animation -> AnimationNotFound.
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        assert!(matches!(ctx.add_blend_source("run", 1.0), Err(error::SSRuntimeError::AnimationNotFound)));
+
+        ctx.setup_animation("walk").unwrap();
+
+        // Unknown animation name -> AnimationNotFound.
+        assert!(matches!(ctx.add_blend_source("not_a_real_anim", 1.0), Err(error::SSRuntimeError::AnimationNotFound)));
+
+        // Cannot remove the primary slot.
+        let primary = ctx.primary_handle();
+        assert!(matches!(ctx.remove_blend_source(primary), Err(error::SSRuntimeError::InvalidParameter)));
+
+        // Invalid handle on weight/frame/primary/speed setters.
+        assert!(matches!(ctx.set_source_weight(99, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.source_set_frame(99, 0.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.source_set_speed(99, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.set_primary(99), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(ctx.source_weight(99).is_none());
+        assert!(ctx.source_frame(99).is_none());
+    }
+
+    #[test]
+    fn ringo_set_primary_routes_to_new_primary() {
+        // After set_primary, all primary-targeted accessors must route to
+        // the new primary's controller; the old primary's state must remain
+        // independent.
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+
+        let walk_handle = ctx.primary_handle();
+        let run_handle = ctx.add_blend_source("run", 1.0).unwrap();
+        assert_eq!(ctx.primary_handle(), walk_handle);
+
+        // Set walk to frame 5 via primary-targeted setter.
+        ctx.set_frame_no(5.0);
+        assert_eq!(ctx.get_frame_no(), 5.0);
+
+        // Swap primary to run; primary-targeted setter now targets run.
+        ctx.set_primary(run_handle).unwrap();
+        assert_eq!(ctx.primary_handle(), run_handle);
+        ctx.set_frame_no(20.0);
+        assert_eq!(ctx.get_frame_no(), 20.0);
+
+        // Swap back to walk; walk's frame must be unchanged by run-period mutations.
+        ctx.set_primary(walk_handle).unwrap();
+        assert_eq!(ctx.primary_handle(), walk_handle);
+        assert_eq!(ctx.get_frame_no(), 5.0, "walk's controller must be independent of run's");
+
+        // And one more swap confirms run's frame is also preserved.
+        ctx.set_primary(run_handle).unwrap();
+        assert_eq!(ctx.get_frame_no(), 20.0);
+    }
+
+    #[test]
+    fn ringo_clear_blend_sources_deactivates_secondaries() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+
+        let primary_handle = ctx.primary_handle();
+        let h1 = ctx.add_blend_source("run", 1.0).unwrap();
+        let h2 = ctx.add_blend_source("dance", 1.0).unwrap();
+        let h3 = ctx.add_blend_source("jump", 1.0).unwrap();
+        assert_eq!(ctx.blend_source_count(), 4);
+
+        ctx.clear_blend_sources();
+
+        // Primary stays active; every secondary is deactivated.
+        assert_eq!(ctx.blend_source_count(), 1);
+        assert_eq!(ctx.primary_handle(), primary_handle);
+        assert!(ctx.source_weight(primary_handle).is_some());
+        assert!(ctx.source_weight(h1).is_none());
+        assert!(ctx.source_weight(h2).is_none());
+        assert!(ctx.source_weight(h3).is_none());
+
+        // get_frame_data still produces a non-empty pose after clear.
+        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data should succeed after clear");
+        assert!(!ctx.instance.resolved_layer.parts_vec.is_empty());
+    }
+
+    #[test]
+    fn ringo_blend_source_set_speed() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let handle = ctx.add_blend_source("run", 1.0).unwrap();
+
+        // Valid handle: any positive speed accepted.
+        assert!(ctx.source_set_speed(handle, 2.0).is_ok());
+        assert!(ctx.source_set_speed(handle, 0.5).is_ok());
+
+        // Removed slot returns InvalidParameter.
+        ctx.remove_blend_source(handle).unwrap();
+        assert!(matches!(ctx.source_set_speed(handle, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
+    }
+
+    #[test]
+    fn ringo_blend_primary_weight_zero_keeps_structure() {
+        // Regression for the bug where Stage A skipped the primary when its
+        // weight was 0, leaving the resolved pose empty. Primary is the
+        // discrete/structure source and must always be extracted regardless
+        // of weight; its weight only controls its continuous-value share.
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let run_only = evaluate_ringo(&resource, "run");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        let primary_handle = ctx.primary_handle();
+        let handle = ctx.add_blend_source("run", 1.0).expect("add_blend_source(run) failed");
+        let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame() as f32;
+        ctx.source_set_frame(handle, run_start).unwrap();
+        ctx.set_source_weight(primary_handle, 0.0).unwrap();
+        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
+        let resolved: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
+
+        // Primary's structure must be preserved: parts count matches run (same SSAE).
+        assert!(!resolved.is_empty(), "resolved parts_vec must not be empty when primary weight=0");
+        assert_eq!(resolved.len(), run_only.len());
+
+        // Continuous values must equal the secondary verbatim (total_weight = 1.0, w = 1.0 for run only).
+        for i in 0..resolved.len() {
+            let (mx, my, mr, ma) = resolved[i];
+            let (rx, ry, rr, ra) = run_only[i];
+            assert!((mx - rx).abs() < 1e-3, "part {i} position_x: mixed={mx} run={rx}");
+            assert!((my - ry).abs() < 1e-3, "part {i} position_y");
+            assert!((mr - rr).abs() < 1e-3, "part {i} rotation_z");
+            assert!((ma - ra).abs() < 1e-3, "part {i} alpha");
+        }
+    }
+
+    #[test]
+    fn ringo_blend_weight_round_trip() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let handle = ctx.add_blend_source("run", 0.42).unwrap();
+        assert_eq!(ctx.source_weight(handle), Some(0.42));
+
+        ctx.set_source_weight(handle, 0.9).unwrap();
+        assert_eq!(ctx.source_weight(handle), Some(0.9));
+
+        ctx.remove_blend_source(handle).unwrap();
+        assert!(ctx.source_weight(handle).is_none());
+    }
+
+    #[test]
+    fn mix_poses_update_flag_or_merged() {
+        // Source A has AttributePosX set, source B has AttributeRotZ. The mixed
+        // pose must report both so Stage B's `needs_center` and any consumer
+        // logic see every attribute that contributed to the value.
+        let mut layer_a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let mut layer_b = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        layer_a.parts_vec[0].set_update_flag(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX);
+        layer_b.parts_vec[0].set_update_flag(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotZ);
+
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let layers = vec![layer_a, layer_b];
+
+        let mut resolved = LayerState::new();
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        let f = resolved.parts_vec[0].update_flag();
+        assert!(f.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
+        assert!(f.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotZ));
     }
 }
