@@ -551,6 +551,58 @@ impl SSRuntimeContext {
         self.inner.prev_frame();
     }
 
+    // Animation blending (Phase 3). Mirrors the C FFI surface; see
+    // `Context::add_blend_source` for the "Primary owns the structure,
+    // secondaries contribute continuous values" model.
+
+    pub fn add_blend_source(&mut self, name: &str, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_blend_source(name, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn add_blend_source_by_hash(&mut self, hash: u32, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_blend_source_by_hash(hash, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn remove_blend_source(&mut self, handle: u32) -> Result<(), JsValue> {
+        self.inner.remove_blend_source(handle).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn clear_blend_sources(&mut self) {
+        self.inner.clear_blend_sources();
+    }
+
+    pub fn blend_source_count(&self) -> u32 {
+        self.inner.blend_source_count()
+    }
+
+    pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), JsValue> {
+        self.inner.set_source_weight(handle, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn source_weight(&self, handle: u32) -> Option<f32> {
+        self.inner.source_weight(handle)
+    }
+
+    pub fn set_primary(&mut self, handle: u32) -> Result<(), JsValue> {
+        self.inner.set_primary(handle).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn primary_handle(&self) -> u32 {
+        self.inner.primary_handle()
+    }
+
+    pub fn source_set_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
+        self.inner.source_set_frame(handle, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn source_frame(&self, handle: u32) -> Option<f32> {
+        self.inner.source_frame(handle)
+    }
+
+    pub fn source_set_speed(&mut self, handle: u32, speed: f32) -> Result<(), JsValue> {
+        self.inner.source_set_speed(handle, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
     pub fn get_passed_event_count(&self) -> i32 {
         self.inner.get_passed_event_indices().len() as i32
     }
