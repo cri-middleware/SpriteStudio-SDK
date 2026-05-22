@@ -795,6 +795,13 @@ impl<'a> InstanceState<'a> {
         self.primary as usize
     }
 
+    fn collapse_to_primary(&mut self) {
+        self.sources.truncate(1);
+        self.layers.truncate(1);
+        self.sources[0] = SourceState::new();
+        self.primary = 0;
+    }
+
     fn primary_source(&self) -> &SourceState {
         &self.sources[self.primary_idx()]
     }
@@ -837,13 +844,8 @@ impl<'a> Context<'a> {
     pub fn reset(&mut self) {
         self.eval.resource = None;
         self.eval.fb.reset();
-        let primary = self.instance.primary_source_mut();
-        primary.controller.reset_setup();
-        primary.animation_idx = -1;
-        primary.weight = 1.0;
-        for layer in self.instance.layers.iter_mut() {
-            layer.cursors.clear();
-        }
+        self.instance.collapse_to_primary();
+        self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
         self.instance.coordinate_system = crate::core::SsCoordinateSystem::default();
         self.instance.origin = crate::core::SsOrigin::default();
@@ -863,13 +865,8 @@ impl<'a> Context<'a> {
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
         self.eval.resource = Some(resource);
         self.eval.fb.reset();
-        let primary = self.instance.primary_source_mut();
-        primary.controller.reset_setup();
-        primary.animation_idx = -1;
-        primary.weight = 1.0;
-        for layer in self.instance.layers.iter_mut() {
-            layer.cursors.clear();
-        }
+        self.instance.collapse_to_primary();
+        self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
         // Configuration (coordinate_system, origin, unit) is preserved.
     }
@@ -893,6 +890,7 @@ impl<'a> Context<'a> {
         };
 
         let metadata = &resource.animations[index];
+        self.instance.collapse_to_primary();
         let primary = self.instance.primary_source_mut();
         primary.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
         primary.animation_idx = index as i32;
@@ -3317,6 +3315,65 @@ mod tests {
             assert!((mr - rr).abs() < 1e-3, "part {i} rotation_z");
             assert!((ma - ra).abs() < 1e-3, "part {i} alpha");
         }
+    }
+
+    #[test]
+    fn setup_animation_after_add_blend_clears_secondary() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let _run = ctx.add_blend_source("run", 0.5).unwrap();
+        assert_eq!(ctx.blend_source_count(), 2);
+
+        ctx.setup_animation("dance").unwrap();
+
+        assert_eq!(ctx.blend_source_count(), 1, "secondary slots must be cleared by setup_animation");
+        assert_eq!(ctx.primary_handle(), 0);
+        assert_eq!(ctx.instance.sources.len(), 1);
+        assert_eq!(ctx.instance.layers.len(), 1);
+    }
+
+    #[test]
+    fn setup_animation_resets_primary_handle() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let run = ctx.add_blend_source("run", 0.5).unwrap();
+        ctx.set_primary(run).unwrap();
+        assert_eq!(ctx.primary_handle(), run);
+
+        ctx.setup_animation("dance").unwrap();
+
+        assert_eq!(ctx.primary_handle(), 0, "setup_animation must reset primary to slot 0");
+        assert_eq!(ctx.instance.sources.len(), 1);
+    }
+
+    #[test]
+    fn bind_resource_clears_blend_state() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let _ = ctx.add_blend_source("run", 0.5).unwrap();
+        assert_eq!(ctx.blend_source_count(), 2);
+
+        // Re-bind to the same resource (same effect as switching to a new one
+        // for blend-state semantics). The blend slots must collapse.
+        ctx.bind_resource(&resource);
+
+        assert_eq!(ctx.instance.sources.len(), 1);
+        assert_eq!(ctx.instance.layers.len(), 1);
+        assert_eq!(ctx.primary_handle(), 0);
+        // Primary is also reset: animation_idx < 0 → blend_source_count is 0.
+        assert_eq!(ctx.blend_source_count(), 0);
     }
 
     #[test]
