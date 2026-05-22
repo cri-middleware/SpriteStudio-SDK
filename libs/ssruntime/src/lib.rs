@@ -803,6 +803,19 @@ impl<'a> InstanceState<'a> {
         let idx = self.primary_idx();
         &mut self.sources[idx]
     }
+
+    /// `true` when the primary is the only active source. The mix step can
+    /// short-circuit to a `mem::swap` in this case — the weighted sum would
+    /// yield primary's pose verbatim with `inv_total * primary.weight == 1.0`,
+    /// so the swap is byte-equivalent to running `mix_poses` while skipping
+    /// the per-part vec clone + 27 per-part PartState setter calls.
+    fn primary_is_only_active(&self) -> bool {
+        let primary_idx = self.primary_idx();
+        if !self.sources[primary_idx].is_active() {
+            return false;
+        }
+        !self.sources.iter().enumerate().any(|(i, s)| i != primary_idx && s.is_active())
+    }
 }
 
 pub struct Context<'a> {
@@ -1125,7 +1138,13 @@ impl<'a> Context<'a> {
             );
         }
 
-        mix_poses(&self.instance.sources, &self.instance.layers, primary_idx, &mut self.instance.resolved_layer);
+        if self.instance.primary_is_only_active() {
+            // Fast path: weighted sum with one active source = identity. Swap
+            // is O(1) vs `mix_poses`'s per-part vec clone + 27 setters.
+            ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
+        } else {
+            mix_poses(&self.instance.sources, &self.instance.layers, primary_idx, &mut self.instance.resolved_layer);
+        }
 
         // Stage B + C + draw plan on the resolved pose.
         let resolved = &mut self.instance.resolved_layer;
