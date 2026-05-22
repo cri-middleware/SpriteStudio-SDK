@@ -15209,13 +15209,13 @@ impl<'a> PartData<'a> {
   pub const VT_PARENT_INDEX: ::flatbuffers::VOffsetT = 6;
   pub const VT_BOUNDS_TYPE: ::flatbuffers::VOffsetT = 8;
   pub const VT_BLEND_TYPE: ::flatbuffers::VOffsetT = 10;
-  pub const VT_MASK_INFLUENCE: ::flatbuffers::VOffsetT = 12;
-  pub const VT_MESH_BINDING: ::flatbuffers::VOffsetT = 14;
-  pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 16;
-  pub const VT_PART_TYPE: ::flatbuffers::VOffsetT = 18;
-  pub const VT_MASK_WRITE: ::flatbuffers::VOffsetT = 20;
-  pub const VT_VISIBLE_INSIDE_MASK: ::flatbuffers::VOffsetT = 22;
-  pub const VT_OUTPUT_INFLUENCE: ::flatbuffers::VOffsetT = 24;
+  pub const VT_VISIBLE_INSIDE_MASK: ::flatbuffers::VOffsetT = 12;
+  pub const VT_MASK_WRITE: ::flatbuffers::VOffsetT = 14;
+  pub const VT_MASK_INFLUENCE: ::flatbuffers::VOffsetT = 16;
+  pub const VT_OUTPUT_INFLUENCE: ::flatbuffers::VOffsetT = 18;
+  pub const VT_MESH_BINDING: ::flatbuffers::VOffsetT = 20;
+  pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 22;
+  pub const VT_PART_TYPE: ::flatbuffers::VOffsetT = 24;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -15231,11 +15231,11 @@ impl<'a> PartData<'a> {
     if let Some(x) = args.mesh_binding { builder.add_mesh_binding(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_parent_index(args.parent_index);
-    builder.add_output_influence(args.output_influence);
-    builder.add_visible_inside_mask(args.visible_inside_mask);
-    builder.add_mask_write(args.mask_write);
     builder.add_part_type_type(args.part_type_type);
+    builder.add_output_influence(args.output_influence);
     builder.add_mask_influence(args.mask_influence);
+    builder.add_mask_write(args.mask_write);
+    builder.add_visible_inside_mask(args.visible_inside_mask);
     builder.add_blend_type(args.blend_type);
     builder.add_bounds_type(args.bounds_type);
     builder.finish()
@@ -15248,7 +15248,10 @@ impl<'a> PartData<'a> {
     let parent_index = self.parent_index();
     let bounds_type = self.bounds_type();
     let blend_type = self.blend_type();
+    let visible_inside_mask = self.visible_inside_mask();
+    let mask_write = self.mask_write();
     let mask_influence = self.mask_influence();
+    let output_influence = self.output_influence();
     let mesh_binding = self.mesh_binding().map(|x| {
       alloc::boxed::Box::new(x.unpack())
     });
@@ -15341,20 +15344,17 @@ impl<'a> PartData<'a> {
       )),
       _ => PartTypeT::NONE,
     };
-    let mask_write = self.mask_write();
-    let visible_inside_mask = self.visible_inside_mask();
-    let output_influence = self.output_influence();
     PartDataT {
       name,
       parent_index,
       bounds_type,
       blend_type,
+      visible_inside_mask,
+      mask_write,
       mask_influence,
+      output_influence,
       mesh_binding,
       part_type,
-      mask_write,
-      visible_inside_mask,
-      output_influence,
     }
   }
 
@@ -15387,11 +15387,32 @@ impl<'a> PartData<'a> {
     unsafe { self._tab.get::<BlendType>(PartData::VT_BLEND_TYPE, Some(BlendType::Mix)).unwrap()}
   }
   #[inline]
+  pub fn visible_inside_mask(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_VISIBLE_INSIDE_MASK, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn mask_write(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_MASK_WRITE, Some(false)).unwrap()}
+  }
+  #[inline]
   pub fn mask_influence(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<bool>(PartData::VT_MASK_INFLUENCE, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn output_influence(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_OUTPUT_INFLUENCE, Some(true)).unwrap()}
   }
   #[inline]
   pub fn mesh_binding(&self) -> Option<PartMeshBinding<'a>> {
@@ -15413,27 +15434,6 @@ impl<'a> PartData<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Table<'a>>>(PartData::VT_PART_TYPE, None)}
-  }
-  #[inline]
-  pub fn mask_write(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartData::VT_MASK_WRITE, Some(false)).unwrap()}
-  }
-  #[inline]
-  pub fn visible_inside_mask(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartData::VT_VISIBLE_INSIDE_MASK, Some(false)).unwrap()}
-  }
-  #[inline]
-  pub fn output_influence(&self) -> bool {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartData::VT_OUTPUT_INFLUENCE, Some(true)).unwrap()}
   }
   #[inline]
   #[allow(non_snake_case)]
@@ -15702,7 +15702,10 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
      .visit_field::<i16>("parent_index", Self::VT_PARENT_INDEX, false)?
      .visit_field::<BoundsType>("bounds_type", Self::VT_BOUNDS_TYPE, false)?
      .visit_field::<BlendType>("blend_type", Self::VT_BLEND_TYPE, false)?
+     .visit_field::<bool>("visible_inside_mask", Self::VT_VISIBLE_INSIDE_MASK, false)?
+     .visit_field::<bool>("mask_write", Self::VT_MASK_WRITE, false)?
      .visit_field::<bool>("mask_influence", Self::VT_MASK_INFLUENCE, false)?
+     .visit_field::<bool>("output_influence", Self::VT_OUTPUT_INFLUENCE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartMeshBinding>>("mesh_binding", Self::VT_MESH_BINDING, false)?
      .visit_union::<PartType, _>("part_type_type", Self::VT_PART_TYPE_TYPE, "part_type", Self::VT_PART_TYPE, false, |key, v, pos| {
         match key {
@@ -15726,9 +15729,6 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
           _ => Ok(()),
         }
      })?
-     .visit_field::<bool>("mask_write", Self::VT_MASK_WRITE, false)?
-     .visit_field::<bool>("visible_inside_mask", Self::VT_VISIBLE_INSIDE_MASK, false)?
-     .visit_field::<bool>("output_influence", Self::VT_OUTPUT_INFLUENCE, false)?
      .finish();
     Ok(())
   }
@@ -15738,13 +15738,13 @@ pub struct PartDataArgs<'a> {
     pub parent_index: i16,
     pub bounds_type: BoundsType,
     pub blend_type: BlendType,
+    pub visible_inside_mask: bool,
+    pub mask_write: bool,
     pub mask_influence: bool,
+    pub output_influence: bool,
     pub mesh_binding: Option<::flatbuffers::WIPOffset<PartMeshBinding<'a>>>,
     pub part_type_type: PartType,
     pub part_type: Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>>,
-    pub mask_write: bool,
-    pub visible_inside_mask: bool,
-    pub output_influence: bool,
 }
 impl<'a> Default for PartDataArgs<'a> {
   #[inline]
@@ -15754,13 +15754,13 @@ impl<'a> Default for PartDataArgs<'a> {
       parent_index: 0,
       bounds_type: BoundsType::None,
       blend_type: BlendType::Mix,
+      visible_inside_mask: false,
+      mask_write: false,
       mask_influence: false,
+      output_influence: true,
       mesh_binding: None,
       part_type_type: PartType::NONE,
       part_type: None,
-      mask_write: false,
-      visible_inside_mask: false,
-      output_influence: true,
     }
   }
 }
@@ -15787,8 +15787,20 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<BlendType>(PartData::VT_BLEND_TYPE, blend_type, BlendType::Mix);
   }
   #[inline]
+  pub fn add_visible_inside_mask(&mut self, visible_inside_mask: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_VISIBLE_INSIDE_MASK, visible_inside_mask, false);
+  }
+  #[inline]
+  pub fn add_mask_write(&mut self, mask_write: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_MASK_WRITE, mask_write, false);
+  }
+  #[inline]
   pub fn add_mask_influence(&mut self, mask_influence: bool) {
     self.fbb_.push_slot::<bool>(PartData::VT_MASK_INFLUENCE, mask_influence, false);
+  }
+  #[inline]
+  pub fn add_output_influence(&mut self, output_influence: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_OUTPUT_INFLUENCE, output_influence, true);
   }
   #[inline]
   pub fn add_mesh_binding(&mut self, mesh_binding: ::flatbuffers::WIPOffset<PartMeshBinding<'b >>) {
@@ -15801,18 +15813,6 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_part_type(&mut self, part_type: ::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartData::VT_PART_TYPE, part_type);
-  }
-  #[inline]
-  pub fn add_mask_write(&mut self, mask_write: bool) {
-    self.fbb_.push_slot::<bool>(PartData::VT_MASK_WRITE, mask_write, false);
-  }
-  #[inline]
-  pub fn add_visible_inside_mask(&mut self, visible_inside_mask: bool) {
-    self.fbb_.push_slot::<bool>(PartData::VT_VISIBLE_INSIDE_MASK, visible_inside_mask, false);
-  }
-  #[inline]
-  pub fn add_output_influence(&mut self, output_influence: bool) {
-    self.fbb_.push_slot::<bool>(PartData::VT_OUTPUT_INFLUENCE, output_influence, true);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartDataBuilder<'a, 'b, A> {
@@ -15836,7 +15836,10 @@ impl ::core::fmt::Debug for PartData<'_> {
       ds.field("parent_index", &self.parent_index());
       ds.field("bounds_type", &self.bounds_type());
       ds.field("blend_type", &self.blend_type());
+      ds.field("visible_inside_mask", &self.visible_inside_mask());
+      ds.field("mask_write", &self.mask_write());
       ds.field("mask_influence", &self.mask_influence());
+      ds.field("output_influence", &self.output_influence());
       ds.field("mesh_binding", &self.mesh_binding());
       ds.field("part_type_type", &self.part_type_type());
       match self.part_type_type() {
@@ -15964,9 +15967,6 @@ impl ::core::fmt::Debug for PartData<'_> {
           ds.field("part_type", &x)
         },
       };
-      ds.field("mask_write", &self.mask_write());
-      ds.field("visible_inside_mask", &self.visible_inside_mask());
-      ds.field("output_influence", &self.output_influence());
       ds.finish()
   }
 }
@@ -15977,12 +15977,12 @@ pub struct PartDataT {
   pub parent_index: i16,
   pub bounds_type: BoundsType,
   pub blend_type: BlendType,
+  pub visible_inside_mask: bool,
+  pub mask_write: bool,
   pub mask_influence: bool,
+  pub output_influence: bool,
   pub mesh_binding: Option<alloc::boxed::Box<PartMeshBindingT>>,
   pub part_type: PartTypeT,
-  pub mask_write: bool,
-  pub visible_inside_mask: bool,
-  pub output_influence: bool,
 }
 impl Default for PartDataT {
   fn default() -> Self {
@@ -15991,12 +15991,12 @@ impl Default for PartDataT {
       parent_index: 0,
       bounds_type: BoundsType::None,
       blend_type: BlendType::Mix,
+      visible_inside_mask: false,
+      mask_write: false,
       mask_influence: false,
+      output_influence: true,
       mesh_binding: None,
       part_type: PartTypeT::NONE,
-      mask_write: false,
-      visible_inside_mask: false,
-      output_influence: true,
     }
   }
 }
@@ -16011,27 +16011,27 @@ impl PartDataT {
     let parent_index = self.parent_index;
     let bounds_type = self.bounds_type;
     let blend_type = self.blend_type;
+    let visible_inside_mask = self.visible_inside_mask;
+    let mask_write = self.mask_write;
     let mask_influence = self.mask_influence;
+    let output_influence = self.output_influence;
     let mesh_binding = self.mesh_binding.as_ref().map(|x|{
       x.pack(_fbb)
     });
     let part_type_type = self.part_type.part_type_type();
     let part_type = self.part_type.pack(_fbb);
-    let mask_write = self.mask_write;
-    let visible_inside_mask = self.visible_inside_mask;
-    let output_influence = self.output_influence;
     PartData::create(_fbb, &PartDataArgs{
       name,
       parent_index,
       bounds_type,
       blend_type,
+      visible_inside_mask,
+      mask_write,
       mask_influence,
+      output_influence,
       mesh_binding,
       part_type_type,
       part_type,
-      mask_write,
-      visible_inside_mask,
-      output_influence,
     })
   }
 }
