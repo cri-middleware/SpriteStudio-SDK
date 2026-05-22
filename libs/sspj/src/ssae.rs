@@ -45,6 +45,17 @@ pub struct SsPart {
     #[serde(default)]
     pub color_label: String,
     pub mask_influence: bool,
+    // SS7 clipping-mask authoring. All optional (absent in older exports).
+    // `write_mask` = this part writes the clipping mask; `visible_inside_mask`
+    // = masked target draws inside the mask region (vs outside). Both default
+    // false. `output_influence` defaults true — the part contributes to output
+    // unless explicitly disabled.
+    #[serde(default)]
+    pub write_mask: bool,
+    #[serde(default)]
+    pub visible_inside_mask: bool,
+    #[serde(default = "default_true")]
+    pub output_influence: bool,
     #[serde(rename = "ineheritRates")]
     pub inherit_rates: InheritRates,
     #[serde(default)]
@@ -114,6 +125,13 @@ pub struct SsPart {
     pub nines_fill_mode: i32,
     #[serde(default)]
     pub nines_mask: bool,
+}
+
+/// serde default for SS7 `<outputInfluence>`: when the tag is absent the part
+/// still contributes to output (true). `write_mask` / `visible_inside_mask`
+/// keep the plain `false` default, so only this field needs a custom helper.
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

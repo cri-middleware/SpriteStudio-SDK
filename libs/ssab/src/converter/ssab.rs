@@ -15213,6 +15213,9 @@ impl<'a> PartData<'a> {
   pub const VT_MESH_BINDING: ::flatbuffers::VOffsetT = 14;
   pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 16;
   pub const VT_PART_TYPE: ::flatbuffers::VOffsetT = 18;
+  pub const VT_MASK_WRITE: ::flatbuffers::VOffsetT = 20;
+  pub const VT_VISIBLE_INSIDE_MASK: ::flatbuffers::VOffsetT = 22;
+  pub const VT_OUTPUT_INFLUENCE: ::flatbuffers::VOffsetT = 24;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -15228,6 +15231,9 @@ impl<'a> PartData<'a> {
     if let Some(x) = args.mesh_binding { builder.add_mesh_binding(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_parent_index(args.parent_index);
+    builder.add_output_influence(args.output_influence);
+    builder.add_visible_inside_mask(args.visible_inside_mask);
+    builder.add_mask_write(args.mask_write);
     builder.add_part_type_type(args.part_type_type);
     builder.add_mask_influence(args.mask_influence);
     builder.add_blend_type(args.blend_type);
@@ -15335,6 +15341,9 @@ impl<'a> PartData<'a> {
       )),
       _ => PartTypeT::NONE,
     };
+    let mask_write = self.mask_write();
+    let visible_inside_mask = self.visible_inside_mask();
+    let output_influence = self.output_influence();
     PartDataT {
       name,
       parent_index,
@@ -15343,6 +15352,9 @@ impl<'a> PartData<'a> {
       mask_influence,
       mesh_binding,
       part_type,
+      mask_write,
+      visible_inside_mask,
+      output_influence,
     }
   }
 
@@ -15401,6 +15413,27 @@ impl<'a> PartData<'a> {
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Table<'a>>>(PartData::VT_PART_TYPE, None)}
+  }
+  #[inline]
+  pub fn mask_write(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_MASK_WRITE, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn visible_inside_mask(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_VISIBLE_INSIDE_MASK, Some(false)).unwrap()}
+  }
+  #[inline]
+  pub fn output_influence(&self) -> bool {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<bool>(PartData::VT_OUTPUT_INFLUENCE, Some(true)).unwrap()}
   }
   #[inline]
   #[allow(non_snake_case)]
@@ -15693,6 +15726,9 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
           _ => Ok(()),
         }
      })?
+     .visit_field::<bool>("mask_write", Self::VT_MASK_WRITE, false)?
+     .visit_field::<bool>("visible_inside_mask", Self::VT_VISIBLE_INSIDE_MASK, false)?
+     .visit_field::<bool>("output_influence", Self::VT_OUTPUT_INFLUENCE, false)?
      .finish();
     Ok(())
   }
@@ -15706,6 +15742,9 @@ pub struct PartDataArgs<'a> {
     pub mesh_binding: Option<::flatbuffers::WIPOffset<PartMeshBinding<'a>>>,
     pub part_type_type: PartType,
     pub part_type: Option<::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>>,
+    pub mask_write: bool,
+    pub visible_inside_mask: bool,
+    pub output_influence: bool,
 }
 impl<'a> Default for PartDataArgs<'a> {
   #[inline]
@@ -15719,6 +15758,9 @@ impl<'a> Default for PartDataArgs<'a> {
       mesh_binding: None,
       part_type_type: PartType::NONE,
       part_type: None,
+      mask_write: false,
+      visible_inside_mask: false,
+      output_influence: true,
     }
   }
 }
@@ -15759,6 +15801,18 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_part_type(&mut self, part_type: ::flatbuffers::WIPOffset<::flatbuffers::UnionWIPOffset>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartData::VT_PART_TYPE, part_type);
+  }
+  #[inline]
+  pub fn add_mask_write(&mut self, mask_write: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_MASK_WRITE, mask_write, false);
+  }
+  #[inline]
+  pub fn add_visible_inside_mask(&mut self, visible_inside_mask: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_VISIBLE_INSIDE_MASK, visible_inside_mask, false);
+  }
+  #[inline]
+  pub fn add_output_influence(&mut self, output_influence: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_OUTPUT_INFLUENCE, output_influence, true);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartDataBuilder<'a, 'b, A> {
@@ -15910,6 +15964,9 @@ impl ::core::fmt::Debug for PartData<'_> {
           ds.field("part_type", &x)
         },
       };
+      ds.field("mask_write", &self.mask_write());
+      ds.field("visible_inside_mask", &self.visible_inside_mask());
+      ds.field("output_influence", &self.output_influence());
       ds.finish()
   }
 }
@@ -15923,6 +15980,9 @@ pub struct PartDataT {
   pub mask_influence: bool,
   pub mesh_binding: Option<alloc::boxed::Box<PartMeshBindingT>>,
   pub part_type: PartTypeT,
+  pub mask_write: bool,
+  pub visible_inside_mask: bool,
+  pub output_influence: bool,
 }
 impl Default for PartDataT {
   fn default() -> Self {
@@ -15934,6 +15994,9 @@ impl Default for PartDataT {
       mask_influence: false,
       mesh_binding: None,
       part_type: PartTypeT::NONE,
+      mask_write: false,
+      visible_inside_mask: false,
+      output_influence: true,
     }
   }
 }
@@ -15954,6 +16017,9 @@ impl PartDataT {
     });
     let part_type_type = self.part_type.part_type_type();
     let part_type = self.part_type.pack(_fbb);
+    let mask_write = self.mask_write;
+    let visible_inside_mask = self.visible_inside_mask;
+    let output_influence = self.output_influence;
     PartData::create(_fbb, &PartDataArgs{
       name,
       parent_index,
@@ -15963,6 +16029,9 @@ impl PartDataT {
       mesh_binding,
       part_type_type,
       part_type,
+      mask_write,
+      visible_inside_mask,
+      output_influence,
     })
   }
 }

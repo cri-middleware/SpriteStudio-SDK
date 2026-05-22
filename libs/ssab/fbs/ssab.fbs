@@ -652,6 +652,17 @@ table PartData {
   mesh_binding: PartMeshBinding;
 
   part_type: PartType;
+
+  // Appended to keep table layout backward-compatible.
+  // Clipping-mask authoring (cutout): `mask_write` = this part writes the
+  // clipping mask (SS7 <writeMask>); `visible_inside_mask` = masked target
+  // draws inside the mask region rather than outside (SS7 <visibleInsideMask>).
+  // `output_influence` = part is actually output to screen (SS7
+  // <outputInfluence>, unrelated to masking; absent → true). isSoftMask
+  // (feathered) is deferred — the pipeline is cutout-only.
+  mask_write: bool;
+  visible_inside_mask: bool;
+  output_influence: bool = true;
 }
 
 table Label {
