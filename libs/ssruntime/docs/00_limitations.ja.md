@@ -98,7 +98,7 @@ ssab embedded は、そのアニメーションパックが **実際に利用す
 - **同一 SSAB 内のみブレンド可**: 複数 `AnimationResource` をまたぐ合成はサポート対象外。
 - **Cell の一貫性が前提**: ブレンドする全アニメーションは「同一 part に同一 Cell を割り当てている」必要があります。`cell_meta_per_part` は primary から取られるため、Cell が異なるとサイズ・pivot ミスマッチで pose が崩れます。同一 SSAE 内のアニメーションでは通常問題になりません。
 - **`parts_color` の α 二重定義**: `parts_color` を持つ part の視覚 α は primary 由来 (mix された `state.alpha` ではない)。`parts_color` を持たない part は mixed `state.alpha` が反映されるため、α ブレンド自体は機能します。
-- **events 発火元は primary 固定**: 全 source の controller が進行しますが、`get_passed_event_indices` で取得できるイベントは primary のもののみ。
+- **events 発火は per-source 閾値で制御**: 既定では Primary のみが発火 (`event_threshold = 1.0`)。Secondary も発火させたい場合は `ss_runtime_set_source_event_threshold` で閾値を下げ、`source.weight >= source.event_threshold` を満たした source の events のみ収集されます。Primary は閾値を無視して常に発火。発火元 source の識別は `ss_runtime_get_passed_event_source_handle` で取得 (events と parallel array)。
 - **deform table の FrameData 浪費**: secondary source の deform は FlatBuffer に書き込まれるが unreferenced。FrameData サイズが膨らみますが正確性には影響しません。
 
 > 関連章: [13. アニメーションブレンド / ミキシング](./13_animation_blending.ja.md)

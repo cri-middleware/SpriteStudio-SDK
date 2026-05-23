@@ -3919,4 +3919,111 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn event_threshold_at_weight_boundary_fires() {
+        // Boundary case: weight == event_threshold. Firing rule is
+        // `weight >= threshold` so the secondary must fire at the exact
+        // boundary, mirroring the documented `>=` semantics.
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+
+        let mut anim_with_events: Option<&str> = None;
+        for name in ["walk", "run", "dance", "jump", "Wait", "wait"] {
+            let mut probe = Context::new();
+            probe.bind_resource(&resource);
+            if probe.setup_animation(name).is_err() {
+                continue;
+            }
+            let anim_idx = probe.instance.primary_source().animation_idx as usize;
+            if resource.animations[anim_idx].events.is_some_and(|e| !e.is_empty()) {
+                anim_with_events = Some(name);
+                break;
+            }
+        }
+        let Some(event_anim) = anim_with_events else {
+            return;
+        };
+
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let secondary = ctx.add_blend_source(event_anim, 0.5).unwrap();
+        ctx.set_source_event_threshold(secondary, 0.5).unwrap();
+
+        let mut saw_secondary = false;
+        for _ in 0..200 {
+            ctx.update(16.0);
+            for &h in ctx.get_passed_event_source_handles() {
+                if h == secondary {
+                    saw_secondary = true;
+                }
+            }
+            if saw_secondary {
+                break;
+            }
+        }
+        assert!(saw_secondary, "weight == threshold must fire (>= semantics)");
+    }
+
+    #[test]
+    fn crossfade_cancel_preserves_weights() {
+        // `cancel_crossfade` clears the in-flight state but leaves source
+        // weights at their current mid-fade value (documented contract for
+        // caller-driven normalization). Subsequent `update` must not rebalance
+        // them further.
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let walk = ctx.primary_handle();
+        let run = ctx.add_blend_source("run", 0.0).unwrap();
+
+        ctx.crossfade(walk, run, 1000.0).unwrap();
+        ctx.update(500.0);
+        let walk_w = ctx.source_weight(walk).unwrap();
+        let run_w = ctx.source_weight(run).unwrap();
+        assert!((walk_w - 0.5).abs() < 1e-3);
+        assert!((run_w - 0.5).abs() < 1e-3);
+
+        ctx.cancel_crossfade();
+        assert!(ctx.crossfade_progress().is_none(), "cancel clears progress");
+
+        // Subsequent updates must not rebalance the cancelled fade.
+        ctx.update(300.0);
+        assert_eq!(ctx.source_weight(walk), Some(walk_w), "walk weight frozen after cancel");
+        assert_eq!(ctx.source_weight(run), Some(run_w), "run weight frozen after cancel");
+        // Primary unchanged.
+        assert_eq!(ctx.primary_handle(), walk);
+    }
+
+    #[test]
+    fn crossfade_overwrites_in_flight() {
+        // Re-invoking `crossfade` mid-fade discards the in-flight one and
+        // re-initializes weights of the new `from`/`to` to (1, 0). Progress
+        // resets to 0.
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let mut ctx = Context::new();
+        ctx.bind_resource(&resource);
+        ctx.setup_animation("walk").unwrap();
+        let walk = ctx.primary_handle();
+        let run = ctx.add_blend_source("run", 0.0).unwrap();
+
+        ctx.crossfade(walk, run, 1000.0).unwrap();
+        ctx.update(500.0);
+        assert!((ctx.crossfade_progress().unwrap() - 0.5).abs() < 1e-3);
+
+        // Same handles, new duration → weights snap back to (1, 0) and progress restarts at 0.
+        ctx.crossfade(walk, run, 200.0).unwrap();
+        assert_eq!(ctx.crossfade_progress(), Some(0.0), "overwrite resets progress");
+        assert_eq!(ctx.source_weight(walk), Some(1.0), "overwrite resets from weight to 1.0");
+        assert_eq!(ctx.source_weight(run), Some(0.0), "overwrite resets to weight to 0.0");
+
+        // New fade completes in 200ms, not the 500ms remaining of the discarded one.
+        ctx.update(200.0);
+        assert!(ctx.crossfade_progress().is_none(), "new fade completes per new duration");
+        assert_eq!(ctx.primary_handle(), run);
+    }
 }
