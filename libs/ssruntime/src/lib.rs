@@ -2448,9 +2448,9 @@ mod tests {
 
     use super::*;
 
-    static TARGET_SSPJ_FILES: [&str; 4] = ["tests/overall/overall.sspj", "tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj"];
+    static TARGET_SSPJ_FILES: [&str; 5] = ["tests/overall/overall.sspj", "tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/Ringo/Ringo.sspj"];
 
-    static TARGET_SSPAB_DIRS: [&str; 4] = ["tests/overall/overall_ssab", "tests/ParticleEffect/ParticleEffect_ssab", "tests/allAttributeV7/allAttributeV7_ssab", "tests/allPartsV7/allPartsV7_ssab"];
+    static TARGET_SSPAB_DIRS: [&str; 5] = ["tests/overall/overall_ssab", "tests/ParticleEffect/ParticleEffect_ssab", "tests/allAttributeV7/allAttributeV7_ssab", "tests/allPartsV7/allPartsV7_ssab", "tests/Ringo/Ringo_ssab"];
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
@@ -3083,6 +3083,7 @@ mod tests {
     }
 
     fn load_ringo_resource() -> SsabData {
+        prepare();
         let ssab_path = get_test_base_path().join("tests/Ringo/Ringo_ssab/Ringo.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
         SsabData::load_copy(&input_buf).expect("Failed to load SsabData")
