@@ -591,16 +591,47 @@ impl SSRuntimeContext {
         self.inner.primary_handle()
     }
 
-    pub fn source_set_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
-        self.inner.source_set_frame(handle, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn set_source_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
+        self.inner.set_source_frame(handle, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
     pub fn source_frame(&self, handle: u32) -> Option<f32> {
         self.inner.source_frame(handle)
     }
 
-    pub fn source_set_speed(&mut self, handle: u32, speed: f32) -> Result<(), JsValue> {
-        self.inner.source_set_speed(handle, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn set_source_speed(&mut self, handle: u32, speed: f32) -> Result<(), JsValue> {
+        self.inner.set_source_speed(handle, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn add_empty_blend_source(&mut self, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_empty_blend_source(weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
+        self.inner.set_source_event_threshold(handle, threshold).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn source_event_threshold(&self, handle: u32) -> Option<f32> {
+        self.inner.source_event_threshold(handle)
+    }
+
+    pub fn crossfade(&mut self, from: u32, to: u32, duration_ms: f32) -> Result<(), JsValue> {
+        self.inner.crossfade(from, to, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn crossfade_progress(&self) -> Option<f32> {
+        self.inner.crossfade_progress()
+    }
+
+    pub fn cancel_crossfade(&mut self) {
+        self.inner.cancel_crossfade();
+    }
+
+    pub fn get_passed_event_source_handle(&self, index: i32) -> u32 {
+        if index < 0 {
+            return u32::MAX;
+        }
+        self.inner.get_passed_event_source_handles().get(index as usize).copied().unwrap_or(u32::MAX)
     }
 
     pub fn get_passed_event_count(&self) -> i32 {

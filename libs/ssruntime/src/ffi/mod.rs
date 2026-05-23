@@ -1020,12 +1020,12 @@ pub extern "C" fn ss_runtime_primary_handle(context: *mut c_void) -> u32 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_source_set_frame(context: *mut c_void, handle: u32, frame: c_float) -> bool {
+pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32, frame: c_float) -> bool {
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
     ffi_context.last_error = 0;
-    match ffi_context.ctx.source_set_frame(handle, frame) {
+    match ffi_context.ctx.set_source_frame(handle, frame) {
         Ok(_) => true,
         Err(e) => {
             ffi_context.last_error = e.as_code();
@@ -1047,17 +1047,119 @@ pub extern "C" fn ss_runtime_source_frame(context: *mut c_void, handle: u32) -> 
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_source_set_speed(context: *mut c_void, handle: u32, speed: c_float) -> bool {
+pub extern "C" fn ss_runtime_set_source_speed(context: *mut c_void, handle: u32, speed: c_float) -> bool {
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
     ffi_context.last_error = 0;
-    match ffi_context.ctx.source_set_speed(handle, speed) {
+    match ffi_context.ctx.set_source_speed(handle, speed) {
         Ok(_) => true,
         Err(e) => {
             ffi_context.last_error = e.as_code();
             false
         }
+    }
+}
+
+/// Adds an "empty" blend source contributing an identity setup pose. See
+/// `Context::add_empty_blend_source` for the mix semantics. Returns
+/// `SS_RUNTIME_INVALID_HANDLE` on failure (`ss_runtime_get_last_error` for
+/// the detail code).
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_add_empty_blend_source(context: *mut c_void, weight: c_float) -> u32 {
+    let Some(ffi_context) = get_context(context) else {
+        return SS_RUNTIME_INVALID_HANDLE;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.add_empty_blend_source(weight) {
+        Ok(h) => h,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            SS_RUNTIME_INVALID_HANDLE
+        }
+    }
+}
+
+/// Sets a per-source event-firing threshold. Default `1.0` (secondaries
+/// never fire). Lower below the source's current weight to opt-in to event
+/// collection from this secondary; events are then exposed via the existing
+/// `ss_runtime_get_passed_event_*` getters, with the source handle obtained
+/// from `ss_runtime_get_passed_event_source_handle`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, handle: u32, threshold: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_source_event_threshold(handle, threshold) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Returns the source's event threshold, or NaN when the handle is invalid /
+/// the slot was removed / the slot is an empty source.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_source_event_threshold(context: *mut c_void, handle: u32) -> c_float {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(t) = ffi_context.ctx.source_event_threshold(handle)
+    {
+        return t;
+    }
+    f32::NAN
+}
+
+/// Returns the source handle that fired the `index`-th passed event, or
+/// `SS_RUNTIME_INVALID_HANDLE` when `index` is out of range. Parallel to
+/// `ss_runtime_get_passed_event_index`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void, index: i32) -> u32 {
+    if let Some(ffi_context) = get_context(context) {
+        if index < 0 {
+            return SS_RUNTIME_INVALID_HANDLE;
+        }
+        return ffi_context.ctx.get_passed_event_source_handles().get(index as usize).copied().unwrap_or(SS_RUNTIME_INVALID_HANDLE);
+    }
+    SS_RUNTIME_INVALID_HANDLE
+}
+
+/// Starts a linear weight crossfade from `from` to `to` over `duration_ms`.
+/// See `Context::crossfade` for completion semantics. Returns `false` on
+/// invalid handles / identical handles / non-positive duration.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_crossfade(context: *mut c_void, from: u32, to: u32, duration_ms: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.crossfade(from, to, duration_ms) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Returns the in-flight crossfade's progress in `[0.0, 1.0]`, or NaN when
+/// no crossfade is active.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_crossfade_progress(context: *mut c_void) -> c_float {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(p) = ffi_context.ctx.crossfade_progress()
+    {
+        return p;
+    }
+    f32::NAN
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_cancel_crossfade(context: *mut c_void) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.cancel_crossfade();
     }
 }
 
