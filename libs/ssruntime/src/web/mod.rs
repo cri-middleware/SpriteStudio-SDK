@@ -343,6 +343,10 @@ impl SSRuntimeContext {
         self.inner.setup_animation(name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
+    pub fn setup_animation_by_hash(&mut self, name_hash: u32) -> Result<(), JsValue> {
+        self.inner.setup_animation_by_hash(name_hash).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
     // Zero-copy getters
     pub fn get_frame_data_buf(&mut self, frame_no: f32) -> Result<*const u8, JsValue> {
         self.inner.get_frame_data(frame_no).map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))

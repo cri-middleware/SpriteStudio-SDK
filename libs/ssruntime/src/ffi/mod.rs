@@ -334,6 +334,24 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
 }
 
 #[unsafe(no_mangle)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences a raw pointer.
+pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void, name_hash: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.setup_animation_by_hash(name_hash) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// # Safety
 ///
