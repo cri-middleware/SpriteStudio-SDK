@@ -1358,6 +1358,7 @@ impl<'a> Context<'a> {
             &resolved.cell_texture_hashes,
             &mut resolved.local_vertices,
             coordinate_system,
+            self.instance.render_mode,
             &mut self.eval.draw_order_workspace,
             &mut self.eval.batches_workspace,
             &mut self.eval.mask_indices_workspace,
