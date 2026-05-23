@@ -131,32 +131,20 @@ impl MeshBindingCache {
 }
 
 /// Builds a [`MeshBindingCache`] from the SSAB-side `PartMeshBinding` table.
-/// Returns `None` when the part has no mesh binding or the vertex list is empty.
+/// Returns `None` when the part has no mesh binding or the offset vector is
+/// empty.
 pub fn build_mesh_binding_cache(mesh_binding: Option<ssab::ssab::ss::format::PartMeshBinding<'_>>) -> Option<MeshBindingCache> {
-    let vertices = mesh_binding?.vertex()?;
-    if vertices.is_empty() {
+    let binding = mesh_binding?;
+    let offsets = binding.vertex_influence_offset()?;
+    if offsets.len() < 2 {
         return None;
     }
+    let bones = binding.influence_bone()?;
+    let weights = binding.influence_weight()?;
+    let coords_x = binding.influence_coord_x()?;
+    let coords_y = binding.influence_coord_y()?;
 
-    let num_vertices = vertices.len();
-    let mut cache = MeshBindingCache::default();
-    cache.influence_offsets.reserve(num_vertices + 1);
-    cache.influence_offsets.push(0);
-
-    for vertex in vertices {
-        if let Some(influences) = vertex.influence() {
-            for inf in influences {
-                cache.bone_indices.push(inf.bone());
-                cache.weights.push(inf.weight());
-                let (cx, cy) = inf.coordinate().map(|c| (c.v1(), c.v2())).unwrap_or((0.0, 0.0));
-                cache.coords_x.push(cx);
-                cache.coords_y.push(cy);
-            }
-        }
-        cache.influence_offsets.push(cache.bone_indices.len() as u32);
-    }
-
-    Some(cache)
+    Some(MeshBindingCache { influence_offsets: offsets.iter().collect(), bone_indices: bones.iter().collect(), weights: weights.iter().collect(), coords_x: coords_x.iter().collect(), coords_y: coords_y.iter().collect() })
 }
 
 /// Per-part static mesh geometry resolved from the part's Cell.

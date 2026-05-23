@@ -1734,35 +1734,29 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 .flatten()
                 .filter(|mesh_bind| !mesh_bind.mesh_vertices_bind_array.is_empty())
                 .map(|mesh_bind| {
-                    let vertex = mesh_bind
-                        .mesh_vertices_bind_array
-                        .iter()
-                        .map(|bind_info| {
-                            let influence = if bind_info.bind_bone_num > 0 {
-                                Some(
-                                    (0..bind_info.bind_bone_num as usize)
-                                        .map(|i| {
-                                            let mut inf = ssab::ssab::ss::format::PartMeshBindingInfluenceT::default();
-                                            inf.bone = bone_index_to_part_index.get(&bind_info.bone_index[i]).copied().unwrap_or(0);
-                                            inf.weight = bind_info.weight[i] as f32 / 100.0;
-                                            let mut coord = ssab::ssab::ss::format::Vec2T::default();
-                                            coord.v1 = bind_info.offset[i].x;
-                                            coord.v2 = bind_info.offset[i].y;
-                                            inf.coordinate = Some(Box::new(coord));
-                                            inf
-                                        })
-                                        .collect::<Vec<_>>(),
-                                )
-                            } else {
-                                None
-                            };
-                            let mut vtx = ssab::ssab::ss::format::PartMeshBindingVertexT::default();
-                            vtx.influence = influence;
-                            vtx
-                        })
-                        .collect::<Vec<_>>();
+                    let num_vertices = mesh_bind.mesh_vertices_bind_array.len();
+                    let total_influences: usize = mesh_bind.mesh_vertices_bind_array.iter().map(|b| b.bind_bone_num.max(0) as usize).sum();
+                    let mut vertex_influence_offset: Vec<u32> = Vec::with_capacity(num_vertices + 1);
+                    let mut influence_bone: Vec<u16> = Vec::with_capacity(total_influences);
+                    let mut influence_weight: Vec<f32> = Vec::with_capacity(total_influences);
+                    let mut influence_coord_x: Vec<f32> = Vec::with_capacity(total_influences);
+                    let mut influence_coord_y: Vec<f32> = Vec::with_capacity(total_influences);
+                    vertex_influence_offset.push(0);
+                    for bind_info in &mesh_bind.mesh_vertices_bind_array {
+                        for i in 0..bind_info.bind_bone_num.max(0) as usize {
+                            influence_bone.push(bone_index_to_part_index.get(&bind_info.bone_index[i]).copied().unwrap_or(0));
+                            influence_weight.push(bind_info.weight[i] as f32 / 100.0);
+                            influence_coord_x.push(bind_info.offset[i].x);
+                            influence_coord_y.push(bind_info.offset[i].y);
+                        }
+                        vertex_influence_offset.push(influence_bone.len() as u32);
+                    }
                     let mut binding = ssab::ssab::ss::format::PartMeshBindingT::default();
-                    binding.vertex = Some(vertex);
+                    binding.vertex_influence_offset = Some(vertex_influence_offset);
+                    binding.influence_bone = Some(influence_bone);
+                    binding.influence_weight = Some(influence_weight);
+                    binding.influence_coord_x = Some(influence_coord_x);
+                    binding.influence_coord_y = Some(influence_coord_y);
                     Box::new(binding)
                 });
 
