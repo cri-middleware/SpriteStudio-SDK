@@ -2988,6 +2988,7 @@ mod tests {
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
         let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
         let mut context = Context::new();
+        context.set_render_mode(crate::core::RenderMode::SceneGraph);
         context.bind_resource(&resource);
         context.setup_animation("anime_1").expect("Failed to setup animation");
 
