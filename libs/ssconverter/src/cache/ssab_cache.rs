@@ -2064,6 +2064,9 @@ impl<'a> SsabCache<'a> {
                 args.bounds_type = part.bounds_type;
                 args.blend_type = part.blend_type;
                 args.mask_influence = part.mask_influence;
+                args.mask_write = part.mask_write;
+                args.visible_inside_mask = part.visible_inside_mask;
+                args.output_influence = part.output_influence;
                 args.mesh_binding = part.mesh_binding.as_ref().map(|b| self.create_shared_mesh_binding(fb, b));
                 args.part_type_type = part.part_type.part_type_type();
                 args.part_type = Some(self.create_shared_part_type(fb, &part.part_type));

@@ -45,6 +45,12 @@ pub struct SsPart {
     #[serde(default)]
     pub color_label: String,
     pub mask_influence: bool,
+    #[serde(default)]
+    pub write_mask: bool,
+    #[serde(default)]
+    pub visible_inside_mask: bool,
+    #[serde(default = "default_true")]
+    pub output_influence: bool,
     #[serde(rename = "ineheritRates")]
     pub inherit_rates: InheritRates,
     #[serde(default)]
@@ -114,6 +120,10 @@ pub struct SsPart {
     pub nines_fill_mode: i32,
     #[serde(default)]
     pub nines_mask: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Deserialize, PartialEq, Debug)]

@@ -648,7 +648,10 @@ table PartData {
   parent_index: short;
   bounds_type: BoundsType;
   blend_type: BlendType;
+  visible_inside_mask: bool;
+  mask_write: bool;
   mask_influence: bool;
+  output_influence: bool = true;
   mesh_binding: PartMeshBinding;
 
   part_type: PartType;

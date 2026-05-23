@@ -1718,6 +1718,9 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             };
             part_data_t.blend_type = convert_alpha_blend_type(&part.alpha_blend_type);
             part_data_t.mask_influence = part.mask_influence;
+            part_data_t.mask_write = part.write_mask;
+            part_data_t.visible_inside_mask = part.visible_inside_mask;
+            part_data_t.output_influence = part.output_influence;
 
             // `mesh_list` is a compact list ordered by Mesh part (one SsMeshBind
             // per Mesh part — it carries no part identity), so index it by a
