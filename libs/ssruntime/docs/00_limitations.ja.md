@@ -16,6 +16,7 @@ Player 実装に着手する **前に** 必ず確認してください。
 - [入力データのバリデーション非実施 (セキュリティ注意事項)](#入力データのバリデーション非実施-セキュリティ注意事項)
 - [AnimationResource と Context のライフタイム](#animationresource-と-context-のライフタイム)
 - [ssab embedded モードの制限事項](#ssab-embedded-モードの制限事項)
+- [アニメーションブレンド時の制限](#アニメーションブレンド時の制限)
 
 ---
 
@@ -89,6 +90,18 @@ ssab embedded は、`sspj` および `ss*e` ファイルに記載されている
 ### 2. 利用するアセットのみを埋め込む (外部インスタンス本体は含まない)
 
 ssab embedded は、そのアニメーションパックが **実際に利用するアセットのみ** を埋め込みます。外部インスタンスとして参照される別の ssab ファイルの本体は埋め込まれないため、**外部インスタンスを利用する場合は参照先の ssab ファイルの実体を別途用意する必要** があります。
+
+## アニメーションブレンド時の制限
+
+`ss_runtime_add_blend_source` 等で複数アニメーションを合成する際の制約です (Phase 3 API)。
+
+- **同一 SSAB 内のみブレンド可**: 複数 `AnimationResource` をまたぐ合成はサポート対象外。
+- **Cell の一貫性が前提**: ブレンドする全アニメーションは「同一 part に同一 Cell を割り当てている」必要があります。`cell_meta_per_part` は primary から取られるため、Cell が異なるとサイズ・pivot ミスマッチで pose が崩れます。同一 SSAE 内のアニメーションでは通常問題になりません。
+- **`parts_color` の α 二重定義**: `parts_color` を持つ part の視覚 α は primary 由来 (mix された `state.alpha` ではない)。`parts_color` を持たない part は mixed `state.alpha` が反映されるため、α ブレンド自体は機能します。
+- **events 発火は per-source 閾値で制御**: 既定では Primary のみが発火 (`event_threshold = 1.0`)。Secondary も発火させたい場合は `ss_runtime_set_source_event_threshold` で閾値を下げ、`source.weight >= source.event_threshold` を満たした source の events のみ収集されます。Primary は閾値を無視して常に発火。発火元 source の識別は `ss_runtime_get_passed_event_source_handle` で取得 (events と parallel array)。
+- **deform table の FrameData 浪費**: secondary source の deform は FlatBuffer に書き込まれるが unreferenced。FrameData サイズが膨らみますが正確性には影響しません。
+
+> 関連章: [13. アニメーションブレンド / ミキシング](./13_animation_blending.ja.md)
 
 ---
 [目次に戻る](./README.ja.md)

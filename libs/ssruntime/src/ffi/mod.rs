@@ -891,6 +891,278 @@ pub extern "C" fn ss_runtime_prev_frame(context: *mut c_void) {
     }
 }
 
+/// Sentinel returned by `ss_runtime_add_blend_source*` on failure.
+pub const SS_RUNTIME_INVALID_HANDLE: u32 = u32::MAX;
+
+// Animation blending (Phase 3) — see `Context::add_blend_source` doc for the
+// "Primary owns the structure, secondaries contribute continuous values"
+// model. Handles are stable slot indices; `remove_blend_source` marks the
+// slot inactive without shifting other handles.
+
+/// # Safety
+/// `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub unsafe extern "C" fn ss_runtime_add_blend_source(context: *mut c_void, name: *const c_char, weight: c_float) -> u32 {
+    let Some(ffi_context) = get_context(context) else {
+        return SS_RUNTIME_INVALID_HANDLE;
+    };
+    ffi_context.last_error = 0;
+    if name.is_null() {
+        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        return SS_RUNTIME_INVALID_HANDLE;
+    }
+    let c_buf = unsafe { CStr::from_ptr(name) };
+    let a = alloc::string::String::from_utf8_lossy(c_buf.to_bytes()).into_owned();
+    match ffi_context.ctx.add_blend_source(&a, weight) {
+        Ok(h) => h,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            SS_RUNTIME_INVALID_HANDLE
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_add_blend_source_by_hash(context: *mut c_void, hash: u32, weight: c_float) -> u32 {
+    let Some(ffi_context) = get_context(context) else {
+        return SS_RUNTIME_INVALID_HANDLE;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.add_blend_source_by_hash(hash, weight) {
+        Ok(h) => h,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            SS_RUNTIME_INVALID_HANDLE
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_remove_blend_source(context: *mut c_void, handle: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.remove_blend_source(handle) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_clear_blend_sources(context: *mut c_void) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.clear_blend_sources();
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_blend_source_count(context: *mut c_void) -> u32 {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.blend_source_count();
+    }
+    0
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32, weight: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_source_weight(handle, weight) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Returns the source's weight, or NaN when the handle is invalid or the
+/// slot has been removed. Callers can test the result with `isnan` (C) /
+/// `Number.isNaN` (JS) to distinguish "0.0 weight" from "no such source".
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_source_weight(context: *mut c_void, handle: u32) -> c_float {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(w) = ffi_context.ctx.source_weight(handle)
+    {
+        return w;
+    }
+    f32::NAN
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_primary(context: *mut c_void, handle: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_primary(handle) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_primary_handle(context: *mut c_void) -> u32 {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.primary_handle();
+    }
+    SS_RUNTIME_INVALID_HANDLE
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32, frame: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_source_frame(handle, frame) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Returns the source's current frame, or NaN when the handle is invalid
+/// or the slot has been removed.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_source_frame(context: *mut c_void, handle: u32) -> c_float {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(f) = ffi_context.ctx.source_frame(handle)
+    {
+        return f;
+    }
+    f32::NAN
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_source_speed(context: *mut c_void, handle: u32, speed: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_source_speed(handle, speed) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Adds an "empty" blend source contributing an identity setup pose. See
+/// `Context::add_empty_blend_source` for the mix semantics. Returns
+/// `SS_RUNTIME_INVALID_HANDLE` on failure (`ss_runtime_get_last_error` for
+/// the detail code).
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_add_empty_blend_source(context: *mut c_void, weight: c_float) -> u32 {
+    let Some(ffi_context) = get_context(context) else {
+        return SS_RUNTIME_INVALID_HANDLE;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.add_empty_blend_source(weight) {
+        Ok(h) => h,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            SS_RUNTIME_INVALID_HANDLE
+        }
+    }
+}
+
+/// Sets a per-source event-firing threshold. Default `1.0` (secondaries
+/// never fire). Lower below the source's current weight to opt-in to event
+/// collection from this secondary; events are then exposed via the existing
+/// `ss_runtime_get_passed_event_*` getters, with the source handle obtained
+/// from `ss_runtime_get_passed_event_source_handle`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, handle: u32, threshold: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_source_event_threshold(handle, threshold) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Returns the source's event threshold, or NaN when the handle is invalid /
+/// the slot was removed / the slot is an empty source.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_source_event_threshold(context: *mut c_void, handle: u32) -> c_float {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(t) = ffi_context.ctx.source_event_threshold(handle)
+    {
+        return t;
+    }
+    f32::NAN
+}
+
+/// Returns the source handle that fired the `index`-th passed event, or
+/// `SS_RUNTIME_INVALID_HANDLE` when `index` is out of range. Parallel to
+/// `ss_runtime_get_passed_event_index`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void, index: i32) -> u32 {
+    if let Some(ffi_context) = get_context(context) {
+        if index < 0 {
+            return SS_RUNTIME_INVALID_HANDLE;
+        }
+        return ffi_context.ctx.get_passed_event_source_handles().get(index as usize).copied().unwrap_or(SS_RUNTIME_INVALID_HANDLE);
+    }
+    SS_RUNTIME_INVALID_HANDLE
+}
+
+/// Starts a linear weight crossfade from `from` to `to` over `duration_ms`.
+/// See `Context::crossfade` for completion semantics. Returns `false` on
+/// invalid handles / identical handles / non-positive duration.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_crossfade(context: *mut c_void, from: u32, to: u32, duration_ms: c_float) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.crossfade(from, to, duration_ms) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Returns the in-flight crossfade's progress in `[0.0, 1.0]`, or NaN when
+/// no crossfade is active.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_crossfade_progress(context: *mut c_void) -> c_float {
+    if let Some(ffi_context) = get_context(context)
+        && let Some(p) = ffi_context.ctx.crossfade_progress()
+    {
+        return p;
+    }
+    f32::NAN
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_cancel_crossfade(context: *mut c_void) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.cancel_crossfade();
+    }
+}
+
 /// Create a new EffectSlot bound to `resource`. Returns null on failure
 /// (resource not loaded, effect_name_hash not found, malformed effect data).
 #[unsafe(no_mangle)]

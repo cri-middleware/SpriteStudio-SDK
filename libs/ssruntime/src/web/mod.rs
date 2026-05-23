@@ -551,6 +551,89 @@ impl SSRuntimeContext {
         self.inner.prev_frame();
     }
 
+    // Animation blending (Phase 3). Mirrors the C FFI surface; see
+    // `Context::add_blend_source` for the "Primary owns the structure,
+    // secondaries contribute continuous values" model.
+
+    pub fn add_blend_source(&mut self, name: &str, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_blend_source(name, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn add_blend_source_by_hash(&mut self, hash: u32, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_blend_source_by_hash(hash, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn remove_blend_source(&mut self, handle: u32) -> Result<(), JsValue> {
+        self.inner.remove_blend_source(handle).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn clear_blend_sources(&mut self) {
+        self.inner.clear_blend_sources();
+    }
+
+    pub fn blend_source_count(&self) -> u32 {
+        self.inner.blend_source_count()
+    }
+
+    pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), JsValue> {
+        self.inner.set_source_weight(handle, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn source_weight(&self, handle: u32) -> Option<f32> {
+        self.inner.source_weight(handle)
+    }
+
+    pub fn set_primary(&mut self, handle: u32) -> Result<(), JsValue> {
+        self.inner.set_primary(handle).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn primary_handle(&self) -> u32 {
+        self.inner.primary_handle()
+    }
+
+    pub fn set_source_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
+        self.inner.set_source_frame(handle, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn source_frame(&self, handle: u32) -> Option<f32> {
+        self.inner.source_frame(handle)
+    }
+
+    pub fn set_source_speed(&mut self, handle: u32, speed: f32) -> Result<(), JsValue> {
+        self.inner.set_source_speed(handle, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn add_empty_blend_source(&mut self, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_empty_blend_source(weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
+        self.inner.set_source_event_threshold(handle, threshold).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn source_event_threshold(&self, handle: u32) -> Option<f32> {
+        self.inner.source_event_threshold(handle)
+    }
+
+    pub fn crossfade(&mut self, from: u32, to: u32, duration_ms: f32) -> Result<(), JsValue> {
+        self.inner.crossfade(from, to, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn crossfade_progress(&self) -> Option<f32> {
+        self.inner.crossfade_progress()
+    }
+
+    pub fn cancel_crossfade(&mut self) {
+        self.inner.cancel_crossfade();
+    }
+
+    pub fn get_passed_event_source_handle(&self, index: i32) -> u32 {
+        if index < 0 {
+            return u32::MAX;
+        }
+        self.inner.get_passed_event_source_handles().get(index as usize).copied().unwrap_or(u32::MAX)
+    }
+
     pub fn get_passed_event_count(&self) -> i32 {
         self.inner.get_passed_event_indices().len() as i32
     }

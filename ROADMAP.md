@@ -25,7 +25,8 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 *(Phase 3 items are implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only. Any item that turns out to need schema changes is reconsidered for an earlier phase.)*
 
-*   [ ] Animation Mixing/Blending in `ssruntime` (whole-animation weighted blend).
+*   [x] Animation Mixing/Blending in `ssruntime` (whole-animation weighted blend).
+*   [ ] Per-part animation blending (layered animation / per-bone mask) — backward-compatible extension of the whole-animation blend API. Optional per-source per-part weights or mask covering common use cases (upper-body aim while lower-body runs, damage reactions, additive overlays). Also considers an Additive blend mode (delta-from-base) alongside the existing interpolative mix.
 *   [ ] Instance Lifecycle API — one cohesive surface covering both:
     *   Animation Instancing: shared evaluation context for driving many instances of the same animation, consumable by Players (e.g., crowd-style rendering).
     *   Dynamic instance swap: runtime replacement of the animation mounted on an Instance part (equivalent to legacy `AnimationChangeInstance`). Must remain compatible with the shared-context semantics above.
