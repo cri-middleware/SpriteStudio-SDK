@@ -1434,9 +1434,5 @@ pub unsafe extern "C" fn ss_runtime_hash_string(s: *const c_char) -> u32 {
         return 0;
     }
     let c_str = unsafe { core::ffi::CStr::from_ptr(s) };
-    if let Ok(rust_str) = c_str.to_str() {
-        crate::fnv1a_hash_str(rust_str)
-    } else {
-        0
-    }
+    if let Ok(rust_str) = c_str.to_str() { crate::fnv1a_hash_str(rust_str) } else { 0 }
 }
