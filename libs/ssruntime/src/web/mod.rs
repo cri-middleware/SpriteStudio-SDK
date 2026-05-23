@@ -773,3 +773,8 @@ impl SSRuntimeInstanceSlot {
         self.inner.is_independent()
     }
 }
+
+#[wasm_bindgen]
+pub fn ss_runtime_hash_string(s: &str) -> u32 {
+    crate::fnv1a_hash_str(s)
+}

@@ -1422,3 +1422,17 @@ pub extern "C" fn ss_runtime_get_active_effect_event(context: *mut c_void, slot_
     }
     ss_effect_event_info::synthetic_default()
 }
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// # Safety
+///
+/// This function is unsafe because it dereferences a raw pointer.
+/// The caller must ensure the pointer is valid and points to a valid null-terminated string.
+pub unsafe extern "C" fn ss_runtime_hash_string(s: *const c_char) -> u32 {
+    if s.is_null() {
+        return 0;
+    }
+    let c_str = unsafe { core::ffi::CStr::from_ptr(s) };
+    if let Ok(rust_str) = c_str.to_str() { crate::fnv1a_hash_str(rust_str) } else { 0 }
+}
