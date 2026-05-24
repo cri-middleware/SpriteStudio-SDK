@@ -1081,8 +1081,13 @@ pub fn compose_frame_data<'a>(
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     compute_local_vertices_for_parts(parts_vec, cell_meta_per_part, raw_vertex_deform, vertice_vec, local_vertices, coordinate_system);
 
-    let (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off) =
-        if render_mode == crate::core::RenderMode::Direct { (None, None, None, None, None) } else { serialize_pose_to_fb(fb, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec) };
+    let (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off) = if render_mode == crate::core::RenderMode::Direct {
+        let pc = (!parts_color_vec.is_empty()).then(|| fb.create_vector(parts_color_vec));
+        let s = (!shader_vec.is_empty()).then(|| fb.create_vector(shader_vec));
+        (None, pc, s, None, None)
+    } else {
+        serialize_pose_to_fb(fb, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec)
+    };
 
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs { cells: cells_off, parts_color: parts_color_off, shaders: shaders_off, vertices: vertices_off, deforms: deforms_off, ..Default::default() };
     args.parts = Some(fb.create_vector(parts_vec));
