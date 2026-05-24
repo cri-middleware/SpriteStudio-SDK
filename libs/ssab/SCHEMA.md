@@ -159,7 +159,8 @@ For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into
 | `rectangle` | Rect | `pos` + `size` | ssce uses pos/size pair; ssab uses rectangle (x1,y1,x2,y2) |
 | `pivot` | Vec2 | `pivot` | Cell pivot point |
 | `rotated` | bool | `rotated` | Whether cell is rotated in atlas |
-| `table_coordinate` | [Vec2] | `mesh_point_list` | Mesh vertex coordinates |
+| `table_coord_x` | [float] | `mesh_point_list[*].x` | SoA mesh vertex X coordinates |
+| `table_coord_y` | [float] | `mesh_point_list[*].y` | SoA mesh vertex Y coordinates |
 | `table_index_vertex` | [ushort] | `mesh_tri_list` | Mesh triangle indices (flattened from SsPoint3) |
 
 ### Fields Not Carried Over

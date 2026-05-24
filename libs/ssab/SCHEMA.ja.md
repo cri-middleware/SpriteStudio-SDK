@@ -159,7 +159,8 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 | `rectangle` | Rect | `pos` + `size` | ssce は pos/size のペア、ssab は矩形 (x1,y1,x2,y2) |
 | `pivot` | Vec2 | `pivot` | セルのピボットポイント |
 | `rotated` | bool | `rotated` | アトラス内でセルが回転しているか |
-| `table_coordinate` | [Vec2] | `mesh_point_list` | メッシュ頂点座標 |
+| `table_coord_x` | [float] | `mesh_point_list[*].x` | メッシュ頂点 X 座標 (SoA) |
+| `table_coord_y` | [float] | `mesh_point_list[*].y` | メッシュ頂点 Y 座標 (SoA) |
 | `table_index_vertex` | [ushort] | `mesh_tri_list` | メッシュ三角形インデックス（SsPoint3 からフラット化） |
 
 ### 引き継がれないフィールド

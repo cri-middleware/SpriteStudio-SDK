@@ -186,7 +186,8 @@ table Cell {
   pivot: Vec2;
   rotated: bool;
 
-  table_coordinate: [Vec2];
+  table_coord_x: [float];
+  table_coord_y: [float];
   table_index_vertex: [ushort];
 }
 
