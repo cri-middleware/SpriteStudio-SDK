@@ -396,7 +396,8 @@ table PartAttributeEffect {
 }
 
 table PartAttributeDeform {
-  coordinate: [Vec2];
+  coord_x: [float];
+  coord_y: [float];
   index: [short];
 }
 

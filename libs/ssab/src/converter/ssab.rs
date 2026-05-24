@@ -11208,8 +11208,9 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeDeform<'a> {
 }
 
 impl<'a> PartAttributeDeform<'a> {
-  pub const VT_COORDINATE: ::flatbuffers::VOffsetT = 4;
-  pub const VT_INDEX: ::flatbuffers::VOffsetT = 6;
+  pub const VT_COORD_X: ::flatbuffers::VOffsetT = 4;
+  pub const VT_COORD_Y: ::flatbuffers::VOffsetT = 6;
+  pub const VT_INDEX: ::flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -11222,29 +11223,41 @@ impl<'a> PartAttributeDeform<'a> {
   ) -> ::flatbuffers::WIPOffset<PartAttributeDeform<'bldr>> {
     let mut builder = PartAttributeDeformBuilder::new(_fbb);
     if let Some(x) = args.index { builder.add_index(x); }
-    if let Some(x) = args.coordinate { builder.add_coordinate(x); }
+    if let Some(x) = args.coord_y { builder.add_coord_y(x); }
+    if let Some(x) = args.coord_x { builder.add_coord_x(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> PartAttributeDeformT {
-    let coordinate = self.coordinate().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
+    let coord_x = self.coord_x().map(|x| {
+      x.into_iter().collect()
+    });
+    let coord_y = self.coord_y().map(|x| {
+      x.into_iter().collect()
     });
     let index = self.index().map(|x| {
       x.into_iter().collect()
     });
     PartAttributeDeformT {
-      coordinate,
+      coord_x,
+      coord_y,
       index,
     }
   }
 
   #[inline]
-  pub fn coordinate(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2<'a>>>> {
+  pub fn coord_x(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2>>>>(PartAttributeDeform::VT_COORDINATE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(PartAttributeDeform::VT_COORD_X, None)}
+  }
+  #[inline]
+  pub fn coord_y(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(PartAttributeDeform::VT_COORD_Y, None)}
   }
   #[inline]
   pub fn index(&self) -> Option<::flatbuffers::Vector<'a, i16>> {
@@ -11261,21 +11274,24 @@ impl ::flatbuffers::Verifiable for PartAttributeDeform<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Vec2>>>>("coordinate", Self::VT_COORDINATE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("coord_x", Self::VT_COORD_X, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("coord_y", Self::VT_COORD_Y, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, i16>>>("index", Self::VT_INDEX, false)?
      .finish();
     Ok(())
   }
 }
 pub struct PartAttributeDeformArgs<'a> {
-    pub coordinate: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2<'a>>>>>,
+    pub coord_x: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
+    pub coord_y: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
     pub index: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, i16>>>,
 }
 impl<'a> Default for PartAttributeDeformArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartAttributeDeformArgs {
-      coordinate: None,
+      coord_x: None,
+      coord_y: None,
       index: None,
     }
   }
@@ -11287,8 +11303,12 @@ pub struct PartAttributeDeformBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeDeformBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_coordinate(&mut self, coordinate: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Vec2<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeDeform::VT_COORDINATE, coordinate);
+  pub fn add_coord_x(&mut self, coord_x: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeDeform::VT_COORD_X, coord_x);
+  }
+  #[inline]
+  pub fn add_coord_y(&mut self, coord_y: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeDeform::VT_COORD_Y, coord_y);
   }
   #[inline]
   pub fn add_index(&mut self, index: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , i16>>) {
@@ -11312,7 +11332,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeDeformBuilder<'a
 impl ::core::fmt::Debug for PartAttributeDeform<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeDeform");
-      ds.field("coordinate", &self.coordinate());
+      ds.field("coord_x", &self.coord_x());
+      ds.field("coord_y", &self.coord_y());
       ds.field("index", &self.index());
       ds.finish()
   }
@@ -11320,13 +11341,15 @@ impl ::core::fmt::Debug for PartAttributeDeform<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributeDeformT {
-  pub coordinate: Option<alloc::vec::Vec<Vec2T>>,
+  pub coord_x: Option<alloc::vec::Vec<f32>>,
+  pub coord_y: Option<alloc::vec::Vec<f32>>,
   pub index: Option<alloc::vec::Vec<i16>>,
 }
 impl Default for PartAttributeDeformT {
   fn default() -> Self {
     Self {
-      coordinate: None,
+      coord_x: None,
+      coord_y: None,
       index: None,
     }
   }
@@ -11336,14 +11359,18 @@ impl PartAttributeDeformT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<PartAttributeDeform<'b>> {
-    let coordinate = self.coordinate.as_ref().map(|x|{
-      let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    let coord_x = self.coord_x.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
+    let coord_y = self.coord_y.as_ref().map(|x|{
+      _fbb.create_vector(x)
     });
     let index = self.index.as_ref().map(|x|{
       _fbb.create_vector(x)
     });
     PartAttributeDeform::create(_fbb, &PartAttributeDeformArgs{
-      coordinate,
+      coord_x,
+      coord_y,
       index,
     })
   }

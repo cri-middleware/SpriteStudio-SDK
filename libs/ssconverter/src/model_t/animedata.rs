@@ -629,19 +629,9 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Deform(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-
-                    let mut coordinate = Vec::new();
-                    let mut index = Vec::<i16>::new();
-                    _key.value.vchg.iter().for_each(|_item| {
-                        let mut vec2 = ssab::ssab::ss::format::Vec2T::default();
-                        vec2.v1 = _item.x;
-                        vec2.v2 = _item.y;
-                        coordinate.push(vec2);
-                        index.push(_item.x_index as i16);
-                    });
-
-                    value.coordinate = Some(coordinate);
-                    value.index = Some(index);
+                    value.coord_x = Some(_key.value.vchg.iter().map(|p| p.x).collect());
+                    value.coord_y = Some(_key.value.vchg.iter().map(|p| p.y).collect());
+                    value.index = Some(_key.value.vchg.iter().map(|p| p.x_index as i16).collect());
                     p_args.deform = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeDeform;
                 }
@@ -1194,18 +1184,8 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
         sspj::ssattribute::SsAttributeKind::Deform(v) => {
             process_interpolatable_attribute!(&v.keys, p_arg.deform_array, ssab::ssab::ss::format::PartAnimationDataDeformT, |k: &sspj::ssattribute::SsAttributeDeformKey| {
                 let mut value = ssab::ssab::ss::format::PartAttributeDeformT::default();
-                value.coordinate = Some(
-                    k.value
-                        .vchg
-                        .iter()
-                        .map(|p| {
-                            let mut v = ssab::ssab::ss::format::Vec2T::default();
-                            v.v1 = p.x;
-                            v.v2 = p.y;
-                            v
-                        })
-                        .collect(),
-                );
+                value.coord_x = Some(k.value.vchg.iter().map(|p| p.x).collect());
+                value.coord_y = Some(k.value.vchg.iter().map(|p| p.y).collect());
                 value.index = Some(k.value.vchg.iter().map(|p| p.x_index as i16).collect());
                 Some(Box::new(value))
             });

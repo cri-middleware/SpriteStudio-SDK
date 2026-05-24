@@ -632,12 +632,17 @@ impl From<&ssab::ssab::ss::format::PartAttributeVertexT> for PartAttributeVertex
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeDeformKey {
-    pub coordinate: Option<Vec<Vec2Key>>,
+    pub coord_x: Option<Vec<ordered_float::OrderedFloat<f32>>>,
+    pub coord_y: Option<Vec<ordered_float::OrderedFloat<f32>>>,
     pub index: Option<Vec<i16>>,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeDeformT> for PartAttributeDeformKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeDeformT) -> Self {
-        Self { coordinate: value.coordinate.as_ref().map(|c| c.iter().map(Vec2Key::from).collect()), index: value.index.as_ref().map(|i| i.to_vec()) }
+        Self {
+            coord_x: value.coord_x.as_ref().map(|c| c.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
+            coord_y: value.coord_y.as_ref().map(|c| c.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
+            index: value.index.as_ref().map(|i| i.to_vec()),
+        }
     }
 }
 
@@ -1653,10 +1658,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::PartAttributeDeformArgs::default();
-        args.coordinate = part_attribute_deform.coordinate.as_ref().map(|p| {
-            let v = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<_>>();
-            fb.create_vector(&v)
-        });
+        args.coord_x = part_attribute_deform.coord_x.as_ref().map(|p| fb.create_vector(p));
+        args.coord_y = part_attribute_deform.coord_y.as_ref().map(|p| fb.create_vector(p));
         args.index = part_attribute_deform.index.as_ref().map(|p| fb.create_vector(p));
 
         let offset = ssab::ssab::ss::format::PartAttributeDeform::create(fb, &args);
