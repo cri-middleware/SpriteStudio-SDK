@@ -506,7 +506,8 @@ pub struct CellKey {
     pub rectangle: Option<RectKey>,
     pub pivot: Option<Vec2Key>,
     pub rotated: bool,
-    pub table_coordinate: Option<Vec<Vec2Key>>,
+    pub table_coord_x: Option<Vec<ordered_float::OrderedFloat<f32>>>,
+    pub table_coord_y: Option<Vec<ordered_float::OrderedFloat<f32>>>,
     pub table_index_vertex: Option<Vec<u16>>,
 }
 impl From<&ssab::ssab::ss::format::CellT> for CellKey {
@@ -517,7 +518,8 @@ impl From<&ssab::ssab::ss::format::CellT> for CellKey {
             rectangle: value.rectangle.as_ref().map(|r| RectKey::from(r.as_ref())),
             pivot: value.pivot.as_ref().map(|p| Vec2Key::from(p.as_ref())),
             rotated: value.rotated,
-            table_coordinate: value.table_coordinate.as_ref().map(|t| t.iter().map(Vec2Key::from).collect::<Vec<Vec2Key>>()),
+            table_coord_x: value.table_coord_x.as_ref().map(|t| t.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
+            table_coord_y: value.table_coord_y.as_ref().map(|t| t.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
             table_index_vertex: value.table_index_vertex.as_ref().map(|t| t.to_vec()),
         }
     }
@@ -630,12 +632,17 @@ impl From<&ssab::ssab::ss::format::PartAttributeVertexT> for PartAttributeVertex
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeDeformKey {
-    pub coordinate: Option<Vec<Vec2Key>>,
+    pub coord_x: Option<Vec<ordered_float::OrderedFloat<f32>>>,
+    pub coord_y: Option<Vec<ordered_float::OrderedFloat<f32>>>,
     pub index: Option<Vec<i16>>,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeDeformT> for PartAttributeDeformKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeDeformT) -> Self {
-        Self { coordinate: value.coordinate.as_ref().map(|c| c.iter().map(Vec2Key::from).collect()), index: value.index.as_ref().map(|i| i.to_vec()) }
+        Self {
+            coord_x: value.coord_x.as_ref().map(|c| c.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
+            coord_y: value.coord_y.as_ref().map(|c| c.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
+            index: value.index.as_ref().map(|i| i.to_vec()),
+        }
     }
 }
 
@@ -1519,10 +1526,8 @@ impl<'a> SsabCache<'a> {
         args.rectangle = cell.rectangle.as_ref().map(|r| self.create_shared_rect(fb, r));
         args.pivot = cell.pivot.as_ref().map(|p| self.create_shared_vec2(fb, p));
         args.rotated = cell.rotated;
-        args.table_coordinate = cell.table_coordinate.as_ref().map(|p| {
-            let vec = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<_>>();
-            fb.create_vector(&vec)
-        });
+        args.table_coord_x = cell.table_coord_x.as_ref().map(|p| fb.create_vector(p));
+        args.table_coord_y = cell.table_coord_y.as_ref().map(|p| fb.create_vector(p));
         args.table_index_vertex = cell.table_index_vertex.as_ref().map(|p| fb.create_vector(p));
 
         let offset = ssab::ssab::ss::format::Cell::create(fb, &args);
@@ -1653,10 +1658,8 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::PartAttributeDeformArgs::default();
-        args.coordinate = part_attribute_deform.coordinate.as_ref().map(|p| {
-            let v = p.iter().map(|v| self.create_shared_vec2(fb, v)).collect::<Vec<_>>();
-            fb.create_vector(&v)
-        });
+        args.coord_x = part_attribute_deform.coord_x.as_ref().map(|p| fb.create_vector(p));
+        args.coord_y = part_attribute_deform.coord_y.as_ref().map(|p| fb.create_vector(p));
         args.index = part_attribute_deform.index.as_ref().map(|p| fb.create_vector(p));
 
         let offset = ssab::ssab::ss::format::PartAttributeDeform::create(fb, &args);

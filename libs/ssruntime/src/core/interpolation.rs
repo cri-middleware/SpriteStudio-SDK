@@ -613,18 +613,20 @@ pub fn evaluate_deform(
                 return UPDATE_FLAG_OFF;
             };
 
-            if let (Some(prev_coordinate), Some(next_coordinate), Some(prev_idx), Some(next_idx)) = (prev_val.coordinate(), next_val.coordinate(), prev_val.index(), next_val.index()) {
+            if let (Some(prev_cx), Some(prev_cy), Some(next_cx), Some(next_cy), Some(prev_idx), Some(next_idx)) = (prev_val.coord_x(), prev_val.coord_y(), next_val.coord_x(), next_val.coord_y(), prev_val.index(), next_val.index()) {
                 // Deform keyframes store a sparse, vertex-keyed set of offsets:
-                // `index[k]` is the changed vertex and `coordinate[k]` its
-                // offset. The changed-vertex set differs between keyframes
+                // `index[k]` is the changed vertex and `coord_x[k]/coord_y[k]`
+                // its offset. The changed-vertex set differs between keyframes
                 // (e.g. an empty rest keyframe vs a deformed one), so the two
                 // sides cannot be interpolated position-by-position. Merge by
                 // vertex index instead — a vertex absent on one side
                 // interpolates against a zero offset. Authored index arrays
                 // are ascending, so a two-pointer merge keeps the output
                 // ascending and allocation-free.
-                let prev_len = core::cmp::min(prev_idx.len(), prev_coordinate.len());
-                let next_len = core::cmp::min(next_idx.len(), next_coordinate.len());
+                let prev_n = prev_cx.len().min(prev_cy.len());
+                let next_n = next_cx.len().min(next_cy.len());
+                let prev_len = core::cmp::min(prev_idx.len(), prev_n);
+                let next_len = core::cmp::min(next_idx.len(), next_n);
 
                 start_workspace.clear();
                 end_workspace.clear();
@@ -636,29 +638,25 @@ pub fn evaluate_deform(
                     let pv = if i < prev_len { prev_idx.get(i) } else { i16::MAX };
                     let nv = if j < next_len { next_idx.get(j) } else { i16::MAX };
                     if pv == nv {
-                        let p = prev_coordinate.get(i);
-                        let n = next_coordinate.get(j);
-                        start_workspace.push(p.v1());
-                        start_workspace.push(p.v2());
-                        end_workspace.push(n.v1());
-                        end_workspace.push(n.v2());
+                        start_workspace.push(prev_cx.get(i));
+                        start_workspace.push(prev_cy.get(i));
+                        end_workspace.push(next_cx.get(j));
+                        end_workspace.push(next_cy.get(j));
                         index_out.push(pv);
                         i += 1;
                         j += 1;
                     } else if pv < nv {
-                        let p = prev_coordinate.get(i);
-                        start_workspace.push(p.v1());
-                        start_workspace.push(p.v2());
+                        start_workspace.push(prev_cx.get(i));
+                        start_workspace.push(prev_cy.get(i));
                         end_workspace.push(0.0);
                         end_workspace.push(0.0);
                         index_out.push(pv);
                         i += 1;
                     } else {
-                        let n = next_coordinate.get(j);
                         start_workspace.push(0.0);
                         start_workspace.push(0.0);
-                        end_workspace.push(n.v1());
-                        end_workspace.push(n.v2());
+                        end_workspace.push(next_cx.get(j));
+                        end_workspace.push(next_cy.get(j));
                         index_out.push(nv);
                         j += 1;
                     }
@@ -674,23 +672,23 @@ pub fn evaluate_deform(
                 }
 
                 UPDATE_FLAG_ON
-            } else if let (Some(prev_coordinate), Some(next_coordinate)) = (prev_val.coordinate(), next_val.coordinate()) {
+            } else if let (Some(prev_cx), Some(prev_cy), Some(next_cx), Some(next_cy)) = (prev_val.coord_x(), prev_val.coord_y(), next_val.coord_x(), next_val.coord_y()) {
                 // No per-vertex index array on one or both keyframes: the
                 // coordinate arrays are positionally aligned, so interpolate
                 // vertex-by-vertex. When prev is longer than next, its
                 // trailing vertices pass through unchanged.
-                let length_full = prev_coordinate.len();
-                let length = core::cmp::min(length_full, next_coordinate.len());
+                let prev_n = prev_cx.len().min(prev_cy.len());
+                let next_n = next_cx.len().min(next_cy.len());
+                let length_full = prev_n;
+                let length = core::cmp::min(prev_n, next_n);
 
                 start_workspace.clear();
                 end_workspace.clear();
                 for i in 0..length {
-                    let p = prev_coordinate.get(i);
-                    let n = next_coordinate.get(i);
-                    start_workspace.push(p.v1());
-                    start_workspace.push(p.v2());
-                    end_workspace.push(n.v1());
-                    end_workspace.push(n.v2());
+                    start_workspace.push(prev_cx.get(i));
+                    start_workspace.push(prev_cy.get(i));
+                    end_workspace.push(next_cx.get(i));
+                    end_workspace.push(next_cy.get(i));
                 }
 
                 out_workspace.clear();
@@ -702,8 +700,7 @@ pub fn evaluate_deform(
                     coord_out.push(runtime::framedata::ss::runtime::Vec2::new(out_workspace[i * 2], out_workspace[i * 2 + 1]));
                 }
                 for i in length..length_full {
-                    let p = prev_coordinate.get(i);
-                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(p.v1(), p.v2()));
+                    coord_out.push(runtime::framedata::ss::runtime::Vec2::new(prev_cx.get(i), prev_cy.get(i)));
                 }
                 if let Some(index) = prev_val.index() {
                     index_out.extend(index.iter());
@@ -724,10 +721,11 @@ pub fn evaluate_deform(
 #[inline]
 fn transfer_deform(source: &Option<ssab::ssab::ss::format::PartAttributeDeform>, coord_out: &mut Vec<runtime::framedata::ss::runtime::Vec2>, index_out: &mut Vec<i16>) {
     if let Some(s) = source {
-        if let Some(coordinate) = s.coordinate() {
-            coord_out.reserve(coordinate.len());
-            for v in coordinate.iter() {
-                coord_out.push(runtime::framedata::ss::runtime::Vec2::new(v.v1(), v.v2()));
+        if let (Some(cx), Some(cy)) = (s.coord_x(), s.coord_y()) {
+            let n = cx.len().min(cy.len());
+            coord_out.reserve(n);
+            for i in 0..n {
+                coord_out.push(runtime::framedata::ss::runtime::Vec2::new(cx.get(i), cy.get(i)));
             }
         }
         if let Some(index) = s.index() {
@@ -1057,16 +1055,18 @@ mod tests {
     /// Build a single PartAnimationDataDeform key with given index, interpolation, coordinates, and indices.
     #[allow(clippy::type_complexity)]
     fn deform_buf(keys: &[(u16, InterpolationType, &[(f32, f32)], &[i16])]) -> alloc::vec::Vec<u8> {
-        use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs, Vec2, Vec2Args};
+        use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs};
 
         let mut builder = flatbuffers::FlatBufferBuilder::new();
         let mut key_offsets = alloc::vec::Vec::new();
 
         for (idx, ip, coords, indices) in keys {
-            let vec_offsets: alloc::vec::Vec<_> = coords.iter().map(|(x, y)| Vec2::create(&mut builder, &Vec2Args { v1: *x, v2: *y })).collect();
-            let coord_off = if vec_offsets.is_empty() { None } else { Some(builder.create_vector(&vec_offsets)) };
+            let xs: alloc::vec::Vec<f32> = coords.iter().map(|(x, _)| *x).collect();
+            let ys: alloc::vec::Vec<f32> = coords.iter().map(|(_, y)| *y).collect();
+            let cx_off = if xs.is_empty() { None } else { Some(builder.create_vector(&xs)) };
+            let cy_off = if ys.is_empty() { None } else { Some(builder.create_vector(&ys)) };
             let idx_off = if indices.is_empty() { None } else { Some(builder.create_vector(indices)) };
-            let value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coordinate: coord_off, index: idx_off });
+            let value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coord_x: cx_off, coord_y: cy_off, index: idx_off });
             let key = PartAnimationDataDeform::create(&mut builder, &PartAnimationDataDeformArgs { index: *idx, interpolation: *ip, value: Some(value), ..Default::default() });
             key_offsets.push(key);
         }
@@ -1260,19 +1260,23 @@ mod tests {
     #[test]
     fn test_evaluate_deform_hermite() {
         // Hermite interpolation with zero tangents matches midpoint at rate 0.5.
-        use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs, SsCurve, SsCurveArgs, Vec2, Vec2Args};
+        use ssab::ssab::ss::format::{PartAnimationDataDeform, PartAnimationDataDeformArgs, PartAttributeDeform, PartAttributeDeformArgs, SsCurve, SsCurveArgs};
 
         let mut builder = flatbuffers::FlatBufferBuilder::new();
         let curve = SsCurve::create(&mut builder, &SsCurveArgs { start_time: 0.0, start_value: 0.0, end_time: 0.0, end_value: 1.0 });
 
-        let p_vec: alloc::vec::Vec<_> = (0..4).map(|i| Vec2::create(&mut builder, &Vec2Args { v1: i as f32, v2: 0.0 })).collect();
-        let p_coord = builder.create_vector(&p_vec);
-        let p_value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coordinate: Some(p_coord), index: None });
+        let p_xs: alloc::vec::Vec<f32> = (0..4).map(|i| i as f32).collect();
+        let p_ys: alloc::vec::Vec<f32> = (0..4).map(|_| 0.0).collect();
+        let p_cx = builder.create_vector(&p_xs);
+        let p_cy = builder.create_vector(&p_ys);
+        let p_value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coord_x: Some(p_cx), coord_y: Some(p_cy), index: None });
         let v0 = PartAnimationDataDeform::create(&mut builder, &PartAnimationDataDeformArgs { index: 0, interpolation: InterpolationType::Hermite, value: Some(p_value), curve: Some(curve), ..Default::default() });
 
-        let n_vec: alloc::vec::Vec<_> = (0..4).map(|i| Vec2::create(&mut builder, &Vec2Args { v1: (i as f32) + 10.0, v2: 0.0 })).collect();
-        let n_coord = builder.create_vector(&n_vec);
-        let n_value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coordinate: Some(n_coord), index: None });
+        let n_xs: alloc::vec::Vec<f32> = (0..4).map(|i| (i as f32) + 10.0).collect();
+        let n_ys: alloc::vec::Vec<f32> = (0..4).map(|_| 0.0).collect();
+        let n_cx = builder.create_vector(&n_xs);
+        let n_cy = builder.create_vector(&n_ys);
+        let n_value = PartAttributeDeform::create(&mut builder, &PartAttributeDeformArgs { coord_x: Some(n_cx), coord_y: Some(n_cy), index: None });
         let v10 = PartAnimationDataDeform::create(&mut builder, &PartAnimationDataDeformArgs { index: 10, interpolation: InterpolationType::None, value: Some(n_value), ..Default::default() });
 
         let arr = builder.create_vector(&[v0, v10]);

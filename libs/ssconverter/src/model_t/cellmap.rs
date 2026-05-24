@@ -6,7 +6,13 @@ fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::ss::format::CellT {
     cell_t.rectangle = Some(Box::new(model_t::common::convert_rectt(sscell.pos.x, sscell.pos.y, sscell.size.x, sscell.size.y)));
     cell_t.pivot = Some(Box::new(model_t::common::convert_vec2t(&sscell.pivot)));
     cell_t.rotated = sscell.rotated;
-    cell_t.table_coordinate = if sscell.mesh_point_list.is_empty() { None } else { Some(model_t::common::convert_vec2t_list(&sscell.mesh_point_list)) };
+    if sscell.mesh_point_list.is_empty() {
+        cell_t.table_coord_x = None;
+        cell_t.table_coord_y = None;
+    } else {
+        cell_t.table_coord_x = Some(sscell.mesh_point_list.iter().map(|p| p.x).collect());
+        cell_t.table_coord_y = Some(sscell.mesh_point_list.iter().map(|p| p.y).collect());
+    }
     cell_t.table_index_vertex = if sscell.mesh_tri_list.is_empty() { None } else { Some(model_t::common::convert_flat_list_from_vec3t_list(&sscell.mesh_tri_list)) };
 
     cell_t

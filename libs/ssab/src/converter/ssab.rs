@@ -5454,8 +5454,9 @@ impl<'a> Cell<'a> {
   pub const VT_RECTANGLE: ::flatbuffers::VOffsetT = 8;
   pub const VT_PIVOT: ::flatbuffers::VOffsetT = 10;
   pub const VT_ROTATED: ::flatbuffers::VOffsetT = 12;
-  pub const VT_TABLE_COORDINATE: ::flatbuffers::VOffsetT = 14;
-  pub const VT_TABLE_INDEX_VERTEX: ::flatbuffers::VOffsetT = 16;
+  pub const VT_TABLE_COORD_X: ::flatbuffers::VOffsetT = 14;
+  pub const VT_TABLE_COORD_Y: ::flatbuffers::VOffsetT = 16;
+  pub const VT_TABLE_INDEX_VERTEX: ::flatbuffers::VOffsetT = 18;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -5468,7 +5469,8 @@ impl<'a> Cell<'a> {
   ) -> ::flatbuffers::WIPOffset<Cell<'bldr>> {
     let mut builder = CellBuilder::new(_fbb);
     if let Some(x) = args.table_index_vertex { builder.add_table_index_vertex(x); }
-    if let Some(x) = args.table_coordinate { builder.add_table_coordinate(x); }
+    if let Some(x) = args.table_coord_y { builder.add_table_coord_y(x); }
+    if let Some(x) = args.table_coord_x { builder.add_table_coord_x(x); }
     if let Some(x) = args.pivot { builder.add_pivot(x); }
     if let Some(x) = args.rectangle { builder.add_rectangle(x); }
     if let Some(x) = args.name { builder.add_name(x); }
@@ -5489,8 +5491,11 @@ impl<'a> Cell<'a> {
       alloc::boxed::Box::new(x.unpack())
     });
     let rotated = self.rotated();
-    let table_coordinate = self.table_coordinate().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
+    let table_coord_x = self.table_coord_x().map(|x| {
+      x.into_iter().collect()
+    });
+    let table_coord_y = self.table_coord_y().map(|x| {
+      x.into_iter().collect()
     });
     let table_index_vertex = self.table_index_vertex().map(|x| {
       x.into_iter().collect()
@@ -5501,7 +5506,8 @@ impl<'a> Cell<'a> {
       rectangle,
       pivot,
       rotated,
-      table_coordinate,
+      table_coord_x,
+      table_coord_y,
       table_index_vertex,
     }
   }
@@ -5552,11 +5558,18 @@ impl<'a> Cell<'a> {
     unsafe { self._tab.get::<bool>(Cell::VT_ROTATED, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn table_coordinate(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2<'a>>>> {
+  pub fn table_coord_x(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2>>>>(Cell::VT_TABLE_COORDINATE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(Cell::VT_TABLE_COORD_X, None)}
+  }
+  #[inline]
+  pub fn table_coord_y(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(Cell::VT_TABLE_COORD_Y, None)}
   }
   #[inline]
   pub fn table_index_vertex(&self) -> Option<::flatbuffers::Vector<'a, u16>> {
@@ -5578,7 +5591,8 @@ impl ::flatbuffers::Verifiable for Cell<'_> {
      .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("rectangle", Self::VT_RECTANGLE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("pivot", Self::VT_PIVOT, false)?
      .visit_field::<bool>("rotated", Self::VT_ROTATED, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Vec2>>>>("table_coordinate", Self::VT_TABLE_COORDINATE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("table_coord_x", Self::VT_TABLE_COORD_X, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("table_coord_y", Self::VT_TABLE_COORD_Y, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, u16>>>("table_index_vertex", Self::VT_TABLE_INDEX_VERTEX, false)?
      .finish();
     Ok(())
@@ -5590,7 +5604,8 @@ pub struct CellArgs<'a> {
     pub rectangle: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
     pub pivot: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub rotated: bool,
-    pub table_coordinate: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2<'a>>>>>,
+    pub table_coord_x: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
+    pub table_coord_y: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
     pub table_index_vertex: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, u16>>>,
 }
 impl<'a> Default for CellArgs<'a> {
@@ -5602,7 +5617,8 @@ impl<'a> Default for CellArgs<'a> {
       rectangle: None,
       pivot: None,
       rotated: false,
-      table_coordinate: None,
+      table_coord_x: None,
+      table_coord_y: None,
       table_index_vertex: None,
     }
   }
@@ -5634,8 +5650,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> CellBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(Cell::VT_ROTATED, rotated, false);
   }
   #[inline]
-  pub fn add_table_coordinate(&mut self, table_coordinate: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Vec2<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(Cell::VT_TABLE_COORDINATE, table_coordinate);
+  pub fn add_table_coord_x(&mut self, table_coord_x: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(Cell::VT_TABLE_COORD_X, table_coord_x);
+  }
+  #[inline]
+  pub fn add_table_coord_y(&mut self, table_coord_y: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(Cell::VT_TABLE_COORD_Y, table_coord_y);
   }
   #[inline]
   pub fn add_table_index_vertex(&mut self, table_index_vertex: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , u16>>) {
@@ -5664,7 +5684,8 @@ impl ::core::fmt::Debug for Cell<'_> {
       ds.field("rectangle", &self.rectangle());
       ds.field("pivot", &self.pivot());
       ds.field("rotated", &self.rotated());
-      ds.field("table_coordinate", &self.table_coordinate());
+      ds.field("table_coord_x", &self.table_coord_x());
+      ds.field("table_coord_y", &self.table_coord_y());
       ds.field("table_index_vertex", &self.table_index_vertex());
       ds.finish()
   }
@@ -5677,7 +5698,8 @@ pub struct CellT {
   pub rectangle: Option<alloc::boxed::Box<RectT>>,
   pub pivot: Option<alloc::boxed::Box<Vec2T>>,
   pub rotated: bool,
-  pub table_coordinate: Option<alloc::vec::Vec<Vec2T>>,
+  pub table_coord_x: Option<alloc::vec::Vec<f32>>,
+  pub table_coord_y: Option<alloc::vec::Vec<f32>>,
   pub table_index_vertex: Option<alloc::vec::Vec<u16>>,
 }
 impl Default for CellT {
@@ -5688,7 +5710,8 @@ impl Default for CellT {
       rectangle: None,
       pivot: None,
       rotated: false,
-      table_coordinate: None,
+      table_coord_x: None,
+      table_coord_y: None,
       table_index_vertex: None,
     }
   }
@@ -5709,8 +5732,11 @@ impl CellT {
       x.pack(_fbb)
     });
     let rotated = self.rotated;
-    let table_coordinate = self.table_coordinate.as_ref().map(|x|{
-      let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    let table_coord_x = self.table_coord_x.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
+    let table_coord_y = self.table_coord_y.as_ref().map(|x|{
+      _fbb.create_vector(x)
     });
     let table_index_vertex = self.table_index_vertex.as_ref().map(|x|{
       _fbb.create_vector(x)
@@ -5721,7 +5747,8 @@ impl CellT {
       rectangle,
       pivot,
       rotated,
-      table_coordinate,
+      table_coord_x,
+      table_coord_y,
       table_index_vertex,
     })
   }
@@ -11181,8 +11208,9 @@ impl<'a> ::flatbuffers::Follow<'a> for PartAttributeDeform<'a> {
 }
 
 impl<'a> PartAttributeDeform<'a> {
-  pub const VT_COORDINATE: ::flatbuffers::VOffsetT = 4;
-  pub const VT_INDEX: ::flatbuffers::VOffsetT = 6;
+  pub const VT_COORD_X: ::flatbuffers::VOffsetT = 4;
+  pub const VT_COORD_Y: ::flatbuffers::VOffsetT = 6;
+  pub const VT_INDEX: ::flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -11195,29 +11223,41 @@ impl<'a> PartAttributeDeform<'a> {
   ) -> ::flatbuffers::WIPOffset<PartAttributeDeform<'bldr>> {
     let mut builder = PartAttributeDeformBuilder::new(_fbb);
     if let Some(x) = args.index { builder.add_index(x); }
-    if let Some(x) = args.coordinate { builder.add_coordinate(x); }
+    if let Some(x) = args.coord_y { builder.add_coord_y(x); }
+    if let Some(x) = args.coord_x { builder.add_coord_x(x); }
     builder.finish()
   }
 
   pub fn unpack(&self) -> PartAttributeDeformT {
-    let coordinate = self.coordinate().map(|x| {
-      x.iter().map(|t| t.unpack()).collect()
+    let coord_x = self.coord_x().map(|x| {
+      x.into_iter().collect()
+    });
+    let coord_y = self.coord_y().map(|x| {
+      x.into_iter().collect()
     });
     let index = self.index().map(|x| {
       x.into_iter().collect()
     });
     PartAttributeDeformT {
-      coordinate,
+      coord_x,
+      coord_y,
       index,
     }
   }
 
   #[inline]
-  pub fn coordinate(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2<'a>>>> {
+  pub fn coord_x(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2>>>>(PartAttributeDeform::VT_COORDINATE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(PartAttributeDeform::VT_COORD_X, None)}
+  }
+  #[inline]
+  pub fn coord_y(&self) -> Option<::flatbuffers::Vector<'a, f32>> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, f32>>>(PartAttributeDeform::VT_COORD_Y, None)}
   }
   #[inline]
   pub fn index(&self) -> Option<::flatbuffers::Vector<'a, i16>> {
@@ -11234,21 +11274,24 @@ impl ::flatbuffers::Verifiable for PartAttributeDeform<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Vec2>>>>("coordinate", Self::VT_COORDINATE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("coord_x", Self::VT_COORD_X, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("coord_y", Self::VT_COORD_Y, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, i16>>>("index", Self::VT_INDEX, false)?
      .finish();
     Ok(())
   }
 }
 pub struct PartAttributeDeformArgs<'a> {
-    pub coordinate: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Vec2<'a>>>>>,
+    pub coord_x: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
+    pub coord_y: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
     pub index: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, i16>>>,
 }
 impl<'a> Default for PartAttributeDeformArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartAttributeDeformArgs {
-      coordinate: None,
+      coord_x: None,
+      coord_y: None,
       index: None,
     }
   }
@@ -11260,8 +11303,12 @@ pub struct PartAttributeDeformBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeDeformBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_coordinate(&mut self, coordinate: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Vec2<'b >>>>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeDeform::VT_COORDINATE, coordinate);
+  pub fn add_coord_x(&mut self, coord_x: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeDeform::VT_COORD_X, coord_x);
+  }
+  #[inline]
+  pub fn add_coord_y(&mut self, coord_y: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , f32>>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartAttributeDeform::VT_COORD_Y, coord_y);
   }
   #[inline]
   pub fn add_index(&mut self, index: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , i16>>) {
@@ -11285,7 +11332,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeDeformBuilder<'a
 impl ::core::fmt::Debug for PartAttributeDeform<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartAttributeDeform");
-      ds.field("coordinate", &self.coordinate());
+      ds.field("coord_x", &self.coord_x());
+      ds.field("coord_y", &self.coord_y());
       ds.field("index", &self.index());
       ds.finish()
   }
@@ -11293,13 +11341,15 @@ impl ::core::fmt::Debug for PartAttributeDeform<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributeDeformT {
-  pub coordinate: Option<alloc::vec::Vec<Vec2T>>,
+  pub coord_x: Option<alloc::vec::Vec<f32>>,
+  pub coord_y: Option<alloc::vec::Vec<f32>>,
   pub index: Option<alloc::vec::Vec<i16>>,
 }
 impl Default for PartAttributeDeformT {
   fn default() -> Self {
     Self {
-      coordinate: None,
+      coord_x: None,
+      coord_y: None,
       index: None,
     }
   }
@@ -11309,14 +11359,18 @@ impl PartAttributeDeformT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<PartAttributeDeform<'b>> {
-    let coordinate = self.coordinate.as_ref().map(|x|{
-      let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
+    let coord_x = self.coord_x.as_ref().map(|x|{
+      _fbb.create_vector(x)
+    });
+    let coord_y = self.coord_y.as_ref().map(|x|{
+      _fbb.create_vector(x)
     });
     let index = self.index.as_ref().map(|x|{
       _fbb.create_vector(x)
     });
     PartAttributeDeform::create(_fbb, &PartAttributeDeformArgs{
-      coordinate,
+      coord_x,
+      coord_y,
       index,
     })
   }
