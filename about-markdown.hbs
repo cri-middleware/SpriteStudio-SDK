@@ -1,0 +1,26 @@
+# Third-Party Licenses
+
+This file lists the licenses of third-party dependencies used in this crate.
+
+## Overview of Licenses
+
+{{#each overview}}
+- [{{name}}](#{{id}}) ({{count}})
+{{/each}}
+
+## Detail of Licenses
+
+{{#each licenses}}
+### <a id="{{id}}"></a>{{name}}
+
+Used by:
+{{#each used_by}}
+- **{{crate.name}} {{crate.version}}**{{#if crate.repository}} ({{crate.repository}}){{/if}}
+{{/each}}
+
+```text
+{{{text}}}
+```
+
+---
+{{/each}}
