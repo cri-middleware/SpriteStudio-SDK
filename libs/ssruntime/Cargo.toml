@@ -37,7 +37,7 @@ too_many_arguments = "allow"
 crate-type = ["rlib", "staticlib", "cdylib"]
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = false
+wasm-opt = ["-Oz", "--all-features"]
 
 [build-dependencies]
 cbindgen = { workspace = true }

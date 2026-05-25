@@ -2384,7 +2384,7 @@ Used by:
 - **hashbrown 0.17.1** (https://github.com/rust-lang/hashbrown)
 - **heck 0.5.0** (https://github.com/withoutboats/heck)
 - **indexmap 2.14.0** (https://github.com/indexmap-rs/indexmap)
-- **js-sys 0.3.98** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys)
+- **js-sys 0.3.99** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys)
 - **linux-raw-sys 0.12.1** (https://github.com/sunfishcode/linux-raw-sys)
 - **log 0.4.29** (https://github.com/rust-lang/log)
 - **num-traits 0.2.19** (https://github.com/rust-num/num-traits)
@@ -2395,10 +2395,10 @@ Used by:
 - **tempfile 3.27.0** (https://github.com/Stebalien/tempfile)
 - **wasi 0.11.1+wasi-snapshot-preview1** (https://github.com/bytecodealliance/wasi)
 - **wasip2 1.0.3+wasi-0.2.9** (https://github.com/bytecodealliance/wasi-rs)
-- **wasm-bindgen-macro-support 0.2.121** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro-support)
-- **wasm-bindgen-macro 0.2.121** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro)
-- **wasm-bindgen-shared 0.2.121** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/shared)
-- **wasm-bindgen 0.2.121** (https://github.com/wasm-bindgen/wasm-bindgen)
+- **wasm-bindgen-macro-support 0.2.122** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro-support)
+- **wasm-bindgen-macro 0.2.122** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro)
+- **wasm-bindgen-shared 0.2.122** (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/shared)
+- **wasm-bindgen 0.2.122** (https://github.com/wasm-bindgen/wasm-bindgen)
 - **wit-bindgen 0.51.0** (https://github.com/bytecodealliance/wit-bindgen)
 - **wit-bindgen 0.57.1** (https://github.com/bytecodealliance/wit-bindgen)
 
@@ -4052,7 +4052,7 @@ SOFTWARE.
 ### <a id="MIT"></a>MIT License
 
 Used by:
-- **quick-xml 0.39.4** (https://github.com/tafia/quick-xml)
+- **quick-xml 0.40.1** (https://github.com/tafia/quick-xml)
 
 ```text
 The MIT License (MIT)
