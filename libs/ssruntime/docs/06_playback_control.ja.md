@@ -61,7 +61,21 @@ for (int i = 0; i < count; i++) {
             emit_signal("user_data", user->part_index(), user->value());
         }
     }
-    // Signal / Audio も同様に処理
+    // Signal の処理 (SpriteStudio v7以降)
+    if (events->signals()) {
+        for (auto sig : *events->signals()) {
+            if (!sig || !sig->value() || !sig->value()->active()) continue;
+            
+            auto val = sig->value();
+            const char* command = val->command_id() ? val->command_id()->c_str() : "";
+            
+            // パラメータ (Integer, Float, Textなど) は params() から取得可能
+            // (各パラメータのパース方法は ssab.h の SignalCommandParam を参照)
+            emit_signal("signal", command, val->params());
+        }
+    }
+    
+    // Audio も同様に events->audios() を参照して処理します
 }
 ```
 
