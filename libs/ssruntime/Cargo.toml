@@ -27,6 +27,7 @@ web = ["wasm-bindgen/std"]
 std = ["flatbuffers/std", "ssab/std", "dep:ssconverter", "wasm-bindgen/std"]
 libc_alloc = ["dep:libc"]
 wasm_alloc = ["dep:dlmalloc"]
+emscripten_alloc = []
 panic-handler = []
 
 [lints.clippy]

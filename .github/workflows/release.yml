@@ -190,7 +190,7 @@ jobs:
           rustup target add wasm32-unknown-unknown --toolchain nightly
           rustup component add rust-src --toolchain nightly
           
-          ./scripts/release-wasm.sh
+          ./scripts/release-emscripten.sh
           mkdir -p lib
           cp target/wasm32-unknown-unknown/release/*.a lib/
           

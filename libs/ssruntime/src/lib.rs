@@ -25,6 +25,69 @@ mod wasm_allocator {
     static ALLOCATOR: dlmalloc::GlobalDlmalloc = dlmalloc::GlobalDlmalloc;
 }
 
+#[cfg(all(not(feature = "std"), feature = "emscripten_alloc"))]
+mod emscripten_allocator {
+    unsafe extern "C" {
+        #[link_name = "malloc"]
+        fn em_malloc(size: usize) -> *mut u8;
+        #[link_name = "free"]
+        fn em_free(ptr: *mut core::ffi::c_void);
+    }
+
+    struct EmscriptenAlloc;
+
+    #[global_allocator]
+    static ALLOCATOR: EmscriptenAlloc = EmscriptenAlloc;
+
+    unsafe impl alloc::alloc::GlobalAlloc for EmscriptenAlloc {
+        unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
+            let size = layout.size();
+            let align = layout.align();
+
+            if align <= 8 {
+                return unsafe { em_malloc(size) };
+            }
+
+            let extra = align + core::mem::size_of::<usize>();
+            let total_size = match size.checked_add(extra) {
+                Some(s) => s,
+                None => return core::ptr::null_mut(),
+            };
+
+            let raw_ptr = unsafe { em_malloc(total_size) };
+            if raw_ptr.is_null() {
+                return core::ptr::null_mut();
+            }
+
+            let aligned_ptr = ((raw_ptr as usize + core::mem::size_of::<usize>() + align - 1) & !(align - 1)) as *mut u8;
+
+            unsafe {
+                let original_ptr_ptr = (aligned_ptr as *mut usize).offset(-1);
+                *original_ptr_ptr = raw_ptr as usize;
+            }
+
+            aligned_ptr
+        }
+
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
+            if ptr.is_null() {
+                return;
+            }
+
+            let align = layout.align();
+            if align <= 8 {
+                unsafe { em_free(ptr as *mut core::ffi::c_void) };
+            } else {
+                unsafe {
+                    let original_ptr_ptr = (ptr as *mut usize).offset(-1);
+                    let original_ptr = *original_ptr_ptr as *mut core::ffi::c_void;
+                    em_free(original_ptr);
+                }
+            }
+        }
+    }
+}
+
 #[cfg(all(not(feature = "std"), feature = "libc_alloc"))]
 mod allocator {
     #[cfg(unix)]
