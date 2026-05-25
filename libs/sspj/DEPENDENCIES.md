@@ -349,7 +349,7 @@ THE SOFTWARE.
 ### <a id="MIT"></a>MIT License
 
 Used by:
-- **quick-xml 0.39.4** (https://github.com/tafia/quick-xml)
+- **quick-xml 0.40.1** (https://github.com/tafia/quick-xml)
 
 ```text
 The MIT License (MIT)
