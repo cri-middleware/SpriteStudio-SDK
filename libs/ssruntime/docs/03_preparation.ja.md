@@ -1,10 +1,10 @@
 # 事前確認
-libssruntime は Rust で実装しており、libssruntime から受け取るデータフォーマットを FlatBuffers を採用しており下記の確認をお願いします。
+libssruntime は Rust で実装されており、libssruntime から受け取るデータフォーマットには FlatBuffers を採用しています。以下の確認をお願いします。
 
 # Rust のビルドサポート
 Player を実装する対象のゲームエンジンがサポートする CPU アーキテクチャ、プラットフォーム を把握し、Rust がビルドに対応しているかを確認してください。
 
-https://doc.Rust-lang.org/beta/Rustc/platform-support.html
+https://doc.rust-lang.org/beta/rustc/platform-support.html
 
 libssruntime のリリース成果物に対象の CPU アーキテクチャ / プラットフォーム のライブラリバイナリが含まれていない場合は自前でのビルドをお願いします。
 
@@ -17,7 +17,7 @@ Player を実装する対象のゲームエンジンとプログラミング言�
 # FlatBuffers のサポート
 Player を実装する対象ゲームエンジンのプログラミング言語を把握し、FlatBuffers の flatc コマンドがその言語に対応しているかを確認してください。
 
-https://FlatBuffers.dev/support/
+https://flatbuffers.dev/support/
 
 ---
 
@@ -29,12 +29,13 @@ Player の実装を開始する前に、必要なツールの準備とプロジ�
 - **空プロジェクトの作成**: 対象のゲームエンジンや言語で、ビルドが可能な空のプロジェクトを用意します。
 - **FlatBuffers の準備**: 
     - `flatc` コマンドを入手します。
-    - `libs/ssruntime/fbs/` にある `ssab.fbs` から、Player で使用する言語のパースコードを生成します。
+    - SDK が提供する各 `.fbs` スキーマファイル（`libs/ssab/fbs/` および `libs/ssruntime/fbs/` ディレクトリ配下）から、Player で使用する言語のパースコードを生成します。
     - 生成されたコードと、FlatBuffers のランタイムライブラリ（`flatbuffers.h` 等）をプロジェクトに取り込みます。
 
 ```bash
 # C++ の場合の生成例
-flatc --cpp -o ./src/gen/ libs/ssruntime/fbs/ssab.fbs
+flatc --cpp -o ./src/gen/ libs/ssab/fbs/*.fbs
+flatc --cpp -o ./src/gen/ libs/ssruntime/fbs/*.fbs
 ```
 
 - **libssruntime のリンク**: 

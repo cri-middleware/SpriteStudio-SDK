@@ -48,7 +48,7 @@ ssruntime の WASM ビルドは **WebAssembly SIMD 命令** を利用してい�
 
 **推奨運用**: SS7 のアニメ制作時には `independent=true` を使わない構成にしてください。やむを得ず使用する場合は、対応する子インスタンスが「順方向再生時のみ正しく描画される」ことを Player の利用者へ明示してください。
 
-> 関連章: [8. 高度な機能と描画ループの拡張 §1 インスタンス再生](./08_advanced_rendering.ja.md)
+> 関連章: [8. コンポーネント実装 (Instance / Effect / Mesh)](./08_advanced_rendering.ja.md)
 
 ## シーク (`set_frame_no`) はスキップしたフレーム上のイベントを発火しない
 
