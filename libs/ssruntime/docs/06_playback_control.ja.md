@@ -69,13 +69,54 @@ for (int i = 0; i < count; i++) {
             auto val = sig->value();
             const char* command = val->command_id() ? val->command_id()->c_str() : "";
             
-            // パラメータ (Integer, Float, Textなど) は params() から取得可能
-            // (各パラメータのパース方法は ssab.h の SignalCommandParam を参照)
-            emit_signal("signal", command, val->params());
+            // パラメータの展開処理 (C++の汎用的な map 等に格納する例)
+            std::map<std::string, MyVariant> params_map;
+            if (auto params = val->params()) {
+                for (uint32_t k = 0; k < params->size(); k++) {
+                    auto param = params->Get(k);
+                    if (!param || !param->param_id()) continue;
+                    std::string p_id = param->param_id()->c_str();
+
+                    // FlatBuffers の Union 型から値を取り出して格納する
+                    switch (param->value_type()) {
+                        case ss::format::SignalCommandParamValue_Bool:
+                            if (auto b = param->value_as_Bool()) params_map[p_id] = b->value();
+                            break;
+                        case ss::format::SignalCommandParamValue_Index:
+                            if (auto i = param->value_as_Index()) params_map[p_id] = i->value();
+                            break;
+                        case ss::format::SignalCommandParamValue_Integer:
+                            if (auto i = param->value_as_Integer()) params_map[p_id] = i->value();
+                            break;
+                        case ss::format::SignalCommandParamValue_Floating:
+                            if (auto f = param->value_as_Floating()) params_map[p_id] = f->value();
+                            break;
+                        case ss::format::SignalCommandParamValue_Text:
+                            if (auto t = param->value_as_Text()) {
+                                if (t->value()) params_map[p_id] = t->value()->c_str();
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            emit_signal("signal", command, params_map);
         }
     }
     
-    // Audio も同様に events->audios() を参照して処理します
+    // Audio の処理
+    if (events->audios()) {
+        for (auto audio : *events->audios()) {
+            if (!audio || !audio->value()) continue;
+            
+            auto val = audio->value();
+            const char* sound_name = val->sound_name() ? val->sound_name()->c_str() : "";
+            int loop_num = val->loop_num();
+            
+            emit_signal("audio", audio->part_index(), sound_name, loop_num);
+        }
+    }
 }
 ```
 

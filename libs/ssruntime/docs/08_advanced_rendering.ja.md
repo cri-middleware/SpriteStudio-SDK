@@ -27,6 +27,14 @@ if (r.transitioned) {
 if (r.visible) {
     child->render(r.child_frame_no);
 }
+
+#### 💡 サブフレーム再生設定の同期・伝搬
+親プレイヤーがサブフレーム補間（実数フレームによる滑らかなアニメーション再生）を有効にしている場合、その設定（有効/無効）を子プレイヤー（インスタンスパーツ）にも正しく伝搬させる必要があります。
+これを怠ると、親のトランスフォームやパーツの動きは滑らかであるにもかかわらず、子プレイヤーのアニメーションだけが整数フレームでカクカクと更新され、同期が崩れる不自然な挙動が発生します。
+
+- **同期のタイミング**:
+  1. 親プレイヤーのサブフレーム有効/無効設定が変更された時、すべての子プレイヤーに対して再帰的に同等の設定（`set_sub_frame_enabled`等）を同期します。
+  2. 新しくインスタンス（子プレイヤー）がセットアップされる際にも、親の現在のサブフレーム設定を初期パラメータとして引き継ぎます。
 ```
 
 #### 外部 SSAB の解決 (External Instances)
@@ -72,15 +80,38 @@ if (step.visible) {
 // メッシュ描画バッチが来たとき
 const float *v_x, *v_y, *uvs;
 const uint32_t *v_offsets;
+const int32_t *indices;
+const uint32_t *index_offsets;
+size_t len;
 
+// 1. 各 SoA バッファを取得する
 ss_runtime_get_mesh_vertices_x(ctx, &v_x, &len);
 ss_runtime_get_mesh_vertices_y(ctx, &v_y, &len);
 ss_runtime_get_mesh_vertex_offsets(ctx, &v_offsets, &len);
+ss_runtime_get_mesh_uvs(ctx, &uvs, &len);
+ss_runtime_get_mesh_indices(ctx, &indices, &len);
+ss_runtime_get_mesh_index_offsets(ctx, &index_offsets, &len);
 
-// パーツ p_idx の頂点範囲を特定して描画
-uint32_t start = v_offsets[p_idx];
-uint32_t end   = v_offsets[p_idx + 1];
-DrawMeshPart(v_x + start, v_y + start, uvs + start, ...);
+// 2. 対象パーツ p_idx の頂点範囲を特定
+uint32_t start_v = v_offsets[p_idx];
+uint32_t end_v   = v_offsets[p_idx + 1];
+uint32_t count_v = end_v - start_v;
+
+// 3. 対象パーツ p_idx のインデックス範囲を特定
+uint32_t start_i = index_offsets[p_idx];
+uint32_t end_i   = index_offsets[p_idx + 1];
+uint32_t count_i = end_i - start_i;
+
+// ※ UV バッファは [u0, v0, u1, v1, ...] とインターリーブされているため、
+// 開始オフセットは start_v * 2 になります。
+DrawMeshPart(
+    v_x + start_v, 
+    v_y + start_v, 
+    uvs + (start_v * 2), 
+    count_v, 
+    indices + start_i, 
+    count_i
+);
 ```
 
 ## 5. この段階での動作確認 (Validation)
