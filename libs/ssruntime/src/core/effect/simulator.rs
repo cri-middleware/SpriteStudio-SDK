@@ -457,14 +457,13 @@ impl EffectSimulator {
             }
 
             let rad_addr = rad + addr;
-            let mut x = rad_addr.cos() * speed * t;
-            let mut y = rad_addr.sin() * speed * t;
+            let (sin_rad_addr, cos_rad_addr) = rad_addr.sin_cos();
+            let mut x = cos_rad_addr * speed * t;
+            let mut y = sin_rad_addr * speed * t;
 
             if particle_params.use_trans_speed {
                 let transspeed = rng.gen_float().mul_add(f32x4::splat(particle_params.trans_speed2), f32x4::splat(particle_params.trans_speed));
                 let speedadd = transspeed * life_safe.recip();
-                let cos_rad_addr = rad_addr.cos();
-                let sin_rad_addr = rad_addr.sin();
                 let addtx = cos_rad_addr * speed;
                 let addtx_trans = cos_rad_addr * speedadd;
                 x = addtx_trans.mul_add(t, addtx) * (t + f32x4::splat(1.0)) * f32x4::splat(0.5);
@@ -632,14 +631,13 @@ impl EffectSimulator {
             }
 
             let rad_addr = rad + addr;
-            let mut x = rad_addr.cos() * speed * next_t;
-            let mut y = rad_addr.sin() * speed * next_t;
+            let (sin_rad_addr, cos_rad_addr) = rad_addr.sin_cos();
+            let mut x = cos_rad_addr * speed * next_t;
+            let mut y = sin_rad_addr * speed * next_t;
 
             if particle_params.use_trans_speed {
                 let transspeed = gen_rand_next().mul_add(f32x4::splat(particle_params.trans_speed2), f32x4::splat(particle_params.trans_speed));
                 let speedadd = transspeed * life_safe.recip();
-                let cos_rad_addr = rad_addr.cos();
-                let sin_rad_addr = rad_addr.sin();
                 let addtx = cos_rad_addr * speed;
                 let addtx_trans = cos_rad_addr * speedadd;
                 x = addtx_trans.mul_add(next_t, addtx) * (next_t + f32x4::splat(1.0)) * f32x4::splat(0.5);
@@ -711,10 +709,10 @@ impl EffectSimulator {
         let col_b_arr = color_b.to_array();
 
         let mut results = [ParticleDrawState::default(); 4];
-        let life_zero_arr = life_zero.to_array();
+        let life_zero_mask = life_zero.to_bitmask();
         for i in 0..4 {
-            // If bitwise value is non-zero, it means life was zero
-            if life_zero_arr[i].to_bits() != 0 {
+            // If the i-th bit is 1, it means life was zero
+            if (life_zero_mask & (1 << i)) != 0 {
                 continue;
             }
             results[i] = ParticleDrawState {

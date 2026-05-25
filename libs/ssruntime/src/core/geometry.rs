@@ -120,18 +120,10 @@ pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) ->
     // Combine conditions: both must be true (bitwise AND on mask)
     let inside_mask = y_cond & x_cond;
 
-    // We count how many true values exist in the mask.
-    // wide crate stores masks as all 1s (0xFFFFFFFF) for true and 0 for false in f32 format.
-    // Converting the bit pattern of each lane into an array allows counting.
-    let arr = inside_mask.to_array();
-    let mut intersections = 0;
-    for item in &arr {
-        if item.to_bits() != 0 {
-            intersections += 1;
-        }
-    }
+    // Using wide 1.4.0's to_bitmask, we get a 4-bit integer where each bit represents a lane.
+    let intersections = inside_mask.to_bitmask().count_ones();
 
-    (intersections % 2) != 0
+    (intersections & 1) != 0
 }
 
 /// Represents a 4x4 grid of vertices and UVs for a Nine-Slice part.
