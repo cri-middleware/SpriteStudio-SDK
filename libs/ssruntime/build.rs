@@ -20,8 +20,15 @@ fn main() {
 
     config.write_to_file(output_file);
 
-    match csbindgen::Builder::default().input_extern_file("src/ffi/mod.rs").input_extern_file("src/types.rs").csharp_dll_name("ssruntime").generate_csharp_file("target/SSRuntimeMethods.g.cs") {
-        Ok(_) => {}
+    let csharp_output_path = "target/SSRuntimeMethods.g.cs";
+    match csbindgen::Builder::default().input_extern_file("src/ffi/mod.rs").input_extern_file("src/types.rs").csharp_dll_name("ssruntime").generate_csharp_file(csharp_output_path) {
+        Ok(_) => {
+            // Post-process the generated C# file to add Unity-specific platform macros for static linking (__Internal)
+            if let Ok(content) = std::fs::read_to_string(csharp_output_path) {
+                let replaced = content.replace("const string __DllName = \"ssruntime\";", "#if UNITY_IOS || UNITY_TVOS || UNITY_WEBGL\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif");
+                let _ = std::fs::write(csharp_output_path, replaced);
+            }
+        }
         Err(e) => {
             eprintln!("Error generating C# bindings: {:?}", e);
             panic!("Unable to generate C# bindings: {}", e);
