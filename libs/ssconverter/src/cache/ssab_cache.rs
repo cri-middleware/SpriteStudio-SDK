@@ -1933,7 +1933,10 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::ss::format::PartTypeT::PartTypeNines(v) => v.pack(fb).as_union_value(),
             ssab::ssab::ss::format::PartTypeT::PartTypeInstance(v) => {
                 let mut p_args = ssab::ssab::ss::format::PartTypeInstanceArgs::default();
-                p_args.ref_anime_hash = v.ref_anime_hash;
+                p_args.ref_anime_pack = v.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s));
+                p_args.ref_anime_pack_hash = v.ref_anime_pack_hash;
+                p_args.ref_anime_name = v.ref_anime_name.as_ref().map(|s| fb.create_shared_string(s));
+                p_args.ref_anime_name_hash = v.ref_anime_name_hash;
                 let offset = ssab::ssab::ss::format::PartTypeInstance::create(fb, &p_args);
                 offset.as_union_value()
             }
@@ -2377,9 +2380,9 @@ impl<'a> SsabCache<'a> {
                 .iter()
                 .map(|entry| {
                     let mut entry_args = ssab::ssab::ss::format::ExternalInstanceArgs::default();
-                    entry_args.anime_name_hash = entry.anime_name_hash;
                     entry_args.anime_pack_name_hash = entry.anime_pack_name_hash;
                     entry_args.anime_pack_name = entry.anime_pack_name.as_ref().map(|s| fb.create_shared_string(s));
+                    entry_args.anime_name_hash = entry.anime_name_hash;
                     entry_args.anime_name = entry.anime_name.as_ref().map(|s| fb.create_shared_string(s));
                     ssab::ssab::ss::format::ExternalInstance::create(fb, &entry_args)
                 })

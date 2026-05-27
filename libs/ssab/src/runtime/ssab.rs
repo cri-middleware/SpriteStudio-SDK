@@ -10664,7 +10664,10 @@ impl<'a> ::flatbuffers::Follow<'a> for PartTypeInstance<'a> {
 }
 
 impl<'a> PartTypeInstance<'a> {
-  pub const VT_REF_ANIME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_REF_ANIME_PACK: ::flatbuffers::VOffsetT = 4;
+  pub const VT_REF_ANIME_PACK_HASH: ::flatbuffers::VOffsetT = 6;
+  pub const VT_REF_ANIME_NAME: ::flatbuffers::VOffsetT = 8;
+  pub const VT_REF_ANIME_NAME_HASH: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -10673,20 +10676,44 @@ impl<'a> PartTypeInstance<'a> {
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args PartTypeInstanceArgs
+    args: &'args PartTypeInstanceArgs<'args>
   ) -> ::flatbuffers::WIPOffset<PartTypeInstance<'bldr>> {
     let mut builder = PartTypeInstanceBuilder::new(_fbb);
-    builder.add_ref_anime_hash(args.ref_anime_hash);
+    builder.add_ref_anime_name_hash(args.ref_anime_name_hash);
+    if let Some(x) = args.ref_anime_name { builder.add_ref_anime_name(x); }
+    builder.add_ref_anime_pack_hash(args.ref_anime_pack_hash);
+    if let Some(x) = args.ref_anime_pack { builder.add_ref_anime_pack(x); }
     builder.finish()
   }
 
 
   #[inline]
-  pub fn ref_anime_hash(&self) -> u32 {
+  pub fn ref_anime_pack(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(PartTypeInstance::VT_REF_ANIME_HASH, Some(0)).unwrap()}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartTypeInstance::VT_REF_ANIME_PACK, None)}
+  }
+  #[inline]
+  pub fn ref_anime_pack_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(PartTypeInstance::VT_REF_ANIME_PACK_HASH, Some(0)).unwrap()}
+  }
+  #[inline]
+  pub fn ref_anime_name(&self) -> Option<&'a str> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(PartTypeInstance::VT_REF_ANIME_NAME, None)}
+  }
+  #[inline]
+  pub fn ref_anime_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(PartTypeInstance::VT_REF_ANIME_NAME_HASH, Some(0)).unwrap()}
   }
 }
 
@@ -10696,19 +10723,28 @@ impl ::flatbuffers::Verifiable for PartTypeInstance<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<u32>("ref_anime_hash", Self::VT_REF_ANIME_HASH, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, false)?
+     .visit_field::<u32>("ref_anime_pack_hash", Self::VT_REF_ANIME_PACK_HASH, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_name", Self::VT_REF_ANIME_NAME, false)?
+     .visit_field::<u32>("ref_anime_name_hash", Self::VT_REF_ANIME_NAME_HASH, false)?
      .finish();
     Ok(())
   }
 }
-pub struct PartTypeInstanceArgs {
-    pub ref_anime_hash: u32,
+pub struct PartTypeInstanceArgs<'a> {
+    pub ref_anime_pack: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub ref_anime_pack_hash: u32,
+    pub ref_anime_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub ref_anime_name_hash: u32,
 }
-impl<'a> Default for PartTypeInstanceArgs {
+impl<'a> Default for PartTypeInstanceArgs<'a> {
   #[inline]
   fn default() -> Self {
     PartTypeInstanceArgs {
-      ref_anime_hash: 0,
+      ref_anime_pack: None,
+      ref_anime_pack_hash: 0,
+      ref_anime_name: None,
+      ref_anime_name_hash: 0,
     }
   }
 }
@@ -10719,8 +10755,20 @@ pub struct PartTypeInstanceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a>
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_ref_anime_hash(&mut self, ref_anime_hash: u32) {
-    self.fbb_.push_slot::<u32>(PartTypeInstance::VT_REF_ANIME_HASH, ref_anime_hash, 0);
+  pub fn add_ref_anime_pack(&mut self, ref_anime_pack: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartTypeInstance::VT_REF_ANIME_PACK, ref_anime_pack);
+  }
+  #[inline]
+  pub fn add_ref_anime_pack_hash(&mut self, ref_anime_pack_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartTypeInstance::VT_REF_ANIME_PACK_HASH, ref_anime_pack_hash, 0);
+  }
+  #[inline]
+  pub fn add_ref_anime_name(&mut self, ref_anime_name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(PartTypeInstance::VT_REF_ANIME_NAME, ref_anime_name);
+  }
+  #[inline]
+  pub fn add_ref_anime_name_hash(&mut self, ref_anime_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(PartTypeInstance::VT_REF_ANIME_NAME_HASH, ref_anime_name_hash, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> PartTypeInstanceBuilder<'a, 'b, A> {
@@ -10740,7 +10788,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartTypeInstanceBuilder<'a, '
 impl ::core::fmt::Debug for PartTypeInstance<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("PartTypeInstance");
-      ds.field("ref_anime_hash", &self.ref_anime_hash());
+      ds.field("ref_anime_pack", &self.ref_anime_pack());
+      ds.field("ref_anime_pack_hash", &self.ref_anime_pack_hash());
+      ds.field("ref_anime_name", &self.ref_anime_name());
+      ds.field("ref_anime_name_hash", &self.ref_anime_name_hash());
       ds.finish()
   }
 }
@@ -14643,10 +14694,10 @@ impl<'a> ::flatbuffers::Follow<'a> for ExternalInstance<'a> {
 }
 
 impl<'a> ExternalInstance<'a> {
-  pub const VT_ANIME_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_ANIME_PACK_NAME: ::flatbuffers::VOffsetT = 4;
   pub const VT_ANIME_PACK_NAME_HASH: ::flatbuffers::VOffsetT = 6;
-  pub const VT_ANIME_PACK_NAME: ::flatbuffers::VOffsetT = 8;
-  pub const VT_ANIME_NAME: ::flatbuffers::VOffsetT = 10;
+  pub const VT_ANIME_NAME: ::flatbuffers::VOffsetT = 8;
+  pub const VT_ANIME_NAME_HASH: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -14658,30 +14709,20 @@ impl<'a> ExternalInstance<'a> {
     args: &'args ExternalInstanceArgs<'args>
   ) -> ::flatbuffers::WIPOffset<ExternalInstance<'bldr>> {
     let mut builder = ExternalInstanceBuilder::new(_fbb);
-    if let Some(x) = args.anime_name { builder.add_anime_name(x); }
-    if let Some(x) = args.anime_pack_name { builder.add_anime_pack_name(x); }
-    builder.add_anime_pack_name_hash(args.anime_pack_name_hash);
     builder.add_anime_name_hash(args.anime_name_hash);
+    if let Some(x) = args.anime_name { builder.add_anime_name(x); }
+    builder.add_anime_pack_name_hash(args.anime_pack_name_hash);
+    if let Some(x) = args.anime_pack_name { builder.add_anime_pack_name(x); }
     builder.finish()
   }
 
 
   #[inline]
-  pub fn anime_name_hash(&self) -> u32 {
+  pub fn anime_pack_name(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(ExternalInstance::VT_ANIME_NAME_HASH, Some(0)).unwrap()}
-  }
-  #[inline]
-  pub fn key_compare_less_than(&self, o: &ExternalInstance) -> bool {
-    self.anime_name_hash() < o.anime_name_hash()
-  }
-
-  #[inline]
-  pub fn key_compare_with_value(&self, val: u32) -> ::core::cmp::Ordering {
-    let key = self.anime_name_hash();
-    key.cmp(&val)
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(ExternalInstance::VT_ANIME_PACK_NAME, None)}
   }
   #[inline]
   pub fn anime_pack_name_hash(&self) -> u32 {
@@ -14691,18 +14732,18 @@ impl<'a> ExternalInstance<'a> {
     unsafe { self._tab.get::<u32>(ExternalInstance::VT_ANIME_PACK_NAME_HASH, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn anime_pack_name(&self) -> Option<&'a str> {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(ExternalInstance::VT_ANIME_PACK_NAME, None)}
-  }
-  #[inline]
   pub fn anime_name(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(ExternalInstance::VT_ANIME_NAME, None)}
+  }
+  #[inline]
+  pub fn anime_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(ExternalInstance::VT_ANIME_NAME_HASH, Some(0)).unwrap()}
   }
 }
 
@@ -14712,28 +14753,28 @@ impl ::flatbuffers::Verifiable for ExternalInstance<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<u32>("anime_name_hash", Self::VT_ANIME_NAME_HASH, false)?
-     .visit_field::<u32>("anime_pack_name_hash", Self::VT_ANIME_PACK_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("anime_pack_name", Self::VT_ANIME_PACK_NAME, false)?
+     .visit_field::<u32>("anime_pack_name_hash", Self::VT_ANIME_PACK_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("anime_name", Self::VT_ANIME_NAME, false)?
+     .visit_field::<u32>("anime_name_hash", Self::VT_ANIME_NAME_HASH, false)?
      .finish();
     Ok(())
   }
 }
 pub struct ExternalInstanceArgs<'a> {
-    pub anime_name_hash: u32,
-    pub anime_pack_name_hash: u32,
     pub anime_pack_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub anime_pack_name_hash: u32,
     pub anime_name: Option<::flatbuffers::WIPOffset<&'a str>>,
+    pub anime_name_hash: u32,
 }
 impl<'a> Default for ExternalInstanceArgs<'a> {
   #[inline]
   fn default() -> Self {
     ExternalInstanceArgs {
-      anime_name_hash: 0,
-      anime_pack_name_hash: 0,
       anime_pack_name: None,
+      anime_pack_name_hash: 0,
       anime_name: None,
+      anime_name_hash: 0,
     }
   }
 }
@@ -14744,20 +14785,20 @@ pub struct ExternalInstanceBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a>
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> ExternalInstanceBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_anime_name_hash(&mut self, anime_name_hash: u32) {
-    self.fbb_.push_slot::<u32>(ExternalInstance::VT_ANIME_NAME_HASH, anime_name_hash, 0);
+  pub fn add_anime_pack_name(&mut self, anime_pack_name: ::flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(ExternalInstance::VT_ANIME_PACK_NAME, anime_pack_name);
   }
   #[inline]
   pub fn add_anime_pack_name_hash(&mut self, anime_pack_name_hash: u32) {
     self.fbb_.push_slot::<u32>(ExternalInstance::VT_ANIME_PACK_NAME_HASH, anime_pack_name_hash, 0);
   }
   #[inline]
-  pub fn add_anime_pack_name(&mut self, anime_pack_name: ::flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(ExternalInstance::VT_ANIME_PACK_NAME, anime_pack_name);
-  }
-  #[inline]
   pub fn add_anime_name(&mut self, anime_name: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(ExternalInstance::VT_ANIME_NAME, anime_name);
+  }
+  #[inline]
+  pub fn add_anime_name_hash(&mut self, anime_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(ExternalInstance::VT_ANIME_NAME_HASH, anime_name_hash, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> ExternalInstanceBuilder<'a, 'b, A> {
@@ -14777,10 +14818,10 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> ExternalInstanceBuilder<'a, '
 impl ::core::fmt::Debug for ExternalInstance<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("ExternalInstance");
-      ds.field("anime_name_hash", &self.anime_name_hash());
-      ds.field("anime_pack_name_hash", &self.anime_pack_name_hash());
       ds.field("anime_pack_name", &self.anime_pack_name());
+      ds.field("anime_pack_name_hash", &self.anime_pack_name_hash());
       ds.field("anime_name", &self.anime_name());
+      ds.field("anime_name_hash", &self.anime_name_hash());
       ds.finish()
   }
 }

@@ -612,7 +612,10 @@ table PartTypeNines {
 }
 
 table PartTypeInstance {
-  ref_anime_hash: uint32;
+  ref_anime_pack: string;
+  ref_anime_pack_hash: uint32;
+  ref_anime_name: string;
+  ref_anime_name_hash: uint32;
 }
 
 table PartTypeEffect {
@@ -827,17 +830,10 @@ table ExternalTexture {
 }
 
 table ExternalInstance {
-  // Sorted by anime_name_hash so the player can LookupByKey when resolving
-  // PartTypeInstance.ref_anime_hash.
-  anime_name_hash: uint32 (key);
-  // fnv1a of the owning anime pack name; matches SsAnimeBinary.name_hash of
-  // the .ssab file that contains the referenced animation.
-  anime_pack_name_hash: uint32;
-  // Anime pack name (matches SsAnimeBinary.name); used to locate the sibling
-  // .ssab file (conventionally `<anime_pack_name>.ssab` next to this one).
   anime_pack_name: string;
-  // Animation name (diagnostic only).
+  anime_pack_name_hash: uint32;
   anime_name: string;
+  anime_name_hash: uint32;
 }
 
 table EmbeddedAsset {
