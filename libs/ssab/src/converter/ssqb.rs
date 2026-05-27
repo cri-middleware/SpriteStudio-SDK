@@ -116,11 +116,10 @@ impl<'a> ::flatbuffers::Follow<'a> for SequenceItem<'a> {
 }
 
 impl<'a> SequenceItem<'a> {
-  pub const VT_REF_ANIME_PACK: ::flatbuffers::VOffsetT = 4;
-  pub const VT_REF_ANIME_PACK_HASH: ::flatbuffers::VOffsetT = 6;
+  pub const VT_REF_ANIME_PACK_AND_NAME_HASH: ::flatbuffers::VOffsetT = 4;
+  pub const VT_REF_ANIME_PACK: ::flatbuffers::VOffsetT = 6;
   pub const VT_REF_ANIME: ::flatbuffers::VOffsetT = 8;
-  pub const VT_REF_ANIME_HASH: ::flatbuffers::VOffsetT = 10;
-  pub const VT_REPEAT_COUNT: ::flatbuffers::VOffsetT = 12;
+  pub const VT_REPEAT_COUNT: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -133,32 +132,36 @@ impl<'a> SequenceItem<'a> {
   ) -> ::flatbuffers::WIPOffset<SequenceItem<'bldr>> {
     let mut builder = SequenceItemBuilder::new(_fbb);
     builder.add_repeat_count(args.repeat_count);
-    builder.add_ref_anime_hash(args.ref_anime_hash);
     if let Some(x) = args.ref_anime { builder.add_ref_anime(x); }
-    builder.add_ref_anime_pack_hash(args.ref_anime_pack_hash);
     if let Some(x) = args.ref_anime_pack { builder.add_ref_anime_pack(x); }
+    builder.add_ref_anime_pack_and_name_hash(args.ref_anime_pack_and_name_hash);
     builder.finish()
   }
 
   pub fn unpack(&self) -> SequenceItemT {
+    let ref_anime_pack_and_name_hash = self.ref_anime_pack_and_name_hash();
     let ref_anime_pack = self.ref_anime_pack().map(|x| {
       alloc::string::ToString::to_string(x)
     });
-    let ref_anime_pack_hash = self.ref_anime_pack_hash();
     let ref_anime = self.ref_anime().map(|x| {
       alloc::string::ToString::to_string(x)
     });
-    let ref_anime_hash = self.ref_anime_hash();
     let repeat_count = self.repeat_count();
     SequenceItemT {
+      ref_anime_pack_and_name_hash,
       ref_anime_pack,
-      ref_anime_pack_hash,
       ref_anime,
-      ref_anime_hash,
       repeat_count,
     }
   }
 
+  #[inline]
+  pub fn ref_anime_pack_and_name_hash(&self) -> u32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<u32>(SequenceItem::VT_REF_ANIME_PACK_AND_NAME_HASH, Some(0)).unwrap()}
+  }
   #[inline]
   pub fn ref_anime_pack(&self) -> Option<&'a str> {
     // Safety:
@@ -167,25 +170,11 @@ impl<'a> SequenceItem<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None)}
   }
   #[inline]
-  pub fn ref_anime_pack_hash(&self) -> u32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(SequenceItem::VT_REF_ANIME_PACK_HASH, Some(0)).unwrap()}
-  }
-  #[inline]
   pub fn ref_anime(&self) -> Option<&'a str> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME, None)}
-  }
-  #[inline]
-  pub fn ref_anime_hash(&self) -> u32 {
-    // Safety:
-    // Created from valid Table for this object
-    // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(SequenceItem::VT_REF_ANIME_HASH, Some(0)).unwrap()}
   }
   #[inline]
   pub fn repeat_count(&self) -> i32 {
@@ -202,30 +191,27 @@ impl ::flatbuffers::Verifiable for SequenceItem<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
+     .visit_field::<u32>("ref_anime_pack_and_name_hash", Self::VT_REF_ANIME_PACK_AND_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, false)?
-     .visit_field::<u32>("ref_anime_pack_hash", Self::VT_REF_ANIME_PACK_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime", Self::VT_REF_ANIME, false)?
-     .visit_field::<u32>("ref_anime_hash", Self::VT_REF_ANIME_HASH, false)?
      .visit_field::<i32>("repeat_count", Self::VT_REPEAT_COUNT, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SequenceItemArgs<'a> {
+    pub ref_anime_pack_and_name_hash: u32,
     pub ref_anime_pack: Option<::flatbuffers::WIPOffset<&'a str>>,
-    pub ref_anime_pack_hash: u32,
     pub ref_anime: Option<::flatbuffers::WIPOffset<&'a str>>,
-    pub ref_anime_hash: u32,
     pub repeat_count: i32,
 }
 impl<'a> Default for SequenceItemArgs<'a> {
   #[inline]
   fn default() -> Self {
     SequenceItemArgs {
+      ref_anime_pack_and_name_hash: 0,
       ref_anime_pack: None,
-      ref_anime_pack_hash: 0,
       ref_anime: None,
-      ref_anime_hash: 0,
       repeat_count: 0,
     }
   }
@@ -237,20 +223,16 @@ pub struct SequenceItemBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SequenceItemBuilder<'a, 'b, A> {
   #[inline]
+  pub fn add_ref_anime_pack_and_name_hash(&mut self, ref_anime_pack_and_name_hash: u32) {
+    self.fbb_.push_slot::<u32>(SequenceItem::VT_REF_ANIME_PACK_AND_NAME_HASH, ref_anime_pack_and_name_hash, 0);
+  }
+  #[inline]
   pub fn add_ref_anime_pack(&mut self, ref_anime_pack: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME_PACK, ref_anime_pack);
   }
   #[inline]
-  pub fn add_ref_anime_pack_hash(&mut self, ref_anime_pack_hash: u32) {
-    self.fbb_.push_slot::<u32>(SequenceItem::VT_REF_ANIME_PACK_HASH, ref_anime_pack_hash, 0);
-  }
-  #[inline]
   pub fn add_ref_anime(&mut self, ref_anime: ::flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(SequenceItem::VT_REF_ANIME, ref_anime);
-  }
-  #[inline]
-  pub fn add_ref_anime_hash(&mut self, ref_anime_hash: u32) {
-    self.fbb_.push_slot::<u32>(SequenceItem::VT_REF_ANIME_HASH, ref_anime_hash, 0);
   }
   #[inline]
   pub fn add_repeat_count(&mut self, repeat_count: i32) {
@@ -274,10 +256,9 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SequenceItemBuilder<'a, 'b, A
 impl ::core::fmt::Debug for SequenceItem<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
     let mut ds = f.debug_struct("SequenceItem");
+      ds.field("ref_anime_pack_and_name_hash", &self.ref_anime_pack_and_name_hash());
       ds.field("ref_anime_pack", &self.ref_anime_pack());
-      ds.field("ref_anime_pack_hash", &self.ref_anime_pack_hash());
       ds.field("ref_anime", &self.ref_anime());
-      ds.field("ref_anime_hash", &self.ref_anime_hash());
       ds.field("repeat_count", &self.repeat_count());
       ds.finish()
   }
@@ -285,19 +266,17 @@ impl ::core::fmt::Debug for SequenceItem<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SequenceItemT {
+  pub ref_anime_pack_and_name_hash: u32,
   pub ref_anime_pack: Option<alloc::string::String>,
-  pub ref_anime_pack_hash: u32,
   pub ref_anime: Option<alloc::string::String>,
-  pub ref_anime_hash: u32,
   pub repeat_count: i32,
 }
 impl Default for SequenceItemT {
   fn default() -> Self {
     Self {
+      ref_anime_pack_and_name_hash: 0,
       ref_anime_pack: None,
-      ref_anime_pack_hash: 0,
       ref_anime: None,
-      ref_anime_hash: 0,
       repeat_count: 0,
     }
   }
@@ -307,20 +286,18 @@ impl SequenceItemT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<SequenceItem<'b>> {
+    let ref_anime_pack_and_name_hash = self.ref_anime_pack_and_name_hash;
     let ref_anime_pack = self.ref_anime_pack.as_ref().map(|x|{
       _fbb.create_string(x)
     });
-    let ref_anime_pack_hash = self.ref_anime_pack_hash;
     let ref_anime = self.ref_anime.as_ref().map(|x|{
       _fbb.create_string(x)
     });
-    let ref_anime_hash = self.ref_anime_hash;
     let repeat_count = self.repeat_count;
     SequenceItem::create(_fbb, &SequenceItemArgs{
+      ref_anime_pack_and_name_hash,
       ref_anime_pack,
-      ref_anime_pack_hash,
       ref_anime,
-      ref_anime_hash,
       repeat_count,
     })
   }

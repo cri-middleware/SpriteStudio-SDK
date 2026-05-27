@@ -29,10 +29,9 @@ fn convert_sequence_item_t_list(sequence_item_list: &[SsSequenceItem]) -> Vec<ss
         .iter()
         .map(|sequence_item| {
             let mut sequence_item_t = ssab::ssqb::ss::format::SequenceItemT::default();
+            sequence_item_t.ref_anime_pack_and_name_hash = utils::fnv1a_hash_str(&format!("{}/{}", sequence_item.ref_anime_pack, sequence_item.ref_anime));
             sequence_item_t.ref_anime = Some(sequence_item.ref_anime.clone());
-            sequence_item_t.ref_anime_hash = utils::fnv1a_hash_str(&sequence_item.ref_anime);
             sequence_item_t.ref_anime_pack = Some(sequence_item.ref_anime_pack.clone());
-            sequence_item_t.ref_anime_pack_hash = utils::fnv1a_hash_str(&sequence_item.ref_anime_pack);
             sequence_item_t.repeat_count = sequence_item.repeat_count;
 
             sequence_item_t
