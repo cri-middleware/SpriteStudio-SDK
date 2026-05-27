@@ -612,7 +612,6 @@ table PartTypeNines {
 }
 
 table PartTypeInstance {
-  ref_anime_pack_and_name_hash: uint32;
   ref_anime_pack: string;
   ref_anime_pack_hash: uint32;
   ref_anime_name: string;
@@ -831,9 +830,10 @@ table ExternalTexture {
 }
 
 table ExternalInstance {
-  anime_pack_and_name_hash: uint32 (key);
   anime_pack_name: string;
+  anime_pack_name_hash: uint32;
   anime_name: string;
+  anime_name_hash: uint32;
 }
 
 table EmbeddedAsset {

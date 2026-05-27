@@ -87,13 +87,14 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
             .iter()
             .map(|(pack, anime)| {
                 let mut entry = ssab::ssab::ss::format::ExternalInstanceT::default();
-                entry.anime_pack_and_name_hash = crate::utils::fnv1a_hash_str(&format!("{}/{}", pack, anime));
+                entry.anime_pack_name_hash = crate::utils::fnv1a_hash_str(pack);
                 entry.anime_pack_name = Some(pack.clone());
+                entry.anime_name_hash = crate::utils::fnv1a_hash_str(anime);
                 entry.anime_name = Some(anime.clone());
                 entry
             })
             .collect::<Vec<_>>();
-        v.sort_by_key(|e| e.anime_pack_and_name_hash);
+        v.sort_by_key(|e| (e.anime_pack_name_hash, e.anime_name_hash));
         Some(v)
     };
     anime_binary.embedded_assets = if embedded {

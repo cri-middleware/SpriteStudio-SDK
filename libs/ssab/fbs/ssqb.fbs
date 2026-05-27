@@ -7,7 +7,6 @@ enum SequenceType: ubyte {
 }
 
 table SequenceItem {
-  ref_anime_pack_and_name_hash: uint32;
   ref_anime_pack: string;
   ref_anime_pack_hash: uint32;
   ref_anime_name: string;
