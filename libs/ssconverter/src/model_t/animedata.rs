@@ -1798,6 +1798,10 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                 sspj::sstypes::SsPartType::Instance => {
                     let mut part_type = ssab::ssab::ss::format::PartTypeInstanceT::default();
                     part_type.ref_anime_pack_and_name_hash = crate::utils::fnv1a_hash_str(&format!("{}/{}", part.ref_anime_pack, part.ref_anime));
+                    part_type.ref_anime_pack = Some(part.ref_anime_pack.clone());
+                    part_type.ref_anime_pack_hash = crate::utils::fnv1a_hash_str(&part.ref_anime_pack);
+                    part_type.ref_anime_name = Some(part.ref_anime.clone());
+                    part_type.ref_anime_name_hash = crate::utils::fnv1a_hash_str(&part.ref_anime);
                     ssab::ssab::ss::format::PartTypeT::PartTypeInstance(Box::new(part_type))
                 }
                 sspj::sstypes::SsPartType::Armature => ssab::ssab::ss::format::PartTypeT::PartTypeArmature(Box::default()),

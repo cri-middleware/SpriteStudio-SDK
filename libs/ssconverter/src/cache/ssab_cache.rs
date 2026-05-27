@@ -1934,6 +1934,10 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::ss::format::PartTypeT::PartTypeInstance(v) => {
                 let mut p_args = ssab::ssab::ss::format::PartTypeInstanceArgs::default();
                 p_args.ref_anime_pack_and_name_hash = v.ref_anime_pack_and_name_hash;
+                p_args.ref_anime_pack = v.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s));
+                p_args.ref_anime_pack_hash = v.ref_anime_pack_hash;
+                p_args.ref_anime_name = v.ref_anime_name.as_ref().map(|s| fb.create_shared_string(s));
+                p_args.ref_anime_name_hash = v.ref_anime_name_hash;
                 let offset = ssab::ssab::ss::format::PartTypeInstance::create(fb, &p_args);
                 offset.as_union_value()
             }

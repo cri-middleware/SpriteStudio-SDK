@@ -13,10 +13,16 @@ impl SsqbCache {
             .iter()
             .map(|sequence_item_t| {
                 let ref_anime_pack = sequence_item_t.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
-                let ref_anime = sequence_item_t.ref_anime.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
+                let ref_anime_name = sequence_item_t.ref_anime_name.as_ref().map(|s| fb.create_shared_string(s.as_ref()));
 
-                let sequence_item_arg =
-                    ssab::ssqb::ss::format::SequenceItemArgs { ref_anime_pack_and_name_hash: sequence_item_t.ref_anime_pack_and_name_hash, ref_anime_pack, ref_anime, repeat_count: sequence_item_t.repeat_count };
+                let sequence_item_arg = ssab::ssqb::ss::format::SequenceItemArgs {
+                    ref_anime_pack_and_name_hash: sequence_item_t.ref_anime_pack_and_name_hash,
+                    ref_anime_pack,
+                    ref_anime_pack_hash: sequence_item_t.ref_anime_pack_hash,
+                    ref_anime_name,
+                    ref_anime_name_hash: sequence_item_t.ref_anime_name_hash,
+                    repeat_count: sequence_item_t.repeat_count,
+                };
                 ssab::ssqb::ss::format::SequenceItem::create(fb, &sequence_item_arg)
             })
             .collect::<Vec<_>>();
