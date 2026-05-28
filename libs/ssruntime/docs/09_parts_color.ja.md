@@ -24,7 +24,7 @@
 `ss_runtime_get_parts_color` 等の API は用意されていません。`FrameData` の `parts_color` テーブルから直接取得します。  
 
 また、描画するパーツの種別で、それぞれ特殊なルールが存在しています。  
-本ルールの適用は、プレーヤー側で行なう必要があります。  
+本ルールの適用は、プレイヤー側で行なう必要があります。  
 
 | パーツ種別 | 合成モード | 適用色 | rate の扱い |
 |---|---|---|---|
@@ -32,7 +32,7 @@
 | Mesh | あり | 全頂点同値 | 全頂点同値 |
 | Shape | Mix に強制 | 4隅の頂点で個別 | 常に1.0 に強制 |
 
-このルールの適用をプレーヤー側の責務としている理由については、ssabのデータ上でなるだけ劣化させないためと、シェーダが個別化して増えることを抑制するための 2 つの意図があります。  
+このルールの適用をプレイヤー側の責務としている理由については、ssabのデータ上でなるだけ劣化させないためと、シェーダが個別化して増えることを抑制するための 2 つの意図があります。  
 
 #### 1-2-1.「通常（Normal）」パーツの例
 ```cpp
@@ -42,7 +42,7 @@ if (color_idx >= 0) {
     auto pc = frame_data->parts_color()->Get(color_idx);
     
     // a チャンネルには階層 alpha が事前合成済み。
-    // Player 側で state->alpha() を再乗算する必要はありません。
+    // プレイヤー 側で state->alpha() を再乗算する必要はありません。
     ConvertColor(pc->lt()->rgba(), pc->lt()->rate()); // 左上
     ConvertColor(pc->rt()->rgba(), pc->rt()->rate()); // 右上
     ConvertColor(pc->lb()->rgba(), pc->lb()->rate()); // 左下
@@ -66,7 +66,7 @@ if (color_idx >= 0) {
     // メッシュの全頂点を処理
     for (int i = 0; i < vert_count; i++) {
         // a チャンネルには階層 alpha が事前合成済み。
-        // Player 側で state->alpha() を再乗算する必要はありません。
+        // プレイヤー 側で state->alpha() を再乗算する必要はありません。
         ConvertColorMesh(cl, rt);   // 全頂点に同じ色 & rate（左上）
 
         // カラー合成モード (Mix, Mul, Add, Sub)
@@ -84,7 +84,7 @@ if (color_idx >= 0) {
      auto pc = frame_data->parts_color()->Get(color_idx);
      
      // a チャンネルには階層 alpha が事前合成済み。
-     // Player 側で state->alpha() を再乗算する必要はありません。
+     // プレイヤー 側で state->alpha() を再乗算する必要はありません。
      ConvertColorShape(pc->lt()->rgba(), 1.0f); // 左上（rate は強制で 1.0）
      ConvertColorShape(pc->rt()->rgba(), 1.0f); // 右上（同上）
      ConvertColorShape(pc->lb()->rgba(), 1.0f); // 左下（同上）
@@ -103,7 +103,7 @@ if (color_idx >= 0) {
 - （各頂点色の）rgba : 合成する色。a はパーツカラーのアルファ素材（パーツの不透明度と乗算される）
 - （各頂点色の）rate : テクセル色と合成する時の比率（合成強度）
 
-上記の内、rgba の a については（実装例などにある通り）ssruntimeの処理内で自動的にパーツの不透明度と合算されるため、基本的なプレーヤーの実装では特段留意する必要はありません。
+上記の内、rgba の a については（実装例などにある通り）ssruntimeの処理内で自動的にパーツの不透明度と合算されるため、基本的なプレイヤーの実装では特段留意する必要はありません。
 
 ### 1-4.参考:シェーダでのパーツカラーの適用例（テーブル駆動の参考実装）
 
@@ -131,7 +131,7 @@ varying vec4 partcolor_color;
 `(c.x, c.y, c.z)` は順に「ピクセル側の重み調整」「PartColor 側の重み係数」「Mul モードフラグ」を表します（c.wは現状未使用）。
 
 #### 1-4-2.頂点シェーダの実装例（`varg` の組み立て）
-`CUSTOM0` には Player が `(rate, blend_idx, pma_flag, _)` を頂点ごとに積んでいます（`rate` の意味は §1-3 を参照）。
+`CUSTOM0` には プレイヤー が `(rate, blend_idx, pma_flag, _)` を頂点ごとに積んでいます（`rate` の意味は §1-3 を参照）。
 
 ```glsl
 void vertex() {
