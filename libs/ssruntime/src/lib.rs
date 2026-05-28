@@ -2338,6 +2338,22 @@ struct EmitterResourceEntry {
     v1: f32,
 }
 
+// Lifted out of `build_draw_plan` so the row buffer can be a cached field.
+#[derive(Default, Clone, Copy)]
+struct ResolvedEmitter {
+    ok: bool,
+    blend_byte: u8,
+    quad_origin_x: f32,
+    quad_origin_y: f32,
+    sw: f32,
+    sh: f32,
+    u0: f32,
+    v0: f32,
+    u1: f32,
+    v1: f32,
+    cellmap_hash: u32,
+}
+
 pub struct EffectSlot<'a> {
     ctx: EffectContext<'a>,
     // SSAB root, kept for cellmap lookup during draw-plan build. Borrows from
@@ -2348,6 +2364,17 @@ pub struct EffectSlot<'a> {
     fb: flatbuffers::FlatBufferBuilder<'a>,
     // Resolved emitter resources keyed by (cellmap_hash, cell_hash, blend_in).
     emitter_resource_cache: alloc::vec::Vec<EmitterResourceEntry>,
+    // Per-frame scratch for `build_draw_plan`: clear()+reserve()'d each tick
+    // so capacities stabilise at the peak and steady-state allocation is zero.
+    scratch_cmd_keys: alloc::vec::Vec<(u32, u32, i32, usize, usize)>,
+    scratch_entries: alloc::vec::Vec<(usize, usize, usize)>,
+    scratch_verts: alloc::vec::Vec<f32>,
+    scratch_uvs: alloc::vec::Vec<f32>,
+    scratch_colors: alloc::vec::Vec<f32>,
+    scratch_indices: alloc::vec::Vec<i32>,
+    scratch_resolved: alloc::vec::Vec<ResolvedEmitter>,
+    scratch_command_meta: alloc::vec::Vec<(u32, u8, u32, u32)>,
+    scratch_cmds: alloc::vec::Vec<crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand>,
     // Cached at create time — never changes for a given effect resource.
     lifetime: i32,
     is_infinite: bool,
@@ -2374,6 +2401,15 @@ impl<'a> EffectSlot<'a> {
             ssab,
             fb: flatbuffers::FlatBufferBuilder::new(),
             emitter_resource_cache: alloc::vec::Vec::new(),
+            scratch_cmd_keys: alloc::vec::Vec::new(),
+            scratch_entries: alloc::vec::Vec::new(),
+            scratch_verts: alloc::vec::Vec::new(),
+            scratch_uvs: alloc::vec::Vec::new(),
+            scratch_colors: alloc::vec::Vec::new(),
+            scratch_indices: alloc::vec::Vec::new(),
+            scratch_resolved: alloc::vec::Vec::new(),
+            scratch_command_meta: alloc::vec::Vec::new(),
+            scratch_cmds: alloc::vec::Vec::new(),
             lifetime,
             is_infinite,
             last_event_frame: -1,
@@ -2527,66 +2563,70 @@ impl<'a> EffectSlot<'a> {
         let stride = if vert_stride == 3 { 3usize } else { 2usize };
         let y_sign: f32 = if y_flip { -1.0 } else { 1.0 };
 
-        // Drive the simulator and copy command keys out before we touch other
-        // `self` fields — the slices returned by `get_draw_commands` borrow from
-        // `self.ctx.instance`, so we narrow the borrow to a tight scope.
-        let cmd_keys: alloc::vec::Vec<(u32, u32, i32, usize, usize)> = {
+        // Narrow the borrow on `self.ctx.get_draw_commands` so other self
+        // fields stay touchable afterwards.
+        self.scratch_cmd_keys.clear();
+        {
             let (commands, _particles) = self.ctx.get_draw_commands();
-            commands.iter().map(|c| (c.cell_map_name_hash, c.cell_name_hash, c.blend_type, c.particle_start, c.particle_end)).collect()
-        };
+            self.scratch_cmd_keys.reserve(commands.len());
+            for c in commands.iter() {
+                self.scratch_cmd_keys.push((c.cell_map_name_hash, c.cell_name_hash, c.blend_type, c.particle_start, c.particle_end));
+            }
+        }
 
         // Phase 1: resolve resources via split-borrow on disjoint self fields.
-        let entries: alloc::vec::Vec<(usize, usize, usize)> = {
+        self.scratch_entries.clear();
+        self.scratch_entries.reserve(self.scratch_cmd_keys.len());
+        {
             let cache = &mut self.emitter_resource_cache;
             let ssab = &self.ssab;
-            cmd_keys.into_iter().map(|(cmh, ch, bi, ps, pe)| (Self::ensure_emitter_resource_in(cache, ssab, cmh, ch, bi), ps, pe)).collect()
-        };
+            for &(cmh, ch, bi, ps, pe) in self.scratch_cmd_keys.iter() {
+                self.scratch_entries.push((Self::ensure_emitter_resource_in(cache, ssab, cmh, ch, bi), ps, pe));
+            }
+        }
 
-        let total_quads: usize = entries.iter().map(|(_, s, e)| e - s).sum();
+        let total_quads: usize = self.scratch_entries.iter().map(|(_, s, e)| e - s).sum();
         if total_quads == 0 {
             return &[];
         }
 
-        let mut verts: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * stride);
-        let mut uvs: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * 2);
-        let mut colors: alloc::vec::Vec<f32> = alloc::vec::Vec::with_capacity(total_quads * 4 * 4);
-        let mut indices: alloc::vec::Vec<i32> = alloc::vec::Vec::with_capacity(total_quads * 6);
+        self.scratch_verts.clear();
+        self.scratch_uvs.clear();
+        self.scratch_colors.clear();
+        self.scratch_indices.clear();
+        self.scratch_verts.reserve(total_quads * 4 * stride);
+        self.scratch_uvs.reserve(total_quads * 4 * 2);
+        self.scratch_colors.reserve(total_quads * 4 * 4);
+        self.scratch_indices.reserve(total_quads * 6);
 
-        // Snapshot resolved entries to avoid re-borrowing self.emitter_resource_cache
-        // while writing into self.fb.
-        struct Resolved {
-            ok: bool,
-            blend_byte: u8,
-            quad_origin_x: f32,
-            quad_origin_y: f32,
-            sw: f32,
-            sh: f32,
-            u0: f32,
-            v0: f32,
-            u1: f32,
-            v1: f32,
-            cellmap_hash: u32,
+        // Snapshot resolved entries so self.emitter_resource_cache is free
+        // to be re-borrowed when we later write into self.fb.
+        self.scratch_resolved.clear();
+        self.scratch_resolved.reserve(self.scratch_entries.len());
+        for (i, _, _) in self.scratch_entries.iter() {
+            let e = &self.emitter_resource_cache[*i];
+            self.scratch_resolved.push(ResolvedEmitter {
+                ok: e.resolved_ok, blend_byte: e.blend_byte,
+                quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y,
+                sw: e.sw, sh: e.sh,
+                u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1,
+                cellmap_hash: e.cellmap_hash,
+            });
         }
-        let resolved: alloc::vec::Vec<Resolved> = entries
-            .iter()
-            .map(|(i, _, _)| {
-                let e = &self.emitter_resource_cache[*i];
-                Resolved { ok: e.resolved_ok, blend_byte: e.blend_byte, quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y, sw: e.sw, sh: e.sh, u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1, cellmap_hash: e.cellmap_hash }
-            })
-            .collect();
 
-        let mut command_meta: alloc::vec::Vec<(u32, u8, u32, u32)> = alloc::vec::Vec::with_capacity(entries.len());
+        self.scratch_command_meta.clear();
+        self.scratch_command_meta.reserve(self.scratch_entries.len());
 
         // Particles live on `self.ctx.instance.draw_particles`; borrow inline.
         let particles = &self.ctx.instance.draw_particles;
 
-        for (cmd_idx, (_, p_start, p_end)) in entries.iter().enumerate() {
-            let r = &resolved[cmd_idx];
-            let particle_offset = (verts.len() / (4 * stride)) as u32;
+        for (cmd_idx, (_, p_start, p_end)) in self.scratch_entries.iter().enumerate() {
+            let r = &self.scratch_resolved[cmd_idx];
+            let particle_offset = (self.scratch_verts.len() / (4 * stride)) as u32;
             let particle_count = (p_end - p_start) as u32;
 
             if !r.ok {
-                command_meta.push((r.cellmap_hash, r.blend_byte, 0, particle_offset));
+                self.scratch_command_meta.push((r.cellmap_hash, r.blend_byte, 0, particle_offset));
                 continue;
             }
 
@@ -2605,41 +2645,43 @@ impl<'a> EffectSlot<'a> {
                     let yy = ly[v] * p.scale_y;
                     let wx = c * xx - s * yy + p.x;
                     let wy = s * xx + c * yy + py;
-                    verts.push(wx);
-                    verts.push(wy);
+                    self.scratch_verts.push(wx);
+                    self.scratch_verts.push(wy);
                     if stride == 3 {
-                        verts.push(0.0);
+                        self.scratch_verts.push(0.0);
                     }
                 }
-                uvs.extend_from_slice(&uvs_corner);
+                self.scratch_uvs.extend_from_slice(&uvs_corner);
                 let r_f = p.color.r as f32 / 255.0;
                 let g_f = p.color.g as f32 / 255.0;
                 let b_f = p.color.b as f32 / 255.0;
                 let a_f = p.color.a as f32 / 255.0;
                 for _ in 0..4 {
-                    colors.extend_from_slice(&[r_f, g_f, b_f, a_f]);
+                    self.scratch_colors.extend_from_slice(&[r_f, g_f, b_f, a_f]);
                 }
                 // Quad-local indices: command consumers slice [off*6 .. (off+qc)*6]
                 // and pair it with the verts slice [off*4*stride .. (off+qc)*4*stride],
                 // so values must be 0..qc*4 within the command, not global.
                 let v = (i * 4) as i32;
-                indices.extend_from_slice(&[v, v + 1, v + 2, v + 2, v + 1, v + 3]);
+                self.scratch_indices.extend_from_slice(&[v, v + 1, v + 2, v + 2, v + 1, v + 3]);
             }
 
-            command_meta.push((r.cellmap_hash, r.blend_byte, particle_count, particle_offset));
+            self.scratch_command_meta.push((r.cellmap_hash, r.blend_byte, particle_count, particle_offset));
         }
 
-        // Build the FlatBuffer. Commands are inlined fixed-size structs, so
-        // we collect them as POD then create the vector in one shot — no
-        // per-element vtable/offset overhead.
+        // Commands are inlined fixed-size structs; collect as POD then create
+        // the vector in one shot (no per-element vtable/offset overhead).
         self.fb.reset();
-        let cmds: alloc::vec::Vec<crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand> =
-            command_meta.iter().map(|(hash, blend, qc, off)| crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand::new(*hash, *qc, *off, *blend)).collect();
-        let commands_off = self.fb.create_vector(&cmds);
-        let verts_off = self.fb.create_vector(&verts);
-        let uvs_off = self.fb.create_vector(&uvs);
-        let colors_off = self.fb.create_vector(&colors);
-        let indices_off = self.fb.create_vector(&indices);
+        self.scratch_cmds.clear();
+        self.scratch_cmds.reserve(self.scratch_command_meta.len());
+        for &(hash, blend, qc, off) in self.scratch_command_meta.iter() {
+            self.scratch_cmds.push(crate::runtime::effect_draw_plan::ss::runtime::EffectDrawCommand::new(hash, qc, off, blend));
+        }
+        let commands_off = self.fb.create_vector(&self.scratch_cmds);
+        let verts_off = self.fb.create_vector(&self.scratch_verts);
+        let uvs_off = self.fb.create_vector(&self.scratch_uvs);
+        let colors_off = self.fb.create_vector(&self.scratch_colors);
+        let indices_off = self.fb.create_vector(&self.scratch_indices);
 
         let mut plan_b = crate::runtime::effect_draw_plan::ss::runtime::EffectDrawPlanBuilder::new(&mut self.fb);
         plan_b.add_commands(commands_off);
