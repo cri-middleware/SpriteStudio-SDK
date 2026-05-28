@@ -2606,10 +2606,16 @@ impl<'a> EffectSlot<'a> {
         for (i, _, _) in self.scratch_entries.iter() {
             let e = &self.emitter_resource_cache[*i];
             self.scratch_resolved.push(ResolvedEmitter {
-                ok: e.resolved_ok, blend_byte: e.blend_byte,
-                quad_origin_x: e.quad_origin_x, quad_origin_y: e.quad_origin_y,
-                sw: e.sw, sh: e.sh,
-                u0: e.u0, v0: e.v0, u1: e.u1, v1: e.v1,
+                ok: e.resolved_ok,
+                blend_byte: e.blend_byte,
+                quad_origin_x: e.quad_origin_x,
+                quad_origin_y: e.quad_origin_y,
+                sw: e.sw,
+                sh: e.sh,
+                u0: e.u0,
+                v0: e.v0,
+                u1: e.u1,
+                v1: e.v1,
                 cellmap_hash: e.cellmap_hash,
             });
         }
