@@ -46,6 +46,7 @@ graph LR
 ### 🎨 第3章：コンポーネント実装 (高度な表現)
 リッチな演出を実現するための、各パーツ種別の詳細な実装です。
 - 08. [**Instance / Effect / Mesh の実装**](./08_advanced_rendering.ja.md)
+- 15. [**Mask の実装**](./15_mask.ja.md)
 - 09. [**パーツカラー (Parts Color)**](./09_parts_color.ja.md)
 - 10. [**外部リソースとオプション機能**](./10_optional_features.ja.md)
 - 13. [**アニメーションブレンド / ミキシング**](./13_animation_blending.ja.md) — クロスフェードと whole-animation 合成 (Phase 3)
