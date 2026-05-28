@@ -1,33 +1,14 @@
-# 実装フェーズ 5：パーツカラーと特殊アトリビュート (Parts Color & Attributes)
+# 実装フェーズ 5：パーツカラー (Parts Color)
 
-パーツの見た目をカスタマイズするためのカラー合成や、UV アニメーションなどの特殊なアトリビュートの実装ガイドです。
+パーツの見た目をカスタマイズするためのカラー合成の実装ガイドです。
+
+---
 
 ## 1. パーツカラー (Parts Color)
 
 頂点ごとにカラーを合成し、着色やグラデーションを実現します。
 
-### カラーの取得
-`ss_runtime_get_parts_color` 等の API は用意されていません。`FrameData` の `parts_color` テーブルから直接取得するか、最適化された Player では Brain が `local_vertices` と共に提供する色情報（将来拡張）を使用します。
-
-```cpp
-// パーツカラーの適用例
-int color_idx = part_state->part_color();
-if (color_idx >= 0) {
-    auto pc = frame_data->parts_color()->Get(color_idx);
-    
-    // a チャンネルには階層 alpha が事前合成済み。
-    // Player 側で state->alpha() を再乗算する必要はありません。
-    Color clt = ConvertColor(pc->lt()->rgba()); // 左上
-    Color crt = ConvertColor(pc->rt()->rgba()); // 右上
-    Color clb = ConvertColor(pc->lb()->rgba()); // 左下
-    Color crb = ConvertColor(pc->rb()->rgba()); // 右下
-    
-    // カラー合成モード (Mix, Mul, Add, Sub)
-    ApplyColorBlend(pc->blend_type());
-}
-```
-
-## 2. 合成モード (Blend Mode)
+### 1-1.合成モード (Blend Mode)
 
 パーツ全体の描画に対するブレンド設定です。
 
@@ -36,14 +17,150 @@ if (color_idx >= 0) {
 - **Sub (減算)**: `SRC_ALPHA / ONE` (ブレンド演算を SUB に設定)
 - **Mul (乗算)**: `DST_COLOR / ONE_MINUS_SRC_ALPHA` (または `ZERO / SRC_COLOR`)
 
-## 3. UV アニメーション
+注釈:  
+`blend_type` フィールドは `BlendType` 列挙型のため、上記の4種類に加えて合計12種類（Mulalpha / Screen / Exclusion / Invert / Mul2 / Div2 / Screen2 / Overlay2 が存在しています）の値が定義されていますが、 **PartColor の合成モードとして有効なのは上記の 4 種のみ** です。
 
-テクスチャの切り出し範囲（UV）を移動・回転・拡大縮小させる機能です。
-Brain 側で計算済みの `local_uvs` (SoA) を使用することで、Player は単にテクスチャ座標として渡すだけで済みます。
+### 1-2.カラーの取得
+`ss_runtime_get_parts_color` 等の API は用意されていません。`FrameData` の `parts_color` テーブルから直接取得します。  
 
-## 4. 左右・上下反転 (Flip)
+また、描画するパーツの種別で、それぞれ特殊なルールが存在しています。  
+本ルールの適用は、プレーヤー側で行なう必要があります。  
 
-パーツの反転 (`flip_h`, `flip_v`) やセルの反転 (`img_flip_h`, `img_flip_v`) は、すべて **`local_vertices` および `local_uvs` に反映済み** です。Player 側で座標を反転させる追加ロジックは不要です。
+| パーツ種別 | 合成モード | 適用色 | rate の扱い |
+|---|---|---|---|
+| Normal | あり | 4隅の頂点で個別 | 4隅の頂点で個別 |
+| Mesh | あり | 全頂点同値 | 全頂点同値 |
+| Shape | Mix に強制 | 4隅の頂点で個別 | 常に1.0 に強制 |
+
+このルールの適用をプレーヤー側の責務としている理由については、ssabのデータ上でなるだけ劣化させないためと、シェーダが個別化して増えることを抑制するための 2 つの意図があります。  
+
+#### 1-2-1.「通常（Normal）」パーツの例
+```cpp
+// Normalパーツのパーツカラーの適用例（参考実装）
+int color_idx = part_state->part_color();
+if (color_idx >= 0) {
+    auto pc = frame_data->parts_color()->Get(color_idx);
+    
+    // a チャンネルには階層 alpha が事前合成済み。
+    // Player 側で state->alpha() を再乗算する必要はありません。
+    ConvertColor(pc->lt()->rgba(), pc->lt()->rate()); // 左上
+    ConvertColor(pc->rt()->rgba(), pc->rt()->rate()); // 右上
+    ConvertColor(pc->lb()->rgba(), pc->lb()->rate()); // 左下
+    ConvertColor(pc->rb()->rgba(), pc->rb()->rate()); // 右下
+    
+    // カラー合成モード (Mix, Mul, Add, Sub)
+    ApplyColorBlend(pc->blend_type());
+}
+```
+注釈: ConvertColor関数とApplyColorBlend関数は非実在の疑似関数で、描画用頂点データに値を設定するための処理となります。
+
+#### 1-2-2.「メッシュ（Mesh）」パーツの例
+```cpp
+// Meshパーツのパーツカラーの適用例（参考実装）
+int color_idx = part_state->part_color();
+if (color_idx >= 0) {
+    auto pc = frame_data->parts_color()->Get(color_idx);
+    auto cl = pc->lt()->rgba();      // メッシュは Whole-only なので、lt の値を全頂点に流す
+    float rt = pc->lt()->rate();
+
+    // メッシュの全頂点を処理
+    for (int i = 0; i < vert_count; i++) {
+        // a チャンネルには階層 alpha が事前合成済み。
+        // Player 側で state->alpha() を再乗算する必要はありません。
+        ConvertColorMesh(cl, rt);   // 全頂点に同じ色 & rate（左上）
+
+        // カラー合成モード (Mix, Mul, Add, Sub)
+        ApplyColorBlendMesh(pc->blend_type());
+    }
+}
+```
+注釈: ConvertColorMesh関数とApplyColorBlendMesh関数は非実在の疑似関数で、描画用頂点データに値を設定するための処理となります。  
+
+#### 1-2-3.「シェイプ（Shape）」パーツの例
+ ```cpp
+ // Shapeパーツのパーツカラー適用例（参考実装）
+ int color_idx = part_state->part_color();
+ if (color_idx >= 0) {
+     auto pc = frame_data->parts_color()->Get(color_idx);
+     
+     // a チャンネルには階層 alpha が事前合成済み。
+     // Player 側で state->alpha() を再乗算する必要はありません。
+     ConvertColorShape(pc->lt()->rgba(), 1.0f); // 左上（rate は強制で 1.0）
+     ConvertColorShape(pc->rt()->rgba(), 1.0f); // 右上（同上）
+     ConvertColorShape(pc->lb()->rgba(), 1.0f); // 左下（同上）
+     ConvertColorShape(pc->rb()->rgba(), 1.0f); // 右下（同上）
+     
+     // カラー合成モード (Mixに強制)
+     ApplyColorBlendShape(0);	// Mixに固定
+ }
+ ```
+注釈: ConvertColorShape関数とApplyColorBlendShape関数は非実在の疑似関数で、描画用頂点データに値を設定するための処理となります。  
+
+### 1-3.参考:パーツカラーに含まれるデータについて
+
+パーツカラーには下記の内容が含まれています。  
+- blend_type : パーツカラーの各色をテクセル色と合成する方法
+- （各頂点色の）rgba : 合成する色。a はパーツカラーのアルファ素材（パーツの不透明度と乗算される）
+- （各頂点色の）rate : テクセル色と合成する時の比率（合成強度）
+
+上記の内、rgba の a については（実装例などにある通り）ssruntimeの処理内で自動的にパーツの不透明度と合算されるため、基本的なプレーヤーの実装では特段留意する必要はありません。
+
+### 1-4.参考:シェーダでのパーツカラーの適用例（テーブル駆動の参考実装）
+
+パーツカラーの合成は、基本的に（頂点及びフラグメントの）シェーダで計算を行うのが合理的です。  
+下記に、パーツカラーの色の合成を、合成式 4 種（Mix / Mul / Add / Sub）を **分岐なし** で実装するパターンを参考実装として提示します。  
+
+概略:  
+頂点シェーダで `blend_type` から、4 要素の `varg` ベクタ（係数テーブル）を組み立て、フラグメントシェーダでは 1 本の汎用式に渡して評価します。  
+フラグメントシェーダでは、合成の種類を気にせず、下記の式でテクセル色との合成を行います。  
+「合成後の色 = ( ピクセルのRGB * varg.x ) + mix( 純白のRGB, ピクセルのRGB, varg.z) * パーツカラー色のRGB * varg.y;」
+
+#### 1-4-1.頂点シェーダの実装例（係数テーブルの定数定義）
+```glsl
+const vec4 _PartColorCoef[4] = vec4[4](
+    vec4(-1.0,  1.0, 0.0, 0.0),  // [0] Mix
+    vec4(-1.0,  1.0, 1.0, 0.0),  // [1] Mul（.z=1 で「白の代わりにピクセル色を係数化」）
+    vec4( 0.0,  1.0, 0.0, 0.0),  // [2] Add
+    vec4( 0.0, -1.0, 0.0, 0.0)   // [3] Sub
+);
+
+varying vec4 partcolor_varg;
+varying vec4 partcolor_color;
+```
+
+`(c.x, c.y, c.z)` は順に「ピクセル側の重み調整」「PartColor 側の重み係数」「Mul モードフラグ」を表します（c.wは現状未使用）。
+
+#### 1-4-2.頂点シェーダの実装例（`varg` の組み立て）
+`CUSTOM0` には Player が `(rate, blend_idx, pma_flag, _)` を頂点ごとに積んでいます（`rate` の意味は §1-3 を参照）。
+
+```glsl
+void vertex() {
+    int idx = clamp(int(CUSTOM0.y + 0.5), 0, 3);  // blend_idx を 0..3 に保護
+    vec4 c = _PartColorCoef[idx];
+    float rate = CUSTOM0.x;                        // colorA
+    partcolor_varg = vec4(
+        1.0 + c.x * rate,                          // .x: ピクセル側重み
+        c.y * rate,                                // .y: PartColor 側重み
+        c.z,                                       // .z: Mul モードフラグ
+        CUSTOM0.z                                  // .w: pma フラグを passthrough
+    );
+    partcolor_color = COLOR;                       // 頂点色（= PartColor の rgba）
+}
+```
+
+#### 1-4-3.フラグメントシェーダの実装例（汎用式 1 本で評価）
+```glsl
+vec3 ss_partcolor_blend(vec3 pixel_rgb, vec3 color_rgb, vec4 varg) {
+    return pixel_rgb * varg.x + mix(vec3(1.0), pixel_rgb, varg.z) * color_rgb * varg.y;
+}
+
+void fragment() {
+    vec4 p = ss_input_texture(TEXTURE, UV);
+    vec3 rgb = ss_partcolor_blend(p.rgb, partcolor_color.rgb, partcolor_varg);
+    float a  = p.a * partcolor_color.a;            // テクスチャ α × 頂点 α（rateAlpha に階層 α が事前合成済み）
+    COLOR    = ss_output_color(vec4(rgb, a), partcolor_varg.w);
+}
+```
 
 ---
 [目次に戻る](./README.ja.md)
