@@ -361,8 +361,7 @@ impl<'a> AnimationResource<'a> {
                         let part_type_disc = part_meta.map(|pm| pm.part_type_type()).unwrap_or(ssab::ssab::ss::format::PartType::NONE);
                         let mask_influence = part_meta.map(|pm| pm.mask_influence()).unwrap_or(false);
                         // PartTypeMask is always a pure mask; drawing parts use the unified draw_as_mask flag.
-                        let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask
-                            || part_meta.map(|pm| pm.draw_as_mask()).unwrap_or(false);
+                        let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask || part_meta.map(|pm| pm.draw_as_mask()).unwrap_or(false);
                         let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
                         let shape_kind = part_meta.and_then(|pm| pm.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
                             ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
