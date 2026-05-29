@@ -571,7 +571,6 @@ enum ShapeType: ubyte {
 
 table PartTypeShape {
   shape_type: ShapeType;
-  shape_mask: bool;
 }
 
 enum TextAnchor: ubyte {
@@ -596,7 +595,6 @@ table PartTypeText {
   text_size: int;
   text_space: float;
   text_smooth: bool;
-  text_mask: bool;
   text_width: int;
   text_height: int;
   e_anchor: TextAnchor;
@@ -608,7 +606,6 @@ table PartTypeNines {
   nines_margin_t: int;
   nines_margin_b: int;
   nines_fill_mode: int;
-  nines_mask: bool;
 }
 
 table PartTypeInstance {
@@ -650,6 +647,8 @@ table PartData {
   visible_inside_mask: bool;
   mask_write: bool;
   mask_influence: bool;
+  // Unified pure-mask flag for drawing parts (Shape/Text/Nines).
+  mask_mode: bool;
   output_influence: bool = true;
   mesh_binding: PartMeshBinding;
 

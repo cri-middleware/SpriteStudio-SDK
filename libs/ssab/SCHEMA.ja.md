@@ -72,6 +72,7 @@
 | `bounds_type` | BoundsType | `bounds_type` | バウンディング計算方式 |
 | `blend_type` | BlendType | `alpha_blend_type` | フィールド名変更 |
 | `mask_influence` | bool | `mask_influence` | パーツがマスク影響に参加するか |
+| `mask_mode` | bool | `shape_mask` / `text_mask` / `nines_mask` | 描画パーツ (Shape/Text/Nines) の pure マスク化フラグを統合。ssae では型ごとに排他の別タグ。`PartTypeMask` は常に pure マスクなので本フラグに依らない |
 | `mesh_binding` | PartMeshBinding | (変換時生成) | `PartTypeMesh` 用の頂点ごとのボーン影響値。下記 [メッシュバインディング](#メッシュバインディング) 参照。メッシュ以外のパーツでは省略。 |
 | `part_type` | PartType (union) | `part_type` + 型固有フィールド | 後述 |
 
@@ -83,9 +84,9 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 |---------------------|----------|------|
 | `PartTypeNull` | `SsPartType::Null` | なし |
 | `PartTypeNormal` | `SsPartType::Normal` | なし |
-| `PartTypeShape` | `SsPartType::Shape` | `shape_type`, `shape_mask` |
+| `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
 | `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family` 等 |
-| `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode`, `nines_mask` |
+| `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
 | `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_hash` (ssae: `ref_anime_pack` + `ref_anime` を文字列で保持) |
 | `PartTypeArmature` | `SsPartType::Armature` | なし |
 | `PartTypeEffect` | `SsPartType::Effect` | `ref_effect_name_hash` (ssae: `ref_effect_name` を文字列で保持) |

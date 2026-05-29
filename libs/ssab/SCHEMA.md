@@ -72,6 +72,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `bounds_type` | BoundsType | `bounds_type` | Bounding calculation mode |
 | `blend_type` | BlendType | `alpha_blend_type` | Renamed field |
 | `mask_influence` | bool | `mask_influence` | Whether the part participates in mask influence |
+| `mask_mode` | bool | `shape_mask` / `text_mask` / `nines_mask` | Unified pure-mask flag for drawing parts (Shape/Text/Nines). Mutually-exclusive per-type tags in the source .ssae. `PartTypeMask` is always a pure mask regardless of this flag |
 | `mesh_binding` | PartMeshBinding | (computed) | Per-vertex bone influences for `PartTypeMesh`. See [Mesh Binding](#mesh-binding) below. Optional; absent for non-mesh parts. |
 | `part_type` | PartType (union) | `part_type` + type-specific fields | See below |
 
@@ -83,9 +84,9 @@ In ssae, the part type is a simple enum (`SsPartType`) and type-specific data (e
 |-------------------|----------------|------|
 | `PartTypeNull` | `SsPartType::Null` | None |
 | `PartTypeNormal` | `SsPartType::Normal` | None |
-| `PartTypeShape` | `SsPartType::Shape` | `shape_type`, `shape_mask` |
+| `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
 | `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, etc. |
-| `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode`, `nines_mask` |
+| `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
 | `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_hash` (ssae: `ref_anime_pack` + `ref_anime` as strings) |
 | `PartTypeArmature` | `SsPartType::Armature` | None |
 | `PartTypeEffect` | `SsPartType::Effect` | `ref_effect_name_hash` (ssae: `ref_effect_name` as string) |

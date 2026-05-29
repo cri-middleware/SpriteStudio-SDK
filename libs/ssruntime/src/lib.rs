@@ -360,17 +360,9 @@ impl<'a> AnimationResource<'a> {
                         let blend_type = part_meta.map(|pm| pm.blend_type()).unwrap_or(ssab::ssab::ss::format::BlendType::Mix);
                         let part_type_disc = part_meta.map(|pm| pm.part_type_type()).unwrap_or(ssab::ssab::ss::format::PartType::NONE);
                         let mask_influence = part_meta.map(|pm| pm.mask_influence()).unwrap_or(false);
-                        let is_mask_contributor = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask {
-                            true
-                        } else if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeShape {
-                            part_meta.and_then(|pm| pm.part_type_as_part_type_shape()).map(|s| s.shape_mask()).unwrap_or(false)
-                        } else if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeText {
-                            part_meta.and_then(|pm| pm.part_type_as_part_type_text()).map(|t| t.text_mask()).unwrap_or(false)
-                        } else if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeNines {
-                            part_meta.and_then(|pm| pm.part_type_as_part_type_nines()).map(|n| n.nines_mask()).unwrap_or(false)
-                        } else {
-                            false
-                        };
+                        // PartTypeMask is always a pure mask; drawing parts use the unified mask_mode flag.
+                        let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask
+                            || part_meta.map(|pm| pm.mask_mode()).unwrap_or(false);
                         let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
                         let shape_kind = part_meta.and_then(|pm| pm.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
                             ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
