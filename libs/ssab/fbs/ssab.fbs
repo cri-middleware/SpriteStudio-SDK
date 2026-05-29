@@ -648,7 +648,7 @@ table PartData {
   mask_write: bool;
   mask_influence: bool;
   // Unified pure-mask flag for drawing parts (Shape/Text/Nines).
-  mask_mode: bool;
+  draw_as_mask: bool;
   output_influence: bool = true;
   mesh_binding: PartMeshBinding;
 

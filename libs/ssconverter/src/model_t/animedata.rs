@@ -1700,8 +1700,8 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             part_data_t.mask_influence = part.mask_influence;
             part_data_t.mask_write = part.write_mask;
             part_data_t.visible_inside_mask = part.visible_inside_mask;
-            // Fold the per-type pure-mask flag from the source .ssae into the unified mask_mode.
-            part_data_t.mask_mode = match &part.part_type {
+            // Fold the per-type pure-mask flag from the source .ssae into the unified draw_as_mask.
+            part_data_t.draw_as_mask = match &part.part_type {
                 sspj::sstypes::SsPartType::Shape => part.shape_mask,
                 sspj::sstypes::SsPartType::Text => part.text_mask,
                 sspj::sstypes::SsPartType::Nines => part.nines_mask,

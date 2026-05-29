@@ -10862,7 +10862,7 @@ impl<'a> PartData<'a> {
   pub const VT_VISIBLE_INSIDE_MASK: ::flatbuffers::VOffsetT = 12;
   pub const VT_MASK_WRITE: ::flatbuffers::VOffsetT = 14;
   pub const VT_MASK_INFLUENCE: ::flatbuffers::VOffsetT = 16;
-  pub const VT_MASK_MODE: ::flatbuffers::VOffsetT = 18;
+  pub const VT_DRAW_AS_MASK: ::flatbuffers::VOffsetT = 18;
   pub const VT_OUTPUT_INFLUENCE: ::flatbuffers::VOffsetT = 20;
   pub const VT_MESH_BINDING: ::flatbuffers::VOffsetT = 22;
   pub const VT_PART_TYPE_TYPE: ::flatbuffers::VOffsetT = 24;
@@ -10884,7 +10884,7 @@ impl<'a> PartData<'a> {
     builder.add_parent_index(args.parent_index);
     builder.add_part_type_type(args.part_type_type);
     builder.add_output_influence(args.output_influence);
-    builder.add_mask_mode(args.mask_mode);
+    builder.add_draw_as_mask(args.draw_as_mask);
     builder.add_mask_influence(args.mask_influence);
     builder.add_mask_write(args.mask_write);
     builder.add_visible_inside_mask(args.visible_inside_mask);
@@ -10944,11 +10944,11 @@ impl<'a> PartData<'a> {
     unsafe { self._tab.get::<bool>(PartData::VT_MASK_INFLUENCE, Some(false)).unwrap()}
   }
   #[inline]
-  pub fn mask_mode(&self) -> bool {
+  pub fn draw_as_mask(&self) -> bool {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<bool>(PartData::VT_MASK_MODE, Some(false)).unwrap()}
+    unsafe { self._tab.get::<bool>(PartData::VT_DRAW_AS_MASK, Some(false)).unwrap()}
   }
   #[inline]
   pub fn output_influence(&self) -> bool {
@@ -11248,7 +11248,7 @@ impl ::flatbuffers::Verifiable for PartData<'_> {
      .visit_field::<bool>("visible_inside_mask", Self::VT_VISIBLE_INSIDE_MASK, false)?
      .visit_field::<bool>("mask_write", Self::VT_MASK_WRITE, false)?
      .visit_field::<bool>("mask_influence", Self::VT_MASK_INFLUENCE, false)?
-     .visit_field::<bool>("mask_mode", Self::VT_MASK_MODE, false)?
+     .visit_field::<bool>("draw_as_mask", Self::VT_DRAW_AS_MASK, false)?
      .visit_field::<bool>("output_influence", Self::VT_OUTPUT_INFLUENCE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<PartMeshBinding>>("mesh_binding", Self::VT_MESH_BINDING, false)?
      .visit_union::<PartType, _>("part_type_type", Self::VT_PART_TYPE_TYPE, "part_type", Self::VT_PART_TYPE, false, |key, v, pos| {
@@ -11285,7 +11285,7 @@ pub struct PartDataArgs<'a> {
     pub visible_inside_mask: bool,
     pub mask_write: bool,
     pub mask_influence: bool,
-    pub mask_mode: bool,
+    pub draw_as_mask: bool,
     pub output_influence: bool,
     pub mesh_binding: Option<::flatbuffers::WIPOffset<PartMeshBinding<'a>>>,
     pub part_type_type: PartType,
@@ -11302,7 +11302,7 @@ impl<'a> Default for PartDataArgs<'a> {
       visible_inside_mask: false,
       mask_write: false,
       mask_influence: false,
-      mask_mode: false,
+      draw_as_mask: false,
       output_influence: true,
       mesh_binding: None,
       part_type_type: PartType::NONE,
@@ -11345,8 +11345,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartDataBuilder<'a, 'b, A> {
     self.fbb_.push_slot::<bool>(PartData::VT_MASK_INFLUENCE, mask_influence, false);
   }
   #[inline]
-  pub fn add_mask_mode(&mut self, mask_mode: bool) {
-    self.fbb_.push_slot::<bool>(PartData::VT_MASK_MODE, mask_mode, false);
+  pub fn add_draw_as_mask(&mut self, draw_as_mask: bool) {
+    self.fbb_.push_slot::<bool>(PartData::VT_DRAW_AS_MASK, draw_as_mask, false);
   }
   #[inline]
   pub fn add_output_influence(&mut self, output_influence: bool) {
@@ -11389,7 +11389,7 @@ impl ::core::fmt::Debug for PartData<'_> {
       ds.field("visible_inside_mask", &self.visible_inside_mask());
       ds.field("mask_write", &self.mask_write());
       ds.field("mask_influence", &self.mask_influence());
-      ds.field("mask_mode", &self.mask_mode());
+      ds.field("draw_as_mask", &self.draw_as_mask());
       ds.field("output_influence", &self.output_influence());
       ds.field("mesh_binding", &self.mesh_binding());
       ds.field("part_type_type", &self.part_type_type());

@@ -1980,7 +1980,7 @@ impl<'a> SsabCache<'a> {
                 args.mask_influence = part.mask_influence;
                 args.mask_write = part.mask_write;
                 args.visible_inside_mask = part.visible_inside_mask;
-                args.mask_mode = part.mask_mode;
+                args.draw_as_mask = part.draw_as_mask;
                 args.output_influence = part.output_influence;
                 args.mesh_binding = part.mesh_binding.as_ref().map(|b| self.create_shared_mesh_binding(fb, b));
                 args.part_type_type = part.part_type.part_type_type();

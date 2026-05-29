@@ -72,7 +72,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `bounds_type` | BoundsType | `bounds_type` | Bounding calculation mode |
 | `blend_type` | BlendType | `alpha_blend_type` | Renamed field |
 | `mask_influence` | bool | `mask_influence` | Whether the part participates in mask influence |
-| `mask_mode` | bool | `shape_mask` / `text_mask` / `nines_mask` | Unified pure-mask flag for drawing parts (Shape/Text/Nines). Mutually-exclusive per-type tags in the source .ssae. `PartTypeMask` is always a pure mask regardless of this flag |
+| `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | Unified pure-mask flag for drawing parts (Shape/Text/Nines). Mutually-exclusive per-type tags in the source .ssae. `PartTypeMask` is always a pure mask regardless of this flag |
 | `mesh_binding` | PartMeshBinding | (computed) | Per-vertex bone influences for `PartTypeMesh`. See [Mesh Binding](#mesh-binding) below. Optional; absent for non-mesh parts. |
 | `part_type` | PartType (union) | `part_type` + type-specific fields | See below |
 
