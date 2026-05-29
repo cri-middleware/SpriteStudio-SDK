@@ -10,21 +10,27 @@ SpriteStudio 7 の「マスク」「クリッピングマスク」機能の実�
 
 混乱しやすいフィールド名・用語を先に整理します。詳細は各節を参照してください。
 
-| 用語 / フィールド | 意味 |
-|---|---|
-| **マスク（パーツ）** `PartTypeMask` | マスク専用のパーツ種別。常に pure マスク（色を描かない） |
-| **マスク（機能）** | 自分より描画優先度が **低い** パーツを、形状の **外側** に残す |
-| **クリッピング（機能）** | 自分より描画優先度が **高い** パーツを、形状の **内側** に収める |
-| **writer** | ステンシルに書き込むパーツ（pure マスク または クリッピング） |
-| **対象 (target)** | マスク／クリッピングの影響を受ける描画パーツ |
-| **pure マスク** | 色を描かず穴になる writer（マスクパーツ＋マスク化された描画パーツ） |
-| `Priority` (FrameData) | 描画優先度。同着はパーツ ID で決まる（§2-1） |
-| `mask` (FrameData, 0..255) | カットアウト閾値を兼ねる。`0` で writer 無効（§2-2 / §2-5） |
-| `mask_influence` | **役割で意味が変わる**（§1-2）。OP または マスク対象フラグ |
-| `mask_write` | 描画パーツを **クリッピング** writer にするフラグ |
-| `draw_as_mask` | 描画パーツ (Shape/Text/Nines) を **pure マスク** 化する統合フラグ（`PartData`）。オーサリングでは種別ごとの設定だが ssab では1つに集約 |
-| `visible_inside_mask` | 極性。`1` = 内側に描画 / `0` = 外側に描画（§2-4） |
-| `Hide` | 非表示。writer が Hide なら何も書かない（§2-2） |
+| 用語 / フィールド | 読み出し元 | 意味 |
+|---|---|---|
+| **マスク（パーツ）** `PartTypeMask` | PartData（静的） | マスク専用のパーツ種別。常に pure マスク（色を描かない） |
+| **マスク（機能）** | — | 自分より描画優先度が **低い** パーツを、形状の **外側** に残す |
+| **クリッピング（機能）** | — | 自分より描画優先度が **高い** パーツを、形状の **内側** に収める |
+| **writer** | — | ステンシルに書き込むパーツ（pure マスク または クリッピング） |
+| **対象 (target)** | — | マスク／クリッピングの影響を受ける描画パーツ |
+| **pure マスク** | — | 色を描かず穴になる writer（マスクパーツ＋マスク化された描画パーツ） |
+| `Priority` | **FrameData（毎フレーム）** | 描画優先度。同着はパーツ ID で決まる（§2-1） |
+| `mask` (float, `0..255`) | **FrameData（毎フレーム）** | カットアウト閾値を兼ねる。`0` で writer 無効（§2-2 / §2-5） |
+| `mask_influence` | **PartData（静的）** | **役割で意味が変わる**（§1-2）。OP または マスク対象フラグ |
+| `mask_write` | **PartData（静的）** | 描画パーツを **クリッピング** writer にするフラグ |
+| `draw_as_mask` | **PartData（静的）** | 描画パーツ (Shape/Text/Nines) を **pure マスク** 化する統合フラグ。オーサリングでは種別ごとの設定だが ssab では1つに集約 |
+| `visible_inside_mask` | **PartData（静的）** | 極性。`1` = 内側に描画 / `0` = 外側に描画（§2-4） |
+| `Hide` | **FrameData（毎フレーム）** | 非表示。※ Player では通常チェック不要（§2-2 補足） |
+
+> **【重要】読み出し元の区別**: マスク関連フィールドは 2 つの異なるテーブルに分かれています。実装時はどちらから読むかを必ず意識してください。
+> - **PartData（静的・パーツ単位）**: `mask_influence` / `mask_write` / `visible_inside_mask` / `draw_as_mask` / パーツ種別。**1 回読めば以後フレームで不変**。
+> - **FrameData（毎フレーム・アニメート）**: `mask` (float) / `Priority` (float) / `Hide` / `part_color` / `alpha`。**毎フレーム読み直す**。
+>
+> 以降の擬似コードでは出所を `part.data.*`（PartData）と `part.frame.*`（FrameData）で区別します。
 
 ### 1-1. マスクとクリッピングは別機能
 
@@ -186,18 +192,19 @@ function build_mask_writers(frame) -> [MaskWriter]:
     writers = []
     for rank, part_index in enumerate(frame.draw_order):
         part = frame.parts[part_index]
-        pure_mask  = part.type == Mask || part.draw_as_mask
-        is_writer  = pure_mask || part.mask_write
+        // part.data.*  = PartData（静的）/ part.frame.* = FrameData（毎フレーム）
+        pure_mask  = part.data.type == Mask || part.data.draw_as_mask
+        is_writer  = pure_mask || part.data.mask_write
         if not is_writer:               continue
-        if part.state.mask == 0:        continue       // §2-2 opt-out
+        if part.frame.mask == 0:        continue       // §2-2 opt-out（毎フレーム値）
         if len(writers) >= MAX_WRITERS: break
 
         writers.append(MaskWriter {
             part_index  = part_index,
             bit         = len(writers),                 // 0,1,2,...
             draw_rank   = rank,
-            op_invert   = part.mask_influence,          // §2-3 OP（pure マスク・クリッピング共通）
-            is_clipping = part.mask_write && !pure_mask,
+            op_invert   = part.data.mask_influence,     // §2-3 OP（pure マスク・クリッピング共通）
+            is_clipping = part.data.mask_write && !pure_mask,
         })
     return writers
 ```
@@ -213,7 +220,7 @@ function render_coverage_bitmap(writers, frame) -> Bitmap:
         channel   = w.bit / 8                          // 0=R, 1=G, 2=B
         bit_val   = (1 << (w.bit % 8)) / 255.0
         bit_color = vec4_zero_except(channel, bit_val)
-        threshold = (255 - frame.parts[w.part_index].state.mask) / 255.0
+        threshold = (255 - frame.parts[w.part_index].frame.mask) / 255.0  // mask は float
 
         draw_geometry(
             geometry = geometry_of(w.part_index),       // Normal=sprite / Mesh / Shape
@@ -242,7 +249,7 @@ void fragment() {
 ```glsl
 uniform sampler2D coverage;
 uniform int   mask_count;
-uniform vec4  mask_meta[MAX_WRITERS]; // (slot_rank, bit, op_invert, is_clipping)
+uniform vec4  mask_meta[MAX_WRITERS]; // (draw_rank, bit, op_invert, is_clipping) ※ build_mask_writers の MaskWriter と対応
 uniform float this_rank;
 uniform float visible_inside;         // §2-4 極性（1=内側 / 0=外側）
 
@@ -283,7 +290,7 @@ void fragment() {
 
 - **被覆 sampler は nearest 必須**（LINEAR だと隣接ビットがブレンドして誤復号）
 - **bbox 外は `visible_inside` だけで分岐**（writer 無し相当として扱う）
-- `mask_meta[i].slot_rank` には **writer 自身の `draw_rank`** を渡し、対象の `this_rank` と前後比較する
+- `mask_meta[i].x`（= writer 自身の `draw_rank`）を、対象の `this_rank` と前後比較する（§2-1 スコープ判定）
 
 #### 3-2-2. 被覆 UV の導出とインスタンス（サブアニメ）への継承
 
@@ -306,6 +313,23 @@ void fragment() {
 - **pure マスクは色を描かない**: マスクパーツ（と pure マスク化された描画パーツ）の色描画バッチはスキップしてください。
 - **writer 数の上限**: ステンシル幅 / 被覆エンコードのビット数で writer 上限が決まります。実用上は 1 フレームあたり数個〜数十個に収まります。
 - **被覆方式の bbox 外の扱い**: 被覆ビットマップ方式の場合、bbox 外の対象パーツは「writer 無し」と同じ扱い（マスクされない）にすることで、テクスチャ端の CLAMP による誤マスクを避けられます。
+
+---
+
+## 4. 実装チェックリスト
+
+実装漏れの自己点検用。各項目の根拠は対応する節を参照してください。
+
+- [ ] **役割判定**（§1-2）: `pure_mask = PartTypeMask || draw_as_mask` / `is_writer = pure_mask || mask_write` / `is_clipping = mask_write && !pure_mask` の 3 式で分類した。
+- [ ] **読み出し元**（用語表）: `mask_influence` / `mask_write` / `visible_inside_mask` / `draw_as_mask` を **PartData（静的）** から、`mask` / `Priority` / `Hide` を **FrameData（毎フレーム）** から読んでいる。
+- [ ] **writer 無効化**（§2-2）: `mask == 0` の writer はスキップした（`Hide` は draw_order に含まれないので Player では未チェックでよい）。
+- [ ] **オプトアウト**（§2-2）: 対象描画パーツは `mask_influence == 1` のときのみ影響を受ける。
+- [ ] **OP**（§2-3）: `mask_influence` を `0`=増分 / `1`=反転 として、pure マスク・クリッピング共通で適用した。
+- [ ] **極性**（§2-4）: 機能ではなく **対象パーツの `visible_inside_mask`** で `masked == visible_inside` を判定した。
+- [ ] **スコープ**（§2-1）: マスク=自分より rank 小、クリッピング=自分より rank 大の対象に適用した。
+- [ ] **カットアウト閾値**（§2-5）: `(255 - mask) / 255`（`mask` は float）で被覆に書く画素を絞った。テクスチャを持たないシェイプは閾値対象外。
+- [ ] **pure マスクの色描画スキップ**（§3-3）: マスクパーツ／pure マスク化パーツの色バッチを描いていない。
+- [ ] **インスタンス継承**（§3-2-2）: 被マスク対象がインスタンスなら、サブアニメ全体を 1 対象として親の被覆・メタで一括判定した（単段のみ）。
 
 ---
 [目次に戻る](./README.ja.md)
