@@ -1908,7 +1908,6 @@ impl<'a> SsabCache<'a> {
                 /*
                 let mut p_args = ssab::ssab::ss::format::PartTypeShapeArgs::default();
                 p_args.shape_type = v.shape_type;
-                p_args.shape_mask = v.shape_mask;
                 let offset = ssab::ssab::ss::format::PartTypeShape::create(fb, &p_args);
                 offset.as_union_value()
                  */
@@ -1923,7 +1922,6 @@ impl<'a> SsabCache<'a> {
                 p_args.text_size = v.text_size;
                 p_args.text_space = v.text_space;
                 p_args.text_smooth = v.text_smooth;
-                p_args.text_mask = v.text_mask;
                 p_args.text_width = v.text_width;
                 p_args.text_height = v.text_height;
                 p_args.e_anchor = v.e_anchor;
@@ -1982,6 +1980,7 @@ impl<'a> SsabCache<'a> {
                 args.mask_influence = part.mask_influence;
                 args.mask_write = part.mask_write;
                 args.visible_inside_mask = part.visible_inside_mask;
+                args.draw_as_mask = part.draw_as_mask;
                 args.output_influence = part.output_influence;
                 args.mesh_binding = part.mesh_binding.as_ref().map(|b| self.create_shared_mesh_binding(fb, b));
                 args.part_type_type = part.part_type.part_type_type();

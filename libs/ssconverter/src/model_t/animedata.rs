@@ -1700,6 +1700,13 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
             part_data_t.mask_influence = part.mask_influence;
             part_data_t.mask_write = part.write_mask;
             part_data_t.visible_inside_mask = part.visible_inside_mask;
+            // Fold the per-type pure-mask flag from the source .ssae into the unified draw_as_mask.
+            part_data_t.draw_as_mask = match &part.part_type {
+                sspj::sstypes::SsPartType::Shape => part.shape_mask,
+                sspj::sstypes::SsPartType::Text => part.text_mask,
+                sspj::sstypes::SsPartType::Nines => part.nines_mask,
+                _ => false,
+            };
             part_data_t.output_influence = part.output_influence;
 
             // `mesh_list` is a compact list ordered by Mesh part (one SsMeshBind
@@ -1752,8 +1759,6 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                         sspj::sstypes::SsShapeType::Arrow => ssab::ssab::ss::format::ShapeType::Arrow,
                         sspj::sstypes::SsShapeType::Star => ssab::ssab::ss::format::ShapeType::Star,
                     };
-                    part_type.shape_mask = part.shape_mask;
-
                     ssab::ssab::ss::format::PartTypeT::PartTypeShape(Box::new(part_type))
                 }
                 sspj::sstypes::SsPartType::Text => {
@@ -1765,7 +1770,6 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                     part_type.text_size = part.text_size;
                     part_type.text_space = part.text_space;
                     part_type.text_smooth = part.text_smooth;
-                    part_type.text_mask = part.text_mask;
                     part_type.text_width = part.text_width;
                     part_type.text_height = part.text_height;
                     part_type.e_anchor = match part.e_anchor {
@@ -1791,7 +1795,6 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
                     part_type.nines_margin_t = part.nines_margin_t;
                     part_type.nines_margin_b = part.nines_margin_b;
                     part_type.nines_fill_mode = part.nines_fill_mode;
-                    part_type.nines_mask = part.nines_mask;
 
                     ssab::ssab::ss::format::PartTypeT::PartTypeNines(Box::new(part_type))
                 }
