@@ -22,7 +22,7 @@ SpriteStudio 7 の「マスク」「クリッピングマスク」機能の実�
 | `mask` (FrameData, 0..255) | カットアウト閾値を兼ねる。`0` で writer 無効（§2-2 / §2-5） |
 | `mask_influence` | **役割で意味が変わる**（§1-2）。OP または マスク対象フラグ |
 | `mask_write` | 描画パーツを **クリッピング** writer にするフラグ |
-| `shape_mask` / `text_mask` | 描画パーツを **pure マスク** 化するフラグ |
+| `draw_as_mask` | 描画パーツ (Shape/Text/Nines) を **pure マスク** 化する統合フラグ（`PartData`）。オーサリングでは種別ごとの設定だが ssab では1つに集約 |
 | `visible_inside_mask` | 極性。`1` = 内側に描画 / `0` = 外側に描画（§2-4） |
 | `Hide` | 非表示。writer が Hide なら何も書かない（§2-2） |
 
@@ -41,23 +41,23 @@ SpriteStudio 7 の「マスク」「クリッピングマスク」機能の実�
 
 ### 1-2. パーツの役割と `mask_influence`
 
-各パーツは「writer か」「対象か」で役割が決まります。「マスク機能」を持つのはマスクパーツのみですが、一部の描画パーツ種別はフラグによって **マスクパーツの役割に変わる**（pure マスク化）ことができます。
+各パーツは「writer か」「対象か」で役割が決まります。「マスク機能」を持つのはマスクパーツのみですが、一部の描画パーツ種別は共通フラグ **`draw_as_mask`** によって **マスクパーツの役割に変わる**（pure マスク化）ことができます。オーサリングでは種別ごとの設定ですが、ssab では `PartData.draw_as_mask` 1つに集約されるため、下表の Shape/Text/Nines は同一条件になります。
 
 | パーツ種別 | 既定の役割 | pure マスク化条件 | クリッピング (`mask_write`) を持てるか |
 |---|---|---|---|
 | **マスク** (`PartTypeMask`) | 常に pure マスク | （常に） | — |
 | **通常** (Normal) | 描画 | （ pure マスクになれない） | ○ |
 | **メッシュ** (Mesh) | 描画 | （ pure マスクになれない） | ○ |
-| **シェイプ** (Shape) | 描画 | `shape_mask == 1` | ○ (`shape_mask == 0` 時) |
-| **テキスト** (Text) | 描画 | `text_mask == 1` | ○ |
-| **ナインスライス** (Nines) | 描画 |  | ○ |
+| **シェイプ** (Shape) | 描画 | `draw_as_mask == 1` | ○ (`draw_as_mask == 0` 時) |
+| **テキスト** (Text) | 描画 | `draw_as_mask == 1` | ○ |
+| **ナインスライス** (Nines) | 描画 | `draw_as_mask == 1` | ○ |
 
-> **シェイプの特例**: `shape_mask == 1` でマスク化された場合でも Cell（テクスチャ）を持たないため、後述のカットアウト閾値（§2-5）は効きません。**形状全体がマスク**になります。
+> **シェイプの特例**: `draw_as_mask == 1` でマスク化されたシェイプは Cell（テクスチャ）を持たないため、後述のカットアウト閾値（§2-5）は効きません。**形状全体がマスク**になります。
 
 プレイヤー側の writer 判定ロジックは概念的に次のようになります：
 
 ```
-pure_mask   = PartTypeMask || shape_mask || text_mask
+pure_mask   = PartTypeMask || draw_as_mask
 is_writer   = pure_mask || mask_write          // ステンシルに書く全パーツ
 is_clipping = mask_write && !pure_mask         // 色も描く（高優先度に適用）
 ```
@@ -186,8 +186,7 @@ function build_mask_writers(frame) -> [MaskWriter]:
     writers = []
     for rank, part_index in enumerate(frame.draw_order):
         part = frame.parts[part_index]
-        pure_mask  = part.type == Mask
-                  || part.shape_mask || part.text_mask
+        pure_mask  = part.type == Mask || part.draw_as_mask
         is_writer  = pure_mask || part.mask_write
         if not is_writer:               continue
         if part.state.mask == 0:        continue       // §2-2 opt-out
