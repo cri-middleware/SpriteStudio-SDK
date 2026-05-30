@@ -818,11 +818,11 @@ pub fn compute_local_vertices_for_parts(
     parts_vec: &mut [runtime::framedata::ss::runtime::PartState],
     cell_meta_per_part: &[f32],
     raw_vertex_deform: &[RawVertexDeform],
-    vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    vertex_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     local_vertices: &mut [f32],
     coordinate_system: SsCoordinateSystem,
 ) {
-    vertice_vec.clear();
+    vertex_vec.clear();
     for slot in local_vertices.iter_mut() {
         *slot = 0.0;
     }
@@ -857,8 +857,8 @@ pub fn compute_local_vertices_for_parts(
         let rb = crate::runtime::framedata::ss::runtime::Vec2::new(vx[3], vy[3]);
         let needs_center = state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeVertex) || state.update_flag().contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor);
         let center = if needs_center { crate::runtime::framedata::ss::runtime::Vec2::new(vx[4], vy[4]) } else { crate::runtime::framedata::ss::runtime::Vec2::default() };
-        vertice_vec.push(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &center));
-        state.set_vertex((vertice_vec.len() - 1) as i16);
+        vertex_vec.push(crate::runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &center));
+        state.set_vertex((vertex_vec.len() - 1) as i16);
 
         let off = i * LOCAL_VERTICES_STRIDE;
         if off + LOCAL_VERTICES_STRIDE <= local_vertices.len() {
@@ -889,13 +889,13 @@ fn serialize_pose_to_fb<'a>(
     cell_vec: &[runtime::framedata::ss::runtime::PartAttributeCell],
     parts_color_vec: &[runtime::framedata::ss::runtime::PartAttributePartColor],
     shader_vec: &[runtime::framedata::ss::runtime::PartAttributeShader],
-    vertice_vec: &[runtime::framedata::ss::runtime::PartAttributeVertex],
+    vertex_vec: &[runtime::framedata::ss::runtime::PartAttributeVertex],
     deform_vec: &[flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>],
 ) -> PoseFbOffsets<'a> {
     let cells_off = (!cell_vec.is_empty()).then(|| fb.create_vector(cell_vec));
     let parts_color_off = (!parts_color_vec.is_empty()).then(|| fb.create_vector(parts_color_vec));
     let shaders_off = (!shader_vec.is_empty()).then(|| fb.create_vector(shader_vec));
-    let vertices_off = (!vertice_vec.is_empty()).then(|| fb.create_vector(vertice_vec));
+    let vertices_off = (!vertex_vec.is_empty()).then(|| fb.create_vector(vertex_vec));
     let deforms_off = (!deform_vec.is_empty()).then(|| fb.create_vector(deform_vec));
     (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off)
 }
@@ -1067,7 +1067,7 @@ pub fn compose_frame_data<'a>(
     cell_vec: &[crate::runtime::framedata::ss::runtime::PartAttributeCell],
     parts_color_vec: &[crate::runtime::framedata::ss::runtime::PartAttributePartColor],
     shader_vec: &[crate::runtime::framedata::ss::runtime::PartAttributeShader],
-    vertice_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    vertex_vec: &mut Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: &[flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform<'a>>],
     raw_vertex_deform: &[RawVertexDeform],
     cell_meta_per_part: &[f32],
@@ -1079,14 +1079,14 @@ pub fn compose_frame_data<'a>(
     batches_workspace: &mut Vec<runtime::framedata::ss::runtime::DrawBatch>,
     mask_indices_workspace: &mut Vec<u16>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
-    compute_local_vertices_for_parts(parts_vec, cell_meta_per_part, raw_vertex_deform, vertice_vec, local_vertices, coordinate_system);
+    compute_local_vertices_for_parts(parts_vec, cell_meta_per_part, raw_vertex_deform, vertex_vec, local_vertices, coordinate_system);
 
     let (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off) = if render_mode == crate::core::RenderMode::Direct {
         let pc = (!parts_color_vec.is_empty()).then(|| fb.create_vector(parts_color_vec));
         let s = (!shader_vec.is_empty()).then(|| fb.create_vector(shader_vec));
         (None, pc, s, None, None)
     } else {
-        serialize_pose_to_fb(fb, cell_vec, parts_color_vec, shader_vec, vertice_vec, deform_vec)
+        serialize_pose_to_fb(fb, cell_vec, parts_color_vec, shader_vec, vertex_vec, deform_vec)
     };
 
     let mut args = runtime::framedata::ss::runtime::FrameDataArgs { cells: cells_off, parts_color: parts_color_off, shaders: shaders_off, vertices: vertices_off, deforms: deforms_off, ..Default::default() };
@@ -1198,12 +1198,12 @@ mod tests {
         let mut parts_vec = vec![make_stage_b_state(-1, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::empty())];
         let cell_meta_per_part = vec![0.0_f32; 6];
         let raw_vertex_deform = vec![RawVertexDeform::default()];
-        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
-        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
 
-        assert!(vertice_vec.is_empty(), "vertice_vec should not gain entries for cell-less parts");
+        assert!(vertex_vec.is_empty(), "vertex_vec should not gain entries for cell-less parts");
         assert_eq!(parts_vec[0].vertex(), -1, "vertex index should remain -1");
         assert!(local_vertices.iter().all(|&v| v == 0.0), "local_vertices for cell-less parts should stay zero");
     }
@@ -1215,14 +1215,14 @@ mod tests {
         let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
         let cell_meta_per_part = vec![0.0_f32; 6];
         let raw_vertex_deform = vec![RawVertexDeform::default()];
-        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
-        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
 
-        assert_eq!(vertice_vec.len(), 1);
+        assert_eq!(vertex_vec.len(), 1);
         assert_eq!(parts_vec[0].vertex(), 0);
-        let v = &vertice_vec[0];
+        let v = &vertex_vec[0];
         assert_eq!((v.lt().x(), v.lt().y()), (-5.0, 10.0));
         assert_eq!((v.rt().x(), v.rt().y()), (5.0, 10.0));
         assert_eq!((v.lb().x(), v.lb().y()), (-5.0, -10.0));
@@ -1237,12 +1237,12 @@ mod tests {
         let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
         let cell_meta_per_part = vec![0.0_f32; 6];
         let raw_vertex_deform = vec![RawVertexDeform { present: true, dx: [1.0, 2.0, 3.0, 4.0], dy: [10.0, 20.0, 30.0, 40.0] }];
-        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
-        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
 
-        let v = &vertice_vec[0];
+        let v = &vertex_vec[0];
         assert_eq!((v.lt().x(), v.lt().y()), (-4.0, 20.0)); // base (-5,10) + (1,10)
         assert_eq!((v.rt().x(), v.rt().y()), (7.0, 30.0)); //      (5,10) + (2,20)
         assert_eq!((v.lb().x(), v.lb().y()), (-2.0, 20.0)); // (-5,-10) + (3,30)
@@ -1257,12 +1257,12 @@ mod tests {
         let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
         let cell_meta_per_part = vec![0.0_f32; 6];
         let raw_vertex_deform = vec![RawVertexDeform::default()];
-        let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
 
-        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YDown);
+        compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YDown);
 
-        let v = &vertice_vec[0];
+        let v = &vertex_vec[0];
         // vx unchanged, vy negated.
         assert_eq!((v.lt().x(), v.lt().y()), (-5.0, -10.0));
         assert_eq!((v.rt().x(), v.rt().y()), (5.0, -10.0));
@@ -1277,10 +1277,10 @@ mod tests {
         let cell_vec: Vec<runtime::framedata::ss::runtime::PartAttributeCell> = Vec::new();
         let parts_color_vec: Vec<runtime::framedata::ss::runtime::PartAttributePartColor> = Vec::new();
         let shader_vec: Vec<runtime::framedata::ss::runtime::PartAttributeShader> = Vec::new();
-        let vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let deform_vec: Vec<flatbuffers::WIPOffset<runtime::framedata::ss::runtime::PartAttributeDeform>> = Vec::new();
 
-        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertice_vec, &deform_vec);
+        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertex_vec, &deform_vec);
 
         assert!(c.is_none());
         assert!(pc.is_none());
@@ -1297,10 +1297,10 @@ mod tests {
         let cell_vec = vec![runtime::framedata::ss::runtime::PartAttributeCell::default()];
         let parts_color_vec = vec![runtime::framedata::ss::runtime::PartAttributePartColor::default()];
         let shader_vec = vec![runtime::framedata::ss::runtime::PartAttributeShader::default()];
-        let vertice_vec = vec![runtime::framedata::ss::runtime::PartAttributeVertex::default()];
+        let vertex_vec = vec![runtime::framedata::ss::runtime::PartAttributeVertex::default()];
         let deform_vec = vec![deform_off];
 
-        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertice_vec, &deform_vec);
+        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertex_vec, &deform_vec);
 
         assert!(c.is_some());
         assert!(pc.is_some());
@@ -1319,10 +1319,10 @@ mod tests {
         let cell_vec: Vec<runtime::framedata::ss::runtime::PartAttributeCell> = Vec::new();
         let parts_color_vec: Vec<runtime::framedata::ss::runtime::PartAttributePartColor> = Vec::new();
         let shader_vec: Vec<runtime::framedata::ss::runtime::PartAttributeShader> = Vec::new();
-        let vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+        let vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
         let deform_vec = vec![deform_off];
 
-        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertice_vec, &deform_vec);
+        let (c, pc, s, v, d) = serialize_pose_to_fb(&mut fb, &cell_vec, &parts_color_vec, &shader_vec, &vertex_vec, &deform_vec);
 
         assert!(c.is_none());
         assert!(pc.is_none());
@@ -1348,24 +1348,24 @@ mod tests {
         let cell_meta_per_part = vec![0.1_f32, 0.2, 10.0, 20.0, 0.0, 0.0];
         let raw_vertex_deform = vec![RawVertexDeform::default()];
 
-        // Case A: only AttributeCell — center field in vertice_vec stays at default (0, 0),
+        // Case A: only AttributeCell — center field in vertex_vec stays at default (0, 0),
         // but local_vertices always carries the computed center.
         {
             let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
-            let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+            let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
             let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
-            compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
-            assert_eq!((vertice_vec[0].center().x(), vertice_vec[0].center().y()), (0.0, 0.0));
+            compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+            assert_eq!((vertex_vec[0].center().x(), vertex_vec[0].center().y()), (0.0, 0.0));
             assert_eq!((local_vertices[8], local_vertices[9]), (-1.0, -4.0));
         }
 
         // Case B: AttributeVertex also set — center is populated with the computed value.
         {
             let mut parts_vec = vec![make_stage_b_state(0, (10.0, 20.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
-            let mut vertice_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
+            let mut vertex_vec: Vec<runtime::framedata::ss::runtime::PartAttributeVertex> = Vec::new();
             let mut local_vertices = vec![0.0_f32; LOCAL_VERTICES_STRIDE];
-            compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertice_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
-            assert_eq!((vertice_vec[0].center().x(), vertice_vec[0].center().y()), (-1.0, -4.0));
+            compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
+            assert_eq!((vertex_vec[0].center().x(), vertex_vec[0].center().y()), (-1.0, -4.0));
         }
     }
 }

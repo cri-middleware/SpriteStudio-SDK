@@ -453,7 +453,7 @@ struct LayerState<'a> {
     cell_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeCell>,
     parts_color_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributePartColor>,
     shader_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeShader>,
-    vertice_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
+    vertex_vec: Vec<crate::runtime::framedata::ss::runtime::PartAttributeVertex>,
     deform_vec: Vec<flatbuffers::WIPOffset<crate::runtime::framedata::ss::runtime::PartAttributeDeform<'a>>>,
     cursors: Vec<usize>,
     cell_meta_per_part: Vec<f32>,
@@ -471,7 +471,7 @@ impl<'a> LayerState<'a> {
             cell_vec: Vec::new(),
             parts_color_vec: Vec::new(),
             shader_vec: Vec::new(),
-            vertice_vec: Vec::new(),
+            vertex_vec: Vec::new(),
             deform_vec: Vec::new(),
             cursors: Vec::new(),
             cell_meta_per_part: Vec::new(),
@@ -491,8 +491,8 @@ impl<'a> LayerState<'a> {
         self.parts_color_vec.reserve(color_c);
         self.shader_vec.clear();
         self.shader_vec.reserve(shader_c);
-        self.vertice_vec.clear();
-        self.vertice_vec.reserve(vertex_c);
+        self.vertex_vec.clear();
+        self.vertex_vec.reserve(vertex_c);
         self.deform_vec.clear();
         self.deform_vec.reserve(deform_c);
 
@@ -746,7 +746,7 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
     }
 
     // Stage B fills these; clear them so stale post-mix data is never read.
-    resolved_layer.vertice_vec.clear();
+    resolved_layer.vertex_vec.clear();
     for v in resolved_layer.local_vertices.iter_mut() {
         *v = 0.0;
     }
@@ -1414,7 +1414,7 @@ impl<'a> Context<'a> {
             &resolved.cell_vec,
             &resolved.parts_color_vec,
             &resolved.shader_vec,
-            &mut resolved.vertice_vec,
+            &mut resolved.vertex_vec,
             &resolved.deform_vec,
             &resolved.raw_vertex_deform,
             &resolved.cell_meta_per_part,
