@@ -30,7 +30,10 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 *   [ ] Instance Lifecycle API — one cohesive surface covering both:
     *   Animation Instancing: shared evaluation context for driving many instances of the same animation, consumable by Players (e.g., crowd-style rendering).
     *   Dynamic instance swap: runtime replacement of the animation mounted on an Instance part (equivalent to legacy `AnimationChangeInstance`). Must remain compatible with the shared-context semantics above.
-*   [ ] State machine implementation.
+    *   **Co-decided**: a shared resource registry that holds several SSABs at once (resolve an animation by its pack hash across all loaded SSABs), used by Dynamic instance swap, External Instance resolution, and Sequence (`.ssqb`) items that reference another SSAB — one mechanism, not three. The host pre-registers the needed SSABs up front rather than the runtime calling back during `update()`, so all asset loading stays host-side and the Wasm/C# bindings need no FFI callbacks.
+*   [ ] State machine implementation — runtime-side animation state graph (states + transitions) built on the blend/crossfade primitives. Covers:
+    *   Game-driven transitions: states switched at runtime by Player-supplied triggers/conditions.
+    *   Sequence (`.ssqb`) playback: SpriteStudio-authored playlists run as a linear, auto-advancing configuration of the state graph (each item = a state; `repeat_count` = times to play before advancing; `SequenceType` Last/Keep/Top = end-of-list behavior). Reuses `set_loop` / `crossfade`, reproduces SS-editor semantics, and needs no `.fbs` change. Items referencing another SSAB (`ref_anime_pack`) resolve via the shared registry above and switch with no crossfade (blending is single-SSAB only). Built into the state graph, not a separate playback system.
 *   [ ] Particle generation cap (runtime LOD) — Brain-side upper bound on particle generation.
 
 ## Items not on the roadmap by design

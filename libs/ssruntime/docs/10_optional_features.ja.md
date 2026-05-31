@@ -55,6 +55,8 @@ void Player::set_cellmap_texture(const std::string& cellmap_name, Texture* overr
     3. `ss_runtime_setup_animation` で次のアニメーションをセットアップし、再生を継続します。
 - **ループ設定**: シーケンス全体のループや、特定の項目のみのループなど、Player 側でステートマシンを構築して制御します。
 
+> **将来計画 (Phase 3)**: 上記は現時点で推奨される Player 側の実装です。Phase 3 の **State machine implementation** では、シーケンスを state machine の一形態（線形・自動送りの構成）として runtime に内包する予定です（item = state、`repeat_count` = くり返し回数、`SequenceType` Last/Keep/Top = 終端の挙動）。別の SSAB を参照する項目 (`ref_anime_pack`) は共有レジストリで解決し、ブレンドが同一 SSAB 内限定のためクロスフェードなしで切り替わります。必要な SSAB はホストが事前登録する方式（runtime はコールバックで読み込まない）で、Wasm/C# のバインディングを単純に保ちます。詳細は [ROADMAP.md](../../../ROADMAP.md) を参照。
+
 ## 3. 特殊なパーツタイプへの対応
 
 | パーツ種別 | 実装のヒント |
