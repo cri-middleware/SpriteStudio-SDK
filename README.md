@@ -57,7 +57,7 @@ graph LR
 * **Sub-frame Interpolation:** Smooth, continuous playback beyond the base framerate. Perfect for high-refresh-rate displays (144Hz+) and slow-motion effects.
 * **Mesh & Deform:** Fully supported mesh weights and vertex deformations for raster images.
 * **Particle Effects:** High-performance particle simulation matching the SpriteStudio editor.
-* **Sequences (`.ssqe`):** Playback of sequence packs.
+* **Sequences (`.ssqe`):** Playback of sequence packs. *(planned — roadmap Phase 3; see [ROADMAP.md](./ROADMAP.md))*
 * **Instance & Masks:** Sub-animation instancing and stencil mask clipping.
 * **Events & User Data:** Frame-accurate callbacks for audio, signals, and user data.
 
