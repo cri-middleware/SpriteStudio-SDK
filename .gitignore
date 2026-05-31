@@ -617,3 +617,6 @@ FodyWeavers.xsd
 # AI assistant configuration
 GEMINI.md
 .gemini/
+
+# Antigravity CLI
+.antigravitycli/
