@@ -46,13 +46,15 @@ graph LR
 ### 🎨 第3章：コンポーネント実装 (高度な表現)
 リッチな演出を実現するための、各パーツ種別の詳細な実装です。
 - 08. [**Instance / Effect / Mesh の実装**](./08_advanced_rendering.ja.md)
-- 09. [**パーツカラーと特殊アトリビュート**](./09_parts_color.ja.md)
-- 10. [**外部リソースとオプション機能**](./10_optional_features.ja.md)
-- 13. [**アニメーションブレンド / ミキシング**](./13_animation_blending.ja.md) — クロスフェードと whole-animation 合成 (Phase 3)
+- 09. [**Mask の実装**](./09_mask.ja.md)
+- 10. [**パーツカラー (Parts Color)**](./10_parts_color.ja.md)
+- 11. [**外部リソースとオプション機能**](./11_optional_features.ja.md)
+- 12. [**アニメーションブレンド / ミキシング**](./12_animation_blending.ja.md) — クロスフェードと whole-animation 合成 (Phase 3)
+- 13. [**特殊アトリビュート (UV / Flip)**](./13_special_attributes.ja.md)
 
 ### 🛠️ 第4章：リファレンス
-- 11. [**no_std 組み込み環境への統合**](./11_no_std_integration.ja.md)
-- 12. [**トラブルシューティング**](./12_troubleshooting.ja.md)
+- 14. [**no_std 組み込み環境への統合**](./14_no_std_integration.ja.md)
+- 15. [**トラブルシューティング**](./15_troubleshooting.ja.md)
 
 ---
 > [!TIP]

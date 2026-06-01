@@ -29,7 +29,7 @@ ssruntime は **アニメーションの状態計算** を担う層であり、�
 | **テキスト描画** | グリフのレイアウト情報 (ビットマップ位置・サイズ・テクスチャ参照) | グリフのレンダリング |
 | **サウンド再生** | 再生指示イベント (ファイル名・発火タイミング) | 実際の音声再生 (エンジンのオーディオシステム連携) |
 
-> 関連章: [6. 再生制御とイベント処理](./06_playback_control.ja.md) / [10. 外部リソースとオプション機能](./10_optional_features.ja.md)
+> 関連章: [6. 再生制御とイベント処理](./06_playback_control.ja.md) / [11. 外部リソースとオプション機能](./11_optional_features.ja.md)
 
 ## WebAssembly (WASM) 環境
 
@@ -101,7 +101,7 @@ ssab embedded は、そのアニメーションパックが **実際に利用す
 - **events 発火は per-source 閾値で制御**: 既定では Primary のみが発火 (`event_threshold = 1.0`)。Secondary も発火させたい場合は `ss_runtime_set_source_event_threshold` で閾値を下げ、`source.weight >= source.event_threshold` を満たした source の events のみ収集されます。Primary は閾値を無視して常に発火。発火元 source の識別は `ss_runtime_get_passed_event_source_handle` で取得 (events と parallel array)。
 - **deform table の FrameData 浪費**: secondary source の deform は FlatBuffer に書き込まれるが unreferenced。FrameData サイズが膨らみますが正確性には影響しません。
 
-> 関連章: [13. アニメーションブレンド / ミキシング](./13_animation_blending.ja.md)
+> 関連章: [12. アニメーションブレンド / ミキシング](./12_animation_blending.ja.md)
 
 ---
 [目次に戻る](./README.ja.md)
