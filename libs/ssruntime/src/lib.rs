@@ -1723,17 +1723,33 @@ impl<'a> Context<'a> {
             let hw = size_x * 0.5;
             let hh = size_y * 0.5;
 
+            // Vertex deform: the 4 box-corner offsets ([LT, RT, LB, RB], in the
+            // part's Y-up local space) are spread across every shape vertex by
+            // bilinear interpolation over its box coordinates (fx, fy) — the same
+            // weighting the renderer uses for per-corner PartColor. Offsets are
+            // added in Y-up space, before the YDown negation, so the dy sign
+            // matches the 4-corner deform path in `compute_local_vertices`.
+            let deform = layer.raw_vertex_deform.get(i).filter(|d| d.present);
+
             let offset = i * stride;
             for v in 0..count {
-                let mut y = vy[v] + ty;
+                let fx = (vx[v] + hw) / size_x;
+                let fy = (hh - vy[v]) / size_y;
+
+                let (mut dvx, mut dvy) = (vx[v] + tx, vy[v] + ty);
+                if let Some(d) = deform {
+                    let (ddx, ddy) = crate::core::geometry::bilinear_box_deform(&d.dx, &d.dy, fx, fy);
+                    dvx += ddx;
+                    dvy += ddy;
+                }
+
+                let mut y = dvy;
                 if coordinate_system == crate::core::SsCoordinateSystem::YDown {
                     y = -y;
                 }
-                globals.shape_vertices[offset + 2 * v] = vx[v] + tx;
+                globals.shape_vertices[offset + 2 * v] = dvx;
                 globals.shape_vertices[offset + 2 * v + 1] = y;
 
-                let fx = (vx[v] + hw) / size_x;
-                let fy = (hh - vy[v]) / size_y;
                 globals.shape_vertex_box_coords[offset + 2 * v] = fx;
                 globals.shape_vertex_box_coords[offset + 2 * v + 1] = fy;
             }

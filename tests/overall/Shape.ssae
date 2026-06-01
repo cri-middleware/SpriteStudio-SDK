@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<SpriteStudioAnimePack version="2.02.00" editorVersion="7.5.0">
+<SpriteStudioAnimePack version="2.02.00" editorVersion="7.5.1">
 	<settings>
 		<fps>30</fps>
 		<frameCount>11</frameCount>
@@ -246,7 +246,7 @@
 			<labels />
 			<guidelines />
 			<isSetup>0</isSetup>
-			<lastFrame>0</lastFrame>
+			<lastFrame>10</lastFrame>
 			<partAnimes>
 				<partAnime>
 					<partName>root</partName>
@@ -302,6 +302,40 @@
 										<rgba>FF800002</rgba>
 										<rate>1</rate>
 									</RB>
+								</value>
+							</key>
+						</attribute>
+						<attribute tag="VERT">
+							<key time="0" ipType="linear">
+								<value>
+									<LT>0 0</LT>
+									<RT>0 0</RT>
+									<LB>0 0</LB>
+									<RB>0 0</RB>
+								</value>
+							</key>
+							<key time="4" ipType="linear">
+								<value>
+									<LT>-200 96</LT>
+									<RT>0 0</RT>
+									<LB>0 0</LB>
+									<RB>0 0</RB>
+								</value>
+							</key>
+							<key time="7" ipType="linear">
+								<value>
+									<LT>-30 -60</LT>
+									<RT>0 0</RT>
+									<LB>0 0</LB>
+									<RB>0 0</RB>
+								</value>
+							</key>
+							<key time="10" ipType="linear">
+								<value>
+									<LT>40 -60</LT>
+									<RT>0 0</RT>
+									<LB>0 0</LB>
+									<RB>0 0</RB>
 								</value>
 							</key>
 						</attribute>
