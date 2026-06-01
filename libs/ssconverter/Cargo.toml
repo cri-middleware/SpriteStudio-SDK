@@ -38,3 +38,4 @@ unnecessary_get_then_check = "allow"
 [build-dependencies]
 cbindgen = { workspace = true }
 vergen-gitcl = { workspace = true }
+csbindgen = "1.9.7"

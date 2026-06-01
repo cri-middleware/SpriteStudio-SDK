@@ -1257,6 +1257,7 @@ name = "ssconverter"
 version = "7.0.0-alpha01"
 dependencies = [
  "cbindgen",
+ "csbindgen",
  "flatbuffers",
  "notify-debouncer-mini",
  "ordered-float",
