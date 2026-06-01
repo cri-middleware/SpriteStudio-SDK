@@ -266,12 +266,12 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
-pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mut *const c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             unsafe {
                 if !out_data.is_null() {
-                    *out_data = ssab_buf.as_ptr() as *mut c_uchar;
+                    *out_data = ssab_buf.as_ptr() as *const c_uchar;
                 }
                 if !out_len.is_null() {
                     *out_len = ssab_buf.len();
@@ -323,8 +323,8 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
         return false;
     }
     let c_buf = unsafe { CStr::from_ptr(name) };
-    let a = alloc::string::String::from_utf8_lossy(c_buf.to_bytes()).into_owned();
-    match ffi_context.ctx.setup_animation(&a) {
+    let a = c_buf.to_str().unwrap_or_default();
+    match ffi_context.ctx.setup_animation(a) {
         Ok(_) => true,
         Err(e) => {
             ffi_context.last_error = e.as_code();

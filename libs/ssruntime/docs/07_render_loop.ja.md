@@ -61,13 +61,34 @@ for (auto batch : *batches) {
 
 （※ Player 実装で `FrameData` から頂点やセルの情報を取得しようとして `null` が返ってくる場合は、`ss_runtime_set_render_mode` で `RenderMode_SceneGraph` を設定しているか確認してください。）
 
-## 3. 実装のポイント：Godot / RenderingServer
+## 3. 描画パフォーマンスの最適化テクニック
 
-Godot などのモダンなエンジンでは、大量の `Sprite2D` ノードを作るのではなく、`RenderingServer` を用いたダイレクト描画が最も効率的です。
+近年のゲームエンジンやグラフィックライブラリでは、パーツごとに表示ノードやスプライトオブジェクトを大量に生成するのではなく、エンジンの低レイヤーな描画 API（バッチレンダリング機能など）を直接叩くことでパフォーマンスが劇的に向上します。
 
-1.  **CanvasItem のプール**: バッチごとに `RID` (CanvasItem) を使い回します。
-2.  **頂点データの集約**: 各パーツの頂点を `PackedVector2Array` 等に詰め込み、`canvas_item_add_triangle_array` で一括描画します。
-3.  **Z-index の活用**: `canvas_item_set_z_index` を用いて、バッチ間の描画順を制御します。
+1. **ポインタの一括取得と保持 (DrawFrame パターン)**:
+   毎フレームの描画ループの先頭で `ss_runtime_get_world_matrices` などのポインタを一括取得し、一時的な構造体やコンテキストに保持しておくことで、ループ内での不要な関数呼び出しやアロケーションを削減できます。
+
+   **各言語環境でのポインタのラップ（ゼロコピー参照）の具体例**:
+   C# や JS (WASM) などの高水準言語から FFI 経由で呼び出す場合、返されたポインタからマネージド配列を新しく確保してデータをコピーするのではなく、メモリを直接覗き込む（Borrow する）言語機能を使うことで、毎フレームのメモリコピーを完全に回避できます。
+
+   * **C# の場合**: `unsafe` ブロック内の生ポインタや、`ReadOnlySpan<float>` 等を使用してラップします。
+   * **JS/TS (WASM) の場合**: `wasmMemory.buffer` を使って `Float32Array` のビュー（のぞき窓）を張ります。
+   
+   ```typescript
+   // 例: JS/TS 環境でアロケーションとコピーを防ぐパターン
+   const ptr = context.get_world_matrices_buf();
+   const count = context.get_parts_count();
+   
+   // 配列のコピーは行わず、WASM のメモリ空間を直接参照 (Borrow) する
+   const worldMatrices = new Float32Array(wasmMemory.buffer, ptr, count * 16);
+   ```
+
+2. **描画リソースのプーリング**:
+   バッチごとに必要となる低レイヤーの描画リソース（頂点バッファ、インデックスバッファ、描画コマンド用の中間オブジェクトなど）は毎フレーム生成・破棄せず、配列等にプールして再利用（使い回し）してください。
+3. **頂点データの集約**:
+   各パーツの計算済み頂点を、対象エンジンが直接受け付けるバッファ形式に詰め込み、描画コマンドを用いて一括で GPU へ送信します。
+4. **描画順序の制御**:
+   Z-index やエンジン独自のドロー順序制御機能を利用して、バッチ間の描画順（`draw_order`）を正しく反映させます。
 
 ## 4. マスクの実装
 

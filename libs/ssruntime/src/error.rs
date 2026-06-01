@@ -49,3 +49,9 @@ impl core::fmt::Display for SSRuntimeError {
         }
     }
 }
+
+#[cfg(feature = "std")]
+impl std::error::Error for SSRuntimeError {}
+
+#[cfg(not(feature = "std"))]
+impl core::error::Error for SSRuntimeError {}
