@@ -209,10 +209,7 @@ pub fn bilinear_box_deform(dx: &[f32; 4], dy: &[f32; 4], fx: f32, fy: f32) -> (f
     let w_rt = fx * (1.0 - fy);
     let w_lb = (1.0 - fx) * fy;
     let w_rb = fx * fy;
-    (
-        dx[0] * w_lt + dx[1] * w_rt + dx[2] * w_lb + dx[3] * w_rb,
-        dy[0] * w_lt + dy[1] * w_rt + dy[2] * w_lb + dy[3] * w_rb,
-    )
+    (dx[0] * w_lt + dx[1] * w_rt + dx[2] * w_lb + dx[3] * w_rb, dy[0] * w_lt + dy[1] * w_rt + dy[2] * w_lb + dy[3] * w_rb)
 }
 
 pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize, [f32; 16], [f32; 16]) {
