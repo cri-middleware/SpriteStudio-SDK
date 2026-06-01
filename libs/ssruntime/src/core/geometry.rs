@@ -195,6 +195,23 @@ pub enum ShapeType {
 
 /// Computes local vertices for a primitive shape.
 /// Returns the number of vertices and the coordinates.
+/// Spreads the four box-corner vertex-deform offsets across an arbitrary
+/// point inside the part's bounding box by bilinear interpolation.
+///
+/// `dx`/`dy` are the per-corner offsets in `[LT, RT, LB, RB]` order (the same
+/// layout produced by `compute_local_vertices`'s 4-corner deform). `(fx, fy)`
+/// are the point's box coordinates with `fx = 0` at the left edge / `fy = 0`
+/// at the top edge, matching `shape_vertex_box_coords` and the renderer's
+/// per-corner PartColor weighting. Returns the interpolated `(dx, dy)` offset.
+#[inline]
+pub fn bilinear_box_deform(dx: &[f32; 4], dy: &[f32; 4], fx: f32, fy: f32) -> (f32, f32) {
+    let w_lt = (1.0 - fx) * (1.0 - fy);
+    let w_rt = fx * (1.0 - fy);
+    let w_lb = (1.0 - fx) * fy;
+    let w_rb = fx * fy;
+    (dx[0] * w_lt + dx[1] * w_rt + dx[2] * w_lb + dx[3] * w_rb, dy[0] * w_lt + dy[1] * w_rt + dy[2] * w_lb + dy[3] * w_rb)
+}
+
 pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize, [f32; 16], [f32; 16]) {
     let (w, h) = size;
     let hw = w * 0.5;
@@ -206,9 +223,16 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
 
     match shape_type {
         ShapeType::Rectangle => {
-            out_x[0..4].copy_from_slice(&[-hw, hw, -hw, hw]);
-            out_y[0..4].copy_from_slice(&[hh, hh, -hh, -hh]);
-            count = 4;
+            // Center + 4 corners (perimeter winding) + closing vertex — a
+            // TRIANGLE_FAN layout matching the other shapes. A deformed or
+            // per-corner-coloured rectangle then interpolates from its center
+            // (4 triangles) instead of across a single diagonal seam
+            // (2 triangles), which is what SpriteStudio does.
+            out_x[0] = 0.0;
+            out_y[0] = 0.0;
+            out_x[1..6].copy_from_slice(&[-hw, hw, hw, -hw, -hw]);
+            out_y[1..6].copy_from_slice(&[hh, hh, -hh, -hh, hh]);
+            count = 6;
         }
         ShapeType::Triangle => {
             // Center + 3 points
@@ -716,9 +740,40 @@ mod tests {
     #[test]
     fn test_compute_shape_vertices_rectangle() {
         let (count, x, y) = compute_shape_vertices(ShapeType::Rectangle, (100.0, 200.0));
-        assert_eq!(count, 4);
-        assert_approx_eq(x[0], -50.0);
-        assert_approx_eq(y[0], 100.0);
+        // Center-first TRIANGLE_FAN: [center, LT, RT, RB, LB, LT(closing)].
+        assert_eq!(count, 6);
+        assert_approx_eq(x[0], 0.0); // center
+        assert_approx_eq(y[0], 0.0);
+        assert_approx_eq(x[1], -50.0); // LT
+        assert_approx_eq(y[1], 100.0);
+        assert_approx_eq(x[5], x[1]); // closing vertex repeats LT
+        assert_approx_eq(y[5], y[1]);
+    }
+
+    #[test]
+    fn test_bilinear_box_deform_corners() {
+        // At each box corner the matching deform offset is returned exactly.
+        let dx = [10.0, 20.0, 30.0, 40.0]; // LT, RT, LB, RB
+        let dy = [-1.0, -2.0, -3.0, -4.0];
+        assert_eq!(bilinear_box_deform(&dx, &dy, 0.0, 0.0), (10.0, -1.0)); // LT
+        assert_eq!(bilinear_box_deform(&dx, &dy, 1.0, 0.0), (20.0, -2.0)); // RT
+        assert_eq!(bilinear_box_deform(&dx, &dy, 0.0, 1.0), (30.0, -3.0)); // LB
+        assert_eq!(bilinear_box_deform(&dx, &dy, 1.0, 1.0), (40.0, -4.0)); // RB
+    }
+
+    #[test]
+    fn test_bilinear_box_deform_center_and_edges() {
+        let dx = [10.0, 20.0, 30.0, 40.0];
+        let dy = [0.0, 0.0, 0.0, 0.0];
+        // Center = mean of the four corners.
+        let (cx, _) = bilinear_box_deform(&dx, &dy, 0.5, 0.5);
+        assert_approx_eq(cx, 25.0);
+        // Top edge midpoint blends LT/RT only.
+        let (tx, _) = bilinear_box_deform(&dx, &dy, 0.5, 0.0);
+        assert_approx_eq(tx, 15.0);
+        // Left edge midpoint blends LT/LB only.
+        let (lx, _) = bilinear_box_deform(&dx, &dy, 0.0, 0.5);
+        assert_approx_eq(lx, 20.0);
     }
 
     #[test]
