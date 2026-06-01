@@ -25,7 +25,7 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | `libs/ssinterpolate` | Platform-agnostic interpolation math (Hermite, Bezier, SIMD). | — |
 | `libs/ssruntime` | Playback Brain — state, interpolation, DrawBatch emission. C-API + WASM bindings. `no_std`-first. | [Player Guide (ja)](./libs/ssruntime/docs/README.ja.md), [FrameData SCHEMA](./libs/ssruntime/SCHEMA.md) / [ja](./libs/ssruntime/SCHEMA.ja.md) |
 
-> Before implementing a Player, read [**Limitations**](./libs/ssruntime/docs/00_limitations.ja.md) and [**Batched Rendering Contract**](./libs/ssruntime/docs/09_batched_rendering.ja.md).
+> Before implementing a Player, read [**Limitations**](./libs/ssruntime/docs/00_limitations.ja.md) and [**Batched Rendering Contract**](./libs/ssruntime/docs/07_render_loop.ja.md).
 
 ## Hard constraints
 
