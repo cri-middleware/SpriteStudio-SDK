@@ -226,9 +226,16 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
 
     match shape_type {
         ShapeType::Rectangle => {
-            out_x[0..4].copy_from_slice(&[-hw, hw, -hw, hw]);
-            out_y[0..4].copy_from_slice(&[hh, hh, -hh, -hh]);
-            count = 4;
+            // Center + 4 corners (perimeter winding) + closing vertex — a
+            // TRIANGLE_FAN layout matching the other shapes. A deformed or
+            // per-corner-coloured rectangle then interpolates from its center
+            // (4 triangles) instead of across a single diagonal seam
+            // (2 triangles), which is what SpriteStudio does.
+            out_x[0] = 0.0;
+            out_y[0] = 0.0;
+            out_x[1..6].copy_from_slice(&[-hw, hw, hw, -hw, -hw]);
+            out_y[1..6].copy_from_slice(&[hh, hh, -hh, -hh, hh]);
+            count = 6;
         }
         ShapeType::Triangle => {
             // Center + 3 points
@@ -736,9 +743,14 @@ mod tests {
     #[test]
     fn test_compute_shape_vertices_rectangle() {
         let (count, x, y) = compute_shape_vertices(ShapeType::Rectangle, (100.0, 200.0));
-        assert_eq!(count, 4);
-        assert_approx_eq(x[0], -50.0);
-        assert_approx_eq(y[0], 100.0);
+        // Center-first TRIANGLE_FAN: [center, LT, RT, RB, LB, LT(closing)].
+        assert_eq!(count, 6);
+        assert_approx_eq(x[0], 0.0); // center
+        assert_approx_eq(y[0], 0.0);
+        assert_approx_eq(x[1], -50.0); // LT
+        assert_approx_eq(y[1], 100.0);
+        assert_approx_eq(x[5], x[1]); // closing vertex repeats LT
+        assert_approx_eq(y[5], y[1]);
     }
 
     #[test]
