@@ -22,6 +22,20 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     config.write_to_file(output_file);
 
+    let csharp_output_path = "target/SSConverterMethods.g.cs";
+    match csbindgen::Builder::default().input_extern_file("src/ffi/mod.rs").csharp_dll_name("ssconverter").csharp_class_accessibility("public").csharp_namespace("SpriteStudio.SsConverter").generate_csharp_file(csharp_output_path) {
+        Ok(_) => {
+            if let Ok(content) = std::fs::read_to_string(csharp_output_path) {
+                let modified = content.replace("namespace CsBindgen", "namespace SpriteStudio.SsConverter");
+                std::fs::write(csharp_output_path, modified).unwrap();
+            }
+        }
+        Err(e) => {
+            eprintln!("Error generating C# bindings: {:?}", e);
+            panic!("Unable to generate C# bindings: {}", e);
+        }
+    };
+
     // get commit hash
     let git = GitclBuilder::default().sha(true).build()?;
 

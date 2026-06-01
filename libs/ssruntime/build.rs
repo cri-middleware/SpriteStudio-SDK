@@ -21,12 +21,21 @@ fn main() {
     config.write_to_file(output_file);
 
     let csharp_output_path = "target/SSRuntimeMethods.g.cs";
-    match csbindgen::Builder::default().input_extern_file("src/ffi/mod.rs").input_extern_file("src/types.rs").csharp_dll_name("ssruntime").generate_csharp_file(csharp_output_path) {
+    match csbindgen::Builder::default()
+        .input_extern_file("src/ffi/mod.rs")
+        .input_extern_file("src/types.rs")
+        .csharp_dll_name("ssruntime")
+        .csharp_class_accessibility("public")
+        .csharp_namespace("SpriteStudio.SsRuntime")
+        .generate_csharp_file(csharp_output_path)
+    {
         Ok(_) => {
             // Post-process the generated C# file to add Unity-specific platform macros for static linking (__Internal)
             if let Ok(content) = std::fs::read_to_string(csharp_output_path) {
-                let replaced = content.replace("const string __DllName = \"ssruntime\";", "#if UNITY_IOS || UNITY_TVOS || UNITY_WEBGL\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif");
-                let _ = std::fs::write(csharp_output_path, replaced);
+                let modified = content
+                    .replace("const string __DllName = \"ssruntime\";", "#if UNITY_IOS || UNITY_TVOS || UNITY_WEBGL\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif")
+                    .replace("namespace CsBindgen", "namespace SpriteStudio.SsRuntime");
+                std::fs::write(csharp_output_path, modified).unwrap();
             }
         }
         Err(e) => {

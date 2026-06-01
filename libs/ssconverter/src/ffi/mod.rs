@@ -25,7 +25,7 @@ impl Context {
     }
 }
 
-#[repr(C)]
+#[repr(i32)]
 pub enum CConverterError {
     Success = 0,
     ErrorIo = -1,

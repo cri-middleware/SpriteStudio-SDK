@@ -41,4 +41,4 @@ wasm-opt = ["-Oz", "--all-features"]
 
 [build-dependencies]
 cbindgen = { workspace = true }
-csbindgen = "1.9.7"
+csbindgen = { workspace = true }
