@@ -1,3 +1,4 @@
+use crate::scan::SspjScan;
 use crate::{ConverterConfig, ConverterError};
 use std::ffi::{CStr, CString, c_char};
 use std::panic::{AssertUnwindSafe, catch_unwind};
@@ -12,6 +13,9 @@ pub struct Context {
 
     handler: Option<JoinHandle<Result<(), crate::ConverterError>>>,
     should_stop: Arc<AtomicBool>,
+
+    scan: Option<SspjScan>,
+    scan_results_c: Vec<CString>,
 }
 impl Default for Context {
     fn default() -> Self {
@@ -21,7 +25,7 @@ impl Default for Context {
 
 impl Context {
     pub fn new() -> Self {
-        Self { error: None, error_c: None, handler: None, should_stop: Arc::new(AtomicBool::new(false)) }
+        Self { error: None, error_c: None, handler: None, should_stop: Arc::new(AtomicBool::new(false)), scan: None, scan_results_c: Vec::new() }
     }
 }
 
@@ -32,6 +36,7 @@ pub enum CConverterError {
     ErrorSspj = -2,
     ErrorConversion = -3,
     ErrorNotYetStarted = -4,
+    ErrorAborted = -5,
     ErrorUnknown = -99,
 }
 
@@ -92,6 +97,10 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
             // ignore previous handler result
             let _ = prev_handler.join();
         }
+
+        context.should_stop = Arc::new(AtomicBool::new(false));
+        let should_stop_clone = context.should_stop.clone();
+
         let c = config.clone();
         let handler = std::thread::spawn(move || {
             let on_log = |msg: &str| {
@@ -101,7 +110,7 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
                     cb(c_msg.as_ptr());
                 }
             };
-            let result = catch_unwind(AssertUnwindSafe(|| crate::converter::converter::convert_sspj_to_ssab_files(sspj_path.as_path(), &c, &on_log)));
+            let result = catch_unwind(AssertUnwindSafe(|| crate::converter::converter::convert_sspj_to_ssab_files_cancellable(sspj_path.as_path(), &c, &on_log, &should_stop_clone)));
             match result {
                 Ok(res) => res,
                 Err(_) => Err(crate::ConverterError::ConversionFailed("Rust thread panicked".into())),
@@ -143,6 +152,9 @@ pub unsafe extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_ch
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
     let context = unsafe { &mut *ctx };
+    if let Some(scan) = &context.scan {
+        return !scan.is_finished();
+    }
     context.handler.as_ref().is_some_and(|h| !h.is_finished())
 }
 
@@ -150,6 +162,9 @@ pub unsafe extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
 pub unsafe extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
     let result = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
+        if let Some(scan) = &context.scan {
+            return scan.is_finished();
+        }
         context.handler.as_ref().map(|h| h.is_finished()).unwrap_or(false)
     }));
     result.unwrap_or(false)
@@ -158,6 +173,10 @@ pub unsafe extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_abort(context: *mut Context) {
     let context = unsafe { &mut *context };
+    if let Some(scan) = &context.scan {
+        scan.abort();
+        return;
+    }
     context.should_stop.store(true, std::sync::atomic::Ordering::Relaxed)
 }
 
@@ -178,6 +197,7 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
                             ConverterError::IoError(_) => CConverterError::ErrorIo,
                             ConverterError::SspjError(_) => CConverterError::ErrorSspj,
                             ConverterError::ConversionFailed(_) => CConverterError::ErrorConversion,
+                            ConverterError::Aborted => CConverterError::ErrorAborted,
                         }
                     }
                 },
@@ -208,4 +228,52 @@ pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data:
             }
         }
     }));
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_converter_scan_dir(ctx: *mut Context, dir: *const c_char, max_depth: u32, max_entries: usize, max_millis: u64) {
+    let _ = catch_unwind(AssertUnwindSafe(|| {
+        let context = unsafe { &mut *ctx };
+        if dir.is_null() {
+            return;
+        }
+        let dir_path = std::path::PathBuf::from(unsafe { CStr::from_ptr(dir) }.to_string_lossy().into_owned());
+        context.scan_results_c.clear();
+        context.scan = Some(SspjScan::start(dir_path, max_depth as usize, max_entries, max_millis));
+    }));
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_converter_scan_visited(ctx: *mut Context) -> usize {
+    let context = unsafe { &mut *ctx };
+    context.scan.as_ref().map(|s| s.visited()).unwrap_or(0)
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_converter_scan_found(ctx: *mut Context) -> usize {
+    let context = unsafe { &mut *ctx };
+    context.scan.as_ref().map(|s| s.found()).unwrap_or(0)
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_converter_scan_budget_exceeded(ctx: *mut Context) -> bool {
+    let context = unsafe { &mut *ctx };
+    context.scan.as_ref().map(|s| s.budget_exceeded()).unwrap_or(false)
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_converter_scan_result_count(ctx: *mut Context) -> usize {
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        let context = unsafe { &mut *ctx };
+        let paths = context.scan.as_ref().map(|s| s.results()).unwrap_or_default();
+        context.scan_results_c = paths.iter().filter_map(|p| CString::new(p.to_string_lossy().as_bytes()).ok()).collect();
+        context.scan_results_c.len()
+    }));
+    result.unwrap_or(0)
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn ss_converter_scan_result_at(ctx: *mut Context, index: usize) -> *const c_char {
+    let context = unsafe { &mut *ctx };
+    context.scan_results_c.get(index).map(|s| s.as_ptr()).unwrap_or(std::ptr::null())
 }

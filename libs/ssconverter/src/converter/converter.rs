@@ -3,6 +3,7 @@ use crate::converter::{ssab_converter, ssqb_converter};
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::ffi::OsString;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[derive(Debug, Clone)]
 pub struct ConvertConfig {
@@ -17,22 +18,59 @@ impl Default for ConvertConfig {
     }
 }
 
-pub fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, _on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+pub fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
 where
     F: Fn(&str) + Sync + Send,
 {
+    convert_sspj_to_ssab_data_cancellable(asset_provider, config, on_log, &AtomicBool::new(false))
+}
+
+pub fn convert_sspj_to_ssab_data_cancellable<F>(
+    asset_provider: &dyn crate::asset_provider::AssetProvider,
+    config: &ConvertConfig,
+    _on_log: &F,
+    should_stop: &AtomicBool,
+) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+where
+    F: Fn(&str) + Sync + Send,
+{
+    if should_stop.load(Ordering::Relaxed) {
+        return Err(crate::converter::converter_error::ConverterError::Aborted);
+    }
+
     let sspj = asset_provider.load_sspj()?;
 
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
-    let ssab_model_list = sspj.anime_list.par_iter().map(|anime_pack| ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, asset_provider, config.embedded)).collect::<Result<Vec<ssab::ssab::ss::format::SsAnimeBinaryT>, _>>()?;
+    let ssab_model_list = sspj
+        .anime_list
+        .par_iter()
+        .map(|anime_pack| {
+            if should_stop.load(Ordering::Relaxed) {
+                return Err(crate::converter::converter_error::ConverterError::Aborted);
+            }
+            ssab_converter::convert_ss_anime_binary_t(anime_pack, &sspj, asset_provider, config.embedded)
+        })
+        .collect::<Result<Vec<ssab::ssab::ss::format::SsAnimeBinaryT>, _>>()?;
 
-    let ssqb_model_list = sspj.sequence_list.par_iter().map(ssqb_converter::convert_ss_sequence_binary_t).collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
+    let ssqb_model_list = sspj
+        .sequence_list
+        .par_iter()
+        .map(|sequence| {
+            if should_stop.load(Ordering::Relaxed) {
+                return Err(crate::converter::converter_error::ConverterError::Aborted);
+            }
+            ssqb_converter::convert_ss_sequence_binary_t(sequence)
+        })
+        .collect::<Result<Vec<ssab::ssqb::ss::format::SsSequenceBinaryT>, _>>()?;
 
     // convert ssab structures to binary data
     let mut ssab_bin_map = ssab_model_list
         .par_iter()
         .zip(sspj.animepack_names.par_iter())
         .map(|(anime_binary_t, f)| {
+            if should_stop.load(Ordering::Relaxed) {
+                return Err(crate::converter::converter_error::ConverterError::Aborted);
+            }
             let mut fb = flatbuffers::FlatBufferBuilder::new();
             let offset = if config.optimize {
                 let mut ssab_cache = ssab_cache::SsabCache::new();
@@ -60,6 +98,9 @@ where
         .par_iter()
         .zip(sspj.sequencepack_names.par_iter())
         .map(|(sequence_binary_t, f)| {
+            if should_stop.load(Ordering::Relaxed) {
+                return Err(crate::converter::converter_error::ConverterError::Aborted);
+            }
             let mut fb = flatbuffers::FlatBufferBuilder::new();
             let offset = if config.optimize {
                 let mut ssqb_cache = ssqb_cache::SsqbCache::new();
@@ -95,8 +136,15 @@ pub fn convert_sspj_to_ssab_files<F>(path: &std::path::Path, config: &ConverterC
 where
     F: Fn(&str) + Sync + Send,
 {
+    convert_sspj_to_ssab_files_cancellable(path, config, on_log, &AtomicBool::new(false))
+}
+
+pub fn convert_sspj_to_ssab_files_cancellable<F>(path: &std::path::Path, config: &ConverterConfig, on_log: &F, should_stop: &AtomicBool) -> Result<(), crate::converter::converter_error::ConverterError>
+where
+    F: Fn(&str) + Sync + Send,
+{
     let asset_provider = crate::asset_provider::create_asset_provider(path)?;
-    let (sspj, convert_result) = convert_sspj_to_ssab_data(asset_provider.as_ref(), &config.convert_config, on_log)?;
+    let (sspj, convert_result) = convert_sspj_to_ssab_data_cancellable(asset_provider.as_ref(), &config.convert_config, on_log, should_stop)?;
 
     let outdir_path = match &config.output {
         Some(out_dir) => std::path::PathBuf::from(&out_dir),
@@ -113,6 +161,9 @@ where
         let options = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         for (name, data) in convert_result.iter() {
+            if should_stop.load(Ordering::Relaxed) {
+                return Err(crate::converter::converter_error::ConverterError::Aborted);
+            }
             zip_writer.start_file(name, options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip start_file: {:?}", e))))?;
             zip_writer.write_all(data).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("zip write: {:?}", e))))?;
         }
@@ -120,6 +171,9 @@ where
         if !config.convert_config.embedded {
             let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
             for (dst_rel_path, src_rel_path) in assets {
+                if should_stop.load(Ordering::Relaxed) {
+                    return Err(crate::converter::converter_error::ConverterError::Aborted);
+                }
                 let data = asset_provider.read_asset(&src_rel_path).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("read_asset: {}: {:?}", src_rel_path, e))))?;
                 zip_writer.start_file(dst_rel_path.clone(), options).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::other(format!("zip start_file: {:?}", e))))?;
                 zip_writer.write_all(&data).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(e.kind(), format!("zip write: {:?}", e))))?;
@@ -139,6 +193,9 @@ where
         }
 
         convert_result.par_iter().try_for_each(|(name, data)| {
+            if should_stop.load(Ordering::Relaxed) {
+                return Err(crate::converter::converter_error::ConverterError::Aborted);
+            }
             let output_path = outdir_path.join(name);
             match std::fs::write(output_path.as_path(), data) {
                 Ok(_) => Ok(()),
@@ -151,6 +208,9 @@ where
             assets
                 .iter()
                 .map(|(dst_rel_path, src_rel_path)| {
+                    if should_stop.load(Ordering::Relaxed) {
+                        return Err(crate::converter::converter_error::ConverterError::Aborted);
+                    }
                     let dst = outdir_path.join(dst_rel_path);
                     let dst_parent = dst.parent().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid output path")))?;
                     if !dst_parent.exists() {

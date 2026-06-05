@@ -5,6 +5,7 @@ pub mod utility;
 mod utils;
 pub use converter::converter::*;
 pub use converter::converter_error::*;
+pub mod scan;
 pub mod watch;
 
 mod asset_provider;
