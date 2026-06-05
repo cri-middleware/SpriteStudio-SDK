@@ -908,12 +908,12 @@ fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(ru
         return Some((K::Normal, true));
     }
     if disc == P::PartTypeShape {
-        return Some((K::Shape, false));
+        return Some((K::Shape, true));
     }
     if disc == P::PartTypeMesh {
-        // Mesh parts each carry their own vertex topology / index buffer, so
-        // they are not batchable — emitted as singleton Mesh batches like Shape.
-        return Some((K::Mesh, false));
+        // Modern renderers support dynamic index buffer concatenation for arbitrary meshes
+        // within a single DrawBatch, so they are fully batchable.
+        return Some((K::Mesh, true));
     }
     if disc == P::PartTypeInstance {
         return Some((K::Instance, false));
