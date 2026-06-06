@@ -117,17 +117,17 @@ jobs:
           ./scripts/release-macos.sh
 
           # TODO: codesign
-          # for f in ./target/universal-apple-darwin/*.dylib
+          # for f in ./target/universal-apple-darwin/release/*.dylib
           # do
           #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
           # done
-          # codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" ssconverter-cli --deep --options runtime --timestamp
+          # codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" target/universal-apple-darwin/release/ssconverter-cli --deep --options runtime --timestamp
           # TODO: notary
           mkdir -p bin
-          cp -r target/universal-apple-darwin/ssconverter-cli bin/
+          cp -r target/universal-apple-darwin/release/ssconverter-cli bin/
           mkdir -p lib
-          cp target/universal-apple-darwin/*.a lib/
-          cp target/universal-apple-darwin/*.dylib lib/
+          cp target/universal-apple-darwin/release/*.a lib/
+          cp target/universal-apple-darwin/release/*.dylib lib/
 
       - name: build iOS
         if: matrix.platform == 'ios' && matrix.arch == 'universal'
@@ -139,14 +139,14 @@ jobs:
           ./scripts/release-ios.sh
 
           # TODO: codesign
-          # for f in ./target/universal-apple-ios/*.dylib
+          # for f in ./target/universal-apple-ios/release/*.dylib
           # do
           #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
           # done
 
           mkdir -p lib
-          cp target/universal-apple-ios/*.a lib/
-          cp target/universal-apple-ios/*.dylib lib/
+          cp target/universal-apple-ios/release/*.a lib/
+          cp target/universal-apple-ios/release/*.dylib lib/
 
 
       - name: build Android
