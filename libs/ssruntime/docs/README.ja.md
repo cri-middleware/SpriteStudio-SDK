@@ -56,6 +56,9 @@ graph LR
 - 14. [**no_std 組み込み環境への統合**](./14_no_std_integration.ja.md)
 - 15. [**トラブルシューティング**](./15_troubleshooting.ja.md)
 
+### 🔌 第5章：エディタ拡張とツール連携
+- 16. [**エディタインテグレーションとコンバート**](./16_editor_integration.ja.md)
+
 ---
 > [!TIP]
 > 実装の各段階で **`tests/overall/overall.sspj`** を動かしてみることを強くお勧めします。エディタと同じ見た目になれば、そのステップはクリアです！

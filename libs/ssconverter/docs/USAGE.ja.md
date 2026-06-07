@@ -99,36 +99,19 @@ void on_conversion_complete(Context* ctx) {
 ss_converter_abort(ctx);
 ```
 
-## 4. 実装例: Godot Plugin での利用
+> **注意**: `ss_converter_abort` を呼び出した直後に `ss_converter_destroy` を呼び出さないでください。ワーカースレッドが完全に停止するまで待ち、必ず `ss_converter_is_finished(ctx) == true` になってから破棄してください。詳細は後述のエディタ連携のベストプラクティスを参照してください。
 
-`SSPlayerForGodot` では、エディタへのファイルドロップ時に `libssconverter` を呼び出し、インプロセスで `.ssab` を生成しています。
+## 4. エディタへの組み込みとベストプラクティス
 
-```cpp
-// gd_ss_import_dock.cpp の抜粋
+ゲームエンジン（Godot や Unity など）のエディタ拡張として `libssconverter` を組み込む場合、単一ファイルの変換だけでなく、以下の対応が求められます。
 
-void GdSsImportControl::_notification(int p_what) {
-    if (p_what == NOTIFICATION_PROCESS) {
-        if (is_importing) {
-            bool all_finished = true;
-            for (void* ctx : import_contexts) {
-                if (!ss_converter_is_finished((Context*)ctx)) {
-                    all_finished = false;
-                    break;
-                }
-            }
+- 複数ファイル・ディレクトリの再帰的な一括バッチコンバート
+- エディタのメインループでのポーリングとプログレス表示
+- ユーザーキャンセル時の安全な中断（UAF を防ぐための `abort` と `destroy` の連携）
 
-            if (all_finished) {
-                // 終了処理とリソースのスキャン
-                is_importing = false;
-                set_process(false);
-                // ... cleanup contexts ...
-            }
-        }
-    }
-}
-```
+これらの詳細な実装パターンや、Godot / Unity 向けの具体的なコード例については、Player 移植ガイドの以下を参照してください。
 
-このように、複数のファイルを同時に並列変換することも可能です（`libssconverter` 内部でも `rayon` による並列処理が行われますが、コンテキストを複数作ることで複数のプロジェクトを並行して扱うことができます）。
+👉 **[16. エディタインテグレーションとコンバート](../../ssruntime/docs/16_editor_integration.ja.md)**
 
 ## 5. 注意事項
 
