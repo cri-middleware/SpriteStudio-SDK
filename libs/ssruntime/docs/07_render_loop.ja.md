@@ -61,6 +61,25 @@ for (auto batch : *batches) {
 
 （※ Player 実装で `FrameData` から頂点やセルの情報を取得しようとして `null` が返ってくる場合は、`ss_runtime_set_render_mode` で `RenderMode_SceneGraph` を設定しているか確認してください。）
 
+### ⚠️ FlatBuffers の per-element アクセサは「重い」：固定長 struct ベクタは生読みする
+
+SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パーツ状態フラグ / alpha 等）** や **`parts_color`（頂点カラー）** — は `FrameData` 内の FlatBuffers ベクタとして配送されます。これらを `frame_data->parts_color()->Get(i)->lt()->rgba()->r()` のような **per-element アクセサで1要素ずつ読むと、想像以上に高コスト**です（アクセサオブジェクト構築 + フィールド毎の境界チェック + バッファ間接参照。特に入れ子構造の `parts_color` が重い）。**C# / JS-TS のような高水準ホストでは、このアクセサコストが多体シーンの支配的ボトルネックになり得ます。**
+
+> [!WARNING]
+> **実測 (Unity / C#, 100体):** `parts` + `parts_color` を per-element アクセサで毎フレーム読む処理が **約 7ms/frame**（frame-data 取り込みコストの ~72%）を占めていた。下記の「生読み」に変えたところ **約 0.27ms** に短縮（~26倍）。
+
+**対策 — 固定長 struct ベクタは生ポインタから直接読む:**
+`parts` / `parts_color` / `draw_batches` は FlatBuffers の **`struct`（固定レイアウト・連続配置）** なので、ベクタ先頭のオフセットを取り、**レイアウトが一致する生の構造体配列として直接読めます**（per-element アクセサを完全に回避）。
+
+- **C#**: 生成コードの struct とバイト互換な `[StructLayout(LayoutKind.Explicit)]` ミラーを定義し、`(MirrorStruct*)(fb_ptr + vectorOffset)` にキャストして読む。
+- **JS/TS (WASM)**: ベクタ先頭オフセットに `DataView` / 型付き配列ビューを張り、フィールドをオフセット直読みする。
+- **C++**: FlatBuffers struct はパック済み・連続配置なので、ベクタ先頭を配列として扱える（アクセサのオーバーヘッドは元々小さいが、ホットパスでは直読みが有利）。
+
+> [!CAUTION]
+> **よくある罠 — 「ゼロコピー ByteBuffer」では解決しない:** FlatBuffers の `ByteBuffer` をネイティブメモリに向ける（C# の `ENABLE_SPAN_T` 等）「ゼロコピー」化は **効きません（むしろ遅くなる）**。コストの正体は memcpy ではなく **per-element アクセサそのもの**だからです。消すべきはアクセサであって、コピーではありません。
+
+**メンテ上の注意:** 生読みミラーは FlatBuffers の struct レイアウト（アライメント / パディング / エンディアン = リトルエンディアン）と完全一致が必須です。`.fbs` 再生成による無言の drift を防ぐため、**起動時に「生成アクセサ経由の読み」と「ミラー経由の読み」を突き合わせて全フィールド一致を assert** する自己検証を入れることを推奨します（sizeof だけでは同サイズの並べ替えを見逃すため、roundtrip 比較が確実）。
+
 ## 3. 描画パフォーマンスの最適化テクニック
 
 近年のゲームエンジンやグラフィックライブラリでは、パーツごとに表示ノードやスプライトオブジェクトを大量に生成するのではなく、エンジンの低レイヤーな描画 API（バッチレンダリング機能など）を直接叩くことでパフォーマンスが劇的に向上します。
