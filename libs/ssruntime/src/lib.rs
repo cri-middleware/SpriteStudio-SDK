@@ -1325,7 +1325,7 @@ impl<'a> Context<'a> {
         }
 
         let primary_metadata = &resource.animations[primary_anim_idx as usize];
-        if !((primary_metadata.start_frame as f32) <= frame_no && frame_no <= (primary_metadata.end_frame as f32)) {
+        if !((primary_metadata.start_frame as f32) <= frame_no && frame_no < (primary_metadata.end_frame as f32 + 1.0)) {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
