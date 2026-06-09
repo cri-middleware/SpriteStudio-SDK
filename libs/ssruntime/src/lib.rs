@@ -2831,13 +2831,19 @@ mod tests {
     }
 
     fn prepare() {
-        TARGET_SSPAB_DIRS.iter().enumerate().for_each(|(i, &dir)| {
-            let ssab_dir = get_test_base_path().join(dir);
-            if !ssab_dir.exists() {
+        // Regenerate fixtures exactly once per test run, always from source, so cached `.ssab`
+        // files can never go stale against the current ssab schema (a stale cache previously caused
+        // flatbuffers to panic on out-of-range reads). `Once` serializes regeneration so the many
+        // parallel `prepare()` callers don't race on a half-written directory.
+        static INIT: std::sync::Once = std::sync::Once::new();
+        INIT.call_once(|| {
+            TARGET_SSPAB_DIRS.iter().enumerate().for_each(|(i, &dir)| {
+                let ssab_dir = get_test_base_path().join(dir);
+                let _ = std::fs::remove_dir_all(&ssab_dir);
                 let sspj = get_test_base_path().join(TARGET_SSPJ_FILES[i]);
                 let config = ssconverter::ConverterConfig::default();
                 let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|_msg: &str| {});
-            }
+            });
         });
     }
 

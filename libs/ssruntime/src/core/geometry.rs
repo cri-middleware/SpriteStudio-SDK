@@ -1,5 +1,5 @@
 use crate::core::SsMatrix4x4;
-use wide::{CmpGt, CmpLt, f32x4};
+use wide::f32x4;
 
 /// Computes the local vertices for a part, including pivot calculation and deformations.
 /// Utilizes SIMD via the `wide` crate for maximum performance.
@@ -120,7 +120,7 @@ pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) ->
     // Combine conditions: both must be true (bitwise AND on mask)
     let inside_mask = y_cond & x_cond;
 
-    // Using wide 1.4.0's to_bitmask, we get a 4-bit integer where each bit represents a lane.
+    // Using wide's to_bitmask, we get a 4-bit integer where each bit represents a lane.
     let intersections = inside_mask.to_bitmask().count_ones();
 
     (intersections & 1) != 0
