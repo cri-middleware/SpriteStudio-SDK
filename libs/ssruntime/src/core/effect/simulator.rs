@@ -2,7 +2,7 @@ use super::state::*;
 use super::types::*;
 use crate::core::math::*;
 use alloc::vec::Vec;
-use wide::{CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, f32x4};
+use wide::f32x4;
 
 pub fn out_quad(t: f32, total_time: f32, max: f32, min: f32) -> f32 {
     if total_time == 0.0 {
