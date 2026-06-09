@@ -364,6 +364,54 @@ impl SSRuntimeContext {
         self.inner.get_world_matrices_len()
     }
 
+    pub fn get_mesh_vertices_x_buf(&self) -> *const f32 {
+        self.inner.get_mesh_vertices_x_ptr()
+    }
+
+    pub fn get_mesh_vertices_x_len(&self) -> usize {
+        self.inner.get_mesh_vertices_x_len()
+    }
+
+    pub fn get_mesh_vertices_y_buf(&self) -> *const f32 {
+        self.inner.get_mesh_vertices_y_ptr()
+    }
+
+    pub fn get_mesh_vertices_y_len(&self) -> usize {
+        self.inner.get_mesh_vertices_y_len()
+    }
+
+    pub fn get_mesh_uvs_buf(&self) -> *const f32 {
+        self.inner.get_mesh_uvs_ptr()
+    }
+
+    pub fn get_mesh_uvs_len(&self) -> usize {
+        self.inner.get_mesh_uvs_len()
+    }
+
+    pub fn get_mesh_indices_buf(&self) -> *const i32 {
+        self.inner.get_mesh_indices_ptr()
+    }
+
+    pub fn get_mesh_indices_len(&self) -> usize {
+        self.inner.get_mesh_indices_len()
+    }
+
+    pub fn get_mesh_vertex_offsets_buf(&self) -> *const u32 {
+        self.inner.get_mesh_vertex_offsets_ptr()
+    }
+
+    pub fn get_mesh_vertex_offsets_len(&self) -> usize {
+        self.inner.get_mesh_vertex_offsets_len()
+    }
+
+    pub fn get_mesh_index_offsets_buf(&self) -> *const u32 {
+        self.inner.get_mesh_index_offsets_ptr()
+    }
+
+    pub fn get_mesh_index_offsets_len(&self) -> usize {
+        self.inner.get_mesh_index_offsets_len()
+    }
+
     pub fn get_local_uvs_buf(&self) -> *const f32 {
         self.inner.get_local_uvs_ptr()
     }
