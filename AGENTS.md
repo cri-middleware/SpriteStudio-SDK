@@ -45,6 +45,7 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | Tests | `cargo test --workspace --all-features` |
 | `no_std` standalone (mobile-style) | `cargo build -p ssruntime --features libc_alloc,panic-handler` |
 | `std` opt-in (desktop DX) | `cargo build -p ssruntime --features std` |
+| `ssconverter` web (browser WASM) | `cargo build -p ssconverter --no-default-features --features web --target wasm32-unknown-unknown` |
 
 The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edits land as unstaged changes — review them via `git diff` before staging.
 
@@ -62,6 +63,21 @@ The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edi
 | `std` | Enables `std` on `flatbuffers` / `ssab` and pulls in `ssconverter` (tests only). Never used by release scripts. |
 
 All release deliverables for `ssruntime` (mobile / desktop / WASM) are pure no_std. Desktop scripts build the workspace first (to emit `ssconverter` / `ssconverter-cli`), then re-build `ssruntime` with `libc_alloc,panic-handler` to overwrite its `cdylib` / `staticlib`. WASM uses `wasm_alloc,panic-handler` with `--no-default-features`. `cargo build -p ssruntime` alone needs the allocator/panic features explicit because `ssconverter` (which transitively fulfills them via `std`) is not in the graph.
+
+## `ssconverter` feature layout
+
+`libs/ssconverter` builds in two profiles from a shared in-memory conversion core (`convert_sspj_to_ssab_data`, which returns a `name -> bytes` map).
+
+| Feature | Purpose |
+|---------|---------|
+| `ffi` (default) | C-API exports; implies `native`. |
+| `native` | CLI / Tauri backend: parallel conversion + filesystem I/O + scan + watch. Implies `parallel`, `scan`, `watch`. |
+| `parallel` | rayon-backed parallel conversion; propagates to `sspj/parallel`. |
+| `scan` | directory traversal (`walkdir`) for batch conversion. |
+| `watch` | filesystem watch mode (`notify-debouncer-mini`). |
+| `web` | browser WASM bindings (`wasm-bindgen` + `js-sys`). Sequential, with in-memory I/O via `MemoryAssetProvider`. |
+
+The web target is packaged by `scripts/release-web.sh` into `pkg/converter-web/`. **rayon spans two crates:** both `ssconverter` and `sspj` use it (the web entry path `sspj::load_from_maps` is itself parallel), so the `parallel` feature gates rayon in *both* — the sequential fallback lives in each crate's `parallel` module (rayon cannot spawn threads on `wasm32-unknown-unknown`). Tauri consumes the native profile (`{ default-features = false, features = ["native"] }`) for full rayon + filesystem; file picking is the host's job (e.g. `tauri-plugin-dialog`), so the converter has no zip/archive handling.
 
 ## Codegen and release scripts
 

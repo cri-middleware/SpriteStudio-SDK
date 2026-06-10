@@ -15,5 +15,11 @@ crate-type = ["rlib"]
 [dependencies]
 serde = {  version = "1.0.228", features = ["derive"] }
 quick-xml = {  version = "0.40.1", features = ["serialize"] }
-rayon = { workspace = true }
+rayon = { workspace = true, optional = true }
+
+[features]
+default = ["parallel"]
+# Parallel parsing via rayon. Disable (e.g. for wasm32 targets, where rayon
+# cannot spawn threads) to fall back to sequential iteration.
+parallel = ["dep:rayon"]
 

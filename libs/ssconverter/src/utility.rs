@@ -54,7 +54,7 @@ pub fn collect_sspj_files_cancellable(root: &Path, should_stop: &AtomicBool, max
 }
 
 fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
-    if is_sspj_file(path) || is_zip_file(path) {
+    if is_sspj_file(path) {
         return vec![path.canonicalize().unwrap_or_else(|_| path.to_path_buf())];
     }
 
@@ -76,8 +76,4 @@ fn collect_sspj_files(path: &Path) -> Vec<PathBuf> {
 
 fn is_sspj_file(path: &Path) -> bool {
     path.is_file() && (path.extension().and_then(|ext| ext.to_str()) == Some("sspj"))
-}
-
-fn is_zip_file(path: &Path) -> bool {
-    path.is_file() && (path.extension().and_then(|ext| ext.to_str()) == Some("zip"))
 }

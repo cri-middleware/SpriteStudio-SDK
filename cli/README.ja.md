@@ -12,15 +12,12 @@
 
 ## シングルモード (Single Mode)
 
-単一の `.sspj` プロジェクトファイル、またはプロジェクトが含まれる `.zip` ファイルを変換します。
+単一の `.sspj` プロジェクトファイルを変換します。
 このモードでは、出力ディレクトリの指定や、ファイル監視（Watcher）機能が利用可能です。
 
 ```bash
 # 単一のプロジェクトを変換
 $ ssconverter-cli project.sspj
-
-# ZIP 圧縮されたプロジェクトを変換
-$ ssconverter-cli project.zip
 
 # 出力ディレクトリを指定して変換
 $ ssconverter-cli project.sspj -o ./output_folder

@@ -20,7 +20,7 @@ description = "Software development kit for OPTPiX SpriteStudio 7 projects"
 
 
 [workspace.dependencies]
-sspj = { path = "libs/sspj" }
+sspj = { path = "libs/sspj", default-features = false }
 ssconverter = { path = "libs/ssconverter" }
 ssab = { path = "libs/ssab", default-features = false }
 ssruntime = { path = "libs/ssruntime" }

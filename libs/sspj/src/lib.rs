@@ -1,3 +1,5 @@
+mod parallel;
+
 pub mod ssae;
 pub mod ssattribute;
 pub mod ssce;

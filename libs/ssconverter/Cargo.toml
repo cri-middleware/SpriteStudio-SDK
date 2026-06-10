@@ -13,20 +13,42 @@ description.workspace = true
 crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
-zip = "8.6.0"
 flatbuffers = { workspace = true, features = ["std"] }
-rayon = { workspace = true }
-walkdir = "2.5.0"
 ordered-float = "5.3.0"
 sspj = { workspace = true }
 ssab = { workspace = true, features = ["converter"] }
+rayon = { workspace = true, optional = true }
+walkdir = { version = "2.5.0", optional = true }
+notify-debouncer-mini = { version = "0.7.0", optional = true }
 wasm-bindgen = { workspace = true, optional = true }
-notify-debouncer-mini = "0.7.0"
+js-sys = { version = "0.3.100", optional = true }
 
 [features]
 default = ["ffi"]
-ffi = []
-web = ["wasm-bindgen"]
+# C-API exports. Requires the native (filesystem) conversion paths.
+ffi = ["native"]
+# Native build (CLI / Tauri backend): parallel conversion, filesystem I/O,
+# directory scanning, and file watching.
+native = ["parallel", "scan", "watch"]
+# Parallel conversion via rayon. Propagates to sspj's parallel parsing.
+parallel = ["dep:rayon", "sspj/parallel"]
+# Directory traversal for batch conversion (CLI).
+scan = ["dep:walkdir"]
+# Filesystem watch mode (CLI).
+watch = ["dep:notify-debouncer-mini"]
+# Browser WASM bindings (wasm32-unknown-unknown). Implies sequential
+# conversion since rayon cannot spawn threads there.
+# Build with: --no-default-features --features web
+web = ["dep:wasm-bindgen", "wasm-bindgen/std", "dep:js-sys"]
+
+# Browser WASM packaging (wasm-pack). SIMD is disabled at compile time by
+# `release-web.sh` (RUSTFLAGS=-simd128; the repo-wide `+simd128` in
+# `.cargo/config.toml` is for the runtime, not the converter). `--all-features`
+# only lets wasm-opt accept rustc's other default wasm features (bulk-memory,
+# nontrapping-fptoint, ...); with no v128 in the input the output stays
+# SIMD-free. `-Oz` keeps the module small.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--all-features"]
 
 [lints.clippy]
 field_reassign_with_default = "allow"
