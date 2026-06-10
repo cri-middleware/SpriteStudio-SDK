@@ -141,13 +141,15 @@ impl<'a> SequenceItem<'a> {
   }
 
   pub fn unpack(&self) -> SequenceItemT {
-    let ref_anime_pack = self.ref_anime_pack().map(|x| {
+    let ref_anime_pack = {
+      let x = self.ref_anime_pack();
       alloc::string::ToString::to_string(x)
-    });
+    };
     let ref_anime_pack_hash = self.ref_anime_pack_hash();
-    let ref_anime_name = self.ref_anime_name().map(|x| {
+    let ref_anime_name = {
+      let x = self.ref_anime_name();
       alloc::string::ToString::to_string(x)
-    });
+    };
     let ref_anime_name_hash = self.ref_anime_name_hash();
     let repeat_count = self.repeat_count();
     SequenceItemT {
@@ -160,11 +162,11 @@ impl<'a> SequenceItem<'a> {
   }
 
   #[inline]
-  pub fn ref_anime_pack(&self) -> Option<&'a str> {
+  pub fn ref_anime_pack(&self) -> &'a str {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None).unwrap()}
   }
   #[inline]
   pub fn ref_anime_pack_hash(&self) -> u32 {
@@ -174,11 +176,11 @@ impl<'a> SequenceItem<'a> {
     unsafe { self._tab.get::<u32>(SequenceItem::VT_REF_ANIME_PACK_HASH, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn ref_anime_name(&self) -> Option<&'a str> {
+  pub fn ref_anime_name(&self) -> &'a str {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_NAME, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_NAME, None).unwrap()}
   }
   #[inline]
   pub fn ref_anime_name_hash(&self) -> u32 {
@@ -202,9 +204,9 @@ impl ::flatbuffers::Verifiable for SequenceItem<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, true)?
      .visit_field::<u32>("ref_anime_pack_hash", Self::VT_REF_ANIME_PACK_HASH, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_name", Self::VT_REF_ANIME_NAME, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_name", Self::VT_REF_ANIME_NAME, true)?
      .visit_field::<u32>("ref_anime_name_hash", Self::VT_REF_ANIME_NAME_HASH, false)?
      .visit_field::<i32>("repeat_count", Self::VT_REPEAT_COUNT, false)?
      .finish();
@@ -222,9 +224,9 @@ impl<'a> Default for SequenceItemArgs<'a> {
   #[inline]
   fn default() -> Self {
     SequenceItemArgs {
-      ref_anime_pack: None,
+      ref_anime_pack: None, // required field
       ref_anime_pack_hash: 0,
-      ref_anime_name: None,
+      ref_anime_name: None, // required field
       ref_anime_name_hash: 0,
       repeat_count: 0,
     }
@@ -267,6 +269,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SequenceItemBuilder<'a, 'b, A
   #[inline]
   pub fn finish(self) -> ::flatbuffers::WIPOffset<SequenceItem<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, SequenceItem::VT_REF_ANIME_PACK,"ref_anime_pack");
+    self.fbb_.required(o, SequenceItem::VT_REF_ANIME_NAME,"ref_anime_name");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -285,18 +289,18 @@ impl ::core::fmt::Debug for SequenceItem<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SequenceItemT {
-  pub ref_anime_pack: Option<alloc::string::String>,
+  pub ref_anime_pack: alloc::string::String,
   pub ref_anime_pack_hash: u32,
-  pub ref_anime_name: Option<alloc::string::String>,
+  pub ref_anime_name: alloc::string::String,
   pub ref_anime_name_hash: u32,
   pub repeat_count: i32,
 }
 impl Default for SequenceItemT {
   fn default() -> Self {
     Self {
-      ref_anime_pack: None,
+      ref_anime_pack: alloc::string::ToString::to_string(""),
       ref_anime_pack_hash: 0,
-      ref_anime_name: None,
+      ref_anime_name: alloc::string::ToString::to_string(""),
       ref_anime_name_hash: 0,
       repeat_count: 0,
     }
@@ -307,11 +311,13 @@ impl SequenceItemT {
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<SequenceItem<'b>> {
-    let ref_anime_pack = self.ref_anime_pack.as_ref().map(|x|{
+    let ref_anime_pack = Some({
+      let x = &self.ref_anime_pack;
       _fbb.create_string(x)
     });
     let ref_anime_pack_hash = self.ref_anime_pack_hash;
-    let ref_anime_name = self.ref_anime_name.as_ref().map(|x|{
+    let ref_anime_name = Some({
+      let x = &self.ref_anime_name;
       _fbb.create_string(x)
     });
     let ref_anime_name_hash = self.ref_anime_name_hash;
@@ -599,9 +605,10 @@ impl<'a> SsSequenceBinary<'a> {
 
   pub fn unpack(&self) -> SsSequenceBinaryT {
     let version = self.version();
-    let sequence_list = self.sequence_list().map(|x| {
+    let sequence_list = {
+      let x = self.sequence_list();
       x.iter().map(|t| t.unpack()).collect()
-    });
+    };
     SsSequenceBinaryT {
       version,
       sequence_list,
@@ -616,11 +623,11 @@ impl<'a> SsSequenceBinary<'a> {
     unsafe { self._tab.get::<u32>(SsSequenceBinary::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
-  pub fn sequence_list(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>>> {
+  pub fn sequence_list(&self) -> ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None).unwrap()}
   }
 }
 
@@ -631,7 +638,7 @@ impl ::flatbuffers::Verifiable for SsSequenceBinary<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<u32>("version", Self::VT_VERSION, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, true)?
      .finish();
     Ok(())
   }
@@ -645,7 +652,7 @@ impl<'a> Default for SsSequenceBinaryArgs<'a> {
   fn default() -> Self {
     SsSequenceBinaryArgs {
       version: 1,
-      sequence_list: None,
+      sequence_list: None, // required field
     }
   }
 }
@@ -674,6 +681,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsSequenceBinaryBuilder<'a, '
   #[inline]
   pub fn finish(self) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, SsSequenceBinary::VT_SEQUENCE_LIST,"sequence_list");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -690,13 +698,13 @@ impl ::core::fmt::Debug for SsSequenceBinary<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SsSequenceBinaryT {
   pub version: u32,
-  pub sequence_list: Option<alloc::vec::Vec<SequenceT>>,
+  pub sequence_list: alloc::vec::Vec<SequenceT>,
 }
 impl Default for SsSequenceBinaryT {
   fn default() -> Self {
     Self {
       version: 1,
-      sequence_list: None,
+      sequence_list: Default::default(),
     }
   }
 }
@@ -706,7 +714,8 @@ impl SsSequenceBinaryT {
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
   ) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'b>> {
     let version = self.version;
-    let sequence_list = self.sequence_list.as_ref().map(|x|{
+    let sequence_list = Some({
+      let x = &self.sequence_list;
       let w: alloc::vec::Vec<_> = x.iter().map(|t| t.pack(_fbb)).collect();_fbb.create_vector(&w)
     });
     SsSequenceBinary::create(_fbb, &SsSequenceBinaryArgs{

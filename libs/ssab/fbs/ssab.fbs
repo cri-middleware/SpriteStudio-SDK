@@ -127,45 +127,45 @@ table FloatValueEntry {
 }
 
 table StringValueEntry {
-  value: string;
+  value: string (required);
 }
 
 table Vec2ValueEntry {
-  value: Vec2;
+  value: Vec2 (required);
 }
 
 table RectValueEntry {
-  value: Rect;
+  value: Rect (required);
 }
 
 table EventUserData {
   part_index: ushort (key);
 
-  value: PartAttributeUserData;
+  value: PartAttributeUserData (required);
 }
 
 table EventSignal {
   part_index: ushort (key);
 
-  value: PartAttributeSignal;
+  value: PartAttributeSignal (required);
 }
 
 table EventAudio {
   part_index: ushort (key);
 
-  value: PartAttributeAudio;
+  value: PartAttributeAudio (required);
 }
 
 table EventInstance {
   part_index: ushort (key);
 
-  value: PartAttributeInstance;
+  value: PartAttributeInstance (required);
 }
 
 table EventEffect {
   part_index: ushort (key);
 
-  value: PartAttributeEffect;
+  value: PartAttributeEffect (required);
 }
 
 table EventsPerFrame {
@@ -180,10 +180,10 @@ table EventsPerFrame {
 
 table Cell {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
 
-  rectangle: Rect;
-  pivot: Vec2;
+  rectangle: Rect (required);
+  pivot: Vec2 (required);
   rotated: bool;
 
   table_coord_x: [float];
@@ -193,11 +193,11 @@ table Cell {
 
 table CellMap {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
 
-  image_path: string;
+  image_path: string (required);
   image_path_hash: uint32; // fnv1a(image_path); used as embedded_assets key when embedded
-  size_original: Vec2;
+  size_original: Vec2 (required);
 
   wrap_mode: TexWrapMode;
   filter_mode: TexFilterMode;
@@ -212,13 +212,13 @@ enum EffectNodeType: ubyte {
 }
 
 table EffectParticlePointGravity {
-  position: Vec2;
+  position: Vec2 (required);
   power: float;
 }
 
 table RectAndVec2ValueTable {
   size: Rect;
-  scale_factor_value: Vec2; // min, max
+  scale_factor_value: Vec2 (required); // min, max
 }
 
 table EffectParticleElementTransColor {
@@ -237,8 +237,8 @@ table EffectParticleElementRotationTrans {
 }
 
 table EffectParticleElementRotation {
-  rotation_value: Vec2; // min, max
-  rotation_add_value: Vec2; // min, max
+  rotation_value: Vec2 (required); // min, max
+  rotation_add_value: Vec2 (required); // min, max
 }
 
 table EffectParticleElementBasic {
@@ -291,12 +291,12 @@ table EffectNode {
 
 table Effect {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
   fps: short;
   is_lock_rand_seed: bool;
   lock_rand_seed: short;
-  layout_scale: Vec2;
-  effect_node: [EffectNode];
+  layout_scale: Vec2 (required);
+  effect_node: [EffectNode] (required);
 }
 
 table SoundFile {
@@ -402,7 +402,7 @@ table PartAttributeDeform {
 }
 
 table PartAttributeShader {
-  id: string;
+  id: string (required);
   id_hash: uint32;
   param0: float;
   param1: float;
@@ -444,21 +444,21 @@ union SignalCommandParamValue {
 }
 
 table SignalCommandParam {
-  param_id: string;
+  param_id: string (required);
   type: SignalCommandParamType;
-  value: SignalCommandParamValue;
+  value: SignalCommandParamValue (required);
 }
 
 table PartAttributeSignal {
   active: bool;
-  command_id: string;
-  params: [SignalCommandParam];
+  command_id: string (required);
+  params: [SignalCommandParam] (required);
 }
 
 table PartAttributeAudio {
   sound_list_name_hash: uint32; // fnv1a(SoundList.name) — addresses SoundList
   sound_name_hash: uint32;      // fnv1a(alias) — addresses SoundFile within the SoundList
-  sound_name: string;           // alias (kept for diagnostics)
+  sound_name: string (required);// alias (kept for diagnostics)
   loop_num: int;
 }
 
@@ -609,9 +609,9 @@ table PartTypeNines {
 }
 
 table PartTypeInstance {
-  ref_anime_pack: string;
+  ref_anime_pack: string (required);
   ref_anime_pack_hash: uint32;
-  ref_anime_name: string;
+  ref_anime_name: string (required);
   ref_anime_name_hash: uint32;
 }
 
@@ -640,7 +640,7 @@ union PartType {
 }
 
 table PartData {
-  name: string;
+  name: string (required);
   parent_index: short;
   bounds_type: BoundsType;
   blend_type: BlendType;
@@ -657,14 +657,14 @@ table PartData {
 
 table Label {
   name_hash: uint32 (key);
-  name: string;
+  name: string (required);
   time: int;
 }
 
 table PartAnimationDataCellValue {
   index: ushort (key);
 
-  value: PartAttributeCell;
+  value: PartAttributeCell (required);
 }
 
 table PartAnimationDataFloatValue {
@@ -704,7 +704,7 @@ table PartAnimationDataPartColor {
   index: ushort (key);
   interpolation: InterpolationType = None;
 
-  value: PartAttributePartColor;
+  value: PartAttributePartColor (required);
 
   curve: SsCurve;
   easing_rate: float = 0;
@@ -714,7 +714,7 @@ table PartAnimationDataShader {
   index: ushort (key);
   interpolation: InterpolationType = None;
 
-  value: PartAttributeShader;
+  value: PartAttributeShader (required);
 
   curve: SsCurve;
   easing_rate: float = 0;
@@ -724,7 +724,7 @@ table PartAnimationDataVertex {
   index: ushort (key);
   interpolation: InterpolationType = None;
 
-  value: PartAttributeVertex;
+  value: PartAttributeVertex (required);
 
   curve: SsCurve;
   easing_rate: float = 0;
@@ -733,20 +733,20 @@ table PartAnimationDataVertex {
 table PartAnimationDataInstance {
   index: ushort (key);
 
-  value: PartAttributeInstance;
+  value: PartAttributeInstance (required);
 }
 
 table PartAnimationDataEffect {
   index: ushort (key);
 
-  value: PartAttributeEffect;
+  value: PartAttributeEffect (required);
 }
 
 table PartAnimationDataVec2 {
   index: ushort (key);
   interpolation: InterpolationType = None;
 
-  value: Vec2;
+  value: Vec2 (required);
 
   curve: SsCurve;
   easing_rate: float = 0;
@@ -756,7 +756,7 @@ table PartAnimationDataDeform {
   index: ushort (key);
   interpolation: InterpolationType = None;
 
-  value: PartAttributeDeform;
+  value: PartAttributeDeform (required);
 
   curve: SsCurve;
   easing_rate: float = 0;
@@ -807,8 +807,8 @@ table AnimationData {
   name: string (required);
   name_hash: uint32;
 
-  parts_initial_attributes: [InitialPartAttributes];
-  parts_animation_data: [PartAnimationData];
+  parts_initial_attributes: [InitialPartAttributes] (required);
+  parts_animation_data: [PartAnimationData] (required);
 
   events: [EventsPerFrame];
   initial_events: [InitialEvents];
@@ -820,7 +820,7 @@ table AnimationData {
   total_frame: short;
   fps: short;
 
-  canvas: Rect;
+  canvas: Rect (required);
 }
 
 table ExternalTexture {
@@ -845,11 +845,11 @@ table EmbeddedAsset {
 table SsAnimeBinary {
   version: uint = 0x00000001;
 
-  name: string;
+  name: string (required);
   name_hash: uint32;
 
-  parts: [PartData];
-  animations: [AnimationData];
+  parts: [PartData] (required);
+  animations: [AnimationData] (required);
 
   cellmaps: [CellMap];
   effects: [Effect];

@@ -7,15 +7,15 @@ enum SequenceType: ubyte {
 }
 
 table SequenceItem {
-  ref_anime_pack: string;
+  ref_anime_pack: string (required);
   ref_anime_pack_hash: uint32;
-  ref_anime_name: string;
+  ref_anime_name: string (required);
   ref_anime_name_hash: uint32;
   repeat_count: int;
 }
 
 table Sequence {
-  name: string (key);
+  name: string (key, required);
   name_hash: uint32;
   index: int;
   type: SequenceType;
@@ -25,7 +25,7 @@ table Sequence {
 table SsSequenceBinary {
   version: uint = 0x00000001;
 
-  sequence_list: [Sequence];
+  sequence_list: [Sequence] (required);
 }
 
 file_identifier "SSQB";

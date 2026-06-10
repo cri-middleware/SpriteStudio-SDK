@@ -60,7 +60,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                     }
                     sspj::ssee::SsEffectFunctionType::Gravity(p) => {
                         let mut behavior_t = ssab::ssab::ss::format::Vec2ValueEntryT::default();
-                        behavior_t.value = Some(Box::new(model_t::common::convert_vec2t(&p.gravity)));
+                        behavior_t.value = Box::new(model_t::common::convert_vec2t(&p.gravity));
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementGravity(Box::new(behavior_t));
@@ -68,7 +68,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                     }
                     sspj::ssee::SsEffectFunctionType::Position(p) => {
                         let mut behavior_t = ssab::ssab::ss::format::RectValueEntryT::default();
-                        behavior_t.value = Some(Box::new(model_t::common::convert_rectt(p.offset_x.value, p.offset_y.value, p.offset_x.subvalue, p.offset_y.subvalue)));
+                        behavior_t.value = Box::new(model_t::common::convert_rectt(p.offset_x.value, p.offset_y.value, p.offset_x.subvalue, p.offset_y.subvalue));
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementPosition(Box::new(behavior_t));
@@ -79,11 +79,11 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut rotation_value = ssab::ssab::ss::format::Vec2T::default();
                         rotation_value.v1 = p.rotation.value;
                         rotation_value.v2 = p.rotation.subvalue;
-                        behavior_t.rotation_value = Some(Box::new(rotation_value));
+                        behavior_t.rotation_value = Box::new(rotation_value);
                         let mut rotation_add_value = ssab::ssab::ss::format::Vec2T::default();
                         rotation_add_value.v1 = p.rotation_add.value;
                         rotation_add_value.v2 = p.rotation_add.subvalue;
-                        behavior_t.rotation_add_value = Some(Box::new(rotation_add_value));
+                        behavior_t.rotation_add_value = Box::new(rotation_add_value);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementRotation(Box::new(behavior_t));
@@ -103,7 +103,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut speed = ssab::ssab::ss::format::Vec2T::default();
                         speed.v1 = p.speed.value;
                         speed.v2 = p.speed.subvalue;
-                        behavior_t.value = Some(Box::new(speed));
+                        behavior_t.value = Box::new(speed);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransSpeed(Box::new(behavior_t));
@@ -114,7 +114,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut acceleration = ssab::ssab::ss::format::Vec2T::default();
                         acceleration.v1 = p.acceleration.value;
                         acceleration.v2 = p.acceleration.subvalue;
-                        behavior_t.value = Some(Box::new(acceleration));
+                        behavior_t.value = Box::new(acceleration);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTangentialAcceleration(Box::new(behavior_t));
@@ -143,7 +143,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut alpha = ssab::ssab::ss::format::Vec2T::default();
                         alpha.v1 = p.disprange.value;
                         alpha.v2 = p.disprange.subvalue;
-                        behavior_t.value = Some(Box::new(alpha));
+                        behavior_t.value = Box::new(alpha);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementAlphaFade(Box::new(behavior_t));
@@ -160,7 +160,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut scale_factor_value = ssab::ssab::ss::format::Vec2T::default();
                         scale_factor_value.v1 = p.scale_factor.value;
                         scale_factor_value.v2 = p.scale_factor.subvalue;
-                        behavior_t.scale_factor_value = Some(Box::new(scale_factor_value));
+                        behavior_t.scale_factor_value = Box::new(scale_factor_value);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementSize(Box::new(behavior_t));
@@ -177,7 +177,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut scale_factor_value = ssab::ssab::ss::format::Vec2T::default();
                         scale_factor_value.v1 = p.scale_factor.value;
                         scale_factor_value.v2 = p.scale_factor.subvalue;
-                        behavior_t.scale_factor_value = Some(Box::new(scale_factor_value));
+                        behavior_t.scale_factor_value = Box::new(scale_factor_value);
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransSize(Box::new(behavior_t));
@@ -188,7 +188,7 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         let mut position = ssab::ssab::ss::format::Vec2T::default();
                         position.v1 = p.position.x;
                         position.v2 = p.position.y;
-                        behavior_t.position = Some(Box::new(position));
+                        behavior_t.position = Box::new(position);
                         behavior_t.power = p.power;
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
@@ -226,15 +226,15 @@ pub fn convert_effect_list(_sspj: &sspj::sspj::SsProject, effect_file_vec: &[&ss
         .map(|effect_file| {
             let mut effect_t = ssab::ssab::ss::format::EffectT::default();
             effect_t.name_hash = crate::utils::fnv1a_hash_str(&effect_file.name);
-            effect_t.name = if effect_file.name.is_empty() { None } else { Some(effect_file.name.to_string()) };
+            effect_t.name = effect_file.name.to_string();
             effect_t.fps = effect_file.effect_data.fps as i16;
             effect_t.is_lock_rand_seed = effect_file.effect_data.is_lock_rand_seed;
             effect_t.lock_rand_seed = effect_file.effect_data.lock_rand_seed as i16;
             let mut layout_scale = ssab::ssab::ss::format::Vec2T::default();
             layout_scale.v1 = effect_file.effect_data.layout_scale_x as f32;
             layout_scale.v2 = effect_file.effect_data.layout_scale_y as f32;
-            effect_t.layout_scale = Some(Box::new(layout_scale));
-            effect_t.effect_node = if effect_file.effect_data.node_list.is_empty() { None } else { Some(convert_effect_node_list(&effect_file.effect_data.node_list)) };
+            effect_t.layout_scale = Box::new(layout_scale);
+            effect_t.effect_node = convert_effect_node_list(&effect_file.effect_data.node_list);
 
             effect_t
         })

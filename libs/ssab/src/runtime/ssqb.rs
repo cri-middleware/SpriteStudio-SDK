@@ -140,11 +140,11 @@ impl<'a> SequenceItem<'a> {
 
 
   #[inline]
-  pub fn ref_anime_pack(&self) -> Option<&'a str> {
+  pub fn ref_anime_pack(&self) -> &'a str {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_PACK, None).unwrap()}
   }
   #[inline]
   pub fn ref_anime_pack_hash(&self) -> u32 {
@@ -154,11 +154,11 @@ impl<'a> SequenceItem<'a> {
     unsafe { self._tab.get::<u32>(SequenceItem::VT_REF_ANIME_PACK_HASH, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn ref_anime_name(&self) -> Option<&'a str> {
+  pub fn ref_anime_name(&self) -> &'a str {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_NAME, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(SequenceItem::VT_REF_ANIME_NAME, None).unwrap()}
   }
   #[inline]
   pub fn ref_anime_name_hash(&self) -> u32 {
@@ -182,9 +182,9 @@ impl ::flatbuffers::Verifiable for SequenceItem<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_pack", Self::VT_REF_ANIME_PACK, true)?
      .visit_field::<u32>("ref_anime_pack_hash", Self::VT_REF_ANIME_PACK_HASH, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_name", Self::VT_REF_ANIME_NAME, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("ref_anime_name", Self::VT_REF_ANIME_NAME, true)?
      .visit_field::<u32>("ref_anime_name_hash", Self::VT_REF_ANIME_NAME_HASH, false)?
      .visit_field::<i32>("repeat_count", Self::VT_REPEAT_COUNT, false)?
      .finish();
@@ -202,9 +202,9 @@ impl<'a> Default for SequenceItemArgs<'a> {
   #[inline]
   fn default() -> Self {
     SequenceItemArgs {
-      ref_anime_pack: None,
+      ref_anime_pack: None, // required field
       ref_anime_pack_hash: 0,
-      ref_anime_name: None,
+      ref_anime_name: None, // required field
       ref_anime_name_hash: 0,
       repeat_count: 0,
     }
@@ -247,6 +247,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SequenceItemBuilder<'a, 'b, A
   #[inline]
   pub fn finish(self) -> ::flatbuffers::WIPOffset<SequenceItem<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, SequenceItem::VT_REF_ANIME_PACK,"ref_anime_pack");
+    self.fbb_.required(o, SequenceItem::VT_REF_ANIME_NAME,"ref_anime_name");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -480,11 +482,11 @@ impl<'a> SsSequenceBinary<'a> {
     unsafe { self._tab.get::<u32>(SsSequenceBinary::VT_VERSION, Some(1)).unwrap()}
   }
   #[inline]
-  pub fn sequence_list(&self) -> Option<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>>> {
+  pub fn sequence_list(&self) -> ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence>>>>(SsSequenceBinary::VT_SEQUENCE_LIST, None).unwrap()}
   }
 }
 
@@ -495,7 +497,7 @@ impl ::flatbuffers::Verifiable for SsSequenceBinary<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<u32>("version", Self::VT_VERSION, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, ::flatbuffers::ForwardsUOffset<Sequence>>>>("sequence_list", Self::VT_SEQUENCE_LIST, true)?
      .finish();
     Ok(())
   }
@@ -509,7 +511,7 @@ impl<'a> Default for SsSequenceBinaryArgs<'a> {
   fn default() -> Self {
     SsSequenceBinaryArgs {
       version: 1,
-      sequence_list: None,
+      sequence_list: None, // required field
     }
   }
 }
@@ -538,6 +540,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsSequenceBinaryBuilder<'a, '
   #[inline]
   pub fn finish(self) -> ::flatbuffers::WIPOffset<SsSequenceBinary<'a>> {
     let o = self.fbb_.end_table(self.start_);
+    self.fbb_.required(o, SsSequenceBinary::VT_SEQUENCE_LIST,"sequence_list");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }

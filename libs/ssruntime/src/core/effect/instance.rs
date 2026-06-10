@@ -73,31 +73,32 @@ impl EffectEmitterInstance {
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementGravity => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_gravity() {
                             particle_params.use_gravity = true;
-                            if let Some(g) = p.value() {
-                                particle_params.gravity = Vector2::new(g.v1(), g.v2());
-                            }
+                            let g = p.value();
+
+                            particle_params.gravity = Vector2::new(g.v1(), g.v2());
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementPosition => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_position() {
                             particle_params.use_offset = true;
-                            if let Some(rect) = p.value() {
-                                particle_params.offset = Vector2::new(rect.x1(), rect.y1());
-                                particle_params.offset2 = Vector2::new(rect.x2() - rect.x1(), rect.y2() - rect.y1());
-                            }
+                            let rect = p.value();
+
+                            particle_params.offset = Vector2::new(rect.x1(), rect.y1());
+                            particle_params.offset2 = Vector2::new(rect.x2() - rect.x1(), rect.y2() - rect.y1());
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementRotation => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_rotation() {
                             particle_params.use_rotation = true;
-                            if let Some(rot) = p.rotation_value() {
-                                particle_params.rotation = rot.v1();
-                                particle_params.rotation2 = rot.v2() - rot.v1();
-                            }
-                            if let Some(rot_add) = p.rotation_add_value() {
-                                particle_params.rotation_add = rot_add.v1();
-                                particle_params.rotation_add2 = rot_add.v2() - rot_add.v1();
-                            }
+                            let rot = p.rotation_value();
+
+                            particle_params.rotation = rot.v1();
+                            particle_params.rotation2 = rot.v2() - rot.v1();
+
+                            let rot_add = p.rotation_add_value();
+
+                            particle_params.rotation_add = rot_add.v1();
+                            particle_params.rotation_add2 = rot_add.v2() - rot_add.v1();
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementRotationTrans => {
@@ -110,19 +111,19 @@ impl EffectEmitterInstance {
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementTransSpeed => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_trans_speed() {
                             particle_params.use_trans_speed = true;
-                            if let Some(v) = p.value() {
-                                particle_params.trans_speed = v.v1();
-                                particle_params.trans_speed2 = v.v2() - v.v1();
-                            }
+                            let v = p.value();
+
+                            particle_params.trans_speed = v.v1();
+                            particle_params.trans_speed2 = v.v2() - v.v1();
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementTangentialAcceleration => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_tangential_acceleration() {
                             particle_params.use_tan_accel = true;
-                            if let Some(v) = p.value() {
-                                particle_params.tangential_accel = v.v1();
-                                particle_params.tangential_accel2 = v.v2() - v.v1();
-                            }
+                            let v = p.value();
+
+                            particle_params.tangential_accel = v.v1();
+                            particle_params.tangential_accel2 = v.v2() - v.v1();
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementInitColor => {
@@ -144,10 +145,10 @@ impl EffectEmitterInstance {
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementAlphaFade => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_alpha_fade() {
                             particle_params.use_alpha_fade = true;
-                            if let Some(v) = p.value() {
-                                particle_params.alpha_fade = v.v1();
-                                particle_params.alpha_fade2 = v.v2();
-                            }
+                            let v = p.value();
+
+                            particle_params.alpha_fade = v.v1();
+                            particle_params.alpha_fade2 = v.v2();
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementSize => {
@@ -157,10 +158,10 @@ impl EffectEmitterInstance {
                                 particle_params.scale = Vector2::new(size.x1(), size.y1());
                                 particle_params.scale_range = Vector2::new(size.x2() - size.x1(), size.y2() - size.y1());
                             }
-                            if let Some(scale) = p.scale_factor_value() {
-                                particle_params.scale_factor = scale.v1();
-                                particle_params.scale_factor2 = scale.v2() - scale.v1();
-                            }
+                            let scale = p.scale_factor_value();
+
+                            particle_params.scale_factor = scale.v1();
+                            particle_params.scale_factor2 = scale.v2() - scale.v1();
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementTransSize => {
@@ -170,18 +171,19 @@ impl EffectEmitterInstance {
                                 particle_params.transscale = Vector2::new(size.x1(), size.y1());
                                 particle_params.scale_range2 = Vector2::new(size.x2() - size.x1(), size.y2() - size.y1());
                             }
-                            if let Some(scale) = p.scale_factor_value() {
-                                particle_params.transscale_factor = scale.v1();
-                                particle_params.transscale_factor2 = scale.v2() - scale.v1();
-                            }
+                            let scale = p.scale_factor_value();
+
+                            particle_params.transscale_factor = scale.v1();
+                            particle_params.transscale_factor2 = scale.v2() - scale.v1();
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticlePointGravity => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_point_gravity() {
                             particle_params.use_p_gravity = true;
-                            if let Some(pos) = p.position() {
-                                particle_params.gravity_pos = Vector2::new(pos.v1(), pos.v2());
-                            }
+                            let pos = p.position();
+
+                            particle_params.gravity_pos = Vector2::new(pos.v1(), pos.v2());
+
                             particle_params.gravity_power = p.power();
                         }
                     }
@@ -248,7 +250,7 @@ pub struct EffectInstanceState {
 
 impl<'a> EffectEvaluationContext<'a> {
     pub fn from_ssab(effect: &ssab_fbs::Effect, my_seed: u32) -> Option<(Self, EffectInstanceState)> {
-        let nodes = effect.effect_node()?;
+        let nodes = effect.effect_node();
         let node_count = nodes.len();
 
         let mut node_to_emitter: Vec<Option<usize>> = vec![None; node_count];
@@ -311,7 +313,8 @@ impl<'a> EffectEvaluationContext<'a> {
             emitter_states.push(emitter_state);
         }
 
-        let layout_scale = if let Some(ls) = effect.layout_scale() { Vector2::new(ls.v1() / 100.0, ls.v2() / 100.0) } else { Vector2::new(1.0, 1.0) };
+        let ls = effect.layout_scale();
+        let layout_scale = Vector2::new(ls.v1() / 100.0, ls.v2() / 100.0);
 
         let eval = Self { emitters, is_infinite, layout_scale, effect_time_length, fps: if effect.fps() == 0 { 30 } else { effect.fps() as i32 }, _marker: PhantomData };
         let instance = EffectInstanceState { state: RenderState { emitter_states, is_playing: true, ..Default::default() }, draw_commands: Vec::new(), draw_particles: Vec::new(), active_indices_workspace: Vec::new() };
