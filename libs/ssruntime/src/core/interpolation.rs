@@ -4,7 +4,6 @@ use ssab::ssab::ss::format::InterpolationType;
 use ssinterpolate::interpolate::*;
 
 const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::all();
-const UPDATE_FLAG_OFF: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
 #[inline]
 pub fn get_interpolated_rate(interpolation: InterpolationType, frame_no: f32, prev_frame: f32, next_frame: f32, curve: Option<ssab::ssab::ss::format::SsCurve>, easing_rate: f32) -> f32 {
@@ -285,12 +284,8 @@ pub fn evaluate_partcolor(
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
             let mut current = runtime::framedata::ss::runtime::PartAttributePartColor::default();
-            let Some(prev_val) = prev.value() else {
-                return (current, UPDATE_FLAG_OFF);
-            };
-            let Some(next_val) = next.value() else {
-                return (current, UPDATE_FLAG_OFF);
-            };
+            let prev_val = prev.value();
+            let next_val = next.value();
 
             let get_color = |c: &Option<ssab::ssab::ss::format::SsAttributePartColorKeyValueColor>| -> (f32, f32, f32, f32, f32) {
                 if let Some(c) = c
@@ -359,36 +354,37 @@ fn transfer_blend_type(bt: ssab::ssab::ss::format::BlendType) -> runtime::framed
 }
 
 #[inline]
-fn transfer_partcolor(source: &Option<ssab::ssab::ss::format::PartAttributePartColor>) -> runtime::framedata::ss::runtime::PartAttributePartColor {
+fn transfer_partcolor(source: &ssab::ssab::ss::format::PartAttributePartColor) -> runtime::framedata::ss::runtime::PartAttributePartColor {
     let mut destination = runtime::framedata::ss::runtime::PartAttributePartColor::default();
-    if let Some(s) = source {
-        destination.set_blend_type(transfer_blend_type(s.blend_type()));
+    let s = source;
 
-        fn convert_u8rect(rgba: &ssab::ssab::ss::format::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {
-            runtime::framedata::ss::runtime::U8Rect::new(rgba.a(), rgba.r(), rgba.g(), rgba.b())
-        }
+    destination.set_blend_type(transfer_blend_type(s.blend_type()));
 
-        if let Some(lt) = s.lt()
-            && let Some(rgba) = lt.rgba()
-        {
-            destination.set_lt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lt.rate()));
-        }
-        if let Some(rt) = s.rt()
-            && let Some(rgba) = rt.rgba()
-        {
-            destination.set_rt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rt.rate()));
-        }
-        if let Some(rb) = s.rb()
-            && let Some(rgba) = rb.rgba()
-        {
-            destination.set_rb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rb.rate()));
-        }
-        if let Some(lb) = s.lb()
-            && let Some(rgba) = lb.rgba()
-        {
-            destination.set_lb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lb.rate()));
-        }
+    fn convert_u8rect(rgba: &ssab::ssab::ss::format::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {
+        runtime::framedata::ss::runtime::U8Rect::new(rgba.a(), rgba.r(), rgba.g(), rgba.b())
     }
+
+    if let Some(lt) = s.lt()
+        && let Some(rgba) = lt.rgba()
+    {
+        destination.set_lt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lt.rate()));
+    }
+    if let Some(rt) = s.rt()
+        && let Some(rgba) = rt.rgba()
+    {
+        destination.set_rt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rt.rate()));
+    }
+    if let Some(rb) = s.rb()
+        && let Some(rgba) = rb.rgba()
+    {
+        destination.set_rb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rb.rate()));
+    }
+    if let Some(lb) = s.lb()
+        && let Some(rgba) = lb.rgba()
+    {
+        destination.set_lb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lb.rate()));
+    }
+
     destination
 }
 
@@ -409,12 +405,8 @@ pub fn evaluate_shader(
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
-            let Some(prev_value) = prev.value() else {
-                return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
-            };
-            let Some(next_value) = next.value() else {
-                return (runtime::framedata::ss::runtime::PartAttributeShader::default(), UPDATE_FLAG_OFF);
-            };
+            let prev_value = prev.value();
+            let next_value = next.value();
 
             let start_params = [prev_value.param0(), prev_value.param1(), prev_value.param2(), prev_value.param3(), prev_value.param4(), prev_value.param5(), prev_value.param6(), prev_value.param7()];
             let end_params = [next_value.param0(), next_value.param1(), next_value.param2(), next_value.param3(), next_value.param4(), next_value.param5(), next_value.param6(), next_value.param7()];
@@ -446,26 +438,24 @@ pub fn evaluate_shader(
 }
 
 #[inline]
-fn transfer_shader(source: &Option<ssab::ssab::ss::format::PartAttributeShader>) -> runtime::framedata::ss::runtime::PartAttributeShader {
-    if let Some(s) = source {
-        runtime::framedata::ss::runtime::PartAttributeShader::new(
-            s.id_hash(),
-            s.param0(),
-            s.param1(),
-            s.param2(),
-            s.param3(),
-            s.param4(),
-            s.param5(),
-            s.param6(),
-            s.param7(),
-            s.map0_cellmap_name_hash(),
-            s.map0_name_hash(),
-            s.map1_cellmap_name_hash(),
-            s.map1_name_hash(),
-        )
-    } else {
-        runtime::framedata::ss::runtime::PartAttributeShader::default()
-    }
+fn transfer_shader(source: &ssab::ssab::ss::format::PartAttributeShader) -> runtime::framedata::ss::runtime::PartAttributeShader {
+    let s = source;
+
+    runtime::framedata::ss::runtime::PartAttributeShader::new(
+        s.id_hash(),
+        s.param0(),
+        s.param1(),
+        s.param2(),
+        s.param3(),
+        s.param4(),
+        s.param5(),
+        s.param6(),
+        s.param7(),
+        s.map0_cellmap_name_hash(),
+        s.map0_name_hash(),
+        s.map1_cellmap_name_hash(),
+        s.map1_name_hash(),
+    )
 }
 
 #[inline]
@@ -485,12 +475,8 @@ pub fn evaluate_vertex(
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
-            let Some(prev_value) = prev.value() else {
-                return (runtime::framedata::ss::runtime::PartAttributeVertex::default(), UPDATE_FLAG_OFF);
-            };
-            let Some(next_value) = next.value() else {
-                return (runtime::framedata::ss::runtime::PartAttributeVertex::default(), UPDATE_FLAG_OFF);
-            };
+            let prev_value = prev.value();
+            let next_value = next.value();
 
             let get_coords = |v: &Option<ssab::ssab::ss::format::Vec2>| -> (f32, f32) { if let Some(v) = v { (v.v1(), v.v2()) } else { (0.0, 0.0) } };
 
@@ -530,27 +516,23 @@ pub fn evaluate_vertex(
 }
 
 #[inline]
-fn transfer_vertex(source: &Option<ssab::ssab::ss::format::PartAttributeVertex>) -> runtime::framedata::ss::runtime::PartAttributeVertex {
-    if let Some(s) = source {
-        let lt = s.lt().map(|lt| runtime::framedata::ss::runtime::Vec2::new(lt.v1(), lt.v2())).unwrap_or_default();
-        let rt = s.rt().map(|rt| runtime::framedata::ss::runtime::Vec2::new(rt.v1(), rt.v2())).unwrap_or_default();
-        let lb = s.lb().map(|lb| runtime::framedata::ss::runtime::Vec2::new(lb.v1(), lb.v2())).unwrap_or_default();
-        let rb = s.rb().map(|rb| runtime::framedata::ss::runtime::Vec2::new(rb.v1(), rb.v2())).unwrap_or_default();
+fn transfer_vertex(source: &ssab::ssab::ss::format::PartAttributeVertex) -> runtime::framedata::ss::runtime::PartAttributeVertex {
+    let s = source;
 
-        // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
-        runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &runtime::framedata::ss::runtime::Vec2::default())
-    } else {
-        runtime::framedata::ss::runtime::PartAttributeVertex::default()
-    }
+    let lt = s.lt().map(|lt| runtime::framedata::ss::runtime::Vec2::new(lt.v1(), lt.v2())).unwrap_or_default();
+    let rt = s.rt().map(|rt| runtime::framedata::ss::runtime::Vec2::new(rt.v1(), rt.v2())).unwrap_or_default();
+    let lb = s.lb().map(|lb| runtime::framedata::ss::runtime::Vec2::new(lb.v1(), lb.v2())).unwrap_or_default();
+    let rb = s.rb().map(|rb| runtime::framedata::ss::runtime::Vec2::new(rb.v1(), rb.v2())).unwrap_or_default();
+
+    // The center vertex is filled later by get_parts after pivot/size/flip/deform are applied.
+    runtime::framedata::ss::runtime::PartAttributeVertex::new(&lt, &rt, &lb, &rb, &runtime::framedata::ss::runtime::Vec2::default())
 }
 
 #[inline]
 pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataVec2<'_>>>, frame_no: f32, hint: &mut usize) -> Option<(f32, f32, runtime::framedata::ss::runtime::UpdateAttributeFlags)> {
     search_prev_next(array, frame_no, |v| v.index() as i32, hint).map(|(prev, next_opt)| {
         if let Some(next) = next_opt {
-            let Some(prev_value) = prev.value() else {
-                return (0.0, 0.0, UPDATE_FLAG_OFF);
-            };
+            let prev_value = prev.value();
             let prev_index = prev.index() as i32 as f32;
             let interpolation = prev.interpolation();
             if interpolation == InterpolationType::None {
@@ -560,14 +542,10 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
-            let Some(next_value) = next.value() else {
-                return (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON);
-            };
+            let next_value = next.value();
             (linear(prev_value.v1(), next_value.v1(), rate), linear(prev_value.v2(), next_value.v2(), rate), UPDATE_FLAG_ON)
         } else {
-            let Some(prev_value) = prev.value() else {
-                return (0.0, 0.0, UPDATE_FLAG_OFF);
-            };
+            let prev_value = prev.value();
             (prev_value.v1(), prev_value.v2(), UPDATE_FLAG_ON)
         }
     })
@@ -578,9 +556,10 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
 /// `index_out`. Both output buffers are cleared at entry, so the caller
 /// can reuse them across parts without manual reset.
 ///
-/// Returns `Some(flags)` if a key was found at/before `frame_no`. The
-/// flags mirror the same on/off semantics as the scalar `evaluate_*`
-/// helpers — `UPDATE_FLAG_OFF` when the matching key had no payload.
+/// Returns `Some(flags)` if a key was found at/before `frame_no`,
+/// carrying the same update semantics as the scalar `evaluate_*` helpers.
+/// Deform values are required on every key, so a found key always reports
+/// `UPDATE_FLAG_ON`.
 #[inline]
 pub fn evaluate_deform(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
@@ -606,12 +585,8 @@ pub fn evaluate_deform(
             let next_index = next.index() as i32 as f32;
             let rate = get_interpolated_rate(interpolation, frame_no, prev_index, next_index, prev.curve(), prev.easing_rate());
 
-            let Some(prev_val) = prev.value() else {
-                return UPDATE_FLAG_OFF;
-            };
-            let Some(next_val) = next.value() else {
-                return UPDATE_FLAG_OFF;
-            };
+            let prev_val = prev.value();
+            let next_val = next.value();
 
             if let (Some(prev_cx), Some(prev_cy), Some(next_cx), Some(next_cy), Some(prev_idx), Some(next_idx)) = (prev_val.coord_x(), prev_val.coord_y(), next_val.coord_x(), next_val.coord_y(), prev_val.index(), next_val.index()) {
                 // Deform keyframes store a sparse, vertex-keyed set of offsets:
@@ -719,19 +694,19 @@ pub fn evaluate_deform(
 }
 
 #[inline]
-fn transfer_deform(source: &Option<ssab::ssab::ss::format::PartAttributeDeform>, coord_out: &mut Vec<runtime::framedata::ss::runtime::Vec2>, index_out: &mut Vec<i16>) {
-    if let Some(s) = source {
-        if let (Some(cx), Some(cy)) = (s.coord_x(), s.coord_y()) {
-            let n = cx.len().min(cy.len());
-            coord_out.reserve(n);
-            for i in 0..n {
-                coord_out.push(runtime::framedata::ss::runtime::Vec2::new(cx.get(i), cy.get(i)));
-            }
+fn transfer_deform(source: &ssab::ssab::ss::format::PartAttributeDeform, coord_out: &mut Vec<runtime::framedata::ss::runtime::Vec2>, index_out: &mut Vec<i16>) {
+    let s = source;
+
+    if let (Some(cx), Some(cy)) = (s.coord_x(), s.coord_y()) {
+        let n = cx.len().min(cy.len());
+        coord_out.reserve(n);
+        for i in 0..n {
+            coord_out.push(runtime::framedata::ss::runtime::Vec2::new(cx.get(i), cy.get(i)));
         }
-        if let Some(index) = s.index() {
-            index_out.reserve(index.len());
-            index_out.extend(index.iter());
-        }
+    }
+    if let Some(index) = s.index() {
+        index_out.reserve(index.len());
+        index_out.extend(index.iter());
     }
 }
 
@@ -744,7 +719,7 @@ pub fn evaluate_bool(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
 #[inline]
 pub fn evaluate_cell<'a>(array: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>, frame_no: f32, hint: &mut usize) -> Option<ssab::ssab::ss::format::PartAttributeCell<'a>> {
     let frame_no = crate::core::math::floorf(frame_no) as i32;
-    search_prev(array, frame_no, |v| v.index() as i32, hint).and_then(|prev| prev.value())
+    search_prev(array, frame_no, |v| v.index() as i32, hint).map(|prev| prev.value())
 }
 
 #[inline]

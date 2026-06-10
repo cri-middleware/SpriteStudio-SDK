@@ -2,26 +2,24 @@ use crate::model_t::ssqbt;
 use crate::utils;
 use sspj::ssqe::{SsSequence, SsSequenceItem};
 
-fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Option<Vec<ssab::ssqb::ss::format::SequenceT>> {
-    Some(
-        sequence_list
-            .iter()
-            .map(|sequence| {
-                let mut sequence_t = ssab::ssqb::ss::format::SequenceT::default();
-                sequence_t.name = sequence.name.clone();
-                sequence_t.name_hash = utils::fnv1a_hash_str(&sequence.name);
-                sequence_t.index = sequence.index;
-                sequence_t.type_ = match &sequence.sequence_type {
-                    sspj::sstypes::SsSequenceType::Last => ssab::ssqb::ss::format::SequenceType::Last,
-                    sspj::sstypes::SsSequenceType::Keep => ssab::ssqb::ss::format::SequenceType::Keep,
-                    sspj::sstypes::SsSequenceType::Top => ssab::ssqb::ss::format::SequenceType::Top,
-                };
-                sequence_t.list = Some(convert_sequence_item_t_list(&sequence.list));
+fn convert_sequence_t_list(sequence_list: &[SsSequence]) -> Vec<ssab::ssqb::ss::format::SequenceT> {
+    sequence_list
+        .iter()
+        .map(|sequence| {
+            let mut sequence_t = ssab::ssqb::ss::format::SequenceT::default();
+            sequence_t.name = sequence.name.clone();
+            sequence_t.name_hash = utils::fnv1a_hash_str(&sequence.name);
+            sequence_t.index = sequence.index;
+            sequence_t.type_ = match &sequence.sequence_type {
+                sspj::sstypes::SsSequenceType::Last => ssab::ssqb::ss::format::SequenceType::Last,
+                sspj::sstypes::SsSequenceType::Keep => ssab::ssqb::ss::format::SequenceType::Keep,
+                sspj::sstypes::SsSequenceType::Top => ssab::ssqb::ss::format::SequenceType::Top,
+            };
+            sequence_t.list = Some(convert_sequence_item_t_list(&sequence.list));
 
-                sequence_t
-            })
-            .collect::<Vec<ssab::ssqb::ss::format::SequenceT>>(),
-    )
+            sequence_t
+        })
+        .collect::<Vec<ssab::ssqb::ss::format::SequenceT>>()
 }
 
 fn convert_sequence_item_t_list(sequence_item_list: &[SsSequenceItem]) -> Vec<ssab::ssqb::ss::format::SequenceItemT> {
@@ -29,9 +27,9 @@ fn convert_sequence_item_t_list(sequence_item_list: &[SsSequenceItem]) -> Vec<ss
         .iter()
         .map(|sequence_item| {
             let mut sequence_item_t = ssab::ssqb::ss::format::SequenceItemT::default();
-            sequence_item_t.ref_anime_pack = Some(sequence_item.ref_anime_pack.clone());
+            sequence_item_t.ref_anime_pack = sequence_item.ref_anime_pack.clone();
             sequence_item_t.ref_anime_pack_hash = utils::fnv1a_hash_str(&sequence_item.ref_anime_pack);
-            sequence_item_t.ref_anime_name = Some(sequence_item.ref_anime.clone());
+            sequence_item_t.ref_anime_name = sequence_item.ref_anime.clone();
             sequence_item_t.ref_anime_name_hash = utils::fnv1a_hash_str(&sequence_item.ref_anime);
             sequence_item_t.repeat_count = sequence_item.repeat_count;
 

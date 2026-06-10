@@ -83,22 +83,27 @@ pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<
     let mut out = alloc::vec::Vec::with_capacity(cell_array.len());
     for key in cell_array {
         let mut meta = ResolvedCellMeta::default();
-        if let Some(value) = key.value() {
-            let cellmap_name_hash = value.cellmap_name_hash();
-            let name_hash = value.name_hash();
-            if let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)
-                && let Some(cells) = cellmap.cells()
-                && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, name_hash)
-            {
-                let (pivot_x, pivot_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
-                let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
-                // Mirror compute_local_uvs's previous fallback: if the
-                // cellmap doesn't carry size_original (or it's zero),
-                // treat the cell rect dimensions as the texture size.
-                let (tex_w, tex_h) = cellmap.size_original().map(|v| (v.v1(), v.v2())).filter(|(w, h)| *w > 0.0 && *h > 0.0).unwrap_or((size_w, size_h));
-                meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
-            }
+        let value = key.value();
+
+        let cellmap_name_hash = value.cellmap_name_hash();
+        let name_hash = value.name_hash();
+        if let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)
+            && let Some(cells) = cellmap.cells()
+            && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, name_hash)
+        {
+            let p = cell.pivot();
+            let (pivot_x, pivot_y) = (p.v1(), p.v2());
+            let r = cell.rectangle();
+            let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
+            // Mirror compute_local_uvs's previous fallback: if the
+            // cellmap doesn't carry size_original (or it's zero),
+            // treat the cell rect dimensions as the texture size.
+            let v = cellmap.size_original();
+            let (w, h) = (v.v1(), v.v2());
+            let (tex_w, tex_h) = if w > 0.0 && h > 0.0 { (w, h) } else { (size_w, size_h) };
+            meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
         }
+
         out.push(meta);
     }
     out
@@ -211,7 +216,7 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     if cell_array.is_empty() {
         return None;
     }
-    let value = cell_array.get(0).value()?;
+    let value = cell_array.get(0).value();
 
     let cellmaps = ssab.cellmaps()?;
     let cellmap = crate::core::ssab_lookup::find_cellmap(&cellmaps, value.cellmap_name_hash())?;
@@ -236,8 +241,10 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     // texture-pixel position via `(pivot.x + 0.5) * size_w` and
     // `(-pivot.y + 0.5) * size_h` — the Y pivot is negated to mirror
     // compute_local_vertices (`cpy`) so it matches the Y-down coordinates.
-    let (rect_left, rect_top, size_w, size_h) = cell.rectangle().map(|r| (r.x1(), r.y1(), r.x2(), r.y2())).unwrap_or((0.0, 0.0, 0.0, 0.0));
-    let (pivot_norm_x, pivot_norm_y) = cell.pivot().map(|p| (p.v1(), p.v2())).unwrap_or((0.0, 0.0));
+    let r = cell.rectangle();
+    let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
+    let p = cell.pivot();
+    let (pivot_norm_x, pivot_norm_y) = (p.v1(), p.v2());
     let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
     let pivot_px_y = (-pivot_norm_y + 0.5) * size_h;
     let mut uvs = alloc::vec::Vec::with_capacity(n * 2);

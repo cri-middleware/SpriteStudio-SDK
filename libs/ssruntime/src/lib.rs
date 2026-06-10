@@ -349,47 +349,49 @@ impl<'a> AnimationResource<'a> {
         }
 
         let mut animations = Vec::new();
-        if let Some(fb_animations) = ssab.animations() {
-            for anim in fb_animations {
-                let mut cached_parts = Vec::new();
-                if let Some(parts) = anim.parts_animation_data() {
-                    let fb_parts = ssab.parts();
-                    for (i, p) in parts.iter().enumerate() {
-                        let part_meta = fb_parts.map(|meta| meta.get(i));
-                        let parent_index = part_meta.map(|pm| pm.parent_index()).unwrap_or(-1);
-                        let blend_type = part_meta.map(|pm| pm.blend_type()).unwrap_or(ssab::ssab::ss::format::BlendType::Mix);
-                        let part_type_disc = part_meta.map(|pm| pm.part_type_type()).unwrap_or(ssab::ssab::ss::format::PartType::NONE);
-                        let mask_influence = part_meta.map(|pm| pm.mask_influence()).unwrap_or(false);
-                        // PartTypeMask is always a pure mask; drawing parts use the unified draw_as_mask flag.
-                        let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask || part_meta.map(|pm| pm.draw_as_mask()).unwrap_or(false);
-                        let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
-                        let shape_kind = part_meta.and_then(|pm| pm.part_type_as_part_type_shape()).and_then(|s| match s.shape_type() {
-                            ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
-                            ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
-                            ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
-                            ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
-                            _ => None,
-                        });
-                        let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.and_then(|pm| pm.mesh_binding()));
-                        let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array()) } else { None };
-                        cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
-                    }
-                }
-                let name_hash = anim.name_hash();
-                let (canvas_width, canvas_height) = if let Some(canvas) = anim.canvas() { (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1()) } else { (0.0, 0.0) };
-                animations.push(AnimationMetadata {
-                    name_hash,
-                    start_frame: anim.start_frame() as i32,
-                    end_frame: anim.end_frame() as i32,
-                    fps: anim.fps() as i32,
-                    canvas_width,
-                    canvas_height,
-                    cached_parts,
-                    events: anim.events(),
-                    initial_events: anim.initial_events(),
-                    labels: anim.labels(),
+        let fb_animations = ssab.animations();
+
+        for anim in fb_animations {
+            let mut cached_parts = Vec::new();
+            let parts = anim.parts_animation_data();
+
+            let fb_parts = ssab.parts();
+            for (i, p) in parts.iter().enumerate() {
+                let part_meta = fb_parts.get(i);
+                let parent_index = part_meta.parent_index();
+                let blend_type = part_meta.blend_type();
+                let part_type_disc = part_meta.part_type_type();
+                let mask_influence = part_meta.mask_influence();
+                // PartTypeMask is always a pure mask; drawing parts use the unified draw_as_mask flag.
+                let is_mask_contributor = part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMask || part_meta.draw_as_mask();
+                let resolved_cells = crate::core::framedata::resolve_cell_array_meta(&ssab, p.cell_array());
+                let shape_kind = part_meta.part_type_as_part_type_shape().and_then(|s| match s.shape_type() {
+                    ssab::ssab::ss::format::ShapeType::Rectangle => Some(crate::core::geometry::ShapeType::Rectangle),
+                    ssab::ssab::ss::format::ShapeType::Triangle => Some(crate::core::geometry::ShapeType::Triangle),
+                    ssab::ssab::ss::format::ShapeType::Star => Some(crate::core::geometry::ShapeType::Star),
+                    ssab::ssab::ss::format::ShapeType::Arrow => Some(crate::core::geometry::ShapeType::Arrow),
+                    _ => None,
                 });
+                let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.mesh_binding());
+                let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array()) } else { None };
+                cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
             }
+
+            let name_hash = anim.name_hash();
+            let canvas = anim.canvas();
+            let (canvas_width, canvas_height) = (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1());
+            animations.push(AnimationMetadata {
+                name_hash,
+                start_frame: anim.start_frame() as i32,
+                end_frame: anim.end_frame() as i32,
+                fps: anim.fps() as i32,
+                canvas_width,
+                canvas_height,
+                cached_parts,
+                events: anim.events(),
+                initial_events: anim.initial_events(),
+                labels: anim.labels(),
+            });
         }
 
         Ok(Self { data, animations })
@@ -402,11 +404,12 @@ impl<'a> AnimationResource<'a> {
     pub fn get_animation_names(&self) -> Vec<alloc::string::String> {
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(self.data) };
         let mut names = Vec::new();
-        if let Some(animations) = ssab.animations() {
-            for anim in animations {
-                names.push(alloc::string::String::from(anim.name()));
-            }
+        let animations = ssab.animations();
+
+        for anim in animations {
+            names.push(alloc::string::String::from(anim.name()));
         }
+
         names
     }
 
@@ -2122,7 +2125,7 @@ impl<'a> Context<'a> {
                 if ev.part_index() as u32 != slot_index {
                     continue;
                 }
-                let Some(attr) = ev.value() else { continue };
+                let attr = ev.value();
                 info = crate::types::ss_event_instance_info {
                     event_frame: epf.frame_index() as i32,
                     start_label_hash: attr.start_label_hash(),
@@ -2193,7 +2196,7 @@ impl<'a> Context<'a> {
                 if ev.part_index() as u32 != slot_index {
                     continue;
                 }
-                let Some(attr) = ev.value() else { continue };
+                let attr = ev.value();
                 let s = attr.speed();
                 info = crate::types::ss_effect_event_info { event_frame: epf.frame_index() as i32, start_time: attr.start_time(), speed: if s == 0.0 { 1.0 } else { s }, independent: attr.independent(), is_synthetic_default: false };
             }
@@ -2459,11 +2462,13 @@ impl<'a> EffectSlot<'a> {
             // SS6-style blend mapping: 0=Mix, 1=Add. Anything else falls back to Mix.
             entry.blend_byte = if blend_in == 1 { 1 } else { 0 };
 
-            let (src_x, src_y, sw, sh) = if let Some(rect) = cell.rectangle() { (rect.x1(), rect.y1(), rect.x2(), rect.y2()) } else { (0.0, 0.0, 0.0, 0.0) };
+            let rect = cell.rectangle();
+            let (src_x, src_y, sw, sh) = (rect.x1(), rect.y1(), rect.x2(), rect.y2());
             // Pivot Y is negated to match Godot's prior emit_effect_slot behavior;
             // the Y-flip logic on the per-particle pass handles the rest of the
             // axis convention difference.
-            let (pivot_x, pivot_y) = if let Some(p) = cell.pivot() { (p.v1(), -p.v2()) } else { (0.0, 0.0) };
+            let p = cell.pivot();
+            let (pivot_x, pivot_y) = (p.v1(), -p.v2());
             entry.sw = sw;
             entry.sh = sh;
             entry.quad_origin_x = -sw * 0.5 + pivot_x * sw;
@@ -2471,7 +2476,8 @@ impl<'a> EffectSlot<'a> {
 
             // UV uses cellmap.size_original — the texture dimensions at SSAB build time.
             // Atlas / scaled-texture pipelines must remap UVs engine-side.
-            let (tex_w, tex_h) = if let Some(s) = cellmap.size_original() { (s.v1(), s.v2()) } else { (1.0, 1.0) };
+            let s = cellmap.size_original();
+            let (tex_w, tex_h) = (s.v1(), s.v2());
             let tex_w = if tex_w > 0.0 { tex_w } else { 1.0 };
             let tex_h = if tex_h > 0.0 { tex_h } else { 1.0 };
             entry.u0 = src_x / tex_w;
@@ -2869,11 +2875,9 @@ mod tests {
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
                 println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("  parts");
-                if let Some(parts) = ssab.parts() {
-                    parts.iter().enumerate().for_each(|(idx, part)| {
-                        println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
-                    })
-                }
+                ssab.parts().iter().enumerate().for_each(|(idx, part)| {
+                    println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name());
+                });
 
                 println!();
             }
@@ -2897,8 +2901,8 @@ mod tests {
         {
             let ssab_buf = context.get_ssab_data().unwrap();
             let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-            let parts_meta = ssab.parts().expect("No parts in ssab");
-            pos_xyz_idx = parts_meta.iter().position(|p| p.name() == Some("POS_XYZ")).expect("Part POS_XYZ not found") as i16;
+            let parts_meta = ssab.parts();
+            pos_xyz_idx = parts_meta.iter().position(|p| p.name() == "POS_XYZ").expect("Part POS_XYZ not found") as i16;
         }
 
         // Test frame 0
@@ -2961,18 +2965,18 @@ mod tests {
 
         let ssab_buf = context.get_ssab_data().unwrap();
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-        let parts_meta = ssab.parts().expect("No parts in ssab");
+        let parts_meta = ssab.parts();
 
         // Hierarchy check
-        let scl_xy_idx = parts_meta.iter().position(|p| p.name() == Some("SCL_XY")).expect("Part SCL_XY not found");
+        let scl_xy_idx = parts_meta.iter().position(|p| p.name() == "SCL_XY").expect("Part SCL_XY not found");
         let scl_xy_part = parts_meta.get(scl_xy_idx);
         let parent_idx = scl_xy_part.parent_index();
         assert!(parent_idx >= 0);
         let parent_part = parts_meta.get(parent_idx as usize);
-        assert_eq!(parent_part.name(), Some("LSCL_XY"));
+        assert_eq!(parent_part.name(), "LSCL_XY");
 
         // Visibility (Hide flag) check
-        let hide_part_idx = parts_meta.iter().position(|p| p.name() == Some("HIDE")).expect("Part HIDE not found") as i16;
+        let hide_part_idx = parts_meta.iter().position(|p| p.name() == "HIDE").expect("Part HIDE not found") as i16;
 
         // Frame 0: Not hidden
         let frame_0_buf = context.get_frame_data(0.0).unwrap();
@@ -3121,9 +3125,8 @@ mod tests {
 
         // Find a part that has deform animation
         let mut deform_part_idx = -1;
-        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.name() == "anime_1"))
-            && let Some(parts_anime) = animation.parts_animation_data()
-        {
+        if let Some(animation) = ssab.animations().iter().find(|a| a.name() == "anime_1") {
+            let parts_anime = animation.parts_animation_data();
             for (idx, p_anime) in parts_anime.iter().enumerate() {
                 if p_anime.deform_array().is_some() {
                     deform_part_idx = idx as i32;
@@ -3185,8 +3188,8 @@ mod tests {
 
         let ssab_buf = context.get_ssab_data().unwrap();
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-        let parts_meta = ssab.parts().expect("No parts in ssab");
-        let shape_idx = parts_meta.iter().position(|p| p.name() == Some("shape_1")).expect("shape_1 not found") as i16;
+        let parts_meta = ssab.parts();
+        let shape_idx = parts_meta.iter().position(|p| p.name() == "shape_1").expect("shape_1 not found") as i16;
 
         let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data");
         let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };

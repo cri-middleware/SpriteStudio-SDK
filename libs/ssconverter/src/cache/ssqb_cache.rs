@@ -13,9 +13,9 @@ impl SsqbCache {
             .iter()
             .map(|sequence_item_t| {
                 let sequence_item_arg = ssab::ssqb::ss::format::SequenceItemArgs {
-                    ref_anime_pack: sequence_item_t.ref_anime_pack.as_ref().map(|s| fb.create_shared_string(s)),
+                    ref_anime_pack: Some(fb.create_shared_string(&sequence_item_t.ref_anime_pack)),
                     ref_anime_pack_hash: sequence_item_t.ref_anime_pack_hash,
-                    ref_anime_name: sequence_item_t.ref_anime_name.as_ref().map(|s| fb.create_shared_string(s)),
+                    ref_anime_name: Some(fb.create_shared_string(&sequence_item_t.ref_anime_name)),
                     ref_anime_name_hash: sequence_item_t.ref_anime_name_hash,
                     repeat_count: sequence_item_t.repeat_count,
                 };
@@ -27,8 +27,9 @@ impl SsqbCache {
     }
     pub fn create_shared_sequence_binary<'a>(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, sequence_binary_t: &ssab::ssqb::ss::format::SsSequenceBinaryT) -> flatbuffers::WIPOffset<ssab::ssqb::ss::format::SsSequenceBinary<'a>> {
         let mut args = ssab::ssqb::ss::format::SsSequenceBinaryArgs::default();
-        args.sequence_list = sequence_binary_t.sequence_list.as_ref().map(|sequence_list| {
-            let v = sequence_list
+        args.sequence_list = Some({
+            let v = sequence_binary_t
+                .sequence_list
                 .iter()
                 .map(|sequence| {
                     let mut s_args = ssab::ssqb::ss::format::SequenceArgs::default();
