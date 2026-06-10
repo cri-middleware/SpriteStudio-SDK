@@ -2875,11 +2875,9 @@ mod tests {
                 let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
                 println!("  ssab: {}", f.file_name().unwrap().to_str().unwrap());
                 println!("  parts");
-                if let Some(parts) = ssab.parts() {
-                    parts.iter().enumerate().for_each(|(idx, part)| {
-                        println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name().unwrap());
-                    })
-                }
+                ssab.parts().iter().enumerate().for_each(|(idx, part)| {
+                    println!("    id: {}, parent_id: {}, type: {}, name: {}", idx, part.parent_index(), part.part_type_type().variant_name().unwrap(), part.name());
+                });
 
                 println!();
             }
@@ -2903,8 +2901,8 @@ mod tests {
         {
             let ssab_buf = context.get_ssab_data().unwrap();
             let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-            let parts_meta = ssab.parts().expect("No parts in ssab");
-            pos_xyz_idx = parts_meta.iter().position(|p| p.name() == Some("POS_XYZ")).expect("Part POS_XYZ not found") as i16;
+            let parts_meta = ssab.parts();
+            pos_xyz_idx = parts_meta.iter().position(|p| p.name() == "POS_XYZ").expect("Part POS_XYZ not found") as i16;
         }
 
         // Test frame 0
@@ -2967,18 +2965,18 @@ mod tests {
 
         let ssab_buf = context.get_ssab_data().unwrap();
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-        let parts_meta = ssab.parts().expect("No parts in ssab");
+        let parts_meta = ssab.parts();
 
         // Hierarchy check
-        let scl_xy_idx = parts_meta.iter().position(|p| p.name() == Some("SCL_XY")).expect("Part SCL_XY not found");
+        let scl_xy_idx = parts_meta.iter().position(|p| p.name() == "SCL_XY").expect("Part SCL_XY not found");
         let scl_xy_part = parts_meta.get(scl_xy_idx);
         let parent_idx = scl_xy_part.parent_index();
         assert!(parent_idx >= 0);
         let parent_part = parts_meta.get(parent_idx as usize);
-        assert_eq!(parent_part.name(), Some("LSCL_XY"));
+        assert_eq!(parent_part.name(), "LSCL_XY");
 
         // Visibility (Hide flag) check
-        let hide_part_idx = parts_meta.iter().position(|p| p.name() == Some("HIDE")).expect("Part HIDE not found") as i16;
+        let hide_part_idx = parts_meta.iter().position(|p| p.name() == "HIDE").expect("Part HIDE not found") as i16;
 
         // Frame 0: Not hidden
         let frame_0_buf = context.get_frame_data(0.0).unwrap();
@@ -3127,9 +3125,8 @@ mod tests {
 
         // Find a part that has deform animation
         let mut deform_part_idx = -1;
-        if let Some(animation) = ssab.animations().and_then(|animes| animes.iter().find(|a| a.name() == "anime_1"))
-            && let Some(parts_anime) = animation.parts_animation_data()
-        {
+        if let Some(animation) = ssab.animations().iter().find(|a| a.name() == "anime_1") {
+            let parts_anime = animation.parts_animation_data();
             for (idx, p_anime) in parts_anime.iter().enumerate() {
                 if p_anime.deform_array().is_some() {
                     deform_part_idx = idx as i32;
@@ -3191,8 +3188,8 @@ mod tests {
 
         let ssab_buf = context.get_ssab_data().unwrap();
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
-        let parts_meta = ssab.parts().expect("No parts in ssab");
-        let shape_idx = parts_meta.iter().position(|p| p.name() == Some("shape_1")).expect("shape_1 not found") as i16;
+        let parts_meta = ssab.parts();
+        let shape_idx = parts_meta.iter().position(|p| p.name() == "shape_1").expect("shape_1 not found") as i16;
 
         let frame_data_buf = context.get_frame_data(0.0).expect("Failed to get frame data");
         let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(frame_data_buf) };

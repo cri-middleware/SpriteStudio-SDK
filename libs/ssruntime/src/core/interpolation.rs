@@ -4,7 +4,6 @@ use ssab::ssab::ss::format::InterpolationType;
 use ssinterpolate::interpolate::*;
 
 const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::all();
-const UPDATE_FLAG_OFF: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
 #[inline]
 pub fn get_interpolated_rate(interpolation: InterpolationType, frame_no: f32, prev_frame: f32, next_frame: f32, curve: Option<ssab::ssab::ss::format::SsCurve>, easing_rate: f32) -> f32 {
@@ -557,9 +556,10 @@ pub fn evaluate_skew(array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset
 /// `index_out`. Both output buffers are cleared at entry, so the caller
 /// can reuse them across parts without manual reset.
 ///
-/// Returns `Some(flags)` if a key was found at/before `frame_no`. The
-/// flags mirror the same on/off semantics as the scalar `evaluate_*`
-/// helpers — `UPDATE_FLAG_OFF` when the matching key had no payload.
+/// Returns `Some(flags)` if a key was found at/before `frame_no`,
+/// carrying the same update semantics as the scalar `evaluate_*` helpers.
+/// Deform values are required on every key, so a found key always reports
+/// `UPDATE_FLAG_ON`.
 #[inline]
 pub fn evaluate_deform(
     array: flatbuffers::Vector<'_, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataDeform<'_>>>,
