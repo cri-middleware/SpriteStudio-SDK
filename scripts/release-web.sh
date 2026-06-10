@@ -30,12 +30,16 @@ fi
 
 pushd ${ROOTDIR} > /dev/null
 
-# ssruntime (playback Brain) -> pkg/web
-OUT_DIR="../../pkg/web/${BUILD_MODE}"
-/bin/rm -rf "pkg/web/${BUILD_MODE}"
-/bin/cp "LICENSE.md" "libs/ssruntime/LICENSE.md"
+# This script stays build-only: it must not depend on cargo-about. wasm-pack
+# bundles each crate's committed LICENSE.md automatically; the third-party
+# THIRD-PARTY-LICENSES.md is added downstream by the release pipeline (the
+# package job runs scripts/generate-licenses.sh and copies it into each
+# package). Run that script manually first if you want the notice locally.
+
+# ssruntime (playback Brain) -> pkg/runtime-web
+OUT_DIR="../../pkg/runtime-web/${BUILD_MODE}"
+/bin/rm -rf "pkg/runtime-web/${BUILD_MODE}"
 $WASM_PACK build libs/ssruntime ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_DIR} -- --features web --no-default-features
-/bin/rm "libs/ssruntime/LICENSE.md"
 
 # ssconverter (sspj -> .ssab) -> pkg/converter-web. Sequential conversion;
 # JS supplies project files in-memory (no rayon, no filesystem on wasm).
@@ -43,8 +47,6 @@ $WASM_PACK build libs/ssruntime ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_
 # (.cargo/config.toml, intended for the runtime) for this build.
 CONVERTER_OUT_DIR="../../pkg/converter-web/${BUILD_MODE}"
 /bin/rm -rf "pkg/converter-web/${BUILD_MODE}"
-/bin/cp "LICENSE.md" "libs/ssconverter/LICENSE.md"
 RUSTFLAGS="-C target-feature=-simd128" $WASM_PACK build libs/ssconverter ${WASM_PACK_FLAGS} --target web --out-dir ${CONVERTER_OUT_DIR} -- --features web --no-default-features
-/bin/rm "libs/ssconverter/LICENSE.md"
 
 popd > /dev/null
