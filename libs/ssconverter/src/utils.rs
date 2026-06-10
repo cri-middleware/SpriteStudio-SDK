@@ -26,6 +26,7 @@ pub fn cellmap_basename(file_name: &str) -> &str {
     file_name.strip_suffix(CELLMAP_FILE_EXT).unwrap_or(file_name)
 }
 
+#[cfg(feature = "native")]
 pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate::ConverterError> {
     let file_path_buf = std::path::PathBuf::from(file);
     if file_path_buf.is_absolute() {
@@ -48,6 +49,7 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
     Ok(())
 }
 
+#[cfg(feature = "native")]
 pub fn get_ssab_output_directory(sspj_path: &std::path::Path, embedded: bool) -> Result<std::path::PathBuf, crate::ConverterError> {
     let suffix = if embedded { "_emb_ssab" } else { "_ssab" };
     let Some(stem) = sspj_path.file_stem() else {
@@ -139,6 +141,7 @@ pub fn get_assets_of_ssab_file(ssab_pair: (&String, &[u8]), sspj: &sspj::sspj::S
     output
 }
 
+#[cfg(any(feature = "native", feature = "web"))]
 pub fn get_assets_of_ssab_files(ssab_map: &HashMap<String, Vec<u8>>, sspj: &sspj::sspj::SsProject) -> HashMap<String, String> {
     ssab_map.iter().flat_map(|(key, value)| self::get_assets_of_ssab_file((key, value), sspj).into_iter().map(|(k, v)| (k.clone(), v.clone()))).collect()
 }

@@ -84,7 +84,7 @@ limitations under the License.
 ### <a id="Apache-2.0"></a>Apache License 2.0
 
 Used by:
-- **wide 1.4.0** (https://github.com/Lokathor/wide)
+- **wide 1.5.0** (https://github.com/Lokathor/wide)
 
 ```text
 Apache License

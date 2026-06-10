@@ -30,10 +30,21 @@ fi
 
 pushd ${ROOTDIR} > /dev/null
 
+# ssruntime (playback Brain) -> pkg/web
 OUT_DIR="../../pkg/web/${BUILD_MODE}"
 /bin/rm -rf "pkg/web/${BUILD_MODE}"
 /bin/cp "LICENSE.md" "libs/ssruntime/LICENSE.md"
 $WASM_PACK build libs/ssruntime ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_DIR} -- --features web --no-default-features
 /bin/rm "libs/ssruntime/LICENSE.md"
+
+# ssconverter (sspj -> .ssab) -> pkg/converter-web. Sequential conversion;
+# JS supplies project files in-memory (no rayon, no filesystem on wasm).
+# The converter does not need SIMD, so override the repo-wide `+simd128`
+# (.cargo/config.toml, intended for the runtime) for this build.
+CONVERTER_OUT_DIR="../../pkg/converter-web/${BUILD_MODE}"
+/bin/rm -rf "pkg/converter-web/${BUILD_MODE}"
+/bin/cp "LICENSE.md" "libs/ssconverter/LICENSE.md"
+RUSTFLAGS="-C target-feature=-simd128" $WASM_PACK build libs/ssconverter ${WASM_PACK_FLAGS} --target web --out-dir ${CONVERTER_OUT_DIR} -- --features web --no-default-features
+/bin/rm "libs/ssconverter/LICENSE.md"
 
 popd > /dev/null

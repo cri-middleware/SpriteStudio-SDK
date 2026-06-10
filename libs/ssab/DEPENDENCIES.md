@@ -11,7 +11,7 @@ This file lists the licenses of third-party dependencies used in this crate.
 ### <a id="Apache-2.0"></a>Apache License 2.0
 
 Used by:
-- **bitflags 2.11.1** (https://github.com/bitflags/bitflags)
+- **bitflags 2.13.0** (https://github.com/bitflags/bitflags)
 
 ```text
                               Apache License

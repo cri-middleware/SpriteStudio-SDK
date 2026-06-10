@@ -16,7 +16,7 @@ Used by:
 - **crossbeam-deque 0.8.6** (https://github.com/crossbeam-rs/crossbeam)
 - **crossbeam-epoch 0.9.18** (https://github.com/crossbeam-rs/crossbeam)
 - **crossbeam-utils 0.8.21** (https://github.com/crossbeam-rs/crossbeam)
-- **either 1.15.0** (https://github.com/rayon-rs/either)
+- **either 1.16.0** (https://github.com/rayon-rs/either)
 - **rayon-core 1.13.0** (https://github.com/rayon-rs/rayon)
 - **rayon 1.12.0** (https://github.com/rayon-rs/rayon)
 
@@ -318,7 +318,7 @@ limitations under the License.
 ### <a id="MIT"></a>MIT License
 
 Used by:
-- **memchr 2.8.0** (https://github.com/BurntSushi/memchr)
+- **memchr 2.8.1** (https://github.com/BurntSushi/memchr)
 
 ```text
 The MIT License (MIT)

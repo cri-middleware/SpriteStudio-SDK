@@ -12,15 +12,12 @@ This CLI wraps [libssconverter](https://github.com/SpriteStudio/SpriteStudio7-SD
 
 ## Single Mode
 
-Converts a single `.sspj` project file or a `.zip` file containing a project.
+Converts a single `.sspj` project file.
 In this mode, you can specify an output directory and enable file watching.
 
 ```bash
 # Convert a single project
 $ ssconverter-cli project.sspj
-
-# Convert a zipped project
-$ ssconverter-cli project.zip
 
 # Convert and specify output directory
 $ ssconverter-cli project.sspj -o ./output_folder

@@ -12,10 +12,9 @@ const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_S
     version = VERSION,
     about = "Converts SpriteStudio 7 projects (.sspj) to optimized binary files (.ssab)",
     override_usage = "
-  single mode: convert a single sspj project or a single sspj project zip file
+  single mode: convert a single sspj project
   usage:
     $ ssconverter-cli [OPTIONS] <sspj_file>
-    $ ssconverter-cli [OPTIONS] <sspj_zip_file>
 
   batch mode: convert multiple sspj projects
   usage:
@@ -27,7 +26,7 @@ struct Cli {
     #[arg(
         required = true,
         value_name = "PATHS", 
-        help = "Paths to .sspj files, zip archives, or directories containing projects",
+        help = "Paths to .sspj files or directories containing projects",
         num_args = 1..
     )]
     files: Vec<PathBuf>,

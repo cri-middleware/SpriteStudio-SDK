@@ -1,165 +1,43 @@
-use crate::utils;
 use sspj::ssloader::SsLoader;
+
+#[cfg(feature = "web")]
 use std::collections::HashMap;
-use std::io::{Cursor, ErrorKind};
 
 pub trait AssetProvider: Sync + Send {
     fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError>;
     fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error>;
-    fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error>;
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError>;
-    fn is_zip(&self) -> bool;
 }
 
+/// Filesystem-backed provider used by the CLI / native (Tauri) builds.
+#[cfg(feature = "native")]
 pub struct FileSystemAssetProvider {
     path_buf: std::path::PathBuf,
     base_path: std::path::PathBuf,
 }
 
+#[cfg(feature = "native")]
 impl FileSystemAssetProvider {
     pub fn new(path: &std::path::Path) -> Result<Self, crate::converter::converter_error::ConverterError> {
         Ok(Self { path_buf: path.to_path_buf(), base_path: path.parent().unwrap_or(std::path::Path::new("")).to_path_buf() })
     }
 }
 
+#[cfg(feature = "native")]
 impl AssetProvider for FileSystemAssetProvider {
     fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError> {
-        utils::validate_file_path(path, &self.base_path)
+        crate::utils::validate_file_path(path, &self.base_path)
     }
     fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error> {
         let path = self.base_path.join(path);
         std::fs::read(path)
     }
-    fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error> {
-        let src_path = self.base_path.join(src_path);
-        let dst_path = std::path::PathBuf::from(dst_path);
-        let r = std::fs::copy(src_path.as_path(), dst_path.as_path());
-        match r {
-            Ok(_) => Ok(()),
-            Err(e) => Err(std::io::Error::other(format!("copy_asset: {:?}", e))),
-        }
-    }
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
         sspj::sspj::SsProject::load_from_file(self.path_buf.as_path())
     }
-    fn is_zip(&self) -> bool {
-        false
-    }
 }
 
-pub struct ZipAssetProvider {
-    sspj_name: String,
-    sspj_map: HashMap<String, String>,
-    binary_map: HashMap<String, Vec<u8>>,
-}
-
-impl ZipAssetProvider {
-    pub fn new(_zip_name: &str, zip_content: &[u8]) -> Result<Self, crate::converter::converter_error::ConverterError> {
-        let cursor = Cursor::new(zip_content);
-        let mut archive = zip::ZipArchive::new(cursor).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::InvalidData, format!("Zip error: {:?}", e))))?;
-
-        // find sspj file
-        let mut sspj_name = "".to_string();
-        let mut sspj_dir = "".to_string();
-        for i in 0..archive.len() {
-            let file = archive.by_index(i).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::InvalidData, format!("Zip entry error: {:?}", e))))?;
-            if file.is_dir() {
-                continue;
-            }
-
-            let path_key = file.name().to_string();
-            if path_key.ends_with(".sspj") {
-                let path_buf = std::path::PathBuf::from(file.name());
-                sspj_name = path_buf
-                    .file_name()
-                    .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Invalid SSPJ file name in zip".to_string()))?
-                    .to_str()
-                    .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Non-UTF8 path in zip".to_string()))?
-                    .to_string();
-                sspj_dir = path_buf
-                    .parent()
-                    .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Could not get parent of SSPJ in zip".to_string()))?
-                    .to_str()
-                    .ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Non-UTF8 parent path in zip".to_string()))?
-                    .to_string();
-            }
-        }
-        if sspj_name.is_empty() {
-            return Err(crate::converter::converter_error::ConverterError::ConversionFailed("SsProject file not found in zip".to_string()));
-        }
-
-        let mut sspj_map = HashMap::new();
-        let mut binary_map = HashMap::new();
-        for i in 0..archive.len() {
-            let mut file = archive.by_index(i).map_err(|e| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(ErrorKind::InvalidData, format!("Zip entry error: {:?}", e))))?;
-            if file.is_dir() {
-                continue;
-            }
-
-            let path_buf = std::path::PathBuf::from(file.name());
-            let path_key = file.name().to_string();
-            let file_path = path_buf.strip_prefix(&sspj_dir).map_err(|_| crate::converter::converter_error::ConverterError::ConversionFailed(format!("Failed to strip prefix: {} from {}", sspj_dir, file.name())))?;
-
-            if path_key.ends_with(".sspj") || path_key.ends_with(".ssae") || path_key.ends_with(".ssce") || path_key.ends_with(".ssee") || path_key.ends_with(".ssqe") || path_key.ends_with(".ssse") || path_key.ends_with(".fnt") {
-                let mut s = String::new();
-                use std::io::Read;
-                file.read_to_string(&mut s).map_err(crate::converter::converter_error::ConverterError::IoError)?;
-
-                sspj_map.insert(file_path.to_string_lossy().to_string(), s);
-            } else {
-                let mut buf = Vec::new();
-                use std::io::Read;
-                file.read_to_end(&mut buf).map_err(crate::converter::converter_error::ConverterError::IoError)?;
-                binary_map.insert(file_path.to_string_lossy().to_string(), buf);
-            }
-        }
-
-        Ok(Self { sspj_name, sspj_map, binary_map })
-    }
-}
-
-impl AssetProvider for ZipAssetProvider {
-    fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError> {
-        // let asset_path = std::path::PathBuf::from(&self.sspj_dir).join(path).as_path().to_str().unwrap().to_string();
-        if self.sspj_map.get(path).is_some() {
-            return Ok(());
-        }
-        if self.binary_map.get(path).is_some() {
-            return Ok(());
-        };
-        Err(crate::ConverterError::ConversionFailed(format!("Asset not found in zip: {}", path)))
-    }
-
-    fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error> {
-        // let asset_path = std::path::PathBuf::from(&self.sspj_dir).join(path).as_path().to_str().unwrap().to_string();
-        if let Some(r) = self.sspj_map.get(path) {
-            return Ok(r.as_bytes().to_vec());
-        }
-        if let Some(r) = self.binary_map.get(path) {
-            return Ok(r.clone());
-        }
-        Err(std::io::Error::new(ErrorKind::NotFound, format!("Asset not found in zip: {}", path)))
-    }
-
-    fn copy_asset(&self, src_path: &str, dst_path: &str) -> Result<(), std::io::Error> {
-        let data = self.read_asset(src_path)?;
-        let dst_path_buf = std::path::PathBuf::from(dst_path);
-
-        if let Some(parent) = dst_path_buf.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-
-        std::fs::write(dst_path_buf.as_path(), data).map_err(|e| std::io::Error::other(format!("copy_asset: {:?}", e)))
-    }
-
-    fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
-        sspj::sspj::SsProject::load_from_maps(&self.sspj_name, &self.sspj_map)
-    }
-    fn is_zip(&self) -> bool {
-        true
-    }
-}
-
+#[cfg(feature = "native")]
 pub fn create_asset_provider(path: &std::path::Path) -> Result<Box<dyn AssetProvider>, crate::converter::converter_error::ConverterError> {
     if path.as_os_str().is_empty() {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Path is empty")));
@@ -167,15 +45,75 @@ pub fn create_asset_provider(path: &std::path::Path) -> Result<Box<dyn AssetProv
     if !path.exists() {
         return Err(crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Path does not exist: {:?}", path))));
     }
-    if path.extension().is_some_and(|ext| ext == "zip") {
-        let data = std::fs::read(path).map_err(crate::converter::converter_error::ConverterError::IoError)?;
-        let file_name = path
-            .file_name()
-            .ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid zip file name")))?
-            .to_str()
-            .ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Non-UTF8 zip file name")))?;
-        Ok(Box::new(ZipAssetProvider::new(file_name, &data)?))
-    } else {
-        Ok(Box::new(FileSystemAssetProvider::new(path)?))
+    Ok(Box::new(FileSystemAssetProvider::new(path)?))
+}
+
+/// In-memory provider for the web (WASM) build. JS reads the project files
+/// (via the File System Access API / `<input webkitdirectory>` / drag-drop)
+/// and hands them across the boundary as `name -> bytes`; there is no
+/// filesystem on this target. Asset paths are relative to the `.sspj`
+/// directory, matching what [`sspj::sspj::SsProject::load_from_maps`] expects.
+#[cfg(feature = "web")]
+pub struct MemoryAssetProvider {
+    sspj_name: String,
+    sspj_map: HashMap<String, String>,
+    binary_map: HashMap<String, Vec<u8>>,
+}
+
+#[cfg(feature = "web")]
+impl MemoryAssetProvider {
+    /// Build a provider from a flat `(path, bytes)` list supplied by the host
+    /// (e.g. a directory the user picked in the browser). Locates the `.sspj`,
+    /// re-bases every path on the `.sspj` directory, and classifies entries
+    /// into text (XML / font) vs binary (images, ...) maps — mirroring how the
+    /// project layout is interpreted on the filesystem.
+    pub fn from_files(files: Vec<(String, Vec<u8>)>) -> Result<Self, crate::ConverterError> {
+        use std::path::{Path, PathBuf};
+
+        let mut sspj_name = String::new();
+        let mut sspj_dir = String::new();
+        for (path, _) in &files {
+            if path.ends_with(".sspj") {
+                let pb = PathBuf::from(path);
+                sspj_name = pb.file_name().and_then(|n| n.to_str()).ok_or_else(|| crate::ConverterError::ConversionFailed("Invalid .sspj file name".to_string()))?.to_string();
+                sspj_dir = pb.parent().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
+            }
+        }
+        if sspj_name.is_empty() {
+            return Err(crate::ConverterError::ConversionFailed("SsProject (.sspj) file not found in the provided files".to_string()));
+        }
+
+        let mut sspj_map = HashMap::new();
+        let mut binary_map = HashMap::new();
+        for (path, data) in files {
+            let rel = Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy().to_string();
+            if path.ends_with(".sspj") || path.ends_with(".ssae") || path.ends_with(".ssce") || path.ends_with(".ssee") || path.ends_with(".ssqe") || path.ends_with(".ssse") || path.ends_with(".fnt") {
+                let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {:?}", path, e)))?;
+                sspj_map.insert(rel, text);
+            } else {
+                binary_map.insert(rel, data);
+            }
+        }
+
+        Ok(Self { sspj_name, sspj_map, binary_map })
+    }
+}
+
+#[cfg(feature = "web")]
+impl AssetProvider for MemoryAssetProvider {
+    fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError> {
+        if self.sspj_map.contains_key(path) || self.binary_map.contains_key(path) { Ok(()) } else { Err(crate::ConverterError::ConversionFailed(format!("Asset not found: {}", path))) }
+    }
+    fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error> {
+        if let Some(s) = self.sspj_map.get(path) {
+            return Ok(s.as_bytes().to_vec());
+        }
+        if let Some(b) = self.binary_map.get(path) {
+            return Ok(b.clone());
+        }
+        Err(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Asset not found: {}", path)))
+    }
+    fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
+        sspj::sspj::SsProject::load_from_maps(&self.sspj_name, &self.sspj_map)
     }
 }
