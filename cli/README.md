@@ -13,7 +13,7 @@ This CLI wraps [libssconverter](https://github.com/SpriteStudio/SpriteStudio7-SD
 ## Single Mode
 
 Converts a single `.sspj` project file.
-In this mode, you can specify an output directory and enable file watching.
+In this mode, you can specify an output directory.
 
 ```bash
 # Convert a single project
@@ -26,7 +26,6 @@ $ ssconverter-cli project.sspj -o ./output_folder
 ### Options (Single Mode)
 - `-e`, `--embedded`: Embed referenced assets (images, etc.) directly into the generated `.ssab` file.
 - `-o`, `--out-dir <directory>`: Specify the output directory for generated files.
-- `-w`, `--watch`: Watch the project directory for changes and automatically re-convert when files are modified.
 - `-h`, `--help`: Print help information.
 
 ## Batch Mode
@@ -47,7 +46,7 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 - `-e`, `--embedded`: Embed referenced assets directly into the generated `.ssab` files.
 - `-h`, `--help`: Print help information.
 
-_Note: The `--out-dir` and `--watch` options are not available in batch mode._
+_Note: The `--out-dir` option is not available in batch mode._
 
 # Installation
 
@@ -73,16 +72,7 @@ Generates `project_ssab/` folder next to `project.sspj`.
 $ ssconverter-cli my_game/project.sspj
 ```
 
-**2. Watch Mode**
-
-Keeps the process running and re-converts whenever you save changes in SpriteStudio.
-
-```bash
-$ ssconverter-cli my_game/project.sspj --watch
-```
-
-
-**3. Embedded Assets**
+**2. Embedded Assets**
 
 Creates a single binary containing all textures, useful for simple distribution.
 

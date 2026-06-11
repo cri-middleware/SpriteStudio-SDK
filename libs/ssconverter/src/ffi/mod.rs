@@ -121,35 +121,6 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_converter_watch(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char) {
-    let _ = catch_unwind(AssertUnwindSafe(|| {
-        let context = unsafe { &mut *ctx };
-        context.error = None;
-        context.error_c = None;
-
-        if sspj.is_null() || output_dir.is_null() {
-            return;
-        }
-
-        let sspj_buf = unsafe { CStr::from_ptr(sspj) };
-        let sspj_str = sspj_buf.to_string_lossy().into_owned();
-        let sspj_path = std::path::PathBuf::from(&sspj_str);
-
-        let output_dir_buf = unsafe { CStr::from_ptr(output_dir) };
-        let output_dir_str = Some(std::ffi::OsString::from(output_dir_buf.to_string_lossy().into_owned()));
-        let mut config = ConverterConfig::default();
-        config.output = output_dir_str.clone();
-
-        context.should_stop = Arc::new(AtomicBool::new(false));
-        let should_stop_clone = context.should_stop.clone();
-
-        let c = config.clone();
-        let handler = std::thread::spawn(move || crate::watch::watch_sspj_project(sspj_path.as_path(), &c, should_stop_clone));
-        context.handler = Some(handler);
-    }));
-}
-
-#[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
     let context = unsafe { &mut *ctx };
     if let Some(scan) = &context.scan {

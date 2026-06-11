@@ -11,7 +11,6 @@ It utilizes `sspj` to parse the project and `ssab` to generate FlatBuffers binar
 - **Project Conversion**: Converts `.sspj` (project) to `.ssab` (animation) and `.ssqe` (sequence) to `.ssqb`.
 - **Optimization**: Deduplicates data structures (like coordinates, colors, strings) during FlatBuffers serialization. This can significantly reduce the binary size (often by 50% or more for complex animations) and improves cache efficiency during runtime playback.
 - **Embedded Mode**: Optionally embeds referenced assets (images, etc.) directly into the binary.
-- **File Watching**: Monitors the project directory for changes and automatically re-converts files.
 - **C-API / FFI**: Provides C-compatible interfaces for integration with other languages (C++, etc.).
 
 # Installation
@@ -96,6 +95,5 @@ void convert() {
 
 - **`converter`**: Core logic for mapping `sspj` data structures to `ssab` FlatBuffers schemas.
 - **`cache`**: Implements caching and deduplication logic for FlatBuffers objects to reduce file size.
-- **`watcher`**: Directory watching functionality using `notify-debouncer-mini`.
 - **`ffi`**: C-API wrapper functions.
 

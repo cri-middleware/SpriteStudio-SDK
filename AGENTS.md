@@ -71,10 +71,9 @@ All release deliverables for `ssruntime` (mobile / desktop / WASM) are pure no_s
 | Feature | Purpose |
 |---------|---------|
 | `ffi` (default) | C-API exports; implies `native`. |
-| `native` | CLI / Tauri backend: parallel conversion + filesystem I/O + scan + watch. Implies `parallel`, `scan`, `watch`. |
+| `native` | CLI / Tauri backend: parallel conversion + filesystem I/O + scan. Implies `parallel`, `scan`. |
 | `parallel` | rayon-backed parallel conversion; propagates to `sspj/parallel`. |
 | `scan` | directory traversal (`walkdir`) for batch conversion. |
-| `watch` | filesystem watch mode (`notify-debouncer-mini`). |
 | `web` | browser WASM bindings (`wasm-bindgen` + `js-sys`). Sequential, with in-memory I/O via `MemoryAssetProvider`. |
 
 The web target is packaged by `scripts/release-web.sh` into `pkg/converter-web/`. **rayon spans two crates:** both `ssconverter` and `sspj` use it (the web entry path `sspj::load_from_maps` is itself parallel), so the `parallel` feature gates rayon in *both* — the sequential fallback lives in each crate's `parallel` module (rayon cannot spawn threads on `wasm32-unknown-unknown`). Tauri consumes the native profile (`{ default-features = false, features = ["native"] }`) for full rayon + filesystem; file picking is the host's job (e.g. `tauri-plugin-dialog`), so the converter has no zip/archive handling.

@@ -1,8 +1,6 @@
 use clap::{CommandFactory, Parser};
 use std::ffi::OsString;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 use std::thread::JoinHandle;
 
 const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_SHA"));
@@ -36,9 +34,6 @@ struct Cli {
 
     #[arg(short, long, value_name = "directory", help = "output directory path (available for single mode only)")]
     out_dir: Option<OsString>,
-
-    #[arg(short, long, help = "watch modifying a sspj project")]
-    watch: bool,
 }
 
 /*
@@ -66,20 +61,6 @@ fn main() -> Result<(), ssconverter::ConverterError> {
     if sspj_paths.len() == 1 {
         config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
         config.output = args.out_dir;
-        if args.watch {
-            // watch mode
-            let should_stop = Arc::new(AtomicBool::new(false));
-            let s = should_stop.clone();
-            ctrlc::set_handler(move || {
-                s.store(true, std::sync::atomic::Ordering::Relaxed);
-                println!("\nStopping watcher...");
-            })
-            .expect("Error setting Ctrl-C handler");
-
-            println!("Watching for changes in {:?}... (Press Ctrl+C to stop)", sspj_paths[0].as_path());
-            ssconverter::watch::watch_sspj_project(sspj_paths[0].as_path(), &config, should_stop)?;
-            return Ok(());
-        }
     } else {
         // batch mode
         config.convert_config = ssconverter::ConvertConfig { embedded: args.embedded, ..Default::default() };
