@@ -13,8 +13,6 @@ pub use converter::converter_error::*;
 pub use utils::version_string;
 #[cfg(feature = "scan")]
 pub mod scan;
-#[cfg(feature = "watch")]
-pub mod watch;
 
 mod asset_provider;
 

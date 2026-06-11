@@ -13,7 +13,7 @@
 ## シングルモード (Single Mode)
 
 単一の `.sspj` プロジェクトファイルを変換します。
-このモードでは、出力ディレクトリの指定や、ファイル監視（Watcher）機能が利用可能です。
+このモードでは、出力ディレクトリの指定が可能です。
 
 ```bash
 # 単一のプロジェクトを変換
@@ -26,7 +26,6 @@ $ ssconverter-cli project.sspj -o ./output_folder
 ### オプション (シングルモード)
 - `-e`, `--embedded`: 参照されているアセット（画像など）を生成される `.ssab` ファイル内に直接埋め込みます。
 - `-o`, `--out-dir <directory>`: 生成ファイルの出力先ディレクトリを指定します。
-- `-w`, `--watch`: プロジェクトディレクトリを監視し、ファイルが変更されたら自動的に再変換を行います。
 - `-h`, `--help`: ヘルプを表示します。
 
 ## バッチモード (Batch Mode)
@@ -47,7 +46,7 @@ $ ssconverter-cli ./assets/projects ./extra_assets
 - `-e`, `--embedded`: アセットを `.ssab` ファイル内に埋め込みます。
 - `-h`, `--help`: ヘルプを表示します。
 
-_注意: バッチモードでは `--out-dir` および `--watch` オプションは利用できません。_
+_注意: バッチモードでは `--out-dir` オプションは利用できません。_
 
 # インストール
 
@@ -72,14 +71,7 @@ $ cargo install --path cli
 $ ssconverter-cli my_game/project.sspj
 ```
 
-**2. 監視モード (Watch Mode)**
-プロセスを常駐させ、SpriteStudio で保存などの変更が行われるたびに自動で再変換します。
-
-```bash
-$ ssconverter-cli my_game/project.sspj --watch
-```
-
-**3. アセット埋め込み**
+**2. アセット埋め込み**
 テクスチャなどの依存ファイルをすべて含んだ単一のバイナリを生成します。配布や管理を単純化したい場合に便利です。
 
 ```bash

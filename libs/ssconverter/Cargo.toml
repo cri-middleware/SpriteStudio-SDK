@@ -19,7 +19,6 @@ sspj = { workspace = true }
 ssab = { workspace = true, features = ["converter"] }
 rayon = { workspace = true, optional = true }
 walkdir = { version = "2.5.0", optional = true }
-notify-debouncer-mini = { version = "0.7.0", optional = true }
 wasm-bindgen = { workspace = true, optional = true }
 js-sys = { version = "0.3.100", optional = true }
 
@@ -28,14 +27,12 @@ default = ["ffi"]
 # C-API exports. Requires the native (filesystem) conversion paths.
 ffi = ["native"]
 # Native build (CLI / Tauri backend): parallel conversion, filesystem I/O,
-# directory scanning, and file watching.
-native = ["parallel", "scan", "watch"]
+# and directory scanning.
+native = ["parallel", "scan"]
 # Parallel conversion via rayon. Propagates to sspj's parallel parsing.
 parallel = ["dep:rayon", "sspj/parallel"]
 # Directory traversal for batch conversion (CLI).
 scan = ["dep:walkdir"]
-# Filesystem watch mode (CLI).
-watch = ["dep:notify-debouncer-mini"]
 # Browser WASM bindings (wasm32-unknown-unknown). Implies sequential
 # conversion since rayon cannot spawn threads there.
 # Build with: --no-default-features --features web
