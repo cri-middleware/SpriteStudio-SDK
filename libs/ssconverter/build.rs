@@ -3,7 +3,7 @@
 use std::env;
 use std::error::Error;
 use std::path::PathBuf;
-use vergen_gitcl::{Emitter, GitclBuilder};
+use vergen_gitcl::{Emitter, Gitcl};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Tell cargo to rerun this script if src directory changes
@@ -36,8 +36,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-    // get commit hash
-    let git = GitclBuilder::default().sha(true).build()?;
+        // get commit hash
+        let git = Gitcl::builder().sha(true).build();
 
     Emitter::default().add_instructions(&git)?.emit()?;
 

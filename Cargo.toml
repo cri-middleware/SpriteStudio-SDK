@@ -11,7 +11,7 @@ members = [
 [workspace.package]
 version = "7.0.0-alpha01"
 edition = "2024"
-rust-version = "1.95"
+rust-version = "1.96"
 authors = ["CRI Middleware Co., Ltd."]
 license = "BSD-3-Clause"
 repository = "https://github.com/SpriteStudio/SpriteStudio7-SDK"
@@ -33,7 +33,7 @@ dlmalloc = "0.2.14"
 rayon = "1.12.0"
 cbindgen = "0.29.4"
 csbindgen = "1.9.8"
-vergen-gitcl = { version = "9.1.0", features = ["build"] }
+vergen-gitcl = { version = "10.0.0", features = ["build"] }
 
 [profile.dev]
 panic = "abort"
