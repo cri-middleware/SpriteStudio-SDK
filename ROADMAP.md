@@ -16,7 +16,12 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 ## Phase 2: Ecosystem & Integration
 
 *   [ ] **Mask Support**: Implementation of per-part mask evaluation and DrawBatch emission.
-*   [ ] **Override Layer API**: per-part runtime overrides for color, cell reference, and visibility. FFI/state only; no `.fbs` change. Prerequisite for migrating existing Players that depend on `PartsColorChange` / `CellChangeParts` / `HideSet`-equivalent semantics. Begin design during Phase 1's Godot integration so the C-API surface is validated on a fresh Player first.
+*   [ ] **Override Layer API**: one cohesive per-part runtime override surface covering color, cell reference, and visibility. FFI/state only; no `.fbs` change. Prerequisite for migrating existing Players that depend on `PartsColorChange` / `CellChangeParts` / `HideSet`-equivalent semantics. Begin design during Phase 1's Godot integration so the C-API surface is validated on a fresh Player first.
+    *   **ssruntime work (required)**: the Rust runtime holds a per-part override table in player state and applies it during `update()` evaluation — *after* keyframe decode, *before* FrameData emission — so an override wins over (or defers to) the keyframed attribute per the priority mode below. Exposes new FFI to set/clear each override kind, addressed by part index (host resolves part name → index), plus a cell-map/texture table swap entry point. Runtime state + C-API only; no schema change.
+    *   **Color override**: per-part color with blend op (Mix / Add / Sub / Mul) and either one RGBA or four per-vertex corners (LU/RU/RD/LD); opacity carried in alpha. Mirrors `PartsColorChange`. Includes read-back of a part's authored color label (`ColorGetColorLabel`-equivalent).
+    *   **Cell-reference override**: replace the displayed cell (cell-map index + cell index; sentinel = follow animation data) per part, plus whole cell-map table replacement for runtime texture/atlas swap. Mirrors `CellChangeParts` and the cell-map table ops. Normal/Mask parts only.
+    *   **Visibility override**: force-hide / force-show a part, optionally cascading to child parts. Mirrors `HideSet`.
+    *   **Co-decided**: a per-override **priority mode** shared across all three kinds, governing coexistence with keyframed attributes — overwrite-on-next-keyframe / hold-until-next-animation / permanent (the legacy `KindIgnoreAttribute` NON / NOW_ANIMATION / PERMANENT trichotomy).
     *   **Co-decided**: sRGB-vs-linear color-value semantics, applied uniformly to keyframed and overridden colors. Settled here so Override blend modes and Player rendering share one contract.
 *   [ ] Migration of existing Players (Unity, pixi.js, etc.) to use `ssruntime`.
 *   [ ] `ssplayer-wgpu` implementation (Reference implementation for Rust-native rendering).
@@ -39,4 +44,4 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 ## Items not on the roadmap by design
 
 *   Per-part AABB in FrameData (Player can derive from vertex positions; revisit only on concrete Player-side demand).
-*   Flip override and vertex correction (expressible as Player post-processing of FrameData).
+*   Flip override and vertex correction (expressible as Player post-processing of FrameData — scale negation / UV swap; deliberately kept out of the Override Layer API. Covers legacy `FlipSetParts`).
