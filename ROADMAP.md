@@ -11,7 +11,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 *   [x] `DrawBatch` contract for cross-engine batched rendering (Brain-side batch emission with Mask batches and `mask_indices`).
 *   [x] Particle quad emission and effect events surfaced via FrameData / FFI.
 *   [x] Mesh part (`PartTypeMesh`) / Deform attribute (`PartAttributeDeform`) runtime evaluation.
-*   [ ] SSPlayer for Godot integration (serves as both C-API validation and Player migration).
+*   [x] SSPlayer for Godot integration (serves as both C-API validation and Player migration).
 
 ## Phase 2: Ecosystem & Integration
 
