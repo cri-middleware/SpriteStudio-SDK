@@ -36,8 +36,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-        // get commit hash
-        let git = Gitcl::builder().sha(true).build();
+    // get commit hash
+    let git = Gitcl::builder().sha(true).build();
 
     Emitter::default().add_instructions(&git)?.emit()?;
 
