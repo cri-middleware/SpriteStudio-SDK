@@ -1325,7 +1325,7 @@ impl<'a> Context<'a> {
         }
 
         let primary_metadata = &resource.animations[primary_anim_idx as usize];
-        if !((primary_metadata.start_frame as f32) <= frame_no && frame_no <= (primary_metadata.end_frame as f32)) {
+        if !((primary_metadata.start_frame as f32) <= frame_no && frame_no < (primary_metadata.end_frame as f32 + 1.0)) {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
 
@@ -2949,6 +2949,50 @@ mod tests {
             assert_eq!(part_state.position_x(), 32.0);
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
+    }
+
+    // Regression for the subframe-end-frame fix: `get_frame_data` accepts the
+    // half-open interval `[start_frame, end_frame + 1)` so a Player doing
+    // subframe interpolation can pass the fractional overshoot that briefly
+    // lands in `(end_frame, end_frame + 1)` at the end / loop boundary without
+    // the runtime erroring (which would blank the whole pose). Inside that
+    // trailing interval the pose holds the last keyframe — byte-for-byte
+    // identical to `end_frame`, i.e. no extrapolation. The upper bound is
+    // exclusive, and the lower bound is unchanged.
+    #[test]
+    fn get_frame_data_accepts_subframe_overshoot_at_animation_end() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let start_frame = context.get_start_frame();
+        let end_frame = context.get_end_frame();
+        assert!(end_frame > start_frame, "fixture sanity: anime_1 should span multiple frames");
+
+        // Pose at exactly `end_frame` (the last valid integer frame), copied out
+        // because the returned slice aliases the context's reused frame buffer.
+        let pose_at_end = context.get_frame_data(end_frame as f32).expect("end_frame must be valid").to_vec();
+        assert!(!pose_at_end.is_empty(), "end_frame pose should not be empty");
+
+        // Subframe overshoot into `(end_frame, end_frame + 1)` is accepted (it
+        // used to return `InvalidParameter`) and holds the `end_frame` pose
+        // exactly — no extrapolation past the final keyframe.
+        for overshoot in [0.001_f32, 0.5, 0.999] {
+            let frame_no = end_frame as f32 + overshoot;
+            let pose = context.get_frame_data(frame_no).unwrap_or_else(|_| panic!("subframe overshoot {frame_no} must be accepted")).to_vec();
+            assert_eq!(pose, pose_at_end, "pose at {frame_no} must hold the end_frame pose");
+        }
+
+        // Upper bound is exclusive: `end_frame + 1.0` (the start of the
+        // nonexistent next frame) is still rejected, as is anything below
+        // `start_frame`.
+        assert!(context.get_frame_data(end_frame as f32 + 1.0).is_err(), "end_frame + 1.0 must be rejected");
+        assert!(context.get_frame_data(start_frame as f32 - 0.5).is_err(), "below start_frame must be rejected");
     }
 
     #[test]

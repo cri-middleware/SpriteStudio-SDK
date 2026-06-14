@@ -77,6 +77,7 @@ if (!isnanf(w)) { /* 有効値 */ }
 ### `ss_runtime_get_frame_data(frame_no)` の挙動
 - **Primary**: 引数の `frame_no` で評価 (single-animation 時の挙動を維持)。
 - **Secondary**: 各 source の controller の現在 frame (`get_frame_no`) で評価。
+- 引数 `frame_no` が受け付けるのは半開区間 `[start_frame, end_frame + 1)` で、終端区間 `(end_frame, end_frame + 1)` は最終キーフレームを保持して返します。詳細は [6. サブフレーム再生 — 受け付けるフレーム範囲と終端の扱い](./06_playback_control.ja.md#受け付けるフレーム範囲と終端の扱い) を参照。
 
 ---
 
