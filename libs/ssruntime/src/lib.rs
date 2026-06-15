@@ -2521,11 +2521,14 @@ impl<'a> EffectSlot<'a> {
 
         if transitioned {
             self.ctx.reset();
-            // Set-loop semantics carried over from the SS6 player: independent
-            // effects loop within their lifetime, dependent effects play once
-            // and the C++ caller previously checked elapsed-vs-lifetime. The
-            // dead-effect early-return below covers the dependent finite case.
-            self.ctx.set_loop(independent);
+            // `independent` controls the *clock* (own delta-time vs parent-synced
+            // frame), not whether the effect loops. Looping is a property of the
+            // effect resource itself: only genuinely infinite effects loop; finite
+            // ones play once and are culled by the dead-effect early-return below
+            // (which now applies regardless of `independent`). The earlier SS6
+            // carry-over `set_loop(independent)` wrongly looped finite independent
+            // effects forever, so they never died at their lifetime.
+            self.ctx.set_loop(self.is_infinite);
             self.last_event_frame = event_frame;
             self.last_is_synthetic = is_synthetic;
             self.last_independent = independent;
@@ -2553,9 +2556,12 @@ impl<'a> EffectSlot<'a> {
             return crate::types::ss_effect_step_result::not_visible();
         }
 
-        // Dead-effect skip: dependent finite effect past its last particle's death.
-        // Independent effects loop (set_loop above) so they never drift past lifetime.
-        if !self.is_infinite && !independent && self.lifetime > 0 && relative_frame > self.lifetime as f32 {
+        // Dead-effect skip: a finite effect past its last particle's death is
+        // gone — independent or not. Independent only changes how `relative_frame`
+        // is advanced (own accumulator vs parent-synced); both clocks must still
+        // honour the effect's finite lifetime. (Previously `!independent` excluded
+        // independent effects here, so finite ones never disappeared.)
+        if !self.is_infinite && self.lifetime > 0 && relative_frame > self.lifetime as f32 {
             return crate::types::ss_effect_step_result::not_visible();
         }
 
