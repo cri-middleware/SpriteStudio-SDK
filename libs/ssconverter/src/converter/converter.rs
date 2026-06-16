@@ -28,7 +28,7 @@ where
 pub fn convert_sspj_to_ssab_data_cancellable<F>(
     asset_provider: &dyn crate::asset_provider::AssetProvider,
     config: &ConvertConfig,
-    _on_log: &F,
+    on_log: &F,
     should_stop: &AtomicBool,
 ) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
 where
@@ -38,8 +38,10 @@ where
         return Err(crate::converter::converter_error::ConverterError::Aborted);
     }
 
+    on_log("Loading SSPJ project file...");
     let sspj = asset_provider.load_sspj()?;
 
+    on_log(&format!("Starting conversion for {} animations and {} sequences...", sspj.anime_list.len(), sspj.sequence_list.len()));
     // pack sspj animation data and sequence data to ssab ssab and ssqb structures
     let ssab_model_list = par_iter!(sspj.anime_list)
         .map(|anime_pack| {
@@ -147,6 +149,8 @@ where
         None => crate::utils::get_ssab_output_directory(path, config.convert_config.embedded)?,
     };
 
+    on_log(&format!("Writing output to: {}", outdir_path.display()));
+
     if !outdir_path.exists() {
         let r = std::fs::create_dir_all(outdir_path.as_path());
         match r {
@@ -157,6 +161,7 @@ where
         }
     }
 
+    on_log(&format!("Generating {} binary files...", convert_result.len()));
     par_iter!(convert_result).try_for_each(|(name, data)| {
         if should_stop.load(Ordering::Relaxed) {
             return Err(crate::converter::converter_error::ConverterError::Aborted);
@@ -170,12 +175,14 @@ where
 
     if !config.convert_config.embedded {
         let assets = crate::utils::get_assets_of_ssab_files(&convert_result, &sspj);
+        on_log("Copying referenced assets...");
         assets
             .iter()
             .map(|(dst_rel_path, src_rel_path)| {
                 if should_stop.load(Ordering::Relaxed) {
                     return Err(crate::converter::converter_error::ConverterError::Aborted);
                 }
+                on_log(&format!("Copying asset: {}", src_rel_path));
                 let dst = outdir_path.join(dst_rel_path);
                 let dst_parent = dst.parent().ok_or_else(|| crate::converter::converter_error::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid output path")))?;
                 if !dst_parent.exists() {
