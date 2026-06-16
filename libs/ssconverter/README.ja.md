@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             embedded: false,  // テクスチャを埋め込まない
             ..Default::default()
         },
-        output: None, // デフォルトの出力先 (例: project_ssab/) を使用
+        output: None, // デフォルトの出力先 (例: project/) を使用
     };
 
     // 変換を実行してファイルを保存 (ログ出力用コールバックを指定)

@@ -2836,7 +2836,7 @@ mod tests {
 
     static TARGET_SSPJ_FILES: [&str; 5] = ["tests/overall/overall.sspj", "tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/Ringo/Ringo.sspj"];
 
-    static TARGET_SSPAB_DIRS: [&str; 5] = ["tests/overall/overall_ssab", "tests/ParticleEffect/ParticleEffect_ssab", "tests/allAttributeV7/allAttributeV7_ssab", "tests/allPartsV7/allPartsV7_ssab", "tests/Ringo/Ringo_ssab"];
+    static TARGET_SSPAB_DIRS: [&str; 5] = ["tests/overall/overall", "tests/ParticleEffect/ParticleEffect", "tests/allAttributeV7/allAttributeV7", "tests/allPartsV7/allPartsV7", "tests/Ringo/Ringo"];
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
@@ -2893,7 +2893,7 @@ mod tests {
     #[test]
     fn evaluate_animation_at_frame() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -2968,7 +2968,7 @@ mod tests {
     #[test]
     fn get_frame_data_accepts_subframe_overshoot_at_animation_end() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
         let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
@@ -3004,7 +3004,7 @@ mod tests {
     #[test]
     fn test_part_hierarchy_and_visibility() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3044,7 +3044,7 @@ mod tests {
     #[test]
     fn test_world_matrices() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3073,7 +3073,7 @@ mod tests {
     #[test]
     fn test_local_uvs() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3125,7 +3125,7 @@ mod tests {
         // `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]`.
         // Cell-bearing parts populate it; the rest stay zero.
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3160,7 +3160,7 @@ mod tests {
     #[test]
     fn test_deform_animation() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7_ssab/deform.ssab");
+        let ssab_path = get_test_base_path().join("tests/allAttributeV7/allAttributeV7/deform.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read deform.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3227,7 +3227,7 @@ mod tests {
         // keyframes, so the runtime must surface the SS6 default instead of the
         // cell-size fallback used for cell-bearing types.
         prepare();
-        let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7_ssab/shape.ssab");
+        let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/shape.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read shape.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3253,7 +3253,7 @@ mod tests {
     #[test]
     fn test_ssab_data_and_resource_separation() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         // 1. Test SsabData load_copy
@@ -3283,7 +3283,7 @@ mod tests {
         let mut base = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         base.pop();
         base.pop();
-        let path = base.join("tests/overall/overall_ssab/UserData.ssab");
+        let path = base.join("tests/overall/overall/UserData.ssab");
         let data = std::fs::read(path).expect("Failed to read test ssab file");
 
         let ssab_data = SsabData::load_copy(&data).unwrap();
@@ -3313,7 +3313,7 @@ mod tests {
     #[test]
     fn test_ssab_resource_accessors() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3346,7 +3346,7 @@ mod tests {
     #[test]
     fn test_ssab_resource_arc_sharing_keeps_buffer_alive() {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/overall/overall_ssab/Basic.ssab");
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
 
         let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
@@ -3520,7 +3520,7 @@ mod tests {
 
     fn load_ringo_resource() -> SsabData {
         prepare();
-        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo_ssab/Ringo.ssab");
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
         let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
         SsabData::load_copy(&input_buf).expect("Failed to load SsabData")
     }
