@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             embedded: false,  // Do not embed textures
             ..Default::default()
         },
-        output: None, // Use default output directory (e.g. project_ssab/)
+        output: None, // Use default output directory (e.g. project/)
     };
 
     // Convert and save files (with a logging callback)

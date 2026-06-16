@@ -51,7 +51,7 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
 
 #[cfg(feature = "native")]
 pub fn get_ssab_output_directory(sspj_path: &std::path::Path, embedded: bool) -> Result<std::path::PathBuf, crate::ConverterError> {
-    let suffix = if embedded { "_emb_ssab" } else { "_ssab" };
+    let suffix = if embedded { "_emb" } else { "" };
     let Some(stem) = sspj_path.file_stem() else {
         return Err(crate::ConverterError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, format!("not found: path stem: {}", sspj_path.as_os_str().to_string_lossy()))));
     };

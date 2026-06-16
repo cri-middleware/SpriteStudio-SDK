@@ -32,7 +32,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 
 複数の `.sspj` プロジェクトをまとめて変換します。
 複数の file パス、またはディレクトリを指定することができます（ディレクトリ内の `.sspj` は再帰的に検索されます）。
-このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に `<name>_ssab/` として生成されます。
+このモードでは `--out-dir` オプションは無視され、出力は各 `.sspj` の隣に `<name>/` として生成されます。
 
 ```bash
 # 特定の複数ファイルを変換
@@ -65,7 +65,7 @@ $ cargo install --path cli
 # 使用例
 
 **1. 基本的な変換**
-`project.sspj` と同じ階層に `project_ssab/` フォルダが生成されます。
+`project.sspj` と同じ階層に `project/` フォルダが生成されます。
 
 ```bash
 $ ssconverter-cli my_game/project.sspj
@@ -84,8 +84,8 @@ $ ssconverter-cli my_game/project.sspj --embedded
 
 | モード | 出力ディレクトリ | 中身 |
 |---|---|---|
-| デフォルト | `<name>_ssab/` | `.ssab`（アニメーションごとに 1 つ）、`.ssqb`（`.ssqe` が参照されている場合のシーケンスパック）、参照されているテクスチャのコピー |
-| `--embedded` | `<name>_emb_ssab/` | 同上ですが、参照アセットは各 `.ssab` 内に埋め込まれます（テクスチャの別ファイルは生成されません） |
+| デフォルト | `<name>/` | `.ssab`（アニメーションごとに 1 つ）、`.ssqb`（`.ssqe` が参照されている場合のシーケンスパック）、参照されているテクスチャのコピー |
+| `--embedded` | `<name>_emb/` | 同上ですが、参照アセットは各 `.ssab` 内に埋め込まれます（テクスチャの別ファイルは生成されません） |
 
 # 次のステップ
 

@@ -32,7 +32,7 @@ $ ssconverter-cli project.sspj -o ./output_folder
 
 Converts multiple `.sspj` projects at once.
 You can pass multiple file paths or directories containing `.sspj` files.
-In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj` in `<name>_ssab/`.
+In this mode, the `--out-dir` option is ignored; each output is written next to its source `.sspj` in `<name>/`.
 
 ```bash
 # Convert multiple specific files
@@ -66,7 +66,7 @@ $ cargo install --path cli
 
 **1. Basic Conversion**
 
-Generates `project_ssab/` folder next to `project.sspj`.
+Generates `project/` folder next to `project.sspj`.
 
 ```bash
 $ ssconverter-cli my_game/project.sspj
@@ -86,8 +86,8 @@ For each `.sspj` converted, a directory is produced next to the source file (unl
 
 | Mode | Output directory | Contents |
 |---|---|---|
-| Default | `<name>_ssab/` | `.ssab` (one per animation), `.ssqb` (per sequence pack, if `.ssqe` is referenced), and copies of referenced textures |
-| `--embedded` | `<name>_emb_ssab/` | Same as above, but referenced assets are inlined into each `.ssab` (no separate texture copies) |
+| Default | `<name>/` | `.ssab` (one per animation), `.ssqb` (per sequence pack, if `.ssqe` is referenced), and copies of referenced textures |
+| `--embedded` | `<name>_emb/` | Same as above, but referenced assets are inlined into each `.ssab` (no separate texture copies) |
 
 # Next Steps
 
