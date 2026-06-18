@@ -11,7 +11,15 @@ fn panic(_info: &::core::panic::PanicInfo) -> ! {
         libc::abort();
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), not(feature = "libc_alloc")))]
+    #[cfg(all(not(target_arch = "wasm32"), feature = "custom_alloc"))]
+    unsafe {
+        unsafe extern "C" {
+            fn ss_custom_abort() -> !;
+        }
+        ss_custom_abort();
+    }
+
+    #[cfg(all(not(target_arch = "wasm32"), not(feature = "libc_alloc"), not(feature = "custom_alloc")))]
     loop {}
 }
 
@@ -88,6 +96,28 @@ mod emscripten_allocator {
     }
 }
 
+#[cfg(all(not(feature = "std"), feature = "custom_alloc"))]
+mod custom_allocator {
+    unsafe extern "C" {
+        fn ss_custom_alloc(size: usize, align: usize) -> *mut u8;
+        fn ss_custom_free(ptr: *mut core::ffi::c_void, align: usize);
+    }
+
+    struct CustomAlloc;
+
+    #[global_allocator]
+    static ALLOCATOR: CustomAlloc = CustomAlloc;
+
+    unsafe impl alloc::alloc::GlobalAlloc for CustomAlloc {
+        unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
+            unsafe { ss_custom_alloc(layout.size(), layout.align()) }
+        }
+
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
+            unsafe { ss_custom_free(ptr as *mut core::ffi::c_void, layout.align()) }
+        }
+    }
+}
 #[cfg(all(not(feature = "std"), feature = "libc_alloc"))]
 mod allocator {
     #[cfg(unix)]

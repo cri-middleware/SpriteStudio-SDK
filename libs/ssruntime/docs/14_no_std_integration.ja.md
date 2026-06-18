@@ -98,51 +98,55 @@ ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
 
 ## 5. 完全な独自のカスタムアロケータの利用 (Unreal Engine 等)
 
-「C の標準の `malloc` も使わず、ゲームエンジンが提供する専用のメモリ確保関数 (例: Unreal Engine の `FMalloc` やメモリプール) のみを使いたい」という場合、SDK 内部のアロケータには依存せず、ユーザー側で FFI 用のラッパークレート (wrapper crate) を作成して独自の `#[global_allocator]` を注入するのがベストプラクティスです。
+「C の標準の `malloc` も使わず、ゲームエンジンが提供する専用のメモリ確保関数 (例: Unreal Engine の `FMalloc` やメモリプール) のみを使いたい」という場合、ラッパークレートを作成することなく、`custom_alloc` フィーチャを有効化するだけで簡単にカスタムアロケータを C/C++ 側から注入できます。
 
 ### 実装ステップ
 
-1. お客様のプロジェクト内に新しいラッパークレート (例: `ssruntime-ffi-wrapper`) を作成します。
-2. このラッパークレートで `ssruntime` を `default-features = false` に設定して取り込みます。
-3. ラッパークレート内で FFI バインディングと独自の `#[global_allocator]` を以下のように定義します。
+1. `ssruntime` をビルドする際に、`libc_alloc` の代わりに `custom_alloc` を指定します。
 
-```rust
-// ssruntime-ffi-wrapper/src/lib.rs
-#![no_std]
+```bash
+cargo build -p ssruntime --release --features "custom_alloc,panic-handler"
+```
 
-use core::alloc::{GlobalAlloc, Layout};
+2. リンクする C/C++ のプロジェクト（Unreal Engine など）側で、以下の 3 つの `extern "C"` 関数を定義します。
 
-// ssruntime を公開する
-pub use ssruntime::*;
+```cpp
+#include <stddef.h>
+#include <stdlib.h>
 
-// 外部の C++ アロケータ関数をリンク (例)
 extern "C" {
-    fn my_engine_malloc(size: usize) -> *mut u8;
-    fn my_engine_free(ptr: *mut u8);
+
+// 1. メモリ確保 (アライメント付き)
+void* ss_custom_alloc(size_t size, size_t align) {
+    // 例: Unreal Engine の場合
+    // return FMemory::Malloc(size, align);
+    return malloc(size); // 最低限の例
 }
 
-struct EngineAllocator;
-
-#[global_allocator]
-static ALLOCATOR: EngineAllocator = EngineAllocator;
-
-unsafe impl GlobalAlloc for EngineAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        my_engine_malloc(layout.size())
-    }
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        my_engine_free(ptr)
-    }
+// 2. メモリ解放
+void ss_custom_free(void* ptr, size_t align) {
+    // 例: Unreal Engine の場合
+    // FMemory::Free(ptr);
+    free(ptr);
 }
 
-// Panic Handler の定義
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {} // ログ出力や独自のエラーハンドリングを追加
+// 3. パニックハンドラ (アボート処理)
+// ※戻り値なし (noreturn) として定義する必要があります
+#if defined(_MSC_VER)
+__declspec(noreturn)
+#elif defined(__GNUC__) || defined(__clang__)
+__attribute__((noreturn))
+#endif
+void ss_custom_abort() {
+    // 例: UE_LOG で致命的エラーを出力してクラッシュさせる
+    // UE_LOG(LogTemp, Fatal, TEXT("ssruntime panic"));
+    abort();
+}
+
 }
 ```
 
-このラッパークレートを `cdylib` または `staticlib` としてビルドすることで、外部 C++ エンジンのメモリ管理機構と完全に一体化した `ssruntime` アセットができあがります。
+これらの関数を C/C++ 側で定義し、生成された `libssruntime.a` (または `.lib`) をリンクするだけで、Rust 側のソースコードを一切触ることなく、シームレスにゲームエンジンのアロケータと統合されます。
 
 ---
 
