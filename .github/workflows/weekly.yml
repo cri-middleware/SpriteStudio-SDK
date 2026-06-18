@@ -51,7 +51,7 @@ jobs:
         with:
           submodules: recursive
 
-      - name: setup for SpriteStudio7-SDK
+      - name: setup for SpriteStudio-SDK
         uses: ./.github/actions/setup
         with:
           platform: ${{ matrix.platform }}

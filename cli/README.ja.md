@@ -2,9 +2,9 @@
 
 # ssconverter-cli
 
-[SpriteStudio7-SDK](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio 7 のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
+[SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio 7 のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
 
-本 CLI は [libssconverter](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssconverter) のラッパーであり、SDK のリリース成果物のビルドに使われているのと同じ変換パイプラインを公開しています。ランタイム側は [libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime) を参照してください。
+本 CLI は [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter) のラッパーであり、SDK のリリース成果物のビルドに使われているのと同じ変換パイプラインを公開しています。ランタイム側は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime) を参照してください。
 
 # 使い方
 
@@ -52,7 +52,7 @@ _注意: バッチモードでは `--out-dir` オプションは利用できま�
 
 ## ビルド済みバイナリ（推奨）
 
-[GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
+[GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページから **Windows**、**macOS**、**Linux** 向けのリリースをダウンロードしてください。ビルド環境は不要です。
 
 ## ソースからビルド
 
@@ -89,7 +89,7 @@ $ ssconverter-cli my_game/project.sspj --embedded
 
 # 次のステップ
 
-`.ssab` ファイルが生成できたら、[libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime) を通じてゲームエンジンに組み込みます。実装手順は [Player 移植ガイド](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/libs/ssruntime/docs/README.ja.md) を参照してください。
+`.ssab` ファイルが生成できたら、[libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime) を通じてゲームエンジンに組み込みます。実装手順は [Player 移植ガイド](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/docs/README.ja.md) を参照してください。
 
 # 開発者向け
 ## ビルド

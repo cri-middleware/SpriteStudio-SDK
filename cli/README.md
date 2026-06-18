@@ -2,9 +2,9 @@
 
 # ssconverter-cli
 
-The build-time tool of the [SpriteStudio7-SDK](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/README.md) workflow: parses SpriteStudio 7 project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
+The build-time tool of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.md) workflow: parses SpriteStudio 7 project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
 
-This CLI wraps [libssconverter](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime).
+This CLI wraps [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime).
 
 # Usage
 
@@ -52,7 +52,7 @@ _Note: The `--out-dir` option is not available in batch mode._
 
 ## Prebuilt binaries (recommended)
 
-Download a release for **Windows**, **macOS**, or **Linux** from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page. No build environment required.
+Download a release for **Windows**, **macOS**, or **Linux** from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page. No build environment required.
 
 ## Build from source
 
@@ -91,7 +91,7 @@ For each `.sspj` converted, a directory is produced next to the source file (unl
 
 # Next Steps
 
-Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/SpriteStudio/SpriteStudio7-SDK/tree/main/libs/ssruntime). For integration guidance, see the [Player Implementation Guide](https://github.com/SpriteStudio/SpriteStudio7-SDK/blob/main/libs/ssruntime/docs/README.ja.md) (Japanese).
+Once `.ssab` files are generated, load them into your engine via [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime). For integration guidance, see the [Player Implementation Guide](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/libs/ssruntime/docs/README.ja.md) (Japanese).
 
 # For Developers
 ## Build

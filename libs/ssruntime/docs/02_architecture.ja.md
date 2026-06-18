@@ -1,6 +1,6 @@
 # Player と libssruntime の役割分担
 
-SpriteStudio7-SDK の再生環境は、計算ロジックを担う **libssruntime** と、実際の描画やプラットフォーム依存処理を担う **Player** の 2 つに分かれています。
+SpriteStudio-SDK の再生環境は、計算ロジックを担う **libssruntime** と、実際の描画やプラットフォーム依存処理を担う **Player** の 2 つに分かれています。
 
 この分担により、一度 Player を実装すれば、ロジックの変更（アニメーション仕様の追加など）を libssruntime の更新だけで吸収でき、高い移植性とメンテナンス性を実現しています。
 

@@ -1,4 +1,4 @@
-# SpriteStudio7-SDK: `no_std` 統合ガイド
+# SpriteStudio-SDK: `no_std` 統合ガイド
 
 `libs/ssruntime` は、ファイルシステムやスレッド機構を持たない組み込み環境、ゲームコンソール (PS5 / Nintendo Switch など)、あるいは独自のメモリアロケータを採用しているゲームエンジン向けに **`#![no_std]` を完全サポート** しています。
 

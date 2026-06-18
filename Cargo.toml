@@ -14,7 +14,7 @@ edition = "2024"
 rust-version = "1.96"
 authors = ["CRI Middleware Co., Ltd."]
 license = "BSD-3-Clause"
-repository = "https://github.com/SpriteStudio/SpriteStudio7-SDK"
+repository = "https://github.com/cri-middleware/SpriteStudio-SDK"
 homepage = "https://www.webtech.co.jp/eng/spritestudio/"
 description = "Software development kit for OPTPiX SpriteStudio 7 projects"
 
