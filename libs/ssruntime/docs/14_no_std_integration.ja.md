@@ -98,51 +98,93 @@ ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
 
 ## 5. 完全な独自のカスタムアロケータの利用 (Unreal Engine 等)
 
-「C の標準の `malloc` も使わず、ゲームエンジンが提供する専用のメモリ確保関数 (例: Unreal Engine の `FMalloc` やメモリプール) のみを使いたい」という場合、SDK 内部のアロケータには依存せず、ユーザー側で FFI 用のラッパークレート (wrapper crate) を作成して独自の `#[global_allocator]` を注入するのがベストプラクティスです。
+「C の標準の `malloc` も使わず、ゲームエンジンが提供する専用のメモリ確保関数 (例: Unreal Engine の `FMalloc` やメモリプール) のみを使いたい」という場合、ラッパークレートを作成することなく、`custom_alloc` フィーチャを有効化するだけで簡単にカスタムアロケータを C/C++ 側から注入できます。
 
 ### 実装ステップ
 
-1. お客様のプロジェクト内に新しいラッパークレート (例: `ssruntime-ffi-wrapper`) を作成します。
-2. このラッパークレートで `ssruntime` を `default-features = false` に設定して取り込みます。
-3. ラッパークレート内で FFI バインディングと独自の `#[global_allocator]` を以下のように定義します。
+1. `ssruntime` をビルドする際に、`libc_alloc` の代わりに `custom_alloc` を指定します。配布物として使うのは **staticlib (`libssruntime.a` / `.lib`)** なので、staticlib を明示してビルドします。
 
-```rust
-// ssruntime-ffi-wrapper/src/lib.rs
-#![no_std]
+```bash
+cargo rustc -p ssruntime --release --features "custom_alloc,panic-handler" --crate-type staticlib
+```
 
-use core::alloc::{GlobalAlloc, Layout};
+> [!IMPORTANT]
+> `custom_alloc` では `ss_custom_*` シンボルや `memcpy` 等の C ランタイム関数は **ssruntime 側では未解決のまま**にしておき、最終的にエンジン側とリンクするときに解決します。そのため `crate-type` に `cdylib` を含む素の `cargo build -p ssruntime` を実行すると、未解決シンボルを許さない macOS / Windows (MSVC) のリンカが `cdylib` のリンク段階で失敗します。上記のように `--crate-type staticlib` を明示してビルドしてください（成果物は `target/release/libssruntime.a`）。
 
-// ssruntime を公開する
-pub use ssruntime::*;
+2. リンクする C/C++ のプロジェクト（Unreal Engine など）側で、以下の 3 つの `extern "C"` 関数を定義します。これらに加えて、`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` といった C ランタイム関数も最終リンク時に必要になりますが、通常はリンクするゲームエンジンの CRT が提供します（ベアメタル環境では別途用意してください）。
 
-// 外部の C++ アロケータ関数をリンク (例)
+```cpp
+#include <stddef.h>
+#include <stdlib.h>
+#if defined(_MSC_VER)
+#include <malloc.h> // _aligned_malloc / _aligned_free
+#endif
+
 extern "C" {
-    fn my_engine_malloc(size: usize) -> *mut u8;
-    fn my_engine_free(ptr: *mut u8);
+
+// 1. メモリ確保
+//    返すポインタは必ず `align` バイト境界に整列している必要があります
+//    (`align` は常に 2 の冪)。素の malloc は max_align_t (通常 8〜16B) しか
+//    保証しないため、SIMD 型などの過剰アラインメント要求で未定義動作になります。
+//    ssruntime はアラインメント補正を行わないので、必ず整列確保を使ってください。
+void* ss_custom_alloc(size_t size, size_t align) {
+    // 例: Unreal Engine の場合
+    // return FMemory::Malloc(size, align);
+#if defined(_MSC_VER)
+    return _aligned_malloc(size, align);
+#else
+    // posix_memalign は align が sizeof(void*) の倍数である必要があるため引き上げる
+    if (align < sizeof(void*)) {
+        align = sizeof(void*);
+    }
+    void* ptr = NULL;
+    if (posix_memalign(&ptr, align, size) != 0) {
+        return NULL; // 確保失敗は NULL を返す (Rust 側が検知する)
+    }
+    return ptr;
+#endif
 }
 
-struct EngineAllocator;
-
-#[global_allocator]
-static ALLOCATOR: EngineAllocator = EngineAllocator;
-
-unsafe impl GlobalAlloc for EngineAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        my_engine_malloc(layout.size())
-    }
-    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
-        my_engine_free(ptr)
-    }
+// 2. メモリ解放
+//    確保時と同じ size / align が渡されます。解放時に size を必要とするプール
+//    アロケータはここで利用できます (malloc 系は無視して構いません)。
+//    ※確保関数と対になる解放関数を使うこと。特に MSVC は _aligned_free が必須で、
+//      _aligned_malloc したメモリを free すると未定義動作になります。
+void ss_custom_free(void* ptr, size_t size, size_t align) {
+    (void)size;
+    (void)align;
+    // 例: Unreal Engine の場合
+    // FMemory::Free(ptr);
+#if defined(_MSC_VER)
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
 }
 
-// Panic Handler の定義
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {} // ログ出力や独自のエラーハンドリングを追加
+// 3. パニックハンドラ (アボート処理)
+// ※戻り値なし (noreturn) として定義する必要があります
+//   (リターンすると Rust 側の `-> !` 契約に違反し未定義動作になります)
+#if defined(_MSC_VER)
+__declspec(noreturn)
+#elif defined(__GNUC__) || defined(__clang__)
+__attribute__((noreturn))
+#endif
+void ss_custom_abort() {
+    // 例: UE_LOG で致命的エラーを出力してクラッシュさせる
+    // UE_LOG(LogTemp, Fatal, TEXT("ssruntime panic"));
+    abort();
+}
+
 }
 ```
 
-このラッパークレートを `cdylib` または `staticlib` としてビルドすることで、外部 C++ エンジンのメモリ管理機構と完全に一体化した `ssruntime` アセットができあがります。
+これらの関数を C/C++ 側で定義し、生成された `libssruntime.a` (または `.lib`) をリンクするだけで、Rust 側のソースコードを一切触ることなく、シームレスにゲームエンジンのアロケータと統合されます。
+
+> [!NOTE]
+> `ss_custom_abort` が呼ばれるのは Rust 側で **panic** が発生したときだけです。`ss_custom_alloc` が `NULL` を返した場合 (メモリ確保失敗) は Rust の alloc エラーハンドラ経由で即座に abort するため、`ss_custom_abort` は経由しません。確保失敗時に独自処理を行いたい場合は `ss_custom_alloc` 内でハンドリングしてください。
+>
+> なお `custom_alloc` と `libc_alloc` / `wasm_alloc` / `emscripten_alloc` は `#[global_allocator]` が競合するため同時に有効化できません (`compile_error!` で検出されます)。
 
 ---
 

@@ -1,5 +1,15 @@
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
 
+// Only one `#[global_allocator]` may exist, so these no_std allocator features are
+// mutually exclusive; feature unification can enable two unintentionally, so emit a
+// readable error instead of the compiler's cryptic "multiple global allocators".
+#[cfg(all(not(feature = "std"), feature = "custom_alloc", feature = "libc_alloc"))]
+compile_error!("features `custom_alloc` and `libc_alloc` are mutually exclusive: enable only one #[global_allocator]");
+#[cfg(all(not(feature = "std"), feature = "custom_alloc", feature = "emscripten_alloc"))]
+compile_error!("features `custom_alloc` and `emscripten_alloc` are mutually exclusive: enable only one #[global_allocator]");
+#[cfg(all(not(feature = "std"), target_arch = "wasm32", feature = "custom_alloc", feature = "wasm_alloc"))]
+compile_error!("features `custom_alloc` and `wasm_alloc` are mutually exclusive: enable only one #[global_allocator]");
+
 #[cfg(all(not(feature = "std"), not(test), not(feature = "web"), feature = "panic-handler"))]
 #[panic_handler]
 fn panic(_info: &::core::panic::PanicInfo) -> ! {
@@ -11,7 +21,15 @@ fn panic(_info: &::core::panic::PanicInfo) -> ! {
         libc::abort();
     }
 
-    #[cfg(all(not(target_arch = "wasm32"), not(feature = "libc_alloc")))]
+    #[cfg(all(not(target_arch = "wasm32"), feature = "custom_alloc"))]
+    unsafe {
+        unsafe extern "C" {
+            fn ss_custom_abort() -> !;
+        }
+        ss_custom_abort();
+    }
+
+    #[cfg(all(not(target_arch = "wasm32"), not(feature = "libc_alloc"), not(feature = "custom_alloc")))]
     loop {}
 }
 
@@ -88,6 +106,40 @@ mod emscripten_allocator {
     }
 }
 
+/// Custom global allocator that forwards every allocation to three `extern "C"`
+/// symbols the linking application must provide (e.g. a game engine allocator):
+///
+/// - `ss_custom_alloc(size, align)`: return `size` bytes aligned to `align`
+///   (always a power of two) or null on failure. Unlike the `libc_alloc`
+///   allocator, the runtime does **not** fix up alignment itself, so the host
+///   must honor `align` (use `posix_memalign` / `_aligned_malloc` / the engine's
+///   aligned allocator — plain `malloc` only guarantees `max_align_t`).
+/// - `ss_custom_free(ptr, size, align)`: free a block returned by
+///   `ss_custom_alloc`, given the same `size` and `align`. Allocators that track
+///   the size internally (`malloc`/`free`, `FMemory::Free`, ...) may ignore them.
+/// - `ss_custom_abort()`: see the `#[panic_handler]` above; must not return.
+#[cfg(all(not(feature = "std"), feature = "custom_alloc"))]
+mod custom_allocator {
+    unsafe extern "C" {
+        fn ss_custom_alloc(size: usize, align: usize) -> *mut u8;
+        fn ss_custom_free(ptr: *mut core::ffi::c_void, size: usize, align: usize);
+    }
+
+    struct CustomAlloc;
+
+    #[global_allocator]
+    static ALLOCATOR: CustomAlloc = CustomAlloc;
+
+    unsafe impl alloc::alloc::GlobalAlloc for CustomAlloc {
+        unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
+            unsafe { ss_custom_alloc(layout.size(), layout.align()) }
+        }
+
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
+            unsafe { ss_custom_free(ptr as *mut core::ffi::c_void, layout.size(), layout.align()) }
+        }
+    }
+}
 #[cfg(all(not(feature = "std"), feature = "libc_alloc"))]
 mod allocator {
     #[cfg(unix)]

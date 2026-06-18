@@ -104,6 +104,11 @@ jobs:
           else
             cargo build --verbose
             cargo build --verbose -p ssruntime --features "libc_alloc,panic-handler"
+
+            # Custom-allocator (console/engine) build. staticlib only: the
+            # ss_custom_* symbols stay unresolved until the host links them, so a
+            # cdylib link would fail standalone on macOS/MSVC.
+            cargo rustc --verbose -p ssruntime --features "custom_alloc,panic-handler" --crate-type staticlib
           fi
         shell: bash
 

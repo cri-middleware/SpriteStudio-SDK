@@ -44,6 +44,7 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | Format apply | `cargo fmt` |
 | Tests | `cargo test --workspace --all-features` |
 | `no_std` standalone (mobile-style) | `cargo build -p ssruntime --features libc_alloc,panic-handler` |
+| `no_std` custom allocator (console/engine) | `cargo rustc -p ssruntime --features custom_alloc,panic-handler --crate-type staticlib` |
 | `std` opt-in (desktop DX) | `cargo build -p ssruntime --features std` |
 | `ssconverter` web (browser WASM) | `cargo build -p ssconverter --no-default-features --features web --target wasm32-unknown-unknown` |
 
@@ -58,6 +59,8 @@ The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edi
 | `ffi` (default) | C-API exports |
 | `libc_alloc` | `libc::malloc/free`-backed `#[global_allocator]` for no_std FFI builds (mobile/desktop). |
 | `wasm_alloc` | `dlmalloc`-backed `#[global_allocator]` for WASM `no_std` builds. |
+| `emscripten_alloc` | Emscripten libc `malloc/free`-backed `#[global_allocator]` (manual over-alignment) for Emscripten `no_std` builds. |
+| `custom_alloc` | Routes `#[global_allocator]` (+ `#[panic_handler]` abort) to host-provided `ss_custom_alloc` / `ss_custom_free` / `ss_custom_abort` C symbols; for game-console/engine allocators. Mutually exclusive with the other allocator features; build as `staticlib`. |
 | `panic-handler` | Provides `#[panic_handler]` for no_std FFI builds. |
 | `web` | `wasm-bindgen` bindings for JS/TS interop. |
 | `std` | Enables `std` on `flatbuffers` / `ssab` and pulls in `ssconverter` (tests only). Never used by release scripts. |
