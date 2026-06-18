@@ -1,7 +1,7 @@
 [**English**](./README.md) | [**日本語**](./README.ja.md)
-# SpriteStudio7-SDK
+# SpriteStudio-SDK
 
-[![CI](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml)
+[![CI](https://github.com/cri-middleware/SpriteStudio-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/cri-middleware/SpriteStudio-SDK/actions/workflows/ci.yml)
 
 本リポジトリは実験的かつ不安定な段階にあります。
 本リポジトリに関していかなる保証もサポートも提供しません。また、リクエストやバグ報告への返信もできません。
@@ -86,7 +86,7 @@ graph LR
 まずは、同梱されているサンプルプロジェクトを変換して SDK の動作を確認してみましょう。
 
 ### 1. ツール・ライブラリをダウンロードする
-[GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) ページから、各プラットフォーム向けの最新版をダウンロードしてください。
+[GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) ページから、各プラットフォーム向けの最新版をダウンロードしてください。
 - **ssconverter-cli**: **Windows**、**macOS**、**Linux** 用の実行ファイルが用意されています。
 - **Web (WASM)**: 直接 JavaScript/TypeScript から利用可能なパッケージが `spritestudio7-sdk-web.zip` として用意されています。
 

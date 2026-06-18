@@ -1,7 +1,7 @@
 [**日本語**](./README.ja.md) | [**English**](./README.md)
-# SpriteStudio7-SDK
+# SpriteStudio-SDK
 
-[![CI](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/SpriteStudio/SpriteStudio7-SDK/actions/workflows/ci.yml)
+[![CI](https://github.com/cri-middleware/SpriteStudio-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/cri-middleware/SpriteStudio-SDK/actions/workflows/ci.yml)
 
 This repository is in an experimental and unstable phase.
 No guarantees or support are provided, and we cannot respond to requests or bug reports at this time.
@@ -86,7 +86,7 @@ graph LR
 Follow these steps to convert a sample project and see the SDK in action.
 
 ### 1. Download the Tools or Libraries
-Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/SpriteStudio/SpriteStudio7-SDK/releases) page.
+Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page.
 - **ssconverter-cli**: Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
 - **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio7-sdk-web.zip`.
 

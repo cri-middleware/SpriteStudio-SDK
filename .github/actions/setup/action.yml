@@ -1,5 +1,5 @@
 name: Setup
-description: Setup build dependencies for SpriteStudio7-SDK
+description: Setup build dependencies for SpriteStudio-SDK
 
 inputs:
   platform:

@@ -1,6 +1,6 @@
-# Contributing to SpriteStudio7-SDK
+# Contributing to SpriteStudio-SDK
 
-Thank you for your interest in contributing to SpriteStudio7-SDK! We welcome all kinds of contributions, including bug reports, feature requests, documentation improvements, and code contributions.
+Thank you for your interest in contributing to SpriteStudio-SDK! We welcome all kinds of contributions, including bug reports, feature requests, documentation improvements, and code contributions.
 
 ## Table of Contents
 - [Code of Conduct](#code-of-conduct)
@@ -83,9 +83,9 @@ By contributing to this project, you agree that your contributions will be licen
 
 ---
 
-# SpriteStudio7-SDK への貢献について
+# SpriteStudio-SDK への貢献について
 
-SpriteStudio7-SDK にご関心をお寄せいただき、ありがとうございます！ バグ報告、機能提案、ドキュメントの改善、コードの提供など、あらゆる形での貢献を歓迎します。
+SpriteStudio-SDK にご関心をお寄せいただき、ありがとうございます！ バグ報告、機能提案、ドキュメントの改善、コードの提供など、あらゆる形での貢献を歓迎します。
 
 ## 目次
 - [行動規範](#行動規範-1)

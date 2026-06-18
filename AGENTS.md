@@ -1,4 +1,4 @@
-# SpriteStudio7-SDK — AI Agent Guide
+# SpriteStudio-SDK — AI Agent Guide
 
 ## Operating rules
 
