@@ -33,7 +33,7 @@ pushd ${ROOTDIR} > /dev/null
 # The pre-compiled standard library for wasm32-unknown-unknown lacks PIC support.
 # Therefore, we must use the nightly toolchain and -Z build-std to recompile core/alloc with PIC.
 # Note: We specifically DO NOT include +atomics here to keep the build single-threaded (nothreads).
-export RUSTFLAGS="-C relocation-model=pic -C target-feature=+simd128"
+export RUSTFLAGS="-C relocation-model=pic -C target-cpu=mvp -C target-feature=+simd128"
 
 cargo +nightly rustc -Z build-std=core,alloc \
     --target wasm32-unknown-unknown \
