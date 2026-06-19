@@ -25,6 +25,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
     *   **Co-decided**: sRGB-vs-linear color-value semantics, applied uniformly to keyframed and overridden colors. Settled here so Override blend modes and Player rendering share one contract.
 *   [ ] Migration of existing Players (Unity, pixi.js, etc.) to use `ssruntime`.
 *   [ ] `ssplayer-wgpu` implementation (Reference implementation for Rust-native rendering).
+*   [ ] **iOS dynamic XCFramework — `.framework`-wrapped slices**: package the dynamic (`dylib`) iOS XCFramework's slices as proper `.framework` bundles (`Info.plist` + bundle layout) instead of bare dylibs, for App Store-valid embedding. The initial XCFramework consolidation ships the static (`.a`) XCFramework plus a *bare-dylib* dynamic XCFramework whose install name is corrected to `@rpath/libssruntime.dylib`; that is enough for now because every current consumer static-links `libssruntime.a` on iOS (Unity drops the static `.xcframework` into `Plugins/iOS/`; Godot links the static `.a` into `libSSGodot`), so the dynamic variant has no consumer yet. Revisit when a real iOS dynamic consumer appears or App Store validation requires the framework form.
 
 ## Phase 3: Feature Expansion (Post-Release)
 
