@@ -135,18 +135,19 @@ jobs:
           DEV_ID_APPLICATION: ${{ secrets.DEV_ID_APPLICATION }}
         run: |
           rustup target add aarch64-apple-ios
+          rustup target add aarch64-apple-ios-sim
           rustup target add x86_64-apple-ios
-          ./scripts/release-ios.sh
+          ./scripts/release-ios-xcframework.sh
 
           # TODO: codesign
-          # for f in ./target/universal-apple-ios/release/*.dylib
+          # for f in ./target/xcframework/dynamic/libssruntime.xcframework/*/*.dylib
           # do
           #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
           # done
 
-          mkdir -p lib
-          cp target/universal-apple-ios/release/*.a lib/
-          cp target/universal-apple-ios/release/*.dylib lib/
+          mkdir -p lib/static lib/dynamic
+          cp -R target/xcframework/static/libssruntime.xcframework lib/static/
+          cp -R target/xcframework/dynamic/libssruntime.xcframework lib/dynamic/
 
 
       - name: build Android
@@ -262,7 +263,7 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-macos/libssconverter.a libs/macos/
           mv ../../spritestudio7-sdk-libraries-macos/libssruntime.a libs/macos/
           mv ../../spritestudio7-sdk-libraries-web/libssruntime.a libs/web/
-          mv ../../spritestudio7-sdk-libraries-ios/libssruntime.a libs/ios/
+          mv ../../spritestudio7-sdk-libraries-ios/static/libssruntime.xcframework libs/ios/
           mv ../../spritestudio7-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64
@@ -304,7 +305,7 @@ jobs:
 
           mv ../../spritestudio7-sdk-libraries-macos/libssconverter.dylib libs/macos/
           mv ../../spritestudio7-sdk-libraries-macos/libssruntime.dylib libs/macos/
-          mv ../../spritestudio7-sdk-libraries-ios/libssruntime.dylib libs/ios/
+          mv ../../spritestudio7-sdk-libraries-ios/dynamic/libssruntime.xcframework libs/ios/
           mv ../../spritestudio7-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64
