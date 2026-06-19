@@ -10,7 +10,8 @@ pub use converter::converter_error::*;
 // Version string (CARGO_PKG_VERSION + short git sha). Exposed as public API so
 // every embedder — CLI, Tauri (native), C-API (ffi), and the web bindings —
 // can report the converter version through a single source of truth.
-pub use utils::version_string;
+// ssab/ssqb_schema_version report the emitted binary format versions instead.
+pub use utils::{ssab_schema_version, ssqb_schema_version, version_string};
 #[cfg(feature = "scan")]
 pub mod scan;
 

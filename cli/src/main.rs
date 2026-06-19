@@ -55,7 +55,7 @@ fn main() -> Result<(), ssconverter::ConverterError> {
         std::process::exit(1);
     }
 
-    println!("{} {}", cmd.get_name(), VERSION);
+    println!("{} {} (ssab schema v{})", cmd.get_name(), VERSION, ssconverter::ssab_schema_version());
 
     let mut config = ssconverter::ConverterConfig::default();
     if sspj_paths.len() == 1 {
