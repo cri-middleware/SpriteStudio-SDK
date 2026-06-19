@@ -50,6 +50,8 @@ mod emscripten_allocator {
         fn em_malloc(size: usize) -> *mut u8;
         #[link_name = "free"]
         fn em_free(ptr: *mut core::ffi::c_void);
+        #[link_name = "posix_memalign"]
+        fn em_posix_memalign(memptr: *mut *mut core::ffi::c_void, align: usize, size: usize) -> i32;
     }
 
     struct EmscriptenAlloc;
@@ -57,51 +59,22 @@ mod emscripten_allocator {
     #[global_allocator]
     static ALLOCATOR: EmscriptenAlloc = EmscriptenAlloc;
 
+    // Emscripten's musl-derived libc malloc guarantees >= 8-byte alignment; larger
+    // alignments go through posix_memalign. Both are released with free.
     unsafe impl alloc::alloc::GlobalAlloc for EmscriptenAlloc {
         unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
-            let size = layout.size();
-            let align = layout.align();
-
-            if align <= 8 {
-                return unsafe { em_malloc(size) };
+            if layout.align() <= 8 {
+                return unsafe { em_malloc(layout.size()) };
             }
-
-            let extra = align + core::mem::size_of::<usize>();
-            let total_size = match size.checked_add(extra) {
-                Some(s) => s,
-                None => return core::ptr::null_mut(),
-            };
-
-            let raw_ptr = unsafe { em_malloc(total_size) };
-            if raw_ptr.is_null() {
+            let mut ptr = core::ptr::null_mut();
+            if unsafe { em_posix_memalign(&mut ptr, layout.align(), layout.size()) } != 0 {
                 return core::ptr::null_mut();
             }
-
-            let aligned_ptr = ((raw_ptr as usize + core::mem::size_of::<usize>() + align - 1) & !(align - 1)) as *mut u8;
-
-            unsafe {
-                let original_ptr_ptr = (aligned_ptr as *mut usize).offset(-1);
-                *original_ptr_ptr = raw_ptr as usize;
-            }
-
-            aligned_ptr
+            ptr as *mut u8
         }
 
-        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
-            if ptr.is_null() {
-                return;
-            }
-
-            let align = layout.align();
-            if align <= 8 {
-                unsafe { em_free(ptr as *mut core::ffi::c_void) };
-            } else {
-                unsafe {
-                    let original_ptr_ptr = (ptr as *mut usize).offset(-1);
-                    let original_ptr = *original_ptr_ptr as *mut core::ffi::c_void;
-                    em_free(original_ptr);
-                }
-            }
+        unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
+            unsafe { em_free(ptr as *mut core::ffi::c_void) };
         }
     }
 }
@@ -146,61 +119,59 @@ mod allocator {
     #[link(name = "c")]
     unsafe extern "C" {}
 
+    // `libc_alloc` delegates to the host libc so the runtime shares its heap with
+    // the embedding application. It is supported only on targets that expose a
+    // standard aligned allocator; elsewhere select `custom_alloc`.
+    #[cfg(not(any(unix, windows)))]
+    compile_error!("feature `libc_alloc` requires a unix or windows target; use `custom_alloc` elsewhere");
+
     struct LibcAlloc;
 
     #[global_allocator]
     static ALLOCATOR: LibcAlloc = LibcAlloc;
 
+    // libc `malloc` already satisfies alignments up to the platform's scalar
+    // alignment (>= 8 on every supported target); larger alignments go through the
+    // platform's aligned allocator. `dealloc` mirrors the same `align` branch so
+    // each block is released by the function that allocated it.
     unsafe impl alloc::alloc::GlobalAlloc for LibcAlloc {
+        #[cfg(unix)]
         unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
-            let size = layout.size();
-            let align = layout.align();
-
-            // Most libc malloc implementations provide at least 8-byte alignment.
-            if align <= 8 {
-                return unsafe { libc::malloc(size) as *mut u8 };
+            if layout.align() <= 8 {
+                return unsafe { libc::malloc(layout.size()) as *mut u8 };
             }
-
-            // Over-allocate to ensure we can find an aligned block.
-            // We need space for: requested size + alignment + space to store the original pointer.
-            let extra = align + core::mem::size_of::<usize>();
-            let total_size = match size.checked_add(extra) {
-                Some(s) => s,
-                None => return core::ptr::null_mut(),
-            };
-
-            let raw_ptr = unsafe { libc::malloc(total_size) as *mut u8 };
-            if raw_ptr.is_null() {
+            // posix_memalign requires `align` to be a power of two and a multiple of
+            // size_of::<*mut _>(); both hold because `align` is a power of two > 8.
+            let mut ptr = core::ptr::null_mut();
+            if unsafe { libc::posix_memalign(&mut ptr, layout.align(), layout.size()) } != 0 {
                 return core::ptr::null_mut();
             }
-
-            // Calculate aligned pointer.
-            // We must have at least size_of::<usize>() before the aligned_ptr to store raw_ptr.
-            let aligned_ptr = ((raw_ptr as usize + core::mem::size_of::<usize>() + align - 1) & !(align - 1)) as *mut u8;
-
-            // Store the original pointer right before the aligned pointer.
-            unsafe {
-                let original_ptr_ptr = (aligned_ptr as *mut usize).offset(-1);
-                *original_ptr_ptr = raw_ptr as usize;
-            }
-
-            aligned_ptr
+            ptr as *mut u8
         }
 
-        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
-            if ptr.is_null() {
-                return;
-            }
+        #[cfg(unix)]
+        unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
+            // Blocks from both malloc and posix_memalign are released with free.
+            unsafe { libc::free(ptr as *mut libc::c_void) };
+        }
 
-            let align = layout.align();
-            if align <= 8 {
+        #[cfg(windows)]
+        unsafe fn alloc(&self, layout: alloc::alloc::Layout) -> *mut u8 {
+            if layout.align() <= 8 {
+                unsafe { libc::malloc(layout.size()) as *mut u8 }
+            } else {
+                // libc::aligned_malloc binds the CRT `_aligned_malloc` (size, align);
+                // its blocks must be released with the matching aligned_free.
+                unsafe { libc::aligned_malloc(layout.size(), layout.align()) as *mut u8 }
+            }
+        }
+
+        #[cfg(windows)]
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
+            if layout.align() <= 8 {
                 unsafe { libc::free(ptr as *mut libc::c_void) };
             } else {
-                unsafe {
-                    let original_ptr_ptr = (ptr as *mut usize).offset(-1);
-                    let original_ptr = *original_ptr_ptr as *mut libc::c_void;
-                    libc::free(original_ptr);
-                }
+                unsafe { libc::aligned_free(ptr as *mut libc::c_void) };
             }
         }
     }
