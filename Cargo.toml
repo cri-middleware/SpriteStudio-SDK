@@ -17,6 +17,8 @@ license = "BSD-3-Clause"
 repository = "https://github.com/cri-middleware/SpriteStudio-SDK"
 homepage = "https://www.webtech.co.jp/eng/spritestudio/"
 description = "Software development kit for OPTPiX SpriteStudio 7 projects"
+keywords = ["spritestudio", "2d-animation", "gamedev", "motion-graphics", "skeletal"]
+categories = ["game-development", "graphics", "multimedia", "no-std"]
 
 
 [workspace.dependencies]
