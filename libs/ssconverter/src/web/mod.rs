@@ -17,6 +17,18 @@ pub fn version() -> String {
     crate::version_string()
 }
 
+/// `.ssab` schema version emitted (distinct from build [`version`]).
+#[wasm_bindgen]
+pub fn ssab_schema_version() -> u32 {
+    crate::ssab_schema_version()
+}
+
+/// `.ssqb` schema version emitted (distinct from build [`version`]).
+#[wasm_bindgen]
+pub fn ssqb_schema_version() -> u32 {
+    crate::ssqb_schema_version()
+}
+
 /// Result of [`convert`].
 #[wasm_bindgen]
 pub struct ConvertResult {

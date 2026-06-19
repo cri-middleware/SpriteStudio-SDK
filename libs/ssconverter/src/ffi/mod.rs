@@ -60,6 +60,16 @@ pub unsafe extern "C" fn ss_converter_version_free(s: *mut c_char) {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_ssab_schema_version() -> u32 {
+    crate::ssab_schema_version()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_converter_ssqb_schema_version() -> u32 {
+    crate::ssqb_schema_version()
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_converter_create() -> *mut Context {
     let c = Context::new();
     Box::into_raw(Box::new(c))

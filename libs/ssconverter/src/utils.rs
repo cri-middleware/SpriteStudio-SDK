@@ -6,6 +6,16 @@ pub fn version_string() -> String {
     format!("{}+{}", env!("CARGO_PKG_VERSION"), short_sha)
 }
 
+/// `.ssab` format version emitted (distinct from build [`version_string`]).
+pub fn ssab_schema_version() -> u32 {
+    ssab::ssab_schema_version()
+}
+
+/// `.ssqb` format version emitted (distinct from build [`version_string`]).
+pub fn ssqb_schema_version() -> u32 {
+    ssab::ssqb_schema_version()
+}
+
 pub fn fnv1a_hash_str(text: &str) -> u32 {
     let mut hash: u32 = 2166136261;
     let prime: u32 = 16777619;
