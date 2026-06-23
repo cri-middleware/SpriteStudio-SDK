@@ -15,7 +15,6 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 ## Phase 2: Ecosystem & Integration
 
-*   [ ] **Mask Support**: Implementation of per-part mask evaluation and DrawBatch emission.
 *   [ ] **Override Layer API**: one cohesive per-part runtime override surface covering color, cell reference, and visibility. FFI/state only; no `.fbs` change. Prerequisite for migrating existing Players that depend on `PartsColorChange` / `CellChangeParts` / `HideSet`-equivalent semantics. Begin design during Phase 1's Godot integration so the C-API surface is validated on a fresh Player first.
     *   **ssruntime work (required)**: the Rust runtime holds a per-part override table in player state and applies it during `update()` evaluation — *after* keyframe decode, *before* FrameData emission — so an override wins over (or defers to) the keyframed attribute per the priority mode below. Exposes new FFI to set/clear each override kind, addressed by part index (host resolves part name → index), plus a cell-map/texture table swap entry point. Runtime state + C-API only; no schema change.
     *   **Color override**: per-part color with blend op (Mix / Add / Sub / Mul) and either one RGBA or four per-vertex corners (LU/RU/RD/LD); opacity carried in alpha. Mirrors `PartsColorChange`. Includes read-back of a part's authored color label (`ColorGetColorLabel`-equivalent).
@@ -44,5 +43,6 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 ## Items not on the roadmap by design
 
+*   Mask rendering / per-part mask evaluation (a **Player responsibility**, not an SDK deliverable). The Brain only emits the cross-engine data — `DrawBatchKind::Mask` batches, `mask_indices`, and the `mask_influence` flag in the DrawBatch plan, plus the static PartData mask flags (`mask_write` / `visible_inside_mask` / `draw_as_mask`) and the per-frame `mask` value — all of which shipped with the Phase 1 DrawBatch contract. Stencil/coverage rasterisation and clipping live in each Player (GPU stencil, or the coverage-bitmap hybrid where stencil is unavailable); see the Player guide [09_mask.ja.md](./libs/ssruntime/docs/09_mask.ja.md). Already implemented in the Unity and Godot players.
 *   Per-part AABB in FrameData (Player can derive from vertex positions; revisit only on concrete Player-side demand).
 *   Flip override and vertex correction (expressible as Player post-processing of FrameData — scale negation / UV swap; deliberately kept out of the Override Layer API. Covers legacy `FlipSetParts`).
