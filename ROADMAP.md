@@ -23,12 +23,10 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
     *   **Co-decided**: a per-override **priority mode** shared across all three kinds, governing coexistence with keyframed attributes — overwrite-on-next-keyframe / hold-until-next-animation / permanent (the legacy `KindIgnoreAttribute` NON / NOW_ANIMATION / PERMANENT trichotomy).
     *   **Co-decided**: sRGB-vs-linear color-value semantics, applied uniformly to keyframed and overridden colors. Settled here so Override blend modes and Player rendering share one contract.
 *   [ ] Migration of existing Players (Unity, pixi.js, etc.) to use `ssruntime`.
-*   [ ] `ssplayer-wgpu` implementation (Reference implementation for Rust-native rendering).
-*   [ ] **iOS dynamic XCFramework — `.framework`-wrapped slices**: package the dynamic (`dylib`) iOS XCFramework's slices as proper `.framework` bundles (`Info.plist` + bundle layout) instead of bare dylibs, for App Store-valid embedding. The initial XCFramework consolidation ships the static (`.a`) XCFramework plus a *bare-dylib* dynamic XCFramework whose install name is corrected to `@rpath/libssruntime.dylib`; that is enough for now because every current consumer static-links `libssruntime.a` on iOS (Unity drops the static `.xcframework` into `Plugins/iOS/`; Godot links the static `.a` into `libSSGodot`), so the dynamic variant has no consumer yet. Revisit when a real iOS dynamic consumer appears or App Store validation requires the framework form.
 
 ## Phase 3: Feature Expansion (Post-Release)
 
-*(Phase 3 items are implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only. Any item that turns out to need schema changes is reconsidered for an earlier phase.)*
+*(Phase 3 is post-release work. Its **runtime-feature** items are implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only; any such item that turns out to need a schema change is reconsidered for an earlier phase. The non-runtime items here (the `ssplayer-wgpu` reference Player and the iOS `.framework` packaging task) are downstream consumer / release-packaging work and are exempt from this constraint.)*
 
 *   [x] Animation Mixing/Blending in `ssruntime` (whole-animation weighted blend).
 *   [ ] Per-part animation blending (layered animation / per-bone mask) — backward-compatible extension of the whole-animation blend API. Optional per-source per-part weights or mask covering common use cases (upper-body aim while lower-body runs, damage reactions, additive overlays). Also considers an Additive blend mode (delta-from-base) alongside the existing interpolative mix.
@@ -40,6 +38,8 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
     *   Game-driven transitions: states switched at runtime by Player-supplied triggers/conditions.
     *   Sequence (`.ssqb`) playback: SpriteStudio-authored playlists run as a linear, auto-advancing configuration of the state graph (each item = a state; `repeat_count` = times to play before advancing; `SequenceType` Last/Keep/Top = end-of-list behavior). Reuses `set_loop` / `crossfade`, reproduces SS-editor semantics, and needs no `.fbs` change. Items referencing another SSAB (`ref_anime_pack`) resolve via the shared registry above and switch with no crossfade (blending is single-SSAB only). Built into the state graph, not a separate playback system.
 *   [ ] Particle generation cap (runtime LOD) — Brain-side upper bound on particle generation.
+*   [ ] **`ssplayer-wgpu` implementation** (reference Player, not a runtime/FFI feature): Rust-native rendering reference implementation.
+*   [ ] **iOS dynamic XCFramework — `.framework`-wrapped slices** (packaging task, not a runtime/FFI feature; relevant once iOS gains a native dynamic consumer): package the dynamic (`dylib`) iOS XCFramework's slices as proper `.framework` bundles (`Info.plist` + bundle layout) instead of bare dylibs, for App Store-valid embedding. The initial XCFramework consolidation ships the static (`.a`) XCFramework plus a *bare-dylib* dynamic XCFramework whose install name is corrected to `@rpath/libssruntime.dylib`; that is enough for now because every current consumer static-links `libssruntime.a` on iOS (Unity drops the static `.xcframework` into `Plugins/iOS/`; Godot links the static `.a` into `libSSGodot`), so the dynamic variant has no consumer yet. Revisit when a real iOS dynamic consumer appears or App Store validation requires the framework form.
 
 ## Items not on the roadmap by design
 
