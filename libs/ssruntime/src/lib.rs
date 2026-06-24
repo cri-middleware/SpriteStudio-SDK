@@ -2192,7 +2192,12 @@ impl<'a> Context<'a> {
                 info.start_time = eff.start_time();
                 let s = eff.speed();
                 info.speed = if s == 0.0 { 1.0 } else { s };
-                info.independent = eff.independent();
+                // The implicit frame-0 (Setup) key is never an independent-playback
+                // start point (spec §3 premise): only a real authored EventEffect
+                // may begin independent playback. Forced to false so this mirrors
+                // the Instance synthetic default (`ss_event_instance_info::synthetic_default`,
+                // independent = false) and the two part types stay symmetric.
+                info.independent = false;
                 info.is_synthetic_default = true;
             }
         }
@@ -2464,6 +2469,22 @@ impl<'a> EffectSlot<'a> {
         self.last_independent
     }
 
+    /// Reset the slot's playback / "last started key" memory to its
+    /// just-created state. The host calls this on an explicit head-out
+    /// (`play` / replay) so a re-played animation re-fires the effect from
+    /// scratch instead of debouncing the first key as the same one it last
+    /// started (spec §6). The resource binding, emitter caches and simulator
+    /// are left intact — forcing `last_event_frame = -1` makes the next `step`
+    /// transition, which re-seeds the simulator via the existing `ctx.reset()`
+    /// path.
+    pub fn reset(&mut self) {
+        self.last_event_frame = -1;
+        self.last_is_synthetic = false;
+        self.last_independent = false;
+        self.last_speed = 1.0;
+        self.accumulated_time = 0.0;
+    }
+
     /// Resolve `(cellmap_hash, cell_hash, blend_in)` to render geometry/UV,
     /// caching the result in `emitter_resource_cache`. Linear search — typical
     /// effects have 1-3 unique tuples and the cache survives across frames.
@@ -2522,12 +2543,20 @@ impl<'a> EffectSlot<'a> {
         // Only a real authored EventEffect re-transitions the slot.
         let ignore_implicit = self.last_independent && ev.is_synthetic_default;
 
-        // Parent loop edge re-arms transition detection: the same EventEffect
-        // identity (event_frame + is_synthetic) re-fires on the next playthrough,
-        // and without this reset the equality check below would treat the loop
-        // edge as a no-op (effect frozen at end of previous cycle). Skipped when
-        // the implicit key is being ignored, so independent playback persists.
-        if parent_looped && !ignore_implicit {
+        // Parent loop edge re-arms transition detection so a *synced* effect
+        // re-fires its authored EventEffect on the next playthrough (without this
+        // reset the equality check below would treat the loop edge as a no-op,
+        // freezing the effect at the end of the previous cycle).
+        //
+        // Independent playback follows the opposite rule (spec §4/§6): the slot
+        // remembers "the last key that started playback" and a re-crossing of the
+        // *same* key must NOT restart it — finite single-key effects play once and
+        // stay dead across loops ("一発限り"), only a *different* key re-fires.
+        // So when the last started key was independent, keep the memory intact:
+        // don't re-arm. `ignore_implicit` already skips the synthetic-key case;
+        // `!self.last_independent` additionally protects the real-key case (#6/#7,
+        // e.g. a partial-section loop whose first active key is the play key).
+        if parent_looped && !ignore_implicit && !self.last_independent {
             self.last_event_frame = -1;
             self.last_is_synthetic = false;
         }
@@ -2776,6 +2805,15 @@ impl InstanceSlot {
         self.last_independent
     }
 
+    /// Reset the slot's "last started key" memory to its just-created state so
+    /// the host can re-fire the instance child on an explicit head-out (`play`
+    /// / replay) instead of debouncing the first key as the same one it last
+    /// started (spec §6). The child context is owned by the host and reset
+    /// separately; the next `step` re-configures and replays it on transition.
+    pub fn reset(&mut self) {
+        *self = Self::new();
+    }
+
     /// Drive the slot for one tick. Configures `child_ctx` on transition
     /// edges and advances its frame either by parent-relative seek or by
     /// delta-time update depending on `independent`.
@@ -2786,7 +2824,13 @@ impl InstanceSlot {
         // re-seeked to it. Only a real authored EventInstance re-transitions it.
         let ignore_implicit = self.last_independent && ev.is_synthetic_default;
 
-        if parent_looped && !ignore_implicit {
+        // Synced children re-arm on the parent loop edge so the authored
+        // EventInstance re-fires each playthrough. Independent children follow the
+        // spec §4/§6 "last started key" rule instead: a re-crossing of the same
+        // key must not restart the child (持続/一発限り), only a different key
+        // re-fires. Keep the memory intact when the last started key was
+        // independent. Mirrors EffectSlot.
+        if parent_looped && !ignore_implicit && !self.last_independent {
             self.last_event_frame = -1;
             self.last_is_synthetic = false;
         }

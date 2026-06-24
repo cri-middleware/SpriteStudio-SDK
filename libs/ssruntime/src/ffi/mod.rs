@@ -1210,6 +1210,20 @@ pub extern "C" fn ss_effect_slot_destroy(slot: *mut c_void) {
     }
 }
 
+/// Reset the slot's playback / "last started key" memory to its just-created
+/// state without destroying it. Call on an explicit head-out (`ss_runtime_play`
+/// / replay) so a re-played animation re-fires its effect from scratch instead
+/// of debouncing the first key as the same one the slot last started. The
+/// resource binding and emitter caches are preserved.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_effect_slot_reset(slot: *mut c_void) {
+    if slot.is_null() {
+        return;
+    }
+    let slot = unsafe { &mut *(slot as *mut crate::EffectSlot) };
+    slot.reset();
+}
+
 /// Advance the slot one frame. The caller resolves the active effect event
 /// (via `ss_runtime_get_active_effect_event`) and feeds it here together with
 /// timing inputs. `parent_looped` re-arms transition detection across the
@@ -1272,6 +1286,19 @@ pub extern "C" fn ss_instance_slot_destroy(slot: *mut c_void) {
     unsafe {
         let _ = Box::from_raw(slot as *mut crate::InstanceSlot);
     }
+}
+
+/// Reset the slot's "last started key" memory to its just-created state without
+/// destroying it. Call on an explicit head-out (`ss_runtime_play` / replay) so a
+/// re-played animation re-fires the instance child from scratch instead of
+/// debouncing the first key as the same one the slot last started.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
+    if slot.is_null() {
+        return;
+    }
+    let slot = unsafe { &mut *(slot as *mut crate::InstanceSlot) };
+    slot.reset();
 }
 
 /// Drive the instance slot for one tick. The caller resolves the active
