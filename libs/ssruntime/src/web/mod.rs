@@ -766,6 +766,17 @@ impl SSRuntimeEffectSlot {
     pub fn is_independent(&self) -> bool {
         self.inner.is_independent()
     }
+
+    /// Reset the slot's playback / "last started key" memory to its just-created
+    /// state without destroying it. Call on an explicit head-out (replay) so a
+    /// re-played animation re-fires its effect from scratch instead of debouncing
+    /// the first key as the same one the slot last started. Mirrors the C-API
+    /// `ss_effect_slot_reset`.
+    pub fn reset(&mut self) {
+        self.inner.reset();
+        self.last_draw_plan_ptr = core::ptr::null();
+        self.last_draw_plan_len = 0;
+    }
 }
 
 /// JS-friendly wrapper of `InstanceSlot`. Same conceptual flow as the C FFI:
@@ -823,6 +834,20 @@ impl SSRuntimeInstanceSlot {
 
     pub fn is_independent(&self) -> bool {
         self.inner.is_independent()
+    }
+
+    /// Reset the slot's "last started key" memory to its just-created state
+    /// without destroying it. Call on an explicit head-out (replay) so a
+    /// re-played animation re-fires the instance child from scratch instead of
+    /// debouncing the first key as the same one the slot last started. Mirrors
+    /// the C-API `ss_instance_slot_reset`.
+    pub fn reset(&mut self) {
+        self.inner.reset();
+        self.last_visible = false;
+        self.last_transitioned = false;
+        self.last_independent = false;
+        self.last_child_frame_no = 0.0;
+        self.last_child_looped = false;
     }
 }
 
