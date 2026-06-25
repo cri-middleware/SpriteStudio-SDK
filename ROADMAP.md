@@ -23,6 +23,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
     *   **Co-decided**: a per-override **priority mode** shared across all three kinds, governing coexistence with keyframed attributes — overwrite-on-next-keyframe / hold-until-next-animation / permanent (the legacy `KindIgnoreAttribute` NON / NOW_ANIMATION / PERMANENT trichotomy).
     *   **Co-decided**: sRGB-vs-linear color-value semantics, applied uniformly to keyframed and overridden colors. Settled here so Override blend modes and Player rendering share one contract.
 *   [ ] Migration of existing Players (Unity, pixi.js, etc.) to use `ssruntime`.
+*   [ ] **Contributor License Agreement (CLA) / DCO integration**: Establish a formal process (e.g., via CLA assistant or DCO GitHub App) for contributors to agree to the project's licensing terms upon submitting Pull Requests, ensuring long-term IP protection.
 
 ## Phase 3: Feature Expansion (Post-Release)
 
