@@ -486,6 +486,10 @@ impl SSRuntimeContext {
         self.inner.is_playing()
     }
 
+    pub fn is_playing_forward(&self) -> bool {
+        self.inner.is_playing_forward()
+    }
+
     pub fn is_pausing(&self) -> bool {
         self.inner.is_pausing()
     }

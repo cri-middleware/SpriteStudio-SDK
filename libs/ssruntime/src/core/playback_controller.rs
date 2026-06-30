@@ -141,6 +141,10 @@ impl PlaybackController {
         self.is_skip_frames
     }
 
+    pub fn is_playing_forward(&self) -> bool {
+        self.playback_forward == 1
+    }
+
     pub fn get_playback_direction(&self) -> PlaybackDirection {
         self.playback_direction
     }

@@ -1906,6 +1906,10 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.is_playing()
     }
 
+    pub fn is_playing_forward(&self) -> bool {
+        self.instance.primary_source().controller.is_playing_forward()
+    }
+
     pub fn is_pausing(&self) -> bool {
         self.instance.primary_source().controller.is_pausing()
     }
