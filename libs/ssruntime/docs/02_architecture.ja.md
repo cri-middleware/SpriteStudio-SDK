@@ -83,12 +83,76 @@ Player の実装を開始する前に、対象のゲームエンジンやプラ�
 ## 2. 内部構造と描画戦略
 Player がアニメーションをどう管理し、レンダリングするかを決定します。
 
-### クラス設計のベストプラクティス (API と内部エンジンの分離)
-Player のクラス構成は、**「ユーザー向け API (外側)」** と **「描画コア (内側)」** の 2 つに分離する設計（カプセル化）を強く推奨します。
-- **表向きの Player クラス (ユーザーAPI・表示ノード層)**:
-  ゲームエンジンやグラフィックライブラリの標準的な表示ノード（コンテナ）を継承し、ユーザーが触る `play()`, `stop()` などの API とイベントを提供します。C-API 呼び出しやメモリのポインタ操作といった複雑な処理はここには書きません。
-- **内部の Player クラス (内部エンジン・描画コア層)**:
-  エンジンの表示ツリーからは独立した軽量なクラスです。内部に `libssruntime` コンテキストを持ち、メモリのプーリングや低レイヤーAPIへの頂点送信など、最高パフォーマンスを出すための処理をカプセル化します。この分離により、対象エンジンのバージョンアップやアーキテクチャ変更にも対応しやすくなります。
+### クラス設計のベストプラクティス（責務分離と推奨レイヤー構成）
+
+Player のクラス構成は **3 つの責務**へ分けます（**FFI 生存管理・再生状態・ホスト統合**という直交関心事から導かれ、既存 Player はいずれもこの形に収束）。各責務の下には言語ごとの生成 **FFI バインディング**（csbindgen / ffigen / wasm-bindgen / ctypes 等）が常在します。
+
+- **(1) 内部エンジン（描画コア）** — `libssruntime` コンテキスト保持・FrameData/SoA 取得・ワールド変換・頂点構築・テクスチャ解決・描画発行。**ホスト非依存**でヘッドレステストや複数表示から再利用可。
+- **(2) 再生制御（Player / Controller）** — `play`/`stop`/`seek`・速度・ループ・イベント・再生状態・デルタ入力。**＋インスタンス／エフェクトの子スロット管理**（子は *再帰サブプレイヤー*。生成・破棄・独立再生・サブフレーム伝播を担う。step と頂点合成は (1)。詳細 → [08_advanced_rendering.ja.md](./08_advanced_rendering.ja.md)）。
+- **(3) 表示ノード（View / Adapter）＝任意** — エンジンの標準表示ノード（`MonoBehaviour` / `Node2D` / `Displayable` / Widget 等）にコアを**合成で保持**し描画へ渡す薄い層。
+
+**コア（Layer 1–3）が成果物、表示ノード（Layer 4）は糊**: バインディング＋内部エンジン＋再生制御の **L1–3 がホスト非依存の「コア Player」** で、これ単体で再生に十分です。自前で描画ループを回すホスト（カスタム C++ / SDL / 生 OpenGL / 多くのグラフィックスライブラリ）は `update(dt)` → DrawBatch 取得 or `paint` でコアを直接駆動でき、L4 は不要。**L4 は任意**で、保持型シーングラフ／ウィジェットを持つエンジン（Unity / Godot / Flutter）への idiomatic 統合時のみ足します。
+
+```mermaid
+graph TD
+    classDef core fill:#83a7cc,stroke:#333,stroke-width:2px,color:#000;
+    classDef ffi fill:#e6e6e6,stroke:#333,stroke-width:2px,color:#000,stroke-dasharray: 5 5;
+    classDef brain fill:#dea584,stroke:#333,stroke-width:2px,color:#000;
+
+    subgraph L4 [Layer 4 / 責務3: 表示ノード View / Adapter（任意）]
+        V1["表示ノード A<br/>例: MeshRenderer / Node2D / Canvas / Displayable"]:::core
+        V2["表示ノード B<br/>UI / 別バックエンド"]:::core
+    end
+    subgraph L3 [Layer 3 / 責務2: 再生制御 Player / Controller]
+        P["play・stop・seek・loop・events / 再生状態 / 時間駆動<br/>インスタンス・エフェクト子スロット管理（再帰サブプレイヤー）"]:::core
+    end
+    subgraph L2 [Layer 2 / 責務1: 内部エンジン 描画コア]
+        E["Internal Player<br/>Context・FrameData/SoA・ワールド変換・頂点構築・テクスチャ"]:::core
+    end
+    subgraph L1 [Layer 1: FFI バインディング 生成物]
+        B["csbindgen / ffigen / wasm-bindgen / ctypes"]:::ffi
+    end
+    subgraph Native [Brain: libssruntime]
+        R["補間・DrawBatch 計算"]:::brain
+    end
+
+    V1 -->|"合成で保持・tick"| P
+    V2 -->|"合成で保持・tick"| P
+    P -->|"内包・update(dt)"| E
+    E -->|"C-API"| B
+    B <-->|"C-API"| R
+    E -.->|"頂点・バッチ"| V1
+    E -.->|"頂点・バッチ"| V2
+    style L4 stroke-dasharray: 6 4
+```
+
+**鉄則**: コアと表示ノードは**継承でなく合成**で分離します（表示ノードがコアを継承する実装は皆無）。図の合成チェーンが骨子で、これにより 1 つの再生状態を**複数の表示方式**へ出せます（Unity=ワールド/uGUI、Web=PixiJS/RMMZ、Ren'Py=transform/mesh）。
+
+#### 束ね方はホスト次第（実装の実構成）
+
+| Player | 言語 | (1) 内部エンジン | (2) 再生制御 | (3) 表示ノード | 束ね方 |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Unity | C# | `SpriteStudioNativeContext` ＋ `SpriteStudioInternalPlayer` ＋ `GeometryBuilder` | `SpriteStudioPlaybackCore` | `SpriteStudioPlayer`(Mesh) / `SpriteStudioGraphic`(uGUI) | (1) 独立／(2) を各 View が保持 |
+| Web | TS | `SSRuntimeManager` | `InternalPlayerBase` / `DirectInternalPlayer` | `SSPlayer`(PixiJS) | (1)+(2) 密結合／(3) 分離 |
+| Godot | C++ | `SsInternalPlayer` | （同左に内包） | `SpriteStudioPlayer2D`(Node2D) | (1)+(2) 融合／(3) 分離 |
+| Ren'Py | Python | `SSRuntime` ＋ framedata ＋ rigs | `SSInternalPlayer` | `SSPlayer`(Displayable) | (1)/(2)/(3) 分離（バインディングは (1) に内包） |
+| Flutter（設計） | Dart | `SpriteStudioInternalPlayer` | `SpriteStudioPlayer` | `SpriteStudioView` ほか | バインディング(`ffigen`)＋(1)(2)(3) をすべて独立＝**4 層** |
+
+- **(1)+(2) は融合可**（Web / Godot）— 再生制御が C-API の薄ラッパで足りる場合。
+- **(2) は (3) から必ず分離**— 表示ノードが再生成される（Flutter の Widget）か、複数表示で再生状態を共有する場合。Unity のようにベース制約（`MonoBehaviour` と `Graphic`）があれば (2) を `PlaybackCore` に括り出し各 View が保持。
+- **迷ったら完全分離**（Ren'Py / Flutter）。**名前でなく責務で設計**する（「InternalPlayer」が指す層は実装ごとに異なる）。
+
+#### 参考実装
+難所（マスク・パーツカラー・Instance/Effect・寿命管理）は既存 Player のソースが最良の手本です。
+
+- **SSPlayerForUnity**（C#）— Job System 頂点構築、ワールド／uGUI の 2 アダプタ、`IDisposable` ＋ Burst Job 同期。
+- **SSPlayerForWeb**（TS / PixiJS）— wasm-bindgen、ゼロコピー view、`FinalizationRegistry`、`IResourceManager`。
+- **SSPlayerForGodot**（C++）— `RenderingServer` 直接描画、Node2D 合成、デストラクタ破棄順。
+- **SSPlayerForRenPy**（Python）— カバレッジ方式マスク、`Displayable` 統合、コアのヘッドレステスト。
+
+#### 補足（生存管理・ECS）
+- **ネイティブ寿命**: 生存管理を 1 箇所に集約し**破棄順を厳守**（Context → Resource、非同期処理は完了後に解放）。明示破棄＋GC ファイナライザを併設。
+- **ECS（Unity DOTS / Bevy 等）**: オブジェクト階層でなく**コンポーネント＋システム**で実装。クラス構成は変わるが「コア / 制御 / 統合」の責務分離は保つ。
 
 ### 描画方式の選択
 - **ダイレクト描画 / バッチレンダリング方式**:
