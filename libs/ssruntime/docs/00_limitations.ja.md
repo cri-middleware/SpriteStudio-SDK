@@ -17,6 +17,7 @@ Player 実装に着手する **前に** 必ず確認してください。
 - [AnimationResource と Context のライフタイム](#animationresource-と-context-のライフタイム)
 - [ssab embedded モードの制限事項](#ssab-embedded-モードの制限事項)
 - [アニメーションブレンド時の制限](#アニメーションブレンド時の制限)
+- [オーディオ（サウンド）の逆再生非対応](#オーディオサウンドの逆再生非対応)
 
 ---
 
@@ -102,6 +103,15 @@ ssab embedded は、そのアニメーションパックが **実際に利用す
 - **deform table の FrameData 浪費**: secondary source の deform は FlatBuffer に書き込まれるが unreferenced。FrameData サイズが膨らみますが正確性には影響しません。
 
 > 関連章: [12. アニメーションブレンド / ミキシング](./12_animation_blending.ja.md)
+
+## オーディオ（サウンド）の逆再生非対応
+
+オーディオ再生は、**アニメーションが時間軸上で順方向（Forward）に進んでいる時のみ**行うように制限することを推奨します。
+
+- 多くのオーディオエンジン（Web Audio API等）は音声ファイルの逆再生を標準ではサポートしていません。
+- Player側の実装において、ランタイムが提供する `is_playing_forward()` （PingPongの往路・復路やBackward設定を考慮した現在の進行方向）と、ユーザー設定の再生速度（`speedScale`）の符号を比較し、実質的な再生方向が順方向である場合のみ `audios` イベントを処理するように実装してください。
+
+> 関連章: [11. 外部リソースとオプション機能](./11_optional_features.ja.md)
 
 ---
 [目次に戻る](./README.ja.md)
