@@ -30,12 +30,12 @@ ssinterpolate = { path = "libs/ssinterpolate" }
 flatbuffers = { version = "25.12.19", default-features = false }
 wide = { version = "1.5.0", default-features = false }
 libm = "0.2.16"
-wasm-bindgen = { version = "0.2.125", default-features = false }
+wasm-bindgen = { version = "0.2.126", default-features = false }
 dlmalloc = "0.2.14"
 rayon = "1.12.0"
 cbindgen = "0.29.4"
 csbindgen = "1.9.8"
-vergen-gitcl = { version = "10.0.0", features = ["build"] }
+vergen-gitcl = { version = "10.0.1", features = ["build"] }
 
 [profile.dev]
 panic = "abort"

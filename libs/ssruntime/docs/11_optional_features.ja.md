@@ -75,48 +75,11 @@ void Player::set_cellmap_texture(const std::string& cellmap_name, Texture* overr
 - **遅延初期化 (Lazy Initialization)**:
   - 音声を使用しないプロジェクトで無駄にオーディオエンジン（Web Audio API の `AudioContext` など）が起動してリソースを消費するのを防ぐため、SSAB内に音声データが含まれていることを検知した初回のみオーディオエンジンを生成する（遅延初期化）設計が望ましいです。
 - **基本的な再生**:
-  - `ss_runtime_get_passed_event_count` / `index` で取得したフレームごとのイベントから `audios` イベントを取り出し、対象のオーディオを再生します。
+  - オーディオは毎フレームの更新時に発火する `audios` イベントを契機として再生されます（`ss_runtime_get_passed_event_count` / `index` を使用して取得します）。
   - **重要**: イベント処理は逆再生時にも発火しますが、逆方向の音声再生はオーディオAPI側でサポートされていないことが多いため、**順再生（再生速度 > 0 かつ 前進方向）の時のみ音声を再生**するようにフィルタリングを行う必要があります（逆再生時の音声再生は制限事項となります）。
-  - `loopNum` (ループ回数) に対応し、`-1` などの0以下の値の場合は無限ループとして扱います（1の場合は1回再生）。
-  - 同一パーツから同じ音声が再度トリガーされた場合、直前の再生を停止してから新しく再生を開始するなど、音声の重複（多重再生）を防ぐ管理が必要です（パーツインデックスごとにアクティブな音声を管理する等）。
-- **一時停止 (Pause) / 再開 (Resume)**:
-  - アニメーションが `pause()` された際、オーディオエンジン側の一時停止機能（Web Audio API の `suspend()` 等）を用いて再生中のすべての音声を一時停止します。
-  - アニメーション再開時（`resume()` または `pause()` トグル時）には、オーディオも再開（`resume()`）します。
-  - リスタート時など、`play()` を明示的に呼ぶ際にもオーディオエンジンがサスペンド状態のままにならないように、サスペンド解除を行う必要があります。
-- **シーク (Seek) と音声の同期 (オプショナル)**:
-  - 特定のフレームにジャンプ（シーク）した際、本来ならその時点で鳴っているべき音声を計算して途中から再生（オフセット再生）する対応は**オプショナル（任意）**です。
-  - 実装する場合は、アニメーション開始フレームからシーク先フレームまでのタイムライン上にある `audios` イベントを走査し、各音声の開始フレームからの「経過時間」を算出して、オーディオAPIのオフセット再生機能を利用します。
-  - 以下はシーク時のオフセット算出の擬似コード（TypeScript風）です：
-```typescript
-// シーク時のオーディオ再生位置（オフセット）算出の擬似コード例
-function syncAudioToFrame(targetFrame: number, fps: number) {
-    audioEngine.stopAll(); // 1. 再生中の音声をすべて停止する
-    const activeAudio = new Map(); // partIndex -> AudioData
+  - SpriteStudioエディタ本体とは異なり、Playerの実装では**シーク（任意のフレームへのジャンプ操作）によるオーディオの再生位置（オフセット）の同期は行いません**。音声はあくまでタイムライン上の該当フレームを**通過した瞬間（イベント発火時）のみ再生**される仕様となります。
+  - `loopNum` はその名の通り「ループ回数」という変数名ですが、実質的には「再生回数」を表します。1以上の値が指定され、その回数分だけ再生を繰り返します。SpriteStudioのオーディオには無限ループの概念はありません。
 
-    // 2. 開始フレームから目的のフレームまでイベントを走査
-    // （※FlatBuffersのイベント配列を順に調べるか、キャッシュを利用する）
-    for (let f = startFrame; f <= targetFrame; f++) {
-        const events = getEventsAtFrame(f);
-        for (const audio of events.audios) {
-            // 同一パーツで鳴った新しい音声は古い音声を上書きする
-            activeAudio.set(audio.partIndex, {
-                soundName: audio.soundName,
-                loopNum: audio.loopNum,
-                startFrame: f // 音声がトリガーされたフレーム
-            });
-        }
-    }
-
-    // 3. 収集したアクティブな音声を適切なオフセット（秒）で再生
-    activeAudio.forEach((data, partIndex) => {
-        const elapsedFrames = targetFrame - data.startFrame;
-        const elapsedSeconds = elapsedFrames / fps;
-        
-        // オーディオエンジン側で途中からの再生(playWithOffset)を行う
-        audioEngine.playWithOffset(data.soundName, data.loopNum, partIndex, elapsedSeconds);
-    });
-}
-```
 
 ## 5. エディタ拡張とワークフローの統合
 
