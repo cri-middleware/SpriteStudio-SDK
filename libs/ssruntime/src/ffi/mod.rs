@@ -737,6 +737,14 @@ pub extern "C" fn ss_runtime_is_playing(context: *mut c_void) -> bool {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_is_playing_forward(context: *mut c_void) -> bool {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.is_playing_forward();
+    }
+    false
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_is_pausing(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {
         return ffi_context.ctx.is_pausing();
