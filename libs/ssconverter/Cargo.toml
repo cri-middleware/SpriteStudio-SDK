@@ -20,7 +20,7 @@ ssab = { workspace = true, features = ["converter"] }
 rayon = { workspace = true, optional = true }
 walkdir = { version = "2.5.0", optional = true }
 wasm-bindgen = { workspace = true, optional = true }
-js-sys = { version = "0.3.100", optional = true }
+js-sys = { version = "0.3.103", optional = true }
 
 [features]
 default = ["ffi"]
