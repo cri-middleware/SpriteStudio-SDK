@@ -33,7 +33,7 @@ fn main() {
             // Post-process the generated C# file to add Unity-specific platform macros for static linking (__Internal)
             if let Ok(content) = std::fs::read_to_string(csharp_output_path) {
                 let modified = content
-                    .replace("const string __DllName = \"ssruntime\";", "#if UNITY_IOS || UNITY_TVOS || UNITY_WEBGL\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif")
+                    .replace("const string __DllName = \"ssruntime\";", "#if (UNITY_IOS || UNITY_TVOS || UNITY_WEBGL) && !UNITY_EDITOR\n        const string __DllName = \"__Internal\";\n#else\n        const string __DllName = \"ssruntime\";\n#endif")
                     .replace("namespace CsBindgen", "namespace SpriteStudio.SsRuntime");
                 std::fs::write(csharp_output_path, modified).unwrap();
             }
