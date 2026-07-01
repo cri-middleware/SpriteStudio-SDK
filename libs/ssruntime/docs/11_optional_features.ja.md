@@ -83,40 +83,7 @@ void Player::set_cellmap_texture(const std::string& cellmap_name, Texture* overr
   - アニメーションが `pause()` された際、オーディオエンジン側の一時停止機能（Web Audio API の `suspend()` 等）を用いて再生中のすべての音声を一時停止します。
   - アニメーション再開時（`resume()` または `pause()` トグル時）には、オーディオも再開（`resume()`）します。
   - リスタート時など、`play()` を明示的に呼ぶ際にもオーディオエンジンがサスペンド状態のままにならないように、サスペンド解除を行う必要があります。
-- **シーク (Seek) と音声の同期 (オプショナル)**:
-  - 特定のフレームにジャンプ（シーク）した際、本来ならその時点で鳴っているべき音声を計算して途中から再生（オフセット再生）する対応は**オプショナル（任意）**です。
-  - 実装する場合は、アニメーション開始フレームからシーク先フレームまでのタイムライン上にある `audios` イベントを走査し、各音声の開始フレームからの「経過時間」を算出して、オーディオAPIのオフセット再生機能を利用します。
-  - 以下はシーク時のオフセット算出の擬似コード（TypeScript風）です：
-```typescript
-// シーク時のオーディオ再生位置（オフセット）算出の擬似コード例
-function syncAudioToFrame(targetFrame: number, fps: number) {
-    audioEngine.stopAll(); // 1. 再生中の音声をすべて停止する
-    const activeAudio = new Map(); // partIndex -> AudioData
 
-    // 2. 開始フレームから目的のフレームまでイベントを走査
-    // （※FlatBuffersのイベント配列を順に調べるか、キャッシュを利用する）
-    for (let f = startFrame; f <= targetFrame; f++) {
-        const events = getEventsAtFrame(f);
-        for (const audio of events.audios) {
-            // 同一パーツで鳴った新しい音声は古い音声を上書きする
-            activeAudio.set(audio.partIndex, {
-                soundName: audio.soundName,
-                loopNum: audio.loopNum,
-                startFrame: f // 音声がトリガーされたフレーム
-            });
-        }
-    }
-
-    // 3. 収集したアクティブな音声を適切なオフセット（秒）で再生
-    activeAudio.forEach((data, partIndex) => {
-        const elapsedFrames = targetFrame - data.startFrame;
-        const elapsedSeconds = elapsedFrames / fps;
-        
-        // オーディオエンジン側で途中からの再生(playWithOffset)を行う
-        audioEngine.playWithOffset(data.soundName, data.loopNum, partIndex, elapsedSeconds);
-    });
-}
-```
 
 ## 5. エディタ拡張とワークフローの統合
 
