@@ -9,7 +9,7 @@ No guarantees or support are provided, and we cannot respond to requests or bug 
 A high-performance, engine-agnostic animation player SDK for **OPTPiX SpriteStudio 7**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
-## The Workflow (How it works)
+## 🔄 The Workflow (How it works)
 
 1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
 2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the full SpriteStudio 7 feature set out of the box.
@@ -51,7 +51,7 @@ graph LR
     class BIN generated;
 ```
 
-## Key Supported Features
+## ✨ Key Supported Features
 
 * **Standard Animations:** Bone hierarchies, transforms, and full keyframe interpolations (Bezier, Hermite, Linear, etc.).
 * **Sub-frame Interpolation:** Smooth, continuous playback beyond the base framerate. Perfect for high-refresh-rate displays (144Hz+) and slow-motion effects.
@@ -61,7 +61,7 @@ graph LR
 * **Instance & Masks:** Sub-animation instancing and stencil mask clipping.
 * **Events & User Data:** Frame-accurate callbacks for audio, signals, and user data.
 
-## Why choose this SDK?
+## 💡 Why choose this SDK?
 
 * **1. Zero-Math Integration & Cross-Engine Visual Consistency**
   The SDK handles all complex state computations (bone matrices, mesh deformations, and hierarchical opacity/colors) and outputs an optimized `DrawBatch` plan. Your engine just reads the generated vertices and renders the primitives. Every renderer consumes the same `DrawBatch` plan, structurally eliminating the most common source of engine-specific visual drift.
@@ -70,7 +70,7 @@ graph LR
 * **3. Extreme Portability (Built with `#![no_std]` Rust)**
   The core runtime is written in strictly `#![no_std]` Rust, meaning it has zero dependencies on operating systems or standard libraries. It integrates seamlessly via C-API or WASM, allowing it to run anywhere—from memory-constrained mobile/embedded devices to web browsers—with rock-solid stability and zero unpredictable allocations.
 
-## Libraries & Tools
+## 📦 Libraries & Tools
 
 - Libraries
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects that consist of `sspj`, `ssae`, `ssee`, `ssse`, `charmap` files.
@@ -81,7 +81,7 @@ graph LR
 - Tool
     - [ssconverter-cli](./cli/README.md): a command-line tool that parses `sspj` projects and creates `ssab` files.
 
-## Quick Start
+## 🚀 Quick Start
 
 Follow these steps to convert a sample project and see the SDK in action.
 
@@ -120,11 +120,11 @@ This repository includes several sample projects in the `tests/` directory to ve
 
 You can use these projects as references when implementing your own player or verifying the SDK's behavior.
 
-## Support & Feedback
+## 💬 Support & Feedback
 
 If you encounter bugs, need help, or want to suggest features, please refer to our [Support Guide](./SUPPORT.md).
 
-## For SDK Developers
+## 🛠️ For SDK Developers
 ### Prepare
 install [rustup](https://rustup.rs/)
 
