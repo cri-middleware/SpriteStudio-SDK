@@ -146,6 +146,9 @@ jobs:
         with:
           toolchain: ${{ steps.msrv.outputs.version }}
 
+      - name: Setup Rust cache (MSRV)
+        uses: Swatinem/rust-cache@v2
+
       - name: cargo check (workspace, all targets, all features)
         run: cargo check --workspace --all-targets --all-features --locked
         shell: bash
