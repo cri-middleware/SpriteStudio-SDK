@@ -63,7 +63,7 @@ for (auto batch : *batches) {
 
 ### ⚠️ FlatBuffers の per-element アクセサは「重い」：固定長 struct ベクタは生読みする
 
-SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パーツ状態フラグ / alpha 等）** や **`parts_color`（頂点カラー）** — は `FrameData` 内の FlatBuffers ベクタとして配送されます。これらを `frame_data->parts_color()->Get(i)->lt()->rgba()->r()` のような **per-element アクセサで1要素ずつ読むと、想像以上に高コスト**です（アクセサオブジェクト構築 + フィールド毎の境界チェック + バッファ間接参照。特に入れ子構造の `parts_color` が重い）。**C# / JS-TS のような高水準ホストでは、このアクセサコストが多体シーンの支配的ボトルネックになり得ます。**
+SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パーツ状態フラグ / alpha 等）** や **`parts_color`（頂点カラー）** — は `FrameData` 内の FlatBuffers ベクタとして配送されます。これらを `frame_data->parts_color()->Get(i)->lt()->rgba()->r()` のような **per-element アクセサで1要素ずつ読むと、想像以上に高コスト**です（アクセサオブジェクト構築 + フィールド毎の境界チェック + バッファ間接参照。特に入れ子構造の `parts_color` が重い）。**C# / JS-TS / Python のような高水準ホストでは、このアクセサコストが多体シーンの支配的ボトルネックになり得ます。**
 
 > [!WARNING]
 > **実測 (Unity / C#, 100体):** `parts` + `parts_color` を per-element アクセサで毎フレーム読む処理が **約 7ms/frame**（frame-data 取り込みコストの ~72%）を占めていた。下記の「生読み」に変えたところ **約 0.27ms** に短縮（~26倍）。
@@ -73,6 +73,7 @@ SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パー
 
 - **C#**: 生成コードの struct とバイト互換な `[StructLayout(LayoutKind.Explicit)]` ミラーを定義し、`(MirrorStruct*)(fb_ptr + vectorOffset)` にキャストして読む。
 - **JS/TS (WASM)**: ベクタ先頭オフセットに `DataView` / 型付き配列ビューを張り、フィールドをオフセット直読みする。
+- **Python (ctypes 等)**: ベクタ先頭のバイト列に対し `struct.iter_unpack`（固定長 struct ベクタ）/ `struct.unpack_from`（数値ベクタ）で一括デコードし、per-element アクセサを回避する。純 Python の生成アクセサ（属性アクセス + 境界チェックが積み重なる）はとりわけ高コストなため、`parts` / `parts_color` / `draw_batches` の生読み化は多体シーンで特に効果が大きい。
 - **C++**: FlatBuffers struct はパック済み・連続配置なので、ベクタ先頭を配列として扱える（アクセサのオーバーヘッドは元々小さいが、ホットパスでは直読みが有利）。
 
 > [!CAUTION]
