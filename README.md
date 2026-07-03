@@ -1,7 +1,7 @@
 [**日本語**](./README.ja.md) | [**English**](./README.md)
 # SpriteStudio-SDK
 
-[![CI](https://github.com/cri-middleware/SpriteStudio-SDK/actions/workflows/ci.yml/badge.svg)](https://github.com/cri-middleware/SpriteStudio-SDK/actions/workflows/ci.yml)
+
 
 This repository is in an experimental and unstable phase.
 No guarantees or support are provided, and we cannot respond to requests or bug reports at this time.
