@@ -1,3 +1,5 @@
+> **日本語** | [English](./10_introduction.md)
+
 # はじめに (Introduction)
 
 このドキュメントは、`libssruntime` を使用して、独自のゲームエンジンやプラットフォーム向けの SpriteStudio 7 アニメーション再生プレイヤー（Player）を実装するためのガイドラインです。

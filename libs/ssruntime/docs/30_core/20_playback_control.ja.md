@@ -1,3 +1,5 @@
+> **日本語** | [English](./20_playback_control.md)
+
 # 再生制御とイベント処理 (Playback & Events)
 
 アニメーションの再生状態（再生・停止・ループ）の管理と、タイムライン上のイベント（ユーザーデータ・シグナル）をゲームロジックへ通知する仕組みを実装します。
@@ -126,17 +128,19 @@ for (int i = 0; i < count; i++) {
 
 | カテゴリ | 推奨 API | 内容 |
 | :--- | :--- | :--- |
-| **基本操作** | `play(name, loop)`, `stop()`, `pause()` | 再生・停止・一時停止 |
+| **基本操作** | `set_animation(name)`, `play(loop)`, `stop()`, `pause()` | アニメーション設定・再生・停止・一時停止 |
 | **パラメータ** | `set_speed(f32)`, `set_frame(f32)` | 速度と現在のフレーム位置 |
 | **コールバック** | `finished`, `looped`, `user_data`, `signal` | 各種イベント発生時の通知 |
 
-### setAnimation / play 分離型 API（任意）
+### `set_animation` と `play` の分離（推奨）
 
-`play(name, loop)` の代わりに、**セットアップ**と**再生開始**を別メソッドへ分けて公開する設計も推奨されます（Godot / Unity 移植が採用）。内部的には C-API の `ss_runtime_setup_animation` → `ss_runtime_play`（本章 1. 参照）をそのまま 2 つの公開 API に割り当てます。
+アニメーションの**セットアップ**（`set_animation`）と**再生開始**（`play`）は、別メソッドへ分けて公開することを推奨します（Godot / Unity 移植が採用）。内部的には C-API の `ss_runtime_setup_animation` → `ss_runtime_play`（本章 1. 参照）をそのまま 2 つの公開 API に割り当てます。
+
+> **なぜ分けるか（メモリアロケーション）**: `set_animation`（`ss_runtime_setup_animation`）はアニメーションのセットアップ時に ssruntime 内部でヒープアロケーションを伴います。これを `play` の内部で毎回行うと、再生のたびにアロケートが走ってしまいます。**アロケーションを伴うセットアップは再生前に済ませ、`play()` はアロケーションの無い軽い操作に保つ**のが狙いです。
 
 | API | 内容 |
 | :--- | :--- |
-| `setAnimation(name)` | アニメのデータをロード・設定し、先頭フレームで待機する（**再生は開始しない**） |
+| `set_animation(name)` | アニメのデータをロード・設定し、先頭フレームで待機する（**再生は開始しない**）。ここで内部アロケーションが発生する |
 | `play()` / `play(startFrame)` | セットアップ済みのアニメをその場（または指定フレーム）から再生開始する |
 
 利点:
@@ -145,7 +149,7 @@ for (int i = 0; i < count; i++) {
 - 再生せずに先頭フレームを posed 表示できる（待機ポーズ）。
 - 再生中でなくてもアニメを差し替えられる（次に `play()` を呼ぶまで開始しない）。
 
-この設計では、再生開始時の通知として `started` コールバックを併せて提供すると、`setAnimation`（差し替え）と `play`（開始）の区別が利用側で扱いやすくなります。
+この設計では、再生開始時の通知として `started` コールバックを併せて提供すると、`set_animation`（差し替え）と `play`（開始）の区別が利用側で扱いやすくなります。
 
 > [!NOTE]
 > ループ回数・速度・再生方向などは `setup_animation` が既定値へ戻すため、`setAnimation` 内で（または `play` の前に）再適用してください。

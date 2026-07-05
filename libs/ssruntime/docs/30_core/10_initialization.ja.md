@@ -1,3 +1,5 @@
+> **日本語** | [English](./10_initialization.md)
+
 # データのロードと初期化 (Initialization)
 
 Player の基本機能の実装において、初期化時に行うべき処理と、メモリ管理の戦略について記載します。

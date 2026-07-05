@@ -1,3 +1,5 @@
+> **日本語** | [English](./README.md)
+
 # SpriteStudio 7 Player 移植ガイド
 
 このガイドでは、`libssruntime` (Brain) を使用して、独自のゲームエンジンやプラットフォーム向けに **SpriteStudio 7 プレイヤー (Player)** を実装する手順を解説します。

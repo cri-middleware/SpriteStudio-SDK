@@ -1,3 +1,5 @@
+> **日本語** | [English](./30_render_loop.md)
+
 # レンダリングループとバッチ描画 (Rendering & Batching)
 
 `libssruntime` (Brain) が算出した計算結果を効率的に取得し、ゲームエンジンで描画するための「レンダリング契約」について記載します。

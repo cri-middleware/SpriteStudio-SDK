@@ -1,3 +1,5 @@
+> **日本語** | [English](./30_implementation_roadmap.md)
+
 # 実装ロードマップ：overall.sspj による機能検証
 
 Player の実装において、最も重要かつ確実な検証方法は **「SpriteStudio 7 本体のエディタ上での表示・動作と、自身の実装した Player の動作を常に比較すること」** です。

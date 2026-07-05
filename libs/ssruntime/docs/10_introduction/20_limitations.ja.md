@@ -1,3 +1,5 @@
+> **日本語** | [English](./20_limitations.md)
+
 # 制限事項 (Limitations)
 
 Player 実装に着手する **前に** 必ず確認してください。

@@ -1,3 +1,5 @@
+> **日本語** | [English](./60_animation_blending.md)
+
 # アニメーションブレンド / ミキシング
 
 複数のアニメーションを重み付きで合成し、滑らかな遷移 (state machine のクロスフェード) や locomotion ブレンド (walk + run の混合) を実現する API です。Phase 3 で追加された機能で、`.fbs` 変更を伴わず FFI と runtime state のみで構成されます。
