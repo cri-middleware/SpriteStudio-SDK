@@ -1,4 +1,4 @@
-# 実装フェーズ 3：レンダリングループとバッチ描画 (Rendering & Batching)
+# レンダリングループとバッチ描画 (Rendering & Batching)
 
 `libssruntime` (Brain) が算出した計算結果を効率的に取得し、ゲームエンジンで描画するための「レンダリング契約」について記載します。
 
@@ -14,6 +14,10 @@
 | **ローカル頂点** | `ss_runtime_get_local_vertices` | Pivot 反転等が適用済みの頂点座標（5頂点 x 2軸） |
 | **テクスチャハッシュ** | `ss_runtime_get_cell_texture_hashes` | パーツが使用しているテクスチャの識別子 |
 | **UV / セルメタ** | `ss_runtime_get_local_uvs`, `cell_meta` | アニメーション済みの UV 座標やセルサイズ |
+
+### UV アニメーション・反転 (Flip) は取得データに反映済み
+
+UV アニメーション（テクスチャ切り出し範囲の移動・回転・拡大縮小）や、パーツ／セルの反転（`flip_h` / `flip_v` / `img_flip_h` / `img_flip_v`）は、**すべて Brain 側で計算のうえ `local_vertices` / `local_uvs` に反映済み**です。Player は上記 SoA バッファをそのまま頂点座標・テクスチャ座標として渡すだけでよく、座標や UV を反転させる追加ロジックは必要ありません。
 
 ## 2. バッチ描画契約 (The Batching Contract)
 
@@ -124,4 +128,4 @@ SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パー
 Player はこれをフックにして、エンジンの Stencil Buffer や専用のマスタリング機能を開始・更新します。
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

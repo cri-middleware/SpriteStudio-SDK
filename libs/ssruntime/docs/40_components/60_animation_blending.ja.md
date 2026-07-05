@@ -1,4 +1,4 @@
-# アニメーションブレンド / ミキシング (Phase 3)
+# アニメーションブレンド / ミキシング
 
 複数のアニメーションを重み付きで合成し、滑らかな遷移 (state machine のクロスフェード) や locomotion ブレンド (walk + run の混合) を実現する API です。Phase 3 で追加された機能で、`.fbs` 変更を伴わず FFI と runtime state のみで構成されます。
 
@@ -21,7 +21,7 @@
 ### Active source の条件
 `animation_idx >= 0 && weight > 0.0` の slot のみが連続値合成に参加します。weight ≤ 0 は inactive (寄与なし)。
 
-**Primary 例外**: Primary が `is_active() == false` (weight = 0) であっても、構造ソースとして必ず `extract_pose` が走ります。weight = 0 の primary は「Cell や離散属性は私が決めるが、連続値は secondary に任せる」という意味になります。
+**Primary 例外**: Primary が `is_active() == false` (weight = 0) であっても、構造ソースとして必ず pose 抽出（構造の展開）が行われます。weight = 0 の primary は「Cell や離散属性は私が決めるが、連続値は secondary に任せる」という意味になります。
 
 ### Weight の自動正規化
 weight は絶対値ではなく相対比率として解釈されます。`(0.7, 0.3)` と `(7.0, 3.0)` は同じ合成結果を生みます (内部で合計 1 に正規化)。
@@ -77,7 +77,7 @@ if (!isnanf(w)) { /* 有効値 */ }
 ### `ss_runtime_get_frame_data(frame_no)` の挙動
 - **Primary**: 引数の `frame_no` で評価 (single-animation 時の挙動を維持)。
 - **Secondary**: 各 source の controller の現在 frame (`get_frame_no`) で評価。
-- 引数 `frame_no` が受け付けるのは半開区間 `[start_frame, end_frame + 1)` で、終端区間 `(end_frame, end_frame + 1)` は最終キーフレームを保持して返します。詳細は [6. サブフレーム再生 — 受け付けるフレーム範囲と終端の扱い](./06_playback_control.ja.md#受け付けるフレーム範囲と終端の扱い) を参照。
+- 引数 `frame_no` が受け付けるのは半開区間 `[start_frame, end_frame + 1)` で、終端区間 `(end_frame, end_frame + 1)` は最終キーフレームを保持して返します。詳細は [6. サブフレーム再生 — 受け付けるフレーム範囲と終端の扱い](../30_core/20_playback_control.ja.md#受け付けるフレーム範囲と終端の扱い) を参照。
 
 ---
 
@@ -287,35 +287,35 @@ const src_handle = ctx.get_passed_event_source_handle(0);  // u32 (0xFFFFFFFF if
 ## 8. 既知の制限
 
 ### parts_color の α premultiplication
-`extract_pose` (Stage A) 内で各 source の `parts_color` は自身の hierarchy α と pre-multiply されます。Mix 後の `vertex color` は primary の `parts_color_vec` を verbatim 使用するため、**primary の α が embedded** された状態となり、`state.alpha` (mixed) とは別系統の値になります。
+ブレンド時、各 source の `parts_color` はその source 自身の階層 α と pre-multiply されます。Mix 後の頂点カラーは primary の `parts_color` をそのまま使うため、**primary の α が反映**された状態となり、mixed な `state.alpha` とは別系統の値になります。
 
 **実用上の挙動**:
 - `parts_color` を持たない Part: mixed `state.alpha` がそのまま視覚 α になり、滑らかにブレンド。
 - `parts_color` を持つ Part: primary の色と α が支配的 (secondary の `parts_color` は使われない)。
 
-同一キャラクタの locomotion blending (= 一般的なユースケース) では問題になりません。色そのものをブレンドしたい場合は将来 PR で「primary の α を un-premultiply → mixed α で re-premultiply」する補正を検討します。
+同一キャラクタの locomotion blending (= 一般的なユースケース) では問題になりません。色そのものをブレンドしたい要件がある場合、現状はサポート対象外です。
 
 ### Cell の一貫性
 ブレンドする全アニメーションの「同一 part に同一 Cell が割り当てられている」前提です。`cell_meta_per_part` (size, pivot, texture_hash 等) は primary から取得されるため、異なる Cell が割り当てられている場合、secondary の TRSA mix と整合しない pose になる可能性があります。
 
 同一 SSAE 内の異なるアニメーションは通常同じ Cell 割当を共有するため、典型的なユースケースでは問題になりません。
 
-### deform table の FB バッファ浪費
-Stage A の per-source ループで secondary source の deform table も FlatBuffer に書き込まれますが、`resolved.deform_vec` は primary のものを使うため、FrameData binary 内で unreferenced な dead data として残ります。FrameData サイズは膨らみますが正確性には影響しません。将来 PR で deform table の FB 書き込みを post-mix に遅延する最適化を検討します。
+### ブレンド時の FrameData サイズ増加
+複数 source をブレンドする際、描画には primary の deform (メッシュ変形) だけが使われますが、secondary source 分の deform データも FrameData に含まれます。その分 FrameData のバイナリサイズは膨らみますが、描画の正確性には影響しません。
 
 ---
 
 ## 9. パフォーマンス特性
 
-### N=1 fast path
-**Primary のみが active source** のケース (= ブレンドを使わない単一アニメーション再生) では、mix 段が `mem::swap` に分岐し O(1) で完了します。ブレンド API を使わない Player にとっての性能 regression はありません。
+### ブレンド未使用時のコスト
+**Primary のみが有効な source** のケース (= ブレンドを使わない単一アニメーション再生) では、mix 処理は O(1) で完了します。ブレンド API を使わない Player にとっての性能上のオーバーヘッドはありません。
 
-### Multi-source mix
-N source ブレンド時、N 回の `extract_pose` と 1 回の `mix_poses`。`mix_poses` のコストは N に依存せず一定 (per-part の加算ループのみ)。
+### 複数 source のブレンド
+N 個の source をブレンドする際、pose の抽出は source ごとに N 回、合成は 1 回行われます。合成コストは source 数 N に依存せず、パーツ数に比例します。
 
-### Inactive slot のスキップ
-weight = 0 または `remove_blend_source` 済の secondary は Stage A をスキップ。State machine の「fade-out 完了後の slot を残す」運用で extract コストは発生しません。
+### 無効スロットのスキップ
+weight = 0 または `remove_blend_source` 済みの secondary source は処理がスキップされます。State machine 的に「fade-out 完了後の slot を残す」運用でも、そのスロットの抽出コストは発生しません。
 
 ---
 
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

@@ -1,4 +1,4 @@
-# 実装フェーズ 1：初期化 (Initialization)
+# データのロードと初期化 (Initialization)
 
 Player の基本機能の実装において、初期化時に行うべき処理と、メモリ管理の戦略について記載します。
 
@@ -118,7 +118,7 @@ graph TD
     - ただし、`ss_resource_create_borrow` を使用した場合は、**Resource が完全に解放される（全ての Context が破棄される）まで、元のバイナリデータ（`ssab_data_ptr`）のメモリを解放しないでください**。
 
 ## 2. ssab ファイルのロードと libssruntime への渡し方
-ネイティブライブラリである libssruntime へ ssab データを渡す方法は、利用するプログラミング言語のポインタ操作能力とアーキテクチャ（`02_architecture.ja.md` の「メモリ管理戦略」参照）に合わせて選択します。
+ネイティブライブラリである libssruntime へ ssab データを渡す方法は、利用するプログラミング言語のポインタ操作能力とアーキテクチャ（[アーキテクチャと実装方針](../20_design/20_architecture.ja.md) の「メモリ管理戦略」参照）に合わせて選択します。
 
 ### パターン A：Borrow (参照) 方式（推奨）
 - **対象言語:** C++, C# (unsafe) など、ポインタを直接渡してメモリを管理できる環境。
@@ -141,7 +141,7 @@ void* resource = ss_resource_create_borrow(
 - **実装:** 
     1. `ss_resource_create_copy` (または言語バインディングの `SSRuntimeResource.new`) を実行してデータをライブラリ側にコピーします。
     2. コピー完了直後に、Player 側でダウンロードした元の生データの参照を切り、解放（GC等）して、メモリの二重持ちを防ぎます。
-    3. ※ もし JS 側で直接パースしたい場合は、`02_architecture.ja.md` に記載の「WASM メモリの逆参照」を活用してください。
+    3. ※ もし JS 側で直接パースしたい場合は、[アーキテクチャと実装方針](../20_design/20_architecture.ja.md) に記載の「WASM メモリの逆参照」を活用してください。
 
 *(※ 従来の後方互換用APIとして `ss_runtime_load_ssab_borrow` や `ss_runtime_load_ssab_copy` も引き続き利用可能ですが、新規実装では Resource と Context を明示的に分けることを推奨します。)*
 
@@ -225,4 +225,4 @@ ss_resource_destroy(resource);
 ```
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

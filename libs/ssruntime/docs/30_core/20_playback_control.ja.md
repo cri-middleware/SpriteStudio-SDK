@@ -1,4 +1,4 @@
-# 実装フェーズ 2：再生制御とイベント処理 (Playback & Events)
+# 再生制御とイベント処理 (Playback & Events)
 
 アニメーションの再生状態（再生・停止・ループ）の管理と、タイムライン上のイベント（ユーザーデータ・シグナル）をゲームロジックへ通知する仕組みを実装します。
 
@@ -165,7 +165,7 @@ for (int i = 0; i < count; i++) {
 > ただしこの範囲は **アニメーションデータ全体（クリップ）** の範囲です。`set_animation_section` で再生区間を限定している場合、ランタイムはセクション端へのクランプを行わず、セクションを越えてもクリップ内の実キーフレームを評価します。セクション再生とサブフレームを併用する場合は、表示用に **Player 側で `frame_no` をセクション端へクランプ** してください。
 
 ### 複数アニメーションのブレンド (State machine / Locomotion blend)
-クロスフェードや locomotion 合成 (walk + run など) を実装する場合は [12. アニメーションブレンド / ミキシング](./12_animation_blending.ja.md) を参照。各 source の独立した frame・speed 制御、`set_primary` による構造ソースの切替などを解説します。
+クロスフェードや locomotion 合成 (walk + run など) を実装する場合は [アニメーションブレンド / ミキシング](../40_components/60_animation_blending.ja.md) を参照。各 source の独立した frame・speed 制御、`set_primary` による構造ソースの切替などを解説します。
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)
