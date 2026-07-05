@@ -251,8 +251,8 @@ jobs:
           mkdir -p web
           mkdir -p ios
           mkdir -p linux/x86_64
-          mkdir -p android/arm32
-          mkdir -p android/arm64
+          mkdir -p android/armeabi-v7a
+          mkdir -p android/arm64-v8a
           mkdir -p android/x86_64
           mkdir -p windows/x86_64
           popd # libs
@@ -263,8 +263,8 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-ios/static/libssruntime.xcframework libs/ios/
           mv ../../spritestudio7-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64
-          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.a libs/android/arm32
+          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64-v8a
+          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.a libs/android/armeabi-v7a
           mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
@@ -294,8 +294,8 @@ jobs:
           mkdir -p macos
           mkdir -p ios
           mkdir -p linux/x86_64
-          mkdir -p android/arm32
-          mkdir -p android/arm64
+          mkdir -p android/armeabi-v7a
+          mkdir -p android/arm64-v8a
           mkdir -p android/x86_64
           mkdir -p windows/x86_64
           popd # libs
@@ -305,8 +305,8 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-ios/dynamic/libssruntime.xcframework libs/ios/
           mv ../../spritestudio7-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
           mv ../../spritestudio7-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
-          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64
-          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.so libs/android/arm32
+          mv ../../spritestudio7-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64-v8a
+          mv ../../spritestudio7-sdk-libraries-android/armv7/libssruntime.so libs/android/armeabi-v7a
           mv ../../spritestudio7-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
