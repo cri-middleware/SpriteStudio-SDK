@@ -1,3 +1,5 @@
+> **日本語** | [English](./20_troubleshooting.md)
+
 # トラブルシューティング
 
 Player 実装中やビルド時に発生する、よくある問題とその解決方法です。現状はビルド・リンク時のプラットフォーム固有の問題を扱います。実行時のトラブルや他カテゴリの問題は、今後ここに追記します。
@@ -105,4 +107,4 @@ ld: warning: duplicate symbol '___rust_alloc' in:
 **対処**: 文字列からのハッシュ生成は、**絶対に自前で実装せず、FFI 経由で提供されている `ss_runtime_hash_string(const char* s)` を必ず呼び出して使用**してください。
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

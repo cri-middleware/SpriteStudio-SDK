@@ -1,4 +1,6 @@
-# 実装フェーズ 5：パーツカラー (Parts Color)
+> **日本語** | [English](./50_parts_color.md)
+
+# パーツカラー (Parts Color)
 
 パーツの見た目をカスタマイズするためのカラー合成の実装ガイドです。
 
@@ -19,7 +21,7 @@
 | 由来フィールド | `parts_color` の **`blend_type`**（`0..3`） | パーツの **`alpha_blend_type`** |
 | 有効な種類 | **Mix / Mul / Add / Sub の 4 種のみ** | 12 種すべて |
 
-以降 §1-1〜§1-4 で扱うのは **PartColor ブレンド** です。フレームバッファ合成（`alpha_blend_type`）は別途 `07_render_loop` 系で扱う描画材質側の設定であり、混同しないでください。
+以降 §1-1〜§1-4 で扱うのは **PartColor ブレンド** です。フレームバッファ合成（`alpha_blend_type`）は別途 [レンダリングループ](../30_core/30_render_loop.ja.md) 側で扱う描画材質の設定であり、混同しないでください。
 
 ### 1-1.PartColor ブレンドモード (Blend Mode)
 
@@ -205,4 +207,4 @@ void fragment() {
 - [ ] **センター頂点**（§1-2-1）: 4 隅＋中心の 5 頂点で描く場合、中心の色・`rate`・位置・UV に 4 隅の平均（補間）を与えた。
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

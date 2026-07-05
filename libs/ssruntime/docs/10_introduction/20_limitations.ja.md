@@ -1,3 +1,5 @@
+> **日本語** | [English](./20_limitations.md)
+
 # 制限事項 (Limitations)
 
 Player 実装に着手する **前に** 必ず確認してください。
@@ -30,7 +32,7 @@ ssruntime は **アニメーションの状態計算** を担う層であり、�
 | **テキスト描画** | グリフのレイアウト情報 (ビットマップ位置・サイズ・テクスチャ参照) | グリフのレンダリング |
 | **サウンド再生** | 再生指示イベント (ファイル名・発火タイミング) | 実際の音声再生 (エンジンのオーディオシステム連携) |
 
-> 関連章: [6. 再生制御とイベント処理](./06_playback_control.ja.md) / [11. 外部リソースとオプション機能](./11_optional_features.ja.md)
+> 関連章: [再生制御とイベント処理](../30_core/20_playback_control.ja.md) / [オーディオ再生の統合](../40_components/90_audio.ja.md)
 
 ## WebAssembly (WASM) 環境
 
@@ -49,7 +51,7 @@ ssruntime の WASM ビルドは **WebAssembly SIMD 命令** を利用してい�
 
 **推奨運用**: SS7 のアニメ制作時には `independent=true` を使わない構成にしてください。やむを得ず使用する場合は、対応する子インスタンスが「順方向再生時のみ正しく描画される」ことを Player の利用者へ明示してください。
 
-> 関連章: [8. コンポーネント実装 (Instance / Effect / Mesh)](./08_advanced_rendering.ja.md)
+> 関連章: [インスタンスパーツ (Instance)](../40_components/10_instance.ja.md)
 
 ## シーク (`set_frame_no`) はスキップしたフレーム上のイベントを発火しない
 
@@ -57,11 +59,11 @@ ssruntime の WASM ビルドは **WebAssembly SIMD 命令** を利用してい�
 
 中間イベントも漏れなく扱いたい場合は、Player 側で移動量に応じて `update(delta)` を複数回呼ぶ、もしくはシーク区間のイベントを ssab から直接スキャンして発火する等のラッパー実装が必要になります。
 
-> 関連章: [6. 再生制御とイベント処理](./06_playback_control.ja.md)
+> 関連章: [再生制御とイベント処理](../30_core/20_playback_control.ja.md)
 
 ## ファイル参照 / リソース解決
 
-ssab に格納されるファイル参照文字列 (テクスチャ・サウンド・フォントなど) の構成ルールは制限事項ではなく仕様です。Player 実装上の前提として **[5. データのロードと初期化 §3.0 ssab に格納されるファイル参照文字列の仕様](./05_initialization.ja.md#30-ssab-に格納されるファイル参照文字列の仕様)** を参照してください。
+ssab に格納されるファイル参照文字列 (テクスチャ・サウンド・フォントなど) の構成ルールは制限事項ではなく仕様です。Player 実装上の前提として **[データのロードと初期化 §3.0 ssab に格納されるファイル参照文字列の仕様](../30_core/10_initialization.ja.md#30-ssab-に格納されるファイル参照文字列の仕様)** を参照してください。
 
 ## 入力データのバリデーション非実施 (セキュリティ注意事項)
 
@@ -100,9 +102,9 @@ ssab embedded は、そのアニメーションパックが **実際に利用す
 - **Cell の一貫性が前提**: ブレンドする全アニメーションは「同一 part に同一 Cell を割り当てている」必要があります。`cell_meta_per_part` は primary から取られるため、Cell が異なるとサイズ・pivot ミスマッチで pose が崩れます。同一 SSAE 内のアニメーションでは通常問題になりません。
 - **`parts_color` の α 二重定義**: `parts_color` を持つ part の視覚 α は primary 由来 (mix された `state.alpha` ではない)。`parts_color` を持たない part は mixed `state.alpha` が反映されるため、α ブレンド自体は機能します。
 - **events 発火は per-source 閾値で制御**: 既定では Primary のみが発火 (`event_threshold = 1.0`)。Secondary も発火させたい場合は `ss_runtime_set_source_event_threshold` で閾値を下げ、`source.weight >= source.event_threshold` を満たした source の events のみ収集されます。Primary は閾値を無視して常に発火。発火元 source の識別は `ss_runtime_get_passed_event_source_handle` で取得 (events と parallel array)。
-- **deform table の FrameData 浪費**: secondary source の deform は FlatBuffer に書き込まれるが unreferenced。FrameData サイズが膨らみますが正確性には影響しません。
+- **ブレンド時の FrameData サイズ増加**: 複数 source のブレンド時、描画に使われない secondary source 分の deform データも FrameData に含まれ、サイズが膨らみます。正確性には影響しません。
 
-> 関連章: [12. アニメーションブレンド / ミキシング](./12_animation_blending.ja.md)
+> 関連章: [アニメーションブレンド / ミキシング](../40_components/60_animation_blending.ja.md)
 
 ## オーディオ（サウンド）の逆再生非対応
 
@@ -111,7 +113,7 @@ ssab embedded は、そのアニメーションパックが **実際に利用す
 - 多くのオーディオエンジン（Web Audio API等）は音声ファイルの逆再生を標準ではサポートしていません。
 - Player側の実装において、ランタイムが提供する `is_playing_forward()` （PingPongの往路・復路やBackward設定を考慮した現在の進行方向）と、ユーザー設定の再生速度（`speedScale`）の符号を比較し、実質的な再生方向が順方向である場合のみ `audios` イベントを処理するように実装してください。
 
-> 関連章: [11. 外部リソースとオプション機能](./11_optional_features.ja.md)
+> 関連章: [オーディオ再生の統合](../40_components/90_audio.ja.md)
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

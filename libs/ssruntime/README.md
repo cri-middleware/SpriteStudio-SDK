@@ -11,7 +11,7 @@ The playback **Brain** of the [SpriteStudio-SDK](https://github.com/cri-middlewa
 
 - **Full SpriteStudio 7 feature set**: bone hierarchies, mesh weights and vertex deformations, particle effects, sequence packs (`.ssqe` → `.ssqb`), sub-animation instances, stencil masks, frame-accurate events and user data.
 - **Sub-frame interpolation**: smooth playback beyond the source framerate — Hermite, Bezier, Linear, and easing curves.
-- **`DrawBatch` plan emission**: each frame's output includes a cross-engine batch plan (vertices, mask sequences, particle quad slots, instance / effect slots). See the [Batched Rendering Contract (Japanese)](./docs/09_batched_rendering.ja.md).
+- **`DrawBatch` plan emission**: each frame's output includes a cross-engine batch plan (vertices, mask sequences, particle quad slots, instance / effect slots). See the [Batched Rendering Contract (Japanese)](./docs/30_core/30_render_loop.ja.md).
 - **Deterministic playback**: explicit random-seed control for reproducible particle simulation.
 - **Rich playback control** (`PlaybackController`): transport (play / pause / stop), single-frame stepping (forward / backward), seek to any frame at sub-frame precision, custom playback range and FPS, loop count (`-1` = infinite), `Normal` / `PingPong` styles, `Forward` / `Reverse` direction, and real-time vs. fixed-step time advancement.
 - **`no_std`-first**: pure `no_std` core; `std` is opt-in for developer ergonomics only. SIMD (`f32x4`) on every target.
@@ -139,7 +139,7 @@ Please refer to it for API signatures and struct definitions.
 
 If you are planning to implement a SpriteStudio 7 player for a new game engine or platform, please refer to the following documentation:
 
-- [**Player Implementation Guide (Japanese)**](./docs/README.ja.md)
+- [**Player Implementation Guide**](./docs/README.md)
 - [**FrameData Schema Documentation**](./SCHEMA.md)
 
 This guide covers everything from basic architecture to advanced features like mesh deformation, instance animations, and `no_std` integration.

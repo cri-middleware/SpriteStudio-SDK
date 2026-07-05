@@ -1,3 +1,5 @@
+> **日本語** | [English](./10_preparation.md)
+
 # 事前確認
 libssruntime は Rust で実装されており、libssruntime から受け取るデータフォーマットには FlatBuffers を採用しています。以下の確認をお願いします。
 
@@ -67,4 +69,4 @@ flatc --cpp -o ./src/gen/ libs/ssruntime/fbs/*.fbs
 この段階で、`ss_runtime_create()` などの API が呼び出せ、エラーなくビルド・実行ができることを確認してください。
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

@@ -11,10 +11,10 @@
 
 - **SpriteStudio 7 の全機能対応**: ボーン階層、メッシュウェイトと頂点変形、パーティクルエフェクト、シーケンスパック (`.ssqe` → `.ssqb`)、サブアニメーションのインスタンス、ステンシルマスク、フレーム単位で正確なイベント / ユーザーデータ。
 - **サブフレーム補間**: ソースのフレームレートを超えた滑らかな再生 — Hermite、Bezier、Linear、各種イージング曲線をサポート。
-- **`DrawBatch` プランの出力**: フレーム毎の出力にエンジン非依存のバッチプラン（頂点、マスク列、パーティクル quad スロット、インスタンス / エフェクトスロット）を含みます。詳細は [Batched Rendering Contract](./docs/07_render_loop.ja.md) を参照してください。
+- **`DrawBatch` プランの出力**: フレーム毎の出力にエンジン非依存のバッチプラン（頂点、マスク列、パーティクル quad スロット、インスタンス / エフェクトスロット）を含みます。詳細は [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) を参照してください。
 - **決定論的な再生**: パーティクル等の再現性のための明示的な乱数シード制御。
 - **詳細な再生制御** (`PlaybackController`): 再生 / 一時停止 / 停止、1 フレーム単位のステップ（前進 / 後退）、任意フレームへのサブフレーム精度シーク、再生範囲と FPS のカスタマイズ、ループ回数 (`-1` で無限)、`Normal` / `PingPong` スタイル、`Forward` / `Reverse` 方向、リアルタイム / 固定ステップの時間進行モード。
-- **アニメーションブレンド / ミキシング**: 複数アニメーションの重み付き合成 (state machine のクロスフェード、locomotion blend など)。各 source は独立した再生制御を持ち、`Primary` source が離散属性と events の権威。詳細は [12. アニメーションブレンド / ミキシング](./docs/12_animation_blending.ja.md) を参照。
+- **アニメーションブレンド / ミキシング**: 複数アニメーションの重み付き合成 (state machine のクロスフェード、locomotion blend など)。各 source は独立した再生制御を持ち、`Primary` source が離散属性と events の権威。詳細は [12. アニメーションブレンド / ミキシング](./docs/40_components/60_animation_blending.ja.md) を参照。
 - **`no_std` ファースト**: コアは純粋な `no_std`。`std` は開発時の利便性のためだけのオプトイン。全環境で SIMD (`f32x4`) を活用。
 
 # `no_std` サポート

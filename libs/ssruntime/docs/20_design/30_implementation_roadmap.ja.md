@@ -1,3 +1,5 @@
+> **日本語** | [English](./30_implementation_roadmap.md)
+
 # 実装ロードマップ：overall.sspj による機能検証
 
 Player の実装において、最も重要かつ確実な検証方法は **「SpriteStudio 7 本体のエディタ上での表示・動作と、自身の実装した Player の動作を常に比較すること」** です。
@@ -55,7 +57,7 @@ SDK の **Slot API** と **SoA バッファ** を使用することで、これ�
 SDK の進化に合わせて、以下の機能が順次サポートされる予定です。
 - **Text パーツ**: 動的なテキストレンダリングとレイアウト。
 - **拡張シェーダー**: 標準以外のカスタムポストプロセスの統合。
-- **PartColor の SoA 化**: パーツカラーで、Brain が `local_vertices` と共に提供する色情報を新設（現在は `FrameData.parts_color` テーブルからの直接取得のみ）。
+- **パーツカラーの SoA 取得**: 現在パーツカラーは `FrameData.parts_color` テーブルから取得しますが、将来的に頂点データと並ぶ SoA バッファからの取得にも対応予定です。
 
 ---
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)

@@ -1,8 +1,10 @@
-# SpriteStudio-SDK: `no_std` 統合ガイド
+> **日本語** | [English](./10_no_std_integration.md)
+
+# no_std 組み込み環境への統合
 
 `libs/ssruntime` は、ファイルシステムやスレッド機構を持たない組み込み環境、ゲームコンソール (PS5 / Nintendo Switch など)、あるいは独自のメモリアロケータを採用しているゲームエンジン向けに **`#![no_std]` を完全サポート** しています。
 
-SDK の `scripts/release-*.sh` が出力する **すべての配布バイナリ (iOS / Android / macOS / Linux / Windows) は `no_std` ビルド** で統一されており、プラットフォーム間で bit-identical な計算結果を保証します。`std` フィーチャは IDE 補完やテスト実行など開発時の DX のためにのみ用意されています。
+SDK が公式に配布する **すべてのバイナリ (iOS / Android / macOS / Linux / Windows) は `no_std` ビルド** で統一されており、プラットフォーム間で bit-identical な計算結果を保証します。`std` フィーチャは IDE 補完やテスト実行など開発時の DX のためにのみ用意されています。
 
 ---
 
@@ -194,7 +196,7 @@ void ss_custom_abort() {
 
 ### 6.1 数学関数
 
-`libs/ssruntime/src/core/math.rs` で、`sin` / `cos` / `tan` / `atan2` / `abs` / `round` / `floor` / `fmod` / `sqrt` の実装が切り替わります。
+`std` / `no_std` で、`sin` / `cos` / `tan` / `atan2` / `abs` / `round` / `floor` / `fmod` / `sqrt` の実装が切り替わります。
 
 | | std | no_std |
 |---|---|---|
@@ -220,17 +222,10 @@ void ss_custom_abort() {
 
 | | std | no_std + `libc_alloc` |
 |---|---|---|
-| 実装 | Rust の System allocator | `LibcAlloc` (本ファイル `lib.rs:18-82`) |
+| 実装 | Rust の System allocator | `LibcAlloc` (`libc_alloc` フィーチャが提供) |
 | 内部 | `libc::malloc/free` (macOS/Linux/iOS/Android) / MSVCRT (Windows) | 同上 |
 
 主要プラットフォームでは **どちらも libc 経由のため実質同一**です。
-
-### 6.4 テストカバレッジ
-
-- `cargo test` は **`std` フィーチャでのみ走ります** (`#[cfg(all(test, feature = "std"))]` で gate)
-- CI の `no_std` ジョブは **コンパイル可否のみ確認** (実行テストは行いません)
-
-`libm` と `std::f32` で結果が乖離する稀な領域は単体テストで検出されないため、最終的な数値検証は **実機の no_std ビルドで確認** することを推奨します。
 
 ---
 
@@ -238,20 +233,20 @@ void ss_custom_abort() {
 
 ### 7.1 リンクしている `ssruntime` は `no_std` (libm 経由) であることを意識する
 
-`scripts/release-*.sh` が出す全配布物は `no_std` です。Player が想定すべき前提:
+SDK が公式配布するバイナリはすべて `no_std` ビルドです。Player が想定すべき前提:
 
 - 三角関数は `libm` クレートの結果 (プラットフォーム libm ではない)
 - パニック時のログは出ない
 - グローバルアロケータは libc malloc 直呼び
 
-これにより **iOS / Android / Windows / macOS / Linux 間でアニメ出力は bit-identical** になります。これは SDK のセールスポイントの 1 つ ([AGENTS.md](../../../AGENTS.md) "100% bit-identical results across all platforms") です。
+これにより **iOS / Android / Windows / macOS / Linux 間でアニメ出力は bit-identical**（全プラットフォームで完全一致）になります。
 
-### 7.2 IDE でのデバッグ結果は "参考値"
+### 7.2 `std` ビルドの数値は "参考値"
 
-`.vscode/settings.json` および `.idea/cargo.xml` で `ssruntime/std` を有効化しているため、**IDE 上で実行される単体テストや `cargo run` の結果はプラットフォーム libm 経由** です。
+開発時の DX 向けに `std` フィーチャ（IDE 補完・テスト実行用）でビルドした場合、数学関数はプラットフォーム libm 経由になり、本番の `no_std` 配布物とは三角関数の結果が ULP 単位で異なる可能性があります。
 
-- `cargo test --features std` で出した数値は本番 (no_std) と ULP 単位で違うかもしれない
-- 最終的な数値検証は **release ビルドの no_std `staticlib` で実機確認** する
+- `std` ビルドで確認した数値は本番 (no_std) と ULP 単位で違うかもしれない
+- 最終的な数値検証は **`no_std` ビルドで実機確認** する
 
 ### 7.3 パニックを Player レイヤで握り潰さない
 
@@ -297,4 +292,4 @@ ld: warning: duplicate symbol 'rust_begin_unwind' in ...
 
 ---
 
-[目次に戻る](./README.ja.md)
+[目次に戻る](../README.ja.md)
