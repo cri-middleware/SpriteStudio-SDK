@@ -37,8 +37,22 @@ too_many_arguments = "allow"
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 
+# Enable exactly the wasm features rustc emits (`+simd128` from `.cargo/config.toml`
+# plus its wasm32 defaults). Do NOT use `--all-features`: on newer wasm-opt (v112+)
+# it also enables experimental *output* proposals, producing type encodings that
+# browsers/V8 reject at instantiation ("invalid value type" in `wasm.initialize`).
+# There is no `target_features` custom section to auto-detect, so these are required.
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-Oz", "--all-features"]
+wasm-opt = [
+    "-Oz",
+    "--enable-simd",
+    "--enable-bulk-memory",
+    "--enable-mutable-globals",
+    "--enable-sign-ext",
+    "--enable-nontrapping-float-to-int",
+    "--enable-multivalue",
+    "--enable-reference-types",
+]
 
 [build-dependencies]
 cbindgen = { workspace = true }
