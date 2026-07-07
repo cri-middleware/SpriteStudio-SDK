@@ -21,6 +21,18 @@ fi
 
 pushd ${ROOTDIR} > /dev/null
 
+# Deployment target: keep the cdylib's LC_BUILD_VERSION minos in lockstep with the
+# framework Info.plist MinimumOSVersion written below — App Store validation rejects
+# an embedded framework whose two minimum-OS values disagree. rustc honours this env
+# for the apple targets, so both the static and dynamic builds inherit it.
+export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-13.0}"
+
+# Marketing/build version for the framework Info.plist. Strip any -prerelease suffix
+# (e.g. 7.0.0-alpha01 -> 7.0.0): App Store rejects a non-numeric CFBundleShortVersionString.
+WORKSPACE_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+SHORT_VERSION="${WORKSPACE_VERSION%%-*}"
+BUNDLE_ID="com.cri-middleware.ssruntime"
+
 # Build ssruntime for the three Apple-mobile targets. Each build emits both
 # libssruntime.a (staticlib) and libssruntime.dylib (cdylib).
 #   aarch64-apple-ios      -> device
@@ -60,21 +72,71 @@ xcodebuild -create-xcframework \
     -library ${STAGE}/sim-static/libssruntime.a           -headers ${HDR_DIR} \
     -output ${OUT_STATIC}/libssruntime.xcframework
 
-# --- dynamic xcframework (bare dylib) ---
-# Rust stamps the cdylib's LC_ID_DYLIB with a build-machine path; rewrite it to
-# @rpath so the dylib is embeddable/loadable from a consuming app bundle.
+# --- dynamic xcframework (.framework-wrapped slices) ---
+# App Store embedding requires a dynamic library to ship as a .framework bundle
+# (Info.plist + bundle layout), not a bare dylib. Wrap each slice as an iOS *flat*
+# framework: the binary, Headers/, Modules/ and Info.plist all sit at the bundle
+# root (no macOS-style Versions/ symlink tree). Rust stamps the cdylib's
+# LC_ID_DYLIB with a build-machine path; the install_name is rewritten to the
+# rpath-relative path dyld expects for an embedded framework.
+make_ios_framework() {
+    # $1 = staging dir to build the .framework in
+    # $2 = input dylib (already lipo'd for its platform)
+    # $3 = CFBundleSupportedPlatforms value (iPhoneOS | iPhoneSimulator)
+    local dir="$1" dylib="$2" platform="$3"
+    local fw="${dir}/libssruntime.framework"
+    /bin/rm -rf "${fw}"
+    /bin/mkdir -p "${fw}/Headers" "${fw}/Modules"
+
+    cp "${dylib}" "${fw}/libssruntime"
+    install_name_tool -id @rpath/libssruntime.framework/libssruntime "${fw}/libssruntime"
+    cp "${HDR_DIR}/ssruntime.h" "${fw}/Headers/ssruntime.h"
+
+    cat > "${fw}/Modules/module.modulemap" <<EOF
+framework module libssruntime {
+    umbrella header "ssruntime.h"
+    export *
+    module * { export * }
+}
+EOF
+
+    cat > "${fw}/Info.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key><string>en</string>
+	<key>CFBundleExecutable</key><string>libssruntime</string>
+	<key>CFBundleIdentifier</key><string>${BUNDLE_ID}</string>
+	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+	<key>CFBundleName</key><string>libssruntime</string>
+	<key>CFBundlePackageType</key><string>FMWK</string>
+	<key>CFBundleShortVersionString</key><string>${SHORT_VERSION}</string>
+	<key>CFBundleVersion</key><string>${SHORT_VERSION}</string>
+	<key>MinimumOSVersion</key><string>${IPHONEOS_DEPLOYMENT_TARGET}</string>
+	<key>CFBundleSupportedPlatforms</key><array><string>${platform}</string></array>
+	<key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array>
+</dict>
+</plist>
+EOF
+    # Catch a malformed plist here rather than at App Store validation time.
+    plutil -lint "${fw}/Info.plist" > /dev/null
+}
+
+# Device is a single arch; the two simulator archs fuse into one fat binary (their
+# IOSSIMULATOR platform in LC_BUILD_VERSION keeps them distinct from the device slice).
 cp target/aarch64-apple-ios/${D}/libssruntime.dylib ${STAGE}/device-dynamic/libssruntime.dylib
-install_name_tool -id @rpath/libssruntime.dylib ${STAGE}/device-dynamic/libssruntime.dylib
+make_ios_framework ${STAGE}/device-dynamic ${STAGE}/device-dynamic/libssruntime.dylib iPhoneOS
 
 lipo -create \
     target/aarch64-apple-ios-sim/${D}/libssruntime.dylib \
     target/x86_64-apple-ios/${D}/libssruntime.dylib \
     -output ${STAGE}/sim-dynamic/libssruntime.dylib
-install_name_tool -id @rpath/libssruntime.dylib ${STAGE}/sim-dynamic/libssruntime.dylib
+make_ios_framework ${STAGE}/sim-dynamic ${STAGE}/sim-dynamic/libssruntime.dylib iPhoneSimulator
 
 xcodebuild -create-xcframework \
-    -library ${STAGE}/device-dynamic/libssruntime.dylib -headers ${HDR_DIR} \
-    -library ${STAGE}/sim-dynamic/libssruntime.dylib     -headers ${HDR_DIR} \
+    -framework ${STAGE}/device-dynamic/libssruntime.framework \
+    -framework ${STAGE}/sim-dynamic/libssruntime.framework \
     -output ${OUT_DYNAMIC}/libssruntime.xcframework
 
 popd > /dev/null
