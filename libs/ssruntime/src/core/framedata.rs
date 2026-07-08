@@ -267,6 +267,10 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
 pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
+    /// `fnv1a_hash_str(PartData.name)`, cached for the Override Layer's
+    /// `name -> part_index` resolver. Stable within an SSAB (part identity is
+    /// AnimationPack-scoped and 1:1 with `parts_animation_data`).
+    pub name_hash: u32,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
     pub mesh_binding: Option<MeshBindingCache>,
@@ -324,6 +328,7 @@ impl<'a> CachedPartData<'a> {
         part: ssab::ssab::ss::format::PartAnimationData<'a>,
         part_index: i16,
         parent_index: i16,
+        name_hash: u32,
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
         mesh_binding: Option<MeshBindingCache>,
@@ -336,6 +341,7 @@ impl<'a> CachedPartData<'a> {
         Self {
             part_index,
             parent_index,
+            name_hash,
             resolved_cells,
             shape_kind,
             mesh_binding,

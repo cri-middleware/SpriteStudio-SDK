@@ -1489,3 +1489,68 @@ pub unsafe extern "C" fn ss_runtime_hash_string(s: *const c_char) -> u32 {
     let c_str = unsafe { core::ffi::CStr::from_ptr(s) };
     if let Ok(rust_str) = c_str.to_str() { crate::fnv1a_hash_str(rust_str) } else { 0 }
 }
+
+// --- Override Layer API (Phase 2) ---
+
+/// Resolve a part name to its `part_index` in the current primary animation.
+/// Returns `-1` on null context / null or invalid name / not found.
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub extern "C" fn ss_runtime_find_part_index(context: *mut c_void, part_name: *const c_char) -> i32 {
+    let Some(ffi_context) = get_context(context) else {
+        return -1;
+    };
+    if part_name.is_null() {
+        return -1;
+    }
+    let c_str = unsafe { CStr::from_ptr(part_name) };
+    let Ok(name) = c_str.to_str() else {
+        return -1;
+    };
+    ffi_context.ctx.find_part_index(name)
+}
+
+/// Set or clear a per-part visibility override.
+/// `force`: `0` = clear/revert, `1` = force-hide, `2` = force-visible (reserved).
+/// `cascade != 0` propagates a force-hide to descendants.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_part_visibility_override(context: *mut c_void, part: u32, force: c_uchar, cascade: c_uchar) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_part_visibility_override(part, force, cascade != 0) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Clear a part's visibility override (revert to animation).
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_clear_part_visibility_override(context: *mut c_void, part: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.clear_part_visibility_override(part) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Clear every per-part override on the context.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_clear_all_part_overrides(context: *mut c_void) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    ffi_context.ctx.clear_all_part_overrides();
+    true
+}

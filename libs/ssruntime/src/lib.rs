@@ -397,7 +397,8 @@ impl<'a> AnimationResource<'a> {
                 });
                 let mesh_binding = crate::core::framedata::build_mesh_binding_cache(part_meta.mesh_binding());
                 let mesh_cell = if part_type_disc == ssab::ssab::ss::format::PartType::PartTypeMesh { crate::core::framedata::build_mesh_cell_data(&ssab, p.cell_array()) } else { None };
-                cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
+                let name_hash = fnv1a_hash_str(part_meta.name());
+                cached_parts.push(crate::core::framedata::CachedPartData::new(p, i as i16, parent_index, name_hash, resolved_cells, shape_kind, mesh_binding, mesh_cell, blend_type, part_type_disc, mask_influence, is_mask_contributor));
             }
 
             let name_hash = anim.name_hash();
@@ -590,6 +591,8 @@ struct EvaluationContext<'a> {
     deform_result_coordinate_workspace: Vec<crate::runtime::framedata::ss::runtime::Vec2>,
     deform_result_index_workspace: Vec<i16>,
     inheritance_alphas_workspace: Vec<f32>,
+    /// Scratch for the Override Layer's force-hide cascade forward pass.
+    override_hide_workspace: Vec<bool>,
 }
 
 impl<'a> EvaluationContext<'a> {
@@ -606,6 +609,7 @@ impl<'a> EvaluationContext<'a> {
             deform_result_coordinate_workspace: Vec::new(),
             deform_result_index_workspace: Vec::new(),
             inheritance_alphas_workspace: Vec::new(),
+            override_hide_workspace: Vec::new(),
         }
     }
 }
@@ -930,6 +934,10 @@ struct InstanceState<'a> {
     unit: crate::core::SsUnit,
     render_mode: crate::core::RenderMode,
     crossfade: Option<CrossfadeState>,
+    /// Per-part runtime Override Layer table (Phase 2). Dense by `part_index`,
+    /// `None` = no override; sized to `num_parts` on `setup_animation`. Empty
+    /// until an animation is set up.
+    part_overrides: Vec<Option<crate::core::override_layer::PartOverride>>,
 }
 
 impl<'a> InstanceState<'a> {
@@ -948,6 +956,24 @@ impl<'a> InstanceState<'a> {
             unit: crate::core::SsUnit::default(),
             render_mode: crate::core::RenderMode::default(),
             crossfade: None,
+            part_overrides: Vec::new(),
+        }
+    }
+
+    /// `true` when at least one part carries an active override — gates the
+    /// per-frame seam work in `get_frame_data`.
+    fn has_any_override(&self) -> bool {
+        self.part_overrides.iter().any(|o| o.as_ref().is_some_and(|p| !p.is_empty()))
+    }
+
+    /// Drop the slot back to `None` if the entry no longer carries any override,
+    /// keeping [`has_any_override`](Self::has_any_override) cheap and the
+    /// lifecycle bookkeeping simple.
+    fn compact_override(&mut self, idx: usize) {
+        if let Some(entry) = self.part_overrides.get_mut(idx)
+            && entry.as_ref().is_some_and(|p| p.is_empty())
+        {
+            *entry = None;
         }
     }
 
@@ -1013,6 +1039,7 @@ impl<'a> Context<'a> {
         self.instance.unit = crate::core::SsUnit::default();
         self.instance.render_mode = crate::core::RenderMode::default();
         self.instance.z_order = crate::core::z_order::ZOrderTable::new();
+        self.instance.part_overrides.clear();
     }
 
     pub fn set_render_mode(&mut self, mode: crate::core::RenderMode) {
@@ -1029,11 +1056,68 @@ impl<'a> Context<'a> {
         self.instance.collapse_to_primary();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
+        // A new SSAB invalidates part identity — drop all overrides.
+        self.instance.part_overrides.clear();
         // Configuration (coordinate_system, origin, unit) is preserved.
     }
 
     pub fn get_ssab_data(&self) -> Option<&[u8]> {
         self.eval.resource.map(|r| r.get_ssab_data())
+    }
+
+    // --- Override Layer API (Phase 2) ---
+
+    /// Resolve a part name to its `part_index` in the current primary animation,
+    /// or `-1` if not loaded / not found. Indices are stable within an SSAB, so
+    /// callers can resolve once and reuse the index across animation changes.
+    pub fn find_part_index(&self, name: &str) -> i32 {
+        let Some(resource) = self.eval.resource else {
+            return -1;
+        };
+        let anim_idx = self.instance.primary_source().animation_idx;
+        if anim_idx < 0 {
+            return -1;
+        }
+        let hash = fnv1a_hash_str(name);
+        resource.animations[anim_idx as usize].cached_parts.iter().position(|p| p.name_hash == hash).map(|i| i as i32).unwrap_or(-1)
+    }
+
+    /// Set or clear a per-part visibility override.
+    /// `force`: `0` = clear/revert to animation, `1` = force-hide,
+    /// `2` = force-visible (reserved, not implemented — rejected).
+    /// `cascade` propagates a force-hide to descendants.
+    pub fn set_part_visibility_override(&mut self, part: u32, force: u8, cascade: bool) -> Result<(), error::SSRuntimeError> {
+        let idx = part as usize;
+        if idx >= self.instance.part_overrides.len() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        match force {
+            0 => {
+                if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
+                    entry.visibility = None;
+                }
+                self.instance.compact_override(idx);
+            }
+            1 => {
+                let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+                entry.visibility = Some(crate::core::override_layer::VisibilityOverride { cascade });
+            }
+            // 2 = force-visible is reserved (handover D-5) but not implemented.
+            _ => return Err(error::SSRuntimeError::InvalidParameter),
+        }
+        Ok(())
+    }
+
+    /// Clear the visibility override on a part (revert to animation).
+    pub fn clear_part_visibility_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
+        self.set_part_visibility_override(part, 0, false)
+    }
+
+    /// Clear every per-part override.
+    pub fn clear_all_part_overrides(&mut self) {
+        for entry in self.instance.part_overrides.iter_mut() {
+            *entry = None;
+        }
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), error::SSRuntimeError> {
@@ -1064,6 +1148,12 @@ impl<'a> Context<'a> {
             layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
         }
         self.instance.resolved_layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+
+        // Override Layer: resize to the new part space. Visibility overrides are
+        // cleared on a new animation (handover D-5); Color/Cell priority modes
+        // (NOW/PERMANENT) are handled once those attributes exist.
+        self.instance.part_overrides.clear();
+        self.instance.part_overrides.resize(num_parts, None);
 
         let globals = &mut self.instance.globals;
         globals.world_matrices.clear();
@@ -1419,6 +1509,13 @@ impl<'a> Context<'a> {
             ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
         } else {
             mix_poses(&self.instance.sources, &self.instance.layers, primary_idx, &mut self.instance.resolved_layer);
+        }
+
+        // ⟵ SEAM: apply the per-part runtime Override Layer on the resolved
+        // pose — after the mix, before compose — so overrides win over both
+        // keyframe values and blend results.
+        if self.instance.has_any_override() {
+            crate::core::override_layer::apply_part_overrides(&self.instance.part_overrides, &primary_metadata.cached_parts, &mut self.instance.resolved_layer.parts_vec, &mut self.eval.override_hide_workspace);
         }
 
         // Stage B + C + draw plan on the resolved pose.
@@ -3026,6 +3123,112 @@ mod tests {
             assert_eq!(part_state.position_x(), 32.0);
             assert!(part_state.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         }
+    }
+
+    // --- Override Layer (Phase 2): Visibility ---
+
+    /// Load Basic.ssab bytes for the override tests (each test owns its resource
+    /// locally so the `resource` outlives its `Context`, matching drop order).
+    fn load_basic_ssab() -> SsabData {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall/Basic.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Basic.ssab");
+        SsabData::load_copy(&input_buf).expect("Failed to load SsabData")
+    }
+
+    #[test]
+    fn override_find_part_index() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+
+        // Before an animation is set up, there is no primary → -1.
+        assert_eq!(context.find_part_index("POS_XYZ"), -1);
+
+        context.setup_animation("anime_1").expect("setup");
+        // Indices are 1:1 with the SSAB part order (see load_parts_of_ssab_files).
+        assert_eq!(context.find_part_index("POS_XYZ"), 2);
+        assert_eq!(context.find_part_index("SCL_XY"), 7);
+        assert_eq!(context.find_part_index("root"), 0);
+        assert_eq!(context.find_part_index("does_not_exist"), -1);
+    }
+
+    #[test]
+    fn override_visibility_force_hide_and_clear() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let idx = context.find_part_index("POS_XYZ");
+        assert!(idx >= 0);
+        let idx = idx as usize;
+
+        // Baseline: POS_XYZ is a visible drawing part at frame 0.
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(!context.instance.resolved_layer.parts_vec[idx].hide(), "POS_XYZ expected visible at baseline");
+
+        // Force-hide → hidden.
+        context.set_part_visibility_override(idx as u32, 1, false).expect("set");
+        assert!(context.instance.has_any_override());
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(context.instance.resolved_layer.parts_vec[idx].hide());
+
+        // Clear → reverts to the animation's value (visible again).
+        context.clear_part_visibility_override(idx as u32).expect("clear");
+        assert!(!context.instance.has_any_override(), "empty entry should compact to None");
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(!context.instance.resolved_layer.parts_vec[idx].hide());
+    }
+
+    #[test]
+    fn override_visibility_cascade() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let parent = context.find_part_index("LSCL_XY"); // id 6
+        let child = context.find_part_index("SCL_XY"); // id 7, parent 6
+        assert!(parent >= 0 && child >= 0);
+        let (parent, child) = (parent as u32, child as usize);
+
+        // Cascade force-hide the parent → the child is hidden too.
+        context.set_part_visibility_override(parent, 1, true).expect("set cascade");
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(context.instance.resolved_layer.parts_vec[parent as usize].hide());
+        assert!(context.instance.resolved_layer.parts_vec[child].hide(), "cascade should hide the child");
+
+        // Non-cascade: the child reverts to its own animated visibility
+        // (keyframed hide does NOT cascade — this proves the override cascade
+        // is the only thing that reached the child).
+        context.clear_all_part_overrides();
+        context.get_frame_data(0.0).expect("frame 0");
+        let child_baseline = context.instance.resolved_layer.parts_vec[child].hide();
+        context.set_part_visibility_override(parent, 1, false).expect("set no-cascade");
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(context.instance.resolved_layer.parts_vec[parent as usize].hide());
+        assert_eq!(context.instance.resolved_layer.parts_vec[child].hide(), child_baseline, "non-cascade must not touch the child");
+    }
+
+    #[test]
+    fn override_cleared_on_setup_animation() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let idx = context.find_part_index("POS_XYZ") as u32;
+        context.set_part_visibility_override(idx, 1, false).expect("set");
+        assert!(context.instance.has_any_override());
+
+        // A new animation clears visibility overrides (handover D-5).
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(!context.instance.has_any_override());
     }
 
     // Regression for the subframe-end-frame fix: `get_frame_data` accepts the

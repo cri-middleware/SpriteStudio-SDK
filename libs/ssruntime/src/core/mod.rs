@@ -3,6 +3,7 @@ pub mod framedata;
 pub mod interpolation;
 pub mod math;
 pub mod matrix;
+pub mod override_layer;
 pub mod playback_controller;
 pub mod ssab_lookup;
 pub mod util;
