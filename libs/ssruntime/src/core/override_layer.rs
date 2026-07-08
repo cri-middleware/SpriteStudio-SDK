@@ -14,8 +14,50 @@
 
 use alloc::vec::Vec;
 
-use crate::core::framedata::CachedPartData;
-use crate::runtime::framedata::ss::runtime::PartState;
+use crate::core::framedata::{CachedPartData, premultiply_part_color_corner};
+use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Rect, UpdateAttributeFlags};
+
+/// Keyframe-vs-override precedence for the attributes that conflict with the
+/// animation (Color and Cell). Visibility has no priority mode.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PriorityMode {
+    /// `NON`: the keyframe reclaims the attribute whenever the animation drives
+    /// it this frame; the override only shows on frames the animation does not
+    /// touch that attribute. Cleared on a new animation.
+    OverwriteOnNextKeyframe,
+    /// `NOW_ANIMATION`: wins for the current animation; cleared on a new one.
+    HoldUntilNextAnimation,
+    /// `PERMANENT`: wins and persists across animation changes (re-validated by
+    /// index range within the same SSAB).
+    Permanent,
+}
+
+impl PriorityMode {
+    /// Map the FFI `priority_mode` byte (`0/1/2`) to a mode.
+    pub fn from_u8(v: u8) -> Option<Self> {
+        match v {
+            0 => Some(Self::OverwriteOnNextKeyframe),
+            1 => Some(Self::HoldUntilNextAnimation),
+            2 => Some(Self::Permanent),
+            _ => None,
+        }
+    }
+}
+
+/// Per-part color override (mirrors SS6 `PartsColorChange`). Applied to Normal
+/// parts only. Corners are stored raw (r, g, b, a) in ssruntime order
+/// `lt, rt, lb, rb`; alpha is pre-multiplied at the seam against the part's
+/// composited alpha, matching keyframed PartColor.
+#[derive(Clone, Copy)]
+pub struct ColorOverride {
+    /// `0=Mix 1=Mul 2=Add 3=Sub`.
+    pub blend_op: u8,
+    /// Four corners `lt, rt, lb, rb`, each `[r, g, b, a]`.
+    pub corners_rgba: [[u8; 4]; 4],
+    /// Per-corner blend rate (single value applied to all corners; `1.0` = full).
+    pub rate: f32,
+    pub priority: PriorityMode,
+}
 
 /// Force-hide a part, optionally cascading to its descendants (a faithful port
 /// of SS6 `HideSet`'s `flagInvolveChildren`). Force-*visible* (overriding a
@@ -32,12 +74,13 @@ pub struct VisibilityOverride {
 #[derive(Clone, Default)]
 pub struct PartOverride {
     pub visibility: Option<VisibilityOverride>,
+    pub color: Option<ColorOverride>,
 }
 
 impl PartOverride {
     /// True when the entry carries no active override (all attributes `None`).
     pub fn is_empty(&self) -> bool {
-        self.visibility.is_none()
+        self.visibility.is_none() && self.color.is_none()
     }
 }
 
@@ -45,7 +88,11 @@ impl PartOverride {
 ///
 /// `override_hide_workspace` is a caller-owned scratch buffer (reused frame to
 /// frame to avoid hot-path allocation); its contents on entry are irrelevant.
-pub fn apply_part_overrides(part_overrides: &[Option<PartOverride>], cached_parts: &[CachedPartData], parts_vec: &mut [PartState], override_hide_workspace: &mut Vec<bool>) {
+/// `parts_color_vec` is the resolved layer's per-part color side vector; a color
+/// override appends a resolved entry and repoints `PartState.part_color` (the
+/// side vecs are rebuilt from the primary every frame, so appends never
+/// accumulate across frames).
+pub fn apply_part_overrides(part_overrides: &[Option<PartOverride>], cached_parts: &[CachedPartData], parts_vec: &mut [PartState], parts_color_vec: &mut Vec<PartAttributePartColor>, override_hide_workspace: &mut Vec<bool>) {
     let n = parts_vec.len();
 
     // --- Visibility (force-hide + optional cascade) ---
@@ -81,5 +128,42 @@ pub fn apply_part_overrides(part_overrides: &[Option<PartOverride>], cached_part
         if force_hidden {
             parts_vec[i].set_hide(true);
         }
+    }
+
+    // --- Color (Normal parts only) ---
+    for i in 0..n {
+        if i >= cached_parts.len() {
+            break;
+        }
+        let Some(color) = part_overrides.get(i).and_then(|o| o.as_ref()).and_then(|o| o.color.as_ref()) else {
+            continue;
+        };
+        // SS6 restricts PartsColorChange to NORMAL parts.
+        if cached_parts[i].part_type_disc != ssab::ssab::ss::format::PartType::PartTypeNormal {
+            continue;
+        }
+
+        let flag = parts_vec[i].update_flag();
+        // NON yields to the animation whenever a keyframe drove color this frame.
+        if color.priority == PriorityMode::OverwriteOnNextKeyframe && flag.contains(UpdateAttributeFlags::AttributePartColor) {
+            continue;
+        }
+
+        // Build the override color and pre-multiply alpha by the part's already
+        // composited alpha, exactly as keyframed PartColor does.
+        let alpha = parts_vec[i].alpha();
+        let corner = |k: usize| -> SsAttributePartColorKeyValueColor {
+            let [r, g, b, a] = color.corners_rgba[k];
+            let raw = SsAttributePartColorKeyValueColor::new(&U8Rect::new(a, r, g, b), color.rate);
+            premultiply_part_color_corner(&raw, alpha)
+        };
+        let (lt, rt, lb, rb) = (corner(0), corner(1), corner(2), corner(3));
+        let pc = PartAttributePartColor::new(BlendType(color.blend_op), &lt, &rt, &lb, &rb);
+
+        parts_color_vec.push(pc);
+        parts_vec[i].set_part_color((parts_color_vec.len() - 1) as i16);
+        // Mark the attribute present so compose emits the 5-vertex/center-color
+        // form for parts that had no keyframed color.
+        parts_vec[i].set_update_flag(flag | UpdateAttributeFlags::AttributePartColor);
     }
 }

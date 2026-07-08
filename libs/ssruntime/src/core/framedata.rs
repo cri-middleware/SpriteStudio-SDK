@@ -668,6 +668,15 @@ pub(crate) fn evaluate_part(
     result
 }
 
+/// Pre-multiply one PartColor corner's alpha by the part's hierarchical alpha
+/// (RGB and per-corner `rate` are preserved). Shared by keyframe decode
+/// ([`extract_pose`]) and the Override Layer so both honor one alpha contract.
+pub(crate) fn premultiply_part_color_corner(c: &crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor, alpha: f32) -> crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
+    let rgba = c.rgba();
+    let new_a = ((rgba.a() as f32 / 255.0) * alpha * 255.0).clamp(0.0, 255.0) as u8;
+    crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&crate::runtime::framedata::ss::runtime::U8Rect::new(new_a, rgba.r(), rgba.g(), rgba.b()), c.rate())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn extract_pose<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
@@ -768,17 +777,11 @@ pub fn extract_pose<'a>(
         // Pre-multiply per-vertex parts color alpha with the hierarchical alpha.
         if let Some(pc) = result.part_color {
             let alpha = result.state.alpha();
-            let apply_alpha = |c: &crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor| {
-                let rgba = c.rgba();
-                let new_a = ((rgba.a() as f32 / 255.0) * alpha * 255.0).clamp(0.0, 255.0) as u8;
-                crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&crate::runtime::framedata::ss::runtime::U8Rect::new(new_a, rgba.r(), rgba.g(), rgba.b()), c.rate())
-            };
-
             let blend_type = pc.blend_type();
-            let lt = apply_alpha(pc.lt());
-            let rt = apply_alpha(pc.rt());
-            let lb = apply_alpha(pc.lb());
-            let rb = apply_alpha(pc.rb());
+            let lt = premultiply_part_color_corner(pc.lt(), alpha);
+            let rt = premultiply_part_color_corner(pc.rt(), alpha);
+            let lb = premultiply_part_color_corner(pc.lb(), alpha);
+            let rb = premultiply_part_color_corner(pc.rb(), alpha);
 
             result.part_color = Some(crate::runtime::framedata::ss::runtime::PartAttributePartColor::new(blend_type, &lt, &rt, &lb, &rb));
         }

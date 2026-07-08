@@ -977,6 +977,25 @@ impl<'a> InstanceState<'a> {
         }
     }
 
+    /// On a new animation within the same SSAB: drop Visibility and NON/NOW
+    /// priority Color/Cell overrides, keep PERMANENT ones, then resize to the
+    /// new part count (part identity is stable within an SSAB; parts beyond the
+    /// new count are dropped by the resize — the PERMANENT re-validation).
+    fn retain_permanent_overrides_on_setup(&mut self, num_parts: usize) {
+        use crate::core::override_layer::PriorityMode;
+        for entry in self.part_overrides.iter_mut() {
+            let Some(p) = entry.as_mut() else { continue };
+            p.visibility = None;
+            if p.color.as_ref().is_some_and(|c| c.priority != PriorityMode::Permanent) {
+                p.color = None;
+            }
+            if p.is_empty() {
+                *entry = None;
+            }
+        }
+        self.part_overrides.resize(num_parts, None);
+    }
+
     fn primary_idx(&self) -> usize {
         self.primary as usize
     }
@@ -1113,6 +1132,45 @@ impl<'a> Context<'a> {
         self.set_part_visibility_override(part, 0, false)
     }
 
+    /// Set a per-part color override with a single RGBA (fills all four corners).
+    /// `blend_op`: `0=Mix 1=Mul 2=Add 3=Sub`. `rgba`: packed `0xRRGGBBAA`.
+    /// `priority`: `0=NON 1=NOW_ANIMATION 2=PERMANENT`. Normal parts only.
+    pub fn set_part_color_override(&mut self, part: u32, blend_op: u8, rgba: u32, priority: u8) -> Result<(), error::SSRuntimeError> {
+        let corner = rgba.to_be_bytes(); // 0xRRGGBBAA -> [r, g, b, a]
+        self.set_part_color_override_corners(part, blend_op, [corner; 4], priority)
+    }
+
+    /// Set a per-part color override with distinct corners in ssruntime order
+    /// `lt, rt, lb, rb`, each `[r, g, b, a]`.
+    pub fn set_part_color_override_corners(&mut self, part: u32, blend_op: u8, corners_rgba: [[u8; 4]; 4], priority: u8) -> Result<(), error::SSRuntimeError> {
+        if blend_op >= 4 {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        let idx = part as usize;
+        if idx >= self.instance.part_overrides.len() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+        entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority });
+        Ok(())
+    }
+
+    /// Clear the color override on a part.
+    pub fn clear_part_color_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
+        let idx = part as usize;
+        if idx >= self.instance.part_overrides.len() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
+            entry.color = None;
+        }
+        self.instance.compact_override(idx);
+        Ok(())
+    }
+
     /// Clear every per-part override.
     pub fn clear_all_part_overrides(&mut self) {
         for entry in self.instance.part_overrides.iter_mut() {
@@ -1149,11 +1207,9 @@ impl<'a> Context<'a> {
         }
         self.instance.resolved_layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
 
-        // Override Layer: resize to the new part space. Visibility overrides are
-        // cleared on a new animation (handover D-5); Color/Cell priority modes
-        // (NOW/PERMANENT) are handled once those attributes exist.
-        self.instance.part_overrides.clear();
-        self.instance.part_overrides.resize(num_parts, None);
+        // Override Layer: a new animation clears Visibility and NON/NOW Color
+        // overrides but keeps PERMANENT ones (handover D-3/D-5).
+        self.instance.retain_permanent_overrides_on_setup(num_parts);
 
         let globals = &mut self.instance.globals;
         globals.world_matrices.clear();
@@ -1515,7 +1571,13 @@ impl<'a> Context<'a> {
         // pose — after the mix, before compose — so overrides win over both
         // keyframe values and blend results.
         if self.instance.has_any_override() {
-            crate::core::override_layer::apply_part_overrides(&self.instance.part_overrides, &primary_metadata.cached_parts, &mut self.instance.resolved_layer.parts_vec, &mut self.eval.override_hide_workspace);
+            crate::core::override_layer::apply_part_overrides(
+                &self.instance.part_overrides,
+                &primary_metadata.cached_parts,
+                &mut self.instance.resolved_layer.parts_vec,
+                &mut self.instance.resolved_layer.parts_color_vec,
+                &mut self.eval.override_hide_workspace,
+            );
         }
 
         // Stage B + C + draw plan on the resolved pose.
@@ -3229,6 +3291,131 @@ mod tests {
         // A new animation clears visibility overrides (handover D-5).
         context.setup_animation("anime_1").expect("re-setup");
         assert!(!context.instance.has_any_override());
+    }
+
+    // --- Override Layer (Phase 2): Color ---
+
+    /// Read the `lt` corner rgba of a part's resolved color, or `None` if unset.
+    fn part_color_lt(ctx: &Context, idx: usize) -> Option<(u8, u8, u8, u8)> {
+        let pc_idx = ctx.instance.resolved_layer.parts_vec[idx].part_color();
+        if pc_idx < 0 {
+            return None;
+        }
+        let c = &ctx.instance.resolved_layer.parts_color_vec[pc_idx as usize];
+        let rgba = c.lt().rgba();
+        Some((rgba.r(), rgba.g(), rgba.b(), rgba.a()))
+    }
+
+    #[test]
+    fn override_color_applies_and_premultiplies() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        // POS_XYZ has no keyframed color; the override is the only color source.
+        let idx = context.find_part_index("POS_XYZ") as usize;
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(part_color_lt(&context, idx).is_none(), "POS_XYZ expected no baseline color");
+
+        // Mix, opaque 0x80/0x40/0x20/0xFF, NOW priority.
+        context.set_part_color_override(idx as u32, 0, 0x8040_20FF, 1).expect("set color");
+        context.get_frame_data(0.0).expect("frame 0");
+
+        let part_alpha = context.instance.resolved_layer.parts_vec[idx].alpha();
+        let expected_a = ((1.0 * part_alpha) * 255.0).clamp(0.0, 255.0) as u8;
+        let (r, g, b, a) = part_color_lt(&context, idx).expect("override color present");
+        assert_eq!((r, g, b), (0x80, 0x40, 0x20));
+        assert_eq!(a, expected_a, "alpha must be pre-multiplied by the part alpha");
+        // Center-vertex flag must be set so compose emits per-vertex color.
+        assert!(context.instance.resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
+    }
+
+    #[test]
+    fn override_color_normal_only() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        // root (index 0) is PartTypeNull → color override is a no-op.
+        context.set_part_color_override(0, 0, 0xFFFF_FFFF, 1).expect("set");
+        context.get_frame_data(0.0).expect("frame 0");
+        assert!(part_color_lt(&context, 0).is_none(), "non-Normal part must not take a color override");
+    }
+
+    #[test]
+    fn override_color_priority_non_vs_now() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall/PartsColor.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("read PartsColor.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("load");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        let anim = resource.get_animation_names().first().expect("an animation").clone();
+        context.setup_animation(&anim).expect("setup");
+
+        // MIX_Whole is a Normal part with keyframed PartColor.
+        let idx = context.find_part_index("MIX_Whole");
+        assert!(idx >= 0);
+        let idx = idx as usize;
+
+        // Baseline keyframed color at frame 0 (animation drives color → flag ON).
+        context.get_frame_data(0.0).expect("frame 0");
+        let baseline = part_color_lt(&context, idx).expect("keyframed color present");
+        assert!(context.instance.resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
+
+        // NON: the keyframe drives color this frame → override yields.
+        context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set NON");
+        context.get_frame_data(0.0).expect("frame 0");
+        assert_eq!(part_color_lt(&context, idx), Some(baseline), "NON must yield to the keyframe");
+
+        // NOW: wins over the keyframe.
+        context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 1).expect("set NOW");
+        context.get_frame_data(0.0).expect("frame 0");
+        let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
+        assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NOW must override the keyframe");
+    }
+
+    #[test]
+    fn override_color_no_accumulation_across_frames() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+        let idx = context.find_part_index("POS_XYZ") as u32;
+        context.set_part_color_override(idx, 0, 0x8040_20FF, 1).expect("set");
+
+        context.get_frame_data(0.0).expect("frame 0");
+        let len1 = context.instance.resolved_layer.parts_color_vec.len();
+        context.get_frame_data(1.0).expect("frame 1");
+        let len2 = context.instance.resolved_layer.parts_color_vec.len();
+        assert_eq!(len1, len2, "override append must not accumulate across frames");
+    }
+
+    #[test]
+    fn override_color_permanent_survives_setup() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+        let idx = context.find_part_index("POS_XYZ") as u32;
+
+        // PERMANENT persists across a new animation...
+        context.set_part_color_override(idx, 0, 0x8040_20FF, 2).expect("set permanent");
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(context.instance.has_any_override(), "PERMANENT must survive setup_animation");
+
+        // ...but NOW does not.
+        context.clear_all_part_overrides();
+        context.set_part_color_override(idx, 0, 0x8040_20FF, 1).expect("set now");
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(!context.instance.has_any_override(), "NOW must clear on setup_animation");
     }
 
     // Regression for the subframe-end-frame fix: `get_frame_data` accepts the
