@@ -40,7 +40,7 @@ done
 #   APPLE_API_KEY_PATH — path to the .p8 private key file
 #   APPLE_API_KEY      — the key ID
 #   APPLE_API_ISSUER   — the issuer ID
-# These map to the SS_APPLE_* GitHub secrets — see ./SSConverterGUI and
+# These map to the SS_APPLE_* GitHub secrets — see
 # .github/workflows/release.yml for the CI wiring.
 if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
     echo "==> Codesigning macOS artifacts as: ${APPLE_SIGNING_IDENTITY}"

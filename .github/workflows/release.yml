@@ -71,7 +71,7 @@ jobs:
       # Import the Developer ID Application certificate into an ephemeral
       # keychain so codesign (run inside the release scripts) can find the
       # signing identity. No-ops when the certificate secret is absent, leaving
-      # the artifacts unsigned. Secrets map to ./SSConverterGUI's SS_APPLE_* set.
+      # the artifacts unsigned.
       - name: Set up signing keychain
         if: matrix.platform == 'macos' || matrix.platform == 'ios'
         env:

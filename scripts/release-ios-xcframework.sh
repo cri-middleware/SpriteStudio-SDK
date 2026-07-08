@@ -141,7 +141,7 @@ xcodebuild -create-xcframework \
 
 # --- Code signing (opt-in via env) ------------------------------------------
 # Sign the xcframeworks for distribution authenticity when APPLE_SIGNING_IDENTITY
-# is set (maps to the SS_APPLE_SIGNING_IDENTITY secret; see ./SSConverterGUI and
+# is set (maps to the SS_APPLE_SIGNING_IDENTITY secret; see
 # .github/workflows/release.yml). iOS code is NOT notarized and does NOT use the
 # macOS hardened runtime — the consuming app re-signs the embedded framework with
 # its own identity at its build time; this signature only lets consumers verify
