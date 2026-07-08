@@ -103,6 +103,12 @@ jobs:
           mkdir -p lib/include
           cp libs/ssruntime/target/ssruntime.h lib/include/
           cp libs/ssconverter/target/ssconverter.h lib/include/
+          # csbindgen C# FFI bindings (platform-independent; Linux is the canonical
+          # source, mirroring how the .h headers above are collected). Consumers
+          # such as SSPlayerForUnity need these to compile against the libs.
+          mkdir -p lib/bindings
+          cp libs/ssruntime/target/SSRuntimeMethods.g.cs lib/bindings/
+          cp libs/ssconverter/target/SSConverterMethods.g.cs lib/bindings/
 
       - name: build macOS
         if: matrix.platform == 'macos' && matrix.arch == 'universal'
@@ -270,6 +276,8 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
 
           cp ../../spritestudio7-sdk-libraries-linux/include/*.h include/
+          mkdir -p bindings
+          cp ../../spritestudio7-sdk-libraries-linux/bindings/*.g.cs bindings/
 
           echo ${{ steps.commit.outputs.hash }} > VERSION
           cp ../../../LICENSE.md ./
@@ -312,6 +320,8 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
 
           mv ../../spritestudio7-sdk-libraries-linux/include/*.h include/
+          mkdir -p bindings
+          cp ../../spritestudio7-sdk-libraries-linux/bindings/*.g.cs bindings/
 
           echo ${{ steps.commit.outputs.hash }} > VERSION
           cp ../../../LICENSE.md ./
