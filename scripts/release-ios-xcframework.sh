@@ -139,4 +139,36 @@ xcodebuild -create-xcframework \
     -framework ${STAGE}/sim-dynamic/libssruntime.framework \
     -output ${OUT_DYNAMIC}/libssruntime.xcframework
 
+# --- Code signing (opt-in via env) ------------------------------------------
+# Sign the xcframeworks for distribution authenticity when APPLE_SIGNING_IDENTITY
+# is set (maps to the SS_APPLE_SIGNING_IDENTITY secret; see ./SSConverterGUI and
+# .github/workflows/release.yml). iOS code is NOT notarized and does NOT use the
+# macOS hardened runtime — the consuming app re-signs the embedded framework with
+# its own identity at its build time; this signature only lets consumers verify
+# the package's provenance (Xcode 15+ "verify app dependencies with signatures").
+#
+# The static xcframework wraps bare `.a` archives, which are NOT themselves
+# code-signable; signing seals the *bundle* so consumers can still verify the
+# static package's provenance. The dynamic one is signed inside-out: each
+# embedded .framework first, then the xcframework wrapper.
+if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+    echo "==> Codesigning iOS xcframeworks as: ${APPLE_SIGNING_IDENTITY}"
+
+    # dynamic: sign embedded frameworks, then the wrapper.
+    for fw in "${OUT_DYNAMIC}"/libssruntime.xcframework/*/libssruntime.framework; do
+        codesign --force --sign "${APPLE_SIGNING_IDENTITY}" --timestamp "${fw}"
+        codesign --verify --strict --verbose=2 "${fw}"
+    done
+    codesign --force --sign "${APPLE_SIGNING_IDENTITY}" --timestamp \
+        "${OUT_DYNAMIC}/libssruntime.xcframework"
+    codesign --verify --strict --verbose=2 "${OUT_DYNAMIC}/libssruntime.xcframework"
+
+    # static: seal the bundle (its `.a` members are not individually signable).
+    codesign --force --sign "${APPLE_SIGNING_IDENTITY}" --timestamp \
+        "${OUT_STATIC}/libssruntime.xcframework"
+    codesign --verify --strict --verbose=2 "${OUT_STATIC}/libssruntime.xcframework"
+else
+    echo "==> Skipping iOS codesign (APPLE_SIGNING_IDENTITY not set)"
+fi
+
 popd > /dev/null

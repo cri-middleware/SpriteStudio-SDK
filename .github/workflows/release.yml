@@ -68,28 +68,40 @@ jobs:
           platform: ${{ matrix.platform }}
           os: ${{ matrix.os }}
 
-#      - name: Retrieve the secret and decode it to a file
-#        if: matrix.platform == 'macos' || matrix.platform == 'ios'
-#        env:
-#          DEV_CERT_APPLICATION: ${{ secrets.DEV_CERT_APPLICATION }}
-#          DEV_CERT_PASS: ${{ secrets.DEV_CERT_PASS }}
-#          KC_PASS: ${{ secrets.KC_PASS }}
-#        run: |
-#          # create variables
-#          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-#
-#          # import certificate and provisioning profile from secrets
-#          echo -n "$DEV_CERT_APPLICATION" | base64 --decode > $CERTIFICATE_PATH
-#
-#          # create temporary keychain
-#          security create-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-#          security set-keychain-settings -lut 21600 ${{ env.KEYCHAIN_PATH }}
-#          security unlock-keychain -p "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-#
-#          # import certificate to keychain
-#          security import $CERTIFICATE_PATH -P "$DEV_CERT_PASS" -f pkcs12 -k ${{ env.KEYCHAIN_PATH }} -T /usr/bin/codesign
-#          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" ${{ env.KEYCHAIN_PATH }}
-#          security list-keychain -d user -s ${{ env.KEYCHAIN_PATH }}
+      # Import the Developer ID Application certificate into an ephemeral
+      # keychain so codesign (run inside the release scripts) can find the
+      # signing identity. No-ops when the certificate secret is absent, leaving
+      # the artifacts unsigned. Secrets map to ./SSConverterGUI's SS_APPLE_* set.
+      - name: Set up signing keychain
+        if: matrix.platform == 'macos' || matrix.platform == 'ios'
+        env:
+          SS_APPLE_CERTIFICATE: ${{ secrets.SS_APPLE_CERTIFICATE }}
+          SS_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.SS_APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$SS_APPLE_CERTIFICATE" ]; then
+            echo "SS_APPLE_CERTIFICATE not set — skipping keychain setup (artifacts will be unsigned)."
+            exit 0
+          fi
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          # Random per-run password for the throwaway keychain; never persisted.
+          KEYCHAIN_PASSWORD="$(openssl rand -base64 24)"
+
+          echo -n "$SS_APPLE_CERTIFICATE" | base64 --decode > "$CERTIFICATE_PATH"
+
+          # Create, harden and unlock a temporary keychain.
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import the cert and authorize codesign to use its private key.
+          security import "$CERTIFICATE_PATH" -P "$SS_APPLE_CERTIFICATE_PASSWORD" -f pkcs12 -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Put the keychain on the search list so codesign resolves the identity.
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          rm -f "$CERTIFICATE_PATH"
 
       - name: build Linux
         if: matrix.platform == 'linux' && matrix.arch == 'x86_64'
@@ -110,43 +122,37 @@ jobs:
           cp libs/ssruntime/target/SSRuntimeMethods.g.cs lib/bindings/
           cp libs/ssconverter/target/SSConverterMethods.g.cs lib/bindings/
 
+      # release-macos.sh signs the universal dylibs + CLI (hardened runtime +
+      # timestamp) and notarizes the CLI when these APPLE_* env vars are present.
       - name: build macOS
         if: matrix.platform == 'macos' && matrix.arch == 'universal'
         env:
-          DEV_ID_APPLICATION: ${{ secrets.DEV_ID_APPLICATION }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.SS_APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.SS_APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.SS_APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.SS_APPLE_TEAM_ID }}
         run: |
           rustup target add aarch64-apple-darwin
           rustup target add x86_64-apple-darwin
           ./scripts/release-macos.sh
 
-          # TODO: codesign
-          # for f in ./target/universal-apple-darwin/release/*.dylib
-          # do
-          #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
-          # done
-          # codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" target/universal-apple-darwin/release/ssconverter-cli --deep --options runtime --timestamp
-          # TODO: notary
           mkdir -p bin
           cp -r target/universal-apple-darwin/release/ssconverter-cli bin/
           mkdir -p lib
           cp target/universal-apple-darwin/release/*.a lib/
           cp target/universal-apple-darwin/release/*.dylib lib/
 
+      # release-ios-xcframework.sh signs both xcframeworks (dynamic frameworks +
+      # each bundle) when APPLE_SIGNING_IDENTITY is present (iOS is not notarized).
       - name: build iOS
         if: matrix.platform == 'ios' && matrix.arch == 'universal'
         env:
-          DEV_ID_APPLICATION: ${{ secrets.DEV_ID_APPLICATION }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.SS_APPLE_SIGNING_IDENTITY }}
         run: |
           rustup target add aarch64-apple-ios
           rustup target add aarch64-apple-ios-sim
           rustup target add x86_64-apple-ios
           ./scripts/release-ios-xcframework.sh
-
-          # TODO: codesign
-          # for f in ./target/xcframework/dynamic/libssruntime.xcframework/*/*.dylib
-          # do
-          #   codesign --force --verify --verbose --keychain ${{ env.KEYCHAIN_PATH }} --sign "${DEV_ID_APPLICATION}" $f --deep --options runtime --timestamp
-          # done
 
           mkdir -p lib/static lib/dynamic
           cp -R target/xcframework/static/libssruntime.xcframework lib/static/
