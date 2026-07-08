@@ -14,8 +14,8 @@
 
 use alloc::vec::Vec;
 
-use crate::core::framedata::{CachedPartData, premultiply_part_color_corner};
-use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Rect, UpdateAttributeFlags};
+use crate::core::framedata::{CachedPartData, ResolvedCellMeta, premultiply_part_color_corner};
+use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributeCell, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Rect, UpdateAttributeFlags};
 
 /// Keyframe-vs-override precedence for the attributes that conflict with the
 /// animation (Color and Cell). Visibility has no priority mode.
@@ -59,6 +59,19 @@ pub struct ColorOverride {
     pub priority: PriorityMode,
 }
 
+/// Per-part cell override (mirrors SS6 `CellChangeParts`). Applied to Normal and
+/// Mask parts only. The cell is identified by `(cellmap_name_hash,
+/// cell_name_hash)` and resolved to a [`ResolvedCellMeta`] **once at set time**
+/// (cached here); the seam then only writes the resolved geometry/texture and
+/// repoints the identity index — no per-frame hash lookup.
+#[derive(Clone, Copy)]
+pub struct CellOverride {
+    pub cellmap_name_hash: u32,
+    pub cell_name_hash: u32,
+    pub resolved: ResolvedCellMeta,
+    pub priority: PriorityMode,
+}
+
 /// Force-hide a part, optionally cascading to its descendants (a faithful port
 /// of SS6 `HideSet`'s `flagInvolveChildren`). Force-*visible* (overriding a
 /// keyframed hide) is intentionally reserved but not implemented (handover D-5);
@@ -75,12 +88,13 @@ pub struct VisibilityOverride {
 pub struct PartOverride {
     pub visibility: Option<VisibilityOverride>,
     pub color: Option<ColorOverride>,
+    pub cell: Option<CellOverride>,
 }
 
 impl PartOverride {
     /// True when the entry carries no active override (all attributes `None`).
     pub fn is_empty(&self) -> bool {
-        self.visibility.is_none() && self.color.is_none()
+        self.visibility.is_none() && self.color.is_none() && self.cell.is_none()
     }
 }
 
@@ -91,8 +105,20 @@ impl PartOverride {
 /// `parts_color_vec` is the resolved layer's per-part color side vector; a color
 /// override appends a resolved entry and repoints `PartState.part_color` (the
 /// side vecs are rebuilt from the primary every frame, so appends never
-/// accumulate across frames).
-pub fn apply_part_overrides(part_overrides: &[Option<PartOverride>], cached_parts: &[CachedPartData], parts_vec: &mut [PartState], parts_color_vec: &mut Vec<PartAttributePartColor>, override_hide_workspace: &mut Vec<bool>) {
+/// accumulate across frames). A cell override likewise appends to `cell_vec`,
+/// overwrites the parallel `cell_meta_per_part` (6 floats/part) + the
+/// `cell_texture_hashes` slot, and repoints `PartState.cell`.
+#[allow(clippy::too_many_arguments)]
+pub fn apply_part_overrides(
+    part_overrides: &[Option<PartOverride>],
+    cached_parts: &[CachedPartData],
+    parts_vec: &mut [PartState],
+    parts_color_vec: &mut Vec<PartAttributePartColor>,
+    cell_vec: &mut Vec<PartAttributeCell>,
+    cell_meta_per_part: &mut [f32],
+    cell_texture_hashes: &mut [u32],
+    override_hide_workspace: &mut Vec<bool>,
+) {
     let n = parts_vec.len();
 
     // --- Visibility (force-hide + optional cascade) ---
@@ -165,5 +191,54 @@ pub fn apply_part_overrides(part_overrides: &[Option<PartOverride>], cached_part
         // Mark the attribute present so compose emits the 5-vertex/center-color
         // form for parts that had no keyframed color.
         parts_vec[i].set_update_flag(flag | UpdateAttributeFlags::AttributePartColor);
+    }
+
+    // --- Cell (Normal + Mask parts only) ---
+    for i in 0..n {
+        if i >= cached_parts.len() {
+            break;
+        }
+        let Some(cell) = part_overrides.get(i).and_then(|o| o.as_ref()).and_then(|o| o.cell.as_ref()) else {
+            continue;
+        };
+        let cp = &cached_parts[i];
+        // SS6 restricts CellChangeParts to NORMAL; SS7 masks also sample a cell.
+        if cp.part_type_disc != ssab::ssab::ss::format::PartType::PartTypeNormal && !cp.is_mask_contributor {
+            continue;
+        }
+
+        let flag = parts_vec[i].update_flag();
+        if cell.priority == PriorityMode::OverwriteOnNextKeyframe && flag.contains(UpdateAttributeFlags::AttributeCell) {
+            continue;
+        }
+
+        let m = &cell.resolved;
+        // (1) geometry/UV channel — consumed by compute_local_vertices_for_parts.
+        let off = i * 6;
+        if off + 6 <= cell_meta_per_part.len() {
+            cell_meta_per_part[off] = m.pivot_x;
+            cell_meta_per_part[off + 1] = m.pivot_y;
+            cell_meta_per_part[off + 2] = m.size_w;
+            cell_meta_per_part[off + 3] = m.size_h;
+            cell_meta_per_part[off + 4] = m.rect_left;
+            cell_meta_per_part[off + 5] = m.rect_top;
+        }
+        // (2) texture channel — drives the DrawBatch texture_hash.
+        if i < cell_texture_hashes.len() {
+            cell_texture_hashes[i] = m.texture_hash;
+        }
+        // (3) identity — the emitted FrameData's cell reference.
+        cell_vec.push(PartAttributeCell::new(cell.cellmap_name_hash, cell.cell_name_hash));
+        parts_vec[i].set_cell((cell_vec.len() - 1) as i16);
+        parts_vec[i].set_update_flag(flag | UpdateAttributeFlags::AttributeCell);
+
+        // A changed cell re-derives the default size for parts without a SizeX/Y
+        // key (mirrors extract_pose's cell-size fallback).
+        if !flag.contains(UpdateAttributeFlags::AttributeSizeX) {
+            parts_vec[i].set_size_x(m.size_w);
+        }
+        if !flag.contains(UpdateAttributeFlags::AttributeSizeY) {
+            parts_vec[i].set_size_y(m.size_h);
+        }
     }
 }

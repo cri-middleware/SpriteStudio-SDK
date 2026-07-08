@@ -1603,6 +1603,41 @@ pub extern "C" fn ss_runtime_clear_part_color_override(context: *mut c_void, par
     }
 }
 
+/// Set a per-part cell override, identified by FNV-1a hashes of the cellmap name
+/// (without `.ssce`) and the cell name. `(0, 0)` reverts to the animation.
+/// `priority_mode`: `0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=
+/// Permanent`. Normal + Mask parts only. Fails if the cell cannot be resolved.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_set_part_cell_override(context: *mut c_void, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority_mode: c_uchar) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.set_part_cell_override(part, cellmap_name_hash, cell_name_hash, priority_mode) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
+/// Clear a part's cell override.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_clear_part_cell_override(context: *mut c_void, part: u32) -> bool {
+    let Some(ffi_context) = get_context(context) else {
+        return false;
+    };
+    ffi_context.last_error = 0;
+    match ffi_context.ctx.clear_part_cell_override(part) {
+        Ok(_) => true,
+        Err(e) => {
+            ffi_context.last_error = e.as_code();
+            false
+        }
+    }
+}
+
 /// Clear every per-part override on the context.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_clear_all_part_overrides(context: *mut c_void) -> bool {

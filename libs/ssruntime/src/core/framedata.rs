@@ -78,35 +78,39 @@ pub struct ResolvedCellMeta {
 /// zero-initialized entry.
 pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>) -> alloc::vec::Vec<ResolvedCellMeta> {
     let Some(cell_array) = cell_array else { return alloc::vec::Vec::new() };
-    let Some(cellmaps) = ssab.cellmaps() else { return alloc::vec::Vec::new() };
+    if ssab.cellmaps().is_none() {
+        return alloc::vec::Vec::new();
+    }
 
     let mut out = alloc::vec::Vec::with_capacity(cell_array.len());
     for key in cell_array {
-        let mut meta = ResolvedCellMeta::default();
         let value = key.value();
-
-        let cellmap_name_hash = value.cellmap_name_hash();
-        let name_hash = value.name_hash();
-        if let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)
-            && let Some(cells) = cellmap.cells()
-            && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, name_hash)
-        {
-            let p = cell.pivot();
-            let (pivot_x, pivot_y) = (p.v1(), p.v2());
-            let r = cell.rectangle();
-            let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
-            // Mirror compute_local_uvs's previous fallback: if the
-            // cellmap doesn't carry size_original (or it's zero),
-            // treat the cell rect dimensions as the texture size.
-            let v = cellmap.size_original();
-            let (w, h) = (v.v1(), v.v2());
-            let (tex_w, tex_h) = if w > 0.0 && h > 0.0 { (w, h) } else { (size_w, size_h) };
-            meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
-        }
-
+        let meta = resolve_single_cell(ssab, value.cellmap_name_hash(), value.name_hash()).unwrap_or_default();
         out.push(meta);
     }
     out
+}
+
+/// Resolve one `(cellmap_name_hash, cell_name_hash)` against the SSAB cellmaps
+/// to a [`ResolvedCellMeta`], or `None` when either lookup fails. Used by the
+/// Override Layer to cache the resolved cell at set time; shares the exact
+/// resolution logic with [`resolve_cell_array_meta`].
+pub(crate) fn resolve_single_cell(ssab: &ssab::ssab::ss::format::SsAnimeBinary, cellmap_name_hash: u32, cell_name_hash: u32) -> Option<ResolvedCellMeta> {
+    let cellmaps = ssab.cellmaps()?;
+    let cellmap = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)?;
+    let cells = cellmap.cells()?;
+    let cell = crate::core::ssab_lookup::find_cell(&cells, cell_name_hash)?;
+
+    let p = cell.pivot();
+    let (pivot_x, pivot_y) = (p.v1(), p.v2());
+    let r = cell.rectangle();
+    let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
+    // Mirror compute_local_uvs's fallback: if the cellmap doesn't carry
+    // size_original (or it's zero), treat the cell rect dimensions as the size.
+    let v = cellmap.size_original();
+    let (w, h) = (v.v1(), v.v2());
+    let (tex_w, tex_h) = if w > 0.0 && h > 0.0 { (w, h) } else { (size_w, size_h) };
+    Some(ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() })
 }
 
 /// Pre-decoded skinned mesh bind-pose data for a single part.

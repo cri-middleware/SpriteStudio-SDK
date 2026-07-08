@@ -989,6 +989,9 @@ impl<'a> InstanceState<'a> {
             if p.color.as_ref().is_some_and(|c| c.priority != PriorityMode::Permanent) {
                 p.color = None;
             }
+            if p.cell.as_ref().is_some_and(|c| c.priority != PriorityMode::Permanent) {
+                p.cell = None;
+            }
             if p.is_empty() {
                 *entry = None;
             }
@@ -1166,6 +1169,48 @@ impl<'a> Context<'a> {
         }
         if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
             entry.color = None;
+        }
+        self.instance.compact_override(idx);
+        Ok(())
+    }
+
+    /// Set a per-part cell override, identified by `(cellmap_name_hash,
+    /// cell_name_hash)` (FNV-1a of the cellmap name without `.ssce` and the cell
+    /// name). `(0, 0)` reverts to the animation. `priority`: `0=NON 1=NOW 2=
+    /// PERMANENT`. Normal + Mask parts only. The cell is resolved against the
+    /// bound SSAB now and cached; errors if it cannot be resolved.
+    pub fn set_part_cell_override(&mut self, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority: u8) -> Result<(), error::SSRuntimeError> {
+        // (0,0) sentinel = follow animation → clear.
+        if cellmap_name_hash == 0 && cell_name_hash == 0 {
+            return self.clear_part_cell_override(part);
+        }
+        let Some(priority) = crate::core::override_layer::PriorityMode::from_u8(priority) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        let idx = part as usize;
+        if idx >= self.instance.part_overrides.len() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        let Some(resource) = self.eval.resource else {
+            return Err(error::SSRuntimeError::NotLoaded);
+        };
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(resource.get_ssab_data()) };
+        let Some(resolved) = crate::core::framedata::resolve_single_cell(&ssab, cellmap_name_hash, cell_name_hash) else {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        };
+        let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
+        entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority });
+        Ok(())
+    }
+
+    /// Clear the cell override on a part.
+    pub fn clear_part_cell_override(&mut self, part: u32) -> Result<(), error::SSRuntimeError> {
+        let idx = part as usize;
+        if idx >= self.instance.part_overrides.len() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        if let Some(entry) = self.instance.part_overrides[idx].as_mut() {
+            entry.cell = None;
         }
         self.instance.compact_override(idx);
         Ok(())
@@ -1576,6 +1621,9 @@ impl<'a> Context<'a> {
                 &primary_metadata.cached_parts,
                 &mut self.instance.resolved_layer.parts_vec,
                 &mut self.instance.resolved_layer.parts_color_vec,
+                &mut self.instance.resolved_layer.cell_vec,
+                &mut self.instance.resolved_layer.cell_meta_per_part,
+                &mut self.instance.resolved_layer.cell_texture_hashes,
                 &mut self.eval.override_hide_workspace,
             );
         }
@@ -3416,6 +3464,142 @@ mod tests {
         context.set_part_color_override(idx, 0, 0x8040_20FF, 1).expect("set now");
         context.setup_animation("anime_1").expect("re-setup");
         assert!(!context.instance.has_any_override(), "NOW must clear on setup_animation");
+    }
+
+    // --- Override Layer (Phase 2): Cell ---
+
+    /// `(cellmap_name_hash, cell_name_hash, size_w, size_h)` for cellmap[0]/cell[0].
+    fn first_cell(ctx: &Context) -> (u32, u32, f32, f32) {
+        let buf = ctx.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
+        let cm = ssab.cellmaps().expect("cellmaps").get(0);
+        let c = cm.cells().expect("cells").get(0);
+        // FFI contract: the stored hash equals fnv1a of the name, so a host that
+        // hashes the cellmap/cell names resolves to the same entry.
+        assert_eq!(cm.name_hash(), fnv1a_hash_str(cm.name()));
+        assert_eq!(c.name_hash(), fnv1a_hash_str(c.name()));
+        let r = c.rectangle();
+        (cm.name_hash(), c.name_hash(), r.x2(), r.y2())
+    }
+
+    #[test]
+    fn override_cell_applies_all_channels() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let (cm_hash, cell_hash, size_w, size_h) = first_cell(&context);
+        let idx = context.find_part_index("POS_XYZ") as usize;
+
+        context.set_part_cell_override(idx as u32, cm_hash, cell_hash, 1).expect("set cell");
+        context.get_frame_data(0.0).expect("frame 0");
+
+        let rl = &context.instance.resolved_layer;
+        let ps = &rl.parts_vec[idx];
+        // Identity channel.
+        assert!(ps.cell() >= 0, "cell index repointed");
+        assert!(ps.update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell));
+        let cv = &rl.cell_vec[ps.cell() as usize];
+        assert_eq!((cv.cellmap_name_hash(), cv.name_hash()), (cm_hash, cell_hash));
+        // Texture channel (drives DrawBatch texture).
+        assert_eq!(rl.cell_texture_hashes[idx], cm_hash);
+        // Geometry channel (drives local vertices): size_w/size_h at [+2]/[+3].
+        assert_eq!(rl.cell_meta_per_part[idx * 6 + 2], size_w);
+        assert_eq!(rl.cell_meta_per_part[idx * 6 + 3], size_h);
+    }
+
+    #[test]
+    fn override_cell_normal_and_mask_only() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let (cm_hash, cell_hash, _, _) = first_cell(&context);
+        // root (index 0) is PartTypeNull → cell override is a no-op.
+        context.set_part_cell_override(0, cm_hash, cell_hash, 1).expect("set");
+        context.get_frame_data(0.0).expect("frame 0");
+        assert_eq!(context.instance.resolved_layer.parts_vec[0].cell(), -1, "Null part must not take a cell override");
+    }
+
+    #[test]
+    fn override_cell_priority_non_vs_now() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        // "CELL" is a Normal part with a keyframed cell.
+        let cell_part = context.find_part_index("CELL") as usize;
+        context.get_frame_data(0.0).expect("frame 0");
+        let ci = context.instance.resolved_layer.parts_vec[cell_part].cell();
+        assert!(ci >= 0, "CELL part has a keyframed cell");
+        assert!(context.instance.resolved_layer.parts_vec[cell_part].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeCell));
+        let (base_cm, base_cell) = {
+            let b = &context.instance.resolved_layer.cell_vec[ci as usize];
+            (b.cellmap_name_hash(), b.name_hash())
+        };
+
+        // Find a different cell in the same cellmap to override with.
+        let alt = {
+            let buf = context.get_ssab_data().unwrap();
+            let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
+            let cellmaps = ssab.cellmaps().unwrap();
+            let cm = cellmaps.iter().find(|c| c.name_hash() == base_cm).expect("baseline cellmap");
+            cm.cells().unwrap().iter().map(|c| c.name_hash()).find(|&h| h != base_cell)
+        };
+        let Some(alt) = alt else {
+            return; // single-cell cellmap — nothing distinct to prove priority with
+        };
+
+        // NON: a keyframe drives the cell this frame → the override yields.
+        context.set_part_cell_override(cell_part as u32, base_cm, alt, 0).expect("set NON");
+        context.get_frame_data(0.0).expect("frame 0");
+        let ci2 = context.instance.resolved_layer.parts_vec[cell_part].cell();
+        let got = {
+            let c = &context.instance.resolved_layer.cell_vec[ci2 as usize];
+            (c.cellmap_name_hash(), c.name_hash())
+        };
+        assert_eq!(got, (base_cm, base_cell), "NON must yield to the keyframed cell");
+
+        // NOW: the override wins.
+        context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
+        context.get_frame_data(0.0).expect("frame 0");
+        let ci3 = context.instance.resolved_layer.parts_vec[cell_part].cell();
+        let got = {
+            let c = &context.instance.resolved_layer.cell_vec[ci3 as usize];
+            (c.cellmap_name_hash(), c.name_hash())
+        };
+        assert_eq!(got, (base_cm, alt), "NOW must override the keyframed cell");
+    }
+
+    #[test]
+    fn override_cell_permanent_survival_and_sentinel_clear() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+        let (cm_hash, cell_hash, _, _) = first_cell(&context);
+        let idx = context.find_part_index("POS_XYZ") as u32;
+
+        // PERMANENT persists across a new animation...
+        context.set_part_cell_override(idx, cm_hash, cell_hash, 2).expect("set permanent");
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(context.instance.has_any_override(), "PERMANENT cell must survive setup_animation");
+
+        // ...and the (0,0) sentinel reverts to the animation (clears).
+        context.set_part_cell_override(idx, 0, 0, 2).expect("sentinel clear");
+        assert!(!context.instance.has_any_override(), "(0,0) must clear the cell override");
+
+        // NOW does not survive setup.
+        context.set_part_cell_override(idx, cm_hash, cell_hash, 1).expect("set now");
+        context.setup_animation("anime_1").expect("re-setup");
+        assert!(!context.instance.has_any_override(), "NOW cell must clear on setup_animation");
     }
 
     // Regression for the subframe-end-frame fix: `get_frame_data` accepts the
