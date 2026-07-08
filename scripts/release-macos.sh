@@ -36,7 +36,10 @@ done
 # Signing runs only when APPLE_SIGNING_IDENTITY is set and its Developer ID
 # Application certificate is importable from the keychain search list (CI sets
 # up an ephemeral keychain; locally your login keychain is used). Notarization
-# of the CLI additionally needs APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID.
+# of the CLI additionally needs an App Store Connect API key:
+#   APPLE_API_KEY_PATH — path to the .p8 private key file
+#   APPLE_API_KEY      — the key ID
+#   APPLE_API_ISSUER   — the issuer ID
 # These map to the SS_APPLE_* GitHub secrets — see ./SSConverterGUI and
 # .github/workflows/release.yml for the CI wiring.
 if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
@@ -57,19 +60,19 @@ if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
     # Notarize the CLI. A bare executable cannot be stapled (stapling targets
     # .app/.dmg/.pkg only), so we notarize a zip of the signed binary and rely on
     # Gatekeeper's online ticket check on first run.
-    if [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
+    if [ -n "${APPLE_API_KEY_PATH:-}" ] && [ -n "${APPLE_API_KEY:-}" ] && [ -n "${APPLE_API_ISSUER:-}" ]; then
         echo "==> Notarizing ssconverter-cli"
         NOTARIZE_ZIP="${OUTPUT}/ssconverter-cli.notarize.zip"
         /bin/rm -f "${NOTARIZE_ZIP}"
         ( cd "${OUTPUT}" && /usr/bin/zip -q ssconverter-cli.notarize.zip ssconverter-cli )
         xcrun notarytool submit "${NOTARIZE_ZIP}" \
-            --apple-id "${APPLE_ID}" \
-            --password "${APPLE_PASSWORD}" \
-            --team-id "${APPLE_TEAM_ID}" \
+            --key "${APPLE_API_KEY_PATH}" \
+            --key-id "${APPLE_API_KEY}" \
+            --issuer "${APPLE_API_ISSUER}" \
             --wait
         /bin/rm -f "${NOTARIZE_ZIP}"
     else
-        echo "==> Skipping notarization (APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID not all set)"
+        echo "==> Skipping notarization (APPLE_API_KEY_PATH / APPLE_API_KEY / APPLE_API_ISSUER not all set)"
     fi
 else
     echo "==> Skipping macOS codesign (APPLE_SIGNING_IDENTITY not set)"
