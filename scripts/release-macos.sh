@@ -32,4 +32,47 @@ for lib in ${LIBS[@]}; do
     lipo -create target/aarch64-apple-darwin/${BUILD_MODE}/${lib} target/x86_64-apple-darwin/${BUILD_MODE}/${lib} -output ${OUTPUT}/${lib}
 done
 
+# --- Code signing & notarization (opt-in via env) ---------------------------
+# Signing runs only when APPLE_SIGNING_IDENTITY is set and its Developer ID
+# Application certificate is importable from the keychain search list (CI sets
+# up an ephemeral keychain; locally your login keychain is used). Notarization
+# of the CLI additionally needs APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID.
+# These map to the SS_APPLE_* GitHub secrets — see ./SSConverterGUI and
+# .github/workflows/release.yml for the CI wiring.
+if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+    echo "==> Codesigning macOS artifacts as: ${APPLE_SIGNING_IDENTITY}"
+    # Hardened runtime (--options runtime) + a secure timestamp are prerequisites
+    # for notarization and for Gatekeeper acceptance of Developer ID binaries.
+    SIGN_TARGETS=(
+        "${OUTPUT}/libssruntime.dylib"
+        "${OUTPUT}/libssconverter.dylib"
+        "${OUTPUT}/ssconverter-cli"
+    )
+    for f in "${SIGN_TARGETS[@]}"; do
+        codesign --force --sign "${APPLE_SIGNING_IDENTITY}" \
+            --options runtime --timestamp "${f}"
+        codesign --verify --strict --verbose=2 "${f}"
+    done
+
+    # Notarize the CLI. A bare executable cannot be stapled (stapling targets
+    # .app/.dmg/.pkg only), so we notarize a zip of the signed binary and rely on
+    # Gatekeeper's online ticket check on first run.
+    if [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
+        echo "==> Notarizing ssconverter-cli"
+        NOTARIZE_ZIP="${OUTPUT}/ssconverter-cli.notarize.zip"
+        /bin/rm -f "${NOTARIZE_ZIP}"
+        ( cd "${OUTPUT}" && /usr/bin/zip -q ssconverter-cli.notarize.zip ssconverter-cli )
+        xcrun notarytool submit "${NOTARIZE_ZIP}" \
+            --apple-id "${APPLE_ID}" \
+            --password "${APPLE_PASSWORD}" \
+            --team-id "${APPLE_TEAM_ID}" \
+            --wait
+        /bin/rm -f "${NOTARIZE_ZIP}"
+    else
+        echo "==> Skipping notarization (APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID not all set)"
+    fi
+else
+    echo "==> Skipping macOS codesign (APPLE_SIGNING_IDENTITY not set)"
+fi
+
 popd > /dev/null
