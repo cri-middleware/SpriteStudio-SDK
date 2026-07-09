@@ -396,6 +396,64 @@ impl<'a> CachedPartData<'a> {
     }
 }
 
+/// Test-only stub of a [`CachedPartData`] with no keyframe tracks, for unit
+/// tests that exercise per-part logic (e.g. the Override Layer) without loading
+/// a real SSAB. Only the fields those tests read are parameterized.
+#[cfg(test)]
+pub(crate) fn cached_part_stub(part_index: i16, parent_index: i16, part_type_disc: ssab::ssab::ss::format::PartType, is_mask_contributor: bool) -> CachedPartData<'static> {
+    CachedPartData {
+        part_index,
+        parent_index,
+        name_hash: 0,
+        resolved_cells: alloc::vec::Vec::new(),
+        shape_kind: None,
+        mesh_binding: None,
+        mesh_cell: None,
+        blend_type: ssab::ssab::ss::format::BlendType::Mix,
+        part_type_disc,
+        mask_influence: false,
+        is_mask_contributor,
+        cell_array: None,
+        position_x_array: None,
+        position_y_array: None,
+        position_z_array: None,
+        rotation_x_array: None,
+        rotation_y_array: None,
+        rotation_z_array: None,
+        scale_x_array: None,
+        scale_y_array: None,
+        local_scale_x_array: None,
+        local_scale_y_array: None,
+        alpha_array: None,
+        local_alpha_array: None,
+        priority_array: None,
+        flip_h_array: None,
+        flip_v_array: None,
+        hide_array: None,
+        part_color_array: None,
+        shader_array: None,
+        vertex_array: None,
+        pivot_x_array: None,
+        pivot_y_array: None,
+        anchor_x_array: None,
+        anchor_y_array: None,
+        size_x_array: None,
+        size_y_array: None,
+        img_flip_h_array: None,
+        img_flip_v_array: None,
+        uv_translation_x_array: None,
+        uv_translation_y_array: None,
+        uv_rotation_z_array: None,
+        uv_scale_x_array: None,
+        uv_scale_y_array: None,
+        bounding_radius_array: None,
+        mask_array: None,
+        skew_array: None,
+        deform_array: None,
+        texture_array: None,
+    }
+}
+
 pub struct PartEvaluationResult {
     pub state: runtime::framedata::ss::runtime::PartState,
     pub cell: Option<crate::runtime::framedata::ss::runtime::PartAttributeCell>,

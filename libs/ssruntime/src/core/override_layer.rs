@@ -1,4 +1,4 @@
-//! Per-part runtime **Override Layer** (ROADMAP Phase 2).
+//! Per-part runtime **Override Layer**
 //!
 //! Applies per-part runtime overrides (Visibility now; Color/Cell added in later
 //! stages) on the *resolved* pose at a single seam in `Context::get_frame_data`
@@ -8,9 +8,6 @@
 //!
 //! The override table is a dense `Vec<Option<PartOverride>>` on `InstanceState`,
 //! indexed by `part_index` (O(1), zero per-frame alloc, `no_std` — no `HashMap`).
-//!
-//! See `libs/ssruntime/OVERRIDE_LAYER_SPEC.md` for the design and the ForUnity
-//! handover decisions (D-1..D-6) it is reconciled against.
 
 use alloc::vec::Vec;
 
@@ -240,5 +237,184 @@ pub fn apply_part_overrides(
         if !flag.contains(UpdateAttributeFlags::AttributeSizeY) {
             parts_vec[i].set_size_y(m.size_h);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::framedata::cached_part_stub;
+    use ssab::ssab::ss::format::PartType;
+
+    /// A blank part state with a given composited alpha and dirty-flag mask.
+    fn state(alpha: f32, flag: UpdateAttributeFlags) -> PartState {
+        let mut s = PartState::default();
+        s.set_alpha(alpha);
+        s.set_cell(-1);
+        s.set_part_color(-1);
+        s.set_update_flag(flag);
+        s
+    }
+
+    /// Run `apply_part_overrides` with freshly-sized side buffers; returns
+    /// `(parts_color_vec, cell_vec, cell_meta_per_part, cell_texture_hashes)`.
+    fn run(ovr: &[Option<PartOverride>], cached: &[CachedPartData], parts: &mut [PartState]) -> (Vec<PartAttributePartColor>, Vec<PartAttributeCell>, Vec<f32>, Vec<u32>) {
+        let n = parts.len();
+        let mut color_vec = Vec::new();
+        let mut cell_vec = Vec::new();
+        let mut cell_meta = vec![0.0f32; n * 6];
+        let mut tex_hashes = vec![0u32; n];
+        let mut ws = Vec::new();
+        apply_part_overrides(ovr, cached, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut ws);
+        (color_vec, cell_vec, cell_meta, tex_hashes)
+    }
+
+    fn vis(cascade: bool) -> PartOverride {
+        PartOverride { visibility: Some(VisibilityOverride { cascade }), ..Default::default() }
+    }
+
+    fn color(blend_op: u8, rgba: [u8; 4], priority: PriorityMode) -> PartOverride {
+        PartOverride { color: Some(ColorOverride { blend_op, corners_rgba: [rgba; 4], rate: 1.0, priority }), ..Default::default() }
+    }
+
+    fn cell(cellmap_name_hash: u32, cell_name_hash: u32, size: (f32, f32), texture_hash: u32, priority: PriorityMode) -> PartOverride {
+        let resolved = ResolvedCellMeta { size_w: size.0, size_h: size.1, texture_hash, ..Default::default() };
+        PartOverride { cell: Some(CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority }), ..Default::default() }
+    }
+
+    #[test]
+    fn priority_mode_from_u8() {
+        assert_eq!(PriorityMode::from_u8(0), Some(PriorityMode::OverwriteOnNextKeyframe));
+        assert_eq!(PriorityMode::from_u8(1), Some(PriorityMode::HoldUntilNextAnimation));
+        assert_eq!(PriorityMode::from_u8(2), Some(PriorityMode::Permanent));
+        assert_eq!(PriorityMode::from_u8(3), None);
+    }
+
+    // --- Visibility ---
+
+    #[test]
+    fn visibility_force_hide_single() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNull, false), cached_part_stub(1, 0, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty())];
+        let ovr = [None, Some(vis(false))];
+        run(&ovr, &cached, &mut parts);
+        assert!(!parts[0].hide());
+        assert!(parts[1].hide());
+    }
+
+    #[test]
+    fn visibility_cascade_hides_whole_subtree() {
+        // 0 = root, 1 child of 0, 2 child of 1 (parent-before-child order).
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNull, false), cached_part_stub(1, 0, PartType::PartTypeNormal, false), cached_part_stub(2, 1, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty())];
+        let ovr = [Some(vis(true)), None, None];
+        run(&ovr, &cached, &mut parts);
+        assert!(parts[0].hide() && parts[1].hide() && parts[2].hide());
+    }
+
+    #[test]
+    fn visibility_non_cascade_leaves_descendants() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNull, false), cached_part_stub(1, 0, PartType::PartTypeNormal, false), cached_part_stub(2, 1, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty())];
+        let ovr = [Some(vis(false)), None, None];
+        run(&ovr, &cached, &mut parts);
+        assert!(parts[0].hide());
+        assert!(!parts[1].hide() && !parts[2].hide());
+    }
+
+    #[test]
+    fn keyframe_hide_does_not_cascade() {
+        // A parent hidden by a *keyframe* (not an override) must not hide its
+        // child — the override cascade keys off overrides only.
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false), cached_part_stub(1, 0, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty())];
+        parts[0].set_hide(true); // simulate a keyframed hide on the parent
+        let ovr = [None, None];
+        run(&ovr, &cached, &mut parts);
+        assert!(!parts[1].hide());
+    }
+
+    // --- Color ---
+
+    #[test]
+    fn color_normal_only_and_premultiply() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNull, false), cached_part_stub(1, -1, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty()), state(0.5, UpdateAttributeFlags::empty())];
+        // Add color (Add op) with opaque input to both; only the Normal part takes it.
+        let ovr = [Some(color(2, [0x80, 0x40, 0x20, 0xFF], PriorityMode::HoldUntilNextAnimation)), Some(color(2, [0x80, 0x40, 0x20, 0xFF], PriorityMode::HoldUntilNextAnimation))];
+        let (cv, ..) = run(&ovr, &cached, &mut parts);
+
+        assert_eq!(parts[0].part_color(), -1, "non-Normal part must be skipped");
+        let idx = parts[1].part_color();
+        assert!(idx >= 0);
+        assert_eq!(cv.len(), 1);
+        assert!(parts[1].update_flag().contains(UpdateAttributeFlags::AttributePartColor), "center-vertex flag must be set");
+        let lt = cv[idx as usize].lt().rgba();
+        assert_eq!((lt.r(), lt.g(), lt.b()), (0x80, 0x40, 0x20));
+        assert_eq!(lt.a(), 127, "alpha 0xFF pre-multiplied by part alpha 0.5");
+        assert_eq!(cv[idx as usize].blend_type().0, 2, "blend op preserved (Add)");
+    }
+
+    #[test]
+    fn color_priority_non_yields_to_keyframe() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)];
+        // Animation drove PartColor this frame → NON override yields.
+        let mut parts = [state(1.0, UpdateAttributeFlags::AttributePartColor)];
+        let ovr = [Some(color(0, [1, 2, 3, 255], PriorityMode::OverwriteOnNextKeyframe))];
+        let (cv, ..) = run(&ovr, &cached, &mut parts);
+        assert!(cv.is_empty());
+        assert_eq!(parts[0].part_color(), -1);
+    }
+
+    #[test]
+    fn color_priority_now_overrides_keyframe() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::AttributePartColor)];
+        let ovr = [Some(color(0, [1, 2, 3, 255], PriorityMode::HoldUntilNextAnimation))];
+        let (cv, ..) = run(&ovr, &cached, &mut parts);
+        assert_eq!(cv.len(), 1);
+        assert!(parts[0].part_color() >= 0);
+    }
+
+    // --- Cell ---
+
+    #[test]
+    fn cell_applies_all_channels_and_size() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty())];
+        let ovr = [Some(cell(0x1111, 0x2222, (30.0, 40.0), 0xABCD, PriorityMode::HoldUntilNextAnimation))];
+        let (_, cv, cmp, cth) = run(&ovr, &cached, &mut parts);
+
+        let idx = parts[0].cell();
+        assert!(idx >= 0);
+        assert_eq!((cv[idx as usize].cellmap_name_hash(), cv[idx as usize].name_hash()), (0x1111, 0x2222));
+        assert_eq!(cth[0], 0xABCD, "texture channel");
+        assert_eq!(cmp[2], 30.0, "geometry size_w at +2");
+        assert_eq!(cmp[3], 40.0, "geometry size_h at +3");
+        assert!(parts[0].update_flag().contains(UpdateAttributeFlags::AttributeCell));
+        assert_eq!(parts[0].size_x(), 30.0, "size re-derived when unkeyed");
+        assert_eq!(parts[0].size_y(), 40.0);
+    }
+
+    #[test]
+    fn cell_normal_and_mask_only() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNull, false), cached_part_stub(1, -1, PartType::PartTypeMask, true)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::empty()), state(1.0, UpdateAttributeFlags::empty())];
+        let ov = cell(1, 2, (8.0, 8.0), 9, PriorityMode::HoldUntilNextAnimation);
+        let ovr = [Some(ov.clone()), Some(ov)];
+        let (_, cv, ..) = run(&ovr, &cached, &mut parts);
+        assert_eq!(parts[0].cell(), -1, "Null part skipped");
+        assert!(parts[1].cell() >= 0, "Mask part applied");
+        assert_eq!(cv.len(), 1);
+    }
+
+    #[test]
+    fn cell_priority_non_yields_to_keyframe() {
+        let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)];
+        let mut parts = [state(1.0, UpdateAttributeFlags::AttributeCell)];
+        let ovr = [Some(cell(1, 2, (8.0, 8.0), 9, PriorityMode::OverwriteOnNextKeyframe))];
+        let (_, cv, ..) = run(&ovr, &cached, &mut parts);
+        assert!(cv.is_empty());
+        assert_eq!(parts[0].cell(), -1);
     }
 }
