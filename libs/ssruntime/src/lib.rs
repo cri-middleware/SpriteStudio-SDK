@@ -938,6 +938,10 @@ struct InstanceState<'a> {
     /// `None` = no override; sized to `num_parts` on `setup_animation`. Empty
     /// until an animation is set up.
     part_overrides: Vec<Option<crate::core::override_layer::PartOverride>>,
+    /// Per-part resolved cell meta recorded by the seam when a cell override is
+    /// applied, so `compute_local_uvs` samples the overridden cell (not just the
+    /// geometry/texture channels). Empty when no override is active this frame.
+    override_cell_uv_meta: Vec<Option<crate::core::framedata::ResolvedCellMeta>>,
 }
 
 impl<'a> InstanceState<'a> {
@@ -957,6 +961,7 @@ impl<'a> InstanceState<'a> {
             render_mode: crate::core::RenderMode::default(),
             crossfade: None,
             part_overrides: Vec::new(),
+            override_cell_uv_meta: Vec::new(),
         }
     }
 
@@ -1616,6 +1621,14 @@ impl<'a> Context<'a> {
         // pose — after the mix, before compose — so overrides win over both
         // keyframe values and blend results.
         if self.instance.has_any_override() {
+            // (Re)size + clear the cell-UV meta so the seam records only the
+            // parts it overrides this frame; compute_local_uvs consults it.
+            if self.instance.override_cell_uv_meta.len() != primary_num_parts {
+                self.instance.override_cell_uv_meta.resize(primary_num_parts, None);
+            }
+            for slot in self.instance.override_cell_uv_meta.iter_mut() {
+                *slot = None;
+            }
             crate::core::override_layer::apply_part_overrides(
                 &self.instance.part_overrides,
                 &primary_metadata.cached_parts,
@@ -1624,8 +1637,13 @@ impl<'a> Context<'a> {
                 &mut self.instance.resolved_layer.cell_vec,
                 &mut self.instance.resolved_layer.cell_meta_per_part,
                 &mut self.instance.resolved_layer.cell_texture_hashes,
+                &mut self.instance.override_cell_uv_meta,
                 &mut self.eval.override_hide_workspace,
             );
+        } else {
+            // No overrides active: leave the buffer empty so compute_local_uvs
+            // falls back to the keyframe cell for every part.
+            self.instance.override_cell_uv_meta.clear();
         }
 
         // Stage B + C + draw plan on the resolved pose.
@@ -1871,6 +1889,7 @@ impl<'a> Context<'a> {
     #[allow(clippy::needless_range_loop)]
     fn compute_local_uvs(instance: &mut InstanceState<'a>, cached_parts: &[crate::core::framedata::CachedPartData]) {
         let layer = &instance.resolved_layer;
+        let override_cell_uv_meta = &instance.override_cell_uv_meta;
         let globals = &mut instance.globals;
         let num_parts = layer.parts_vec.len();
         if globals.local_uvs.len() != num_parts * 10 {
@@ -1886,7 +1905,15 @@ impl<'a> Context<'a> {
                 continue;
             }
             let cursor = layer.cursors[i * core::framedata::NUM_PART_ATTRIBUTES + core::framedata::IDX_ATTRIBUTECELL];
-            let Some(meta) = cached_parts[i].resolved_cells.get(cursor) else { continue };
+            // A cell override recorded at the seam wins for UVs too, so the
+            // sampled image (not just the quad size/texture) reflects the swap.
+            let meta = match override_cell_uv_meta.get(i).and_then(|m| m.as_ref()) {
+                Some(m) => m,
+                None => match cached_parts[i].resolved_cells.get(cursor) {
+                    Some(m) => m,
+                    None => continue,
+                },
+            };
             if meta.size_w == 0.0 && meta.size_h == 0.0 {
                 continue;
             }
@@ -3575,6 +3602,46 @@ mod tests {
             (c.cellmap_name_hash(), c.name_hash())
         };
         assert_eq!(got, (base_cm, alt), "NOW must override the keyframed cell");
+    }
+
+    #[test]
+    fn override_cell_changes_uvs() {
+        let ssab_data = load_basic_ssab();
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let cell_part = context.find_part_index("CELL") as usize;
+        context.get_frame_data(0.0).expect("frame 0");
+        let ci = context.instance.resolved_layer.parts_vec[cell_part].cell();
+        assert!(ci >= 0);
+        let (base_cm, base_cell) = {
+            let b = &context.instance.resolved_layer.cell_vec[ci as usize];
+            (b.cellmap_name_hash(), b.name_hash())
+        };
+        let base = cell_part * 10;
+        let baseline_uvs: Vec<f32> = context.instance.globals.local_uvs[base..base + 10].to_vec();
+
+        // A different cell in the same cellmap sits at a different atlas rect.
+        let alt = {
+            let buf = context.get_ssab_data().unwrap();
+            let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
+            let cm = ssab.cellmaps().unwrap().iter().find(|c| c.name_hash() == base_cm).expect("baseline cellmap");
+            cm.cells().unwrap().iter().map(|c| c.name_hash()).find(|&h| h != base_cell)
+        };
+        let Some(alt) = alt else {
+            return; // single-cell cellmap — cannot prove a UV change
+        };
+
+        // Override to the alt cell: the SAMPLED UVs must change — not just the
+        // quad size/texture. (Regression: compute_local_uvs used the keyframe
+        // cell and ignored the override, so only size/texture changed.)
+        context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
+        context.get_frame_data(0.0).expect("frame 0");
+        let overridden_uvs: Vec<f32> = context.instance.globals.local_uvs[base..base + 10].to_vec();
+
+        assert_ne!(baseline_uvs, overridden_uvs, "a cell override must change the sampled UVs");
     }
 
     #[test]

@@ -114,6 +114,7 @@ pub fn apply_part_overrides(
     cell_vec: &mut Vec<PartAttributeCell>,
     cell_meta_per_part: &mut [f32],
     cell_texture_hashes: &mut [u32],
+    override_cell_uv_meta: &mut [Option<ResolvedCellMeta>],
     override_hide_workspace: &mut Vec<bool>,
 ) {
     let n = parts_vec.len();
@@ -210,7 +211,7 @@ pub fn apply_part_overrides(
         }
 
         let m = &cell.resolved;
-        // (1) geometry/UV channel — consumed by compute_local_vertices_for_parts.
+        // (1) geometry channel — consumed by compute_local_vertices_for_parts.
         let off = i * 6;
         if off + 6 <= cell_meta_per_part.len() {
             cell_meta_per_part[off] = m.pivot_x;
@@ -224,7 +225,14 @@ pub fn apply_part_overrides(
         if i < cell_texture_hashes.len() {
             cell_texture_hashes[i] = m.texture_hash;
         }
-        // (3) identity — the emitted FrameData's cell reference.
+        // (3) UV channel — compute_local_uvs samples the keyframe cell
+        // (resolved_cells[cursor]) which the seam cannot touch; record the
+        // resolved meta so the overridden cell's UV rect / rotation / tex size
+        // is what actually gets sampled.
+        if i < override_cell_uv_meta.len() {
+            override_cell_uv_meta[i] = Some(*m);
+        }
+        // (4) identity — the emitted FrameData's cell reference.
         cell_vec.push(PartAttributeCell::new(cell.cellmap_name_hash, cell.cell_name_hash));
         parts_vec[i].set_cell((cell_vec.len() - 1) as i16);
         parts_vec[i].set_update_flag(flag | UpdateAttributeFlags::AttributeCell);
@@ -257,16 +265,19 @@ mod tests {
     }
 
     /// Run `apply_part_overrides` with freshly-sized side buffers; returns
-    /// `(parts_color_vec, cell_vec, cell_meta_per_part, cell_texture_hashes)`.
-    fn run(ovr: &[Option<PartOverride>], cached: &[CachedPartData], parts: &mut [PartState]) -> (Vec<PartAttributePartColor>, Vec<PartAttributeCell>, Vec<f32>, Vec<u32>) {
+    /// `(parts_color_vec, cell_vec, cell_meta_per_part, cell_texture_hashes,
+    /// override_cell_uv_meta)`.
+    #[allow(clippy::type_complexity)]
+    fn run(ovr: &[Option<PartOverride>], cached: &[CachedPartData], parts: &mut [PartState]) -> (Vec<PartAttributePartColor>, Vec<PartAttributeCell>, Vec<f32>, Vec<u32>, Vec<Option<ResolvedCellMeta>>) {
         let n = parts.len();
         let mut color_vec = Vec::new();
         let mut cell_vec = Vec::new();
         let mut cell_meta = vec![0.0f32; n * 6];
         let mut tex_hashes = vec![0u32; n];
+        let mut uv_meta = vec![None; n];
         let mut ws = Vec::new();
-        apply_part_overrides(ovr, cached, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut ws);
-        (color_vec, cell_vec, cell_meta, tex_hashes)
+        apply_part_overrides(ovr, cached, parts, &mut color_vec, &mut cell_vec, &mut cell_meta, &mut tex_hashes, &mut uv_meta, &mut ws);
+        (color_vec, cell_vec, cell_meta, tex_hashes, uv_meta)
     }
 
     fn vis(cascade: bool) -> PartOverride {
@@ -383,7 +394,7 @@ mod tests {
         let cached = [cached_part_stub(0, -1, PartType::PartTypeNormal, false)];
         let mut parts = [state(1.0, UpdateAttributeFlags::empty())];
         let ovr = [Some(cell(0x1111, 0x2222, (30.0, 40.0), 0xABCD, PriorityMode::HoldUntilNextAnimation))];
-        let (_, cv, cmp, cth) = run(&ovr, &cached, &mut parts);
+        let (_, cv, cmp, cth, uv) = run(&ovr, &cached, &mut parts);
 
         let idx = parts[0].cell();
         assert!(idx >= 0);
@@ -391,6 +402,10 @@ mod tests {
         assert_eq!(cth[0], 0xABCD, "texture channel");
         assert_eq!(cmp[2], 30.0, "geometry size_w at +2");
         assert_eq!(cmp[3], 40.0, "geometry size_h at +3");
+        // UV channel: the resolved meta is recorded so compute_local_uvs samples
+        // the overridden cell (not just the geometry/texture channels).
+        let uv_meta = uv[0].expect("UV meta recorded for the overridden cell");
+        assert_eq!((uv_meta.size_w, uv_meta.size_h, uv_meta.texture_hash), (30.0, 40.0, 0xABCD));
         assert!(parts[0].update_flag().contains(UpdateAttributeFlags::AttributeCell));
         assert_eq!(parts[0].size_x(), 30.0, "size re-derived when unkeyed");
         assert_eq!(parts[0].size_y(), 40.0);
