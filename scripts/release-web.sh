@@ -36,10 +36,21 @@ pushd ${ROOTDIR} > /dev/null
 # package job runs scripts/generate-licenses.sh and copies it into each
 # package). Run that script manually first if you want the notice locally.
 
-# ssruntime (playback Brain) -> pkg/runtime-web
+# ssruntime (playback Brain) -> pkg/runtime-web. Inherits the repo-wide
+# `+simd128` (.cargo/config.toml); this is the primary build for modern browsers.
 OUT_DIR="../../pkg/runtime-web/${BUILD_MODE}"
 /bin/rm -rf "pkg/runtime-web/${BUILD_MODE}"
 $WASM_PACK build libs/ssruntime ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_DIR} -- --features web --no-default-features
+
+# ssruntime no-SIMD variant -> pkg/runtime-web-nosimd. For hosts whose WASM
+# engine lacks simd128 — notably the NW.js bundled with RPG Maker MZ, whose
+# Chromium predates stable WASM SIMD and fails to load the simd128 build. Same
+# source + same wasm-bindgen as above, so the generated JS glue is interface-
+# identical: a consumer can swap only the `ssruntime_bg.wasm` binary. Override
+# the repo-wide `+simd128` with `-simd128` for this build.
+NOSIMD_OUT_DIR="../../pkg/runtime-web-nosimd/${BUILD_MODE}"
+/bin/rm -rf "pkg/runtime-web-nosimd/${BUILD_MODE}"
+RUSTFLAGS="-C target-feature=-simd128" $WASM_PACK build libs/ssruntime ${WASM_PACK_FLAGS} --target web --out-dir ${NOSIMD_OUT_DIR} -- --features web --no-default-features
 
 # ssconverter (sspj -> .ssab) -> pkg/converter-web. Sequential conversion;
 # JS supplies project files in-memory (no rayon, no filesystem on wasm).
