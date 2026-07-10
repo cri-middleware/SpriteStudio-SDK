@@ -36,13 +36,33 @@ try {
     # package job runs scripts/generate-licenses.ps1 and copies it into each
     # package). Run that script manually first if you want the notice locally.
 
-    # ssruntime (playback Brain) -> pkg/runtime-web
+    # ssruntime (playback Brain) -> pkg/runtime-web. Inherits the repo-wide
+    # `+simd128` (.cargo/config.toml); primary build for modern browsers.
     $outDir = "../../pkg/runtime-web/$buildMode"
     if (Test-Path "pkg/runtime-web/$buildMode") {
         Remove-Item -Recurse -Force "pkg/runtime-web/$buildMode"
     }
-    
+
     & $wasmPack build libs/ssruntime @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features
+
+    # ssruntime no-SIMD variant -> pkg/runtime-web-nosimd. For hosts whose WASM
+    # engine lacks simd128 — notably the NW.js bundled with RPG Maker MZ, whose
+    # Chromium predates stable WASM SIMD and fails to load the simd128 build.
+    # Same source + same wasm-bindgen, so the JS glue is interface-identical: a
+    # consumer can swap only the `ssruntime_bg.wasm` binary. Override the
+    # repo-wide `+simd128` with `-simd128` for this build.
+    $nosimdOutDir = "../../pkg/runtime-web-nosimd/$buildMode"
+    if (Test-Path "pkg/runtime-web-nosimd/$buildMode") {
+        Remove-Item -Recurse -Force "pkg/runtime-web-nosimd/$buildMode"
+    }
+
+    $oldRustFlagsRuntime = $env:RUSTFLAGS
+    try {
+        $env:RUSTFLAGS = "-C target-feature=-simd128"
+        & $wasmPack build libs/ssruntime @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features
+    } finally {
+        $env:RUSTFLAGS = $oldRustFlagsRuntime
+    }
 
     # ssconverter (sspj -> .ssab) -> pkg/converter-web. Sequential conversion;
     # JS supplies project files in-memory (no rayon, no filesystem on wasm).
