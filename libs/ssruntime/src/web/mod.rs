@@ -710,6 +710,63 @@ impl SSRuntimeContext {
     pub fn get_active_effect_event(&mut self, slot_index: u32) -> WebEffectEventInfo {
         self.inner.get_active_effect_event(slot_index).into()
     }
+
+    // ---- Override Layer (Phase 2): per-part runtime overrides -------------
+    // Mirrors the `ss_runtime_*_override` C FFI in `src/ffi/mod.rs`.
+
+    /// Mirror of `ss_runtime_find_part_index`. `-1` if not loaded / not found.
+    pub fn find_part_index(&self, part_name: &str) -> i32 {
+        self.inner.find_part_index(part_name)
+    }
+
+    /// Mirror of `ss_runtime_set_part_visibility_override`.
+    /// `force`: 0=clear/revert, 1=force-hide, 2=force-visible (reserved).
+    pub fn set_part_visibility_override(&mut self, part: u32, force: u8, cascade: bool) -> Result<(), JsValue> {
+        self.inner.set_part_visibility_override(part, force, cascade).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_clear_part_visibility_override`.
+    pub fn clear_part_visibility_override(&mut self, part: u32) -> Result<(), JsValue> {
+        self.inner.clear_part_visibility_override(part).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_set_part_color_override`. `rgba` packed `0xRRGGBBAA`
+    /// (fills all four corners); `blend_op`: 0=Mix 1=Mul 2=Add 3=Sub;
+    /// `priority_mode`: 0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=Permanent.
+    pub fn set_part_color_override(&mut self, part: u32, blend_op: u8, rgba: u32, priority_mode: u8) -> Result<(), JsValue> {
+        self.inner.set_part_color_override(part, blend_op, rgba, priority_mode).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_set_part_color_override_corners`. `rgba_ltrtlbrb` =
+    /// 4 packed RGBA in ssruntime corner order `lt, rt, lb, rb`.
+    pub fn set_part_color_override_corners(&mut self, part: u32, blend_op: u8, rgba_ltrtlbrb: &[u32], priority_mode: u8) -> Result<(), JsValue> {
+        if rgba_ltrtlbrb.len() < 4 {
+            return Err(JsValue::from_str("rgba_ltrtlbrb must have 4 elements"));
+        }
+        let corners = [rgba_ltrtlbrb[0].to_be_bytes(), rgba_ltrtlbrb[1].to_be_bytes(), rgba_ltrtlbrb[2].to_be_bytes(), rgba_ltrtlbrb[3].to_be_bytes()];
+        self.inner.set_part_color_override_corners(part, blend_op, corners, priority_mode).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_clear_part_color_override`.
+    pub fn clear_part_color_override(&mut self, part: u32) -> Result<(), JsValue> {
+        self.inner.clear_part_color_override(part).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_set_part_cell_override`. `(0, 0)` reverts to the
+    /// animation; Normal + Mask parts only; errors if the cell is unresolvable.
+    pub fn set_part_cell_override(&mut self, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority_mode: u8) -> Result<(), JsValue> {
+        self.inner.set_part_cell_override(part, cellmap_name_hash, cell_name_hash, priority_mode).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_clear_part_cell_override`.
+    pub fn clear_part_cell_override(&mut self, part: u32) -> Result<(), JsValue> {
+        self.inner.clear_part_cell_override(part).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    /// Mirror of `ss_runtime_clear_all_part_overrides`.
+    pub fn clear_all_part_overrides(&mut self) {
+        self.inner.clear_all_part_overrides();
+    }
 }
 
 /// JS-friendly wrapper of `EffectSlot`. Same conceptual flow as the C FFI:

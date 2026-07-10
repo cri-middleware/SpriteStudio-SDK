@@ -78,35 +78,39 @@ pub struct ResolvedCellMeta {
 /// zero-initialized entry.
 pub fn resolve_cell_array_meta<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>, cell_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataCellValue<'a>>>>) -> alloc::vec::Vec<ResolvedCellMeta> {
     let Some(cell_array) = cell_array else { return alloc::vec::Vec::new() };
-    let Some(cellmaps) = ssab.cellmaps() else { return alloc::vec::Vec::new() };
+    if ssab.cellmaps().is_none() {
+        return alloc::vec::Vec::new();
+    }
 
     let mut out = alloc::vec::Vec::with_capacity(cell_array.len());
     for key in cell_array {
-        let mut meta = ResolvedCellMeta::default();
         let value = key.value();
-
-        let cellmap_name_hash = value.cellmap_name_hash();
-        let name_hash = value.name_hash();
-        if let Some(cellmap) = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)
-            && let Some(cells) = cellmap.cells()
-            && let Some(cell) = crate::core::ssab_lookup::find_cell(&cells, name_hash)
-        {
-            let p = cell.pivot();
-            let (pivot_x, pivot_y) = (p.v1(), p.v2());
-            let r = cell.rectangle();
-            let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
-            // Mirror compute_local_uvs's previous fallback: if the
-            // cellmap doesn't carry size_original (or it's zero),
-            // treat the cell rect dimensions as the texture size.
-            let v = cellmap.size_original();
-            let (w, h) = (v.v1(), v.v2());
-            let (tex_w, tex_h) = if w > 0.0 && h > 0.0 { (w, h) } else { (size_w, size_h) };
-            meta = ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() };
-        }
-
+        let meta = resolve_single_cell(ssab, value.cellmap_name_hash(), value.name_hash()).unwrap_or_default();
         out.push(meta);
     }
     out
+}
+
+/// Resolve one `(cellmap_name_hash, cell_name_hash)` against the SSAB cellmaps
+/// to a [`ResolvedCellMeta`], or `None` when either lookup fails. Used by the
+/// Override Layer to cache the resolved cell at set time; shares the exact
+/// resolution logic with [`resolve_cell_array_meta`].
+pub(crate) fn resolve_single_cell(ssab: &ssab::ssab::ss::format::SsAnimeBinary, cellmap_name_hash: u32, cell_name_hash: u32) -> Option<ResolvedCellMeta> {
+    let cellmaps = ssab.cellmaps()?;
+    let cellmap = crate::core::ssab_lookup::find_cellmap(&cellmaps, cellmap_name_hash)?;
+    let cells = cellmap.cells()?;
+    let cell = crate::core::ssab_lookup::find_cell(&cells, cell_name_hash)?;
+
+    let p = cell.pivot();
+    let (pivot_x, pivot_y) = (p.v1(), p.v2());
+    let r = cell.rectangle();
+    let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
+    // Mirror compute_local_uvs's fallback: if the cellmap doesn't carry
+    // size_original (or it's zero), treat the cell rect dimensions as the size.
+    let v = cellmap.size_original();
+    let (w, h) = (v.v1(), v.v2());
+    let (tex_w, tex_h) = if w > 0.0 && h > 0.0 { (w, h) } else { (size_w, size_h) };
+    Some(ResolvedCellMeta { pivot_x, pivot_y, size_w, size_h, rect_left, rect_top, tex_w, tex_h, rotated: cell.rotated(), texture_hash: cellmap.name_hash() })
 }
 
 /// Pre-decoded skinned mesh bind-pose data for a single part.
@@ -267,6 +271,10 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
 pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
+    /// `fnv1a_hash_str(PartData.name)`, cached for the Override Layer's
+    /// `name -> part_index` resolver. Stable within an SSAB (part identity is
+    /// AnimationPack-scoped and 1:1 with `parts_animation_data`).
+    pub name_hash: u32,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
     pub mesh_binding: Option<MeshBindingCache>,
@@ -324,6 +332,7 @@ impl<'a> CachedPartData<'a> {
         part: ssab::ssab::ss::format::PartAnimationData<'a>,
         part_index: i16,
         parent_index: i16,
+        name_hash: u32,
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
         mesh_binding: Option<MeshBindingCache>,
@@ -336,6 +345,7 @@ impl<'a> CachedPartData<'a> {
         Self {
             part_index,
             parent_index,
+            name_hash,
             resolved_cells,
             shape_kind,
             mesh_binding,
@@ -383,6 +393,64 @@ impl<'a> CachedPartData<'a> {
             deform_array: part.deform_array(),
             texture_array: part.texture_array(),
         }
+    }
+}
+
+/// Test-only stub of a [`CachedPartData`] with no keyframe tracks, for unit
+/// tests that exercise per-part logic (e.g. the Override Layer) without loading
+/// a real SSAB. Only the fields those tests read are parameterized.
+#[cfg(test)]
+pub(crate) fn cached_part_stub(part_index: i16, parent_index: i16, part_type_disc: ssab::ssab::ss::format::PartType, is_mask_contributor: bool) -> CachedPartData<'static> {
+    CachedPartData {
+        part_index,
+        parent_index,
+        name_hash: 0,
+        resolved_cells: alloc::vec::Vec::new(),
+        shape_kind: None,
+        mesh_binding: None,
+        mesh_cell: None,
+        blend_type: ssab::ssab::ss::format::BlendType::Mix,
+        part_type_disc,
+        mask_influence: false,
+        is_mask_contributor,
+        cell_array: None,
+        position_x_array: None,
+        position_y_array: None,
+        position_z_array: None,
+        rotation_x_array: None,
+        rotation_y_array: None,
+        rotation_z_array: None,
+        scale_x_array: None,
+        scale_y_array: None,
+        local_scale_x_array: None,
+        local_scale_y_array: None,
+        alpha_array: None,
+        local_alpha_array: None,
+        priority_array: None,
+        flip_h_array: None,
+        flip_v_array: None,
+        hide_array: None,
+        part_color_array: None,
+        shader_array: None,
+        vertex_array: None,
+        pivot_x_array: None,
+        pivot_y_array: None,
+        anchor_x_array: None,
+        anchor_y_array: None,
+        size_x_array: None,
+        size_y_array: None,
+        img_flip_h_array: None,
+        img_flip_v_array: None,
+        uv_translation_x_array: None,
+        uv_translation_y_array: None,
+        uv_rotation_z_array: None,
+        uv_scale_x_array: None,
+        uv_scale_y_array: None,
+        bounding_radius_array: None,
+        mask_array: None,
+        skew_array: None,
+        deform_array: None,
+        texture_array: None,
     }
 }
 
@@ -662,6 +730,15 @@ pub(crate) fn evaluate_part(
     result
 }
 
+/// Pre-multiply one PartColor corner's alpha by the part's hierarchical alpha
+/// (RGB and per-corner `rate` are preserved). Shared by keyframe decode
+/// ([`extract_pose`]) and the Override Layer so both honor one alpha contract.
+pub(crate) fn premultiply_part_color_corner(c: &crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor, alpha: f32) -> crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
+    let rgba = c.rgba();
+    let new_a = ((rgba.a() as f32 / 255.0) * alpha * 255.0).clamp(0.0, 255.0) as u8;
+    crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&crate::runtime::framedata::ss::runtime::U8Rect::new(new_a, rgba.r(), rgba.g(), rgba.b()), c.rate())
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn extract_pose<'a>(
     fb: &mut flatbuffers::FlatBufferBuilder<'a>,
@@ -762,17 +839,11 @@ pub fn extract_pose<'a>(
         // Pre-multiply per-vertex parts color alpha with the hierarchical alpha.
         if let Some(pc) = result.part_color {
             let alpha = result.state.alpha();
-            let apply_alpha = |c: &crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor| {
-                let rgba = c.rgba();
-                let new_a = ((rgba.a() as f32 / 255.0) * alpha * 255.0).clamp(0.0, 255.0) as u8;
-                crate::runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&crate::runtime::framedata::ss::runtime::U8Rect::new(new_a, rgba.r(), rgba.g(), rgba.b()), c.rate())
-            };
-
             let blend_type = pc.blend_type();
-            let lt = apply_alpha(pc.lt());
-            let rt = apply_alpha(pc.rt());
-            let lb = apply_alpha(pc.lb());
-            let rb = apply_alpha(pc.rb());
+            let lt = premultiply_part_color_corner(pc.lt(), alpha);
+            let rt = premultiply_part_color_corner(pc.rt(), alpha);
+            let lb = premultiply_part_color_corner(pc.lb(), alpha);
+            let rb = premultiply_part_color_corner(pc.rb(), alpha);
 
             result.part_color = Some(crate::runtime::framedata::ss::runtime::PartAttributePartColor::new(blend_type, &lt, &rt, &lb, &rb));
         }
