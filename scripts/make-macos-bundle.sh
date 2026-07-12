@@ -55,8 +55,16 @@ cat > "${BUNDLE}/Contents/Info.plist" <<EOF
 EOF
 plutil -lint "${BUNDLE}/Contents/Info.plist" > /dev/null
 
-# Ad-hoc sign so the bundle loads on Apple Silicon (arm64 refuses to dlopen
-# unsigned code). release-macos.sh re-signs with Developer ID when a signing
-# identity is available; the ad-hoc signature keeps unsigned CI/local builds
-# loadable. Guarded so a non-macOS host does not hard-fail.
-codesign --force --sign - "${BUNDLE}" > /dev/null 2>&1 || true
+# Sign so the bundle loads on Apple Silicon (arm64 refuses to dlopen unsigned code).
+# When APPLE_SIGNING_IDENTITY is set (same env var release-macos.sh uses), sign with
+# that Developer ID + hardened runtime + secure timestamp so the bundle is
+# notarization-ready; a failure here is surfaced (an explicit identity should not be
+# silently downgraded). Otherwise ad-hoc sign so unsigned CI/local builds still load
+# — guarded so a non-macOS host does not hard-fail. Mirrors make-macos-framework.sh.
+if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
+    codesign --force --sign "${APPLE_SIGNING_IDENTITY}" \
+        --options runtime --timestamp "${BUNDLE}"
+    codesign --verify --strict --verbose=2 "${BUNDLE}"
+else
+    codesign --force --sign - "${BUNDLE}" > /dev/null 2>&1 || true
+fi
