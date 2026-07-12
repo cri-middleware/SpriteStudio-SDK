@@ -85,7 +85,7 @@ pub unsafe extern "C" fn ss_converter_destroy(context: *mut Context) {
 type LogCallback = Option<extern "C" fn(*const c_char)>;
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, callback: LogCallback) {
+pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, embedded: bool, callback: LogCallback) {
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
         context.error = None;
@@ -102,6 +102,7 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
         let output_dir_str = Some(std::ffi::OsString::from(output_dir_buf.to_string_lossy().into_owned()));
         let mut config = ConverterConfig::default();
         config.output = output_dir_str;
+        config.convert_config.embedded = embedded;
 
         if let Some(prev_handler) = context.handler.take() {
             // ignore previous handler result
