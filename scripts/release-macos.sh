@@ -65,6 +65,10 @@ done
 # APPLE_SIGNING_IDENTITY is set (exported before this script runs), else ad-hoc — so
 # the signing block below does NOT re-sign it.
 FRAMEWORK=${OUTPUT}/libssruntime.framework
+# The framework's public header + module-map umbrella is the plain-C header
+# (libs/ssruntime/target/ssruntime.h). build.rs also emits the C++ variant as
+# ssruntime.hpp, which ships in the SDK release's include/ for C++ consumers
+# (e.g. Godot). A C umbrella keeps the clang module importable from Swift/ObjC.
 "${BASEDIR}/make-macos-framework.sh" \
     "${OUTPUT}/libssruntime.dylib" \
     "${FRAMEWORK}" \
