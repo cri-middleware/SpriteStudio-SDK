@@ -8,7 +8,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src");
 
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let output_file = PathBuf::from(&crate_dir).join("target").join("ssruntime.h");
+    let output_file = PathBuf::from(&crate_dir).join("target").join("ssruntime.hpp");
 
     let config = match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::Cxx).generate() {
         Ok(bindings) => bindings,
@@ -19,6 +19,22 @@ fn main() {
     };
 
     config.write_to_file(output_file);
+
+    // Also emit a plain C header (.h) for ffigen / C-only consumers: the Flutter
+    // Body runs `dart run ffigen` over it, and it is the module-map umbrella for
+    // the macOS/iOS framework. The C++ header ships alongside as .hpp (above);
+    // both go into the SDK release's include/. Consumers pick by extension
+    // (.h = C, .hpp = C++).
+    let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssruntime.h");
+    match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::C).generate() {
+        Ok(bindings) => {
+            bindings.write_to_file(&c_output_file);
+        }
+        Err(e) => {
+            eprintln!("Error generating C bindings: {:?}", e);
+            panic!("Unable to generate C bindings: {}", e);
+        }
+    };
 
     let csharp_output_path = "target/SSRuntimeMethods.g.cs";
     match csbindgen::Builder::default()

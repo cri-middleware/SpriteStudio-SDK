@@ -128,8 +128,13 @@ jobs:
           cp target/release/*.a lib/
           cp target/release/*.so lib/
           mkdir -p lib/include
+          # cbindgen emits both a plain-C header (.h) and a C++ header (.hpp);
+          # ship both so consumers pick by extension (ffigen / C use .h,
+          # Godot / C++ use .hpp).
           cp libs/ssruntime/target/ssruntime.h lib/include/
           cp libs/ssconverter/target/ssconverter.h lib/include/
+          cp libs/ssruntime/target/ssruntime.hpp lib/include/
+          cp libs/ssconverter/target/ssconverter.hpp lib/include/
           # csbindgen C# FFI bindings (platform-independent; Linux is the canonical
           # source, mirroring how the .h headers above are collected). Consumers
           # such as SSPlayerForUnity need these to compile against the libs.
@@ -306,7 +311,7 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
 
-          cp ../../spritestudio7-sdk-libraries-linux/include/*.h include/
+          cp ../../spritestudio7-sdk-libraries-linux/include/*.h ../../spritestudio7-sdk-libraries-linux/include/*.hpp include/
           mkdir -p bindings
           cp ../../spritestudio7-sdk-libraries-linux/bindings/*.g.cs bindings/
 
@@ -358,7 +363,7 @@ jobs:
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
           mv ../../spritestudio7-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
 
-          mv ../../spritestudio7-sdk-libraries-linux/include/*.h include/
+          mv ../../spritestudio7-sdk-libraries-linux/include/*.h ../../spritestudio7-sdk-libraries-linux/include/*.hpp include/
           mkdir -p bindings
           cp ../../spritestudio7-sdk-libraries-linux/bindings/*.g.cs bindings/
 
