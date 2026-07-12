@@ -63,8 +63,9 @@ void convert() {
     ss_converter_context* ctx = ss_converter_create();
     
     // バックグラウンドスレッドで変換を開始
+    // 第4引数（embedded）はテクスチャを .ssab に内包します。従来のレイアウトの場合は false を渡します。
     // ログが不要な場合はコールバックに nullptr を渡します
-    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", nullptr);
+    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", false, nullptr);
     
     // 完了を待機
     while (ss_converter_is_running(ctx)) {

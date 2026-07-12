@@ -44,8 +44,10 @@ const char* sspj_path = "C:/Assets/Character.sspj";
 const char* output_dir = "C:/Project/Assets/SSAB/";
 
 // Start conversion
-// The 4th argument is a log callback (nullptr if not needed)
-ss_converter_convert(ctx, sspj_path, output_dir, [](const char* msg) {
+// The 4th argument enables embedded output (textures packed into the .ssab); pass false for
+// the conventional layout (textures referenced as sibling PNGs).
+// The 5th argument is a log callback (nullptr if not needed)
+ss_converter_convert(ctx, sspj_path, output_dir, /*embedded=*/false, [](const char* msg) {
     printf("SSConverter: %s\n", msg);
 });
 ```

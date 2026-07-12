@@ -64,8 +64,9 @@ void convert() {
     ss_converter_context* ctx = ss_converter_create();
     
     // Start conversion in a background thread
+    // The 4th argument (embedded) packs textures into the .ssab; pass false for the conventional layout.
     // Pass nullptr for the logging callback if not needed
-    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", nullptr);
+    ss_converter_convert(ctx, "path/to/project.sspj", "output/dir", false, nullptr);
     
     // Wait for finish
     while (ss_converter_is_running(ctx)) {

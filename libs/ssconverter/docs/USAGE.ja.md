@@ -44,8 +44,10 @@ const char* sspj_path = "C:/Assets/Character.sspj";
 const char* output_dir = "C:/Project/Assets/SSAB/";
 
 // 変換を開始
-// 第4引数はログ用コールバック（不要な場合は nullptr）
-ss_converter_convert(ctx, sspj_path, output_dir, [](const char* msg) {
+// 第4引数は embedded 出力（テクスチャを .ssab に内包）の有効化。従来どおり（テクスチャを隣接 PNG として
+// 参照）にする場合は false を指定します。
+// 第5引数はログ用コールバック（不要な場合は nullptr）
+ss_converter_convert(ctx, sspj_path, output_dir, /*embedded=*/false, [](const char* msg) {
     printf("SSConverter: %s\n", msg);
 });
 ```
