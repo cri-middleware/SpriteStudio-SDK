@@ -52,9 +52,11 @@ done
 # needs a .framework bundle rather than a bare dylib. The framework binary is the
 # SAME Mach-O as the universal libssruntime.dylib produced above — we only wrap it in
 # a macOS *versioned* bundle (Versions/A + Current symlinks; distinct from the iOS
-# flat framework layout). The standalone libssruntime.dylib is left in place and
-# untouched so Unity (which also accepts .dylib) and Ren'Py (ctypes/dlopen by path)
-# keep working with no migration.
+# flat framework layout). Ren'Py dlopens this framework by path (ctypes); Flutter /
+# CocoaPods link it via vendored_frameworks. Unity consumes the separate
+# ssruntime.bundle built below (macOS's native-plugin format). The bare
+# libssruntime.dylib is now just an internal intermediate — the shared Mach-O the
+# framework and bundle are copied from — and is no longer shipped.
 FRAMEWORK=${OUTPUT}/libssruntime.framework
 /bin/rm -rf ${FRAMEWORK}
 /bin/mkdir -p ${FRAMEWORK}/Versions/A/Headers ${FRAMEWORK}/Versions/A/Modules ${FRAMEWORK}/Versions/A/Resources
@@ -106,6 +108,20 @@ ln -sfn Versions/Current/Headers ${FRAMEWORK}/Headers
 ln -sfn Versions/Current/Modules ${FRAMEWORK}/Modules
 ln -sfn Versions/Current/Resources ${FRAMEWORK}/Resources
 
+# --- macOS .bundle packaging (Unity) ----------------------------------------
+# Unity's documented macOS native-plugin format is a loadable *.bundle*. The
+# packaging lives in scripts/make-macos-bundle.sh (single source of truth) so
+# SSPlayerForUnity's build-runtime.sh reuses the exact same layout on its fast
+# host/debug path. Same universal Mach-O as libssruntime.dylib above; the helper
+# ad-hoc signs it, and the signing block below re-signs it with Developer ID when
+# an identity is available.
+"${BASEDIR}/make-macos-bundle.sh" \
+    "${OUTPUT}/libssruntime.dylib" \
+    "${OUTPUT}/ssruntime.bundle" \
+    "${SHORT_VERSION}" \
+    "${BUNDLE_ID}" \
+    "${MACOSX_DEPLOYMENT_TARGET}"
+
 # --- Code signing & notarization (opt-in via env) ---------------------------
 # Signing runs only when APPLE_SIGNING_IDENTITY is set and its Developer ID
 # Application certificate is importable from the keychain search list (CI sets
@@ -139,6 +155,12 @@ if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
     codesign --force --sign "${APPLE_SIGNING_IDENTITY}" \
         --options runtime --timestamp "${OUTPUT}/libssruntime.framework/Versions/A"
     codesign --verify --strict --verbose=2 "${OUTPUT}/libssruntime.framework"
+
+    # Sign the Unity .bundle (same hardened-runtime + timestamp treatment as the
+    # dylibs/framework). Signing a bundle targets the bundle directory itself.
+    codesign --force --sign "${APPLE_SIGNING_IDENTITY}" \
+        --options runtime --timestamp "${OUTPUT}/ssruntime.bundle"
+    codesign --verify --strict --verbose=2 "${OUTPUT}/ssruntime.bundle"
 
     # Notarize the CLI. A bare executable cannot be stapled (stapling targets
     # .app/.dmg/.pkg only), so we notarize a zip of the signed binary and rely on

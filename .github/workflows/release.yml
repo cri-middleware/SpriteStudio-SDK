@@ -156,6 +156,10 @@ jobs:
           mkdir -p lib
           cp target/universal-apple-darwin/release/*.a lib/
           cp target/universal-apple-darwin/release/*.dylib lib/
+          # Unity consumes libssruntime as a .bundle (macOS's documented native-
+          # plugin format). It has no version symlinks, so unlike the framework a
+          # plain recursive copy survives the artifact upload/download and zip.
+          cp -R target/universal-apple-darwin/release/ssruntime.bundle lib/
           # Tar the versioned libssruntime.framework so its version symlinks +
           # code signature survive the artifact upload/download and the final
           # `zip` (both of which would otherwise dereference symlinks and
@@ -336,10 +340,14 @@ jobs:
           popd # libs
 
           mv ../../spritestudio7-sdk-libraries-macos/libssconverter.dylib libs/macos/
-          mv ../../spritestudio7-sdk-libraries-macos/libssruntime.dylib libs/macos/
-          # libssruntime also ships as a versioned .framework (Ren'Py loads this;
-          # the standalone dylib above stays for Unity et al.). Untar to restore
-          # its version symlinks + code signature.
+          # The macOS runtime ships as two wrappers of the same universal Mach-O:
+          # a .bundle (Unity's native-plugin format) and a versioned .framework
+          # (Ren'Py dlopens it by path; Flutter / CocoaPods link it via
+          # vendored_frameworks, which cannot consume a loadable .bundle). The bare
+          # standalone runtime dylib is no longer shipped — every consumer moved
+          # off it. The bundle has no symlinks so a plain copy is fine; the
+          # framework is untarred to restore its version symlinks + code signature.
+          cp -R ../../spritestudio7-sdk-libraries-macos/ssruntime.bundle libs/macos/
           tar -C libs/macos -xf ../../spritestudio7-sdk-libraries-macos/libssruntime.framework.tar
           mv ../../spritestudio7-sdk-libraries-ios/dynamic/libssruntime.xcframework libs/ios/
           mv ../../spritestudio7-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
