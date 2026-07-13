@@ -430,12 +430,18 @@ jobs:
             fi
           done
 
+          # Canonical checksum manifest so a consumer can verify each downloaded
+          # zip's integrity (`sha256sum -c SHA256SUMS --ignore-missing` for a
+          # partial download). Generated last, over every zip in release-dist.
+          ( cd release-dist && sha256sum *.zip > SHA256SUMS )
+
       - name: Create GitHub Release
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.upload_release == 'true'
         uses: softprops/action-gh-release@v3
         with:
           files: |
             release-dist/*.zip
+            release-dist/SHA256SUMS
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
