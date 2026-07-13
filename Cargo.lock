@@ -689,14 +689,14 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "ssab"
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 dependencies = [
  "flatbuffers",
 ]
 
 [[package]]
 name = "ssconverter"
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 dependencies = [
  "cbindgen",
  "csbindgen",
@@ -713,7 +713,7 @@ dependencies = [
 
 [[package]]
 name = "ssconverter-cli"
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 dependencies = [
  "clap",
  "rayon",
@@ -723,7 +723,7 @@ dependencies = [
 
 [[package]]
 name = "ssinterpolate"
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 dependencies = [
  "libm",
  "wide",
@@ -731,7 +731,7 @@ dependencies = [
 
 [[package]]
 name = "sspj"
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 dependencies = [
  "quick-xml",
  "rayon",
@@ -740,7 +740,7 @@ dependencies = [
 
 [[package]]
 name = "ssruntime"
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 dependencies = [
  "cbindgen",
  "csbindgen",

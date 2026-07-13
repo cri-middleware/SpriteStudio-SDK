@@ -9,7 +9,7 @@ members = [
     "libs/ssinterpolate",
 ]
 [workspace.package]
-version = "7.0.0-alpha01"
+version = "7.0.0-alpha.1"
 edition = "2024"
 rust-version = "1.96"
 authors = ["CRI Middleware Co., Ltd."]

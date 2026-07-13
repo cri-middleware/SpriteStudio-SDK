@@ -28,7 +28,7 @@ pushd ${ROOTDIR} > /dev/null
 export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-13.0}"
 
 # Marketing/build version for the framework Info.plist. Strip any -prerelease suffix
-# (e.g. 7.0.0-alpha01 -> 7.0.0): App Store rejects a non-numeric CFBundleShortVersionString.
+# (e.g. 7.0.0-alpha.1 -> 7.0.0): App Store rejects a non-numeric CFBundleShortVersionString.
 WORKSPACE_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 SHORT_VERSION="${WORKSPACE_VERSION%%-*}"
 BUNDLE_ID="jp.co.cri-mw.optpix.ssruntime"

@@ -28,7 +28,7 @@ pushd ${ROOTDIR} > /dev/null
 export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
 
 # Marketing/build version + bundle id for the .framework Info.plist (mirrors the iOS
-# xcframework packaging). Strip any -prerelease suffix (e.g. 7.0.0-alpha01 -> 7.0.0):
+# xcframework packaging). Strip any -prerelease suffix (e.g. 7.0.0-alpha.1 -> 7.0.0):
 # App Store rejects a non-numeric CFBundleShortVersionString.
 WORKSPACE_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 SHORT_VERSION="${WORKSPACE_VERSION%%-*}"
