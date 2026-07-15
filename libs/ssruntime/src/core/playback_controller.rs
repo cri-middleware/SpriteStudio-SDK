@@ -123,8 +123,12 @@ impl PlaybackController {
 
     /// `true` while the last frame of a cycle is being shown. With a finite
     /// loop count this is raised once per cycle, not only on the last one, and
-    /// with an infinite loop count it is never raised. Use [`is_finished`] to
-    /// detect the end of playback.
+    /// with an infinite loop count it is never raised.
+    ///
+    /// Internal playback state, deliberately not part of the Player-facing
+    /// surface — it is absent from the C-API and the WASM bindings because
+    /// every past attempt to build a `finished` notification on it produced a
+    /// bug. Use [`is_finished`] for that.
     ///
     /// [`is_finished`]: Self::is_finished
     pub fn is_end_frame_reached(&self) -> bool {

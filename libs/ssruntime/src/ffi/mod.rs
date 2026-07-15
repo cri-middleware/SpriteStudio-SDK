@@ -712,21 +712,12 @@ pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
     0.0
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_end_frame_reached(context: *mut c_void) -> bool {
-    if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.is_end_frame_reached();
-    }
-    false
-}
-
 /// Returns `true` once the configured loops have completed, staying `true`
 /// until the next `ss_runtime_play` / `ss_runtime_setup_animation`. Always
-/// `false` under an infinite loop count.
+/// `false` under an infinite loop count, and never raised by
+/// `ss_runtime_stop`.
 ///
-/// Prefer this over `ss_runtime_is_end_frame_reached`, which reports "the last
-/// frame of a cycle is showing" and so is raised once per loop, not only at the
-/// end of playback.
+/// This is a *state*, not a pulse: to notify once, take its rising edge.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_is_finished(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {

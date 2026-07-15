@@ -2023,16 +2023,11 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.get_frame_no()
     }
 
-    pub fn is_end_frame_reached(&self) -> bool {
-        self.instance.primary_source().controller.is_end_frame_reached()
-    }
-
     /// `true` once the configured loops have completed, and sticky until the
     /// next `play` / `setup_animation`. Never `true` under an infinite loop
-    /// count. Prefer this over [`is_end_frame_reached`], which is raised once
-    /// per cycle rather than only at the end of playback.
+    /// count, and never raised by `stop`.
     ///
-    /// [`is_end_frame_reached`]: Self::is_end_frame_reached
+    /// This is a *state*, not a pulse: to notify once, take its rising edge.
     pub fn is_finished(&self) -> bool {
         self.instance.primary_source().controller.is_finished()
     }
