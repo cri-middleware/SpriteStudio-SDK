@@ -34,6 +34,7 @@ Per part-type implementation details for richer expression.
 - [**Mask**](./40_components/40_mask.md)
 - [**Parts Color**](./40_components/50_parts_color.md)
 - [**Animation Blending**](./40_components/60_animation_blending.md)
+- [**Part Overrides (Override Layer API)**](./40_components/65_override_layer.md) — per-part runtime overrides for color / cell / visibility (Phase 2)
 - [**External Resources & Textures**](./40_components/70_external_resources.md)
 - [**Sequence**](./40_components/80_sequence.md)
 - [**Audio**](./40_components/90_audio.md)
