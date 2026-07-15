@@ -66,7 +66,7 @@ The following table shows exactly which arrays from SSAB's `PartAnimationData` a
 | `bounding_radius` | `bounding_radius_array` | Interpolated collision radius. |
 | `mask` | `mask_array` | Interpolated mask influence. |
 | `skew_x/y` | `skew_array` | Derived from SSAB's Vec2 skew interpolation. |
-| `texture` | `texture_array` | Texture override/change ID. |
+| `texture` | `texture_array` | Texture override (`TCHG`): fnv1a hash of the texture name, resolvable via `external_textures`. `0` = no override (the part keeps its cell's own texture). Step-evaluated — never interpolated. Already folded into `DrawBatch.texture_hash`, so a Player that batches by `texture_hash` needs no per-part handling. |
 
 ---
 
@@ -108,7 +108,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 |:---|:---|:---|
 | `start_rank` | ushort | Starting index into `draw_order` for this batch. |
 | `count` | ushort | Number of consecutive `draw_order` entries belonging to this batch. |
-| `texture_hash` | uint32 | fnv1a hash of the texture (cellmap image path, or external texture name) the batch binds. `0` if the kind does not need a texture (e.g. `Shape`). |
+| `texture_hash` | uint32 | fnv1a hash of the texture the batch binds — normally `cellmap_name_hash` (the cellmap name without `.ssce`), but the texture *name* hash of an authored `TextureChange` (`TCHG`) when one overrides the parts in this slice. A TCHG override participates in the batch key, so parts sharing a cellmap but bound to different textures are split into separate batches. Players must resolve both hash spaces: cellmap names and `external_textures` entries (every TCHG texture name is guaranteed present there). `0` if the kind does not need a texture (e.g. `Shape`). |
 | `vertex_count` | ushort | Total vertex count contributed by all parts in this batch (sum across the slice). |
 | `index_count` | ushort | Total index count contributed by all parts in this batch. |
 | `blend_type` | BlendType | Shared blend mode for the slice — matches the parts' `part_color.blend_type`. |
@@ -119,7 +119,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 
 | Variant | Geometry source per part |
 |:---|:---|
-| `Normal` | Standard sprite quad — driven by `vertex` pool + `cell` pool (texture from `cellmap_name_hash`). |
+| `Normal` | Standard sprite quad — driven by `vertex` pool + `cell` pool (texture from `texture_hash`: `cellmap_name_hash`, or the TCHG texture name when overridden). |
 | `Shape` | Procedural shape from `PartTypeShape` (no texture). |
 | `Instance` | Sub-anime instance slot — see [Player Guide](./docs/README.ja.md) for slot pulling. |
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |

@@ -55,7 +55,7 @@
 | `effects` | [Effect] | `SsEffectFile` (ssee) | Effect タイプのパーツが参照するエフェクトのみ |
 | `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | パックに Audio タイプのパーツが含まれる場合のみ |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | `text_bitmap == true` の Text タイプパーツが使用するビットマップフォントのみ |
-| `external_textures` | [ExternalTexture] | — | 外部テクスチャ参照 |
+| `external_textures` | [ExternalTexture] | — | 外部テクスチャ参照。`name_hash` でソート。プロジェクトの `<ExternalTextures>` リストと、この pack 内の `TCHG` キーが指す全ての `TextureName`（`common.png` のようなセルマップ画像を含む）の和集合。Player が `TCHG` のハッシュ（ひいては `DrawBatch.texture_hash`）をロード可能な名前へ逆引きするためのテーブルであり、両方の供給元を網羅する必要がある。 |
 | `external_instances` | [ExternalInstance] | — | クロスパックインスタンス参照。`anime_name_hash` でソートされ FlatBuffers の `(key)` になっているため、Player は `LookupByKey(ref_anime_hash)` で直接引ける。各エントリは `anime_pack_name_hash`（参照先 pack の `SsAnimeBinary.name_hash` と一致）、`anime_pack_name`（隣接する `<pack>.ssab` ファイル探索に使用）、`anime_name`（診断用）を持つ。 |
 | `embedded_assets` | [EmbeddedAsset] | — | オプションで埋め込まれるバイナリアセット（画像、サウンドなど） |
 
@@ -272,7 +272,7 @@ AnimationData
 | `MASK` | `mask_array` | PartAnimationDataFloatValue |
 | `VERT` (skew) | `skew_array` | PartAnimationDataVec2 | *注: ssae の `VERT` タグは単一の `SsAttributeVertexKeyValue` に頂点オフセットと skew データの両方を含みます。ssab ではこれらが `vertex_array` と `skew_array` に分離されます。* |
 | `DEFM` | `deform_array` | PartAnimationDataDeform |
-| `TCHG` | `texture_array` | PartAnimationDataUIntValue |
+| `TCHG` | `texture_array` | PartAnimationDataUIntValue | *値は `fnv1a(TextureName)` で、`external_textures` から解決可能。空の `TextureName`（作画上の「上書き無し」）はハッシュ化せず `0` に正規化するため、実テクスチャと区別でき `texture` の既定値とも一致する。ステップ評価であり補間されない。* |
 
 ### イベント属性（特殊な処理）
 
