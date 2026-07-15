@@ -1252,10 +1252,20 @@ fn build_draw_order_and_batches<'a>(
 
         let is_pure_mask = kind == DrawBatchKind::Mask;
         let needs_mask_twin = cached.is_mask_contributor && !is_pure_mask;
-        let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
+        let cell_texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
         // Both kinds draw the part's Cell, so without one there is nothing to
         // batch — a nines part also has an empty geometry range in that case.
-        let cell_backed_no_cell = matches!(kind, DrawBatchKind::Normal | DrawBatchKind::Nines) && texture_hash == 0;
+        // Culled on the *cell* hash: a TCHG override names a texture but never gives a
+        // cell-less part geometry to draw, so it must not resurrect one here.
+        let cell_backed_no_cell = matches!(kind, DrawBatchKind::Normal | DrawBatchKind::Nines) && cell_texture_hash == 0;
+        // An authored TextureChange (TCHG) rebinds this part's texture, so it has to take part
+        // in the batch key — otherwise parts sharing a cellmap merge into one batch and the
+        // override cannot be bound. `texture` is 0 both by schema default and for the authored
+        // "no override" (empty TextureName), which falls back to the cell's own texture. Only a
+        // part that resolved a cell honours the override: a textureless kind (`Shape`, `Text`)
+        // keeps `texture_hash` at 0, and a cell-less part is culled below anyway.
+        let texture_override = part_state.texture();
+        let texture_hash = if cell_texture_hash != 0 && part_state.update_flag().contains(UpdateAttributeFlags::AttributeTexture) && texture_override != 0 { texture_override } else { cell_texture_hash };
         // Masks honour Hide too: a hidden mask must NOT contribute coverage
         // (SS mask opt-out is mask-value==0 OR Hide==true) — otherwise a hidden
         // mask would wrongly clip its targets once the player rasterises mask

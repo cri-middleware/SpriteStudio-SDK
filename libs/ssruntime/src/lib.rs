@@ -5472,4 +5472,54 @@ mod tests {
         let quad_w = (box_coords[(vs + 1) * 2] - box_coords[vs * 2]) * w;
         assert!((quad_w - (cell_w - 2.0 * MARGIN)).abs() < 1e-3, "a full repeat must keep the source slice's pixel size (got {quad_w})");
     }
+
+    /// TextureChange.ssae authors two parts that share the `common` cellmap: `TO_TEXTURE`
+    /// swaps `common.png` -> `common_2.png` at frame 1, `TO_CELLMAP` swaps an empty name
+    /// (no override) -> `box_00_00.png`. A TCHG override must reach `DrawBatch.texture_hash`,
+    /// otherwise both parts merge into one batch and only one texture can ever be bound.
+    #[test]
+    fn texture_change_splits_batches_by_overridden_texture() {
+        fn fnv1a(text: &str) -> u32 {
+            text.bytes().fold(2166136261u32, |hash, b| (hash ^ b as u32).wrapping_mul(16777619))
+        }
+
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/overall/overall/TextureChange.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("read TextureChange.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("load");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("resource");
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("setup");
+
+        let cellmap_hash = fnv1a("common");
+        let (common_png, common_2_png, box_png) = (fnv1a("common.png"), fnv1a("common_2.png"), fnv1a("box_00_00.png"));
+
+        // Every texture a TCHG key names must be reversible hash -> name by the Player, including
+        // names absent from the project's <ExternalTextures> list (`common.png`, `box_00_00.png`).
+        {
+            let buf = context.get_ssab_data().unwrap();
+            let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(buf) };
+            let externals = ssab.external_textures().expect("external_textures");
+            for expected in [common_png, common_2_png, box_png] {
+                assert!(externals.iter().any(|t| t.name_hash() == expected), "TCHG texture {} missing from external_textures", expected);
+            }
+        }
+
+        let batches_at = |context: &mut Context, frame: f32| -> alloc::vec::Vec<(u16, u32)> {
+            let fd_buf = context.get_frame_data(frame).expect("frame data");
+            let fd = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(fd_buf) };
+            fd.draw_batches().iter().map(|b| (b.count(), b.texture_hash())).collect()
+        };
+
+        // Frame 0: TO_TEXTURE binds its authored common.png; TO_CELLMAP's empty TextureName is
+        // "no override" and must fall back to the cell's own cellmap texture (not fnv1a("")).
+        assert_eq!(batches_at(&mut context, 0.0), alloc::vec![(1, common_png), (1, cellmap_hash)]);
+
+        // Frame 1: both parts override to different textures, so neither may share a batch.
+        assert_eq!(batches_at(&mut context, 1.0), alloc::vec![(1, common_2_png), (1, box_png)]);
+
+        // TCHG is a step attribute — the frame-1 values hold with no further keys.
+        assert_eq!(batches_at(&mut context, 5.0), alloc::vec![(1, common_2_png), (1, box_png)]);
+    }
 }
