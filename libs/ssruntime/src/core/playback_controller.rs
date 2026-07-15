@@ -373,6 +373,8 @@ impl PlaybackController {
             if s != 0.0 {
                 self.end_frame_reached = false;
 
+                let playback_style = if self.start_frame == self.end_frame { PlaybackStyle::Normal } else { self.playback_style };
+
                 let next: f32 = self.current_frame + s;
                 let next_frame_no = floorf(next) as i32;
                 let mut next_frame_decimal = next - next_frame_no as f32;
@@ -385,7 +387,7 @@ impl PlaybackController {
                     let (start_limit, end_limit) = if self.playback_forward > 0 { (self.start_frame, self.end_frame) } else { (self.end_frame, self.start_frame) };
 
                     if frame_no == end_limit && self.remain_loops != -1 {
-                        match &self.playback_style {
+                        match &playback_style {
                             PlaybackStyle::Normal => {
                                 self.end_frame_reached = true;
                             }
@@ -404,7 +406,7 @@ impl PlaybackController {
                     let is_reached = if self.playback_forward > 0 { frame_no > end_limit } else { frame_no < end_limit };
 
                     if is_reached {
-                        match &self.playback_style {
+                        match &playback_style {
                             PlaybackStyle::Normal => {
                                 if self.remain_loops == -1 {
                                     // infinite loop
@@ -521,8 +523,20 @@ impl PlaybackController {
     }
 
     pub fn set_frame_no(&mut self, frame: f32) {
-        self.current_frame = frame;
+        self.current_frame = self.clamp_to_section(frame);
         self.needs_evaluation = true;
+    }
+
+    fn clamp_to_section(&self, frame: f32) -> f32 {
+        let low = self.start_frame as f32;
+        let high = self.end_frame as f32;
+        if frame < low {
+            low
+        } else if frame > high {
+            high
+        } else {
+            frame
+        }
     }
 
     /// Sets `current_frame` to the position reached after `diff` frames have
@@ -883,6 +897,28 @@ mod tests {
     }
 
     #[test]
+    fn single_frame_pingpong_clip_stays_inside_the_section() {
+        let mut t = PlaybackController::new();
+        t.setup(5, 5, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [5, 5, 5]);
+    }
+
+    #[test]
+    fn single_frame_pingpong_clip_stays_inside_the_section_when_backward() {
+        let mut t = PlaybackController::new();
+        t.setup(5, 5, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [5, 5, 5]);
+    }
+
+    #[test]
     fn narrowing_the_section_to_one_frame_reports_it() {
         let mut t = PlaybackController::new();
         t.setup(0, 9, 30);
@@ -904,6 +940,23 @@ mod tests {
         collect_passed(&mut t, 1);
         t.set_animation_section(2, 5);
         assert_eq!(collect_passed(&mut t, 8), [2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn seeking_outside_the_section_is_confined_to_it() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_animation_section(2, 5);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+
+        t.set_frame_no(9.0);
+        assert_eq!(t.get_frame_no(), 5.0);
+        assert_eq!(collect_passed(&mut t, 3), [5]);
+
+        t.set_frame_no(-4.0);
+        assert_eq!(t.get_frame_no(), 2.0);
     }
 
     #[test]
