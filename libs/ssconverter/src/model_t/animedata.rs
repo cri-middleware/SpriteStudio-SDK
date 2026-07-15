@@ -635,7 +635,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             }
             sspj::ssattribute::SsAttributeKind::Texchange(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    p_args.texture = crate::utils::fnv1a_hash_str(&_key.value.texture_name);
+                    p_args.texture = crate::utils::fnv1a_hash_texture_name(&_key.value.texture_name);
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeTexture;
                 }
             }
@@ -1184,7 +1184,7 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
             });
         }
         sspj::ssattribute::SsAttributeKind::Texchange(v) => {
-            process_simple_attribute!(&v.keys, p_arg.texture_array, ssab::ssab::ss::format::PartAnimationDataUIntValueT, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_str(&k.value.texture_name) });
+            process_simple_attribute!(&v.keys, p_arg.texture_array, ssab::ssab::ss::format::PartAnimationDataUIntValueT, |k: &sspj::ssattribute::SsAttributeTexchangeKey| { crate::utils::fnv1a_hash_texture_name(&k.value.texture_name) });
         }
         _ => {}
     });
