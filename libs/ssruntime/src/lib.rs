@@ -3130,12 +3130,17 @@ impl InstanceSlot {
             child_ctx.get_frame_no()
         };
 
+        // Hosts feed this back as `parent_looped` when stepping the child's own
+        // instance/effect slots, so it re-arms the grandchildren's playback keys:
+        // an independent child runs on its own clock, making its loop — not the
+        // parent animation's — the edge they must re-fire on.
+        //
         // Read the child controller's own loop pulse rather than inferring one
         // from a frame regression: a backward or ping-pong child moves its frame
         // backwards on ordinary ticks, which an inference reports as a loop every
-        // tick. The `delta_seconds` / `transitioned` gate stays because those are
-        // exactly the ticks that skip `child_ctx.update`, where the pulse would
-        // otherwise be a stale leftover from the previous update.
+        // tick, restarting every grandchild every tick. The `delta_seconds` /
+        // `transitioned` gate stays because those are exactly the ticks that skip
+        // `child_ctx.update`, where the pulse would be a stale leftover.
         let child_looped = independent && delta_seconds > 0.0 && !transitioned && child_ctx.is_looped();
 
         self.last_independent = independent;
