@@ -414,11 +414,14 @@ impl PlaybackController {
                                     if self.remain_loops == 0 {
                                         self.is_playing = false;
                                         self.end_frame_reached = true;
-                                        // stop playing the animation
+                                        // Park on the end frame and stop. It is not pushed to
+                                        // `passed_frames`: reaching it is what let this branch be
+                                        // entered, so it was already reported -- either earlier in
+                                        // this same loop, or by the update that landed on it.
+                                        // Pushing again re-fires its events.
                                         frame_no = end_limit;
                                         current_frame_no = frame_no;
                                         next_frame_decimal = 0.0;
-                                        self.passed_frames.push(frame_no);
                                         break;
                                     } else {
                                         // continue to play the animation
@@ -441,11 +444,12 @@ impl PlaybackController {
                                         if self.remain_loops == 0 {
                                             self.is_playing = false;
                                             self.end_frame_reached = true;
-                                            // stop playing the animation
+                                            // Park on the turn-around frame and stop. Not pushed --
+                                            // the update that landed back on it already reported it
+                                            // (see the Normal arm above).
                                             frame_no = if self.playback_direction == PlaybackDirection::Forward { self.start_frame } else { self.end_frame };
                                             current_frame_no = frame_no;
                                             next_frame_decimal = 0.0;
-                                            self.passed_frames.push(frame_no);
                                             break;
                                         } else {
                                             self.is_looped = true;
@@ -826,6 +830,79 @@ mod tests {
         assert!(!t.is_end_frame_reached());
         let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
         assert_eq!(kinds, ["looped", "finished"], "Replay must honour the same loop count");
+    }
+
+    /// Every frame `t` reports as passed, across `steps` updates.
+    fn collect_passed(t: &mut PlaybackController, steps: usize) -> Vec<i32> {
+        let interval = 1000.0 / 30.0;
+        let mut all = Vec::new();
+        for _ in 0..steps {
+            t.update(interval);
+            all.extend_from_slice(t.get_passed_frames());
+        }
+        all
+    }
+
+    #[test]
+    fn end_frame_is_reported_once_when_playback_stops() {
+        // The update that stops playback parks on the end frame, which the
+        // previous update already reported. Reporting it again re-fires any
+        // user-data / signal / audio key authored on the last frame.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn end_frame_is_reported_once_when_a_single_update_overruns_the_end() {
+        // Frame-skipping with a delta big enough to walk the whole clip in one
+        // update: the stop branch is then entered by the same inner loop that
+        // just reported the end frame.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(1);
+        t.set_skip_frames(true);
+        t.play();
+        t.update((1000.0 / 30.0) * 10.0);
+        assert_eq!(t.get_passed_frames(), [0, 1, 2, 3, 4]);
+        assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn single_frame_clip_reports_its_only_frame_once() {
+        let mut t = PlaybackController::new();
+        t.setup(5, 5, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 6), [5]);
+    }
+
+    #[test]
+    fn pingpong_reports_the_turnaround_frame_once_when_playback_stops() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 3, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        // Out 0..3, back 3..0. The trailing 0 -- where playback stops -- must be
+        // reported once. (The peak is not doubled here: the duplicated
+        // turn-around frame is a `resolve_frame` property, not an `update` one.)
+        assert_eq!(collect_passed(&mut t, 10), [0, 1, 2, 3, 2, 1, 0]);
+    }
+
+    #[test]
+    fn looping_still_reports_every_frame_of_every_cycle() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 2, 30);
+        t.set_loops(2);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [0, 1, 2, 0, 1, 2]);
     }
 
     #[test]
