@@ -83,6 +83,8 @@ pub fn resolve_frame(diff: f32, start: i32, end: i32, loops: i32, style: Playbac
         PlaybackDirection::Backward => end as f32 - local_offset,
     };
 
+    let frame = if frame < start as f32 { start as f32 } else { frame };
+
     (frame, false)
 }
 
@@ -678,6 +680,44 @@ mod tests {
         assert_eq!(rf(11.0, start, end, 1, s, d), (0.0, false)); // trough duplicated
         assert_eq!(rf(21.0, start, end, 1, s, d), (10.0, false));
         assert_eq!(rf(22.0, start, end, 1, s, d), (10.0, true));
+    }
+
+    #[test]
+    fn resolve_frame_never_leaves_the_section_on_fractional_diffs() {
+        for &(start, end) in &[(0, 4), (5, 9), (5, 5)] {
+            for &style in &[PlaybackStyle::Normal, PlaybackStyle::PingPong] {
+                for &dir in &[PlaybackDirection::Forward, PlaybackDirection::Backward] {
+                    for i in 0..400 {
+                        let diff = i as f32 * 0.25;
+                        let (frame, _) = rf(diff, start, end, 3, style, dir);
+                        let reported = floorf(frame) as i32;
+                        assert!((start..=end).contains(&reported), "diff={diff} start={start} end={end} style={} dir={} resolved {frame} -> reports frame {reported}", style as i32, dir as i32);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn resolve_frame_backward_holds_the_start_frame_through_its_slot() {
+        let (start, end) = (5, 9);
+        let s = PlaybackStyle::Normal;
+        let d = PlaybackDirection::Backward;
+
+        assert_eq!(rf(4.0, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(4.5, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(5.0, start, end, 3, s, d), (9.0, false));
+    }
+
+    #[test]
+    fn resolve_frame_pingpong_holds_the_trough_through_its_slot() {
+        let (start, end) = (5, 9);
+        let s = PlaybackStyle::PingPong;
+        let d = PlaybackDirection::Forward;
+
+        assert_eq!(rf(9.0, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(9.5, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(10.0, start, end, 3, s, d), (5.0, false));
     }
 
     #[test]
