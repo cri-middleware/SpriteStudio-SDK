@@ -232,9 +232,12 @@ Player 実装において、利用者がアニメーションを制御するた�
 
 ### イベント通知
 Player は内部的に `libssruntime` からイベントをポーリングし、ゲーム側のスクリプトやシステムが受け取れるように以下のコールバックやイベント機構（C# の delegate や Godot の signal など）を提供することを推奨します。
-- **setAnimationFinishedCallback(callback)**: アニメーション再生終了時の通知を受け取る。
+- **setAnimationFinishedCallback(callback)**: ループも含めてアニメーション再生が完了した際の通知を受け取る。
+- **setAnimationLoopedCallback(callback)**: アニメーションが1周して先頭に戻った際の通知を受け取る。
 - **setUserDataCallback(callback)**: タイムライン上のユーザーデータを検出した際の通知を受け取る。
 - **setSignalCallback(callback)**: シグナルコマンドを検出した際の通知を受け取る。
+
+`finished` / `looped` の正確な意味とポーリング方法は [再生制御とイベント処理](../30_core/20_playback_control.ja.md) を参照してください。
 
 ---
 [目次に戻る](../README.ja.md)

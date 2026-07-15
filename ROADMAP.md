@@ -27,6 +27,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 *   [x] Animation Mixing/Blending in `ssruntime` (whole-animation weighted blend).
 *   [ ] Per-part animation blending (layered animation / per-bone mask) — backward-compatible extension of the whole-animation blend API. Optional per-source per-part weights or mask covering common use cases (upper-body aim while lower-body runs, damage reactions, additive overlays). Also considers an Additive blend mode (delta-from-base) alongside the existing interpolative mix.
+*   [ ] Per-source and Instance-child playback flags — `is_looped` / `is_finished` / `is_end_frame_reached` report the primary blend source only, so secondary blend sources expose no loop/finish state. Synced (non-independent) Instance / Effect children have none either: `resolve_frame` computes `finished` but `set_frame_relative` discards it. Surfacing the child case means adding a field to the `ss_instance_step_result` C struct — an ABI break for every Player, so it is deliberately held back from the loop/finish event work that shipped the flags themselves.
 *   [ ] Instance Lifecycle API — one cohesive surface covering both:
     *   Animation Instancing: shared evaluation context for driving many instances of the same animation, consumable by Players (e.g., crowd-style rendering).
     *   Dynamic instance swap: runtime replacement of the animation mounted on an Instance part (equivalent to legacy `AnimationChangeInstance`). Must remain compatible with the shared-context semantics above.

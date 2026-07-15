@@ -2027,6 +2027,16 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.is_end_frame_reached()
     }
 
+    /// `true` once the configured loops have completed, and sticky until the
+    /// next `play` / `setup_animation`. Never `true` under an infinite loop
+    /// count. Prefer this over [`is_end_frame_reached`], which is raised once
+    /// per cycle rather than only at the end of playback.
+    ///
+    /// [`is_end_frame_reached`]: Self::is_end_frame_reached
+    pub fn is_finished(&self) -> bool {
+        self.instance.primary_source().controller.is_finished()
+    }
+
     pub fn is_looped(&self) -> bool {
         self.instance.primary_source().controller.is_looped()
     }

@@ -19,6 +19,17 @@ ss_runtime_set_loop(context, -1);
 ss_runtime_play(context);
 ```
 
+### `ss_runtime_set_loop` の値
+
+| 値 | 意味 |
+| :--- | :--- |
+| `n` (> 0) | `n` 周再生して停止する。`1` = 1回のみ |
+| `-1` | 無限ループ |
+| `0` | 無限ループ（`-1` の別名。0 以下は全て `-1` に正規化される） |
+
+> [!NOTE]
+> ループ回数は `setup_animation` が既定値（無限）へ戻します。`setup_animation` の後、`play` の前に再適用してください。`play` はその時点のループ回数でカウンタを再武装するため、完了したアニメを `play` で再生し直すと同じループ回数がもう一度適用されます。
+
 ### 再生ヘッドの操作
 - **シーク**: `ss_runtime_set_frame_no(context, frame)` で任意のフレームへジャンプできます。
 - **一時停止**: `ss_runtime_pause(context)` で再生を一時停止/再開（トグル）します。
@@ -31,16 +42,46 @@ Player は毎フレーム、ゲームエンジンのデルタタイムをライ�
 // 更新実行 (デルタタイムはミリ秒で渡す)
 ss_runtime_update(context, delta_ms);
 
-// 状態確認
-if (ss_runtime_is_end_frame_reached(context)) {
-    // 再生終了（非ループ時、または有限ループの完了）
-    on_animation_finished();
-}
+// ループした（頭に戻った）
 if (ss_runtime_is_looped(context)) {
-    // ループ境界を跨いだ
     on_animation_looped();
 }
+// ループも含めて再生が完了した
+if (ss_runtime_is_finished(context)) {
+    on_animation_finished();
+}
 ```
+
+### 3つのフラグの違い
+
+| API | 意味 | 寿命 |
+| :--- | :--- | :--- |
+| `ss_runtime_is_looped` | 再生ヘッドが**頭に戻った**（＝1周した） | **パルス**。`update` の先頭で毎回クリアされる |
+| `ss_runtime_is_finished` | 指定ループ回数を**すべて完了した** | **状態**。次の `play` / `setup_animation` まで `true` のまま |
+| `ss_runtime_is_end_frame_reached` | **最終フレームを表示中** | 状態。次にフレームが進むまで `true` のまま |
+
+この3つは役割が異なります。**`finished` の判定には `is_finished` を使ってください。**
+
+> [!WARNING]
+> `is_end_frame_reached` は「再生完了」ではありません。有限ループでは**毎周の最終フレームで立つ**ため、これを `finished` として扱うと `set_loop(3)` で3回通知が飛びます。また無限ループ（既定値）では**一度も立ちません**。
+
+実装上の注意:
+
+- **`is_looped` はパルス**なので、`update` の直後に**毎回**ポーリングしてください。別の頻度で読むと取りこぼします。1回の `update` で複数周した場合も1回にまとまります（大きな `delta` ＋ フレームスキップ有効時）。
+- **`is_finished` は状態**なので、通知を1回だけ出したい場合は Player 側で**立ち上がりエッジを取って**ください。`is_playing` が false の間は `update` を早期 return する作りなら、それだけで重複は防げます。
+- `is_finished` は `stop()` では立ちません。あくまで指定ループ回数を完走した場合のみです。
+
+### イベント列の例
+
+`set_loop(3)` で 0〜4 フレームのアニメを再生した場合:
+
+| 周 | 通知 |
+| :--- | :--- |
+| 1周目の末尾 → 頭に戻る | `looped` |
+| 2周目の末尾 → 頭に戻る | `looped` |
+| 3周目の末尾 | `finished`（頭には戻らず最終フレームで停止、`is_playing` が false になる） |
+
+無限ループ（`-1` / `0`）では `looped` のみが繰り返し発火し、`finished` は永久に発火しません。
 
 ## 3. イベントの取得 (ポーリング)
 
@@ -130,7 +171,7 @@ for (int i = 0; i < count; i++) {
 | :--- | :--- | :--- |
 | **基本操作** | `set_animation(name)`, `play(loop)`, `stop()`, `pause()` | アニメーション設定・再生・停止・一時停止 |
 | **パラメータ** | `set_speed(f32)`, `set_frame(f32)` | 速度と現在のフレーム位置 |
-| **コールバック** | `finished`, `looped`, `user_data`, `signal` | 各種イベント発生時の通知 |
+| **コールバック** | `finished`, `looped`, `user_data`, `signal` | 各種イベント発生時の通知（本章 2. 参照） |
 
 ### `set_animation` と `play` の分離（推奨）
 
