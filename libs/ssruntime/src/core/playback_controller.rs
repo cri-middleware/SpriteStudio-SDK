@@ -83,6 +83,8 @@ pub fn resolve_frame(diff: f32, start: i32, end: i32, loops: i32, style: Playbac
         PlaybackDirection::Backward => end as f32 - local_offset,
     };
 
+    let frame = if frame < start as f32 { start as f32 } else { frame };
+
     (frame, false)
 }
 
@@ -341,7 +343,8 @@ impl PlaybackController {
         self.start_frame = if start_frame >= 0 && start_frame < self.anime_data_end_frame { start_frame } else { self.anime_data_start_frame };
         self.end_frame = if end_frame >= 0 && end_frame < self.anime_data_end_frame { end_frame } else { self.anime_data_end_frame };
 
-        self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 }
+        self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 };
+        self.needs_evaluation = true;
     }
 
     pub fn update(&mut self, delta: f32) -> f32 {
@@ -372,6 +375,8 @@ impl PlaybackController {
             if s != 0.0 {
                 self.end_frame_reached = false;
 
+                let playback_style = if self.start_frame == self.end_frame { PlaybackStyle::Normal } else { self.playback_style };
+
                 let next: f32 = self.current_frame + s;
                 let next_frame_no = floorf(next) as i32;
                 let mut next_frame_decimal = next - next_frame_no as f32;
@@ -384,7 +389,7 @@ impl PlaybackController {
                     let (start_limit, end_limit) = if self.playback_forward > 0 { (self.start_frame, self.end_frame) } else { (self.end_frame, self.start_frame) };
 
                     if frame_no == end_limit && self.remain_loops != -1 {
-                        match &self.playback_style {
+                        match &playback_style {
                             PlaybackStyle::Normal => {
                                 self.end_frame_reached = true;
                             }
@@ -403,7 +408,7 @@ impl PlaybackController {
                     let is_reached = if self.playback_forward > 0 { frame_no > end_limit } else { frame_no < end_limit };
 
                     if is_reached {
-                        match &self.playback_style {
+                        match &playback_style {
                             PlaybackStyle::Normal => {
                                 if self.remain_loops == -1 {
                                     // infinite loop
@@ -520,8 +525,20 @@ impl PlaybackController {
     }
 
     pub fn set_frame_no(&mut self, frame: f32) {
-        self.current_frame = frame;
+        self.current_frame = self.clamp_to_section(frame);
         self.needs_evaluation = true;
+    }
+
+    fn clamp_to_section(&self, frame: f32) -> f32 {
+        let low = self.start_frame as f32;
+        let high = self.end_frame as f32;
+        if frame < low {
+            low
+        } else if frame > high {
+            high
+        } else {
+            frame
+        }
     }
 
     /// Sets `current_frame` to the position reached after `diff` frames have
@@ -663,6 +680,44 @@ mod tests {
         assert_eq!(rf(11.0, start, end, 1, s, d), (0.0, false)); // trough duplicated
         assert_eq!(rf(21.0, start, end, 1, s, d), (10.0, false));
         assert_eq!(rf(22.0, start, end, 1, s, d), (10.0, true));
+    }
+
+    #[test]
+    fn resolve_frame_never_leaves_the_section_on_fractional_diffs() {
+        for &(start, end) in &[(0, 4), (5, 9), (5, 5)] {
+            for &style in &[PlaybackStyle::Normal, PlaybackStyle::PingPong] {
+                for &dir in &[PlaybackDirection::Forward, PlaybackDirection::Backward] {
+                    for i in 0..400 {
+                        let diff = i as f32 * 0.25;
+                        let (frame, _) = rf(diff, start, end, 3, style, dir);
+                        let reported = floorf(frame) as i32;
+                        assert!((start..=end).contains(&reported), "diff={diff} start={start} end={end} style={} dir={} resolved {frame} -> reports frame {reported}", style as i32, dir as i32);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn resolve_frame_backward_holds_the_start_frame_through_its_slot() {
+        let (start, end) = (5, 9);
+        let s = PlaybackStyle::Normal;
+        let d = PlaybackDirection::Backward;
+
+        assert_eq!(rf(4.0, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(4.5, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(5.0, start, end, 3, s, d), (9.0, false));
+    }
+
+    #[test]
+    fn resolve_frame_pingpong_holds_the_trough_through_its_slot() {
+        let (start, end) = (5, 9);
+        let s = PlaybackStyle::PingPong;
+        let d = PlaybackDirection::Forward;
+
+        assert_eq!(rf(9.0, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(9.5, start, end, 3, s, d), (5.0, false));
+        assert_eq!(rf(10.0, start, end, 3, s, d), (5.0, false));
     }
 
     #[test]
@@ -879,6 +934,69 @@ mod tests {
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 6), [5]);
+    }
+
+    #[test]
+    fn single_frame_pingpong_clip_stays_inside_the_section() {
+        let mut t = PlaybackController::new();
+        t.setup(5, 5, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [5, 5, 5]);
+    }
+
+    #[test]
+    fn single_frame_pingpong_clip_stays_inside_the_section_when_backward() {
+        let mut t = PlaybackController::new();
+        t.setup(5, 5, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [5, 5, 5]);
+    }
+
+    #[test]
+    fn narrowing_the_section_to_one_frame_reports_it() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        collect_passed(&mut t, 1);
+        t.set_animation_section(3, 3);
+        assert_eq!(collect_passed(&mut t, 5), [3]);
+    }
+
+    #[test]
+    fn a_new_section_reports_its_own_start_frame() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        collect_passed(&mut t, 1);
+        t.set_animation_section(2, 5);
+        assert_eq!(collect_passed(&mut t, 8), [2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn seeking_outside_the_section_is_confined_to_it() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_animation_section(2, 5);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+
+        t.set_frame_no(9.0);
+        assert_eq!(t.get_frame_no(), 5.0);
+        assert_eq!(collect_passed(&mut t, 3), [5]);
+
+        t.set_frame_no(-4.0);
+        assert_eq!(t.get_frame_no(), 2.0);
     }
 
     #[test]
