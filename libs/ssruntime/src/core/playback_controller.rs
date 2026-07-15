@@ -341,7 +341,8 @@ impl PlaybackController {
         self.start_frame = if start_frame >= 0 && start_frame < self.anime_data_end_frame { start_frame } else { self.anime_data_start_frame };
         self.end_frame = if end_frame >= 0 && end_frame < self.anime_data_end_frame { end_frame } else { self.anime_data_end_frame };
 
-        self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 }
+        self.current_frame = if self.playback_direction == PlaybackDirection::Forward { self.start_frame as f32 } else { self.end_frame as f32 };
+        self.needs_evaluation = true;
     }
 
     pub fn update(&mut self, delta: f32) -> f32 {
@@ -879,6 +880,30 @@ mod tests {
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 6), [5]);
+    }
+
+    #[test]
+    fn narrowing_the_section_to_one_frame_reports_it() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        collect_passed(&mut t, 1);
+        t.set_animation_section(3, 3);
+        assert_eq!(collect_passed(&mut t, 5), [3]);
+    }
+
+    #[test]
+    fn a_new_section_reports_its_own_start_frame() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        collect_passed(&mut t, 1);
+        t.set_animation_section(2, 5);
+        assert_eq!(collect_passed(&mut t, 8), [2, 3, 4, 5]);
     }
 
     #[test]
