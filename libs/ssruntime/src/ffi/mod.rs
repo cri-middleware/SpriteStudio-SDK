@@ -1319,13 +1319,11 @@ pub extern "C" fn ss_instance_slot_reset(slot: *mut c_void) {
 /// EventInstance (via `ss_runtime_get_active_event_instance` against the
 /// *parent* runtime context) and passes the *child* runtime context here so
 /// that label resolution and frame stepping happen against the right Context.
-/// `previous_child_frame` is the child's frame_no before this tick — used
-/// only to detect independent-mode loop edges.
 /// Returns `transitioned == true` on EventInstance edges; the caller is
 /// responsible for any side effects tied to `play()` (event-sink notifications)
 /// since those are host-side concerns.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
+pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance_info, child_ctx: *mut c_void, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> ss_instance_step_result {
     if slot.is_null() {
         return ss_instance_step_result::not_visible();
     }
@@ -1333,7 +1331,7 @@ pub extern "C" fn ss_instance_slot_step(slot: *mut c_void, ev: ss_event_instance
         return ss_instance_step_result::not_visible();
     };
     let slot = unsafe { &mut *(slot as *mut crate::InstanceSlot) };
-    slot.step(ev, &mut child_ffi.ctx, previous_child_frame, parent_frame, delta_seconds, parent_looped)
+    slot.step(ev, &mut child_ffi.ctx, parent_frame, delta_seconds, parent_looped)
 }
 
 #[unsafe(no_mangle)]

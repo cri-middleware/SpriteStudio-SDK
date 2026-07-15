@@ -871,9 +871,8 @@ impl SSRuntimeInstanceSlot {
     /// label resolution and frame stepping run against it.
     /// Returns `true` if visible. Inspect `transitioned`, `independent`,
     /// `child_frame_no`, `child_looped` via the corresponding getters.
-    #[allow(clippy::too_many_arguments)]
-    pub fn step(&mut self, ev: &WebEventInstanceInfo, child_ctx: &mut SSRuntimeContext, previous_child_frame: f32, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> bool {
-        let r = self.inner.step((*ev).into(), &mut child_ctx.inner, previous_child_frame, parent_frame, delta_seconds, parent_looped);
+    pub fn step(&mut self, ev: &WebEventInstanceInfo, child_ctx: &mut SSRuntimeContext, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> bool {
+        let r = self.inner.step((*ev).into(), &mut child_ctx.inner, parent_frame, delta_seconds, parent_looped);
         self.last_visible = r.visible;
         self.last_transitioned = r.transitioned;
         self.last_independent = r.independent;
