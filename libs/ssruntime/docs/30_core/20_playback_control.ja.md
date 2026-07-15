@@ -19,6 +19,17 @@ ss_runtime_set_loop(context, -1);
 ss_runtime_play(context);
 ```
 
+### `ss_runtime_set_loop` の値
+
+| 値 | 意味 |
+| :--- | :--- |
+| `n` (> 0) | `n` 周再生して停止する。`1` = 1回のみ |
+| `-1` | 無限ループ |
+| `0` | 無限ループ（`-1` の別名。0 以下は全て `-1` に正規化される） |
+
+> [!NOTE]
+> ループ回数は `setup_animation` が既定値（無限）へ戻します。`setup_animation` の後、`play` の前に再適用してください。`play` はその時点のループ回数でカウンタを再武装するため、完了したアニメを `play` で再生し直すと同じループ回数がもう一度適用されます。
+
 ### 再生ヘッドの操作
 - **シーク**: `ss_runtime_set_frame_no(context, frame)` で任意のフレームへジャンプできます。
 - **一時停止**: `ss_runtime_pause(context)` で再生を一時停止/再開（トグル）します。
@@ -27,20 +38,77 @@ ss_runtime_play(context);
 
 Player は毎フレーム、ゲームエンジンのデルタタイムをライブラリに渡して状態を更新します。
 
-```cpp
-// 更新実行 (デルタタイムはミリ秒で渡す)
-ss_runtime_update(context, delta_ms);
+### 実装の型
 
-// 状態確認
-if (ss_runtime_is_end_frame_reached(context)) {
-    // 再生終了（非ループ時、または有限ループの完了）
-    on_animation_finished();
-}
-if (ss_runtime_is_looped(context)) {
-    // ループ境界を跨いだ
-    on_animation_looped();
-}
+`looped` / `finished` の通知は、**以下の形で実装してください**。フラグごとに寿命が違うため、扱い方も異なります。
+
+```cpp
+class MyPlayer {
+    bool prev_finished = false;   // finished の立ち上がりエッジ検出用
+
+    void update(float delta_seconds) {
+        // 1. 更新実行 (デルタタイムはミリ秒で渡す)
+        ss_runtime_update(context, delta_seconds * 1000.0f);
+
+        // 2. looped は「パルス」。update の直後にそのまま読む
+        if (ss_runtime_is_looped(context)) {
+            emit_looped();
+        }
+
+        // 3. finished は「状態」。立ち上がりエッジで 1 回だけ通知する
+        bool finished = ss_runtime_is_finished(context);
+        if (finished && !prev_finished) {
+            emit_finished();
+        }
+        prev_finished = finished;
+    }
+
+    void play() {
+        prev_finished = false;   // 再生し直しに備えてラッチを戻す
+        ss_runtime_play(context);
+    }
+};
 ```
+
+### 2つのフラグの違い
+
+| API | 意味 | 寿命 | 扱い方 |
+| :--- | :--- | :--- | :--- |
+| `ss_runtime_is_looped` | 再生ヘッドが**頭に戻った**（＝1周した） | **パルス**。`update` の先頭で毎回クリアされる | そのまま通知 |
+| `ss_runtime_is_finished` | 指定ループ回数を**すべて完了した** | **状態**。次の `play` / `setup_animation` まで `true` のまま | **エッジを取って**通知 |
+
+- `is_looped` は 1 回の `update` で複数周した場合も 1 回にまとまります（大きな `delta` ＋ フレームスキップ有効時）。
+- `is_finished` は `stop()` では立ちません。指定ループ回数を完走した場合のみです。
+- `is_finished` は無限ループ（既定値）では永久に立ちません。無限ループの終了は `looped` を数えるか、Player 側で `stop()` を呼んで判断してください。
+
+### よくある誤り
+
+実際に複数の Player で起きた不具合です。いずれも `is_finished` を上記の型で使えば起きません。
+
+| 誤った実装 | 症状 |
+| :--- | :--- |
+| エッジを取らずに `is_finished` をそのまま通知する | 完了後、**毎フレーム発火し続ける** |
+| `prev_finished` を `play` でリセットしない | 完了 → 再生し直しの際、次の完了を**取りこぼす**ことがある |
+| `!is_playing` を `finished` として代用する | `stop()` や再生開始前と区別できず**誤発火**する |
+| 「最終フレームに到達したか」で終了を判定する | 有限ループで**毎周発火**する。無限ループでは**一度も発火しない**。再生ループをそこで止めると**1周目で再生が打ち切られる** |
+
+> [!NOTE]
+> 「最終フレームを表示中」という内部状態（`end_frame_reached`）は、かつて C-API / WASM に公開されていましたが、**これを終了判定に使った Player がすべてバグを踏んだ**ため、Player 向け API から外しました。終了判定は `is_finished` だけを使ってください。
+
+> [!NOTE]
+> `is_playing` が false の間は `update` 自体を早期 return する作りなら、その guard がエッジ検出を兼ねるため `prev_finished` は理屈の上では不要です。しかし依存関係が暗黙になり、後から guard を動かすと壊れます。**上記の型どおり明示的にラッチを持つことを推奨します。**
+
+### イベント列の例
+
+`set_loop(3)` で 0〜4 フレームのアニメを再生した場合:
+
+| 周 | 通知 |
+| :--- | :--- |
+| 1周目の末尾 → 頭に戻る | `looped` |
+| 2周目の末尾 → 頭に戻る | `looped` |
+| 3周目の末尾 | `finished`（頭には戻らず最終フレームで停止、`is_playing` が false になる） |
+
+無限ループ（`-1` / `0`）では `looped` のみが繰り返し発火し、`finished` は永久に発火しません。
 
 ## 3. イベントの取得 (ポーリング)
 
@@ -130,7 +198,7 @@ for (int i = 0; i < count; i++) {
 | :--- | :--- | :--- |
 | **基本操作** | `set_animation(name)`, `play(loop)`, `stop()`, `pause()` | アニメーション設定・再生・停止・一時停止 |
 | **パラメータ** | `set_speed(f32)`, `set_frame(f32)` | 速度と現在のフレーム位置 |
-| **コールバック** | `finished`, `looped`, `user_data`, `signal` | 各種イベント発生時の通知 |
+| **コールバック** | `finished`, `looped`, `user_data`, `signal` | 各種イベント発生時の通知（本章 2. 参照） |
 
 ### `set_animation` と `play` の分離（推奨）
 

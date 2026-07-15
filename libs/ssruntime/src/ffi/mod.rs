@@ -712,10 +712,16 @@ pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
     0.0
 }
 
+/// Returns `true` once the configured loops have completed, staying `true`
+/// until the next `ss_runtime_play` / `ss_runtime_setup_animation`. Always
+/// `false` under an infinite loop count, and never raised by
+/// `ss_runtime_stop`.
+///
+/// This is a *state*, not a pulse: to notify once, take its rising edge.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_end_frame_reached(context: *mut c_void) -> bool {
+pub extern "C" fn ss_runtime_is_finished(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.is_end_frame_reached();
+        return ffi_context.ctx.is_finished();
     }
     false
 }

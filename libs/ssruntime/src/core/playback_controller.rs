@@ -121,10 +121,35 @@ impl PlaybackController {
         self.current_frame
     }
 
+    /// `true` while the last frame of a cycle is being shown. With a finite
+    /// loop count this is raised once per cycle, not only on the last one, and
+    /// with an infinite loop count it is never raised.
+    ///
+    /// Internal playback state, deliberately not part of the Player-facing
+    /// surface — it is absent from the C-API and the WASM bindings because
+    /// every past attempt to build a `finished` notification on it produced a
+    /// bug. Use [`is_finished`] for that.
+    ///
+    /// [`is_finished`]: Self::is_finished
     pub fn is_end_frame_reached(&self) -> bool {
         self.end_frame_reached
     }
 
+    /// `true` once the configured loops have completed, and sticky until the
+    /// next `play` / `setup`. Never becomes `true` under an infinite loop
+    /// count, nor after a bare `stop()` part-way through playback.
+    ///
+    /// `remain_loops` only reaches `0` on the branch that ends playback, so
+    /// this cannot be confused with `stop()` being called while the last frame
+    /// of a non-final cycle happens to be showing.
+    pub fn is_finished(&self) -> bool {
+        self.remain_loops == 0 && !self.is_playing
+    }
+
+    /// `true` for the single `update` that wrapped the playhead back to the
+    /// start frame. Cleared on entry to every `update`, so it must be polled
+    /// after each one or the pulse is lost. Never raised on the final cycle of
+    /// a finite loop count — that cycle finishes instead of looping.
     pub fn is_looped(&self) -> bool {
         self.is_looped
     }
@@ -259,7 +284,10 @@ impl PlaybackController {
         self.fps_rate = 1.0;
 
         self.current_frame = start_frame as f32;
-        self.loops = -1;
+        // Resets `remain_loops` too: a stale count from a previous animation
+        // would otherwise raise `end_frame_reached` at the end of this one's
+        // first cycle.
+        self.set_loops(-1);
 
         self.is_skip_frames = true;
         self.playback_style = PlaybackStyle::Normal;
@@ -276,13 +304,16 @@ impl PlaybackController {
 
     /**
      * Set the number of loops.
+     * n > 0: play n cycles, then stop
      * -1: infinite loop
-     * 0: no loop
-     * n: loop n times
+     * 0: infinite loop (accepted as a synonym for -1)
+     *
+     * `0` and every negative value normalize to `-1` so that `update` and
+     * `resolve_frame` agree on the infinite sentinel.
      */
     pub fn set_loops(&mut self, loops: i32) {
-        self.loops = if loops >= 0 { loops } else { -1 };
-        self.remain_loops = loops;
+        self.loops = if loops > 0 { loops } else { -1 };
+        self.remain_loops = self.loops;
     }
 
     pub fn set_frame_rate(&mut self, fps: i32) {
@@ -383,11 +414,14 @@ impl PlaybackController {
                                     if self.remain_loops == 0 {
                                         self.is_playing = false;
                                         self.end_frame_reached = true;
-                                        // stop playing the animation
+                                        // Park on the end frame and stop. It is not pushed to
+                                        // `passed_frames`: reaching it is what let this branch be
+                                        // entered, so it was already reported -- either earlier in
+                                        // this same loop, or by the update that landed on it.
+                                        // Pushing again re-fires its events.
                                         frame_no = end_limit;
                                         current_frame_no = frame_no;
                                         next_frame_decimal = 0.0;
-                                        self.passed_frames.push(frame_no);
                                         break;
                                     } else {
                                         // continue to play the animation
@@ -410,11 +444,12 @@ impl PlaybackController {
                                         if self.remain_loops == 0 {
                                             self.is_playing = false;
                                             self.end_frame_reached = true;
-                                            // stop playing the animation
+                                            // Park on the turn-around frame and stop. Not pushed --
+                                            // the update that landed back on it already reported it
+                                            // (see the Normal arm above).
                                             frame_no = if self.playback_direction == PlaybackDirection::Forward { self.start_frame } else { self.end_frame };
                                             current_frame_no = frame_no;
                                             next_frame_decimal = 0.0;
-                                            self.passed_frames.push(frame_no);
                                             break;
                                         } else {
                                             self.is_looped = true;
@@ -455,6 +490,15 @@ impl PlaybackController {
     pub fn play_with_start_frame(&mut self, frame_no: f32) {
         self.is_playing = true;
         self.is_pausing = false;
+
+        // Re-arm the loop counter and drop the terminal flags. Replaying a
+        // finished animation would otherwise inherit `remain_loops == 0`,
+        // which decrements straight to the infinite sentinel on the first
+        // wrap, and expose a stale `end_frame_reached` until the first
+        // advancing update.
+        self.remain_loops = self.loops;
+        self.end_frame_reached = false;
+        self.is_looped = false;
 
         let mut current_frame = match &self.playback_direction {
             PlaybackDirection::Forward => self.start_frame as f32,
@@ -650,6 +694,215 @@ mod tests {
         assert_eq!(t.get_frame_no(), 10.0);
         t.set_frame_relative(15.0);
         assert_eq!(t.get_frame_no(), 14.0);
+    }
+
+    /// Drives `t` one frame at a time and records the loop / finish events a
+    /// Player would observe by polling after every `update`.
+    fn collect_events(t: &mut PlaybackController, steps: usize) -> Vec<(usize, &'static str)> {
+        let interval = 1000.0 / 30.0;
+        let mut events = Vec::new();
+        let mut was_finished = false;
+        for i in 0..steps {
+            t.update(interval);
+            if t.is_looped() {
+                events.push((i, "looped"));
+            }
+            if t.is_finished() && !was_finished {
+                events.push((i, "finished"));
+            }
+            was_finished = t.is_finished();
+        }
+        events
+    }
+
+    #[test]
+    fn set_loops_3_emits_looped_looped_finished() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+
+        let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
+        assert_eq!(kinds, ["looped", "looped", "finished"]);
+        assert_eq!(t.get_frame_no(), 4.0, "Should rest on the end frame");
+        assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn infinite_loop_emits_looped_only_and_never_finishes() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(-1);
+        t.set_skip_frames(false);
+        t.play();
+
+        // 30 steps over an inclusive 5-frame cycle wraps 6 times.
+        let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
+        assert_eq!(kinds, ["looped"; 6]);
+        assert!(!t.is_finished());
+        assert!(t.is_playing());
+    }
+
+    #[test]
+    fn set_loops_0_is_infinite() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(0);
+        assert_eq!(t.get_loops(), -1, "0 normalizes to the infinite sentinel");
+        assert_eq!(t.get_remain_loops(), -1);
+        t.set_skip_frames(false);
+        t.play();
+
+        let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
+        assert_eq!(kinds, ["looped"; 6], "0 must behave exactly like -1");
+        assert!(!t.is_end_frame_reached(), "Infinite loop must never raise end_frame_reached");
+        assert!(!t.is_finished());
+    }
+
+    #[test]
+    fn is_finished_distinguishes_stop_from_completion() {
+        // stop() part-way through must not read as finished...
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+        t.update(1000.0 / 30.0);
+        t.stop();
+        assert!(!t.is_playing());
+        assert!(!t.is_finished(), "stop() mid-playback is not 'finished'");
+
+        // ...not even when the playhead is resting on the last frame of a
+        // non-final cycle, where end_frame_reached is legitimately set.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(3);
+        t.set_skip_frames(false);
+        t.play();
+        for _ in 0..4 {
+            t.update(1000.0 / 30.0);
+        }
+        assert!(t.is_end_frame_reached(), "Should be showing the end frame of cycle 1");
+        t.stop();
+        assert!(!t.is_finished(), "end_frame_reached + stopped is not 'finished'");
+    }
+
+    #[test]
+    fn setup_rearms_loop_count_for_the_next_animation() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        for _ in 0..6 {
+            t.update(1000.0 / 30.0);
+        }
+        assert!(t.is_finished());
+        assert_eq!(t.get_remain_loops(), 0);
+
+        // A stale remain_loops == 0 would raise end_frame_reached at the end of
+        // the next animation's first cycle even though it loops forever.
+        t.setup(0, 4, 30);
+        assert_eq!(t.get_loops(), -1);
+        assert_eq!(t.get_remain_loops(), -1, "remain_loops must not leak across setup()");
+        t.set_skip_frames(false);
+        t.play();
+        let kinds: Vec<_> = collect_events(&mut t, 12).into_iter().map(|(_, k)| k).collect();
+        assert_eq!(kinds, ["looped", "looped"]);
+        assert!(!t.is_end_frame_reached());
+    }
+
+    #[test]
+    fn replaying_a_finished_animation_rearms_the_loop_count() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(2);
+        t.set_skip_frames(false);
+        t.play();
+        let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
+        assert_eq!(kinds, ["looped", "finished"]);
+
+        // Without re-arming, remain_loops == 0 would decrement to the infinite
+        // sentinel on the first wrap and the replay would never finish.
+        t.play();
+        assert!(!t.is_finished(), "play() must drop the stale terminal state");
+        assert!(!t.is_end_frame_reached());
+        let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
+        assert_eq!(kinds, ["looped", "finished"], "Replay must honour the same loop count");
+    }
+
+    /// Every frame `t` reports as passed, across `steps` updates.
+    fn collect_passed(t: &mut PlaybackController, steps: usize) -> Vec<i32> {
+        let interval = 1000.0 / 30.0;
+        let mut all = Vec::new();
+        for _ in 0..steps {
+            t.update(interval);
+            all.extend_from_slice(t.get_passed_frames());
+        }
+        all
+    }
+
+    #[test]
+    fn end_frame_is_reported_once_when_playback_stops() {
+        // The update that stops playback parks on the end frame, which the
+        // previous update already reported. Reporting it again re-fires any
+        // user-data / signal / audio key authored on the last frame.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn end_frame_is_reported_once_when_a_single_update_overruns_the_end() {
+        // Frame-skipping with a delta big enough to walk the whole clip in one
+        // update: the stop branch is then entered by the same inner loop that
+        // just reported the end frame.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(1);
+        t.set_skip_frames(true);
+        t.play();
+        t.update((1000.0 / 30.0) * 10.0);
+        assert_eq!(t.get_passed_frames(), [0, 1, 2, 3, 4]);
+        assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn single_frame_clip_reports_its_only_frame_once() {
+        let mut t = PlaybackController::new();
+        t.setup(5, 5, 30);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 6), [5]);
+    }
+
+    #[test]
+    fn pingpong_reports_the_turnaround_frame_once_when_playback_stops() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 3, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.set_loops(1);
+        t.set_skip_frames(false);
+        t.play();
+        // Out 0..3, back 3..0. The trailing 0 -- where playback stops -- must be
+        // reported once. (The peak is not doubled here: the duplicated
+        // turn-around frame is a `resolve_frame` property, not an `update` one.)
+        assert_eq!(collect_passed(&mut t, 10), [0, 1, 2, 3, 2, 1, 0]);
+    }
+
+    #[test]
+    fn looping_still_reports_every_frame_of_every_cycle() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 2, 30);
+        t.set_loops(2);
+        t.set_skip_frames(false);
+        t.play();
+        assert_eq!(collect_passed(&mut t, 8), [0, 1, 2, 0, 1, 2]);
     }
 
     #[test]
