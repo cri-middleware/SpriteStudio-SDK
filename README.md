@@ -9,6 +9,10 @@ No guarantees or support are provided, and we cannot respond to requests or bug 
 A high-performance, engine-agnostic animation player SDK for **OPTPiX SpriteStudio 7**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
+## 🎯 Compatibility
+
+SpriteStudio-SDK `7.x.x` supports projects authored in **OPTPiX SpriteStudio 7.5 or later**.
+
 ## 🔄 The Workflow (How it works)
 
 1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
