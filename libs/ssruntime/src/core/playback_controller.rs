@@ -534,7 +534,7 @@ impl PlaybackController {
         let high = self.end_frame as f32;
         if frame < low {
             low
-        } else if frame > high {
+        } else if frame >= high + 1.0 {
             high
         } else {
             frame
@@ -782,6 +782,49 @@ mod tests {
         assert_eq!(kinds, ["looped", "looped", "finished"]);
         assert_eq!(t.get_frame_no(), 4.0, "Should rest on the end frame");
         assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn set_frame_no_keeps_sub_frame_progress_inside_the_last_frame() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 60);
+
+        t.set_frame_no(10.25);
+        assert_eq!(t.get_frame_no(), 10.25, "frame 10 spans [10, 11); 10.25 is inside the section");
+
+        t.set_frame_no(11.0);
+        assert_eq!(t.get_frame_no(), 10.0, "frame 11 is past the section");
+
+        t.set_frame_no(15.0);
+        assert_eq!(t.get_frame_no(), 10.0);
+
+        t.set_frame_no(-1.0);
+        assert_eq!(t.get_frame_no(), 0.0);
+    }
+
+    #[test]
+    fn writing_the_reported_frame_back_does_not_freeze_sub_frame_playback() {
+        // The host loop Unity runs for an independent Instance child: advance the
+        // controller, then hand the reported frame straight back through
+        // `set_frame_no`. Clamping that write-back to `end_frame` truncates the
+        // last frame's sub-frame progress every tick, so the head can never reach
+        // the wrap and the child freezes on the section end.
+        let mut t = PlaybackController::new();
+        t.setup(0, 10, 60);
+        t.set_loops(-1);
+        t.play();
+
+        let quarter_frame = 1000.0 / 60.0 / 4.0;
+        let mut looped = 0;
+        for _ in 0..(11 * 4 * 2) {
+            t.update(quarter_frame);
+            let reported = t.get_frame_no();
+            t.set_frame_no(reported);
+            if t.is_looped() {
+                looped += 1;
+            }
+        }
+        assert_eq!(looped, 2, "infinite loop froze at frame {}", t.get_frame_no());
     }
 
     #[test]
