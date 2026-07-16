@@ -14,7 +14,7 @@ const ss_event_instance_info info = ss_runtime_get_active_event_instance(runtime
 // 状態更新と同期
 const ss_instance_step_result r = ss_instance_slot_step(
     state.instance_slot, info, child->runtime_ctx,
-    child->previous_frame_no, parent_frame_no, delta_seconds, parent_looped);
+    parent_frame_no, delta_seconds, parent_looped);
 
 if (r.transitioned) {
     // インスタンスの切り替わり（イベントの発生）を検知。
@@ -26,6 +26,21 @@ if (r.visible) {
     child->render(r.child_frame_no);
 }
 ```
+
+### 子の終了・ループの検知
+
+**独立再生の子**は、`step` の内部で子 Context が時間で進められるため、**子 Context に対して通常の再生制御 API がそのまま使えます**。
+
+```cpp
+// 独立再生の子が指定ループ回数を完走したか
+if (ss_runtime_is_finished(child->runtime_ctx)) { /* ... */ }
+```
+
+`ss_runtime_is_finished` は状態なので、[再生制御とイベント処理](../30_core/20_playback_control.ja.md) の型どおりエッジを取って通知してください。ラッチは `r.transitioned` で `child->play()` を呼ぶタイミングで戻せます。
+
+一方 **親フレームに同期する子（非独立）** は、親のフレームから毎フレーム決定論的にシークされるだけで、再生状態（`is_playing` やループ残数）を持ちません。そのため `ss_runtime_is_finished(child->runtime_ctx)` は同期の子では**常に false** です。同期の子は指定ループ回数を終えると**最終フレームで停止表示**になります（SpriteStudio 6 と同じ挙動）。終了そのものを契機に処理を走らせたい場合は、親アニメーション側のキーで表現してください。
+
+`r.child_looped` は**独立再生の子が1周した**ことを示すパルスです（同期の子では常に false）。子がさらにインスタンス／エフェクトパーツを持つ場合、**この値を孫の `step` に `parent_looped` として渡してください**。独立再生の子は親の時間ではなく自分の経過時間で回っているため、孫にとっての「親がループした」は親アニメーションの `ss_runtime_is_looped` ではなく、この値だからです。渡し忘れると、孫の再生キーが子のループ時に再アームされず、2周目以降に再生され直しません。
 
 ### 💡 サブフレーム再生設定の同期・伝搬
 親プレイヤーがサブフレーム補間（実数フレームによる滑らかなアニメーション再生）を有効にしている場合、その設定（有効/無効）を子プレイヤー（インスタンスパーツ）にも正しく伝搬させる必要があります。
