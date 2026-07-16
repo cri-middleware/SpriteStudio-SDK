@@ -277,7 +277,9 @@ jobs:
         uses: prompt/actions-commit-hash@v4
 
       - name: Install cargo-about
-        run: cargo install cargo-about --locked --features cli
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
 
       # Generate the third-party notices fresh from the current Cargo.lock into
       # target/licenses/ (not committed). Each shipped artifact gets the file
