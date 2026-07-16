@@ -36,12 +36,12 @@ If you find a bug, please open an issue and include:
 If you have an idea, please open an issue to discuss it before starting work.
 
 ### Pull Requests
-1. Fork the repository and create your branch from `main`.
+1. Fork the repository and create your branch from `develop`.
 2. Ensure your code follows the existing style and conventions.
 3. Add tests for any new features or bug fixes.
 4. Ensure all tests pass (`cargo test`).
 5. Update documentation if necessary (READMEs, Doc comments).
-6. Submit a Pull Request with a clear description of the changes.
+6. Submit a Pull Request against `develop` with a clear description of the changes.
 
 ## Development Environment
 
@@ -121,12 +121,12 @@ SpriteStudio-SDK にご関心をお寄せいただき、ありがとうござい
 SDK を改善するアイデアがある場合は、開発を始める前に Issue を作成して内容を議論しましょう。
 
 ### プルリクエスト
-1. リポジトリをフォークし、`main` ブランチから作業用ブランチを作成してください。
+1. リポジトリをフォークし、`develop` ブランチから作業用ブランチを作成してください。
 2. 既存のスタイルや規約に従ってコードを記述してください。
 3. 新しい機能やバグ修正には、対応するテストを追加してください。
 4. すべてのテストがパスすることを確認してください (`cargo test`)。
 5. 必要に応じてドキュメント (README やコメント) を更新してください。
-6. 変更内容を明確に記載したプルリクエストを送信してください。
+6. `develop` ブランチに向けて、変更内容を明確に記載したプルリクエストを送信してください。
 
 ## 開発環境のセットアップ
 

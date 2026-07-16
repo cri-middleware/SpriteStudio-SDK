@@ -9,6 +9,10 @@
 **OPTPiX SpriteStudio 7** 向けの、ハイパフォーマンスでエンジン非依存なアニメーションプレイヤー SDK です。
 この SDK を使用することで、あらゆるゲームエンジンやレンダリングフレームワーク上で、**ラスターベースの 2D アニメーション**を簡単に実装・再生することができます。
 
+## 🎯 対応バージョン (Compatibility)
+
+SpriteStudio-SDK `7.x.x` は **OPTPiX SpriteStudio 7.5 以上**で作成されたプロジェクトに対応しています。
+
 ## 🔄 ワークフロー (The Workflow)
 
 1. **変換 (Convert):** 同梱の CLI ツール (`ssconverter-cli`) を使用して、SpriteStudio のプロジェクト (`.sspj`) を極限まで最適化されたバイナリフォーマット (`.ssab`) に変換します。
