@@ -23,7 +23,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 ## Phase 3: Feature Expansion (Post-Release)
 
-*(Phase 3 is post-release work. Its **runtime-feature** items are implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only; any such item that turns out to need a schema change is reconsidered for an earlier phase. The one non-runtime item here, the `ssplayer-wgpu` reference Player, is downstream consumer work and is exempt from this constraint.)*
+*(Phase 3 is post-release work. Its **runtime-feature** items are implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only; any such item that turns out to need a schema change is reconsidered for an earlier phase. The one non-runtime item here, `ssplayer-wgpu`, is a Body rather than the Brain — the constraint is about the format and the evaluation core, so a Player the SDK ships is outside it.)*
 
 *   [x] Animation Mixing/Blending in `ssruntime` (whole-animation weighted blend).
 *   [ ] Per-part animation blending (layered animation / per-bone mask) — backward-compatible extension of the whole-animation blend API. Optional per-source per-part weights or mask covering common use cases (upper-body aim while lower-body runs, damage reactions, additive overlays). Also considers an Additive blend mode (delta-from-base) alongside the existing interpolative mix.
@@ -36,7 +36,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
     *   Game-driven transitions: states switched at runtime by Player-supplied triggers/conditions.
     *   Sequence (`.ssqb`) playback: SpriteStudio-authored playlists run as a linear, auto-advancing configuration of the state graph (each item = a state; `repeat_count` = times to play before advancing; `SequenceType` Last/Keep/Top = end-of-list behavior). Reuses `set_loop` / `crossfade`, reproduces SS-editor semantics, and needs no `.fbs` change. Items referencing another SSAB (`ref_anime_pack`) resolve via the shared registry above and switch with no crossfade (blending is single-SSAB only). Built into the state graph, not a separate playback system.
     *   **Depends on**: the blend/crossfade primitives it drives (`crossfade` / `add_blend_source` / `set_loop` / `reset`, complete and surfaced over FFI and WASM) and the `.ssqb` data layer (parsed and converted end-to-end — `libs/sspj/src/ssqe.rs` → `libs/ssab/fbs/ssqb.fbs` → the ssqb converter, with fixtures). Both are in place, so what this item adds is runtime orchestration only. Items referencing another SSAB additionally wait on the Instance Lifecycle shared registry above.
-*   [ ] **`ssplayer-wgpu` implementation** (reference Player, not a runtime/FFI feature): Rust-native rendering reference implementation.
+*   [ ] **`ssplayer-wgpu` implementation** — the Rust-native Player the SDK ships, and the base the Rust ecosystem (Bevy and the like) builds on. Not a demo: it carries the same three-faced surface as `ssruntime` itself (Rust `rlib`, C via cbindgen, JS via wasm-bindgen), and the WebGPU and FFI faces sit on top of the Rust API rather than beside it. It does double duty as the reference the other Players are read against, which is why it is the one Body in this repo.
 
 ## Backlog
 
