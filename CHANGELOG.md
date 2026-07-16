@@ -1,14 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Entries follow [Conventional Commits](https://www.conventionalcommits.org/); newest first.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## v7.0.0-alpha.1 - 2026-0X-XX
 
-## [7.0.0-alpha.1] - 2026-0X-XX
-
-### Added
-- **Initial Public Release**: SpriteStudio 7 SDK (`ssconverter-cli` + `libssruntime`).
+### Adds APIs / Features
+- **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting OPTPiX SpriteStudio 7.
 - **Core Runtime**: Engine-agnostic, `#![no_std]` brain with zero-math integration and SIMD (f32x4) state computation.
 - **Features**: Supports Mesh Deformation, Particles (SSEE), Instances, and SS7.1 parts (Skew, 9-Slice, Shape).
 - **Integrations**: C-API and Web (WASM) ready.
