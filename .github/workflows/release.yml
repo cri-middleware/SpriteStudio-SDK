@@ -292,8 +292,8 @@ jobs:
           cd artifacts
 
           rm -rf static
-          mkdir -p static/runtime
-          pushd static/runtime
+          mkdir -p static
+          pushd static
           mkdir -p libs include
           pushd libs
           mkdir -p macos
@@ -307,28 +307,28 @@ jobs:
           mkdir -p windows/x86_64
           popd # libs
 
-          mv ../../spritestudio-sdk-libraries-macos/libssconverter.a libs/macos/
-          mv ../../spritestudio-sdk-libraries-macos/libssruntime.a libs/macos/
-          mv ../../spritestudio-sdk-libraries-web/libssruntime.a libs/web/
-          mv ../../spritestudio-sdk-libraries-ios/static/libssruntime.xcframework libs/ios/
-          mv ../../spritestudio-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
-          mv ../../spritestudio-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
-          mv ../../spritestudio-sdk-libraries-linux-aarch64/libssconverter.a libs/linux/aarch64
-          mv ../../spritestudio-sdk-libraries-linux-aarch64/libssruntime.a libs/linux/aarch64
-          mv ../../spritestudio-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64-v8a
-          mv ../../spritestudio-sdk-libraries-android/armv7/libssruntime.a libs/android/armeabi-v7a
-          mv ../../spritestudio-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
-          mv ../../spritestudio-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
-          mv ../../spritestudio-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
+          mv ../spritestudio-sdk-libraries-macos/libssconverter.a libs/macos/
+          mv ../spritestudio-sdk-libraries-macos/libssruntime.a libs/macos/
+          mv ../spritestudio-sdk-libraries-web/libssruntime.a libs/web/
+          mv ../spritestudio-sdk-libraries-ios/static/libssruntime.xcframework libs/ios/
+          mv ../spritestudio-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
+          mv ../spritestudio-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
+          mv ../spritestudio-sdk-libraries-linux-aarch64/libssconverter.a libs/linux/aarch64
+          mv ../spritestudio-sdk-libraries-linux-aarch64/libssruntime.a libs/linux/aarch64
+          mv ../spritestudio-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64-v8a
+          mv ../spritestudio-sdk-libraries-android/armv7/libssruntime.a libs/android/armeabi-v7a
+          mv ../spritestudio-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
+          mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
+          mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
 
-          cp ../../spritestudio-sdk-libraries-linux/include/*.h ../../spritestudio-sdk-libraries-linux/include/*.hpp include/
+          cp ../spritestudio-sdk-libraries-linux/include/*.h ../spritestudio-sdk-libraries-linux/include/*.hpp include/
           mkdir -p bindings
-          cp ../../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
+          cp ../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
 
           echo ${{ steps.commit.outputs.hash }} > VERSION
-          cp ../../../LICENSE.md ./
-          cp ../../../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md ./
-          cp ../../../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md ./
+          cp ../../LICENSE.md ./
+          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md ./
+          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md ./
           # pushd libs/windows
           # cp x86_64/ssconverter.lib ssconverter.windows.editor.x86_64.lib
           # cp x86_64/ssconverter.lib ssconverter.windows.template_debug.x86_64.lib
@@ -338,11 +338,11 @@ jobs:
           # cp x86_64/ssruntime.lib ssruntime.windows.template_release.x86_64.lib
           # popd # libs/windows
 
-          popd # static/runtime
+          popd # static
 
           rm -rf dynamic
-          mkdir -p dynamic/runtime
-          pushd dynamic/runtime
+          mkdir -p dynamic
+          pushd dynamic
           mkdir -p libs include
           pushd libs
           mkdir -p macos
@@ -355,7 +355,7 @@ jobs:
           mkdir -p windows/x86_64
           popd # libs
 
-          mv ../../spritestudio-sdk-libraries-macos/libssconverter.dylib libs/macos/
+          mv ../spritestudio-sdk-libraries-macos/libssconverter.dylib libs/macos/
           # The macOS runtime ships as two wrappers of the same universal Mach-O:
           # a .bundle (Unity's native-plugin format) and a versioned .framework
           # (Ren'Py dlopens it by path; Flutter / CocoaPods link it via
@@ -363,34 +363,48 @@ jobs:
           # standalone runtime dylib is no longer shipped — every consumer moved
           # off it. The bundle has no symlinks so a plain copy is fine; the
           # framework is untarred to restore its version symlinks + code signature.
-          cp -R ../../spritestudio-sdk-libraries-macos/ssruntime.bundle libs/macos/
-          tar -C libs/macos -xf ../../spritestudio-sdk-libraries-macos/libssruntime.framework.tar
-          mv ../../spritestudio-sdk-libraries-ios/dynamic/libssruntime.xcframework libs/ios/
-          mv ../../spritestudio-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
-          mv ../../spritestudio-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
-          mv ../../spritestudio-sdk-libraries-linux-aarch64/libssconverter.so libs/linux/aarch64
-          mv ../../spritestudio-sdk-libraries-linux-aarch64/libssruntime.so libs/linux/aarch64
-          mv ../../spritestudio-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64-v8a
-          mv ../../spritestudio-sdk-libraries-android/armv7/libssruntime.so libs/android/armeabi-v7a
-          mv ../../spritestudio-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
-          mv ../../spritestudio-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
-          mv ../../spritestudio-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
+          cp -R ../spritestudio-sdk-libraries-macos/ssruntime.bundle libs/macos/
+          tar -C libs/macos -xf ../spritestudio-sdk-libraries-macos/libssruntime.framework.tar
+          mv ../spritestudio-sdk-libraries-ios/dynamic/libssruntime.xcframework libs/ios/
+          mv ../spritestudio-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
+          mv ../spritestudio-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
+          mv ../spritestudio-sdk-libraries-linux-aarch64/libssconverter.so libs/linux/aarch64
+          mv ../spritestudio-sdk-libraries-linux-aarch64/libssruntime.so libs/linux/aarch64
+          mv ../spritestudio-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64-v8a
+          mv ../spritestudio-sdk-libraries-android/armv7/libssruntime.so libs/android/armeabi-v7a
+          mv ../spritestudio-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
+          mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
+          mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
 
-          mv ../../spritestudio-sdk-libraries-linux/include/*.h ../../spritestudio-sdk-libraries-linux/include/*.hpp include/
+          mv ../spritestudio-sdk-libraries-linux/include/*.h ../spritestudio-sdk-libraries-linux/include/*.hpp include/
           mkdir -p bindings
-          cp ../../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
+          cp ../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
 
           echo ${{ steps.commit.outputs.hash }} > VERSION
-          cp ../../../LICENSE.md ./
-          cp ../../../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md ./
-          cp ../../../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md ./
+          cp ../../LICENSE.md ./
+          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md ./
+          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md ./
 
-          popd # static/runtime
+          popd # dynamic
+
+          # web: the three wasm-pack packages are already assembled by the web
+          # build job; collect them under web/ — with each package's third-party
+          # notice, the same way static/ and dynamic/ are assembled above. They
+          # share file names (ssruntime.js, …), so they stay as subdirectories.
+          rm -rf web
+          mkdir -p web
+          mv spritestudio-sdk-libraries-web/runtime-web web/
+          mv spritestudio-sdk-libraries-web/runtime-web-nosimd web/
+          mv spritestudio-sdk-libraries-web/converter-web web/
+          cp ../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md web/runtime-web/THIRD-PARTY-LICENSES.md
+          cp ../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md web/runtime-web-nosimd/THIRD-PARTY-LICENSES.md
+          cp ../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md web/converter-web/THIRD-PARTY-LICENSES.md
 
           rm -rf ../output
           mkdir -p ../output
           mv static ../output/
           mv dynamic ../output/
+          mv web ../output/
 
       - name: Upload final release package
         uses: actions/upload-artifact@v7
@@ -404,24 +418,29 @@ jobs:
           name: spritestudio-sdk-dynamic-libs
           path: output/dynamic
 
+      - name: Upload final release package
+        uses: actions/upload-artifact@v7
+        with:
+          name: spritestudio-sdk-web-libs
+          path: output/web
+
       - name: Archive release packages
         run: |
           mkdir -p release-dist
-          zip -r release-dist/spritestudio-sdk-static-libs.zip output/static
+          # Zip the SDK tree (libs/, include/, bindings/, VERSION, …) at the
+          # archive root — a clean, consumer-neutral layout with no wrapper
+          # directory. Each Player's scripts/download-sdk.sh maps it into that
+          # Player's own build layout.
+          ( cd output/static && zip -r ../../release-dist/spritestudio-sdk-static-libs.zip . )
           # -y (store symlinks) so the macOS libssruntime.framework's version
           # symlinks + code signature survive the zip; download-sdk's `unzip`
           # restores them on extract.
-          zip -ry release-dist/spritestudio-sdk-dynamic-libs.zip output/dynamic
+          ( cd output/dynamic && zip -ry ../../release-dist/spritestudio-sdk-dynamic-libs.zip . )
 
-          # Web packages — wasm-pack already placed each crate's own LICENSE.md
-          # in the package; add its third-party notice (generated by the
-          # "Generate third-party license notices" step above), then zip.
-          cp target/licenses/THIRD-PARTY-LICENSES.ssruntime.md artifacts/spritestudio-sdk-libraries-web/runtime-web/THIRD-PARTY-LICENSES.md
-          cp target/licenses/THIRD-PARTY-LICENSES.ssruntime.md artifacts/spritestudio-sdk-libraries-web/runtime-web-nosimd/THIRD-PARTY-LICENSES.md
-          cp target/licenses/THIRD-PARTY-LICENSES.ssconverter.md artifacts/spritestudio-sdk-libraries-web/converter-web/THIRD-PARTY-LICENSES.md
-          zip -rj release-dist/spritestudio-sdk-runtime-web.zip artifacts/spritestudio-sdk-libraries-web/runtime-web/*
-          zip -rj release-dist/spritestudio-sdk-runtime-web-nosimd.zip artifacts/spritestudio-sdk-libraries-web/runtime-web-nosimd/*
-          zip -rj release-dist/spritestudio-sdk-converter-web.zip artifacts/spritestudio-sdk-libraries-web/converter-web/*
+          # Web packages — runtime-web/, runtime-web-nosimd/ and converter-web/
+          # were assembled into output/web above (they share file names, so they
+          # stay as subdirectories). Zip them like the static/dynamic archives.
+          ( cd output/web && zip -r ../../release-dist/spritestudio-sdk-web-libs.zip . )
 
           for dir in artifacts/ssconverter-cli-*; do
             if [ -d "$dir" ]; then
