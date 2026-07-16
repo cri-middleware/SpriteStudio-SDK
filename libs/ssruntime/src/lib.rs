@@ -593,6 +593,9 @@ struct EvaluationContext<'a> {
     inheritance_alphas_workspace: Vec<f32>,
     /// Scratch for the Override Layer's force-hide cascade forward pass.
     override_hide_workspace: Vec<bool>,
+    /// Scratch copy of the primary controller's traversed frames, so the seam
+    /// can read them while the override table is borrowed mutably.
+    override_passed_frames_workspace: Vec<i32>,
 }
 
 impl<'a> EvaluationContext<'a> {
@@ -610,6 +613,7 @@ impl<'a> EvaluationContext<'a> {
             deform_result_index_workspace: Vec::new(),
             inheritance_alphas_workspace: Vec::new(),
             override_hide_workspace: Vec::new(),
+            override_passed_frames_workspace: Vec::new(),
         }
     }
 }
@@ -1109,6 +1113,13 @@ impl<'a> Context<'a> {
         resource.animations[anim_idx as usize].cached_parts.iter().position(|p| p.name_hash == hash).map(|i| i as i32).unwrap_or(-1)
     }
 
+    /// The integer frame the primary playhead is on right now — baked into a NON
+    /// override at set time so its own set-frame keyframe can be skipped on the
+    /// first handover evaluation (see `PriorityMode::OverwriteOnNextKeyframe`).
+    fn override_set_frame(&self) -> i32 {
+        crate::core::math::floorf(self.instance.primary_source().controller.get_frame_no()) as i32
+    }
+
     /// Set or clear a per-part visibility override.
     /// `force`: `0` = clear/revert to animation, `1` = force-hide,
     /// `2` = force-visible (reserved, not implemented — rejected).
@@ -1161,8 +1172,11 @@ impl<'a> Context<'a> {
         if idx >= self.instance.part_overrides.len() {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
+        // Anchor the NON one-shot to "from the moment of override": remember the
+        // set frame (its own keyframe is skipped on the first evaluation).
+        let set_frame = self.override_set_frame();
         let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
-        entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority });
+        entry.color = Some(crate::core::override_layer::ColorOverride { blend_op, corners_rgba, rate: 1.0, priority, set_frame, pending_first_eval: true });
         Ok(())
     }
 
@@ -1203,8 +1217,9 @@ impl<'a> Context<'a> {
         let Some(resolved) = crate::core::framedata::resolve_single_cell(&ssab, cellmap_name_hash, cell_name_hash) else {
             return Err(error::SSRuntimeError::InvalidParameter);
         };
+        let set_frame = self.override_set_frame();
         let entry = self.instance.part_overrides[idx].get_or_insert_with(Default::default);
-        entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority });
+        entry.cell = Some(crate::core::override_layer::CellOverride { cellmap_name_hash, cell_name_hash, resolved, priority, set_frame, pending_first_eval: true });
         Ok(())
     }
 
@@ -1629,8 +1644,14 @@ impl<'a> Context<'a> {
             for slot in self.instance.override_cell_uv_meta.iter_mut() {
                 *slot = None;
             }
+            // NON handover is decided from the frames the primary actually
+            // traversed this update (section / loop / reverse / ping-pong
+            // correct). Copy them out before the mutable borrows below so the
+            // controller borrow is released.
+            self.eval.override_passed_frames_workspace.clear();
+            self.eval.override_passed_frames_workspace.extend_from_slice(self.instance.primary_source().controller.get_passed_frames());
             crate::core::override_layer::apply_part_overrides(
-                &self.instance.part_overrides,
+                &mut self.instance.part_overrides,
                 &primary_metadata.cached_parts,
                 &mut self.instance.resolved_layer.parts_vec,
                 &mut self.instance.resolved_layer.parts_color_vec,
@@ -1639,6 +1660,7 @@ impl<'a> Context<'a> {
                 &mut self.instance.resolved_layer.cell_texture_hashes,
                 &mut self.instance.override_cell_uv_meta,
                 &mut self.eval.override_hide_workspace,
+                &self.eval.override_passed_frames_workspace,
             );
         } else {
             // No overrides active: leave the buffer empty so compute_local_uvs
@@ -3447,19 +3469,37 @@ mod tests {
         assert!(idx >= 0);
         let idx = idx as usize;
 
-        // Baseline keyframed color at frame 0 (animation drives color → flag ON).
+        // Baseline: a keyframed color exists at frame 0 (flag ON).
         context.get_frame_data(0.0).expect("frame 0");
-        let baseline = part_color_lt(&context, idx).expect("keyframed color present");
+        part_color_lt(&context, idx).expect("keyframed color present at frame 0");
         assert!(context.instance.resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
 
-        // NON: the keyframe drives color this frame → override yields.
-        context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set NON");
-        context.get_frame_data(0.0).expect("frame 0");
-        assert_eq!(part_color_lt(&context, idx), Some(baseline), "NON must yield to the keyframe");
+        let interval = 1000.0 / context.get_fps().max(1) as f32;
+        context.play();
 
-        // NOW: wins over the keyframe.
+        // NON set right after play(): the first update sits on frame 0 (its own
+        // keyframe), which is skipped — so the override WINS its set-frame
+        // segment even though color is animated (the old bug hid it entirely).
+        context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 0).expect("set NON");
+        let f = context.update(0.0);
+        context.get_frame_data(f).expect("frame 0");
+        let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
+        assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NON wins at its set frame (own keyframe skipped)");
+        assert!(context.instance.part_overrides[idx].as_ref().unwrap().color.is_some(), "slot retained on the set frame");
+
+        // Play a full loop: playback decodes a PartColor key past frame 0 (or
+        // key@0 again on the wrap), so the one-shot hands over and drops.
+        let end = context.get_end_frame();
+        for _ in 0..(end + 2) {
+            let f = context.update(interval);
+            context.get_frame_data(f).expect("frame");
+        }
+        assert!(context.instance.part_overrides[idx].as_ref().map_or(true, |o| o.color.is_none()), "NON hands over one-shot after decoding a key");
+
+        // NOW: wins the keyframe every frame regardless of what the animation drives.
         context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 1).expect("set NOW");
-        context.get_frame_data(0.0).expect("frame 0");
+        let f = context.update(interval);
+        context.get_frame_data(f).expect("frame");
         let (r, g, b, _a) = part_color_lt(&context, idx).expect("override color present");
         assert_eq!((r, g, b), (0x01, 0x02, 0x03), "NOW must override the keyframe");
     }
@@ -3592,19 +3632,34 @@ mod tests {
             return; // single-cell cellmap — nothing distinct to prove priority with
         };
 
-        // NON: a keyframe drives the cell this frame → the override yields.
+        let interval = 1000.0 / context.get_fps().max(1) as f32;
+        context.play();
+
+        // NON set right after play(): the first update sits on the frame-0 cell
+        // key (skipped), so the override WINS its set-frame segment.
         context.set_part_cell_override(cell_part as u32, base_cm, alt, 0).expect("set NON");
-        context.get_frame_data(0.0).expect("frame 0");
+        let f = context.update(0.0);
+        context.get_frame_data(f).expect("frame 0");
         let ci2 = context.instance.resolved_layer.parts_vec[cell_part].cell();
         let got = {
             let c = &context.instance.resolved_layer.cell_vec[ci2 as usize];
             (c.cellmap_name_hash(), c.name_hash())
         };
-        assert_eq!(got, (base_cm, base_cell), "NON must yield to the keyframed cell");
+        assert_eq!(got, (base_cm, alt), "NON wins at its set frame (own key skipped)");
+        assert!(context.instance.part_overrides[cell_part].as_ref().unwrap().cell.is_some());
 
-        // NOW: the override wins.
+        // Play a full loop: a cell key is decoded → one-shot handover, dropped.
+        let end = context.get_end_frame();
+        for _ in 0..(end + 2) {
+            let f = context.update(interval);
+            context.get_frame_data(f).expect("frame");
+        }
+        assert!(context.instance.part_overrides[cell_part].as_ref().map_or(true, |o| o.cell.is_none()), "cell NON hands over after decoding a key");
+
+        // NOW: wins the keyframed cell every frame.
         context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
-        context.get_frame_data(0.0).expect("frame 0");
+        let f = context.update(interval);
+        context.get_frame_data(f).expect("frame");
         let ci3 = context.instance.resolved_layer.parts_vec[cell_part].cell();
         let got = {
             let c = &context.instance.resolved_layer.cell_vec[ci3 as usize];
