@@ -537,6 +537,13 @@ struct GlobalBuffers {
     shape_vertices: Vec<f32>,
     shape_vertex_box_coords: Vec<f32>,
     shape_vertex_counts: Vec<i32>,
+    /// Shape triangle indices (local per shape part) and their CSR offsets
+    /// (length `num_parts + 1`), mirroring `mesh_indices` / `mesh_index_offsets`.
+    /// The Brain emits an explicit triangulation so Players consume real
+    /// triangle indices instead of assuming a vertex-0 fan (wrong for the
+    /// concave Arrow shape).
+    shape_indices: Vec<i32>,
+    shape_index_offsets: Vec<u32>,
     /// Skinned mesh world-space vertex positions, concatenated across all parts.
     /// Use `mesh_vertex_offsets` to slice per-part ranges:
     ///   part `p` occupies `mesh_vertex_offsets[p]..mesh_vertex_offsets[p + 1]`.
@@ -563,6 +570,8 @@ impl GlobalBuffers {
             shape_vertices: Vec::new(),
             shape_vertex_box_coords: Vec::new(),
             shape_vertex_counts: Vec::new(),
+            shape_indices: Vec::new(),
+            shape_index_offsets: Vec::new(),
             mesh_vertices_x: Vec::new(),
             mesh_vertices_y: Vec::new(),
             mesh_vertex_offsets: Vec::new(),
@@ -2015,6 +2024,24 @@ impl<'a> Context<'a> {
             }
             globals.shape_vertex_counts[i] = count as i32;
         }
+
+        // Emit an explicit triangulation per shape part (CSR, mirroring the
+        // mesh index buffers) so Players consume real triangle indices instead
+        // of assuming a vertex-0 fan. Indices are local to each part's vertex
+        // range and depend only on the shape topology, not the frame pose.
+        globals.shape_indices.clear();
+        globals.shape_index_offsets.clear();
+        globals.shape_index_offsets.push(0);
+        for i in 0..num_parts {
+            let count = globals.shape_vertex_counts[i] as usize;
+            if count >= 3
+                && let Some(shape_kind) = cached_parts[i].shape_kind
+            {
+                let (idx, n) = crate::core::geometry::compute_shape_indices(shape_kind, count);
+                globals.shape_indices.extend_from_slice(&idx[..n]);
+            }
+            globals.shape_index_offsets.push(globals.shape_indices.len() as u32);
+        }
     }
 
     // Frame Number getter functions
@@ -2122,6 +2149,22 @@ impl<'a> Context<'a> {
 
     pub fn get_shape_vertex_counts_len(&self) -> usize {
         self.instance.globals.shape_vertex_counts.len()
+    }
+
+    pub fn get_shape_indices_ptr(&self) -> *const i32 {
+        self.instance.globals.shape_indices.as_ptr()
+    }
+
+    pub fn get_shape_indices_len(&self) -> usize {
+        self.instance.globals.shape_indices.len()
+    }
+
+    pub fn get_shape_index_offsets_ptr(&self) -> *const u32 {
+        self.instance.globals.shape_index_offsets.as_ptr()
+    }
+
+    pub fn get_shape_index_offsets_len(&self) -> usize {
+        self.instance.globals.shape_index_offsets.len()
     }
 
     pub fn get_cell_meta_ptr(&self) -> *const f32 {

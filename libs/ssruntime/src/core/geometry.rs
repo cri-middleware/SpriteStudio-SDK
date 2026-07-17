@@ -296,6 +296,45 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
     (count, out_x, out_y)
 }
 
+/// Maximum triangle indices any shape emits (Star: 10 triangles × 3).
+pub const SHAPE_MAX_INDICES: usize = 30;
+
+/// Triangle indices (local, into the vertex list returned by
+/// [`compute_shape_vertices`] for the same `shape_type`) that tessellate a
+/// primitive shape, plus the used length (always a multiple of 3).
+///
+/// Rectangle / Triangle / Star use a center-first triangle fan `[0, i, i+1]`.
+/// Arrow needs an explicit triangulation: its 7-point ring has **no** interior
+/// center vertex, so the naive fan from vertex 0 (a boundary corner of the
+/// concave outline) self-overlaps. It is split into the shaft quad
+/// (`[0,6,2], [0,2,1]`) and the head fan from the tip (`[4,6,5], [4,2,6],
+/// [4,3,2]`).
+pub fn compute_shape_indices(shape_type: ShapeType, count: usize) -> ([i32; SHAPE_MAX_INDICES], usize) {
+    let mut out = [0; SHAPE_MAX_INDICES];
+    let used = match shape_type {
+        ShapeType::Arrow => {
+            out[..15].copy_from_slice(&[0, 6, 2, 0, 2, 1, 4, 6, 5, 4, 2, 6, 4, 3, 2]);
+            15
+        }
+        ShapeType::Rectangle | ShapeType::Triangle | ShapeType::Star => {
+            // The last vertex is a closing repeat, so the final triangle is
+            // [0, count-2, count-1].
+            let mut n = 0;
+            for i in 1..count.saturating_sub(1) {
+                if n + 3 > SHAPE_MAX_INDICES {
+                    break;
+                }
+                out[n] = 0;
+                out[n + 1] = i as i32;
+                out[n + 2] = (i + 1) as i32;
+                n += 3;
+            }
+            n
+        }
+    };
+    (out, used)
+}
+
 /// Optional per-frame deform delta passed to [`compute_skinned_mesh_vertices`].
 ///
 /// Tuple layout: `(changed_vertex_indices, delta_x, delta_y, part_world_matrix)`.
@@ -784,6 +823,52 @@ mod tests {
         assert_approx_eq(y[0], 0.0);
         assert_approx_eq(x[11], x[1]);
         assert_approx_eq(y[11], y[1]);
+    }
+
+    /// Sum of the absolute triangle areas produced by `indices` over `(x, y)`.
+    fn triangulated_area(x: &[f32; 16], y: &[f32; 16], indices: &[i32]) -> f32 {
+        indices
+            .chunks_exact(3)
+            .map(|t| {
+                let (a, b, c) = (t[0] as usize, t[1] as usize, t[2] as usize);
+                0.5 * ((x[b] - x[a]) * (y[c] - y[a]) - (x[c] - x[a]) * (y[b] - y[a])).abs()
+            })
+            .sum()
+    }
+
+    /// Shoelace area of a simple polygon given by the first `count` vertices.
+    fn polygon_area(x: &[f32; 16], y: &[f32; 16], count: usize) -> f32 {
+        let mut acc = 0.0;
+        for i in 0..count {
+            let j = (i + 1) % count;
+            acc += x[i] * y[j] - x[j] * y[i];
+        }
+        0.5 * acc.abs()
+    }
+
+    #[test]
+    fn test_compute_shape_indices_center_fans() {
+        let (rect, rn) = compute_shape_indices(ShapeType::Rectangle, 6);
+        assert_eq!(&rect[..rn], &[0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]);
+        let (tri, tn) = compute_shape_indices(ShapeType::Triangle, 5);
+        assert_eq!(&tri[..tn], &[0, 1, 2, 0, 2, 3, 0, 3, 4]);
+        let (star, sn) = compute_shape_indices(ShapeType::Star, 12);
+        assert_eq!(sn, 30);
+        assert_eq!(&star[..3], &[0, 1, 2]);
+        assert_eq!(&star[sn - 3..sn], &[0, 10, 11]);
+    }
+
+    #[test]
+    fn test_compute_shape_indices_arrow_tiles_without_overlap() {
+        // Arrow is concave with no center vertex — the historical fan from
+        // vertex 0 self-overlapped. The correct triangulation must tile the
+        // polygon exactly (sum of triangle areas == polygon area).
+        let (count, x, y) = compute_shape_vertices(ShapeType::Arrow, (100.0, 200.0));
+        assert_eq!(count, 7);
+        let (idx, n) = compute_shape_indices(ShapeType::Arrow, count);
+        assert_eq!(&idx[..n], &[0, 6, 2, 0, 2, 1, 4, 6, 5, 4, 2, 6, 4, 3, 2]);
+        assert!(idx[..n].iter().all(|&v| (v as usize) < count));
+        assert_approx_eq(triangulated_area(&x, &y, &idx[..n]), polygon_area(&x, &y, count));
     }
 
     #[test]
