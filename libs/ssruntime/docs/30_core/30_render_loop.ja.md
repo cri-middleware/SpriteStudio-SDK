@@ -57,6 +57,17 @@ for (auto batch : *batches) {
 }
 ```
 
+> [!IMPORTANT]
+> **この `draw_order` ループは描画（ジオメトリ発行）専用です。** Instance / Effect パーツの
+> **`step`（子アニメ・パーティクルの時計の前進）を、この `draw_order` ループから駆動しないでください。**
+> `Hide` 中のパーツは Brain が `draw_order` / `DrawBatch` から除外するため
+> （[Mask の実装](../40_components/40_mask.ja.md) の補足参照）、「`draw_order` に載ったものだけ `step`」
+> にすると、独立再生の子／エフェクトが非表示中に `step` されず時計が凍ります。**`step` は全 Instance /
+> Effect パーツをパックのメタデータから列挙して毎フレーム漏れなく回し**、その結果を描画するときにだけ
+> この `draw_order`（と `step` の戻り値 `visible`）を使ってください。詳細は
+> [インスタンスパーツ](../40_components/10_instance.ja.md) /
+> [エフェクトパーツ](../40_components/20_effect.ja.md) を参照。
+
 ### RenderMode についての注意点
 
 `libssruntime` には、エンジンの描画思想に合わせた `RenderMode`（レンダリングモード）の概念があります。
