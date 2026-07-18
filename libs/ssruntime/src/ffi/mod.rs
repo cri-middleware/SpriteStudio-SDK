@@ -557,6 +557,54 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
 
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Shape triangle indices (part-local, 0-based) that tessellate each shape part,
+/// concatenated across all parts. Slice part `p`'s range via
+/// `ss_runtime_get_shape_index_offsets`: `[offsets[p], offsets[p + 1])`.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_indices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_indices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
+/// `ss_runtime_get_shape_indices`. Part `p` occupies `[offsets[p], offsets[p + 1])`;
+/// non-shape parts have an empty range.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_shape_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_shape_index_offsets_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_shape_index_offsets_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 /// Skinned mesh per-vertex X coordinates in world space, concatenated across all
 /// parts. Pair with `ss_runtime_get_mesh_vertex_offsets` to slice per-part
 /// ranges: part `p`'s vertices live at indices `offsets[p]..offsets[p + 1]`.
