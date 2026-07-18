@@ -97,8 +97,6 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         let mut v = asset_files
             .iter()
             .map(|(name, path)| {
-                //let src = sspj_parent_path.join(path);
-                //let r = std::fs::read(&src);
                 let r = asset_provider.read_asset(path);
                 let data = match r {
                     Ok(data) => data,

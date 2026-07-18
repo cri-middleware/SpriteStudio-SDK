@@ -3,10 +3,9 @@ use alloc::vec::Vec;
 use crate::core::framedata::CachedPartData;
 use crate::runtime::framedata::ss::runtime::PartState;
 
-/// 描画順 (z-order) を保持するテーブル。`indices` には part_idx を rank 昇順で
-/// 並べた permutation を持ち、これが `FrameData.draw_order` の元データとなる。
-/// 旧 API には rank-per-part_idx の逆引き表 (`order: Vec<i32>`) もあったが、
-/// バッチ描画契約 (chapter 9) への移行に伴い廃止 (FFI も同時に削除)。
+/// Table holding the draw order (z-order). `indices` is a permutation of
+/// part_idx sorted by ascending rank, and is the source data for
+/// `FrameData.draw_order`.
 pub struct ZOrderTable {
     indices: Vec<usize>,
     is_static: bool,
@@ -63,8 +62,8 @@ impl ZOrderTable {
         self.computed = true;
     }
 
-    /// part_idx 列を「描画順」(rank 昇順) に並べたスライス。
-    /// FrameData.draw_order の元データとして使用する。
+    /// The part_idx column arranged in draw order (ascending rank); the
+    /// source data for `FrameData.draw_order`.
     pub fn indices(&self) -> &[usize] {
         &self.indices
     }
