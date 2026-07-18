@@ -77,6 +77,9 @@ pub extern "C" fn ss_converter_create() -> *mut Context {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_destroy(context: *mut Context) {
+    if context.is_null() {
+        return;
+    }
     let _ = catch_unwind(AssertUnwindSafe(|| unsafe {
         let _ = Box::from_raw(context);
     }));
@@ -86,6 +89,9 @@ type LogCallback = Option<extern "C" fn(*const c_char)>;
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_char, output_dir: *const c_char, embedded: bool, callback: LogCallback) {
+    if ctx.is_null() {
+        return;
+    }
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
         context.error = None;
@@ -133,6 +139,9 @@ pub unsafe extern "C" fn ss_converter_convert(ctx: *mut Context, sspj: *const c_
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
+    if ctx.is_null() {
+        return false;
+    }
     let context = unsafe { &mut *ctx };
     if let Some(scan) = &context.scan {
         return !scan.is_finished();
@@ -142,6 +151,9 @@ pub unsafe extern "C" fn ss_converter_is_running(ctx: *mut Context) -> bool {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool {
+    if context.is_null() {
+        return false;
+    }
     let result = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
         if let Some(scan) = &context.scan {
@@ -154,6 +166,9 @@ pub unsafe extern "C" fn ss_converter_is_finished(context: *mut Context) -> bool
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_abort(context: *mut Context) {
+    if context.is_null() {
+        return;
+    }
     let context = unsafe { &mut *context };
     if let Some(scan) = &context.scan {
         scan.abort();
@@ -164,6 +179,9 @@ pub unsafe extern "C" fn ss_converter_abort(context: *mut Context) {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConverterError {
+    if context.is_null() {
+        return CConverterError::ErrorUnknown;
+    }
     let result = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
 
@@ -199,6 +217,9 @@ pub unsafe extern "C" fn ss_converter_get_result(context: *mut Context) -> CConv
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data: *mut *const c_char, out_len: *mut usize) {
+    if context.is_null() {
+        return;
+    }
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *context };
         unsafe {
@@ -214,6 +235,9 @@ pub unsafe extern "C" fn ss_converter_get_error(context: *mut Context, out_data:
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_dir(ctx: *mut Context, dir: *const c_char, max_depth: u32, max_entries: usize, max_millis: u64) {
+    if ctx.is_null() {
+        return;
+    }
     let _ = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
         if dir.is_null() {
@@ -227,24 +251,36 @@ pub unsafe extern "C" fn ss_converter_scan_dir(ctx: *mut Context, dir: *const c_
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_visited(ctx: *mut Context) -> usize {
+    if ctx.is_null() {
+        return 0;
+    }
     let context = unsafe { &mut *ctx };
     context.scan.as_ref().map(|s| s.visited()).unwrap_or(0)
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_found(ctx: *mut Context) -> usize {
+    if ctx.is_null() {
+        return 0;
+    }
     let context = unsafe { &mut *ctx };
     context.scan.as_ref().map(|s| s.found()).unwrap_or(0)
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_budget_exceeded(ctx: *mut Context) -> bool {
+    if ctx.is_null() {
+        return false;
+    }
     let context = unsafe { &mut *ctx };
     context.scan.as_ref().map(|s| s.budget_exceeded()).unwrap_or(false)
 }
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_result_count(ctx: *mut Context) -> usize {
+    if ctx.is_null() {
+        return 0;
+    }
     let result = catch_unwind(AssertUnwindSafe(|| {
         let context = unsafe { &mut *ctx };
         let paths = context.scan.as_ref().map(|s| s.results()).unwrap_or_default();
@@ -256,6 +292,36 @@ pub unsafe extern "C" fn ss_converter_scan_result_count(ctx: *mut Context) -> us
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn ss_converter_scan_result_at(ctx: *mut Context, index: usize) -> *const c_char {
+    if ctx.is_null() {
+        return std::ptr::null();
+    }
     let context = unsafe { &mut *ctx };
     context.scan_results_c.get(index).map(|s| s.as_ptr()).unwrap_or(std::ptr::null())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Regression: every C-API entry point must tolerate a NULL context handle
+    // (e.g. a caller that ignored a failed create) and return a safe default
+    // instead of dereferencing NULL. These calls previously segfaulted, which
+    // the surrounding catch_unwind cannot rescue.
+    #[test]
+    fn null_context_returns_safe_defaults() {
+        let null: *mut Context = std::ptr::null_mut();
+        unsafe {
+            assert!(!ss_converter_is_running(null));
+            assert!(!ss_converter_is_finished(null));
+            assert!(matches!(ss_converter_get_result(null), CConverterError::ErrorUnknown));
+            assert_eq!(ss_converter_scan_visited(null), 0);
+            assert_eq!(ss_converter_scan_found(null), 0);
+            assert!(!ss_converter_scan_budget_exceeded(null));
+            assert_eq!(ss_converter_scan_result_count(null), 0);
+            assert!(ss_converter_scan_result_at(null, 0).is_null());
+            // Void-returning entry points must simply not crash on NULL.
+            ss_converter_abort(null);
+            ss_converter_destroy(null);
+        }
+    }
 }
