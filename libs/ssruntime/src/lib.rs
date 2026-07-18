@@ -833,7 +833,16 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
                     continue;
                 }
                 let w = src.weight * inv_total;
-                let s = &layers[j].parts_vec[i];
+                // Defensive: a blend source's layer is sized to its own
+                // animation's part count, which can be shorter than the
+                // primary's when a caller blends mismatched part lists. Parts
+                // are correlated positionally by index, so skip a missing part
+                // instead of indexing out of bounds — a mismatched-part-count
+                // blend then degrades gracefully rather than panicking and
+                // aborting the host.
+                let Some(s) = layers[j].parts_vec.get(i) else {
+                    continue;
+                };
                 pos_x += w * s.position_x();
                 pos_y += w * s.position_y();
                 pos_z += w * s.position_z();
@@ -863,8 +872,9 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
                 skew_y += w * s.skew_y();
                 flag |= s.update_flag();
 
-                let rvd = &layers[j].raw_vertex_deform[i];
-                if rvd.present {
+                if let Some(rvd) = layers[j].raw_vertex_deform.get(i)
+                    && rvd.present
+                {
                     deform_present = true;
                     let w_v = wide::f32x4::splat(w);
                     dx_acc = w_v.mul_add(wide::f32x4::from(rvd.dx), dx_acc);
