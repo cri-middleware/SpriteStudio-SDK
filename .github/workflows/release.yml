@@ -14,6 +14,11 @@ env:
   PYTHONIOENCODING: utf8
   KEYCHAIN_PATH: app-signing.keychain-db
 
+# Default to read-only; the package job below elevates to contents: write only
+# where it creates the GitHub Release.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-cargo-${{ github.actor }}-${{ github.head_ref || github.run_number }}-${{ github.ref }}
   cancel-in-progress: true
@@ -63,7 +68,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           submodules: recursive
 
@@ -196,7 +201,7 @@ jobs:
       - name: build Android
         if: matrix.platform == 'android'
         run: |
-          cargo install cargo-ndk
+          cargo install cargo-ndk --locked
           rustup target add aarch64-linux-android
           rustup target add armv7-linux-androideabi
           rustup target add x86_64-linux-android
@@ -226,6 +231,12 @@ jobs:
           cp target/x86_64-pc-windows-msvc/release/*.lib lib/x86_64/
           cp target/x86_64-pc-windows-msvc/release/*.dll lib/x86_64/
 
+      - name: Install wasm-pack
+        if: matrix.platform == 'web'
+        uses: taiki-e/install-action@07b4745e0c39a41822af610387492e3e53aa222b # v2
+        with:
+          tool: wasm-pack
+
       - name: build Web
         if: matrix.platform == 'web'
         run: |
@@ -238,8 +249,6 @@ jobs:
           mkdir -p lib
           cp target/wasm32-unknown-unknown/release/*.a lib/
           
-          # Use faster binary installer for wasm-pack
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
           ./scripts/release-web.sh
           cp -r pkg/runtime-web/release lib/runtime-web
           cp -r pkg/runtime-web-nosimd/release lib/runtime-web-nosimd
@@ -247,14 +256,14 @@ jobs:
 
       - name: Upload artifact ssconverter-cli
         if: matrix.platform == 'windows' || matrix.platform == 'linux' || matrix.platform == 'macos'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ssconverter-cli-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: bin
           if-no-files-found: error
 
       - name: Upload artifact libraries
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: spritestudio-sdk-libraries-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: lib
@@ -263,21 +272,23 @@ jobs:
   package:
     needs: release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # softprops/action-gh-release creates the GitHub Release
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           fetch-depth: 0
       - name: Download all artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: artifacts
 
       - id: commit
-        uses: prompt/actions-commit-hash@v4
+        uses: prompt/actions-commit-hash@9e673021a12f5b5506d4da77ffbb8446e8a37b4a # v4
 
       - name: Install cargo-about
-        uses: taiki-e/install-action@v2
+        uses: taiki-e/install-action@07b4745e0c39a41822af610387492e3e53aa222b # v2
         with:
           tool: cargo-about
 
@@ -407,19 +418,19 @@ jobs:
           mv web ../output/
 
       - name: Upload final release package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: spritestudio-sdk-static-libs
           path: output/static
 
       - name: Upload final release package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: spritestudio-sdk-dynamic-libs
           path: output/dynamic
 
       - name: Upload final release package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: spritestudio-sdk-web-libs
           path: output/web
@@ -458,7 +469,7 @@ jobs:
 
       - name: Create GitHub Release
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.upload_release == 'true'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
         with:
           files: |
             release-dist/*.zip

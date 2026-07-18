@@ -332,11 +332,10 @@ fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType
 }
 
 fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind], cellmap_names: &[String], part_type: &sspj::sstypes::SsPartType) {
-    // MEMO: This function. Since only “setup” is targeted, “key.time == 0” might not be necessary.
-    //       It's required because the caller is attempting to composite with frame 0,
-    //         but that should probably be done during key-frame placement ?    Yuzu.
+    // Only frame-0 ("setup") keys are composited here: the caller builds the
+    // initial part attributes from frame 0, so keys with `time == 0` are the
+    // ones that matter.
     setup_attributes.iter().for_each(|attribute| {
-        //        p_args.update_flag = 0;
         match attribute {
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
@@ -421,7 +420,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             }
             sspj::ssattribute::SsAttributeKind::Prio(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
-                    // TODO: When Z-sort, priority must be based on  spatially transformed Z-values. Yuzu.
+                    // TODO: when Z-sorting, priority should be based on spatially transformed Z-values.
                     p_args.priority = _key.value as f32;
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributePrio;
                 }
@@ -498,7 +497,6 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                         let mut value = ssab::ssab::ss::format::PartAttributeVertexT::default();
                         let mut coordinate = ssab::ssab::ss::format::Vec2T::default();
 
-                        //                       coordinate = ssab::ssab::ss::format::Vec2T::default();
                         if let Some(_lt) = _key.value.lt.as_ref() {
                             coordinate.v1 = _lt.x;
                             coordinate.v2 = _lt.y;

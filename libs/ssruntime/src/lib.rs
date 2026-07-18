@@ -2468,10 +2468,10 @@ impl<'a> Context<'a> {
                 let s = eff.speed();
                 info.speed = if s == 0.0 { 1.0 } else { s };
                 // The implicit frame-0 (Setup) key is never an independent-playback
-                // start point (spec §3 premise): only a real authored EventEffect
-                // may begin independent playback. Forced to false so this mirrors
-                // the Instance synthetic default (`ss_event_instance_info::synthetic_default`,
-                // independent = false) and the two part types stay symmetric.
+                // start point: only a real authored EventEffect may begin independent
+                // playback. Forced to false so this mirrors the Instance synthetic
+                // default (`ss_event_instance_info::synthetic_default`, independent =
+                // false) and the two part types stay symmetric.
                 info.independent = false;
                 info.is_synthetic_default = true;
             }
@@ -2748,7 +2748,7 @@ impl<'a> EffectSlot<'a> {
     /// just-created state. The host calls this on an explicit head-out
     /// (`play` / replay) so a re-played animation re-fires the effect from
     /// scratch instead of debouncing the first key as the same one it last
-    /// started (spec §6). The resource binding, emitter caches and simulator
+    /// started. The resource binding, emitter caches and simulator
     /// are left intact — forcing `last_event_frame = -1` makes the next `step`
     /// transition, which re-seeds the simulator via the existing `ctx.reset()`
     /// path.
@@ -2823,10 +2823,10 @@ impl<'a> EffectSlot<'a> {
         // reset the equality check below would treat the loop edge as a no-op,
         // freezing the effect at the end of the previous cycle).
         //
-        // Independent playback follows the opposite rule (spec §4/§6): the slot
+        // Independent playback follows the opposite rule: the slot
         // remembers "the last key that started playback" and a re-crossing of the
         // *same* key must NOT restart it — finite single-key effects play once and
-        // stay dead across loops ("一発限り"), only a *different* key re-fires.
+        // stay dead across loops ("fire-once"), only a *different* key re-fires.
         // So when the last started key was independent, keep the memory intact:
         // don't re-arm. `ignore_implicit` already skips the synthetic-key case;
         // `!self.last_independent` additionally protects the real-key case (#6/#7,
@@ -2886,8 +2886,7 @@ impl<'a> EffectSlot<'a> {
         // Dead-effect skip: a finite effect past its last particle's death is
         // gone — independent or not. Independent only changes how `relative_frame`
         // is advanced (own accumulator vs parent-synced); both clocks must still
-        // honour the effect's finite lifetime. (Previously `!independent` excluded
-        // independent effects here, so finite ones never disappeared.)
+        // honour the effect's finite lifetime.
         if !self.is_infinite && self.lifetime > 0 && relative_frame > self.lifetime as f32 {
             return crate::types::ss_effect_step_result::not_visible();
         }
@@ -3083,7 +3082,7 @@ impl InstanceSlot {
     /// Reset the slot's "last started key" memory to its just-created state so
     /// the host can re-fire the instance child on an explicit head-out (`play`
     /// / replay) instead of debouncing the first key as the same one it last
-    /// started (spec §6). The child context is owned by the host and reset
+    /// started. The child context is owned by the host and reset
     /// separately; the next `step` re-configures and replays it on transition.
     pub fn reset(&mut self) {
         *self = Self::new();
@@ -3101,8 +3100,8 @@ impl InstanceSlot {
 
         // Synced children re-arm on the parent loop edge so the authored
         // EventInstance re-fires each playthrough. Independent children follow the
-        // spec §4/§6 "last started key" rule instead: a re-crossing of the same
-        // key must not restart the child (持続/一発限り), only a different key
+        // "last started key" rule instead: a re-crossing of the same
+        // key must not restart the child (sustained / fire-once), only a different key
         // re-fires. Keep the memory intact when the last started key was
         // independent. Mirrors EffectSlot.
         if parent_looped && !ignore_implicit && !self.last_independent {

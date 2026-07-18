@@ -1079,10 +1079,9 @@ fn build_draw_order_and_batches<'a>(
         let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
         let normal_no_cell = kind == DrawBatchKind::Normal && texture_hash == 0;
         // Masks honour Hide too: a hidden mask must NOT contribute coverage
-        // (SS mask opt-out is mask-value==0 OR Hide==true). Previously pure
-        // masks were force-emitted regardless of Hide (harmless when masks were
-        // never rendered); now that the player rasterises mask coverage, a
-        // hidden mask would wrongly clip its targets, so respect Hide here.
+        // (SS mask opt-out is mask-value==0 OR Hide==true) — otherwise a hidden
+        // mask would wrongly clip its targets once the player rasterises mask
+        // coverage.
         let drawn_as_self = !part_state.hide() && !normal_no_cell;
 
         if !needs_mask_twin && !drawn_as_self {

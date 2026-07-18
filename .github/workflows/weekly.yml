@@ -12,6 +12,9 @@ env:
   PYTHONIOENCODING: utf8
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 concurrency:
   group: weekly-ci-${{ github.ref }}
   cancel-in-progress: true
@@ -47,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           submodules: recursive
 
@@ -65,7 +68,7 @@ jobs:
             rustup target add aarch64-apple-ios
           elif [ "${{ matrix.platform }}" == "android" ]; then
             rustup target add aarch64-linux-android
-            cargo install cargo-ndk
+            cargo install cargo-ndk --locked
           fi
         shell: bash
 

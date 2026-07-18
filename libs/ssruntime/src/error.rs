@@ -1,20 +1,20 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum SSRuntimeError {
-    /// データの読み込みに失敗（空データなど）
+    /// Failed to load data (e.g. empty data).
     EmptyData,
-    /// SSAB のバージョンが不一致
+    /// SSAB version mismatch.
     InvalidVersion { expected: u32, got: u32 },
-    /// アニメーションが見つからない
+    /// Animation not found.
     AnimationNotFound,
-    /// データがロードされていない
+    /// Data is not loaded.
     NotLoaded,
-    /// パラメータが不正（フレーム番号が範囲外など）
+    /// Invalid parameter (e.g. frame number out of range).
     InvalidParameter,
-    /// メモリ確保に失敗
+    /// Memory allocation failed.
     MemoryError,
-    /// エフェクトデータが壊れている（必須フィールド欠落など）
+    /// Effect data is malformed (e.g. missing required fields).
     MalformedEffect,
-    /// その他のエラー（将来的な拡張用）
+    /// Other/unknown error (reserved for future extension).
     Unknown,
 }
 
