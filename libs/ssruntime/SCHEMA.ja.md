@@ -92,7 +92,7 @@ FrameData (FFI を介したメモリバッファ)
 
 ## 描画プラン: 順序・バッチ・マスクスライス
 
-`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これは `CLAUDE.md` および [Batched Rendering Contract](./docs/09_batched_rendering.ja.md) で言及している「DrawBatch コントラクト」です。
+`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これは `CLAUDE.md` および [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) で言及している「DrawBatch コントラクト」です。
 
 | FrameData フィールド | 型 | 説明 |
 |:---|:---|:---|
@@ -113,7 +113,7 @@ FrameData (FFI を介したメモリバッファ)
 | `index_count` | ushort | スライス内の全パーツが寄与するインデックス数の合計。 |
 | `blend_type` | BlendType | スライス共通のブレンドモード。各パーツの `part_color.blend_type` と一致。 |
 | `kind` | DrawBatchKind | 描画カテゴリ（下表）。Player がスライス内パーツについてどのジオメトリ／データを取り出すかを決定。 |
-| `flags` | ubyte | バッチごとのフラグビット。現状定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [Batched Rendering Contract](./docs/09_batched_rendering.ja.md) を参照。 |
+| `flags` | ubyte | バッチごとのフラグビット。現状定義済み: ビット `0x01` = `MASK_INFLUENCE` (このスライス内のパーツがアクティブなマスクスライスでマスクされる)。残りビットは予約済み — 未知ビットは無視すること。完全な契約は [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) を参照。 |
 
 ### `DrawBatchKind`
 

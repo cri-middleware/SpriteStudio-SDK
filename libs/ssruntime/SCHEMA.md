@@ -92,7 +92,7 @@ Complex attributes are stored in pools within `FrameData` to avoid duplicating l
 
 ## Draw Plan: Order, Batches, Mask Slice
 
-`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract" referenced from `CLAUDE.md` and the [Batched Rendering Contract](./docs/09_batched_rendering.ja.md).
+`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract" referenced from `CLAUDE.md` and the [Batched Rendering Contract](./docs/30_core/30_render_loop.md).
 
 | FrameData Field | Type | Description |
 |:---|:---|:---|
@@ -113,7 +113,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 | `index_count` | ushort | Total index count contributed by all parts in this batch. |
 | `blend_type` | BlendType | Shared blend mode for the slice — matches the parts' `part_color.blend_type`. |
 | `kind` | DrawBatchKind | Renderable category (see below). Determines which geometry / data the Player should fetch for parts in the slice. |
-| `flags` | ubyte | Per-batch flag bits. Currently defined: bit `0x01` = `MASK_INFLUENCE` (parts in this slice are masked by the active mask slice). Remaining bits are reserved — unrecognised bits should be ignored. See the [Batched Rendering Contract](./docs/09_batched_rendering.ja.md) for the full contract. |
+| `flags` | ubyte | Per-batch flag bits. Currently defined: bit `0x01` = `MASK_INFLUENCE` (parts in this slice are masked by the active mask slice). Remaining bits are reserved — unrecognised bits should be ignored. See the [Batched Rendering Contract](./docs/30_core/30_render_loop.md) for the full contract. |
 
 ### `DrawBatchKind`
 
