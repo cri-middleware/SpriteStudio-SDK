@@ -266,9 +266,13 @@ pub fn rate_ease_elastic_in<T: SsFloat>(rate: T, power_easing: T) -> T {
     if rate <= zero || rate >= one {
         rate
     } else {
-        let s = power_easing * T::from_f32(0.25);
+        let mut power_easing_modify = power_easing;
+        if power_easing_modify == zero {
+            power_easing_modify = T::from_f32(0.3 * 1.5);
+        }
+        let s = power_easing_modify * T::from_f32(0.25);
         let rate_slide = rate - one;
-        T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_slide) * ((rate_slide - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin()
+        T::from_f32(-1.0) * T::from_f32(2.0).powf(T::from_f32(10.0) * rate_slide) * ((rate_slide - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin()
     }
 }
 
@@ -278,8 +282,12 @@ pub fn rate_ease_elastic_out<T: SsFloat>(rate: T, power_easing: T) -> T {
     if rate <= zero || rate >= one {
         rate
     } else {
-        let s = power_easing * T::from_f32(0.25);
-        T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing).sin() + one
+        let mut power_easing_modify = power_easing;
+        if power_easing_modify == zero {
+            power_easing_modify = T::from_f32(0.3 * 1.5);
+        }
+        let s = power_easing_modify * T::from_f32(0.25);
+        T::from_f32(2.0).powf(T::from_f32(-10.0) * rate) * ((rate - s) * (T::pi() * T::from_f32(2.0)) / power_easing_modify).sin() + one
     }
 }
 
@@ -440,6 +448,27 @@ mod tests {
         assert_near(rate_ease_back_inout(0.0), 0.0);
         assert_near(rate_ease_back_inout(0.5), 0.5);
         assert_near(rate_ease_back_inout(1.0), 1.0);
+    }
+
+    #[test]
+    fn test_elastic() {
+        // Endpoints are pass-through for all three variants.
+        assert_near(rate_ease_elastic_in(0.0, 2.0), 0.0);
+        assert_near(rate_ease_elastic_in(1.0, 2.0), 1.0);
+        assert_near(rate_ease_elastic_out(0.0, 2.0), 0.0);
+        assert_near(rate_ease_elastic_out(1.0, 2.0), 1.0);
+        assert_near(rate_ease_elastic_inout(0.0, 2.0), 0.0);
+        assert_near(rate_ease_elastic_inout(1.0, 2.0), 1.0);
+
+        // Regression: a keyframe authored without an easing rate yields
+        // power_easing == 0. The in/out variants used to divide by it and
+        // return NaN; all three must stay finite (the inout branch already
+        // guarded this, the in/out twins did not).
+        for &rate in &[0.1_f32, 0.25, 0.5, 0.75, 0.9] {
+            assert!(rate_ease_elastic_in(rate, 0.0).is_finite(), "elastic_in NaN at rate {rate}");
+            assert!(rate_ease_elastic_out(rate, 0.0).is_finite(), "elastic_out NaN at rate {rate}");
+            assert!(rate_ease_elastic_inout(rate, 0.0).is_finite(), "elastic_inout NaN at rate {rate}");
+        }
     }
 
     #[test]
