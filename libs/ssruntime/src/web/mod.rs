@@ -265,15 +265,6 @@ impl SSRuntimeResource {
         }
         Ok(SSRuntimeResource { inner })
     }
-
-    pub fn create_borrow(data: &[u8]) -> Result<SSRuntimeResource, JsValue> {
-        let ssab_data = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) }.map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let inner = SsabResource::new(ssab_data);
-        if inner.resource().is_none() {
-            return Err(JsValue::from_str("Failed to parse SSAB data"));
-        }
-        Ok(SSRuntimeResource { inner })
-    }
 }
 
 #[wasm_bindgen]
@@ -313,16 +304,6 @@ impl SSRuntimeContext {
 
     pub fn load_ssab_copy(&mut self, data: &[u8]) -> bool {
         if let Ok(ssab_data) = SsabData::load_copy(data) {
-            let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
-            if res.inner.resource().is_some() {
-                return self.bind_resource(&res);
-            }
-        }
-        false
-    }
-
-    pub fn load_ssab_borrow(&mut self, data: &[u8]) -> bool {
-        if let Ok(ssab_data) = unsafe { SsabData::load_borrow(data.as_ptr(), data.len()) } {
             let res = SSRuntimeResource { inner: SsabResource::new(ssab_data) };
             if res.inner.resource().is_some() {
                 return self.bind_resource(&res);
