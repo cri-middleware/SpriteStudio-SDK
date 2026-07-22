@@ -22,31 +22,6 @@ SpriteStudio 7 のプロジェクトファイル (`.sspj`) を、ランタイム
 ssconverter = { path = "libs/ssconverter" }
 ```
 
-# 使い方 (Rust)
-
-```rust
-use std::path::Path;
-use ssconverter::{convert_sspj_to_ssab_files, ConverterConfig, ConvertConfig};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sspj_path = Path::new("path/to/project.sspj");
-    
-    let config = ConverterConfig {
-        convert_config: ConvertConfig {
-            optimize: true,   // 重複排除を有効化
-            embedded: false,  // テクスチャを埋め込まない
-            ..Default::default()
-        },
-        output: None, // デフォルトの出力先 (例: project/) を使用
-    };
-
-    // 変換を実行してファイルを保存 (ログ出力用コールバックを指定)
-    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
-    
-    Ok(())
-}
-```
-
 # FFI (C/C++)
 
 このライブラリは、コンバータの作成や進捗監視を行うための C API を公開しています。
@@ -75,7 +50,7 @@ void convert() {
     // 結果の確認
     CConverterError result = ss_converter_get_result(ctx);
     if (result != CConverterError::Success) {
-        char* err_msg;
+        const char* err_msg;
         size_t len;
         ss_converter_get_error(ctx, &err_msg, &len);
         printf("Error: %.*s\n", (int)len, err_msg);
@@ -87,8 +62,11 @@ void convert() {
 
 # ビルド機能 (Features)
 
-- **`ffi`** (default): C-API および静的/動的ライブラリの生成を有効にします。
-- **`web`**: WASM サポートを有効にします (実験的)。
+- **`ffi`** (default): C-API および静的/動的ライブラリの生成を有効にします。`native` を含みます。
+- **`native`**: ネイティブビルド（CLI / Tauri バックエンド）— 並列変換、ファイルシステム I/O、ディレクトリ走査。`parallel` と `scan` を含みます。
+- **`parallel`**: `rayon` による並列変換。`sspj` の並列パースにも波及します。
+- **`scan`**: バッチ変換用のディレクトリ走査（`walkdir`）。
+- **`web`**: ブラウザ向け WASM バインディング（`wasm32-unknown-unknown`）。`rayon` がスレッドを起動できないため逐次実行です。`--no-default-features --features web` でビルドします。
 
 # アーキテクチャ
 

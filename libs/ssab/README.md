@@ -60,16 +60,19 @@ ssab = { path = "libs/ssab", features = ["converter"] }
 
 ```rust
 use std::fs;
-use ssab::ssab::ss::format::get_root_as_ss_anime_binary;
+use ssab::ssab::ss::format::root_as_ss_anime_binary;
 
 fn main() {
-let bytes = fs::read("test.ssab").unwrap();
+    let bytes = fs::read("test.ssab").unwrap();
 
-    // Get the root object from the binary
-    let anime = get_root_as_ss_anime_binary(&bytes).unwrap();
+    // Get the root object from the binary. `root_as_*` verifies the buffer;
+    // the `_unchecked` variants skip verification.
+    let binary = root_as_ss_anime_binary(&bytes).unwrap();
 
-    println!("Anime Name: {}", anime.name().unwrap_or("unknown"));
-    println!("Total Frames: {}", anime.total_frame());
+    println!("Name: {}", binary.name());
+    for anime in binary.animations() {
+        println!("  {} ({} frames @ {} fps)", anime.name(), anime.total_frame(), anime.fps());
+    }
 }
 ```
 
@@ -80,19 +83,27 @@ You must enable the `converter` feature.
 ```rust
 #[cfg(feature = "converter")]
 fn create_ssab() {
-use flatbuffers::FlatBufferBuilder;
-use ssab::ssab::ss::format::{SsAnimeBinary, SsAnimeBinaryT};
+    use flatbuffers::FlatBufferBuilder;
+    use ssab::ssab::ss::format::{AnimationDataT, SsAnimeBinaryT, finish_ss_anime_binary_buffer};
 
-    // Build data using Object API (T-struct)
-    let mut anime_obj = SsAnimeBinaryT::default();
-    anime_obj.name = Some("MyAnimation".to_string());
-    anime_obj.fps = 60;
-    anime_obj.total_frame = 100;
+    // Build data using Object API (T-structs). They are `#[non_exhaustive]`,
+    // so start from `default()` and assign fields.
+    // Per-animation properties such as fps live on `AnimationDataT`.
+    let mut anime = AnimationDataT::default();
+    anime.name = "MyAnimation".to_string();
+    anime.fps = 60;
+    anime.total_frame = 100;
 
-    // Serialize with FlatBufferBuilder
+    // `SsAnimeBinaryT` is the root: it holds the parts and the animation list.
+    let mut binary = SsAnimeBinaryT::default();
+    binary.name = "MyProject".to_string();
+    binary.animations = vec![anime];
+
+    // Serialize with FlatBufferBuilder. The helper writes the "SSAB" file
+    // identifier, which `root_as_ss_anime_binary` checks for.
     let mut builder = FlatBufferBuilder::new();
-    let offset = anime_obj.pack(&mut builder);
-    builder.finish(offset, Some(SsAnimeBinary::IDENTIFIER));
+    let offset = binary.pack(&mut builder);
+    finish_ss_anime_binary_buffer(&mut builder, offset);
 
     let buf = builder.finished_data();
     // Write buf to a file, etc...

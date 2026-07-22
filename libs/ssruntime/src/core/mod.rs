@@ -1,3 +1,21 @@
+//! The evaluation core — everything that turns `.ssab` data plus a time into drawable state.
+//!
+//! | Module | Responsibility |
+//! |---|---|
+//! | [`playback_controller`] | Transport, loop counting, ping-pong, seek, FPS and playback range. |
+//! | [`interpolation`] | Keyframe curve evaluation (delegates the maths to `ssinterpolate`). |
+//! | [`matrix`] / [`geometry`] | Transform composition and vertex/mesh geometry. |
+//! | [`framedata`] | Builds the per-frame FlatBuffer and the DrawBatch plan a Player consumes. |
+//! | [`override_layer`] | Per-part runtime overrides of color, cell and visibility. |
+//! | [`effect`] | Particle effect simulation. |
+//! | [`z_order`] | Draw-order resolution. |
+//! | [`ssab_lookup`] | Name/hash lookups into the loaded binary. |
+//!
+//! The enums defined here — [`SsCoordinateSystem`], [`SsOrigin`], [`SsUnit`] and
+//! [`RenderMode`] — are the knobs that adapt output to a host engine's conventions.
+//! Getting them right is usually the first thing a new Player has to do: a Y-down
+//! engine fed Y-up output renders upside down.
+
 pub mod effect;
 pub mod framedata;
 pub mod interpolation;

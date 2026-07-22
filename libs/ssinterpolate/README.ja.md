@@ -33,4 +33,4 @@ let eased_value = linear(start, end, eased_rate);
 
 ## フィーチャーフラグ
 
-- `ffi`: (デフォルト) C/C++ 互換性のための `extern "C"` ラッパーを有効にします。
+- `ffi`: (デフォルトでは無効) C/C++ 互換性のための `extern "C"` ラッパーを有効にします。

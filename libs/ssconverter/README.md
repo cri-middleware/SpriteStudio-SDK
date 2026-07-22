@@ -22,31 +22,6 @@ Add the following to your `Cargo.toml`:
 ssconverter = { path = "libs/ssconverter" }
 ```
 
-# Usage (Rust)
-
-```rust
-use std::path::Path;
-use ssconverter::{convert_sspj_to_ssab_files, ConverterConfig, ConvertConfig};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sspj_path = Path::new("path/to/project.sspj");
-    
-    let config = ConverterConfig {
-        convert_config: ConvertConfig {
-            optimize: true,   // Enable deduplication
-            embedded: false,  // Do not embed textures
-            ..Default::default()
-        },
-        output: None, // Use default output directory (e.g. project/)
-    };
-
-    // Convert and save files (with a logging callback)
-    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
-    
-    Ok(())
-}
-```
-
 # FFI (C/C++)
 
 This library exposes a C API for creating converters and monitoring progress.
@@ -76,7 +51,7 @@ void convert() {
     // Check result
     CConverterError result = ss_converter_get_result(ctx);
     if (result != CConverterError::Success) {
-        char* err_msg;
+        const char* err_msg;
         size_t len;
         ss_converter_get_error(ctx, &err_msg, &len);
         printf("Error: %.*s\n", (int)len, err_msg);
@@ -89,8 +64,11 @@ void convert() {
 
 # Build Features
 
-- **`ffi`** (default): Enables C-API and static/dynamic library generation.
-- **`web`**: Enables WASM support (experimental).
+- **`ffi`** (default): Enables C-API and static/dynamic library generation. Implies `native`.
+- **`native`**: Native build (CLI / Tauri backend) — parallel conversion, filesystem I/O, and directory scanning. Implies `parallel` and `scan`.
+- **`parallel`**: Parallel conversion via `rayon`. Propagates to `sspj`'s parallel parsing.
+- **`scan`**: Directory traversal (`walkdir`) for batch conversion.
+- **`web`**: Browser WASM bindings (`wasm32-unknown-unknown`). Sequential, since `rayon` cannot spawn threads there. Build with `--no-default-features --features web`.
 
 # Architecture
 

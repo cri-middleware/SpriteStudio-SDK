@@ -77,7 +77,7 @@ graph LR
 ## 📦 ライブラリとツール
 
 - ライブラリ
-    - [libsspj](./libs/sspj/README.ja.md): `sspj`、`ssae`、`ssee`、`ssse`、`charmap`ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
+    - [libsspj](./libs/sspj/README.ja.md): `sspj`、`ssae`、`ssce`、`ssee`、`ssqe`、`ssse`、ビットマップフォントの文字マップ（`fnt` / `json`）ファイルで構成される`sspj`プロジェクトを解析するライブラリです。
     - [libssab](./libs/ssab/README.ja.md): アニメーションバイナリファイルである`ssab`ファイルを作成・解析するライブラリです。
     - [libssinterpolate](./libs/ssinterpolate/README.ja.md): アニメーション補間計算のためのプラットフォーム非依存な数学ライブラリです。
     - [libssconverter](./libs/ssconverter/README.ja.md): `sspj` プロジェクトを解析し、`ssab` ファイルを作成するライブラリです。

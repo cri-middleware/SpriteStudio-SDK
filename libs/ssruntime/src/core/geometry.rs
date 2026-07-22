@@ -307,7 +307,7 @@ pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4
 /// For each vertex `v`:
 /// 1. **Skeletal** — accumulate `Σ bone_world_matrices[bone_indices[i]] · (coords_x[i], coords_y[i]) · weights[i]`
 ///    over the CSR influence slice `influence_offsets[v]..influence_offsets[v + 1]`.
-///    Translation IS applied (MultiplyPoint3x4 — m[12], m[13] terms).
+///    Translation IS applied (MultiplyPoint3x4 — the `m[12]`, `m[13]` terms).
 /// 2. **Deform delta** (optional) — for each entry in `deform.0`, add
 ///    `part_world_mat · (delta_x, delta_y)` (rotation/scale only — MultiplyVector).
 ///

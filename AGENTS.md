@@ -43,12 +43,16 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | Format check | `cargo fmt --all -- --check` |
 | Format apply | `cargo fmt` |
 | Tests | `cargo test --workspace --all-features` |
+| Rustdoc (broken links) | `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features` |
+| Doctests only | `cargo test --doc --workspace` |
 | `no_std` standalone (mobile-style) | `cargo build -p ssruntime --features libc_alloc,panic-handler` |
 | `no_std` custom allocator (console/engine) | `cargo rustc -p ssruntime --features custom_alloc,panic-handler --crate-type staticlib` |
 | `std` opt-in (desktop DX) | `cargo build -p ssruntime --features std` |
 | `ssconverter` web (browser WASM) | `cargo build -p ssconverter --no-default-features --features web --target wasm32-unknown-unknown` |
 
 The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edits land as unstaged changes — review them via `git diff` before staging.
+
+Doctests need an allocator, so a lone `cargo test --doc -p ssruntime` fails on "no global memory allocator found"; run them workspace-wide (feature unification pulls in `std`) or add `--features ssruntime/std`. The full `cargo test --workspace --all-features` in CI covers them. Rustdoc's broken-link check is a *separate* CI step: `cargo test` never sees intra-doc links.
 
 ## `ssruntime` feature layout
 
