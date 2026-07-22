@@ -58,16 +58,19 @@ ssab = { path = "libs/ssab", features = ["converter"] }
 ## データの読み込み (Runtime)
 ```rust
 use std::fs;
-use ssab::ssab::ss::format::get_root_as_ss_anime_binary;
+use ssab::ssab::ss::format::root_as_ss_anime_binary;
 
 fn main() {
     let bytes = fs::read("test.ssab").unwrap();
 
-    // バイナリからルートオブジェクトを取得
-    let anime = get_root_as_ss_anime_binary(&bytes).unwrap();
-    
-    println!("Anime Name: {}", anime.name().unwrap_or("unknown"));
-    println!("Total Frames: {}", anime.total_frame());
+    // バイナリからルートオブジェクトを取得。`root_as_*` はバッファを検証します
+    // （検証を省く `_unchecked` 版もあります）。
+    let binary = root_as_ss_anime_binary(&bytes).unwrap();
+
+    println!("Name: {}", binary.name());
+    for anime in binary.animations() {
+        println!("  {} ({} frames @ {} fps)", anime.name(), anime.total_frame(), anime.fps());
+    }
 }
 ```
 
@@ -78,19 +81,27 @@ fn main() {
 ```rust
 #[cfg(feature = "converter")]
 fn create_ssab() {
-use flatbuffers::FlatBufferBuilder;
-use ssab::ssab::ss::format::{SsAnimeBinary, SsAnimeBinaryT};
+    use flatbuffers::FlatBufferBuilder;
+    use ssab::ssab::ss::format::{AnimationDataT, SsAnimeBinaryT, finish_ss_anime_binary_buffer};
 
-    // Object API (T構造体) を使用してデータを構築
-    let mut anime_obj = SsAnimeBinaryT::default();
-    anime_obj.name = Some("MyAnimation".to_string());
-    anime_obj.fps = 60;
-    anime_obj.total_frame = 100;
+    // Object API (T構造体) を使用してデータを構築。T構造体は `#[non_exhaustive]`
+    // なので、`default()` から始めてフィールドを代入します。
+    // fps などアニメーション単位の情報は `AnimationDataT` にあります。
+    let mut anime = AnimationDataT::default();
+    anime.name = "MyAnimation".to_string();
+    anime.fps = 60;
+    anime.total_frame = 100;
 
-    // FlatBufferBuilder でシリアライズ
+    // `SsAnimeBinaryT` がルートで、パーツとアニメーション一覧を保持します。
+    let mut binary = SsAnimeBinaryT::default();
+    binary.name = "MyProject".to_string();
+    binary.animations = vec![anime];
+
+    // FlatBufferBuilder でシリアライズ。ヘルパーが "SSAB" ファイル識別子を
+    // 書き込みます（`root_as_ss_anime_binary` はこれを検査します）。
     let mut builder = FlatBufferBuilder::new();
-    let offset = anime_obj.pack(&mut builder);
-    builder.finish(offset, Some(SsAnimeBinary::IDENTIFIER));
+    let offset = binary.pack(&mut builder);
+    finish_ss_anime_binary_buffer(&mut builder, offset);
 
     let buf = builder.finished_data();
     // buf をファイルに書き出すなど...

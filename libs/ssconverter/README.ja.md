@@ -75,7 +75,7 @@ void convert() {
     // 結果の確認
     CConverterError result = ss_converter_get_result(ctx);
     if (result != CConverterError::Success) {
-        char* err_msg;
+        const char* err_msg;
         size_t len;
         ss_converter_get_error(ctx, &err_msg, &len);
         printf("Error: %.*s\n", (int)len, err_msg);
@@ -87,8 +87,11 @@ void convert() {
 
 # ビルド機能 (Features)
 
-- **`ffi`** (default): C-API および静的/動的ライブラリの生成を有効にします。
-- **`web`**: WASM サポートを有効にします (実験的)。
+- **`ffi`** (default): C-API および静的/動的ライブラリの生成を有効にします。`native` を含みます。
+- **`native`**: ネイティブビルド（CLI / Tauri バックエンド）— 並列変換、ファイルシステム I/O、ディレクトリ走査。`parallel` と `scan` を含みます。
+- **`parallel`**: `rayon` による並列変換。`sspj` の並列パースにも波及します。
+- **`scan`**: バッチ変換用のディレクトリ走査（`walkdir`）。
+- **`web`**: ブラウザ向け WASM バインディング（`wasm32-unknown-unknown`）。`rayon` がスレッドを起動できないため逐次実行です。`--no-default-features --features web` でビルドします。
 
 # アーキテクチャ
 

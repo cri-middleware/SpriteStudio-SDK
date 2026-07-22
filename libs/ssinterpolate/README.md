@@ -33,4 +33,4 @@ let eased_value = linear(start, end, eased_rate);
 
 ## Features Flags
 
-- `ffi`: (Default) Enables `extern "C"` wrappers for C/C++ interoperability.
+- `ffi`: (Off by default) Enables `extern "C"` wrappers for C/C++ interoperability.

@@ -44,7 +44,8 @@ When integrating this library into a Player (game engine), please pay close atte
 
 2. **Resource Sharing and Lifetimes (FFI)**
    - To optimize memory usage, a single animation resource (`AnimationResource`) can be shared across multiple playback instances (`Context`).
-   - After binding a resource to a context using `ss_runtime_bind_resource`, **you must not destroy the resource before the context is destroyed or bound to another resource**. Doing so will result in a dangling pointer (use-after-free) and lead to crashes.
+   - Resources are reference-counted internally. It is safe to call `ss_resource_destroy` on a resource that is still bound to one or more contexts — the data stays alive until every bound context is destroyed or reset.
+   - **The buffer you pass to `ss_resource_create_borrow` is a different matter:** it is *not* copied, so **the caller must keep that memory valid and unmodified until the resource is destroyed**. Use `ss_resource_create_copy` instead if you cannot guarantee that.
 
 # Architecture
 
