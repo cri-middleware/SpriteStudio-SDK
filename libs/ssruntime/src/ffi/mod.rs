@@ -1,3 +1,40 @@
+//! The C ABI — how every non-Rust Player talks to the runtime.
+//!
+//! A flat set of `extern "C"` functions mirroring the Rust API, plus the opaque handles
+//! that carry state across the boundary. `cbindgen` turns this module into `ssruntime.h`
+//! at build time; that header, not this page, is what a C or C++ integrator reads.
+//!
+//! # Handles
+//!
+//! Two opaque pointers, both `*mut c_void` to C:
+//!
+//! - **Resource** (`ss_resource_create_copy` / `_borrow` → `ss_resource_destroy`) — parsed
+//!   `.ssab` data. Internally reference-counted, so it is safe to destroy a resource that
+//!   contexts are still bound to; the buffer stays alive until the last one lets go.
+//!   The `_borrow` variant does *not* copy, so the caller's buffer must outlive it.
+//! - **Context** ([`ss_runtime_create`] → [`ss_runtime_destroy`]) — the playback state of
+//!   one animation. Bind a resource with [`ss_runtime_bind_resource`]; several contexts
+//!   may share one.
+//!
+//! Effect and instance parts get their own handles ([`ss_effect_slot_create`],
+//! [`ss_instance_slot_create`]), stepped once per tick by the Player.
+//!
+//! # Calling convention
+//!
+//! Fallible calls return `bool` (or a null pointer, or [`SS_RUNTIME_INVALID_HANDLE`]) and
+//! record the reason on the context; read it back with `ss_runtime_get_last_error` and
+//! compare against [`crate::error::SSRuntimeError::as_code`]. Getters that return a float
+//! use `NaN` for "no such thing", which is distinguishable from a legitimate `0.0`.
+//!
+//! Buffers handed out through `out_data` / `out_len` pairs point into runtime-owned
+//! memory and stay valid only until the next call that rewrites them. Copy anything you
+//! need to keep.
+//!
+//! # Validation
+//!
+//! Loading does not validate the `.ssab` — see the crate docs. Every entry point that
+//! takes a data pointer trusts it.
+
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::doc_lazy_continuation)]
 

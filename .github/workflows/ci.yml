@@ -44,6 +44,13 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
         shell: bash
 
+      # Catches broken intra-doc links, which `cargo test --doc` does not see.
+      - name: Rustdoc (workspace)
+        run: cargo doc --workspace --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings
+        shell: bash
+
   ci:
     name: ${{ matrix.name }}
     needs: lint

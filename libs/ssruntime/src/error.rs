@@ -1,3 +1,12 @@
+//! The runtime's error type and its stable integer codes.
+//!
+//! [`SSRuntimeError::as_code`] maps each variant to a small integer that is part of the
+//! C ABI: across FFI a call reports failure by return value and the caller retrieves the
+//! code with `ss_runtime_get_last_error`. **These numbers are a compatibility surface** —
+//! existing variants keep their codes, and new ones take fresh numbers rather than
+//! reusing a retired one.
+
+/// Everything that can go wrong loading or playing back an animation.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SSRuntimeError {
     /// Failed to load data (e.g. empty data).
@@ -19,6 +28,7 @@ pub enum SSRuntimeError {
 }
 
 impl SSRuntimeError {
+    /// The stable integer code reported across the C ABI. See the module docs.
     pub fn as_code(&self) -> i32 {
         match self {
             SSRuntimeError::EmptyData => 1,
