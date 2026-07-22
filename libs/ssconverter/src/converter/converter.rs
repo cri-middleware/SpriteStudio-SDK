@@ -18,14 +18,21 @@ impl Default for ConvertConfig {
     }
 }
 
-pub fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
+// The in-memory conversion core. Crate-private because `AssetProvider` is: an
+// external caller could never name the parameter type. The entry points the crate
+// actually exposes are `convert_sspj_to_ssab_files*` (native) and the `web` bindings.
+//
+// The uncancellable wrapper only has a caller under `web`; native paths thread a
+// real `should_stop` through so the GUI can abort a long conversion.
+#[cfg(feature = "web")]
+pub(crate) fn convert_sspj_to_ssab_data<F>(asset_provider: &dyn crate::asset_provider::AssetProvider, config: &ConvertConfig, on_log: &F) -> Result<(sspj::sspj::SsProject, HashMap<String, Vec<u8>>), crate::converter::converter_error::ConverterError>
 where
     F: Fn(&str) + Sync + Send,
 {
     convert_sspj_to_ssab_data_cancellable(asset_provider, config, on_log, &AtomicBool::new(false))
 }
 
-pub fn convert_sspj_to_ssab_data_cancellable<F>(
+pub(crate) fn convert_sspj_to_ssab_data_cancellable<F>(
     asset_provider: &dyn crate::asset_provider::AssetProvider,
     config: &ConvertConfig,
     on_log: &F,
