@@ -22,31 +22,6 @@ Add the following to your `Cargo.toml`:
 ssconverter = { path = "libs/ssconverter" }
 ```
 
-# Usage (Rust)
-
-```rust
-use std::path::Path;
-use ssconverter::{convert_sspj_to_ssab_files, ConverterConfig, ConvertConfig};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sspj_path = Path::new("path/to/project.sspj");
-    
-    let config = ConverterConfig {
-        convert_config: ConvertConfig {
-            optimize: true,   // Enable deduplication
-            embedded: false,  // Do not embed textures
-            ..Default::default()
-        },
-        output: None, // Use default output directory (e.g. project/)
-    };
-
-    // Convert and save files (with a logging callback)
-    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
-    
-    Ok(())
-}
-```
-
 # FFI (C/C++)
 
 This library exposes a C API for creating converters and monitoring progress.

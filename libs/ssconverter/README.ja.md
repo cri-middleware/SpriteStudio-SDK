@@ -22,31 +22,6 @@ SpriteStudio 7 のプロジェクトファイル (`.sspj`) を、ランタイム
 ssconverter = { path = "libs/ssconverter" }
 ```
 
-# 使い方 (Rust)
-
-```rust
-use std::path::Path;
-use ssconverter::{convert_sspj_to_ssab_files, ConverterConfig, ConvertConfig};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let sspj_path = Path::new("path/to/project.sspj");
-    
-    let config = ConverterConfig {
-        convert_config: ConvertConfig {
-            optimize: true,   // 重複排除を有効化
-            embedded: false,  // テクスチャを埋め込まない
-            ..Default::default()
-        },
-        output: None, // デフォルトの出力先 (例: project/) を使用
-    };
-
-    // 変換を実行してファイルを保存 (ログ出力用コールバックを指定)
-    convert_sspj_to_ssab_files(sspj_path, &config, &|msg| println!("{}", msg))?;
-    
-    Ok(())
-}
-```
-
 # FFI (C/C++)
 
 このライブラリは、コンバータの作成や進捗監視を行うための C API を公開しています。
