@@ -16,7 +16,7 @@ ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 dlmalloc = { workspace = true, optional = true, features = ["global"] }
-libc = { version = "0.2.186", optional = true }
+libc = { version = "0.2.189", optional = true }
 ssconverter = { workspace = true, optional = true }
 wide = { workspace = true }
 

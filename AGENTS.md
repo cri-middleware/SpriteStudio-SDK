@@ -92,7 +92,7 @@ The web target is packaged by `scripts/release-web.sh` into `pkg/converter-web/`
 
 ## Workspace conventions
 
-*   Single Cargo workspace, Rust edition 2024, MSRV 1.96.
+*   Single Cargo workspace, Rust edition 2024, MSRV 1.97.1.
 *   Centralized versioning via `[workspace.package]` in the root `Cargo.toml`; member crates inherit.
 *   Inter-crate deps use `{ workspace = true }` or `{ path = "..." }`.
 *   `cbindgen` generates C/C++ headers for `ssconverter` and `ssruntime`.
