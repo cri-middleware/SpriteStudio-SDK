@@ -56,7 +56,7 @@ _注意: バッチモードでは `--out-dir` オプションは利用できま�
 
 ## ソースからビルド
 
-Rust ツールチェイン（[rustup](https://rustup.rs/)）が必要です。リポジトリのルートから:
+Rust ツールチェイン（[rustup](https://rustup.rs/)）の **1.97 以降** が必要です。リポジトリのルートから:
 
 ```bash
 $ cargo install --path cli

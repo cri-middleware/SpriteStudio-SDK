@@ -4,6 +4,16 @@ on:
   schedule:
     # Every Sunday at 00:00 UTC (9:00 AM JST)
     - cron: '0 0 * * 0'
+  # Windows / macOS / iOS / Android are not in the per-PR matrix, so a platform
+  # break would otherwise sit unnoticed until the next Sunday run. Release
+  # branches get the full matrix up front, when it is still cheap to fix.
+  pull_request:
+    branches:
+      - 'release-*'
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE*'
   workflow_dispatch:
 
 env:

@@ -100,7 +100,12 @@ jobs:
             # Build for general FFI and Web (Stable)
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
-            
+
+            # Browser converter (shipped as lib/converter-web by release-web.sh).
+            # rayon spans ssconverter AND sspj, so this is the only check that the
+            # sequential `parallel`-off fallback still compiles for wasm32.
+            cargo build --target wasm32-unknown-unknown --verbose -p ssconverter --no-default-features --features "web"
+
             # Build for Godot GDExtension (Nightly + PIC)
             export RUSTFLAGS="-C relocation-model=pic"
             cargo +nightly rustc -Z build-std=core,alloc \
@@ -110,6 +115,10 @@ jobs:
               --no-default-features \
               --features "wasm_alloc,panic-handler" \
               --crate-type staticlib,rlib
+
+            # Emscripten deliverable (release.yml ships its .a). Needs no emsdk —
+            # the nightly toolchain and wasm target installed above are enough.
+            ./scripts/release-emscripten.sh
           else
             cargo build --verbose
             cargo build --verbose -p ssruntime --features "libc_alloc,panic-handler"
