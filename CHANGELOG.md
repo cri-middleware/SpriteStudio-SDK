@@ -14,6 +14,9 @@ Entries follow [Conventional Commits](https://www.conventionalcommits.org/); new
 - **Custom Allocator Injection**: `custom_alloc` feature lets game engines / consoles supply their own allocator and abort handler via `ss_custom_alloc` / `ss_custom_free` / `ss_custom_abort` C symbols — no wrapper crate required.
 - **Documentation**: Overhauled bilingual (EN/JA) README and contribution guidelines.
 
+### Updates
+- **Minimum Supported Rust Version**: building from source requires Rust 1.97 or newer.
+
 ### Known Limitations
 - Text/Font Bitmap rendering pending validation.
 - macOS/iOS binaries are not yet code-signed.
