@@ -18,5 +18,4 @@ Entries follow [Conventional Commits](https://www.conventionalcommits.org/); new
 - **Minimum Supported Rust Version**: building from source requires Rust 1.97 or newer.
 
 ### Known Limitations
-- Text/Font Bitmap rendering pending validation.
 - macOS/iOS binaries are not yet code-signed.

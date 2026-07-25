@@ -124,7 +124,7 @@ FrameData (FFI を介したメモリバッファ)
 | `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player Guide](./docs/README.ja.md) を参照。 |
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |
 | `Mesh` | `PartMeshBinding` によるボーンスキニング済みインデックス付きメッシュ。 |
-| `Text` | ビットマップフォントのグリフ矩形。 |
+| `Text` | テキストパーツの描画順における位置。1 パーツ 1 バッチで、ジオメトリ（`vertex_count` / `index_count` は `0`）もテクスチャ（`texture_hash`）も持たない。字詰め・ラスタライズ・フォント解決は Player の担当（[制限事項](./docs/10_introduction/20_limitations.ja.md) を参照）。マスク指定されたテキストパーツはプランから除外される。 |
 | `Nines` | `PartTypeNines` から生成した 9 パッチのグリッド。頂点・UV・インデックスは Nines 専用 SoA バッファにパーツ単位で入る（[特殊なパーツタイプ](./docs/40_components/95_special_parts.ja.md) を参照）。 |
 | `Mask` | ステンシル書き込み専用バッチ。色出力は行わず、対象パーツは `mask_indices` にも列挙される。 |
 
