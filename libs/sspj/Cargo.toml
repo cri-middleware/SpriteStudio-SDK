@@ -13,8 +13,8 @@ description.workspace = true
 crate-type = ["rlib"]
 
 [dependencies]
-serde = {  version = "1.0.229", features = ["derive"] }
-quick-xml = {  version = "0.41.0", features = ["serialize"] }
+serde = { workspace = true }
+quick-xml = { workspace = true }
 rayon = { workspace = true, optional = true }
 
 [features]

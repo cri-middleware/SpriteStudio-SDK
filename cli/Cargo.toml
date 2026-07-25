@@ -10,7 +10,7 @@ homepage.workspace = true
 description.workspace = true
 
 [dependencies]
-clap = { version = "4.5.56", features = ["derive"] }
+clap = { workspace = true }
 rayon = { workspace = true }
 ssconverter = { workspace = true }
 
