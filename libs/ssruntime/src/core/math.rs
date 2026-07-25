@@ -1,5 +1,5 @@
 #[cfg(not(feature = "std"))]
-pub use libm::{atan2f, cosf, fabsf, floorf, fmodf, roundf, sincosf, sinf, sqrtf, tanf};
+pub use libm::{atan2f, ceilf, cosf, fabsf, floorf, fmodf, roundf, sincosf, sinf, sqrtf, tanf};
 
 #[cfg(feature = "std")]
 #[inline]
@@ -41,6 +41,12 @@ pub fn roundf(f: f32) -> f32 {
 #[inline]
 pub fn floorf(f: f32) -> f32 {
     f.floor()
+}
+
+#[cfg(feature = "std")]
+#[inline]
+pub fn ceilf(f: f32) -> f32 {
+    f.ceil()
 }
 
 #[cfg(feature = "std")]

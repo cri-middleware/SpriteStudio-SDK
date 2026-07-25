@@ -125,7 +125,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |
 | `Mesh` | Indexed mesh with bone-skinned vertices using `PartMeshBinding`. |
 | `Text` | Bitmap-font glyph quads. |
-| `Nines` | 9-patch / nine-slice quads. |
+| `Nines` | 9-patch grid built from `PartTypeNines` — vertices, UVs and indices come from the Nines SoA buffers, sliced per part (see [Special part types](./docs/40_components/95_special_parts.md)). |
 | `Mask` | Stencil-write batch — does not produce colour output; entries are also listed in `mask_indices`. |
 
 > **Walking the plan:** for each `batch` in `draw_batches`, iterate `draw_order[batch.start_rank .. batch.start_rank + batch.count]`, fetch each `PartState`, and emit geometry of `batch.kind`. Switch GPU state (texture, blend) once per batch rather than per part.

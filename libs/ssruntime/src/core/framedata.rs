@@ -267,6 +267,60 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     Some(MeshCellData { uvs, indices, rest_x, rest_y })
 }
 
+/// Per-part static Nine-Slice authoring, read once from `PartTypeNines`.
+/// Margins are `(left, top, right, bottom)` in source-cell pixels.
+#[derive(Clone, Copy)]
+pub struct NinesPartData {
+    pub margins: (f32, f32, f32, f32),
+    pub fill_mode: crate::core::geometry::NinesFillMode,
+}
+
+/// Builds a [`NinesPartData`] from the SSAB-side `PartTypeNines` table.
+/// Returns `None` for every other part type.
+pub fn build_nines_part_data(part_meta: &ssab::ssab::ss::format::PartData<'_>) -> Option<NinesPartData> {
+    let n = part_meta.part_type_as_part_type_nines()?;
+    Some(NinesPartData { margins: (n.nines_margin_l() as f32, n.nines_margin_t() as f32, n.nines_margin_r() as f32, n.nines_margin_b() as f32), fill_mode: crate::core::geometry::NinesFillMode::from_i32(n.nines_fill_mode()) })
+}
+
+/// Per-part Nine-Slice geometry for the current frame, concatenated across
+/// parts in CSR layout. Non-nines parts occupy an empty range.
+///
+/// `vertices` / `box_coords` / `uvs` are interleaved pairs sliced by
+/// `vertex_offsets`; `indices` is sliced by `index_offsets` and its values are
+/// local to each part's vertex range.
+#[derive(Default)]
+pub struct NinesBuffers {
+    pub vertices: alloc::vec::Vec<f32>,
+    pub uvs: alloc::vec::Vec<f32>,
+    pub box_coords: alloc::vec::Vec<f32>,
+    pub indices: alloc::vec::Vec<i32>,
+    pub vertex_offsets: alloc::vec::Vec<u32>,
+    pub index_offsets: alloc::vec::Vec<u32>,
+}
+
+impl NinesBuffers {
+    fn begin(&mut self, num_parts: usize) {
+        self.vertices.clear();
+        self.uvs.clear();
+        self.box_coords.clear();
+        self.indices.clear();
+        self.vertex_offsets.clear();
+        self.vertex_offsets.reserve(num_parts + 1);
+        self.index_offsets.clear();
+        self.index_offsets.reserve(num_parts + 1);
+    }
+
+    /// Vertex / index count of part `i`, `(0, 0)` for parts without geometry.
+    #[inline]
+    pub fn counts(&self, i: usize) -> (u32, u32) {
+        let span = |o: &[u32]| match (o.get(i), o.get(i + 1)) {
+            (Some(start), Some(end)) => end.saturating_sub(*start),
+            _ => 0,
+        };
+        (span(&self.vertex_offsets), span(&self.index_offsets))
+    }
+}
+
 #[derive(Clone)]
 pub struct CachedPartData<'a> {
     pub part_index: i16,
@@ -277,6 +331,7 @@ pub struct CachedPartData<'a> {
     pub name_hash: u32,
     pub resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
     pub shape_kind: Option<crate::core::geometry::ShapeType>,
+    pub nines: Option<NinesPartData>,
     pub mesh_binding: Option<MeshBindingCache>,
     pub mesh_cell: Option<MeshCellData>,
 
@@ -335,6 +390,7 @@ impl<'a> CachedPartData<'a> {
         name_hash: u32,
         resolved_cells: alloc::vec::Vec<ResolvedCellMeta>,
         shape_kind: Option<crate::core::geometry::ShapeType>,
+        nines: Option<NinesPartData>,
         mesh_binding: Option<MeshBindingCache>,
         mesh_cell: Option<MeshCellData>,
         blend_type: ssab::ssab::ss::format::BlendType,
@@ -348,6 +404,7 @@ impl<'a> CachedPartData<'a> {
             name_hash,
             resolved_cells,
             shape_kind,
+            nines,
             mesh_binding,
             mesh_cell,
             blend_type,
@@ -407,6 +464,7 @@ pub(crate) fn cached_part_stub(part_index: i16, parent_index: i16, part_type_dis
         name_hash: 0,
         resolved_cells: alloc::vec::Vec::new(),
         shape_kind: None,
+        nines: None,
         mesh_binding: None,
         mesh_cell: None,
         blend_type: ssab::ssab::ss::format::BlendType::Mix,
@@ -892,6 +950,102 @@ pub fn extract_pose<'a>(
     }
 }
 
+/// Builds this frame's Nine-Slice geometry for every nines part — the runtime
+/// side of `SsNines`, driven by the part's authored margins / fill mode and the
+/// pose's size and Cell.
+///
+/// Positions land in the same local-space box the quad path produces (pivot,
+/// image flip and Y-Up/Y-Down already applied), so a Player only multiplies
+/// them by the world matrix. UVs are cellmap texture-pixel coordinates, and
+/// `box_coords` carry each vertex's fraction inside the part box so per-corner
+/// PartColor interpolates the same way `shape_vertex_box_coords` drives it.
+///
+/// A part flip mirrors the box coordinates rather than the UVs: a nine-slice
+/// has asymmetric margins, so mirroring the sampling alone would squeeze the
+/// far margin into the near slice instead of mirroring the drawn box.
+pub fn compute_nines_geometry_for_parts(
+    parts_vec: &[runtime::framedata::ss::runtime::PartState],
+    cached_parts: &[CachedPartData<'_>],
+    cell_meta_per_part: &[f32],
+    raw_vertex_deform: &[RawVertexDeform],
+    coordinate_system: SsCoordinateSystem,
+    out: &mut NinesBuffers,
+) {
+    out.begin(parts_vec.len());
+
+    for (i, state) in parts_vec.iter().enumerate() {
+        out.vertex_offsets.push((out.box_coords.len() / 2) as u32);
+        out.index_offsets.push(out.indices.len() as u32);
+
+        let Some(nines) = cached_parts.get(i).and_then(|c| c.nines) else {
+            continue;
+        };
+        let (w, h) = (state.size_x(), state.size_y());
+        if state.cell() < 0 || w <= 0.0 || h <= 0.0 {
+            continue;
+        }
+
+        let off = i * 6;
+        let meta = |k: usize| cell_meta_per_part.get(off + k).copied().unwrap_or(0.0);
+        let (cell_w, cell_h) = (meta(2), meta(3));
+        let (rect_left, rect_top) = (meta(4), meta(5));
+        if cell_w <= 0.0 || cell_h <= 0.0 {
+            continue;
+        }
+
+        let start = out.box_coords.len() / 2;
+        let index_start = out.indices.len();
+        let (vertex_count, _) = crate::core::geometry::emit_nines_geometry((w, h), (rect_left, rect_top, rect_left + cell_w, rect_top + cell_h), nines.margins, nines.fill_mode, &mut out.box_coords, &mut out.uvs, &mut out.indices);
+
+        let mut pivot_y = state.pivot_y();
+        if coordinate_system == SsCoordinateSystem::YDown {
+            pivot_y = -pivot_y;
+        }
+        let (bx, by) = crate::core::geometry::compute_local_vertices((w, h), (meta(0), meta(1)), (state.pivot_x(), pivot_y), (state.img_flip_h(), state.img_flip_v()), None);
+        let (left, top, right, bottom) = (bx[0], by[0], bx[3], by[3]);
+
+        let mirror_u = state.flip_h() != state.img_flip_h();
+        let mirror_v = state.flip_v() != state.img_flip_v();
+        let deform = raw_vertex_deform.get(i).filter(|d| d.present);
+
+        for v in start..start + vertex_count as usize {
+            let (mut fx, mut fy) = (out.box_coords[v * 2], out.box_coords[v * 2 + 1]);
+            if mirror_u {
+                fx = 1.0 - fx;
+            }
+            if mirror_v {
+                fy = 1.0 - fy;
+            }
+            out.box_coords[v * 2] = fx;
+            out.box_coords[v * 2 + 1] = fy;
+
+            let mut x = left + fx * (right - left);
+            let mut y = top + fy * (bottom - top);
+            if let Some(d) = deform {
+                let (dx, dy) = crate::core::geometry::bilinear_box_deform(&d.dx, &d.dy, fx, fy);
+                x += dx;
+                y += dy;
+            }
+            if coordinate_system == SsCoordinateSystem::YDown {
+                y = -y;
+            }
+            out.vertices.push(x);
+            out.vertices.push(y);
+        }
+
+        // Mirroring one axis reverses each triangle's orientation; restore it
+        // so Players that cull back faces still see the grid.
+        if mirror_u != mirror_v {
+            for tri in out.indices[index_start..].chunks_exact_mut(3) {
+                tri.swap(1, 2);
+            }
+        }
+    }
+
+    out.vertex_offsets.push((out.box_coords.len() / 2) as u32);
+    out.index_offsets.push(out.indices.len() as u32);
+}
+
 pub fn compute_local_vertices_for_parts(
     parts_vec: &mut [runtime::framedata::ss::runtime::PartState],
     cell_meta_per_part: &[f32],
@@ -993,6 +1147,11 @@ fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(ru
         // within a single DrawBatch, so they are fully batchable.
         return Some((K::Mesh, true));
     }
+    if disc == P::PartTypeNines {
+        // Same story as Mesh: the per-part grids are concatenated in the Nines
+        // SoA buffers, so consecutive nines parts merge into one batch.
+        return Some((K::Nines, true));
+    }
     if disc == P::PartTypeInstance {
         return Some((K::Instance, false));
     }
@@ -1040,6 +1199,7 @@ fn build_draw_order_and_batches<'a>(
     cached_parts: &[CachedPartData<'_>],
     parts_vec: &[runtime::framedata::ss::runtime::PartState],
     cell_texture_hashes: &[u32],
+    nines: &NinesBuffers,
     draw_order_workspace: &mut Vec<u16>,
     batches_workspace: &mut Vec<runtime::framedata::ss::runtime::DrawBatch>,
     mask_indices_workspace: &mut Vec<u16>,
@@ -1077,12 +1237,14 @@ fn build_draw_order_and_batches<'a>(
         let is_pure_mask = kind == DrawBatchKind::Mask;
         let needs_mask_twin = cached.is_mask_contributor && !is_pure_mask;
         let texture_hash = cell_texture_hashes.get(part_idx).copied().unwrap_or(0);
-        let normal_no_cell = kind == DrawBatchKind::Normal && texture_hash == 0;
+        // Both kinds draw the part's Cell, so without one there is nothing to
+        // batch — a nines part also has an empty geometry range in that case.
+        let cell_backed_no_cell = matches!(kind, DrawBatchKind::Normal | DrawBatchKind::Nines) && texture_hash == 0;
         // Masks honour Hide too: a hidden mask must NOT contribute coverage
         // (SS mask opt-out is mask-value==0 OR Hide==true) — otherwise a hidden
         // mask would wrongly clip its targets once the player rasterises mask
         // coverage.
-        let drawn_as_self = !part_state.hide() && !normal_no_cell;
+        let drawn_as_self = !part_state.hide() && !cell_backed_no_cell;
 
         if !needs_mask_twin && !drawn_as_self {
             continue;
@@ -1106,6 +1268,9 @@ fn build_draw_order_and_batches<'a>(
             let f = part_state.update_flag();
             let needs_center = f.contains(UpdateAttributeFlags::AttributeVertex) || f.contains(UpdateAttributeFlags::AttributePartColor);
             if needs_center { (5, 12) } else { (4, 6) }
+        } else if kind == DrawBatchKind::Nines {
+            // Known exactly: the grid was built before the draw plan.
+            nines.counts(part_idx)
         } else {
             (0, 0)
         };
@@ -1150,6 +1315,7 @@ pub fn compose_frame_data<'a>(
     cell_meta_per_part: &[f32],
     cell_texture_hashes: &[u32],
     local_vertices: &mut [f32],
+    nines: &mut NinesBuffers,
     coordinate_system: SsCoordinateSystem,
     render_mode: crate::core::RenderMode,
     draw_order_workspace: &mut Vec<u16>,
@@ -1157,6 +1323,8 @@ pub fn compose_frame_data<'a>(
     mask_indices_workspace: &mut Vec<u16>,
 ) -> flatbuffers::WIPOffset<runtime::framedata::ss::runtime::FrameData<'a>> {
     compute_local_vertices_for_parts(parts_vec, cell_meta_per_part, raw_vertex_deform, vertex_vec, local_vertices, coordinate_system);
+    // Before the draw plan: its Nines batches carry the exact vertex / index counts.
+    compute_nines_geometry_for_parts(parts_vec, cached_parts, cell_meta_per_part, raw_vertex_deform, coordinate_system, nines);
 
     let (cells_off, parts_color_off, shaders_off, vertices_off, deforms_off) = if render_mode == crate::core::RenderMode::Direct {
         let pc = (!parts_color_vec.is_empty()).then(|| fb.create_vector(parts_color_vec));
@@ -1173,7 +1341,7 @@ pub fn compose_frame_data<'a>(
     // FrameData::create より前に args.draw_order / args.draw_batches を設定する必要があるため
     // ここで実行する (lib.rs から z_order.update を移譲)。
     z_order.update(parts_vec);
-    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(fb, z_order.indices(), cached_parts, parts_vec, cell_texture_hashes, draw_order_workspace, batches_workspace, mask_indices_workspace);
+    let (draw_order_off, draw_batches_off, mask_indices_off) = build_draw_order_and_batches(fb, z_order.indices(), cached_parts, parts_vec, cell_texture_hashes, nines, draw_order_workspace, batches_workspace, mask_indices_workspace);
     args.draw_order = Some(draw_order_off);
     args.draw_batches = Some(draw_batches_off);
     args.mask_indices = Some(mask_indices_off);
@@ -1444,5 +1612,134 @@ mod tests {
             compute_local_vertices_for_parts(&mut parts_vec, &cell_meta_per_part, &raw_vertex_deform, &mut vertex_vec, &mut local_vertices, crate::core::SsCoordinateSystem::YUp);
             assert_eq!((vertex_vec[0].center().x(), vertex_vec[0].center().y()), (-1.0, -4.0));
         }
+    }
+
+    /// One nines part with 10 px margins over a 64 px cell.
+    fn make_nines_part(fill_mode: crate::core::geometry::NinesFillMode) -> Vec<CachedPartData<'static>> {
+        let mut part = cached_part_stub(0, -1, ssab::ssab::ss::format::PartType::PartTypeNines, false);
+        part.nines = Some(NinesPartData { margins: (10.0, 10.0, 10.0, 10.0), fill_mode });
+        vec![part]
+    }
+
+    /// `[pivot_x, pivot_y, size_w, size_h, rect_left, rect_top]` for a 64x64
+    /// cell at the texture's origin.
+    fn nines_cell_meta() -> Vec<f32> {
+        vec![0.0, 0.0, 64.0, 64.0, 0.0, 0.0]
+    }
+
+    fn run_nines(parts_vec: &[runtime::framedata::ss::runtime::PartState], cached: &[CachedPartData<'_>], deform: &[RawVertexDeform], coordinate_system: crate::core::SsCoordinateSystem) -> NinesBuffers {
+        let mut out = NinesBuffers::default();
+        compute_nines_geometry_for_parts(parts_vec, cached, &nines_cell_meta(), deform, coordinate_system, &mut out);
+        out
+    }
+
+    #[test]
+    fn nines_stretch_fills_the_part_box() {
+        let parts_vec = vec![make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+        let out = run_nines(&parts_vec, &make_nines_part(crate::core::geometry::NinesFillMode::Stretch), &[RawVertexDeform::default()], crate::core::SsCoordinateSystem::YUp);
+
+        assert_eq!(out.vertex_offsets, vec![0, 16]);
+        assert_eq!(out.index_offsets, vec![0, 54]);
+        assert_eq!(out.counts(0), (16, 54));
+
+        // The grid's corners are the part's box corners, Y-Up and pivot-centred.
+        assert_eq!((out.vertices[0], out.vertices[1]), (-50.0, 50.0));
+        assert_eq!((out.vertices[30], out.vertices[31]), (50.0, -50.0));
+        // Box coordinates run 0 -> 1 across it, UVs stay in cell pixels.
+        assert_eq!((out.box_coords[0], out.box_coords[1]), (0.0, 0.0));
+        assert_eq!((out.box_coords[30], out.box_coords[31]), (1.0, 1.0));
+        assert_eq!((out.uvs[0], out.uvs[1]), (0.0, 0.0));
+        assert_eq!((out.uvs[30], out.uvs[31]), (64.0, 64.0));
+        // The slice line sits one margin in, in both spaces.
+        assert_eq!((out.vertices[10], out.vertices[11]), (-40.0, 40.0));
+        assert_eq!((out.uvs[10], out.uvs[11]), (10.0, 10.0));
+    }
+
+    #[test]
+    fn nines_tile_repeats_the_middle_slice() {
+        // A 44 px middle slice covers the part's 80 px middle in 2 repeats.
+        let parts_vec = vec![make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+        let out = run_nines(&parts_vec, &make_nines_part(crate::core::geometry::NinesFillMode::Tile), &[RawVertexDeform::default()], crate::core::SsCoordinateSystem::YUp);
+
+        let quads = 4 + 2 * 2 + 2 * 2 + 2 * 2;
+        assert_eq!(out.counts(0), (quads * 4, quads * 6));
+        // Independent quads, so the vertex and index buffers stay in lockstep.
+        assert_eq!(out.vertices.len(), out.box_coords.len());
+        assert_eq!(out.uvs.len(), out.box_coords.len());
+    }
+
+    #[test]
+    fn nines_flip_mirrors_the_box_and_keeps_winding() {
+        let mut state = make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell);
+        state.set_flip_h(true);
+        let out = run_nines(&[state], &make_nines_part(crate::core::geometry::NinesFillMode::Stretch), &[RawVertexDeform::default()], crate::core::SsCoordinateSystem::YUp);
+
+        // The first grid vertex still samples the cell's top-left, but it is now
+        // drawn at the box's right edge — mirroring the box, not the sampling,
+        // is what keeps asymmetric margins mirrored instead of squeezed.
+        assert_eq!((out.uvs[0], out.uvs[1]), (0.0, 0.0));
+        assert_eq!((out.box_coords[0], out.box_coords[1]), (1.0, 0.0));
+        assert_eq!((out.vertices[0], out.vertices[1]), (50.0, 50.0));
+
+        // Mirroring a single axis would reverse each triangle, so the emitter
+        // swaps the last two indices back.
+        assert_eq!(&out.indices[0..6], &[0, 4, 1, 4, 5, 1]);
+
+        // Mirroring both axes cancels out and leaves the original winding.
+        let mut state = make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell);
+        state.set_flip_h(true);
+        state.set_flip_v(true);
+        let out = run_nines(&[state], &make_nines_part(crate::core::geometry::NinesFillMode::Stretch), &[RawVertexDeform::default()], crate::core::SsCoordinateSystem::YUp);
+        assert_eq!((out.box_coords[0], out.box_coords[1]), (1.0, 1.0));
+        assert_eq!(&out.indices[0..6], &[0, 1, 4, 4, 1, 5]);
+    }
+
+    #[test]
+    fn nines_spreads_vertex_deform_across_the_grid() {
+        let parts_vec = vec![make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell | UpdateAttributeFlags::AttributeVertex)];
+        // Move the LT corner 10 px right; the offset fades out across the grid.
+        let deform = vec![RawVertexDeform { present: true, dx: [10.0, 0.0, 0.0, 0.0], dy: [0.0; 4] }];
+        let out = run_nines(&parts_vec, &make_nines_part(crate::core::geometry::NinesFillMode::Stretch), &deform, crate::core::SsCoordinateSystem::YUp);
+
+        assert_eq!(out.vertices[0], -40.0); // LT takes the whole offset
+        assert_eq!(out.vertices[30], 50.0); // RB takes none of it
+        // Interior vertex (0.1, 0.1): 10 * 0.9 * 0.9.
+        assert!((out.vertices[10] - (-40.0 + 8.1)).abs() < 1e-4, "got {}", out.vertices[10]);
+    }
+
+    #[test]
+    fn nines_honours_y_down() {
+        let parts_vec = vec![make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+        let out = run_nines(&parts_vec, &make_nines_part(crate::core::geometry::NinesFillMode::Stretch), &[RawVertexDeform::default()], crate::core::SsCoordinateSystem::YDown);
+
+        // Same box coordinate, mirrored Y — the grid's first vertex is the box's
+        // top-left in both systems.
+        assert_eq!((out.box_coords[0], out.box_coords[1]), (0.0, 0.0));
+        assert_eq!((out.vertices[0], out.vertices[1]), (-50.0, -50.0));
+        assert_eq!((out.vertices[30], out.vertices[31]), (50.0, 50.0));
+    }
+
+    #[test]
+    fn nines_geometry_is_empty_without_drawable_input() {
+        let stretch = crate::core::geometry::NinesFillMode::Stretch;
+        let deform = [RawVertexDeform::default()];
+
+        // Not a nines part.
+        let normal = vec![cached_part_stub(0, -1, ssab::ssab::ss::format::PartType::PartTypeNormal, false)];
+        let parts_vec = vec![make_stage_b_state(0, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+        let out = run_nines(&parts_vec, &normal, &deform, crate::core::SsCoordinateSystem::YUp);
+        assert_eq!(out.counts(0), (0, 0));
+        assert_eq!(out.vertex_offsets, vec![0, 0]);
+
+        // Nines part with no Cell resolved this frame.
+        let parts_vec = vec![make_stage_b_state(-1, (100.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::empty())];
+        let out = run_nines(&parts_vec, &make_nines_part(stretch), &deform, crate::core::SsCoordinateSystem::YUp);
+        assert_eq!(out.counts(0), (0, 0));
+
+        // Nines part collapsed to zero size.
+        let parts_vec = vec![make_stage_b_state(0, (0.0, 100.0), (0.0, 0.0), UpdateAttributeFlags::AttributeCell)];
+        let out = run_nines(&parts_vec, &make_nines_part(stretch), &deform, crate::core::SsCoordinateSystem::YUp);
+        assert_eq!(out.counts(0), (0, 0));
+        assert!(out.vertices.is_empty() && out.indices.is_empty());
     }
 }

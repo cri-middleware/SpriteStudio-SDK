@@ -740,6 +740,166 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void,
     }
 }
 
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Nine-Slice per-vertex positions for the current frame, interleaved
+/// `[x, y, ...]` and concatenated across all parts, written by
+/// `ss_runtime_get_frame_data`. Slice per part with
+/// `ss_runtime_get_nines_vertex_offsets`; parts drawn by another
+/// `DrawBatchKind` occupy an empty range.
+///
+/// Coordinates are part-local with pivot, image flip and the
+/// `coordinate_system` (Y-Up/Y-Down) flip already applied — exactly like
+/// `ss_runtime_get_local_vertices` — so a Player just multiplies them by the
+/// part's world matrix. The grid is a 4x4 sheet for `nines_fill_mode == 0`
+/// (stretch) and independent quads per repeat for `== 1` (tile).
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_nines_vertices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_nines_vertices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Nine-Slice per-vertex UVs in cellmap texture-pixel space, interleaved
+/// `[u, v, ...]`. Shares the vertex CSR of
+/// `ss_runtime_get_nines_vertex_offsets`. Divide by the texture size to
+/// normalize, the same as `ss_runtime_get_local_uvs`.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_nines_uvs_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_nines_uvs_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Nine-Slice per-vertex box coordinates, interleaved `[fx, fy, ...]` with
+/// `0` at the part's left / top edge and `1` at its right / bottom edge.
+/// Shares the vertex CSR of `ss_runtime_get_nines_vertex_offsets`.
+///
+/// Use them to bilinearly interpolate the four `part_color` corners across the
+/// grid — the same weighting `ss_runtime_get_shape_vertex_box_coords` provides
+/// for Shape parts. A part flip is already folded in, so `fx` / `fy` always
+/// describe the drawn box.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_nines_box_coords_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_nines_box_coords_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// Nine-Slice triangle indices, concatenated across all parts and sliced by
+/// `ss_runtime_get_nines_index_offsets`. Values are **part-local**
+/// (`0..vertex_count`), so a Player passes them alongside the part's vertex
+/// slice without rebasing. Each quad is wound `LT, RT, LB / LB, RT, RB`.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_nines_indices_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_nines_indices_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// CSR-style prefix sum (length = `num_parts + 1`) over the vertex buffers
+/// `ss_runtime_get_nines_vertices` / `_uvs` / `_box_coords`. Part `p` occupies
+/// vertices `[offsets[p], offsets[p + 1])` — multiply by 2 to index the
+/// interleaved floats. Non-nines parts have an empty range.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_nines_vertex_offsets_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_nines_vertex_offsets_len();
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+/// CSR-style prefix sum (length = `num_parts + 1`) for the triangle indices in
+/// `ss_runtime_get_nines_indices`. Part `p` occupies
+/// `[offsets[p], offsets[p + 1])`; non-nines parts have an empty range.
+///
+/// # Safety
+///
+/// This function is unsafe because it dereferences raw pointers for output.
+/// The caller must ensure `out_data` and `out_len` are valid if they are not null.
+pub unsafe extern "C" fn ss_runtime_get_nines_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.last_error = 0;
+        unsafe {
+            if !out_data.is_null() {
+                *out_data = ffi_context.ctx.get_nines_index_offsets_ptr();
+            }
+            if !out_len.is_null() {
+                *out_len = ffi_context.ctx.get_nines_index_offsets_len();
+            }
+        }
+    }
+}
+
 // Frame Number getter functions
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_get_frame_no(context: *mut c_void) -> c_float {
