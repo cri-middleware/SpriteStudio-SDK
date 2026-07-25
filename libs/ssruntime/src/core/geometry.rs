@@ -21,18 +21,20 @@ pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset:
     let mut vx = f32x4::from([sx, ex, sx, ex]);
     let mut vy = f32x4::from([sy, sy, ey, ey]);
 
-    // 3. Add Deform offsets
-    if let Some((dx_arr, dy_arr)) = deform {
+    // 3. Add Deform offsets, then 4. the 5th center vertex — the mean of the
+    //    four corners (Varignon's theorem). Undeformed, the quad is still the
+    //    axis-aligned box, so its centre is analytic and the two horizontal
+    //    reductions are skipped entirely on the common (no-deform) path.
+    let (cx, cy) = if let Some((dx_arr, dy_arr)) = deform {
         vx += f32x4::from(*dx_arr);
         vy += f32x4::from(*dy_arr);
-    }
+        (vx.reduce_add() * 0.25, vy.reduce_add() * 0.25)
+    } else {
+        ((sx + ex) * 0.5, (sy + ey) * 0.5)
+    };
 
     let vx_arr: [f32; 4] = vx.to_array();
     let vy_arr: [f32; 4] = vy.to_array();
-
-    // 4. Compute 5th center vertex (Mathematical Optimization: Varignon's theorem)
-    let cx = vx.reduce_add() * 0.25;
-    let cy = vy.reduce_add() * 0.25;
 
     ([vx_arr[0], vx_arr[1], vx_arr[2], vx_arr[3], cx], [vy_arr[0], vy_arr[1], vy_arr[2], vy_arr[3], cy])
 }
@@ -175,12 +177,26 @@ pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32
     let uv_u = [l, l + sml / sw * (r - l), r - smr / sw * (r - l), r];
     let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
 
-    NineSliceGrid {
-        vertices_x: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::from(vx); 4]) },
-        vertices_y: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::splat(vy[0]), f32x4::splat(vy[1]), f32x4::splat(vy[2]), f32x4::splat(vy[3])]) },
-        uvs_u: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::from(uv_u); 4]) },
-        uvs_v: unsafe { core::mem::transmute::<[f32x4; 4], [f32; 16]>([f32x4::splat(uv_v[0]), f32x4::splat(uv_v[1]), f32x4::splat(uv_v[2]), f32x4::splat(uv_v[3])]) },
-    }
+    // Row-major 4x4 expansion: the column axis repeats the 4 per-column values
+    // once per row, the row axis broadcasts each per-row value across its row.
+    // Written with safe copies rather than `transmute::<[f32x4; 4], [f32; 16]>`,
+    // which relied on `wide`'s internal layout; these compile to the same stores.
+    let by_column = |v: [f32; 4]| {
+        let mut out = [0.0f32; 16];
+        for row in 0..4 {
+            out[row * 4..row * 4 + 4].copy_from_slice(&v);
+        }
+        out
+    };
+    let by_row = |v: [f32; 4]| {
+        let mut out = [0.0f32; 16];
+        for (row, &value) in v.iter().enumerate() {
+            out[row * 4..row * 4 + 4].copy_from_slice(&[value; 4]);
+        }
+        out
+    };
+
+    NineSliceGrid { vertices_x: by_column(vx), vertices_y: by_row(vy), uvs_u: by_column(uv_u), uvs_v: by_row(uv_v) }
 }
 
 /// Primitive shape types supported by Shape Parts.
@@ -315,9 +331,15 @@ pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4
 /// no further `TableIDPartsBone` lookup is performed at runtime.
 ///
 /// Layout: CSR for `influence_offsets`, SoA for `weights`/`coords_x`/`coords_y`.
-/// The common case (≤4 influences per vertex) is computed with `f32x4`: lanes are
-/// gathered into stack-local arrays, multiplied as SIMD, then reduced. The rare
-/// >4-influence path falls back to a scalar accumulator.
+/// Vectorized **across vertices**, four at a time, mirroring
+/// [`compute_rigid_mesh_vertices`]: each `f32x4` lane owns one vertex and the
+/// influence slots are walked lane-wise, so the accumulators never leave the
+/// lanes and no horizontal reduction is performed. Lanes whose vertex has run
+/// out of influences contribute weight `0.0`, which makes ragged influence
+/// counts fall out of the same loop — there is no separate >4-influence path.
+/// Vectorizing the influence axis instead would cost two `reduce_add`s per
+/// vertex, which dominates for the 1–2 influence counts SS data actually
+/// contains.
 ///
 /// `flip_y` negates the bind `coords_y`. SSAB-side bind coordinates are authored
 /// Y-up; set `flip_y` when the bone world matrices are Y-down so the bind-pose
@@ -350,13 +372,24 @@ pub fn compute_skinned_mesh_vertices(
     let y_sign_v = f32x4::from([y_sign; 4]);
 
     // 1. Skeletal: per-vertex weighted bone transform sum (MultiplyPoint3x4 — translation included).
-    for v in 0..num_vertices {
-        let start = influence_offsets[v] as usize;
-        let end = influence_offsets[v + 1] as usize;
-        let count = end - start;
+    //
+    // SIMD body: 4 vertices per iteration, one per lane. `max_slots` is the
+    // widest influence count in the group; lanes that run out early gather
+    // weight 0.0 and so contribute nothing. Real SS meshes are near-uniform
+    // (almost always all-1 or all-2), so the group rarely does excess work.
+    let chunks = num_vertices / 4;
+    for c in 0..chunks {
+        let b = c * 4;
+        // `influence_offsets` is CSR, so vertex b+3's end is index b+4 — in
+        // range because the caller guarantees len > num_vertices.
+        let starts = [influence_offsets[b] as usize, influence_offsets[b + 1] as usize, influence_offsets[b + 2] as usize, influence_offsets[b + 3] as usize];
+        let slots = [influence_offsets[b + 1] as usize - starts[0], influence_offsets[b + 2] as usize - starts[1], influence_offsets[b + 3] as usize - starts[2], influence_offsets[b + 4] as usize - starts[3]];
+        let max_slots = slots[0].max(slots[1]).max(slots[2]).max(slots[3]);
 
-        if count <= 4 {
-            // Fast path: gather up to 4 influences into f32x4 lanes (zero-padded).
+        let mut acc_x = f32x4::splat(0.0);
+        let mut acc_y = f32x4::splat(0.0);
+
+        for k in 0..max_slots {
             let mut w_lanes = [0.0f32; 4];
             let mut cx_lanes = [0.0f32; 4];
             let mut cy_lanes = [0.0f32; 4];
@@ -367,18 +400,20 @@ pub fn compute_skinned_mesh_vertices(
             let mut m5_lanes = [0.0f32; 4];
             let mut m13_lanes = [0.0f32; 4];
 
-            for k in 0..count {
-                let i = start + k;
-                w_lanes[k] = weights[i];
-                cx_lanes[k] = coords_x[i];
-                cy_lanes[k] = coords_y[i];
-                let mat = &bone_world_matrices[bone_indices[i] as usize];
-                m0_lanes[k] = mat.m[0];
-                m4_lanes[k] = mat.m[4];
-                m12_lanes[k] = mat.m[12];
-                m1_lanes[k] = mat.m[1];
-                m5_lanes[k] = mat.m[5];
-                m13_lanes[k] = mat.m[13];
+            for lane in 0..4 {
+                if k < slots[lane] {
+                    let i = starts[lane] + k;
+                    w_lanes[lane] = weights[i];
+                    cx_lanes[lane] = coords_x[i];
+                    cy_lanes[lane] = coords_y[i];
+                    let mat = &bone_world_matrices[bone_indices[i] as usize];
+                    m0_lanes[lane] = mat.m[0];
+                    m4_lanes[lane] = mat.m[4];
+                    m12_lanes[lane] = mat.m[12];
+                    m1_lanes[lane] = mat.m[1];
+                    m5_lanes[lane] = mat.m[5];
+                    m13_lanes[lane] = mat.m[13];
+                }
             }
 
             let w = f32x4::from(w_lanes);
@@ -388,25 +423,30 @@ pub fn compute_skinned_mesh_vertices(
             let px = f32x4::from(m0_lanes) * cx + f32x4::from(m4_lanes) * cy + f32x4::from(m12_lanes);
             let py = f32x4::from(m1_lanes) * cx + f32x4::from(m5_lanes) * cy + f32x4::from(m13_lanes);
 
-            out_x[v] = (px * w).reduce_add();
-            out_y[v] = (py * w).reduce_add();
-        } else {
-            // Slow path: >4 influences (rare in SS data). Scalar accumulator.
-            let mut acc_x = 0.0f32;
-            let mut acc_y = 0.0f32;
-            for i in start..end {
-                let w = weights[i];
-                let cx = coords_x[i];
-                let cy = coords_y[i] * y_sign;
-                let mat = &bone_world_matrices[bone_indices[i] as usize];
-                let px = mat.m[0] * cx + mat.m[4] * cy + mat.m[12];
-                let py = mat.m[1] * cx + mat.m[5] * cy + mat.m[13];
-                acc_x += px * w;
-                acc_y += py * w;
-            }
-            out_x[v] = acc_x;
-            out_y[v] = acc_y;
+            acc_x = px.mul_add(w, acc_x);
+            acc_y = py.mul_add(w, acc_y);
         }
+
+        out_x[b..b + 4].copy_from_slice(&acc_x.to_array());
+        out_y[b..b + 4].copy_from_slice(&acc_y.to_array());
+    }
+
+    // Scalar tail: the final < 4 vertices.
+    for v in (chunks * 4)..num_vertices {
+        let start = influence_offsets[v] as usize;
+        let end = influence_offsets[v + 1] as usize;
+        let mut acc_x = 0.0f32;
+        let mut acc_y = 0.0f32;
+        for i in start..end {
+            let w = weights[i];
+            let cx = coords_x[i];
+            let cy = coords_y[i] * y_sign;
+            let mat = &bone_world_matrices[bone_indices[i] as usize];
+            acc_x += (mat.m[0] * cx + mat.m[4] * cy + mat.m[12]) * w;
+            acc_y += (mat.m[1] * cx + mat.m[5] * cy + mat.m[13]) * w;
+        }
+        out_x[v] = acc_x;
+        out_y[v] = acc_y;
     }
 
     // 2. Deform delta: MultiplyVector — rotation/scale only, NO translation.
@@ -940,8 +980,9 @@ mod tests {
     }
 
     #[test]
-    fn test_skinned_mesh_five_influences_scalar_fallback() {
-        // Exercises the >4-influence scalar path. Five identity bones, equal weights,
+    fn test_skinned_mesh_five_influences_scalar_tail() {
+        // A lone vertex never fills a 4-wide group, so this exercises the scalar
+        // tail with more than 4 influences. Five identity bones, equal weights,
         // bind coord (10, 20) seen by every influence → output equals (10, 20).
         let offsets = [0u32, 5];
         let bone_indices = [0u16; 5];
@@ -957,5 +998,67 @@ mod tests {
 
         assert_arr_approx_eq(&out_x, &[10.0], 1);
         assert_arr_approx_eq(&out_y, &[20.0], 1);
+    }
+
+    #[test]
+    fn test_skinned_mesh_ragged_influence_counts_in_simd_group() {
+        // 4 vertices = exactly one SIMD group, with influence counts 1/2/5/3.
+        // `max_slots` is 5, so every lane but the third zero-pads for at least
+        // two slots — the group must still produce each vertex's own weighted sum.
+        //
+        // Bone 0 is identity; bone 1 translates by (+100, +200). Every vertex
+        // binds at (10, 20) and its weights sum to 1, so a vertex is at (10, 20)
+        // when all its influences are bone 0, and shifted by the bone-1 weight
+        // fraction otherwise.
+        let offsets = [0u32, 1, 3, 8, 11];
+        let bone_indices = [
+            0u16, // v0: 1 influence, bone 0
+            0, 0, // v1: 2 influences, both bone 0
+            0, 0, 0, 0, 1, // v2: 5 influences, last one bone 1 (weight 0.2)
+            0, 0, 0, // v3: 3 influences, all bone 0
+        ];
+        let weights = [1.0f32, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2, 0.2, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0];
+        let coords_x = [10.0f32; 11];
+        let coords_y = [20.0f32; 11];
+
+        let mut bone1 = SsMatrix4x4::IDENTITY;
+        bone1.m[12] = 100.0;
+        bone1.m[13] = 200.0;
+        let bones = [SsMatrix4x4::IDENTITY, bone1];
+
+        let mut out_x = [0.0f32; 4];
+        let mut out_y = [0.0f32; 4];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
+
+        // v2 = 0.8·(10, 20) + 0.2·(110, 220) = (30, 60).
+        assert_arr_approx_eq(&out_x, &[10.0, 10.0, 30.0, 10.0], 4);
+        assert_arr_approx_eq(&out_y, &[20.0, 20.0, 60.0, 20.0], 4);
+    }
+
+    #[test]
+    fn test_skinned_mesh_simd_chunk_and_tail() {
+        // 6 vertices = one 4-wide group + a 2-vertex scalar tail. Both halves
+        // must agree; a chunk/tail boundary bug shows up as the last two
+        // vertices keeping their zero-initialized values.
+        let offsets = [0u32, 1, 2, 3, 4, 5, 6];
+        let bone_indices = [0u16; 6];
+        let weights = [1.0f32; 6];
+        let coords_x = [1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let coords_y = [10.0f32, 20.0, 30.0, 40.0, 50.0, 60.0];
+        // 90° rotation: W · (x, y) = (-y, x).
+        let bones = [SsMatrix4x4::create_rotation_z(core::f32::consts::FRAC_PI_2)];
+
+        let mut out_x = [0.0f32; 6];
+        let mut out_y = [0.0f32; 6];
+
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, false, &mut out_x, &mut out_y);
+        assert_arr_approx_eq(&out_x, &[-10.0, -20.0, -30.0, -40.0, -50.0, -60.0], 6);
+        assert_arr_approx_eq(&out_y, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 6);
+
+        // flip_y negates the bind Y before the transform: out_x = -(-y) = y.
+        compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, true, &mut out_x, &mut out_y);
+        assert_arr_approx_eq(&out_x, &[10.0, 20.0, 30.0, 40.0, 50.0, 60.0], 6);
+        assert_arr_approx_eq(&out_y, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 6);
     }
 }
