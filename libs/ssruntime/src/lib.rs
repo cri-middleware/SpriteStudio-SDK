@@ -5292,6 +5292,45 @@ mod tests {
         }
     }
 
+    /// Text parts carry no runtime geometry, but they must still hold their
+    /// slot in the draw order so a Player can composite them by priority.
+    #[test]
+    fn test_text_parts_are_placed_in_the_draw_plan() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/allPartsV7/allPartsV7/text.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read text.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation("anime_1").expect("Failed to setup animation");
+
+        let ssab_buf = context.get_ssab_data().unwrap();
+        let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(ssab_buf) };
+        let text_parts: alloc::vec::Vec<usize> = ssab.parts().iter().enumerate().filter(|(_, p)| p.part_type_type() == ssab::ssab::ss::format::PartType::PartTypeText).map(|(i, _)| i).collect();
+        assert!(!text_parts.is_empty(), "the fixture must hold text parts");
+
+        let frame_buf = context.get_frame_data(1.0).expect("Failed to get frame data").to_vec();
+        let frame_data = unsafe { crate::runtime::framedata::ss::runtime::root_as_frame_data_unchecked(&frame_buf) };
+
+        let drawn: alloc::vec::Vec<usize> = frame_data.draw_order().iter().map(|slot| frame_data.parts().get(slot as usize).part_index() as usize).collect();
+        for part_index in &text_parts {
+            assert!(drawn.contains(part_index), "text part {part_index} must appear in draw_order");
+        }
+
+        let text_batches: alloc::vec::Vec<_> = frame_data.draw_batches().iter().filter(|b| b.kind() == crate::runtime::framedata::ss::runtime::DrawBatchKind::Text).collect();
+        assert_eq!(text_batches.len(), text_parts.len(), "each text part gets its own batch");
+        for batch in text_batches {
+            assert_eq!(batch.count(), 1);
+            // Glyphs are the Player's: no geometry, and the font is resolved
+            // from the ssab rather than from the batch's texture hash.
+            assert_eq!((batch.vertex_count(), batch.index_count()), (0, 0));
+            assert_eq!(batch.texture_hash(), 0);
+        }
+        assert!(frame_data.mask_indices().is_empty(), "no text mask in this fixture");
+    }
+
     /// An SSAB without nines parts must come out of the pipeline exactly as it
     /// did before the Nine-Slice support: no `Nines` batches, and empty
     /// geometry buffers whose CSR is flat.

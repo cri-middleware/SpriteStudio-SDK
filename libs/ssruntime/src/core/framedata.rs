@@ -1152,6 +1152,14 @@ fn classify_for_draw_batch(disc: ssab::ssab::ss::format::PartType) -> Option<(ru
         // SoA buffers, so consecutive nines parts merge into one batch.
         return Some((K::Nines, true));
     }
+    if disc == P::PartTypeText {
+        // Glyph layout and rasterisation belong to the Player, so the batch
+        // carries neither geometry nor a texture — it exists to give the part
+        // its slot in the draw order. Not batchable: the runtime cannot key the
+        // font a part draws with, so merging two text parts would hide a font
+        // change inside one batch.
+        return Some((K::Text, false));
+    }
     if disc == P::PartTypeInstance {
         return Some((K::Instance, false));
     }
@@ -1223,6 +1231,14 @@ fn build_draw_order_and_batches<'a>(
         let Some((kind, batchable)) = classify_for_draw_batch(cached.part_type_disc) else {
             continue;
         };
+
+        // A text part authored as a pure mask is dropped outright. The runtime
+        // produces no glyphs, so it can neither write coverage nor be honoured
+        // as a mask — and surfacing it as an ordinary batch would draw text the
+        // author meant to be invisible.
+        if kind == DrawBatchKind::Text && cached.is_mask_contributor {
+            continue;
+        }
 
         if cached.is_mask_contributor {
             mask_indices_workspace.push(part_idx as u16);
@@ -1741,5 +1757,48 @@ mod tests {
         let out = run_nines(&parts_vec, &make_nines_part(stretch), &deform, crate::core::SsCoordinateSystem::YUp);
         assert_eq!(out.counts(0), (0, 0));
         assert!(out.vertices.is_empty() && out.indices.is_empty());
+    }
+
+    #[test]
+    fn text_parts_take_a_draw_slot_but_never_a_mask_slot() {
+        // Three text parts; the middle one is authored as a pure mask.
+        let cached =
+            vec![cached_part_stub(0, -1, ssab::ssab::ss::format::PartType::PartTypeText, false), cached_part_stub(1, -1, ssab::ssab::ss::format::PartType::PartTypeText, true), cached_part_stub(2, -1, ssab::ssab::ss::format::PartType::PartTypeText, false)];
+        let parts_vec: Vec<_> = (0..3).map(|_| make_stage_b_state(-1, (10.0, 10.0), (0.0, 0.0), UpdateAttributeFlags::empty())).collect();
+
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
+        let (mut draw_order, mut batches, mut mask_indices) = (Vec::new(), Vec::new(), Vec::new());
+        build_draw_order_and_batches(&mut fb, &[0, 1, 2], &cached, &parts_vec, &[0, 0, 0], &NinesBuffers::default(), &mut draw_order, &mut batches, &mut mask_indices);
+
+        // Text now takes part in the draw order — it used to be dropped before
+        // the plan was built — but a text mask is left out entirely, since the
+        // runtime has no glyphs to write coverage with.
+        assert_eq!(draw_order, vec![0, 2]);
+        assert!(mask_indices.is_empty(), "a text mask must not claim coverage it cannot write");
+
+        // One batch per text part: the runtime cannot key the font, so merging
+        // would hide a font change inside a single batch.
+        assert_eq!(batches.len(), 2);
+        for (batch, rank) in batches.iter().zip([0, 1]) {
+            assert_eq!(batch.kind(), runtime::framedata::ss::runtime::DrawBatchKind::Text);
+            assert_eq!(batch.start_rank(), rank);
+            assert_eq!(batch.count(), 1);
+            // The Player owns the glyphs, so the batch carries no geometry and
+            // no texture — the font comes from the ssab.
+            assert_eq!((batch.vertex_count(), batch.index_count()), (0, 0));
+            assert_eq!(batch.texture_hash(), 0);
+        }
+    }
+
+    #[test]
+    fn hidden_text_parts_stay_out_of_the_draw_plan() {
+        let cached = vec![cached_part_stub(0, -1, ssab::ssab::ss::format::PartType::PartTypeText, false)];
+        let mut state = make_stage_b_state(-1, (10.0, 10.0), (0.0, 0.0), UpdateAttributeFlags::empty());
+        state.set_hide(true);
+        let mut fb = flatbuffers::FlatBufferBuilder::new();
+        let (mut draw_order, mut batches, mut mask_indices) = (Vec::new(), Vec::new(), Vec::new());
+        build_draw_order_and_batches(&mut fb, &[0], &cached, &[state], &[0], &NinesBuffers::default(), &mut draw_order, &mut batches, &mut mask_indices);
+
+        assert!(draw_order.is_empty() && batches.is_empty() && mask_indices.is_empty());
     }
 }

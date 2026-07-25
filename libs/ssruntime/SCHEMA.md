@@ -124,7 +124,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 | `Instance` | Sub-anime instance slot — see [Player Guide](./docs/README.ja.md) for slot pulling. |
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |
 | `Mesh` | Indexed mesh with bone-skinned vertices using `PartMeshBinding`. |
-| `Text` | Bitmap-font glyph quads. |
+| `Text` | A text part's slot in the draw order — one part per batch, with no geometry (`vertex_count` / `index_count` are `0`) and no `texture_hash`. Glyph layout, rasterisation and font resolution are the Player's (see [Limitations](./docs/10_introduction/20_limitations.md)); text parts authored as masks are omitted from the plan. |
 | `Nines` | 9-patch grid built from `PartTypeNines` — vertices, UVs and indices come from the Nines SoA buffers, sliced per part (see [Special part types](./docs/40_components/95_special_parts.md)). |
 | `Mask` | Stencil-write batch — does not produce colour output; entries are also listed in `mask_indices`. |
 

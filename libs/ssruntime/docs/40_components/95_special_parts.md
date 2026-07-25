@@ -8,6 +8,7 @@ Implementation hints for special part kinds such as 9-slice, shape, and sound.
 | :--- | :--- |
 | **9-slice** | Draw the `DrawBatchKind::Nines` batches from the dedicated SoA buffers described below. `local_vertices` only carries the part's plain bounding quad for these parts. |
 | **Shape** | Use the dedicated SoA buffers such as `ss_runtime_get_shape_vertices` to obtain the polygon's vertex data. |
+| **Text** | Glyphs are the Player's: read `PartTypeText` (and `FontBitmap` for bitmap-font projects) from the ssab and draw with the host engine's text stack. The runtime only reserves the part's slot — a geometry-less `DrawBatchKind::Text` batch per part — so text composites by priority like anything else (see [Limitations](../10_introduction/20_limitations.md)). |
 | **Sound** | Watch `passed_event` inside your update loop and play the sound if `audios` events are included (see [Audio](./90_audio.md) for details). |
 
 ## 9-slice

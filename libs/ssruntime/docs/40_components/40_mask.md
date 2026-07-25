@@ -62,6 +62,8 @@ Each part's role is determined by "is it a writer?" and "is it a target?". Only 
 
 > **The shape special case**: a shape turned into a mask with `draw_as_mask == 1` has no cell (texture), so the cutout threshold described later ([§2-5](#2-5-cutout-threshold-which-pixels-are-written-into-the-coverage)) does not apply. **The whole shape becomes the mask.**
 
+> **The text exception**: the row above describes what authoring expresses, but glyphs are the Player's, so the runtime has nothing to write coverage with. A text part with `draw_as_mask == 1` is therefore **dropped from the draw plan entirely** — it neither writes coverage nor draws. Ordinary text parts (`draw_as_mask == 0`) do get their slot in the plan, and whether they can be clipped as a mask target depends on the Player's own text drawing. See [Limitations](../10_introduction/20_limitations.md).
+
 The Player's writer-classification logic is conceptually as follows:
 
 ```
