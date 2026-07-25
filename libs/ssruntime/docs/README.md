@@ -4,7 +4,7 @@
 
 This guide explains how to implement a **SpriteStudio 7 Player** for your own game engine or platform using `libssruntime` (the Brain).
 
-> 🚧 **English translation in progress.** Some pages may still be Japanese-only — each page links to its Japanese source until it is translated.
+> Every page of this guide is available in English; each page links to its Japanese source at the top. The Japanese version remains the source of truth — if the two ever disagree, follow the Japanese page and please report the discrepancy.
 
 ## 📚 Table of Contents
 
