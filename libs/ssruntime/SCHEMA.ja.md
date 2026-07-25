@@ -125,7 +125,7 @@ FrameData (FFI を介したメモリバッファ)
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |
 | `Mesh` | `PartMeshBinding` によるボーンスキニング済みインデックス付きメッシュ。 |
 | `Text` | ビットマップフォントのグリフ矩形。 |
-| `Nines` | 9 パッチ / 9 スライスの矩形。 |
+| `Nines` | `PartTypeNines` から生成した 9 パッチのグリッド。頂点・UV・インデックスは Nines 専用 SoA バッファにパーツ単位で入る（[特殊なパーツタイプ](./docs/40_components/95_special_parts.ja.md) を参照）。 |
 | `Mask` | ステンシル書き込み専用バッチ。色出力は行わず、対象パーツは `mask_indices` にも列挙される。 |
 
 > **プランの走査:** `draw_batches` の各 `batch` について、`draw_order[batch.start_rank .. batch.start_rank + batch.count]` をイテレートし、`PartState` を取り出して `batch.kind` のジオメトリを発行する。GPU ステート（テクスチャ・ブレンド）の切替はパーツごとではなくバッチごとに 1 回だけ行う。

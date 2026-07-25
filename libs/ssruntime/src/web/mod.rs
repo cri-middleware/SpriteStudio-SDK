@@ -393,6 +393,54 @@ impl SSRuntimeContext {
         self.inner.get_mesh_index_offsets_len()
     }
 
+    pub fn get_nines_vertices_buf(&self) -> *const f32 {
+        self.inner.get_nines_vertices_ptr()
+    }
+
+    pub fn get_nines_vertices_len(&self) -> usize {
+        self.inner.get_nines_vertices_len()
+    }
+
+    pub fn get_nines_uvs_buf(&self) -> *const f32 {
+        self.inner.get_nines_uvs_ptr()
+    }
+
+    pub fn get_nines_uvs_len(&self) -> usize {
+        self.inner.get_nines_uvs_len()
+    }
+
+    pub fn get_nines_box_coords_buf(&self) -> *const f32 {
+        self.inner.get_nines_box_coords_ptr()
+    }
+
+    pub fn get_nines_box_coords_len(&self) -> usize {
+        self.inner.get_nines_box_coords_len()
+    }
+
+    pub fn get_nines_indices_buf(&self) -> *const i32 {
+        self.inner.get_nines_indices_ptr()
+    }
+
+    pub fn get_nines_indices_len(&self) -> usize {
+        self.inner.get_nines_indices_len()
+    }
+
+    pub fn get_nines_vertex_offsets_buf(&self) -> *const u32 {
+        self.inner.get_nines_vertex_offsets_ptr()
+    }
+
+    pub fn get_nines_vertex_offsets_len(&self) -> usize {
+        self.inner.get_nines_vertex_offsets_len()
+    }
+
+    pub fn get_nines_index_offsets_buf(&self) -> *const u32 {
+        self.inner.get_nines_index_offsets_ptr()
+    }
+
+    pub fn get_nines_index_offsets_len(&self) -> usize {
+        self.inner.get_nines_index_offsets_len()
+    }
+
     pub fn get_local_uvs_buf(&self) -> *const f32 {
         self.inner.get_local_uvs_ptr()
     }

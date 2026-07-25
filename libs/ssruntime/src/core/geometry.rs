@@ -128,75 +128,210 @@ pub fn is_point_in_quad(target_p: (f32, f32), v_x: &[f32; 4], v_y: &[f32; 4]) ->
     (intersections & 1) != 0
 }
 
-/// Represents a 4x4 grid of vertices and UVs for a Nine-Slice part.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct NineSliceGrid {
-    pub vertices_x: [f32; 16],
-    pub vertices_y: [f32; 16],
-    pub uvs_u: [f32; 16],
-    pub uvs_v: [f32; 16],
+/// Fill mode of a Nine-Slice part (`PartTypeNines.nines_fill_mode`), mirroring
+/// `SsNines::m_eFillMode` in the SpriteStudio SDK.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum NinesFillMode {
+    /// `0` — the four edges and the centre are stretched to fill the part.
+    #[default]
+    Stretch,
+    /// `1` — the four edges and the centre repeat the source slice at its
+    /// native pixel size; the repeat that overflows the region is clipped.
+    Tile,
 }
 
-/// Computes the 16 grid points for a Nine-Slice part.
-/// `size`: (width, height) of the part.
-/// `uv_rect`: (left, top, right, bottom) in normalized UV space or pixel space.
-/// `margins`: (left, top, right, bottom) margins.
-/// `source_size`: (width, height) of the source image/rect for margin validation.
-pub fn compute_nineslice_geometry(size: (f32, f32), uv_rect: (f32, f32, f32, f32), margins: (f32, f32, f32, f32), source_size: (f32, f32)) -> NineSliceGrid {
-    let (w, h) = size;
-    let (l, t, r, b) = uv_rect;
+impl NinesFillMode {
+    pub fn from_i32(value: i32) -> Self {
+        match value {
+            1 => Self::Tile,
+            _ => Self::Stretch,
+        }
+    }
+}
+
+/// Runaway guard for [`emit_nines_geometry`]: repeats per axis are clamped to
+/// this, and a centre whose repeat count exceeds [`NINES_MAX_TILE_QUADS`] falls
+/// back to a single stretched quad. Authored content never reaches either — a
+/// 4096 px part filled by a 16 px source slice needs 256 repeats — they only
+/// stop degenerate data (a near-zero source slice) from exhausting memory.
+pub const NINES_MAX_TILE_DIV: i32 = 4096;
+/// Companion to [`NINES_MAX_TILE_DIV`] for the two-axis centre region.
+pub const NINES_MAX_TILE_QUADS: i64 = 1 << 16;
+
+/// Shrinks two opposing margins that together exceed the source extent so the
+/// middle slice never inverts — `SsNines::updateSafeMargin`. The overlap is
+/// split in half with the odd pixel charged to the far side, matching the SDK's
+/// integer division.
+#[inline]
+fn shrink_opposing_margins(near: f32, far: f32, extent: f32) -> (f32, f32) {
+    let diff = near + far - extent;
+    if diff <= 0.0 {
+        return (near, far);
+    }
+    let half = crate::core::math::floorf(diff * 0.5);
+    (near - half, far - (diff - half))
+}
+
+/// Clamps a part's authored margins against the source cell so opposing
+/// margins never overlap. Margins are `(left, top, right, bottom)`.
+pub fn nines_safe_margins(margins: (f32, f32, f32, f32), source_size: (f32, f32)) -> (f32, f32, f32, f32) {
     let (ml, mt, mr, mb) = margins;
     let (sw, sh) = source_size;
+    let (sml, smr) = shrink_opposing_margins(ml, mr, sw);
+    let (smt, smb) = shrink_opposing_margins(mt, mb, sh);
+    (sml, smt, smr, smb)
+}
 
-    // 1. Calculate Safe Margins (same as SS6-SDK)
-    let mut sml = ml;
-    let mut smr = mr;
-    let diff_x = ml + mr - sw;
-    if diff_x > 0.0 {
-        let half = diff_x * 0.5;
-        sml -= half;
-        smr -= diff_x - half;
+/// The four slice lines of a Nine-Slice part — `SsNines::updatePoints`.
+///
+/// `x` / `y` are box fractions (`0` = left / top edge, `1` = right / bottom
+/// edge) so the caller can place them inside whatever local-space box the
+/// pivot produced; `u` / `v` are cellmap texture-pixel coordinates.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct NineSliceLines {
+    pub x: [f32; 4],
+    pub y: [f32; 4],
+    pub u: [f32; 4],
+    pub v: [f32; 4],
+}
+
+/// Computes the slice lines for a Nine-Slice part.
+/// `size`: (width, height) of the part — must be non-zero.
+/// `cell_rect`: (left, top, right, bottom) of the source cell, in texture pixels.
+/// `margins`: (left, top, right, bottom) authored margins, in source pixels.
+pub fn compute_nineslice_lines(size: (f32, f32), cell_rect: (f32, f32, f32, f32), margins: (f32, f32, f32, f32)) -> NineSliceLines {
+    let (w, h) = size;
+    let (rl, rt, rr, rb) = cell_rect;
+    let (sml, smt, smr, smb) = nines_safe_margins(margins, (rr - rl, rb - rt));
+
+    NineSliceLines { x: [0.0, sml / w, 1.0 - smr / w, 1.0], y: [0.0, smt / h, 1.0 - smb / h, 1.0], u: [rl, rl + sml, rr - smr, rr], v: [rt, rt + smt, rb - smb, rb] }
+}
+
+/// Appends one quad. `vertex_base` is the part's first vertex in `out_box`, so
+/// the emitted indices stay local to the part's range.
+#[inline]
+fn push_nines_quad(vertex_base: usize, out_box: &mut alloc::vec::Vec<f32>, out_uv: &mut alloc::vec::Vec<f32>, out_idx: &mut alloc::vec::Vec<i32>, x: (f32, f32), y: (f32, f32), u: (f32, f32), v: (f32, f32)) {
+    let base = (out_box.len() / 2 - vertex_base) as i32;
+    // LT, RT, LB, RB — the corner order `compute_local_vertices` uses.
+    out_box.extend_from_slice(&[x.0, y.0, x.1, y.0, x.0, y.1, x.1, y.1]);
+    out_uv.extend_from_slice(&[u.0, v.0, u.1, v.0, u.0, v.1, u.1, v.1]);
+    out_idx.extend_from_slice(&[base, base + 1, base + 2, base + 2, base + 1, base + 3]);
+}
+
+/// Number of whole-or-partial repeats covering `dst` with a `src`-sized slice,
+/// clamped by [`NINES_MAX_TILE_DIV`]. `0` when the region has no extent.
+#[inline]
+fn nines_tile_div(dst: f32, src: f32) -> i32 {
+    if dst <= 0.0 || src <= 0.0 {
+        return 0;
+    }
+    let div = crate::core::math::ceilf(dst / src);
+    if div >= NINES_MAX_TILE_DIV as f32 { NINES_MAX_TILE_DIV } else { div as i32 }
+}
+
+/// Appends one Nine-Slice part's geometry to the output buffers, ported from
+/// `SsNines::createStretchPolygon` / `createTilePolygon`.
+///
+/// `out_box` receives interleaved box coordinates `(fx, fy)` — `0` at the left
+/// / top edge, `1` at the right / bottom — which the caller maps into the
+/// part's local-space box (and reuses to interpolate the four PartColor
+/// corners). `out_uv` receives interleaved texture-pixel UVs, `out_idx`
+/// triangle indices local to this part's vertex range. Returns
+/// `(vertex_count, index_count)`.
+///
+/// Tiling anchors the repeats the way the SDK does: horizontally from the left
+/// edge of each region and vertically from its bottom edge, so the clipped
+/// partial repeat lands on the right and at the top.
+pub fn emit_nines_geometry(
+    size: (f32, f32),
+    cell_rect: (f32, f32, f32, f32),
+    margins: (f32, f32, f32, f32),
+    fill_mode: NinesFillMode,
+    out_box: &mut alloc::vec::Vec<f32>,
+    out_uv: &mut alloc::vec::Vec<f32>,
+    out_idx: &mut alloc::vec::Vec<i32>,
+) -> (u32, u32) {
+    let lines = compute_nineslice_lines(size, cell_rect, margins);
+    let vertex_base = out_box.len() / 2;
+    let index_base = out_idx.len();
+
+    match fill_mode {
+        NinesFillMode::Stretch => {
+            for row in 0..4 {
+                for col in 0..4 {
+                    out_box.extend_from_slice(&[lines.x[col], lines.y[row]]);
+                    out_uv.extend_from_slice(&[lines.u[col], lines.v[row]]);
+                }
+            }
+            for row in 0..3i32 {
+                for col in 0..3i32 {
+                    let lt = row * 4 + col;
+                    let (rt, lb, rb) = (lt + 1, lt + 4, lt + 5);
+                    out_idx.extend_from_slice(&[lt, rt, lb, lb, rt, rb]);
+                }
+            }
+        }
+        NinesFillMode::Tile => emit_nines_tiles(vertex_base, size, &lines, out_box, out_uv, out_idx),
     }
 
-    let mut smt = mt;
-    let mut smb = mb;
-    let diff_y = mt + mb - sh;
-    if diff_y > 0.0 {
-        let half = diff_y * 0.5;
-        smt -= half;
-        smb -= diff_y - half;
+    (((out_box.len() / 2) - vertex_base) as u32, (out_idx.len() - index_base) as u32)
+}
+
+fn emit_nines_tiles(vertex_base: usize, size: (f32, f32), lines: &NineSliceLines, out_box: &mut alloc::vec::Vec<f32>, out_uv: &mut alloc::vec::Vec<f32>, out_idx: &mut alloc::vec::Vec<i32>) {
+    let (w, h) = size;
+    // Region extents in part-local units: one source pixel tiles as one unit.
+    let (dst_w, dst_h) = ((lines.x[2] - lines.x[1]) * w, (lines.y[2] - lines.y[1]) * h);
+    let (src_w, src_h) = (lines.u[2] - lines.u[1], lines.v[2] - lines.v[1]);
+
+    let div_w = nines_tile_div(dst_w, src_w);
+    let div_h = nines_tile_div(dst_h, src_h);
+
+    // Columns of the horizontal repeat: box fractions plus the clipped `u`.
+    let column = |i: i32| -> (f32, f32, f32) {
+        let x0 = lines.x[1] + (src_w / w) * i as f32;
+        let x1 = x0 + src_w / w;
+        if x1 > lines.x[2] { (x0, lines.x[2], lines.u[2] - (x1 - lines.x[2]) * w) } else { (x0, x1, lines.u[2]) }
+    };
+    // Rows repeat from the bottom edge upwards, so the partial one is on top.
+    let row = |i: i32| -> (f32, f32, f32) {
+        let y1 = lines.y[2] - (src_h / h) * i as f32;
+        let y0 = y1 - src_h / h;
+        if y0 < lines.y[1] { (lines.y[1], y1, lines.v[2] - (y1 - lines.y[1]) * h) } else { (y0, y1, lines.v[1]) }
+    };
+
+    // Centre.
+    if div_w > 0 && div_h > 0 {
+        if div_w as i64 * div_h as i64 > NINES_MAX_TILE_QUADS {
+            push_nines_quad(vertex_base, out_box, out_uv, out_idx, (lines.x[1], lines.x[2]), (lines.y[1], lines.y[2]), (lines.u[1], lines.u[2]), (lines.v[1], lines.v[2]));
+        } else {
+            for iy in 0..div_h {
+                let (y0, y1, v0) = row(iy);
+                for ix in 0..div_w {
+                    let (x0, x1, u1) = column(ix);
+                    push_nines_quad(vertex_base, out_box, out_uv, out_idx, (x0, x1), (y0, y1), (lines.u[1], u1), (v0, lines.v[2]));
+                }
+            }
+        }
     }
 
-    // 2. Calculate Grid Coordinates
-    let hx2 = w * 0.5;
-    let hy2 = h * 0.5;
+    // Top / bottom edges tile horizontally, left / right edges vertically.
+    for ix in 0..div_w {
+        let (x0, x1, u1) = column(ix);
+        push_nines_quad(vertex_base, out_box, out_uv, out_idx, (x0, x1), (lines.y[0], lines.y[1]), (lines.u[1], u1), (lines.v[0], lines.v[1]));
+        push_nines_quad(vertex_base, out_box, out_uv, out_idx, (x0, x1), (lines.y[2], lines.y[3]), (lines.u[1], u1), (lines.v[2], lines.v[3]));
+    }
+    for iy in 0..div_h {
+        let (y0, y1, v0) = row(iy);
+        push_nines_quad(vertex_base, out_box, out_uv, out_idx, (lines.x[0], lines.x[1]), (y0, y1), (lines.u[0], lines.u[1]), (v0, lines.v[2]));
+        push_nines_quad(vertex_base, out_box, out_uv, out_idx, (lines.x[2], lines.x[3]), (y0, y1), (lines.u[2], lines.u[3]), (v0, lines.v[2]));
+    }
 
-    let vx = [-hx2, -hx2 + sml, hx2 - smr, hx2];
-    let vy = [hy2, hy2 - smt, -hy2 + smb, -hy2]; // Y down in SS7-SDK default? No, let's stick to SS6-SDK logic (Y up internally)
-
-    let uv_u = [l, l + sml / sw * (r - l), r - smr / sw * (r - l), r];
-    let uv_v = [t, t + smt / sh * (b - t), b - smb / sh * (b - t), b];
-
-    // Row-major 4x4 expansion: the column axis repeats the 4 per-column values
-    // once per row, the row axis broadcasts each per-row value across its row.
-    // Written with safe copies rather than `transmute::<[f32x4; 4], [f32; 16]>`,
-    // which relied on `wide`'s internal layout; these compile to the same stores.
-    let by_column = |v: [f32; 4]| {
-        let mut out = [0.0f32; 16];
-        for row in 0..4 {
-            out[row * 4..row * 4 + 4].copy_from_slice(&v);
+    // Corners never repeat.
+    for c in [0usize, 2] {
+        for r in [0usize, 2] {
+            push_nines_quad(vertex_base, out_box, out_uv, out_idx, (lines.x[c], lines.x[c + 1]), (lines.y[r], lines.y[r + 1]), (lines.u[c], lines.u[c + 1]), (lines.v[r], lines.v[r + 1]));
         }
-        out
-    };
-    let by_row = |v: [f32; 4]| {
-        let mut out = [0.0f32; 16];
-        for (row, &value) in v.iter().enumerate() {
-            out[row * 4..row * 4 + 4].copy_from_slice(&[value; 4]);
-        }
-        out
-    };
-
-    NineSliceGrid { vertices_x: by_column(vx), vertices_y: by_row(vy), uvs_u: by_column(uv_u), uvs_v: by_row(uv_v) }
+    }
 }
 
 /// Primitive shape types supported by Shape Parts.
@@ -755,26 +890,111 @@ mod tests {
     }
 
     #[test]
-    fn test_compute_nineslice_geometry() {
-        let size = (100.0, 100.0);
-        let uv_rect = (0.0, 0.0, 1.0, 1.0);
-        let margins = (10.0, 10.0, 10.0, 10.0);
-        let source_size = (100.0, 100.0);
+    fn test_compute_nineslice_lines() {
+        let lines = compute_nineslice_lines((100.0, 100.0), (0.0, 0.0, 100.0, 100.0), (10.0, 10.0, 10.0, 10.0));
 
-        let grid = compute_nineslice_geometry(size, uv_rect, margins, source_size);
+        // Box fractions: the margins occupy a tenth of the part on each side.
+        assert_approx_eq(lines.x[0], 0.0);
+        assert_approx_eq(lines.x[1], 0.1);
+        assert_approx_eq(lines.x[2], 0.9);
+        assert_approx_eq(lines.x[3], 1.0);
+        assert_eq!(lines.x, lines.y);
 
-        // Check top-left corner vertex
-        assert_approx_eq(grid.vertices_x[0], -50.0);
-        assert_approx_eq(grid.vertices_y[0], 50.0);
-        // Check grid vertex (1,1)
-        assert_approx_eq(grid.vertices_x[5], -40.0);
-        assert_approx_eq(grid.vertices_y[5], 40.0);
+        // UVs stay in texture-pixel space.
+        assert_approx_eq(lines.u[0], 0.0);
+        assert_approx_eq(lines.u[1], 10.0);
+        assert_approx_eq(lines.u[2], 90.0);
+        assert_approx_eq(lines.u[3], 100.0);
+        assert_eq!(lines.u, lines.v);
+    }
 
-        // Check UVs
-        assert_approx_eq(grid.uvs_u[0], 0.0);
-        assert_approx_eq(grid.uvs_v[0], 0.0);
-        assert_approx_eq(grid.uvs_u[5], 0.1);
-        assert_approx_eq(grid.uvs_v[5], 0.1);
+    #[test]
+    fn test_nines_safe_margins_shrink_overlapping() {
+        // Fits: margins are returned untouched.
+        assert_eq!(nines_safe_margins((10.0, 10.0, 10.0, 10.0), (64.0, 64.0)), (10.0, 10.0, 10.0, 10.0));
+
+        // 40 + 30 over a 60 px source overlaps by 10, split evenly.
+        let (l, _, r, _) = nines_safe_margins((40.0, 0.0, 30.0, 0.0), (60.0, 100.0));
+        assert_approx_eq(l, 35.0);
+        assert_approx_eq(r, 25.0);
+
+        // An odd overlap charges the extra pixel to the far side, matching the
+        // SDK's integer division.
+        let (l, _, r, _) = nines_safe_margins((40.0, 0.0, 25.0, 0.0), (60.0, 100.0));
+        assert_approx_eq(l, 38.0);
+        assert_approx_eq(r, 22.0);
+    }
+
+    #[test]
+    fn test_emit_nines_stretch() {
+        let (mut b, mut uv, mut idx) = (alloc::vec::Vec::new(), alloc::vec::Vec::new(), alloc::vec::Vec::new());
+        let (vc, ic) = emit_nines_geometry((100.0, 100.0), (0.0, 0.0, 100.0, 100.0), (10.0, 10.0, 10.0, 10.0), NinesFillMode::Stretch, &mut b, &mut uv, &mut idx);
+
+        // A shared 4x4 grid: 16 vertices, 9 quads.
+        assert_eq!((vc, ic), (16, 54));
+        assert_eq!(b.len(), 32);
+        assert_eq!(idx.len(), 54);
+
+        // Row-major from the top-left corner.
+        assert_approx_eq(b[0], 0.0);
+        assert_approx_eq(b[1], 0.0);
+        assert_approx_eq(uv[0], 0.0);
+        assert_approx_eq(uv[1], 0.0);
+        // Vertex (1, 1) — the inner corner of the top-left slice.
+        assert_approx_eq(b[10], 0.1);
+        assert_approx_eq(b[11], 0.1);
+        assert_approx_eq(uv[10], 10.0);
+        assert_approx_eq(uv[11], 10.0);
+        // First quad, wound LT, RT, LB / LB, RT, RB.
+        assert_eq!(&idx[0..6], &[0, 1, 4, 4, 1, 5]);
+    }
+
+    #[test]
+    fn test_emit_nines_tile_repeats_and_clips() {
+        let (mut b, mut uv, mut idx) = (alloc::vec::Vec::new(), alloc::vec::Vec::new(), alloc::vec::Vec::new());
+        // A 64 px cell with 16 px margins leaves a 32 px middle slice, which
+        // covers the part's 68 px middle in ceil(68 / 32) = 3 repeats per axis.
+        let (vc, ic) = emit_nines_geometry((100.0, 100.0), (0.0, 0.0, 64.0, 64.0), (16.0, 16.0, 16.0, 16.0), NinesFillMode::Tile, &mut b, &mut uv, &mut idx);
+
+        // 4 corners + 2 * 3 horizontal edges + 2 * 3 vertical + 3 * 3 centre.
+        let quads = 4 + 2 * 3 + 2 * 3 + 3 * 3;
+        assert_eq!((vc, ic), (quads * 4, quads * 6));
+
+        // Centre repeat (0, 0): full slice, anchored at the region's bottom.
+        assert_approx_eq(b[0], 0.16);
+        assert_approx_eq(b[1], 0.52);
+        assert_approx_eq(uv[0], 16.0);
+        assert_approx_eq(uv[1], 16.0);
+        assert_approx_eq(b[7], 0.84); // RB.y — the bottom edge of the middle
+        assert_approx_eq(uv[7], 48.0);
+
+        // Centre repeat (2, 0): overflows to the right, so it is clipped to the
+        // region edge and its UV is cut to the 4 px that remain.
+        let (bq, uq) = (&b[2 * 8..3 * 8], &uv[2 * 8..3 * 8]);
+        assert_approx_eq(bq[0], 0.80);
+        assert_approx_eq(bq[2], 0.84);
+        assert_approx_eq(uq[0], 16.0);
+        assert_approx_eq(uq[2], 20.0);
+
+        // The vertical partial repeat lands at the top of the region.
+        let (bq, uq) = (&b[6 * 8..7 * 8], &uv[6 * 8..7 * 8]);
+        assert_approx_eq(bq[1], 0.16);
+        assert_approx_eq(bq[5], 0.20);
+        assert_approx_eq(uq[1], 44.0);
+        assert_approx_eq(uq[5], 48.0);
+    }
+
+    #[test]
+    fn test_emit_nines_tile_clamps_degenerate_repeats() {
+        let (mut b, mut uv, mut idx) = (alloc::vec::Vec::new(), alloc::vec::Vec::new(), alloc::vec::Vec::new());
+        // Margins that leave a 0.2 px middle slice would need half a million
+        // repeats to fill a 100000 px part: the per-axis clamp caps the edges
+        // and the centre falls back to a single stretched quad.
+        let (vc, ic) = emit_nines_geometry((100_000.0, 100_000.0), (0.0, 0.0, 64.0, 64.0), (31.9, 31.9, 31.9, 31.9), NinesFillMode::Tile, &mut b, &mut uv, &mut idx);
+
+        let quads = 4 + 4 * NINES_MAX_TILE_DIV as u32 + 1;
+        assert_eq!((vc, ic), (quads * 4, quads * 6));
+        assert!(b.iter().all(|c| c.is_finite()));
     }
 
     #[test]
