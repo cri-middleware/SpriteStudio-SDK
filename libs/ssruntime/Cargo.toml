@@ -17,14 +17,20 @@ libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 dlmalloc = { workspace = true, optional = true, features = ["global"] }
 libc = { workspace = true, optional = true }
-ssconverter = { workspace = true, optional = true }
 wide = { workspace = true }
+
+# ssconverter is used only by the integration tests (regenerating .ssab fixtures
+# from .sspj). It is a dev-dependency — not part of the public `std` feature — so
+# that enabling `std` (e.g. a wasm consumer that needs an std allocator) does not
+# drag the native converter into the build graph.
+[dev-dependencies]
+ssconverter = { workspace = true }
 
 [features]
 default = ["ffi"]
 ffi = []
 web = ["wasm-bindgen/std"]
-std = ["flatbuffers/std", "ssab/std", "dep:ssconverter", "wasm-bindgen/std"]
+std = ["flatbuffers/std", "ssab/std", "wasm-bindgen/std"]
 libc_alloc = ["dep:libc"]
 wasm_alloc = ["dep:dlmalloc"]
 emscripten_alloc = []
