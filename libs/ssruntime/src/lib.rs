@@ -307,7 +307,7 @@ use alloc::vec::Vec;
 
 #[rustfmt::skip]
 /// cbindgen:ignore
-mod runtime;
+pub mod runtime;
 pub mod core;
 pub mod error;
 
@@ -547,6 +547,10 @@ impl<'a> AnimationResource<'a> {
 
     pub fn get_ssab_data(&self) -> &'a [u8] {
         self.data
+    }
+
+    pub fn animations(&self) -> &[AnimationMetadata<'a>] {
+        &self.animations
     }
 
     pub fn get_animation_names(&self) -> Vec<alloc::string::String> {
