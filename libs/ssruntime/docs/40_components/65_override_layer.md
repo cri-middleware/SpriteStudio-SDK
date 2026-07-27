@@ -43,7 +43,7 @@ The things that are **not** override targets, and why, are below. Do not confuse
 
 | What you want to do | Where it belongs (the responsible side) |
 |---|---|
-| Swapping a texture / cellmap (atlas) | **The Player**. Swap the texture bound by `DrawBatch.texture_hash` → [Managing External Resources and Textures](./70_external_resources.md) |
+| Swapping a texture / cellmap (atlas) | **The Player**. Swap the texture bound by `DrawBatch.texture_hash` → [Managing External Resources and Textures](./70_external_resources.md). Note that an **authored** texture change (`TCHG`) is already evaluated by the runtime and reflected in `texture_hash` |
 | Flipping | **The Player**. Express it in post-processing of the FrameData (scale inversion / UV swap) |
 | Whole-object color / opacity / draw order | **The Player**. Not a per-part concern |
 | Swapping an instance part | Planned for a different stage in future (the **Phase 3** Instance Lifecycle API) |

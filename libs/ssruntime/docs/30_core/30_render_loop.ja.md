@@ -14,7 +14,7 @@
 | :--- | :--- | :--- |
 | **ワールド行列** | `ss_runtime_get_world_matrices` | 各パーツの最終的な位置・回転・拡大縮小（4x4 行列） |
 | **ローカル頂点** | `ss_runtime_get_local_vertices` | Pivot 反転等が適用済みの頂点座標（5頂点 x 2軸） |
-| **テクスチャハッシュ** | `ss_runtime_get_cell_texture_hashes` | パーツが使用しているテクスチャの識別子 |
+| **テクスチャハッシュ** | `ss_runtime_get_cell_texture_hashes` | パーツが参照している **セル側の** テクスチャの識別子（バインド用ではありません。§2 参照） |
 | **UV / セルメタ** | `ss_runtime_get_local_uvs`, `cell_meta` | アニメーション済みの UV 座標やセルサイズ |
 
 ### UV アニメーション・反転 (Flip) は取得データに反映済み
@@ -56,6 +56,20 @@ for (auto batch : *batches) {
     FlushDrawCall();
 }
 ```
+
+### バインドするテクスチャは `DrawBatch.texture_hash` だけで決まります
+
+`texture_hash` は次のどちらかで、Player はその**両方を引けるテクスチャマップ**を用意しておく必要があります。
+
+- **セルマップ名のハッシュ**（通常）— `ssab->cellmaps()[].name_hash`
+- **テクスチャファイル名のハッシュ** — 作画でテクスチャ変更 (`TCHG`) が指定されたパーツ。`ssab->external_textures()[].name_hash` から名前を逆引きします。
+
+上書きの有無はバッチキーに折り込まれているため、**このループを変える必要はありません**。一方で以下の 2 点に注意してください。
+
+- `ss_runtime_get_cell_texture_hashes`（§1）が返すのは **セルが属するセルマップ**のハッシュで、テクスチャ変更を反映していません。バインドの判断には使わず、必ず `DrawBatch.texture_hash` を使ってください。
+- テクスチャ変更やセルのオーバーライドによって **バッチの分割点・バッチ数はフレームごとに変わります**。「バッチ数は一定」という前提の最適化は避けてください。
+
+詳細は [外部リソースとテクスチャの管理](../40_components/70_external_resources.ja.md) を参照してください。
 
 > [!IMPORTANT]
 > **この `draw_order` ループは描画（ジオメトリ発行）専用です。** Instance / Effect パーツの

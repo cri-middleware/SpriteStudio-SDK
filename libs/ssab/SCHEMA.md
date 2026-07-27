@@ -55,7 +55,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `effects` | [Effect] | `SsEffectFile` (ssee) | Only effects referenced by Effect-type parts |
 | `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Included only if the pack contains Audio-type parts |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | Only bitmap fonts used by Text-type parts with `text_bitmap == true` |
-| `external_textures` | [ExternalTexture] | — | External texture references |
+| `external_textures` | [ExternalTexture] | — | External texture references; sorted by `name_hash`. Union of the project's `<ExternalTextures>` list and every distinct `TextureName` named by a `TCHG` key in this pack (including cellmap images such as `common.png`). This is the reverse-lookup table a Player needs to turn a `TCHG` hash — and hence `DrawBatch.texture_hash` — back into a loadable name, so it must cover both sources. |
 | `external_instances` | [ExternalInstance] | — | Cross-pack instance references; sorted by `anime_name_hash` (the FlatBuffers `(key)`) so the player can `LookupByKey(ref_anime_hash)` directly. Each entry carries `anime_pack_name_hash` (matches `SsAnimeBinary.name_hash` of the target pack), `anime_pack_name` (used to locate the sibling `<pack>.ssab` file), and `anime_name` (diagnostic). |
 | `embedded_assets` | [EmbeddedAsset] | — | Optionally embedded binary assets (images, sounds, etc.) |
 
@@ -272,7 +272,7 @@ AnimationData
 | `MASK` | `mask_array` | PartAnimationDataFloatValue |
 | `VERT` (skew) | `skew_array` | PartAnimationDataVec2 | *Note: ssae's `VERT` tag contains both vertex offsets and skew data in a single `SsAttributeVertexKeyValue`. In ssab, these are split into separate `vertex_array` and `skew_array`.* |
 | `DEFM` | `deform_array` | PartAnimationDataDeform |
-| `TCHG` | `texture_array` | PartAnimationDataUIntValue |
+| `TCHG` | `texture_array` | PartAnimationDataUIntValue | *Value is `fnv1a(TextureName)`, resolvable via `external_textures`. An empty `TextureName` (authored "no override") is normalised to `0` rather than hashed, so it stays distinguishable from a real texture and matches the `texture` default; step-evaluated, never interpolated.* |
 
 ### Event Attributes (special handling)
 

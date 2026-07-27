@@ -35,7 +35,7 @@ Per part-type implementation details for richer expression.
 - [**Parts Color**](./40_components/50_parts_color.md)
 - [**Animation Blending**](./40_components/60_animation_blending.md)
 - [**Part Overrides (Override Layer API)**](./40_components/65_override_layer.md) — per-part runtime overrides for color / cell / visibility (Phase 2)
-- [**External Resources & Textures**](./40_components/70_external_resources.md)
+- [**External Resources & Textures**](./40_components/70_external_resources.md) — texture resolution / authored texture change (TCHG) / external SSAB references
 - [**Sequence**](./40_components/80_sequence.md)
 - [**Audio**](./40_components/90_audio.md)
 - [**Special Part Types**](./40_components/95_special_parts.md)

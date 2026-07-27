@@ -14,7 +14,7 @@ Using APIs such as `ss_runtime_get_world_matrices(ctx, &ptr, &len)`, you can ref
 | :--- | :--- | :--- |
 | **World matrices** | `ss_runtime_get_world_matrices` | Each part's final position / rotation / scale (4x4 matrix) |
 | **Local vertices** | `ss_runtime_get_local_vertices` | Vertex coordinates with pivot flipping and so on already applied (5 vertices x 2 axes) |
-| **Texture hashes** | `ss_runtime_get_cell_texture_hashes` | The identifier of the texture the part uses |
+| **Texture hashes** | `ss_runtime_get_cell_texture_hashes` | The identifier of the texture on the **cell** side of the part (not what you bind — see §2) |
 | **UV / cell meta** | `ss_runtime_get_local_uvs`, `cell_meta` | Animated UV coordinates and cell sizes |
 
 ### UV animation and flipping are already applied to the data you obtain
@@ -56,6 +56,20 @@ for (auto batch : *batches) {
     FlushDrawCall();
 }
 ```
+
+### `DrawBatch.texture_hash` alone decides what you bind
+
+`texture_hash` is one of the following, so the Player needs a texture map that can resolve **both**:
+
+- **A hash of the cellmap name** (normally) — `ssab->cellmaps()[].name_hash`
+- **A hash of a texture file name** — for a part under an authored texture change (`TCHG`). Reverse the hash back to a name through `ssab->external_textures()[].name_hash`.
+
+Whether an override applies is folded into the batch key, so **this loop needs no changes**. Two things to watch, though:
+
+- `ss_runtime_get_cell_texture_hashes` (§1) returns the hash of the **cellmap the cell belongs to** and does not reflect a texture change. Do not use it to decide what to bind; always use `DrawBatch.texture_hash`.
+- A texture change or a cell override means **the split points, and the batch count, vary from frame to frame**. Avoid optimizations that assume a fixed batch count.
+
+See [Managing External Resources and Textures](../40_components/70_external_resources.md) for details.
 
 > [!IMPORTANT]
 > **This `draw_order` loop is for drawing (geometry emission) only.** Do **not** drive the

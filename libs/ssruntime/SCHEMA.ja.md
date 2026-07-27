@@ -66,7 +66,7 @@ FrameData (FFI を介したメモリバッファ)
 | `bounding_radius` | `bounding_radius_array` | 補間済み当たり判定半径。 |
 | `mask` | `mask_array` | 補間済みマスク影響度。 |
 | `skew_x/y` | `skew_array` | SSAB の Vec2 歪み補間から算出。 |
-| `texture` | `texture_array` | テクスチャ変更（上書き）用 ID。 |
+| `texture` | `texture_array` | テクスチャ変更（`TCHG`）: テクスチャ名の fnv1a ハッシュで、`external_textures` から解決可能。`0` は上書き無し（パーツは自身のセルのテクスチャを使用）。ステップ評価であり補間されない。`DrawBatch.texture_hash` に反映済みのため、`texture_hash` でバッチ処理する Player はパーツ単位の対応を追加する必要はない。 |
 
 ---
 
@@ -108,7 +108,7 @@ FrameData (FFI を介したメモリバッファ)
 |:---|:---|:---|
 | `start_rank` | ushort | このバッチが指す `draw_order` の開始インデックス。 |
 | `count` | ushort | このバッチに含まれる `draw_order` 連続エントリ数。 |
-| `texture_hash` | uint32 | バッチがバインドするテクスチャ（セルマップの画像パス、または外部テクスチャ名）の fnv1a ハッシュ。テクスチャ不要な種別（`Shape` 等）では `0`。 |
+| `texture_hash` | uint32 | バッチがバインドするテクスチャの fnv1a ハッシュ。通常は `cellmap_name_hash`（`.ssce` を除いたセルマップ名）だが、スライス内のパーツがテクスチャ変更（`TCHG`）で上書きされている場合はそのテクスチャ *名* のハッシュ。TCHG の上書き値はバッチキーに含まれるため、同一セルマップを参照していてもバインド先テクスチャが異なるパーツは別バッチに分割される。Player は両方のハッシュ空間（セルマップ名と `external_textures` エントリ）を解決する必要がある（TCHG が指すテクスチャ名は必ず `external_textures` に含まれる）。テクスチャ不要な種別（`Shape` 等）では `0`。 |
 | `vertex_count` | ushort | スライス内の全パーツが寄与する頂点数の合計。 |
 | `index_count` | ushort | スライス内の全パーツが寄与するインデックス数の合計。 |
 | `blend_type` | BlendType | スライス共通のブレンドモード。各パーツの `part_color.blend_type` と一致。 |
@@ -119,7 +119,7 @@ FrameData (FFI を介したメモリバッファ)
 
 | バリアント | パーツごとのジオメトリソース |
 |:---|:---|
-| `Normal` | 標準スプライト矩形 — `vertex` プール + `cell` プール（テクスチャは `cellmap_name_hash` 経由）。 |
+| `Normal` | 標準スプライト矩形 — `vertex` プール + `cell` プール（テクスチャは `texture_hash` 経由: `cellmap_name_hash`、または上書き時は TCHG のテクスチャ名）。 |
 | `Shape` | `PartTypeShape` から生成される手続き的シェイプ（テクスチャ無し）。 |
 | `Instance` | サブアニメのインスタンススロット — スロット pull の詳細は [Player Guide](./docs/README.ja.md) を参照。 |
 | `Effect` | 該当 `EffectSlot` のパーティクル矩形（`effect_draw_plan.fbs` 参照）。 |

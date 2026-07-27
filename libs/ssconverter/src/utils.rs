@@ -27,6 +27,19 @@ pub fn fnv1a_hash_str(text: &str) -> u32 {
     hash
 }
 
+/// Hash a `TCHG` `TextureName`, mapping the authored "no override" to `0`.
+///
+/// An empty `TextureName` means "keep the cell's own texture". Hashing it verbatim would
+/// yield the FNV offset basis (`2166136261`) — a value indistinguishable from a real texture
+/// that no lookup table can resolve, so the Player would fail to bind a texture at all.
+/// `0` is the schema default for `InitialPartAttributes.texture` and is reserved for this.
+pub fn fnv1a_hash_texture_name(texture_name: &str) -> u32 {
+    if texture_name.is_empty() {
+        return 0;
+    }
+    fnv1a_hash_str(texture_name)
+}
+
 /// File extension used by sspj cellmap entries.
 pub const CELLMAP_FILE_EXT: &str = ".ssce";
 

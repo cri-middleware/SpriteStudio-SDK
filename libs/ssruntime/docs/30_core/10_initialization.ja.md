@@ -163,6 +163,9 @@ void* resource = ss_resource_create_borrow(
 ## 3. アセット（テクスチャ）のロードと紐付け
 ssab 内には「どのセルマップ（画像）を使用するか」という情報が含まれています。Player は設計方針で選択した `ssab` のタイプに合わせて、テクスチャを準備する必要があります。
 
+> [!IMPORTANT]
+> **ロード対象は `cellmaps()` と `external_textures()` の 2 つです。** 描画時にバインドするテクスチャは `DrawBatch.texture_hash` で決まりますが、この値はセルマップ名のハッシュ（通常）と、テクスチャファイル名のハッシュ（作画でテクスチャ変更 `TCHG` が指定されたパーツ）のどちらにもなります。`external_textures()` をロードしていないと、後者のバッチでテクスチャが見つからず、そのパーツが描画されません。詳細は [外部リソースとテクスチャの管理](../40_components/70_external_resources.ja.md) を参照してください。
+
 ### 3.0. ssab に格納されるファイル参照文字列の仕様
 ssab に格納されるファイル参照文字列 (テクスチャ・サウンド・フォントなど) は、ssconverter が以下のルールで生成します。Player はエンジン側のアセット参照と対応付ける際に、この仕様を前提にしてください。
 
@@ -172,8 +175,8 @@ ssab に格納されるファイル参照文字列 (テクスチャ・サウン�
 
 ### Reference (参照方式) の場合
 - **ロード元**: 外部ファイル（PNG 等）。
-- **手順**: `cellmap->image_path()` から取得できるファイルパスを基に、エンジンの標準的なアセットロード機構を用いてテクスチャを読み込みます。
-- **注意点**: `image_path` は通常 `.sspj` や `.ssab` からの相対パスです。Player 側でベースディレクトリと結合して絶対パス（またはエンジン内のリソースパス）を生成する必要があります。
+- **手順**: `cellmap->image_path()` から取得できるファイルパスを基に、エンジンの標準的なアセットロード機構を用いてテクスチャを読み込みます。続けて `external_textures()` も走査し、`name()`（テクスチャのファイル名）を同じ規則でパス解決してロードします。
+- **注意点**: `image_path` や `external_textures()` の `name` は通常 `.sspj` や `.ssab` からの相対パスです。Player 側でベースディレクトリと結合して絶対パス（またはエンジン内のリソースパス）を生成する必要があります。
 
 ```cpp
 // Godot (C++) での実装例
@@ -184,8 +187,16 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
         String image_path = base_dir.path_join(String::utf8(cellmap->image_path()->c_str()));
         // エンジンの機能でロード
         Ref<Texture2D> texture = ResourceLoader::get_singleton()->load(image_path);
-        // ハッシュ値で管理
+        // セルマップ名のハッシュで管理
         _textures[cellmap->name_hash()] = texture;
+    }
+    // テクスチャ変更 (TCHG) がバインドする先。同じマップに、テクスチャ名のハッシュで入れる
+    if (binary->external_textures() != nullptr) {
+        for (int i = 0; i < binary->external_textures()->size(); i++) {
+            auto etexture = binary->external_textures()->Get(i);
+            String image_path = base_dir.path_join(String::utf8(etexture->name()->c_str()));
+            _textures[etexture->name_hash()] = ResourceLoader::get_singleton()->load(image_path);
+        }
     }
 }
 ```
@@ -193,11 +204,12 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
 ### Embedded (埋め込み方式) の場合
 - **ロード元**: ssab バイナリ内部。
 - **手順**: `ssab->embedded_assets()` を走査し、各セルマップに対応するバイナリデータを直接取得します。このメモリ上のデータを、エンジンの「画像データからのテクスチャ作成」機能に渡して読み込みます。
+- **注意点**: `embedded_assets()` の `name_hash` は **ファイル名の** ハッシュです（セルマップの場合は `image_path`、外部テクスチャの場合は `name`）。セルマップ名のハッシュとは異なるので、`cellmaps()` / `external_textures()` 側のエントリを経由して対応付けてください。外部テクスチャも埋め込み対象に含まれます。
 
 ### 共通の処理：セル情報のインデックス化
 描画パフォーマンスを向上させるため、初期化時に以下の情報をキャッシュしておくことを強く推奨します。
 
-- **CellMap のインデックス化**: `ssab->cellmaps()` の並び順や `name_hash()` をキーとして、ロードしたテクスチャオブジェクトを紐付けます。
+- **テクスチャのインデックス化**: `ssab->cellmaps()` の `name_hash()` と `ssab->external_textures()` の `name_hash()` の **両方** をキーとして、ロードしたテクスチャオブジェクトを 1 つのマップに紐付けます。描画時は `DrawBatch.texture_hash` をそのままキーとして引けます。
 - **セルの高速検索**: 各 CellMap 内の `cells()` を走査し、`name_hash()` をキーとして、そのセルの切り出し矩形（UV）や原点（Pivot）情報を即座に引けるようにしておきます。
 
 ## 4. 再生するアニメーション情報の管理

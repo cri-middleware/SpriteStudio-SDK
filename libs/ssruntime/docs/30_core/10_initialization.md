@@ -163,6 +163,9 @@ In these cases, do not force immediate GC or back-referencing - accept Pattern C
 ## 3. Loading and binding assets (textures)
 The ssab contains information about "which cellmap (image) is used". The Player must prepare textures according to the `ssab` type chosen in its design.
 
+> [!IMPORTANT]
+> **There are two things to load: `cellmaps()` and `external_textures()`.** The texture to bind when drawing comes from `DrawBatch.texture_hash`, and that value is either a hash of the cellmap name (normally) or a hash of a texture file name (for a part under an authored texture change, `TCHG`). If you have not loaded `external_textures()`, batches of the latter kind find no texture and their parts do not draw. See [Managing External Resources and Textures](../40_components/70_external_resources.md) for details.
+
 ### 3.0. Specification of the file-reference strings stored in the ssab
 ssconverter generates the file-reference strings stored in the ssab (textures, sounds, fonts, and so on) according to the following rules. Assume this specification when mapping them to your engine's asset references.
 
@@ -172,8 +175,8 @@ ssconverter generates the file-reference strings stored in the ssab (textures, s
 
 ### For Reference type
 - **Load from**: external files (PNG and so on).
-- **Procedure**: using the file path obtained from `cellmap->image_path()`, load the texture with your engine's standard asset-loading mechanism.
-- **Note**: `image_path` is normally relative to the `.sspj` or `.ssab`. The Player must join it with the base directory to produce an absolute path (or an in-engine resource path).
+- **Procedure**: using the file path obtained from `cellmap->image_path()`, load the texture with your engine's standard asset-loading mechanism. Then walk `external_textures()` as well and load each `name()` (a texture file name) resolved by the same rule.
+- **Note**: `image_path`, and `name` in `external_textures()`, are normally relative to the `.sspj` or `.ssab`. The Player must join them with the base directory to produce an absolute path (or an in-engine resource path).
 
 ```cpp
 // Implementation example in Godot (C++)
@@ -184,8 +187,16 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
         String image_path = base_dir.path_join(String::utf8(cellmap->image_path()->c_str()));
         // Load with the engine's facility
         Ref<Texture2D> texture = ResourceLoader::get_singleton()->load(image_path);
-        // Manage it by hash
+        // Manage it by the hash of the cellmap name
         _textures[cellmap->name_hash()] = texture;
+    }
+    // What a texture change (TCHG) binds. Into the same map, keyed by the texture name's hash
+    if (binary->external_textures() != nullptr) {
+        for (int i = 0; i < binary->external_textures()->size(); i++) {
+            auto etexture = binary->external_textures()->Get(i);
+            String image_path = base_dir.path_join(String::utf8(etexture->name()->c_str()));
+            _textures[etexture->name_hash()] = ResourceLoader::get_singleton()->load(image_path);
+        }
     }
 }
 ```
@@ -193,11 +204,12 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
 ### For Embedded type
 - **Load from**: inside the ssab binary.
 - **Procedure**: walk `ssab->embedded_assets()` and obtain the binary data corresponding to each cellmap directly. Pass that in-memory data to your engine's "create a texture from image data" facility.
+- **Note**: the `name_hash` in `embedded_assets()` is the hash of the **file name** (`image_path` for a cellmap, `name` for an external texture). That differs from the hash of the cellmap name, so map them through the matching `cellmaps()` / `external_textures()` entry. External textures are embedded too.
 
 ### Common processing: indexing the cell information
 To improve rendering performance, we strongly recommend caching the following at initialization.
 
-- **Indexing CellMaps**: associate the loaded texture objects with the ordering of `ssab->cellmaps()` or with `name_hash()` as the key.
+- **Indexing textures**: associate the loaded texture objects into a single map keyed by **both** `name_hash()` from `ssab->cellmaps()` and `name_hash()` from `ssab->external_textures()`. At draw time you can then look them up with `DrawBatch.texture_hash` directly.
 - **Fast cell lookup**: walk the `cells()` inside each CellMap and make their cut-out rectangle (UV) and origin (pivot) information immediately retrievable with `name_hash()` as the key.
 
 ## 4. Managing the animations to play

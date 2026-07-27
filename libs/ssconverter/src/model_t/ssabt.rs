@@ -35,7 +35,21 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     // events can be linked to a SoundList without storing the integer id.
     let sound_list_id_to_name_hash: HashMap<i32, u32> = sspj.sound_list.iter().map(|p| (p.table.id, crate::utils::fnv1a_hash_str(&p.name))).collect();
 
-    let external_textures = sspj.external_textures.iter().map(|texture_info| texture_info.path_name.clone()).collect::<HashSet<String>>();
+    // TCHG keys name a texture directly, so every distinct TextureName must be resolvable
+    // hash -> name by the Player. The project's <ExternalTextures> list only covers textures
+    // registered by the author, so harvest the attribute values too; otherwise a TCHG naming
+    // a cellmap image (or any unregistered texture) leaves the Player with an opaque hash.
+    let texchange_texture_names = anime_pack
+        .anime_list
+        .iter()
+        .flat_map(|anime| anime.part_animes.iter())
+        .flat_map(|part_anime| part_anime.attributes.iter())
+        .filter_map(|attribute| if let sspj::ssattribute::SsAttributeKind::Texchange(v) = attribute { Some(v) } else { None })
+        .flat_map(|texchange| texchange.keys.iter())
+        // An empty TextureName is the authored "no override" and has no texture to resolve.
+        .filter(|key| !key.value.texture_name.is_empty())
+        .map(|key| key.value.texture_name.clone());
+    let external_textures = sspj.external_textures.iter().map(|texture_info| texture_info.path_name.clone()).chain(texchange_texture_names).collect::<HashSet<String>>();
 
     let external_instances = anime_pack
         .model
