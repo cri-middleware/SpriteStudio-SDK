@@ -53,7 +53,7 @@ graph LR
 - [**パーツカラー (Parts Color)**](./40_components/50_parts_color.ja.md)
 - [**アニメーションブレンド / ミキシング**](./40_components/60_animation_blending.ja.md) — クロスフェードと whole-animation 合成 (Phase 3)
 - [**パーツオーバーライド (Override Layer API)**](./40_components/65_override_layer.ja.md) — カラー / セル / 表示のパーツ単位の実行時上書き (Phase 2)
-- [**外部リソースとテクスチャの管理**](./40_components/70_external_resources.ja.md)
+- [**外部リソースとテクスチャの管理**](./40_components/70_external_resources.ja.md) — テクスチャの解決 / 作画によるテクスチャ変更 (TCHG) / 外部 SSAB 参照
 - [**シーケンス (Sequence)**](./40_components/80_sequence.ja.md)
 - [**オーディオ（サウンド）再生の統合**](./40_components/90_audio.ja.md)
 - [**特殊なパーツタイプ (9スライス / シェイプ / サウンド)**](./40_components/95_special_parts.ja.md)

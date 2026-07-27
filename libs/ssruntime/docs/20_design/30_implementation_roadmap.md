@@ -47,9 +47,10 @@ The final check for particle presentation.
 ---
 
 ## Step 6: Verifying optional features
-Check the following special parts as needed.
+Check the following special parts and attributes as needed.
 - **Sound**: does the sound play on the specified frame?
 - **9Slice**: are the corners preserved when scaled up?
+- **TextureChange**: in `TextureChange.ssae`, are two parts that reference the same cellmap drawn with different textures? (If you missed loading `external_textures()`, one of them does not draw.) → [Managing External Resources and Textures](../40_components/70_external_resources.md)
 
 ---
 
