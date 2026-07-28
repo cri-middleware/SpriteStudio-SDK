@@ -66,9 +66,10 @@ done
 # the signing block below does NOT re-sign it.
 FRAMEWORK=${OUTPUT}/libssruntime.framework
 # The framework's public header + module-map umbrella is the plain-C header
-# (libs/ssruntime/target/ssruntime.h). build.rs also emits the C++ variant as
-# ssruntime.hpp, which ships in the SDK release's include/ for C++ consumers
-# (e.g. Godot). A C umbrella keeps the clang module importable from Swift/ObjC.
+# (libs/ssruntime/target/ssruntime.h). A C umbrella keeps the clang module
+# importable from Swift/ObjC, and its `extern "C"` guards keep it importable from
+# ObjC++/C++ too. build.rs also emits the C++ variant as ssruntime.hpp, which
+# ships in the SDK release's include/ for consumers that prefer it (e.g. Godot).
 "${BASEDIR}/make-macos-framework.sh" \
     "${OUTPUT}/libssruntime.dylib" \
     "${FRAMEWORK}" \
