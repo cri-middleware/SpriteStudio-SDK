@@ -22,13 +22,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     config.write_to_file(output_file);
 
-    // Also emit a plain C header (.h) for ffigen / C-only consumers: the Flutter
-    // Body runs `dart run ffigen` over it, and it is the module-map umbrella for
-    // the macOS/iOS framework. The C++ header ships alongside as .hpp (above);
-    // both go into the SDK release's include/. Consumers pick by extension
-    // (.h = C, .hpp = C++).
+    // Also emit a plain C header (.h) for ffigen / C consumers. `cpp_compat`
+    // wraps it in `extern "C"` so the same header links correctly from C++ as
+    // well; ffigen parses in C mode, where the guard disappears. See
+    // libs/ssruntime/build.rs for the full reasoning. The C++ header still ships
+    // alongside as .hpp (above) for consumers that want its ergonomics.
     let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssconverter.h");
-    match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::C).generate() {
+    match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).generate() {
         Ok(bindings) => {
             bindings.write_to_file(&c_output_file);
         }

@@ -138,9 +138,10 @@ jobs:
           cp target/release/*.a lib/
           cp target/release/*.so lib/
           mkdir -p lib/include
-          # cbindgen emits both a plain-C header (.h) and a C++ header (.hpp);
-          # ship both so consumers pick by extension (ffigen / C use .h,
-          # Godot / C++ use .hpp).
+          # cbindgen emits both a plain-C header (.h) and a C++ header (.hpp).
+          # The .h carries `extern "C"` guards, so it serves C and C++ alike
+          # (ffigen and the framework module map need this one); the .hpp ships
+          # alongside for consumers that prefer its C++ ergonomics, such as Godot.
           cp libs/ssruntime/target/ssruntime.h lib/include/
           cp libs/ssconverter/target/ssconverter.h lib/include/
           cp libs/ssruntime/target/ssruntime.hpp lib/include/
