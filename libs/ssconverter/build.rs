@@ -10,23 +10,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=src");
 
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let output_file = PathBuf::from(&crate_dir).join("target").join("ssconverter.hpp");
 
-    let config = match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::Cxx).generate() {
-        Ok(bindings) => bindings,
-        Err(e) => {
-            eprintln!("Error generating C++ bindings: {:?}", e);
-            panic!("Unable to generate bindings: {}", e);
-        }
-    };
-
-    config.write_to_file(output_file);
-
-    // Also emit a plain C header (.h) for ffigen / C consumers. `cpp_compat`
-    // wraps it in `extern "C"` so the same header links correctly from C++ as
-    // well; ffigen parses in C mode, where the guard disappears. See
-    // libs/ssruntime/build.rs for the full reasoning. The C++ header still ships
-    // alongside as .hpp (above) for consumers that want its ergonomics.
+    // Emit a plain C header (.h) for ffigen / C consumers. `cpp_compat` wraps it
+    // in `extern "C"` so the same header links correctly from C++ as well;
+    // ffigen parses in C mode, where the guard disappears. See
+    // libs/ssruntime/build.rs for the full reasoning.
     let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssconverter.h");
     match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).generate() {
         Ok(bindings) => {
