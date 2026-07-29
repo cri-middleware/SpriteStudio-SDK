@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Entries follow [Conventional Commits](https://www.conventionalcommits.org/); newest first.
 
-## v7.0.0-alpha.1 - Unreleased
+## v7.0.0-beta.1 - Unreleased
 
 ### Adds APIs / Features
 - **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting OPTPiX SpriteStudio 7.
@@ -16,6 +16,3 @@ Entries follow [Conventional Commits](https://www.conventionalcommits.org/); new
 
 ### Updates
 - **Minimum Supported Rust Version**: building from source requires Rust 1.97 or newer.
-
-### Known Limitations
-- macOS/iOS binaries are not yet code-signed.
