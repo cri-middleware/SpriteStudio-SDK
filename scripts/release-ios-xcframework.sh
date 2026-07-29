@@ -55,8 +55,7 @@ OUT_DYNAMIC=${WORK}/dynamic
 /bin/rm -rf ${OUT_STATIC} ${OUT_DYNAMIC} ${STAGE}
 /bin/mkdir -p ${HDR_DIR} ${STAGE}/sim-static ${STAGE}/sim-dynamic ${STAGE}/device-dynamic
 # Use the plain-C header (.h) as the xcframework's public header + module-map
-# umbrella; build.rs also emits a C++ .hpp variant, carried in the release
-# include/. A C umbrella keeps the clang module importable from Swift/ObjC.
+# umbrella. A C umbrella keeps the clang module importable from Swift/ObjC.
 cp libs/ssruntime/target/ssruntime.h ${HDR_DIR}/
 
 D=${BUILD_MODE}

@@ -138,14 +138,11 @@ jobs:
           cp target/release/*.a lib/
           cp target/release/*.so lib/
           mkdir -p lib/include
-          # cbindgen emits both a plain-C header (.h) and a C++ header (.hpp).
-          # The .h carries `extern "C"` guards, so it serves C and C++ alike
-          # (ffigen and the framework module map need this one); the .hpp ships
-          # alongside for consumers that prefer its C++ ergonomics, such as Godot.
+          # cbindgen emits one plain-C header (.h) per crate. It carries
+          # `extern "C"` guards, so it serves C and C++ alike (ffigen and the
+          # framework module map need this one).
           cp libs/ssruntime/target/ssruntime.h lib/include/
           cp libs/ssconverter/target/ssconverter.h lib/include/
-          cp libs/ssruntime/target/ssruntime.hpp lib/include/
-          cp libs/ssconverter/target/ssconverter.hpp lib/include/
           # csbindgen C# FFI bindings (platform-independent; Linux is the canonical
           # source, mirroring how the .h headers above are collected). Consumers
           # such as SSPlayerForUnity need these to compile against the libs.
@@ -333,7 +330,7 @@ jobs:
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
 
-          cp ../spritestudio-sdk-libraries-linux/include/*.h ../spritestudio-sdk-libraries-linux/include/*.hpp include/
+          cp ../spritestudio-sdk-libraries-linux/include/*.h include/
           mkdir -p bindings
           cp ../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
 
@@ -388,7 +385,7 @@ jobs:
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
 
-          mv ../spritestudio-sdk-libraries-linux/include/*.h ../spritestudio-sdk-libraries-linux/include/*.hpp include/
+          mv ../spritestudio-sdk-libraries-linux/include/*.h include/
           mkdir -p bindings
           cp ../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
 
