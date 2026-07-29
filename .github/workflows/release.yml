@@ -459,6 +459,7 @@ jobs:
               platform=${dir#artifacts/ssconverter-cli-}
               cp LICENSE.md "$dir"/
               cp target/licenses/THIRD-PARTY-LICENSES.cli.md "$dir"/THIRD-PARTY-LICENSES.md
+              chmod +x "$dir"/ssconverter-cli 2>/dev/null || true
               zip -rj "release-dist/ssconverter-cli-${platform}.zip" "$dir"
             fi
           done
