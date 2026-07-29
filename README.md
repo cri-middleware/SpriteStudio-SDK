@@ -1,11 +1,6 @@
 [**日本語**](./README.ja.md) | [**English**](./README.md)
 # SpriteStudio-SDK
 
-
-
-This repository is in an experimental and unstable phase.
-No guarantees or support are provided, and we cannot respond to requests or bug reports at this time.
-
 A high-performance, engine-agnostic animation player SDK for **OPTPiX SpriteStudio 7**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
