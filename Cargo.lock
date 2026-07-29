@@ -275,9 +275,9 @@ dependencies = [
 
 [[package]]
 name = "either"
-version = "1.16.0"
+version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91622ff5e7162018101f2fea40d6ebf4a78bbe5a49736a2020649edf9693679e"
+checksum = "9e5e8f6c15a24b9a3ee5efec809ccd006d3b30e8b3bb63c39af737c7f87daa1d"
 
 [[package]]
 name = "equivalent"
@@ -689,14 +689,14 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "ssab"
-version = "7.0.0-alpha.1"
+version = "7.0.0-beta.1"
 dependencies = [
  "flatbuffers",
 ]
 
 [[package]]
 name = "ssconverter"
-version = "7.0.0-alpha.1"
+version = "7.0.0-beta.1"
 dependencies = [
  "cbindgen",
  "csbindgen",
@@ -713,7 +713,7 @@ dependencies = [
 
 [[package]]
 name = "ssconverter-cli"
-version = "7.0.0-alpha.1"
+version = "7.0.0-beta.1"
 dependencies = [
  "clap",
  "rayon",
@@ -723,7 +723,7 @@ dependencies = [
 
 [[package]]
 name = "ssinterpolate"
-version = "7.0.0-alpha.1"
+version = "7.0.0-beta.1"
 dependencies = [
  "libm",
  "wide",
@@ -731,7 +731,7 @@ dependencies = [
 
 [[package]]
 name = "sspj"
-version = "7.0.0-alpha.1"
+version = "7.0.0-beta.1"
 dependencies = [
  "quick-xml",
  "rayon",
@@ -740,7 +740,7 @@ dependencies = [
 
 [[package]]
 name = "ssruntime"
-version = "7.0.0-alpha.1"
+version = "7.0.0-beta.1"
 dependencies = [
  "cbindgen",
  "csbindgen",
@@ -854,9 +854,9 @@ dependencies = [
 
 [[package]]
 name = "toml_parser"
-version = "1.1.2+spec-1.1.0"
+version = "1.1.3+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
+checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
 dependencies = [
  "winnow 1.0.4",
 ]
