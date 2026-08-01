@@ -148,6 +148,31 @@ The polarity is **not decided by the feature**; it is decided uniformly by the m
 
 **Shapes, which have no texture,** are exempt from the threshold (the whole geometry forms the shape).
 
+### 2-6. Composing mask settings down an instance hierarchy
+
+When the masked target is an **instance part (a sub-animation reference)**, the mask reaches **the whole sub-animation**. The caller's settings (on the instance part) and the callee's (on each part inside the sub-animation) are then **composed** — neither one simply wins.
+
+| Setting | Composition | Meaning |
+|---|---|---|
+| `visible_inside_mask` | **OR** (accumulates down the hierarchy) | once any level asks for "inside", everything below it draws inside |
+| `mask_influence` | **AND** (chains down the hierarchy) | if the caller is not a mask target, nothing below it is masked |
+
+Computing the effective values:
+
+```
+effective influence      = caller's effective influence && own mask_influence
+effective visible_inside = caller's effective visible_inside || own visible_inside_mask
+```
+
+- **The identity elements are `influence = 1` / `visible_inside = 0`.** A top-level animation (called by no instance) starts from those, so each of its parts is evaluated exactly by its own settings.
+- Once `mask_influence` reaches `0` through the AND it can never return to `1`, so "not masked" is settled for the whole subtree.
+- **Scope** (which writers reach the part, [§2-1](#2-1-scope-which-drawn-parts-a-mask-reaches)) is still decided by **the instance part's own rank**. What composes is the **target decision ([§2-2](#2-2-opting-out-of-the-mask-effect)) and the polarity ([§2-4](#2-4-polarity-whether-to-draw-inside-or-outside-the-mask))**.
+- **`mask_write` does not take part in the composition.** It states that the part writes a mask of its own — a local fact, not something a descendant takes on. (It still makes that part itself a target, as in [§2-2](#2-2-opting-out-of-the-mask-effect).)
+
+> **Implementation note**: in a Player that builds children independently, the natural approach is to **hand the composed values to the child immediately before the child builds**. The child can then resolve its own parts' roles against them, and the parent never has to rewrite the child's result afterwards. Because each level passes on what it has already composed, nesting chains with nothing extra to write. A fallback along the lines of "a child that carries its own setting wins, and only the ones without inherit from the caller" is neither the OR nor the AND — it is a third behaviour, and it disagrees with SS7.5 in both directions.
+
+> **Verification status**: the single-level (one caller) OR / AND has been checked against SS7.5. **Multi-level (nested) chaining is a straightforward generalisation of that single-level rule and is unverified.**
+
 ---
 
 ## 3. Implementation approaches
@@ -167,8 +192,9 @@ SpriteStudio's original masking mechanism is designed around a stencil buffer. I
 Masking splits into two kinds of draws: the **Writer** (which carves the mask's shape into the stencil) and the masked target's **Test** (which reads the carved stencil and decides inside vs outside).
 
 - **Writer**: writes no color (`ColorMask 0`). The stencil is always updated (`Comp = Always`), and the update operation `Pass` switches by the OP ([§2-3](#2-3-op-the-write-operation-into-the-stencil)):
-  - Increment mask → `IncrementWrap` / `DecrementWrap` (a **counter**; it counts nesting depth, up to 15 levels with 4 bits)
+  - Increment mask → `IncrementWrap` / `DecrementWrap` (a **counter**; it counts how many masks overlap)
   - Invert mask (the invert setting of `mask_influence`) → `Invert` (odd/even = the winding scheme; it is its own inverse operation)
+  - **These two OPs must never share bits.** They do not commute with each other, so mixing them makes coverage depend on draw order and leaves the cancellation short of zero ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required)). Split the `WriteMask` per OP.
   - `Ref` is unused (this is not Replace, so `0` is fine). The cutout is a fragment `discard` using the threshold from [§2-5](#2-5-cutout-threshold-which-pixels-are-written-into-the-coverage) (when the geometry itself is the mask, as with Shape, make the threshold negative to disable the discard).
 - **Test (the masked target)**: adds **only a stencil test** to the ordinary color drawing. The polarity ([§2-4](#2-4-polarity-whether-to-draw-inside-or-outside-the-mask)) is expressed through `Comp`:
   - `visible_inside_mask` (draw inside) → `NotEqual` (passes on pixels where the mask bits are set)
@@ -194,11 +220,31 @@ Many rendering pipelines, URP included, **use the stencil constantly for their o
 The workaround is to **isolate SS masking into a dedicated bit range with `ReadMask` / `WriteMask`**. The ForUnity implementation limits it to the **low 4 bits (`0x0F`)**:
 
 - This matches the **free bits** of URP's user-reserved allocation (bits 0-3 = UserMask / bit 4 = light / bits 5-6 = material type / bit 7 = reserved), so it can coexist with URP's features (the Built-in pipeline uses the same layout).
-- `WriteMask = 0x0F`: the carry of `IncrementWrap` **does not leak** into bit 4 (URP's light bit) - it is dropped by the mask.
+- The `WriteMask` stays **inside** `0x0F` (and is split further per OP — see [§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required)): the carry of `IncrementWrap` **does not leak** into bit 4 (URP's light bit) - it is dropped by the mask.
 - `ReadMask = 0x0F`: the test looks **only at its own bits**, so it can ignore whatever URP wrote into bits 4-7.
-- With the counter scheme (Incr/Decr) 4 bits give 15 levels of nesting; with the invert scheme it is odd/even. Note that **widening the bit range beyond `0x0F` destroys (and is destroyed by) URP's reserved bits**.
+- Because the 4 bits have to be split per OP ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required)), **only 3 are left for the counter = 7 overlapping masks**; the invert side is odd/even and has no limit. Note that **widening the bit range beyond `0x0F` destroys (and is destroyed by) URP's reserved bits**.
 
 > If the pipeline you port to uses the stencil, the standard approach is likewise to **choose a dedicated bit range and fence it off with the read/write masks**. On an engine where you cannot secure bits, or where the stencil is not exposed at all, switch to the coverage-bitmap approach (without a stencil) of [§3-2](#3-2-when-the-engine-does-not-expose-a-stencil).
+
+#### 3-1-4. Give each OP its own bit plane (required)
+
+`Invert` and `IncrementWrap`/`DecrementWrap` are **each their own inverse in isolation, but they do not commute with each other**. While they share bits, two things go wrong wherever writers of differing `mask_influence` overlap:
+
+- **Coverage depends on draw order**: `increment → invert` gives `0 → 1 → 254` (covered), while `invert → increment` gives `0 → 255 → 0` (**not covered**). The same two masks flip their result depending on the order they were written in.
+- **The cancellation does not return to zero**: `increment(1) → another invert(254) → decrement(253)`. What is left contaminates the mask test of every part drawn afterwards, breaking the self-cancellation of [§3-1-2](#3-1-2-preserving-stencil-state-before-and-after-drawing).
+
+A stencil write is `new = (OP(old) & WriteMask) | (old & ~WriteMask)`. The OP itself still runs on the whole value, but **restricting the written bits throws the carry / borrow away, so each plane stays closed**. So split the `WriteMask` per OP:
+
+| OP | Plane | Bits needed | Overlap |
+|---|---|---|---|
+| `Invert` | **parity** | 1 bit | odd/even. **No limit** |
+| `IncrementWrap` / `DecrementWrap` | **counter** | the remaining `n` bits | union. Up to `2^n - 1` |
+
+- One bit is enough for parity (`Invert` just flips that bit and never touches the counter).
+- The counter must be **contiguous from bit 0** (increment/decrement are ordinary arithmetic).
+- **The Test side (target parts) needs no change.** `ReadMask` still covers both planes and the decision is still "value ≠ 0", which is exactly a **union of the two planes** — matching the specification that masks of differing `mask_influence` compose as a union where they overlap.
+
+The ForUnity implementation splits the `0x0F` of [§3-1-3](#3-1-3-workaround-when-the-engine-uses-the-stencil-routinely-urp-and-similar) into **parity `0x08` / counter `0x07`** (so `mask_influence == 0` masks stack up to 7 deep).
 
 ### 3-2. When the engine does not expose a stencil
 
@@ -344,13 +390,14 @@ void fragment() {
 
 1. The parent passes **its coverage texture, `mask_meta`, and writer count** to the instance child's Player.
 2. Compose the UV transform: `M_child = M_parent · slot_xf` (`slot_xf` = the instance placement matrix from child-local to parent-local). This correctly maps each of the child's vertices' player-local coordinates into **the parent's coverage UV**.
-3. Decide the whole sub-animation at once using **the instance part's own `rank` and `visible_inside_mask`** (do not evaluate the child's individual parts).
+3. Hand over the **composed mask settings** as well ([§2-6](#2-6-composing-mask-settings-down-an-instance-hierarchy)). Each part inside the sub-animation decides its target status and polarity from **the effective values handed down composed with its own settings**. **Use the instance part's own rank for the scope decision** (the replay shader's `this_rank`), because the sub-animation sits at the instance part's position in the parent's draw order.
 
 Key points:
 
-- **Inheritance is single-level (one layer)**. An instance is treated as "one masked target".
-- Inheritance applies only when the instance part is **a mask target (`mask_influence == 1` or `mask_write`) and inside the parent mask's scope (or `visible_inside`)**.
-- The child only references the parent's coverage and never builds its own (if the child has masks of its own, those are a separate track).
+- **The settings compose** ([§2-6](#2-6-composing-mask-settings-down-an-instance-hierarchy)): `visible_inside_mask` with OR, `mask_influence` with AND. Do not decide the sub-animation as one settings-less blob from the caller's values alone - the child parts' own settings take part in the decision too.
+- **The composition chains through the hierarchy.** If each level passes on what it has already composed, nesting needs nothing extra (multi-level is unverified - see the verification status in [§2-6](#2-6-composing-mask-settings-down-an-instance-hierarchy)).
+- The coverage and metadata (which writer owns which bit) are **owned solely by the parent**. The child only references the parent's coverage and never builds its own (if the child has masks of its own, those are a separate track).
+- The parent's mask reaches the child only when the instance part is **a mask target (`mask_influence == 1` or `mask_write`)**; otherwise the AND leaves everything below it unmasked.
 
 #### 3-2-3. Coverage-bitmap size classes and the one-frame delay (handling continuous scaling)
 
@@ -397,12 +444,13 @@ For self-checking against omissions. See the corresponding section for the ratio
 - [ ] **Disabling writers** ([§2-2](#2-2-opting-out-of-the-mask-effect)): writers with `mask == 0` are skipped (`Hide` is not included in `draw_order`, so the Player need not check it).
 - [ ] **Opting out** ([§2-2](#2-2-opting-out-of-the-mask-effect)): a target drawn part is affected only when `mask_influence == 1`.
 - [ ] **OP** ([§2-3](#2-3-op-the-write-operation-into-the-stencil)): `mask_influence` is applied as `0` = increment / `1` = invert, shared by pure masks and clipping.
+- [ ] **A bit plane per OP** ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required), GPU stencil approach): `Invert` and `Incr`/`Decr` were given separate `WriteMask`s and share no bits (the Test side's `ReadMask` still covers both planes).
 - [ ] **Polarity** ([§2-4](#2-4-polarity-whether-to-draw-inside-or-outside-the-mask)): decided by **the target part's `visible_inside_mask`**, not by the feature, with `masked == visible_inside`.
 - [ ] **Scope** ([§2-1](#2-1-scope-which-drawn-parts-a-mask-reaches)): masks are applied to targets with a lower rank than themselves, clipping to targets with a higher rank.
 - [ ] **Cutout threshold** ([§2-5](#2-5-cutout-threshold-which-pixels-are-written-into-the-coverage)): the pixels written into the coverage are narrowed with `(255 - mask) / 255` (`mask` is a float). Shapes without a texture are exempt.
 - [ ] **Preserving stencil state** ([§3-1-2](#3-1-2-preserving-stencil-state-before-and-after-drawing), the GPU stencil approach): pure masks cancel at their own rank and **clipping cancels at the end of its object's drawing**, applying the inverse operation with the same shape as the write (preventing contamination of other SS objects within the same frame).
 - [ ] **Skipping color drawing for pure masks** ([§3-3](#3-3-common-notes)): the color batches of mask parts / parts turned into pure masks are not drawn.
-- [ ] **Instance inheritance** ([§3-2-2](#3-2-2-deriving-the-coverage-uv-and-inheritance-into-instances-sub-animations)): when the masked target is an instance, the whole sub-animation is decided as one target using the parent's coverage and metadata (single level only).
+- [ ] **Instance-hierarchy composition** ([§2-6](#2-6-composing-mask-settings-down-an-instance-hierarchy)): each part inside a sub-animation is decided from its own settings composed with the caller's - `visible_inside_mask` with OR, `mask_influence` with AND (`mask_write` stays out of it; the scope uses the instance part's own rank).
 
 ---
 [Back to Table of Contents](../README.md)
