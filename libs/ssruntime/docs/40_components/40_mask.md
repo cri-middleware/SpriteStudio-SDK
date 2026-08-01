@@ -246,6 +246,8 @@ A stencil write is `new = (OP(old) & WriteMask) | (old & ~WriteMask)`. The OP it
 
 The ForUnity implementation splits the `0x0F` of [§3-1-3](#3-1-3-workaround-when-the-engine-uses-the-stencil-routinely-urp-and-similar) into **parity `0x08` / counter `0x07`** (so `mask_influence == 0` masks stack up to 7 deep).
 
+> **This rule does not depend on the implementation approach.** The coverage-bitmap approach of [§3-2](#3-2-when-the-engine-does-not-expose-a-stencil) replays the very same operations, so it applies there unchanged. What it splits is not bits but **accumulators**, and with no bit budget to divide the depth limit above does not apply either (see the replay in [§3-2-1](#3-2-1-reference-implementation-pseudocode-for-the-coverage-bitmap-approach)).
+
 ### 3-2. When the engine does not expose a stencil
 
 For example, Godot 4.6's 2D canvas does not expose a stencil buffer. On such an engine you can reproduce the stencil with the following hybrid approach:
@@ -350,7 +352,10 @@ bool mask_passes(vec2 cov_uv) {
         return visible_inside <= 0.5;
 
     vec4 cov = texture(coverage, cov_uv);   // the sampler must be nearest
-    int stencil = 0;
+    // The plane split of §3-1-4. These are ordinary shader variables rather than
+    // a real stencil, so there is no bit budget to divide — two accumulators do.
+    int parity = 0;   // invert (mask_influence == 1): covered where an odd number overlap
+    int count  = 0;   // increment (mask_influence == 0): covered where any overlap
     for (int i = 0; i < mask_count; i++) {
         vec4 m = mask_meta[i];
         bool is_clipping = m.w > 0.5;
@@ -361,11 +366,11 @@ bool mask_passes(vec2 cov_uv) {
         int bit  = int(m.y + 0.5);
         int byte = int(cov[bit / 8] * 255.0 + 0.5);
         if (((byte >> (bit % 8)) & 1) == 0) continue;
-        // §2-3 OP
-        if (m.z > 0.5) stencil = (~stencil) & 0xFF;     // invert
-        else           stencil = (stencil + 1) & 0xFF;  // increment
+        // §2-3 OP (§3-1-4: never mix these two into one accumulator)
+        if (m.z > 0.5) parity ^= 1;                     // invert
+        else           count  += 1;                     // increment
     }
-    bool masked = (stencil != 0);
+    bool masked = (parity != 0) || (count != 0);        // union of the two planes
     return masked == (visible_inside > 0.5);            // §2-4 decision formula
 }
 
@@ -381,6 +386,8 @@ void fragment() {
 - **The coverage sampler must be nearest** (with LINEAR, adjacent bits blend and decode incorrectly)
 - **Outside the bbox, branch on `visible_inside` alone** (treat it as equivalent to having no writer)
 - Compare `mask_meta[i].x` (= the writer's own `draw_rank`) against the target's `this_rank` ([§2-1](#2-1-scope-which-drawn-parts-a-mask-reaches) scope decision)
+- **Never mix invert and increment into one accumulator** ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required)). That rule is not specific to the GPU-stencil approach: **the replay reproduces the same operations, so it applies here unchanged**. Folding both into a single `stencil` makes coverage depend on **the order the writers happen to be listed in** wherever writers of differing `mask_influence` overlap (`increment → invert` covers, `invert → increment` does not).
+- The replay side, however, has **no bit budget to worry about**. These are shader variables rather than a real stencil, so the "3 bits of counter = 7 overlapping masks" ceiling of [§3-1-3](#3-1-3-workaround-when-the-engine-uses-the-stencil-routinely-urp-and-similar) does not apply; overlap is free up to the writer count (24).
 
 #### 3-2-2. Deriving the coverage UV and inheritance into instances (sub-animations)
 
@@ -444,7 +451,7 @@ For self-checking against omissions. See the corresponding section for the ratio
 - [ ] **Disabling writers** ([§2-2](#2-2-opting-out-of-the-mask-effect)): writers with `mask == 0` are skipped (`Hide` is not included in `draw_order`, so the Player need not check it).
 - [ ] **Opting out** ([§2-2](#2-2-opting-out-of-the-mask-effect)): a target drawn part is affected only when `mask_influence == 1`.
 - [ ] **OP** ([§2-3](#2-3-op-the-write-operation-into-the-stencil)): `mask_influence` is applied as `0` = increment / `1` = invert, shared by pure masks and clipping.
-- [ ] **A bit plane per OP** ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required), GPU stencil approach): `Invert` and `Incr`/`Decr` were given separate `WriteMask`s and share no bits (the Test side's `ReadMask` still covers both planes).
+- [ ] **A plane per OP** ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required), **both approaches**): `Invert` and `Incr`/`Decr` are not mixed into the same bits or the same accumulator. With a GPU stencil that means a separate `WriteMask` per OP (the Test side's `ReadMask` still covers both planes); with the coverage bitmap it means two accumulators in the replay, combined as a union ([§3-2](#3-2-when-the-engine-does-not-expose-a-stencil)).
 - [ ] **Polarity** ([§2-4](#2-4-polarity-whether-to-draw-inside-or-outside-the-mask)): decided by **the target part's `visible_inside_mask`**, not by the feature, with `masked == visible_inside`.
 - [ ] **Scope** ([§2-1](#2-1-scope-which-drawn-parts-a-mask-reaches)): masks are applied to targets with a lower rank than themselves, clipping to targets with a higher rank.
 - [ ] **Cutout threshold** ([§2-5](#2-5-cutout-threshold-which-pixels-are-written-into-the-coverage)): the pixels written into the coverage are narrowed with `(255 - mask) / 255` (`mask` is a float). Shapes without a texture are exempt.
