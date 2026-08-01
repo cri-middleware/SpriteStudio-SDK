@@ -4,6 +4,8 @@
 **OPTPiX SpriteStudio 7** 向けの、ハイパフォーマンスでエンジン非依存なアニメーションプレイヤー SDK です。
 この SDK を使用することで、あらゆるゲームエンジンやレンダリングフレームワーク上で、**ラスターベースの 2D アニメーション**を簡単に実装・再生することができます。
 
+📚 この SDK・各公式 Player・変換ツールの関係は、エコシステム全体のポータル [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/) にまとまっています — 🚧 初回リリース後に公開。
+
 ## 🎯 対応バージョン (Compatibility)
 
 SpriteStudio-SDK `7.x.x` は **OPTPiX SpriteStudio 7.5 以上**で作成されたプロジェクトに対応しています。
