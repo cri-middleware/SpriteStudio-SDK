@@ -4,6 +4,8 @@
 A high-performance, engine-agnostic animation player SDK for **OPTPiX SpriteStudio 7**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
+📚 How this SDK, the official players, and the conversion tools fit together is documented in [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/), the portal for the whole ecosystem — 🚧 live after the first release.
+
 ## 🎯 Compatibility
 
 SpriteStudio-SDK `7.x.x` supports projects authored in **OPTPiX SpriteStudio 7.5 or later**.
