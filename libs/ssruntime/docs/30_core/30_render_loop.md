@@ -19,7 +19,9 @@ Using APIs such as `ss_runtime_get_world_matrices(ctx, &ptr, &len)`, you can ref
 
 ### World matrices can be reflections — do not decompose them naively
 
-A world matrix is a general affine basis, not a position + rotation + scale triple. Its determinant is negative whenever the pose is mirrored, which happens in two independent ways: a negative scale authored on the part or inherited from an ancestor, and any mirroring the Player itself folds into its root transform (a horizontal-flip feature, for example).
+A world matrix is a general affine basis, not a position + rotation + scale triple. Its determinant is negative whenever the pose has been mirrored an odd number of times. Two independent sources contribute: a negative scale authored on the part or inherited from an ancestor, and any mirroring the Player folds into its own root transform (a horizontal-flip feature, for example).
+
+**They compose, so they cancel in pairs.** Mirroring the Player does not make the determinant negative — it *toggles* it. Parts authored mirrored are ordinary in real data (the `Ringo` test asset has eight such parts out of sixty-nine), and those are precisely the ones that come back positive the moment the Player flips. Never infer the sign from the flip settings, or from the absence of them; read it off the matrix you are actually holding.
 
 A reflection is not a rotation. Engines that express orientation as a quaternion or as Euler angles cannot represent one, so their "extract the rotation from this matrix" helpers are **undefined** on a negative-determinant matrix — they return meaningless values rather than merely inaccurate ones. Handing the matrix straight to a node transform is safe only where the engine's transform type stores a full affine, meaning one that carries a signed scale and ideally skew.
 
