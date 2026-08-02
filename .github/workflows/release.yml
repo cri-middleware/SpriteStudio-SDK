@@ -41,7 +41,7 @@ jobs:
             platform: linux
             arch: aarch64
 
-          - name: 🏁 Windows (x86_64, MSVC)
+          - name: 🏁 Windows (x86_64 + arm64, MSVC)
             os: windows-latest
             platform: windows
             arch: x86_64
@@ -229,6 +229,20 @@ jobs:
           cp target/x86_64-pc-windows-msvc/release/*.lib lib/x86_64/
           cp target/x86_64-pc-windows-msvc/release/*.dll lib/x86_64/
 
+          # arm64 cross-compiles from this x86_64 runner (MSVC ships the ARM64
+          # toolchain), so it rides the same job instead of a matrix entry —
+          # the same shape as the Android job emitting three ABIs at once.
+          # The CLI lands in its own tree and ships as its own artifact: the
+          # packaging step zips every ssconverter-cli-* artifact with `zip -rj`,
+          # which would collide two ssconverter-cli.exe at the zip root.
+          rustup target add aarch64-pc-windows-msvc
+          ./scripts/release-windows-arm64.ps1
+          mkdir bin-arm64
+          cp target/aarch64-pc-windows-msvc/release/ssconverter-cli.exe bin-arm64/
+          mkdir lib/arm64
+          cp target/aarch64-pc-windows-msvc/release/*.lib lib/arm64/
+          cp target/aarch64-pc-windows-msvc/release/*.dll lib/arm64/
+
       - name: Install wasm-pack
         if: matrix.platform == 'web'
         uses: taiki-e/install-action@07b4745e0c39a41822af610387492e3e53aa222b # v2
@@ -258,6 +272,14 @@ jobs:
         with:
           name: ssconverter-cli-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: bin
+          if-no-files-found: error
+
+      - name: Upload artifact ssconverter-cli (Windows arm64)
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ssconverter-cli-windows-arm64
+          path: bin-arm64
           if-no-files-found: error
 
       - name: Upload artifact libraries
@@ -314,6 +336,7 @@ jobs:
           mkdir -p android/arm64-v8a
           mkdir -p android/x86_64
           mkdir -p windows/x86_64
+          mkdir -p windows/arm64
           popd # libs
 
           mv ../spritestudio-sdk-libraries-macos/libssconverter.a libs/macos/
@@ -329,6 +352,8 @@ jobs:
           mv ../spritestudio-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
+          mv ../spritestudio-sdk-libraries-windows/arm64/ssconverter.lib libs/windows/arm64
+          mv ../spritestudio-sdk-libraries-windows/arm64/ssruntime.lib libs/windows/arm64
 
           cp ../spritestudio-sdk-libraries-linux/include/*.h include/
           mkdir -p bindings
@@ -362,6 +387,7 @@ jobs:
           mkdir -p android/arm64-v8a
           mkdir -p android/x86_64
           mkdir -p windows/x86_64
+          mkdir -p windows/arm64
           popd # libs
 
           mv ../spritestudio-sdk-libraries-macos/libssconverter.dylib libs/macos/
@@ -384,6 +410,8 @@ jobs:
           mv ../spritestudio-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
           mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
+          mv ../spritestudio-sdk-libraries-windows/arm64/ssconverter.dll libs/windows/arm64
+          mv ../spritestudio-sdk-libraries-windows/arm64/ssruntime.dll libs/windows/arm64
 
           mv ../spritestudio-sdk-libraries-linux/include/*.h include/
           mkdir -p bindings
