@@ -89,7 +89,7 @@ Follow these steps to convert a sample project and see the SDK in action.
 ### 1. Download the Tools or Libraries
 Download the latest version of the tools for your platform from the [GitHub Releases](https://github.com/cri-middleware/SpriteStudio-SDK/releases) page.
 - **ssconverter-cli**: Pre-built binaries are available for **Windows**, **macOS**, and **Linux**.
-- **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio-sdk-web.zip`.
+- **Web (WASM)**: A pre-built package for direct JavaScript/TypeScript usage is available as `spritestudio-sdk-web-libs.zip`.
 
 ### 2. Convert a Sample Project
 Run the downloaded tool to convert one of the bundled test projects into the binary `.ssab` format:
