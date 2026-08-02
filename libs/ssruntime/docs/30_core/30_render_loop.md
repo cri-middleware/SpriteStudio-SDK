@@ -17,6 +17,20 @@ Using APIs such as `ss_runtime_get_world_matrices(ctx, &ptr, &len)`, you can ref
 | **Texture hashes** | `ss_runtime_get_cell_texture_hashes` | The identifier of the texture on the **cell** side of the part (not what you bind — see §2) |
 | **UV / cell meta** | `ss_runtime_get_local_uvs`, `cell_meta` | Animated UV coordinates and cell sizes |
 
+### World matrices can be reflections — do not decompose them naively
+
+A world matrix is a general affine basis, not a position + rotation + scale triple. Its determinant is negative whenever the pose is mirrored, which happens in two independent ways: a negative scale authored on the part or inherited from an ancestor, and any mirroring the Player itself folds into its root transform (a horizontal-flip feature, for example).
+
+A reflection is not a rotation. Engines that express orientation as a quaternion or as Euler angles cannot represent one, so their "extract the rotation from this matrix" helpers are **undefined** on a negative-determinant matrix — they return meaningless values rather than merely inaccurate ones. Handing the matrix straight to a node transform is safe only where the engine's transform type stores a full affine, meaning one that carries a signed scale and ideally skew.
+
+This matters as soon as the Player exposes part poses to game code — attaching a weapon or a hitbox to a part, say. In that case:
+
+* **Translation is always exact**, whatever the determinant.
+* To recover an orientation, make the basis proper first (negate one column) and carry the reflection separately, typically as a negative scale on that axis.
+* Which column you negate is a convention, and it decides where the leftover shows up. Put the sign on Y, and a horizontal mirror leaves an extra 180 degrees in the extracted rotation while a vertical one leaves none. Any consumer that takes the rotation but drops the scale inherits that residue, and never mirrors the attached object itself.
+
+That last point is a property of the decomposition, not a defect to fix at this layer, so state the chosen convention and its consequence in the Player's own documentation.
+
 ### UV animation and flipping are already applied to the data you obtain
 
 UV animation (moving, rotating, and scaling the texture cut-out region) and part / cell flipping (`flip_h` / `flip_v` / `img_flip_h` / `img_flip_v`) are **all computed on the Brain side and already reflected in `local_vertices` / `local_uvs`**. The Player only needs to pass the SoA buffers above straight through as vertex and texture coordinates; no extra logic to flip coordinates or UVs is required.
