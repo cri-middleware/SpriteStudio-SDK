@@ -38,7 +38,7 @@ Per part-type implementation details for richer expression.
 - [**External Resources & Textures**](./40_components/70_external_resources.md) — texture resolution / authored texture change (TCHG) / external SSAB references
 - [**Sequence**](./40_components/80_sequence.md)
 - [**Audio**](./40_components/90_audio.md)
-- [**Special Part Types**](./40_components/95_special_parts.md)
+- [**Special Part Types**](./40_components/95_special_parts.md) — 9-slice / shape / text / sound; the text section carries the glyph layout specification
 
 ### 50. Reference
 - [**no_std Integration**](./50_reference/10_no_std_integration.md)

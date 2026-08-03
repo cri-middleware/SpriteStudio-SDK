@@ -56,7 +56,7 @@ graph LR
 - [**外部リソースとテクスチャの管理**](./40_components/70_external_resources.ja.md) — テクスチャの解決 / 作画によるテクスチャ変更 (TCHG) / 外部 SSAB 参照
 - [**シーケンス (Sequence)**](./40_components/80_sequence.ja.md)
 - [**オーディオ（サウンド）再生の統合**](./40_components/90_audio.ja.md)
-- [**特殊なパーツタイプ (9スライス / シェイプ / サウンド)**](./40_components/95_special_parts.ja.md)
+- [**特殊なパーツタイプ (9スライス / シェイプ / テキスト / サウンド)**](./40_components/95_special_parts.ja.md) — テキストはグリフのレイアウト仕様も含みます
 
 ### 50. リファレンス (Reference)
 - [**no_std 組み込み環境への統合**](./50_reference/10_no_std_integration.ja.md)
