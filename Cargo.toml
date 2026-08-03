@@ -28,7 +28,7 @@ ssab = { path = "libs/ssab", default-features = false }
 ssruntime = { path = "libs/ssruntime" }
 ssinterpolate = { path = "libs/ssinterpolate" }
 flatbuffers = { version = "25.12.19", default-features = false }
-wide = { version = "1.5.0", default-features = false }
+wide = { version = "1.6.0", default-features = false }
 libm = "0.2.16"
 wasm-bindgen = { version = "0.2.126", default-features = false }
 dlmalloc = "0.2.14"

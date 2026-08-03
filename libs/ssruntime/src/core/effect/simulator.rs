@@ -20,14 +20,14 @@ pub fn out_quad(t: f32, total_time: f32, max: f32, min: f32) -> f32 {
 pub fn out_quad_simd(t: f32x4, total_time: f32x4, max: f32x4, min: f32x4) -> f32x4 {
     let mut t = t;
     let t_gt_total = t.simd_gt(total_time);
-    t = t_gt_total.blend(total_time, t);
+    t = t_gt_total.select(total_time, t);
 
     let range = max - min;
     let t_norm = t / total_time;
     let res = (-range * t_norm).mul_add(t_norm - f32x4::splat(2.0), min);
 
     let total_time_zero = total_time.simd_eq(f32x4::splat(0.0));
-    total_time_zero.blend(f32x4::splat(0.0), res)
+    total_time_zero.select(f32x4::splat(0.0), res)
 }
 
 fn blend_number(a: u8, b: u8, rate: f32) -> u8 {
@@ -427,7 +427,7 @@ impl EffectSimulator {
         let life = endtimes_f - stimes_f;
 
         let life_zero = life.simd_eq(f32x4::splat(0.0));
-        let life_safe = life_zero.blend(f32x4::splat(1.0), life);
+        let life_safe = life_zero.select(f32x4::splat(1.0), life);
 
         let lifeper = t / life_safe;
 
@@ -450,7 +450,7 @@ impl EffectSimulator {
             let mut addr = f32x4::splat(0.0);
             if particle_params.use_tan_accel {
                 let accel = rng.gen_float().mul_add(f32x4::splat(particle_params.tangential_accel2), f32x4::splat(particle_params.tangential_accel));
-                let speed_safe = speed.simd_le(f32x4::splat(0.0)).blend(f32x4::splat(0.1), speed);
+                let speed_safe = speed.simd_le(f32x4::splat(0.0)).select(f32x4::splat(0.1), speed);
                 let l = life_safe * speed_safe * f32x4::splat(0.2);
                 let c = f32x4::splat(core::f32::consts::PI) * l;
                 addr = (accel * c.recip()) * t;
@@ -501,15 +501,15 @@ impl EffectSimulator {
                 let res_zero = (add * f32x4::splat(particle_params.rotation_factor)).mul_add(t, rot);
 
                 let addf = add.mul_sub(f32x4::splat(particle_params.rotation_factor), add) * lastt.recip();
-                let mod_t = t.simd_gt(lastt).blend(t - lastt, f32x4::splat(0.0));
-                let nowt = t.simd_lt(lastt).blend(t, lastt);
+                let mod_t = t.simd_gt(lastt).select(t - lastt, f32x4::splat(0.0));
+                let nowt = t.simd_lt(lastt).select(t, lastt);
                 let final_soul = addf.mul_add(nowt, add);
                 let mut addrf = (final_soul + add) * (nowt + f32x4::splat(1.0)) * f32x4::splat(0.5);
                 addrf -= add;
                 addrf = mod_t.mul_add(final_soul, addrf);
                 let res_normal = rot + addrf;
 
-                rotation = lastt_zero.blend(res_zero, res_normal);
+                rotation = lastt_zero.select(res_zero, res_normal);
             } else {
                 rotation = add.mul_add(t, rot);
             }
@@ -551,9 +551,9 @@ impl EffectSimulator {
             let cond_end = per.simd_gt(end);
             let end_ge_100 = end.simd_ge(f32x4::splat(100.0));
             let alpha_end = ((per - end) / (f32x4::splat(100.0) - end)).min(f32x4::splat(1.0));
-            let color_a_end = end_ge_100.blend(f32x4::splat(0.0), color_a * (f32x4::splat(1.0) - alpha_end));
+            let color_a_end = end_ge_100.select(f32x4::splat(0.0), color_a * (f32x4::splat(1.0) - alpha_end));
 
-            color_a = cond_start.blend(color_a_start, cond_end.blend(color_a_end, color_a)).trunc();
+            color_a = cond_start.select(color_a_start, cond_end.select(color_a_end, color_a)).trunc();
         }
 
         let mut scale_x = f32x4::splat(1.0);
@@ -586,7 +586,7 @@ impl EffectSimulator {
             let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + emitter_pos_y);
             let dist_sq = vx.mul_add(vx, vy * vy);
             let inv_dist = dist_sq.recip_sqrt();
-            let inv_dist = dist_sq.simd_eq(f32x4::splat(0.0)).blend(f32x4::splat(0.0), inv_dist);
+            let inv_dist = dist_sq.simd_eq(f32x4::splat(0.0)).select(f32x4::splat(0.0), inv_dist);
             let nvx = vx * inv_dist;
             let nvy = vy * inv_dist;
             let dist = dist_sq * inv_dist;
@@ -608,8 +608,8 @@ impl EffectSimulator {
             let final_x_le = (nvx * gp).mul_add(t, final_x);
             let final_y_le = (nvy * gp).mul_add(t, final_y);
 
-            final_x = gp_gt_zero.blend(final_x_gt, final_x_le);
-            final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
+            final_x = gp_gt_zero.select(final_x_gt, final_x_le);
+            final_y = gp_gt_zero.select(final_y_gt, final_y_le);
         }
 
         let mut direction = [0.0; 4];
@@ -624,7 +624,7 @@ impl EffectSimulator {
             let mut addr = f32x4::splat(0.0);
             if particle_params.use_tan_accel {
                 let accel = gen_rand_next().mul_add(f32x4::splat(particle_params.tangential_accel2), f32x4::splat(particle_params.tangential_accel));
-                let speed_safe = speed.simd_le(f32x4::splat(0.0)).blend(f32x4::splat(0.1), speed);
+                let speed_safe = speed.simd_le(f32x4::splat(0.0)).select(f32x4::splat(0.1), speed);
                 let l = life_safe * speed_safe * f32x4::splat(0.2);
                 let c = f32x4::splat(core::f32::consts::PI) * l;
                 addr = (accel * c.recip()) * next_t;
@@ -668,7 +668,7 @@ impl EffectSimulator {
                 let vy = f32x4::splat(particle_params.gravity_pos.y) - (oy + emitter_pos_y);
                 let dist_sq = vx.mul_add(vx, vy * vy);
                 let inv_dist = dist_sq.recip_sqrt();
-                let inv_dist = dist_sq.simd_eq(f32x4::splat(0.0)).blend(f32x4::splat(0.0), inv_dist);
+                let inv_dist = dist_sq.simd_eq(f32x4::splat(0.0)).select(f32x4::splat(0.0), inv_dist);
                 let nvx = vx * inv_dist;
                 let nvy = vy * inv_dist;
                 let dist = dist_sq * inv_dist;
@@ -688,8 +688,8 @@ impl EffectSimulator {
                 let final_x_le = (nvx * gp).mul_add(next_t, next_final_x);
                 let final_y_le = (nvy * gp).mul_add(next_t, next_final_y);
 
-                next_final_x = gp_gt_zero.blend(final_x_gt, final_x_le);
-                next_final_y = gp_gt_zero.blend(final_y_gt, final_y_le);
+                next_final_x = gp_gt_zero.select(final_x_gt, final_x_le);
+                next_final_y = gp_gt_zero.select(final_y_gt, final_y_le);
             }
 
             let dy = next_final_y - final_y;
