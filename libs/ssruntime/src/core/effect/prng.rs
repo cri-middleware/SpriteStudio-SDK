@@ -56,7 +56,7 @@ impl XorShift32x4 {
         let exp = u32x4::splat(0x3F80_0000);
         let bits = (x >> 9) | exp;
 
-        let f: f32x4 = unsafe { core::mem::transmute(bits) };
+        let f = f32x4::from_bits(bits);
 
         f - f32x4::splat(1.0)
     }
