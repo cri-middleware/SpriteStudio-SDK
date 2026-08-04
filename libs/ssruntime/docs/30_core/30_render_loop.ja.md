@@ -167,8 +167,17 @@ SoA getter (§1) でカバーされない属性 — 例えば **`parts`（パー
 
 ## 4. マスクの実装
 
-マスクパーツが出現すると、`DrawBatchKind::Mask` が発行されます。
-Player はこれをフックにして、エンジンの Stencil Buffer や専用のマスタリング機能を開始・更新します。
+Player はマスクバッチをフックにして、エンジンの Stencil Buffer や専用のマスキング機能を開始・更新します。ここでは FrameData から何が読めるかだけを整理します。意味論・判定ルール・実装方式は [Mask の実装](../40_components/40_mask.ja.md) が正本です。
+
+**`DrawBatchKind::Mask` が発行されるパーツ**（いずれも `count = 1`・`vertex_count` / `index_count` は `0`）:
+
+- **マスクパーツ (`PartTypeMask`)**
+- **`draw_as_mask` でマスク化された描画パーツ (Shape / Nines)** — マスクバッチと自分の色バッチが **同じ rank に両方** 出ます。pure マスクは色を描かないので、Player は色バッチの方をスキップしてください（[Mask の実装 §3-3](../40_components/40_mask.ja.md#3-3-共通の注意点)）
+
+> [!IMPORTANT]
+> **クリッピング (`mask_write`) には `DrawBatchKind::Mask` は発行されません。** クリッピングは通常の描画バッチとしてのみ出るため、このバッチ種別だけをフックにした Player は **クリッピングを丸ごと取りこぼします**。writer の確定は PartData を読んで Player 側で行ってください（[Mask の実装 §1-2](../40_components/40_mask.ja.md#1-2-パーツの役割と-mask_influence)）。
+
+**`mask_indices`**: FrameData が持つ pure マスクのパーツ index 列です。**writer リストとしてそのまま使わないでください** — クリッピングを含まず、`Hide == true` のマスクパーツも落とさないため、`draw_order` と一致しません。
 
 ---
 [目次に戻る](../README.ja.md)

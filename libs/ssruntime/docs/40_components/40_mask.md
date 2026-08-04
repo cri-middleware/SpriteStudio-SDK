@@ -26,7 +26,7 @@ Let us first sort out the field names and terms that are easy to confuse. See ea
 | `mask_write` | **PartData (static)** | The flag that makes a drawn part a **clipping** writer |
 | `draw_as_mask` | **PartData (static)** | The unified flag that turns a drawn part (Shape/Text/Nines) into a **pure mask**. In authoring it is a per-type setting, but in the ssab it is consolidated into one |
 | `visible_inside_mask` | **PartData (static)** | The polarity. `1` = draw inside / `0` = draw outside ([§2-4](#2-4-polarity-whether-to-draw-inside-or-outside-the-mask)) |
-| `Hide` | **FrameData (per frame)** | Hidden. Note: the Player normally need not check it (see the note in [§2-2](#2-2-opting-out-of-the-mask-effect)) |
+| `Hide` | **FrameData (per frame)** | Hidden. **A writer has to be checked against it on the Player side** (see the note in [§2-2](#2-2-opting-out-of-the-mask-effect)) |
 
 > **[Important] Distinguishing where values are read from**: the mask-related fields are split across two different tables. Always be conscious of which one you read from.
 > - **PartData (static, per part)**: `mask_influence` / `mask_write` / `visible_inside_mask` / `draw_as_mask` / the part type. **Read once; unchanged in later frames.**
@@ -121,7 +121,9 @@ In implementation terms, letting `rank` be the position in `draw_order` (the seq
 - For a drawn part to be masked, the following must hold.
     - A drawn part is affected by masking / clipping **only when `mask_influence == 1`**. Drawn parts with `mask_influence == 0` are unaffected by masks (opted out).
 
-> Note: the Brain does not include writers with `Hide == true` in `draw_order` / `DrawBatch`, so the Player need not be conscious of `Hide`. **Check only the `mask` value on the Player side.**
+> **Note (check `Hide` on the Player side too)**: what the Brain drops from `draw_order` / `DrawBatch` is only a **mask part (`PartTypeMask`)** with `Hide == true`. **A drawn part turned into a mask by `draw_as_mask` (Shape / Nines) still gets its mask batch when `Hide == true`** — all that is suppressed is its own color drawing; the coverage is still written.
+>
+> So decide whether a writer is active from **both `mask != 0` and `Hide == false`** on the Player side. It only double-rejects what the Brain already dropped, so the check is safe on either path.
 
 ### 2-3. OP (the write operation into the stencil)
 
@@ -436,7 +438,8 @@ Countermeasure 1 ensures "no dropout even when a transition happens", and counte
 
 ### 3-3. Common notes
 
-- **Pure masks draw no color**: skip the color-drawing batches of mask parts (and of drawn parts turned into pure masks).
+- **Pure masks draw no color**: skip the color-drawing batches of mask parts (and of drawn parts turned into pure masks). A `draw_as_mask` drawn part emits **both** its mask batch and its own color batch **at the same rank**.
+- **Do not use `mask_indices` as the writer list**: `mask_indices` in the FrameData enumerates the part indices of pure masks (`PartTypeMask` / `draw_as_mask`), but it **excludes clipping (`mask_write`)** and **does not drop mask parts with `Hide == true`** — so it does not agree with `draw_order`. Settle the writers by walking `draw_order` with the three formulas of [§1-2](#1-2-part-roles-and-mask_influence).
 - **The upper limit on writers**: the stencil width / the number of bits in the coverage encoding determines the writer limit. In practice it stays within a few to a few dozen per frame.
 - **Handling outside the bbox in the coverage approach**: with the coverage-bitmap approach, treating target parts outside the bbox the same as "no writer" (unmasked) avoids false masking caused by CLAMP at the texture edges.
 
@@ -448,7 +451,7 @@ For self-checking against omissions. See the corresponding section for the ratio
 
 - [ ] **Role classification** ([§1-2](#1-2-part-roles-and-mask_influence)): classified with the three formulas `pure_mask = PartTypeMask || draw_as_mask` / `is_writer = pure_mask || mask_write` / `is_clipping = mask_write && !pure_mask`.
 - [ ] **Where values are read from** (the terminology table): `mask_influence` / `mask_write` / `visible_inside_mask` / `draw_as_mask` are read from **PartData (static)**, and `mask` / `Priority` / `Hide` from **FrameData (per frame)**.
-- [ ] **Disabling writers** ([§2-2](#2-2-opting-out-of-the-mask-effect)): writers with `mask == 0` are skipped (`Hide` is not included in `draw_order`, so the Player need not check it).
+- [ ] **Disabling writers** ([§2-2](#2-2-opting-out-of-the-mask-effect)): writers with `mask == 0` **or `Hide == true`** are skipped (exclusion from `draw_order` only covers mask parts, so decide it on the Player side).
 - [ ] **Opting out** ([§2-2](#2-2-opting-out-of-the-mask-effect)): a target drawn part is affected only when `mask_influence == 1`.
 - [ ] **OP** ([§2-3](#2-3-op-the-write-operation-into-the-stencil)): `mask_influence` is applied as `0` = increment / `1` = invert, shared by pure masks and clipping.
 - [ ] **A plane per OP** ([§3-1-4](#3-1-4-give-each-op-its-own-bit-plane-required), **both approaches**): `Invert` and `Incr`/`Decr` are not mixed into the same bits or the same accumulator. With a GPU stencil that means a separate `WriteMask` per OP (the Test side's `ReadMask` still covers both planes); with the coverage bitmap it means two accumulators in the replay, combined as a union ([§3-2](#3-2-when-the-engine-does-not-expose-a-stencil)).
