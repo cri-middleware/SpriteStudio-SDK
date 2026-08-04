@@ -31,7 +31,7 @@ export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-13.0}"
 # (e.g. 7.0.0-alpha.1 -> 7.0.0): App Store rejects a non-numeric CFBundleShortVersionString.
 WORKSPACE_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 SHORT_VERSION="${WORKSPACE_VERSION%%-*}"
-BUNDLE_ID="jp.co.cri-mw.optpix.ssruntime"
+BUNDLE_ID="jp.co.cri-mw.spritestudio.ssruntime"
 
 # Build ssruntime for the three Apple-mobile targets. Each build emits both
 # libssruntime.a (staticlib) and libssruntime.dylib (cdylib).

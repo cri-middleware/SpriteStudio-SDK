@@ -32,7 +32,7 @@ export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
 # App Store rejects a non-numeric CFBundleShortVersionString.
 WORKSPACE_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 SHORT_VERSION="${WORKSPACE_VERSION%%-*}"
-BUNDLE_ID="jp.co.cri-mw.optpix.ssruntime"
+BUNDLE_ID="jp.co.cri-mw.spritestudio.ssruntime"
 
 cargo build --target aarch64-apple-darwin ${CARGO_FLAGS}
 cargo build --target aarch64-apple-darwin ${CARGO_FLAGS} -p ssruntime --features libc_alloc,panic-handler
