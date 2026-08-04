@@ -167,8 +167,17 @@ In recent game engines and graphics libraries, performance improves dramatically
 
 ## 4. Implementing masks
 
-When a mask part appears, a `DrawBatchKind::Mask` is emitted.
-The Player hooks this to start and update the engine's stencil buffer or dedicated masking feature.
+The Player hooks the mask batches to start and update the engine's stencil buffer or dedicated masking feature. This section only lays out what the FrameData gives you; [Mask implementation](../40_components/40_mask.md) is the reference for the semantics, the rules, and the approaches.
+
+**Parts that emit a `DrawBatchKind::Mask`** (both with `count = 1` and `vertex_count` / `index_count` at `0`):
+
+- **A mask part (`PartTypeMask`)**
+- **A drawn part turned into a mask by `draw_as_mask` (Shape / Nines)** — the mask batch and its own color batch are **both emitted at the same rank**. A pure mask draws no color, so the Player has to skip the color one ([Mask implementation §3-3](../40_components/40_mask.md#3-3-common-notes))
+
+> [!IMPORTANT]
+> **Clipping (`mask_write`) emits no `DrawBatchKind::Mask`.** Clipping only ever appears as an ordinary drawing batch, so a Player that hooks on this batch kind alone **misses clipping entirely**. Settle the writers on the Player side by reading the PartData ([Mask implementation §1-2](../40_components/40_mask.md#1-2-part-roles-and-mask_influence)).
+
+**`mask_indices`**: the FrameData's list of pure-mask part indices. **Do not use it as the writer list** — it excludes clipping and does not drop mask parts with `Hide == true`, so it does not agree with `draw_order`.
 
 ---
 [Back to Table of Contents](../README.md)

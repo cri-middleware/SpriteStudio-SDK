@@ -26,7 +26,7 @@ SpriteStudio 7 の「マスク」「クリッピングマスク」機能の実�
 | `mask_write` | **PartData（静的）** | 描画パーツを **クリッピング** writer にするフラグ |
 | `draw_as_mask` | **PartData（静的）** | 描画パーツ (Shape/Text/Nines) を **pure マスク** 化する統合フラグ。オーサリングでは種別ごとの設定だが ssab では1つに集約 |
 | `visible_inside_mask` | **PartData（静的）** | 極性。`1` = 内側に描画 / `0` = 外側に描画（[§2-4](#2-4-極性マスクの内側か外側のどちらに描画するか)） |
-| `Hide` | **FrameData（毎フレーム）** | 非表示。※ Player では通常チェック不要（[§2-2](#2-2-マスクの効果のオプトアウト) 補足） |
+| `Hide` | **FrameData（毎フレーム）** | 非表示。**writer では Player 側の判定が必要**（[§2-2](#2-2-マスクの効果のオプトアウト) 補足） |
 
 > **【重要】読み出し元の区別**: マスク関連フィールドは 2 つの異なるテーブルに分かれています。実装時はどちらから読むかを必ず意識してください。
 > - **PartData（静的・パーツ単位）**: `mask_influence` / `mask_write` / `visible_inside_mask` / `draw_as_mask` / パーツ種別。**1 回読めば以後フレームで不変**。
@@ -121,7 +121,9 @@ is_clipping = mask_write && !pure_mask         // 色も描く（高優先度に
 - 描画パーツがマスクされるのは、次を満たす必要があります。
     - 描画パーツが **`mask_influence == 1` のときのみ** マスク／クリッピングの影響を受けます。`mask_influence == 0` の描画パーツはマスクの影響を受けません（オプトアウト）。
 
-> 補足: `Hide == true` の writer は Brain が draw_order / DrawBatch に含めないため、Player 側で `Hide` を意識する必要はありません。**`mask` 値だけ Player でチェック** してください。
+> **補足（`Hide` は Player 側でも判定してください）**: Brain が draw_order / DrawBatch から落とすのは、`Hide == true` の **マスクパーツ (`PartTypeMask`)** だけです。**`draw_as_mask` でマスク化された描画パーツ（Shape / Nines）は、`Hide == true` でもマスクバッチが発行されます** — 抑止されるのは自分の色描画だけで、被覆は書かれます。
+>
+> したがって writer の有効判定は、**`mask != 0` と `Hide == false` の両方**を Player 側で行ってください。Brain が既に落としたパーツを二重に弾くだけなので、この判定はどちらの経路でも安全です。
 
 ### 2-3. OP（ステンシルへの書込演算）
 
@@ -436,7 +438,8 @@ bbox のピクセルサイズをそのまま毎フレーム target サイズに�
 
 ### 3-3. 共通の注意点
 
-- **pure マスクは色を描かない**: マスクパーツ（と pure マスク化された描画パーツ）の色描画バッチはスキップしてください。
+- **pure マスクは色を描かない**: マスクパーツ（と pure マスク化された描画パーツ）の色描画バッチはスキップしてください。`draw_as_mask` の描画パーツは、マスクバッチと自分の色バッチが **同じ rank に両方** 出ます。
+- **`mask_indices` を writer リストとして使わない**: FrameData の `mask_indices` は pure マスク（`PartTypeMask` / `draw_as_mask`）のパーツ index 列ですが、**クリッピング (`mask_write`) を含まず**、**`Hide == true` のマスクパーツも落としません**（＝ `draw_order` と一致しません）。writer の確定は [§1-2](#1-2-パーツの役割と-mask_influence) の 3 式で `draw_order` を走査して行ってください。
 - **writer 数の上限**: ステンシル幅 / 被覆エンコードのビット数で writer 上限が決まります。実用上は 1 フレームあたり数個〜数十個に収まります。
 - **被覆方式の bbox 外の扱い**: 被覆ビットマップ方式の場合、bbox 外の対象パーツは「writer 無し」と同じ扱い（マスクされない）にすることで、テクスチャ端の CLAMP による誤マスクを避けられます。
 
@@ -448,7 +451,7 @@ bbox のピクセルサイズをそのまま毎フレーム target サイズに�
 
 - [ ] **役割判定**（[§1-2](#1-2-パーツの役割と-mask_influence)）: `pure_mask = PartTypeMask || draw_as_mask` / `is_writer = pure_mask || mask_write` / `is_clipping = mask_write && !pure_mask` の 3 式で分類した。
 - [ ] **読み出し元**（用語表）: `mask_influence` / `mask_write` / `visible_inside_mask` / `draw_as_mask` を **PartData（静的）** から、`mask` / `Priority` / `Hide` を **FrameData（毎フレーム）** から読んでいる。
-- [ ] **writer 無効化**（[§2-2](#2-2-マスクの効果のオプトアウト)）: `mask == 0` の writer はスキップした（`Hide` は draw_order に含まれないので Player では未チェックでよい）。
+- [ ] **writer 無効化**（[§2-2](#2-2-マスクの効果のオプトアウト)）: `mask == 0` **または `Hide == true`** の writer をスキップした（draw_order からの除外はマスクパーツにしか効かないので、Player 側で判定する）。
 - [ ] **オプトアウト**（[§2-2](#2-2-マスクの効果のオプトアウト)）: 対象描画パーツは `mask_influence == 1` のときのみ影響を受ける。
 - [ ] **OP**（[§2-3](#2-3-opステンシルへの書込演算)）: `mask_influence` を `0`=増分 / `1`=反転 として、pure マスク・クリッピング共通で適用した。
 - [ ] **OP ごとのプレーン分離**（[§3-1-4](#3-1-4-op-ごとにビットプレーンを分ける必須)・**両方式**）: `Invert` と `Incr`/`Decr` を同じビット／同じ蓄積器に混ぜていない。GPU ステンシル方式なら OP ごとに別の `WriteMask`（テスト側の `ReadMask` は両プレーンを含む全体のまま）、被覆ビットマップ方式なら replay の蓄積器を 2 本に分けて和集合を取る（[§3-2](#3-2-ステンシルが公開されていないエンジンの場合)）。
