@@ -71,7 +71,7 @@
 | `parent_index` | short | `parent_index` | 親パーツのインデックス |
 | `bounds_type` | BoundsType | `bounds_type` | バウンディング計算方式 |
 | `blend_type` | BlendType | `alpha_blend_type` | フィールド名変更 |
-| `mask_influence` | bool | `mask_influence` | パーツがマスク影響に参加するか |
+| `mask_influence` | bool | `mask_influence` | **役割で意味が変わる二重定義**。マスク writer では OP（`0` = 増分 / `1` = 反転）、被マスク側の描画パーツでは対象フラグ（`1` = 適用される / `0` = オプトアウト）。クリッピングは writer 兼描画パーツなので、同じ値が両方の意味で同時に使われる。片方の意味を捨てないこと → [Mask の実装 §1-2](../ssruntime/docs/40_components/40_mask.ja.md#1-2-パーツの役割と-mask_influence) |
 | `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | 描画パーツ (Shape/Text/Nines) の pure マスク化フラグを統合。ssae では型ごとに排他の別タグ。`PartTypeMask` は常に pure マスクなので本フラグに依らない |
 | `mesh_binding` | PartMeshBinding | (変換時生成) | `PartTypeMesh` 用の頂点ごとのボーン影響値。下記 [メッシュバインディング](#メッシュバインディング) 参照。メッシュ以外のパーツでは省略。 |
 | `part_type` | PartType (union) | `part_type` + 型固有フィールド | 後述 |

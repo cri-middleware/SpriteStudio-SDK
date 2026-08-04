@@ -71,7 +71,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `parent_index` | short | `parent_index` | Parent part index |
 | `bounds_type` | BoundsType | `bounds_type` | Bounding calculation mode |
 | `blend_type` | BlendType | `alpha_blend_type` | Renamed field |
-| `mask_influence` | bool | `mask_influence` | Whether the part participates in mask influence |
+| `mask_influence` | bool | `mask_influence` | **A dual definition whose meaning changes with the role**: on a mask writer it is the OP (`0` = increment / `1` = invert); on a masked drawing part it is the target flag (`1` = affected / `0` = opted out). Clipping is both a writer and a drawing part, so the same value serves both meanings at once. Do not drop either one → [Mask implementation §1-2](../ssruntime/docs/40_components/40_mask.md#1-2-part-roles-and-mask_influence) |
 | `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | Unified pure-mask flag for drawing parts (Shape/Text/Nines). Mutually-exclusive per-type tags in the source .ssae. `PartTypeMask` is always a pure mask regardless of this flag |
 | `mesh_binding` | PartMeshBinding | (computed) | Per-vertex bone influences for `PartTypeMesh`. See [Mesh Binding](#mesh-binding) below. Optional; absent for non-mesh parts. |
 | `part_type` | PartType (union) | `part_type` + type-specific fields | See below |
