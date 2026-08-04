@@ -19,7 +19,7 @@ SRC=$1
 BUNDLE=$2
 VER=${3:-0.0.0}
 VER=${VER%%-*}                                   # strip any -prerelease suffix
-BUNDLE_ID=${4:-jp.co.cri-mw.optpix.ssruntime}
+BUNDLE_ID=${4:-jp.co.cri-mw.spritestudio.ssruntime}
 MIN_OS=${5:-11.0}
 
 if [ -z "$SRC" ] || [ -z "$BUNDLE" ]; then
