@@ -1,0 +1,226 @@
+site_name: SpriteStudio SDK
+site_description: "Player Porting Guide for the SpriteStudio SDK - implement a SpriteStudio 7 player on any engine"
+site_author: "CRI Middleware Co., Ltd."
+site_url: "https://cri-middleware.github.io/SpriteStudio-SDK/"
+repo_name: "cri-middleware/SpriteStudio-SDK"
+repo_url: "https://github.com/cri-middleware/SpriteStudio-SDK"
+# No `edit_uri`, matching the sibling repositories: the value is a branch name that nothing
+# validates -- `--strict` does not look at it -- and it was already wrong in three of the five
+# player repos. The footer repo link and CONTRIBUTING.ja.md already route corrections.
+# Rendered in the site footer. Deliberately year-less so it never goes stale.
+copyright: "Copyright &copy; CRI Middleware Co., Ltd."
+
+# The guide is published from where it is authored, next to the crate it documents, rather
+# than copied into a top-level docs/ tree. Two reasons: SpriteStudio-Docs links straight at
+# `tree/HEAD/libs/ssruntime/docs`, and the pages are written to read correctly on GitHub as
+# plain Markdown. Moving them would break both. `docs/` at the repository root therefore
+# holds only requirements.txt (the toolchain pin), no content.
+docs_dir: libs/ssruntime/docs
+
+# Nothing builds the docs on a pull request - pages.yml runs on `release: published` and
+# dispatch - so the local build is the only gate, and a plain `build`/`serve` should fail on
+# a broken link too rather than depend on remembering `--strict`.
+strict: true
+
+# Contributor-facing style rules for the guide, not part of the guide. It is also the one
+# Japanese page with no English counterpart, and its `./NN_name.md` filename templates are
+# not real links - left in, they would fail the strict build.
+exclude_docs: |
+  CONTRIBUTING.ja.md
+
+# Strips the per-page `日本語 | English` switcher line, which is written for GitHub and
+# cannot work on the site - see docs/hooks.py for the full reasoning. A plain module rather
+# than a plugin, so it costs nothing in docs/requirements.txt.
+hooks:
+  - docs/hooks.py
+
+theme:
+  name: material
+  language: en
+  # Only overrides/main.html lives here: it appends the Open Graph / Twitter Card
+  # metadata that Material does not emit on its own.
+  custom_dir: overrides
+  # Matches the SDK card on the SpriteStudio-Docs landing page. A bundled Material icon,
+  # so it needs no image file; there is no SpriteStudio artwork for a favicon yet.
+  icon:
+    logo: material/cog
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    # Previous / next links in the footer, so the guide can be read in order.
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search:
+      lang:
+        - en
+        - ja
+  - callouts
+  - i18n:
+      # `suffix`, not the `folder` layout the sibling repos use: this guide pairs each page
+      # with its translation as `NN_name.md` / `NN_name.ja.md` in the same directory, which
+      # is the repository-wide convention and what makes the pages readable on GitHub.
+      # The plugin resolves the `.ja.md` links the pages already carry.
+      docs_structure: suffix
+      languages:
+        - locale: en
+          name: English
+          default: true
+          build: true
+        - locale: ja
+          name: 日本語
+          build: true
+          # Feeds <meta name="description"> and the Open Graph tags on every ja page;
+          # without it they inherit the top-level English site_description.
+          site_description: "SpriteStudio SDK の Player 移植ガイド - 任意のエンジンに SpriteStudio 7 Player を実装する"
+          extra:
+            # Footer icon labels (title / aria-label). Mirrors the `extra.social` list below.
+            social:
+              - icon: fontawesome/brands/github
+                link: https://github.com/cri-middleware
+                name: GitHub の cri-middleware
+              - icon: material/web
+                link: https://www.webtech.co.jp/spritestudio/
+                name: OPTPiX SpriteStudio
+              - icon: fontawesome/brands/x-twitter
+                link: https://x.com/spritestudio
+                name: X の SpriteStudio
+          # Japanese nav labels. Keys must match the `nav:` titles below *exactly*,
+          # emoji included - a mismatched key silently leaves the English label.
+          nav_translations:
+            🏠 Home: 🏠 ホーム
+            🚀 Introduction: 🚀 はじめに
+            Introduction & Glossary: はじめに・用語解説
+            Limitations: 制限事項
+            🧭 Design: 🧭 設計と準備
+            Preparation & Prerequisites: 事前確認とプロジェクトの準備
+            Architecture & Implementation Approach: アーキテクチャと実装方針
+            Implementation Roadmap: 実装ロードマップ
+            🎬 Core Playback: 🎬 コア実装
+            Loading & Initialization: データのロードと初期化
+            Playback Control & Events: 再生制御とイベント処理
+            Rendering Loop & Batching: レンダリングループとバッチ描画
+            🧩 Components: 🧩 コンポーネント実装
+            Instance Parts: インスタンスパーツ (Instance)
+            Effect Parts: エフェクトパーツ (Effect)
+            Mesh & Deform: メッシュとデフォーム (Mesh)
+            Mask: Mask の実装
+            Parts Color: パーツカラー (Parts Color)
+            Animation Blending: アニメーションブレンド / ミキシング
+            Part Overrides: パーツオーバーライド (Override Layer API)
+            External Resources & Textures: 外部リソースとテクスチャの管理
+            Sequence: シーケンス (Sequence)
+            Audio: オーディオ（サウンド）再生の統合
+            Special Part Types: 特殊なパーツタイプ
+            📚 Reference: 📚 リファレンス
+            no_std Integration: no_std 組み込み環境への統合
+            Troubleshooting: トラブルシューティング
+            🛠️ Tooling: 🛠️ ツール連携
+            Editor Integration & Conversion: エディタインテグレーションとコンバート
+
+# Mirrors the table of contents in README.md; the numeric directory prefixes are the
+# reading order, so keep the two in step when a page is added.
+nav:
+  - 🏠 Home: README.md
+  - 🚀 Introduction:
+      - Introduction & Glossary: 10_introduction/10_introduction.md
+      - Limitations: 10_introduction/20_limitations.md
+  - 🧭 Design:
+      - Preparation & Prerequisites: 20_design/10_preparation.md
+      - Architecture & Implementation Approach: 20_design/20_architecture.md
+      - Implementation Roadmap: 20_design/30_implementation_roadmap.md
+  - 🎬 Core Playback:
+      - Loading & Initialization: 30_core/10_initialization.md
+      - Playback Control & Events: 30_core/20_playback_control.md
+      - Rendering Loop & Batching: 30_core/30_render_loop.md
+  - 🧩 Components:
+      - Instance Parts: 40_components/10_instance.md
+      - Effect Parts: 40_components/20_effect.md
+      - Mesh & Deform: 40_components/30_mesh.md
+      - Mask: 40_components/40_mask.md
+      - Parts Color: 40_components/50_parts_color.md
+      - Animation Blending: 40_components/60_animation_blending.md
+      - Part Overrides: 40_components/65_override_layer.md
+      - External Resources & Textures: 40_components/70_external_resources.md
+      - Sequence: 40_components/80_sequence.md
+      - Audio: 40_components/90_audio.md
+      - Special Part Types: 40_components/95_special_parts.md
+  - 📚 Reference:
+      - no_std Integration: 50_reference/10_no_std_integration.md
+      - Troubleshooting: 50_reference/20_troubleshooting.md
+  - 🛠️ Tooling:
+      - Editor Integration & Conversion: 60_tooling/10_editor_integration.md
+  # rustdoc is not built by MkDocs; pages.yml drops `cargo doc` output into site/api/ after
+  # the MkDocs build. An absolute URL because the target does not exist at build time -- it
+  # points at production, so it is dead during a local `mkdocs serve`.
+  - 📦 Rust API (rustdoc): https://cri-middleware.github.io/SpriteStudio-SDK/api/ssruntime/index.html
+
+markdown_extensions:
+  - toc:
+      # The guide's cross-references were written against GitHub's anchor slugs, which keep
+      # Japanese headings intact. Python-Markdown's default slugify strips non-ASCII, which
+      # would turn every Japanese heading into `_1`, `_2`, ... and break those links.
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+
+# Anchors are only `info` by default, so a cross-reference to a heading that has been
+# renamed would ship silently broken. Promoted to `warn` so `strict` turns it into a
+# build failure, which is the whole point of gating on the local build.
+validation:
+  links:
+    anchors: warn
+
+extra:
+  # Footer icons. Keep to destinations that outlive any single release.
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cri-middleware
+      name: cri-middleware on GitHub
+    - icon: material/web
+      link: https://www.webtech.co.jp/spritestudio/
+      name: OPTPiX SpriteStudio
+    # Keep the handle here in sync with `twitter:site` in overrides/main.html.
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/spritestudio
+      name: SpriteStudio on X
+  # No hand-written `alternate:` list. The i18n plugin generates one that points at the
+  # *current* page in the other language; a static list can only point at the two site
+  # roots, and the plugin logs the hand-written form as malformed in the sibling repos.

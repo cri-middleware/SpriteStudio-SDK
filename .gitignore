@@ -629,3 +629,7 @@ CLAUDE.md
 
 # Antigravity CLI
 .antigravitycli/
+
+# MkDocs build output. `site/` is the default site_dir for the docs site defined by
+# mkdocs.yml; pages.yml uploads it and nothing else should ever commit it.
+/site/

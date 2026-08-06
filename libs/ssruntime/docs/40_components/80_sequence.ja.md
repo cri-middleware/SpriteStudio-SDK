@@ -10,7 +10,7 @@
     3. `ss_runtime_setup_animation` で次のアニメーションをセットアップし、再生を継続します。
 - **ループ設定**: シーケンス全体のループや、特定の項目のみのループなど、Player 側でステートマシンを構築して制御します。
 
-> **将来計画 (Phase 3)**: 上記は現時点で推奨される Player 側の実装です。将来的に、シーケンス再生（線形・自動送りのステートマシン）を `libssruntime` 側に内包する機能を予定しています。詳細は [ROADMAP.md](../../../../ROADMAP.md) を参照してください。
+> **将来計画 (Phase 3)**: 上記は現時点で推奨される Player 側の実装です。将来的に、シーケンス再生（線形・自動送りのステートマシン）を `libssruntime` 側に内包する機能を予定しています。詳細は [ROADMAP.md](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/ROADMAP.md) を参照してください。
 
 ---
 [目次に戻る](../README.ja.md)
