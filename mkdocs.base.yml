@@ -1,0 +1,129 @@
+# Settings shared by every locale. `mkdocs.yml` (English) and `mkdocs.ja.yml` both start
+# with `INHERIT: ./mkdocs.base.yml` and add only what differs between them.
+#
+# This file is never built directly -- it has no `docs_dir` and no `nav`. It is named
+# `mkdocs.base.yml` rather than `mkdocs.yml` precisely so that a bare `zensical build`
+# picks up the English locale config instead of this one.
+#
+# IMPORTANT -- the rule that shapes this split: **every YAML sequence must be defined in
+# exactly one of the three files.** Zensical's `INHERIT` *concatenates* sequences from
+# parent and child, where MkDocs replaces them. Put `nav` here as well as in a locale file
+# and the Japanese site renders the English navigation followed by the Japanese one; do the
+# same with `extra.social` and the footer grows six icons. Mappings deep-merge in both
+# tools, so scalars like `theme.language` are safe to override.
+
+site_name: SpriteStudio SDK
+site_author: "CRI Middleware Co., Ltd."
+repo_name: "cri-middleware/SpriteStudio-SDK"
+repo_url: "https://github.com/cri-middleware/SpriteStudio-SDK"
+# No `edit_uri`, matching the sibling repositories: the value is a branch name that nothing
+# validates -- strict mode does not look at it -- and it was already wrong in three of the
+# five player repos. It would also point at the wrong file here, since the site is built
+# from a generated tree rather than from the pages as authored. The footer repo link and
+# CONTRIBUTING.ja.md already route corrections.
+# Rendered in the site footer. Deliberately year-less so it never goes stale.
+copyright: "Copyright &copy; CRI Middleware Co., Ltd."
+
+# Nothing builds the docs on a pull request - pages.yml runs on `release: published` and
+# dispatch - so the local build is the only gate, and a plain `build` should fail on a broken
+# link rather than depend on remembering `--strict`.
+strict: true
+
+theme:
+  name: material
+  # Only overrides/ lives here: main.html appends the Open Graph / Twitter Card metadata the
+  # theme does not emit and repairs the page title; partials/alternate.html rebuilds the
+  # language selector so it points at the current page.
+  custom_dir: overrides
+  # Matches the SDK card on the SpriteStudio-Docs landing page. A bundled icon, so it needs
+  # no image file; there is no SpriteStudio artwork for a favicon yet.
+  icon:
+    logo: material/cog
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    # Previous / next links in the footer, so the guide can be read in order.
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  # Search language follows `theme.language`, which each locale config sets, so there is no
+  # per-language list to keep in sync here. Each locale gets its own index, and the Japanese
+  # one is segmented into words rather than indexed as unbroken runs of characters.
+  - search
+
+markdown_extensions:
+  - toc:
+      # The guide's cross-references were written against GitHub's anchor slugs, which keep
+      # Japanese headings intact. Python-Markdown's default slugify strips non-ASCII, which
+      # would turn every Japanese heading into `_1`, `_2`, ... and break those links.
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  # Keeps the `> [!NOTE]` blockquote syntax working now that `mkdocs-callouts` is gone -
+  # Zensical parses it natively. Two things to know: a list inside a callout needs a blank
+  # `>` line before it, and `[!IMPORTANT]` is not a built-in admonition type, so it renders
+  # unstyled until you add the CSS the player repos carry in docs/*/stylesheets/extra.css.
+  - pymdownx.quotes:
+      callouts: true
+
+# Anchors are only reported by default, so a cross-reference to a heading that has been
+# renamed would ship silently broken. Turned on so `strict` fails the build instead, which
+# is the whole point of gating on the local build.
+validation:
+  invalid_links: true
+  invalid_link_anchors: true
+
+extra:
+  # The header language selector. `link` is each locale's subpath under the site root, NOT
+  # a full URL -- overrides/partials/alternate.html rebuilds the href from it plus the
+  # current page, so switching language keeps the reader on the same page instead of
+  # dropping them on the other locale's home page. `extra.site_root_prefix` in each locale
+  # config is the other half of that calculation.
+  #
+  # Under MkDocs the i18n plugin generated this list; there was deliberately no hand-written
+  # one, because a static list could only point at the two site roots. The override solves
+  # that properly, so the list comes back -- as data for the override, not as hrefs.
+  alternate:
+    - name: English
+      link: ""
+      lang: en
+    - name: 日本語
+      link: ja/
+      lang: ja

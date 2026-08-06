@@ -1,10 +1,10 @@
-# Documentation toolchain (MkDocs). Pinned for reproducible CI builds.
-# Bump deliberately; keep in sync with the plugins declared in mkdocs.yml.
+# Documentation toolchain (Zensical). Pinned for reproducible CI builds; bump deliberately.
 #
-# This directory holds the toolchain pin only. The published content is the Player Porting
-# Guide under libs/ssruntime/docs, which mkdocs.yml points `docs_dir` at -- see the comment
-# there for why the pages are not moved here. The path matches the sibling player repos so
-# `cache-dependency-path: docs/requirements.txt` reads the same in every pages.yml.
-mkdocs-material==9.7.6
-mkdocs-static-i18n==1.3.1
-mkdocs-callouts==1.16.1
+# Migrated off MkDocs + Material for MkDocs, which the same team put into maintenance mode
+# after shipping Zensical. SpriteStudio-Docs moved first, then the five player/tool repos.
+#
+# `mkdocs-static-i18n` (suffix layout), `mkdocs-callouts`, the `hooks.py` that stripped the
+# per-page language switcher, and `exclude_docs` are all gone. The first, third and fourth
+# are replaced by scripts/build-docs-tree.py; the second by Zensical's native `> [!NOTE]`
+# parsing (`pymdownx.quotes`).
+zensical==0.0.53

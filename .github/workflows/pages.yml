@@ -45,12 +45,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r docs/requirements.txt
 
-      # --strict fails the build on a broken link, a missing nav entry, a heading anchor that
-      # has been renamed out from under a cross-reference, or a page that lost its language
-      # switcher line (docs/hooks.py). Nothing builds the docs on a pull request, so this run
-      # and the local build are the only gates.
-      - name: Build docs (strict validation)
-        run: mkdocs build --strict
+      # The guide is authored with each page next to its `.ja.md` translation, which is what
+      # makes it readable on GitHub; Zensical builds one locale per config, from one
+      # directory. This generates those two directories, and fails if a page lost the
+      # language switcher line it is required to carry.
+      - name: Generate the per-locale documentation trees
+        run: python3 scripts/build-docs-tree.py
+
+      # One build per locale. --strict fails on a broken link, a missing nav entry, or a
+      # heading anchor renamed out from under a cross-reference. Nothing builds the docs on a
+      # pull request, so this run and the local build are the only gates.
+      #
+      # Order matters: the ja build writes into site/ja, and the English build wipes site/ on
+      # the way in. Swapping these two steps publishes a site with no Japanese pages.
+      - name: Build docs, English (strict validation)
+        run: zensical build --strict
+
+      - name: Build docs, Japanese (strict validation)
+        run: zensical build -f mkdocs.ja.yml --strict
 
       - name: setup for SpriteStudio-SDK
         uses: ./.github/actions/setup
@@ -66,8 +78,12 @@ jobs:
         run: cargo doc --workspace --no-deps --all-features
 
       # `cargo doc` writes no index.html at the root of a workspace — with six crates there
-      # is no single page to land on. The nav entry in mkdocs.yml therefore links straight to
-      # ssruntime, and this redirect covers anyone who trims the URL back to /api/.
+      # is no single page to land on. The nav entry in both locale configs therefore links
+      # straight to ssruntime, and this redirect covers anyone who trims the URL back to
+      # /api/. This step has to stay after both locale builds: the English one clears site/.
+      #
+      # Note it lands at /api/ only, not /ja/api/ — rustdoc output is English-only, and both
+      # navs point at the same absolute URL.
       - name: Graft rustdoc onto the site at /api/
         run: |
           mkdir -p site/api
