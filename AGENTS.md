@@ -49,8 +49,11 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | `no_std` custom allocator (console/engine) | `cargo rustc -p ssruntime --features custom_alloc,panic-handler --crate-type staticlib` |
 | `std` opt-in (desktop DX) | `cargo build -p ssruntime --features std` |
 | `ssconverter` web (browser WASM) | `cargo build -p ssconverter --no-default-features --features web --target wasm32-unknown-unknown` |
+| Docs site (after editing `libs/ssruntime/docs`) | `pip install -r docs/requirements.txt && mkdocs build --strict` |
 
 The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edits land as unstaged changes — review them via `git diff` before staging.
+
+The docs site build is **not** run on a pull request — `pages.yml` only fires on `release: published` and dispatch — so the local `--strict` build is the only gate on a broken link, a stale heading anchor, or a page missing its `日本語 | English` switcher line. Run it before merging any change under `libs/ssruntime/docs`.
 
 Doctests need an allocator, so a lone `cargo test --doc -p ssruntime` fails on "no global memory allocator found"; run them workspace-wide (feature unification pulls in `std`) or add `--features ssruntime/std`. The full `cargo test --workspace --all-features` in CI covers them. Rustdoc's broken-link check is a *separate* CI step: `cargo test` never sees intra-doc links.
 

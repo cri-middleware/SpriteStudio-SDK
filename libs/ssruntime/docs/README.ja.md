@@ -69,4 +69,4 @@ graph LR
 > [!TIP]
 > 実装の各段階で **`tests/overall/overall.sspj`** を動かしてみることを強くお勧めします。エディタと同じ見た目になれば、そのステップはクリアです！
 
-[SpriteStudio-SDK Top](../../../README.ja.md) / [libssruntime Top](../README.ja.md)
+[SpriteStudio-SDK Top](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.ja.md) / [libssruntime Top](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/README.ja.md)

@@ -10,7 +10,7 @@ This is the feature that processes the "chained animation playlist" defined in a
     3. Set up the next animation with `ss_runtime_setup_animation` and continue playback.
 - **Loop settings**: build a state machine on the Player side to control things like looping the whole sequence or looping only a particular item.
 
-> **Future plan (Phase 3)**: the above is the Player-side implementation recommended at present. In the future we plan to bring sequence playback (a linear, auto-advancing state machine) inside `libssruntime`. See [ROADMAP.md](../../../../ROADMAP.md) for details.
+> **Future plan (Phase 3)**: the above is the Player-side implementation recommended at present. In the future we plan to bring sequence playback (a linear, auto-advancing state machine) inside `libssruntime`. See [ROADMAP.md](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/ROADMAP.md) for details.
 
 ---
 [Back to Table of Contents](../README.md)

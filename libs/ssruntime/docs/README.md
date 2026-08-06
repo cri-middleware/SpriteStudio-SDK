@@ -6,6 +6,29 @@ This guide explains how to implement a **SpriteStudio 7 Player** for your own ga
 
 > Every page of this guide is available in English; each page links to its Japanese source at the top. The Japanese version remains the source of truth — if the two ever disagree, follow the Japanese page and please report the discrepancy.
 
+## 🚀 Implementation Flow
+
+We recommend implementing a Player in the following three phases.
+
+```mermaid
+graph LR
+    A[Preparation] --> B[Core]
+    B --> C[Components]
+    C --> D[Done]
+
+    subgraph "Phase 1: Preparation"
+    A
+    end
+    subgraph "Phase 2: Basic playback"
+    B
+    end
+    subgraph "Phase 3: Advanced expression"
+    C
+    end
+```
+
+---
+
 ## 📚 Table of Contents
 
 > [!IMPORTANT]
@@ -51,4 +74,4 @@ Per part-type implementation details for richer expression.
 > [!TIP]
 > Run **`tests/overall/overall.sspj`** at each implementation stage. If it looks the same as the editor, that step is done!
 
-[SpriteStudio-SDK Top](../../../README.md) / [libssruntime Top](../README.md)
+[SpriteStudio-SDK Top](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/README.md) / [libssruntime Top](https://github.com/cri-middleware/SpriteStudio-SDK/blob/HEAD/libs/ssruntime/README.md)

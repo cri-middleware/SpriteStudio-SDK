@@ -1,0 +1,98 @@
+name: Publish docs via GitHub Pages
+
+# Builds the MkDocs site (the Player Porting Guide under libs/ssruntime/docs), grafts the
+# workspace rustdoc onto it at /api/, and deploys the two as a single Pages artifact via the
+# artifact method (no gh-pages branch) — matching the sibling player repositories.
+#
+# The published site is tied to releases, not to merges: a published release or a manual
+# dispatch deploys, and nothing else does. This keeps the docs site in step with the release
+# the SpriteStudio Docs portal links to, rather than running ahead of it on every merge.
+# release.yml always creates the GitHub Release as a draft, so `published` is the moment a
+# human publishes it from the UI — exactly the intended trigger.
+#
+# GitHub Pages must already be enabled on the repository with Source: GitHub Actions. There
+# is no `configure-pages` step with `enablement: true`, so a repository that has never had
+# Pages turned on fails at the deploy step rather than bootstrapping itself.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# Permissions required by the artifact-based Pages deploy. No contents:write — nothing is
+# pushed to a branch.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; let an in-progress deploy finish rather than cancelling it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: 3.x
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r docs/requirements.txt
+
+      # --strict fails the build on a broken link, a missing nav entry, a heading anchor that
+      # has been renamed out from under a cross-reference, or a page that lost its language
+      # switcher line (docs/hooks.py). Nothing builds the docs on a pull request, so this run
+      # and the local build are the only gates.
+      - name: Build docs (strict validation)
+        run: mkdocs build --strict
+
+      - name: setup for SpriteStudio-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: linux
+          os: ubuntu-latest
+
+      # Deliberately without `RUSTDOCFLAGS: -D warnings`, unlike the same command in ci.yml:
+      # that gate belongs on the pull request. Enforcing it again here would mean a single
+      # bad intra-doc link publishes no documentation at all rather than documentation with
+      # one bad link in it.
+      - name: Build rustdoc (workspace)
+        run: cargo doc --workspace --no-deps --all-features
+
+      # `cargo doc` writes no index.html at the root of a workspace — with six crates there
+      # is no single page to land on. The nav entry in mkdocs.yml therefore links straight to
+      # ssruntime, and this redirect covers anyone who trims the URL back to /api/.
+      - name: Graft rustdoc onto the site at /api/
+        run: |
+          mkdir -p site/api
+          cp -R target/doc/. site/api/
+          cat > site/api/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>SpriteStudio SDK — Rust API</title>
+          <meta http-equiv="refresh" content="0; url=ssruntime/index.html">
+          <link rel="canonical" href="ssruntime/index.html">
+          <a href="ssruntime/index.html">SpriteStudio SDK Rust API reference</a>
+          HTML
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
