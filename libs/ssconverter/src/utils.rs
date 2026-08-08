@@ -40,6 +40,20 @@ pub fn fnv1a_hash_texture_name(texture_name: &str) -> u32 {
     fnv1a_hash_str(texture_name)
 }
 
+pub const ASSET_PATH_SEPARATOR: char = '/';
+
+pub fn join_asset_path(base: &str, name: &str) -> String {
+    let base = base.trim_end_matches(ASSET_PATH_SEPARATOR);
+    if base.is_empty() {
+        return name.to_string();
+    }
+    format!("{}{}{}", base, ASSET_PATH_SEPARATOR, name)
+}
+
+pub fn asset_path_parent(path: &str) -> Option<&str> {
+    path.rsplit_once(ASSET_PATH_SEPARATOR).map(|(parent, _)| parent)
+}
+
 /// File extension used by sspj cellmap entries.
 pub const CELLMAP_FILE_EXT: &str = ".ssce";
 
@@ -181,4 +195,23 @@ pub fn get_assets_of_ssab_files(ssab_map: &HashMap<String, Vec<u8>>, sspj: &sspj
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use super::*;
+
+    #[test]
+    fn join_asset_path_always_uses_forward_slash() {
+        assert_eq!(join_asset_path("images", "chara.png"), "images/chara.png");
+        assert_eq!(join_asset_path("font/nested", "mplus_0.png"), "font/nested/mplus_0.png");
+        // An empty base (a file sitting at the project root) must not introduce a leading separator.
+        assert_eq!(join_asset_path("", "chara.png"), "chara.png");
+        // A base already carrying a trailing separator must not double it.
+        assert_eq!(join_asset_path("images/", "chara.png"), "images/chara.png");
+    }
+
+    #[test]
+    fn asset_path_parent_splits_on_forward_slash_only() {
+        assert_eq!(asset_path_parent("font/RoundedMPlus.fnt"), Some("font"));
+        assert_eq!(asset_path_parent("font/nested/RoundedMPlus.fnt"), Some("font/nested"));
+        assert_eq!(asset_path_parent("RoundedMPlus.fnt"), None);
+    }
+}
