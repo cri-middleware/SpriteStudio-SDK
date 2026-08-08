@@ -4,7 +4,7 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
     let mut v = charmap_dic
         .iter()
         .map(|(key, charmap)| {
-            let parent_path = std::path::Path::new(&key).parent();
+            let parent_path = crate::utils::asset_path_parent(key);
 
             let mut bitmap = ssab::ssab::ss::format::FontBitmapT::default();
 
@@ -37,7 +37,9 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
 
             let mut pages: Vec<_> = charmap.pages.values().collect();
             pages.sort_by_key(|p| p.id);
-            let name_textures = pages.into_iter().map(|p| if let Some(parent_path) = parent_path { parent_path.join(&p.file).to_string_lossy().to_string() } else { p.file.clone() }).collect::<Vec<_>>();
+            // The `.fnt` names its page textures relative to the charmap file, so they are rebased on
+            // the charmap's directory. `/` is the separator on every host — see `join_asset_path`.
+            let name_textures = pages.into_iter().map(|p| crate::utils::join_asset_path(parent_path.unwrap_or_default(), &p.file)).collect::<Vec<_>>();
             if name_textures.is_empty() {
                 bitmap.name_texture_hash = None;
                 bitmap.name_texture = None;
@@ -138,6 +140,28 @@ mod tests {
         let offset = glyph.offset.as_ref().unwrap();
         assert_eq!(offset.v1, -3.0);
         assert_eq!(offset.v2, 29.0);
+    }
+
+    #[test]
+    fn test_page_textures_are_rebased_with_forward_slash() {
+        let mut charmap_dic = HashMap::new();
+
+        let mut mock_charmap = SsCharMap::default();
+        mock_charmap.pages.insert(0, SsCharMapPage { id: 0, file: "mock_0.png".to_string() });
+        mock_charmap.pages.insert(1, SsCharMapPage { id: 1, file: "mock_1.png".to_string() });
+
+        // The sspj names a charmap by its `/`-separated relative path; the page textures are
+        // rebased on that directory and must read the same on every host OS.
+        charmap_dic.insert("font/nested/mock.fnt".to_string(), &mock_charmap);
+
+        let result = convert_font_bitmaps(&charmap_dic);
+
+        let name_texture = result[0].name_texture.as_ref().unwrap();
+        assert_eq!(name_texture, &["font/nested/mock_0.png".to_string(), "font/nested/mock_1.png".to_string()]);
+
+        let name_texture_hash = result[0].name_texture_hash.as_ref().unwrap();
+        assert_eq!(name_texture_hash[0], crate::utils::fnv1a_hash_str("font/nested/mock_0.png"));
+        assert_eq!(name_texture_hash[1], crate::utils::fnv1a_hash_str("font/nested/mock_1.png"));
     }
 
     #[test]
