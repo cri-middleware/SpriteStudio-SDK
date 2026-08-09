@@ -154,12 +154,45 @@ if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
               "${OUTPUT}/ssruntime.bundle" \
               "${NOTARIZE_DIR}/"
         /usr/bin/ditto -c -k --sequesterRsrc --keepParent "${NOTARIZE_DIR}" "${NOTARIZE_ZIP}"
+
+        # `notarytool submit --wait` is not reliably non-zero on a rejected
+        # submission, so the exit code alone can let an unnotarized release
+        # through green. Assert on the reported status instead, and keep going
+        # past a non-zero exit (|| NOTARIZE_RC=$?, which set -e tolerates) so the
+        # status check below is what decides. plutil parses the JSON — it ships
+        # with macOS, unlike jq, so this works on a maintainer's Mac too.
+        #
+        # Because the four binaries go up as one archive, a rejection is
+        # all-or-nothing and the status alone does not say which one failed —
+        # so fetch the notary log, which reports per-binary issues, before
+        # failing the build.
+        NOTARIZE_OUT="${OUTPUT}/notarize.json"
+        NOTARIZE_RC=0
         xcrun notarytool submit "${NOTARIZE_ZIP}" \
             --key "${APPLE_API_KEY_PATH}" \
             --key-id "${APPLE_API_KEY}" \
             --issuer "${APPLE_API_ISSUER}" \
-            --wait
-        /bin/rm -rf "${NOTARIZE_DIR}" "${NOTARIZE_ZIP}"
+            --wait --output-format json > "${NOTARIZE_OUT}" || NOTARIZE_RC=$?
+        cat "${NOTARIZE_OUT}"
+
+        # An unparseable response leaves STATUS empty, which fails below — the
+        # safe direction, since the raw response is echoed above for diagnosis.
+        NOTARIZE_STATUS=$(/usr/bin/plutil -extract status raw -o - -- "${NOTARIZE_OUT}" 2>/dev/null || true)
+        NOTARIZE_ID=$(/usr/bin/plutil -extract id raw -o - -- "${NOTARIZE_OUT}" 2>/dev/null || true)
+        if [ "${NOTARIZE_STATUS}" != "Accepted" ]; then
+            echo "ERROR: notarization failed (status=${NOTARIZE_STATUS:-unknown}, notarytool exit=${NOTARIZE_RC})" >&2
+            if [ -n "${NOTARIZE_ID}" ]; then
+                echo "==> Notary log for submission ${NOTARIZE_ID}:" >&2
+                xcrun notarytool log "${NOTARIZE_ID}" \
+                    --key "${APPLE_API_KEY_PATH}" \
+                    --key-id "${APPLE_API_KEY}" \
+                    --issuer "${APPLE_API_ISSUER}" >&2 || true
+            fi
+            exit 1
+        fi
+        echo "==> Notarization accepted (submission ${NOTARIZE_ID})"
+
+        /bin/rm -rf "${NOTARIZE_DIR}" "${NOTARIZE_ZIP}" "${NOTARIZE_OUT}"
     else
         echo "==> Skipping notarization (APPLE_API_KEY_PATH / APPLE_API_KEY / APPLE_API_ISSUER not all set)"
     fi
