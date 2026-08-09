@@ -119,24 +119,80 @@ if [ -n "${APPLE_SIGNING_IDENTITY:-}" ]; then
     # libssruntime.framework and ssruntime.bundle are already Developer-ID signed
     # (hardened runtime + timestamp) by their packaging helpers above
     # (make-macos-framework.sh / make-macos-bundle.sh), which honour
-    # APPLE_SIGNING_IDENTITY — so they are NOT re-signed here. Like the standalone
-    # dylibs, neither is separately notarized; the consuming app re-signs and
-    # notarizes the whole .app.
+    # APPLE_SIGNING_IDENTITY — so they are NOT re-signed here, only notarized below.
 
-    # Notarize the CLI. A bare executable cannot be stapled (stapling targets
-    # .app/.dmg/.pkg only), so we notarize a zip of the signed binary and rely on
-    # Gatekeeper's online ticket check on first run.
+    # Notarize every macOS binary we ship. A Developer ID signature alone is not
+    # enough for the Players: their install route is "download the release zip in
+    # a browser", which stamps com.apple.quarantine on everything extracted from
+    # it, and Gatekeeper refuses to dlopen quarantined code that has no
+    # notarization ticket. That bites on the *developer's* machine, upstream of
+    # any app signing — the Unity Editor loading ssruntime.bundle /
+    # libssconverter.dylib, and Ren'Py dlopening libssruntime.framework — so
+    # "the consuming app re-signs and notarizes the whole .app" does not cover it.
+    # SSPlayerForGodot notarizes its GDExtension frameworks for the same reason.
+    #
+    # Nothing here can be stapled (stapling targets .app/.dmg/.pkg only), so the
+    # tickets live on Apple's servers and Gatekeeper fetches them online on first
+    # load. One archive holding all of them is a single round trip: the notary
+    # service issues a ticket per Mach-O cdhash found inside it.
+    #
+    # libssruntime.dylib is deliberately absent — it is only the intermediate the
+    # framework and bundle are copied from, and is not shipped (see above).
     if [ -n "${APPLE_API_KEY_PATH:-}" ] && [ -n "${APPLE_API_KEY:-}" ] && [ -n "${APPLE_API_ISSUER:-}" ]; then
-        echo "==> Notarizing ssconverter-cli"
-        NOTARIZE_ZIP="${OUTPUT}/ssconverter-cli.notarize.zip"
-        /bin/rm -f "${NOTARIZE_ZIP}"
-        ( cd "${OUTPUT}" && /usr/bin/zip -q ssconverter-cli.notarize.zip ssconverter-cli )
+        echo "==> Notarizing macOS artifacts"
+        NOTARIZE_DIR="${OUTPUT}/notarize"
+        NOTARIZE_ZIP="${OUTPUT}/notarize.zip"
+        /bin/rm -rf "${NOTARIZE_DIR}" "${NOTARIZE_ZIP}"
+        /bin/mkdir -p "${NOTARIZE_DIR}"
+        # cp -R copies the framework's version symlinks AS symlinks, and ditto
+        # (not /usr/bin/zip, which follows them) keeps them that way in the
+        # archive — a flattened bundle is "ambiguous" to codesign and would be
+        # rejected. Same reason SSPlayerForRenPy packages with `zip -y`.
+        cp -R "${OUTPUT}/ssconverter-cli" \
+              "${OUTPUT}/libssconverter.dylib" \
+              "${FRAMEWORK}" \
+              "${OUTPUT}/ssruntime.bundle" \
+              "${NOTARIZE_DIR}/"
+        /usr/bin/ditto -c -k --sequesterRsrc --keepParent "${NOTARIZE_DIR}" "${NOTARIZE_ZIP}"
+
+        # `notarytool submit --wait` is not reliably non-zero on a rejected
+        # submission, so the exit code alone can let an unnotarized release
+        # through green. Assert on the reported status instead, and keep going
+        # past a non-zero exit (|| NOTARIZE_RC=$?, which set -e tolerates) so the
+        # status check below is what decides. plutil parses the JSON — it ships
+        # with macOS, unlike jq, so this works on a maintainer's Mac too.
+        #
+        # Because the four binaries go up as one archive, a rejection is
+        # all-or-nothing and the status alone does not say which one failed —
+        # so fetch the notary log, which reports per-binary issues, before
+        # failing the build.
+        NOTARIZE_OUT="${OUTPUT}/notarize.json"
+        NOTARIZE_RC=0
         xcrun notarytool submit "${NOTARIZE_ZIP}" \
             --key "${APPLE_API_KEY_PATH}" \
             --key-id "${APPLE_API_KEY}" \
             --issuer "${APPLE_API_ISSUER}" \
-            --wait
-        /bin/rm -f "${NOTARIZE_ZIP}"
+            --wait --output-format json > "${NOTARIZE_OUT}" || NOTARIZE_RC=$?
+        cat "${NOTARIZE_OUT}"
+
+        # An unparseable response leaves STATUS empty, which fails below — the
+        # safe direction, since the raw response is echoed above for diagnosis.
+        NOTARIZE_STATUS=$(/usr/bin/plutil -extract status raw -o - -- "${NOTARIZE_OUT}" 2>/dev/null || true)
+        NOTARIZE_ID=$(/usr/bin/plutil -extract id raw -o - -- "${NOTARIZE_OUT}" 2>/dev/null || true)
+        if [ "${NOTARIZE_STATUS}" != "Accepted" ]; then
+            echo "ERROR: notarization failed (status=${NOTARIZE_STATUS:-unknown}, notarytool exit=${NOTARIZE_RC})" >&2
+            if [ -n "${NOTARIZE_ID}" ]; then
+                echo "==> Notary log for submission ${NOTARIZE_ID}:" >&2
+                xcrun notarytool log "${NOTARIZE_ID}" \
+                    --key "${APPLE_API_KEY_PATH}" \
+                    --key-id "${APPLE_API_KEY}" \
+                    --issuer "${APPLE_API_ISSUER}" >&2 || true
+            fi
+            exit 1
+        fi
+        echo "==> Notarization accepted (submission ${NOTARIZE_ID})"
+
+        /bin/rm -rf "${NOTARIZE_DIR}" "${NOTARIZE_ZIP}" "${NOTARIZE_OUT}"
     else
         echo "==> Skipping notarization (APPLE_API_KEY_PATH / APPLE_API_KEY / APPLE_API_ISSUER not all set)"
     fi

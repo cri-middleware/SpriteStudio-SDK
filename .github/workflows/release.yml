@@ -115,16 +115,16 @@ jobs:
 
           rm -f "$CERTIFICATE_PATH"
 
-      # Decode the App Store Connect API key (.p8) used to notarize the CLI and
-      # expose its path to the macOS build step. No-ops when the secret is
-      # absent. macOS only (iOS is not notarized).
+      # Decode the App Store Connect API key (.p8) used to notarize the shipped
+      # macOS binaries and expose its path to the macOS build step. No-ops when
+      # the secret is absent. macOS only (iOS has no notarization).
       - name: Prepare Apple API key
         if: matrix.platform == 'macos'
         env:
           ASC_API_KEY_PASS: ${{ secrets.ASC_API_KEY_PASS }}
         run: |
           if [ -z "$ASC_API_KEY_PASS" ]; then
-            echo "ASC_API_KEY_PASS not set — skipping API key setup (CLI will not be notarized)."
+            echo "ASC_API_KEY_PASS not set — skipping API key setup (artifacts will not be notarized)."
             exit 0
           fi
           echo "$ASC_API_KEY_PASS" | base64 --decode > "$RUNNER_TEMP/apple_api_key.p8"
@@ -153,8 +153,9 @@ jobs:
           cp libs/ssconverter/target/SSConverterMethods.g.cs lib/bindings/
 
       # release-macos.sh signs the universal dylibs + CLI (hardened runtime +
-      # timestamp) and notarizes the CLI when these APPLE_* env vars are present.
-      # APPLE_API_KEY_PATH is set by the "Prepare Apple API key" step above.
+      # timestamp) and notarizes everything it ships — CLI, libssconverter.dylib,
+      # libssruntime.framework, ssruntime.bundle — when these APPLE_* env vars are
+      # present. APPLE_API_KEY_PATH is set by the "Prepare Apple API key" step above.
       - name: build macOS
         if: matrix.platform == 'macos' && matrix.arch == 'universal'
         env:
