@@ -133,37 +133,37 @@ Attributes not covered by the SoA getters (§1) - for example **`parts` (part st
 In recent game engines and graphics libraries, performance improves dramatically when you drive the engine's low-level drawing API (batch rendering features and the like) directly, instead of creating large numbers of display nodes or sprite objects per part.
 
 1. **Fetch and hold pointers in bulk (the DrawFrame pattern)**:
-   Fetch pointers such as `ss_runtime_get_world_matrices` in bulk at the top of each frame's drawing loop and keep them in a temporary structure or context, which cuts unnecessary function calls and allocations inside the loop.
+    Fetch pointers such as `ss_runtime_get_world_matrices` in bulk at the top of each frame's drawing loop and keep them in a temporary structure or context, which cuts unnecessary function calls and allocations inside the loop.
 
-   **Concrete examples of wrapping pointers (zero-copy references) per language environment**:
-   When calling over FFI from a high-level language such as C# or JS (WASM), you can completely avoid a per-frame memory copy by using the language feature that peeks directly into memory (borrowing), rather than allocating a new managed array from the returned pointer and copying the data.
+    **Concrete examples of wrapping pointers (zero-copy references) per language environment**:
+    When calling over FFI from a high-level language such as C# or JS (WASM), you can completely avoid a per-frame memory copy by using the language feature that peeks directly into memory (borrowing), rather than allocating a new managed array from the returned pointer and copying the data.
 
-   * **C#**: wrap it with a raw pointer inside an `unsafe` block, or with `ReadOnlySpan<float>` and similar.
-   * **JS/TS (WASM)**: place a `Float32Array` view (a window) over `wasmMemory.buffer`.
+    * **C#**: wrap it with a raw pointer inside an `unsafe` block, or with `ReadOnlySpan<float>` and similar.
+    * **JS/TS (WASM)**: place a `Float32Array` view (a window) over `wasmMemory.buffer`.
 
-   ```typescript
-   // Example: the pattern that avoids allocation and copying in a JS/TS environment
-   const ptr = context.get_world_matrices_buf();
-   const count = context.get_parts_count();
+    ```typescript
+    // Example: the pattern that avoids allocation and copying in a JS/TS environment
+    const ptr = context.get_world_matrices_buf();
+    const count = context.get_parts_count();
 
-   // No array copy: reference (borrow) the WASM memory space directly
-   const worldMatrices = new Float32Array(wasmMemory.buffer, ptr, count * 16);
-   ```
+    // No array copy: reference (borrow) the WASM memory space directly
+    const worldMatrices = new Float32Array(wasmMemory.buffer, ptr, count * 16);
+    ```
 
-   > [!WARNING]
-   > **The lifecycle trap in multi-threaded renderers (avoiding use-after-free)**
-   > In modern engines - Unity's Job System (Burst), Godot's multi-threaded RenderingServer, Unreal Engine's RenderThread - it is common for "animation updates on the main thread" and "drawing / geometry construction on a worker thread" to run asynchronously.
-   > If you design your Player to hand SoA buffers (raw pointers obtained from the C-API) to the rendering thread with zero copies, then a situation where **"the rendering thread is reading the pointer while the main thread runs the Player's disposal path and calls `ss_runtime_destroy`"** causes an access to freed memory (segfault / access violation) and a guaranteed crash.
-   > To avoid this, implement strict lifecycle management: at Player (component) disposal or destructor time (`Destroy` / `Dispose`), **always wait for running drawing jobs and thread work to complete (synchronizing with Unity's `JobHandle.Complete()` or similar) before freeing native memory with `ss_runtime_destroy`**.
+    > [!WARNING]
+    > **The lifecycle trap in multi-threaded renderers (avoiding use-after-free)**
+    > In modern engines - Unity's Job System (Burst), Godot's multi-threaded RenderingServer, Unreal Engine's RenderThread - it is common for "animation updates on the main thread" and "drawing / geometry construction on a worker thread" to run asynchronously.
+    > If you design your Player to hand SoA buffers (raw pointers obtained from the C-API) to the rendering thread with zero copies, then a situation where **"the rendering thread is reading the pointer while the main thread runs the Player's disposal path and calls `ss_runtime_destroy`"** causes an access to freed memory (segfault / access violation) and a guaranteed crash.
+    > To avoid this, implement strict lifecycle management: at Player (component) disposal or destructor time (`Destroy` / `Dispose`), **always wait for running drawing jobs and thread work to complete (synchronizing with Unity's `JobHandle.Complete()` or similar) before freeing native memory with `ss_runtime_destroy`**.
 
 2. **Pool drawing resources**:
-   Do not create and destroy the low-level drawing resources each batch needs (vertex buffers, index buffers, intermediate objects for draw commands) every frame; pool them in arrays and reuse them.
+    Do not create and destroy the low-level drawing resources each batch needs (vertex buffers, index buffers, intermediate objects for draw commands) every frame; pool them in arrays and reuse them.
 3. **Zero-allocation design (avoiding GC spikes)**:
-   Allocating new managed arrays (`new`) inside the per-frame drawing loop, or delegating work to high-level UI components (Unity's uGUI Canvas Rebuild, for example), causes serious performance degradation and GC spikes. We strongly recommend a zero-allocation design that reuses pre-allocated native memory (`NativeArray` and so on) and updates vertex buffers directly (`SetVertexBufferData` and so on).
+    Allocating new managed arrays (`new`) inside the per-frame drawing loop, or delegating work to high-level UI components (Unity's uGUI Canvas Rebuild, for example), causes serious performance degradation and GC spikes. We strongly recommend a zero-allocation design that reuses pre-allocated native memory (`NativeArray` and so on) and updates vertex buffers directly (`SetVertexBufferData` and so on).
 4. **Aggregate vertex data**:
-   Pack each part's computed vertices into the buffer format your target engine accepts directly, and submit them to the GPU in bulk with a draw command.
+    Pack each part's computed vertices into the buffer format your target engine accepts directly, and submit them to the GPU in bulk with a draw command.
 5. **Control the draw order**:
-   Use Z-index or your engine's own draw-order control to reflect the order between batches (`draw_order`) correctly.
+    Use Z-index or your engine's own draw-order control to reflect the order between batches (`draw_order`) correctly.
 
 ## 4. Implementing masks
 

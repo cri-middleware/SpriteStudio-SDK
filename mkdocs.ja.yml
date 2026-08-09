@@ -1,0 +1,78 @@
+# Japanese site. Built with `zensical build -f mkdocs.ja.yml`, and always *after* the
+# English build: `site_dir` is nested inside it, and a build wipes its own output directory.
+#
+# `docs_dir` points at a generated tree; see the note in mkdocs.yml and
+# scripts/build-docs-tree.py, which must run before either build.
+#
+# Everything not listed here comes from mkdocs.base.yml. Before adding anything, read the
+# note there about sequences: `nav` and `extra.social` are defined in this file and in
+# mkdocs.yml, and must never also appear in the base.
+INHERIT: ./mkdocs.base.yml
+
+docs_dir: build/docs/ja
+site_dir: site/ja
+# Must carry the `ja/` suffix: this is what `page.canonical_url` and therefore the `og:url`
+# tag are built from. Inheriting the English `site_url` would advertise every Japanese page
+# under its English address.
+site_url: "https://cri-middleware.github.io/SpriteStudio-SDK/ja/"
+# Feeds <meta name="description"> and the Open Graph tags on every ja page. Without it they
+# would inherit the English `site_description`.
+site_description: "SpriteStudio SDK の Player 移植ガイド - 任意のエンジンに SpriteStudio 7 Player を実装する"
+
+theme:
+  # Drives the UI string translations, the `html lang` attribute, and -- because the search
+  # engine segments CJK text per locale -- Japanese word splitting in the search index.
+  language: ja
+
+extra:
+  # This locale builds into site/ja, so the root of the whole multi-locale site is one level
+  # up. The language selector prepends this to its target; see
+  # overrides/partials/alternate.html.
+  site_root_prefix: "../"
+  # Footer icon labels (title / aria-label). Mirrors `extra.social` in mkdocs.yml.
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cri-middleware
+      name: GitHub の cri-middleware
+    - icon: material/web
+      link: https://www.webtech.co.jp/spritestudio/
+      name: OPTPiX SpriteStudio
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/spritestudio
+      name: X の SpriteStudio
+
+# The Japanese counterpart of the `nav` in mkdocs.yml -- same paths, translated labels.
+# This replaces the old `nav_translations` map: labels are written where they are used
+# instead of being looked up by their English string, so a renamed English title can no
+# longer silently leave the Japanese label untranslated.
+nav:
+  - 🏠 ホーム: README.md
+  - 🚀 はじめに:
+      - はじめに・用語解説: 10_introduction/10_introduction.md
+      - 制限事項: 10_introduction/20_limitations.md
+  - 🧭 設計と準備:
+      - 事前確認とプロジェクトの準備: 20_design/10_preparation.md
+      - アーキテクチャと実装方針: 20_design/20_architecture.md
+      - 実装ロードマップ: 20_design/30_implementation_roadmap.md
+  - 🎬 コア実装:
+      - データのロードと初期化: 30_core/10_initialization.md
+      - 再生制御とイベント処理: 30_core/20_playback_control.md
+      - レンダリングループとバッチ描画: 30_core/30_render_loop.md
+  - 🧩 コンポーネント実装:
+      - インスタンスパーツ (Instance): 40_components/10_instance.md
+      - エフェクトパーツ (Effect): 40_components/20_effect.md
+      - メッシュとデフォーム (Mesh): 40_components/30_mesh.md
+      - Mask の実装: 40_components/40_mask.md
+      - パーツカラー (Parts Color): 40_components/50_parts_color.md
+      - アニメーションブレンド / ミキシング: 40_components/60_animation_blending.md
+      - パーツオーバーライド (Override Layer API): 40_components/65_override_layer.md
+      - 外部リソースとテクスチャの管理: 40_components/70_external_resources.md
+      - シーケンス (Sequence): 40_components/80_sequence.md
+      - オーディオ（サウンド）再生の統合: 40_components/90_audio.md
+      - 特殊なパーツタイプ: 40_components/95_special_parts.md
+  - 📚 リファレンス:
+      - no_std 組み込み環境への統合: 50_reference/10_no_std_integration.md
+      - トラブルシューティング: 50_reference/20_troubleshooting.md
+  - 🛠️ ツール連携:
+      - エディタインテグレーションとコンバート: 60_tooling/10_editor_integration.md
+  - 📦 Rust API (rustdoc): https://cri-middleware.github.io/SpriteStudio-SDK/api/ssruntime/index.html
