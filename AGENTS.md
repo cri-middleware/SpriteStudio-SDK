@@ -49,11 +49,13 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | `no_std` custom allocator (console/engine) | `cargo rustc -p ssruntime --features custom_alloc,panic-handler --crate-type staticlib` |
 | `std` opt-in (desktop DX) | `cargo build -p ssruntime --features std` |
 | `ssconverter` web (browser WASM) | `cargo build -p ssconverter --no-default-features --features web --target wasm32-unknown-unknown` |
-| Docs site (after editing `libs/ssruntime/docs`) | `pip install -r docs/requirements.txt && python3 scripts/build-docs-tree.py && zensical build --strict && zensical build -f mkdocs.ja.yml --strict` |
+| Docs site (after editing `libs/ssruntime/docs`) | `scripts/prepare-docs.sh` once, then `scripts/build-docs.sh` — `.ps1` twins on Windows |
 
 The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edits land as unstaged changes — review them via `git diff` before staging.
 
 The docs site build is **not** run on a pull request — `pages.yml` only fires on `release: published` and dispatch — so the local build is the only gate on a broken link, a stale heading anchor, or a page missing its `日本語 | English` switcher line. Run it before merging any change under `libs/ssruntime/docs`. Note `serve` validates nothing: `zensical serve --strict` is accepted and currently does nothing.
+
+`scripts/build-docs.sh` is what `pages.yml` runs too, so CI and the local gate cannot drift: it generates the guide trees, then builds English and Japanese in that order, both `--strict`. It takes `key=value` options and `--help` like the other scripts here (`locale=ja`, `venv=…`). Every repository in the family spells this pair the same way; the `-docs` suffix keeps it apart from the scripts that build the code. What it does *not* build is the rustdoc the published site carries at `/api/` — that stays `cargo doc --workspace` in the workflow, so a locally built `site/` has no `/api/`.
 
 ### How the site is built
 
@@ -65,7 +67,7 @@ The site runs on [Zensical](https://zensical.org), the successor to MkDocs + Mat
 *   `docs/hooks.py`, which stripped the per-page language switcher line (now a hard error if a page lacks it, rather than a warning `strict` promoted);
 *   `exclude_docs`, which kept `CONTRIBUTING.ja.md` out of the site.
 
-Run it before either build. Everything else follows the family pattern: `mkdocs.base.yml` holds what both locales share, `mkdocs.yml` builds English to `site/`, `mkdocs.ja.yml` builds Japanese to `site/ja/` — English first, because it clears `site/`, which contains `site/ja`.
+`scripts/build-docs.sh` runs it before either build, every time, so the generated tree cannot go stale. Everything else follows the family pattern: `mkdocs.base.yml` holds what both locales share, `mkdocs.yml` builds English to `site/`, `mkdocs.ja.yml` builds Japanese to `site/ja/` — English first, because it clears `site/`, which contains `site/ja`.
 
 **The three-config split has one rule: a YAML sequence must be defined in exactly one of the three files.** Zensical's `INHERIT` *concatenates* parent and child sequences where MkDocs replaces them, so a `nav` in the base as well as a locale config renders both navigations, one after the other.
 
