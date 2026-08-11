@@ -42,27 +42,34 @@ jobs:
           cache: pip
           cache-dependency-path: docs/requirements.txt
 
-      - name: Install dependencies
-        run: pip install -r docs/requirements.txt
-
-      # The guide is authored with each page next to its `.ja.md` translation, which is what
-      # makes it readable on GitHub; Zensical builds one locale per config, from one
-      # directory. This generates those two directories, and fails if a page lost the
-      # language switcher line it is required to carry.
-      - name: Generate the per-locale documentation trees
-        run: python3 scripts/build-docs-tree.py
-
-      # One build per locale. --strict fails on a broken link, a missing nav entry, or a
-      # heading anchor renamed out from under a cross-reference. Nothing builds the docs on a
-      # pull request, so this run and the local build are the only gates.
+      # Both steps below run the same scripts a contributor runs locally, rather than
+      # repeating the commands here. Nothing builds the docs on a pull request, so there is
+      # no PR run to catch a divergence between the two — the fewer places the build is
+      # spelled out, the better.
       #
-      # Order matters: the ja build writes into site/ja, and the English build wipes site/ on
-      # the way in. Swapping these two steps publishes a site with no Japanese pages.
-      - name: Build docs, English (strict validation)
-        run: zensical build --strict
+      # prepare-docs.sh creates .venv and installs the pins from docs/requirements.txt;
+      # build-docs.sh then finds zensical there. (It falls back to PATH when there is no
+      # venv, so a plain `pip install -r docs/requirements.txt` step would still work here —
+      # but then CI and the README would be running different things.)
+      - name: Install dependencies
+        run: ./scripts/prepare-docs.sh
 
-      - name: Build docs, Japanese (strict validation)
-        run: zensical build -f mkdocs.ja.yml --strict
+      # Three things, in the one script:
+      #
+      #   scripts/build-docs-tree.py first — the guide is authored with each page next to
+      #   its `.ja.md` translation, which is what makes it readable on GitHub, while
+      #   Zensical builds one locale per config from one directory. It generates those two
+      #   directories, and fails if a page lost the language switcher line it must carry.
+      #
+      #   Then one build per locale, English first: the ja build writes into site/ja and
+      #   the English build wipes site/ on the way in, so the opposite order publishes a
+      #   site with no Japanese pages at all.
+      #
+      #   Both --strict, which fails on a broken link, a missing nav entry, or a heading
+      #   anchor renamed out from under a cross-reference. This run and the local build are
+      #   the only gates there are.
+      - name: Build docs, both locales (strict validation)
+        run: ./scripts/build-docs.sh
 
       - name: setup for SpriteStudio-SDK
         uses: ./.github/actions/setup
