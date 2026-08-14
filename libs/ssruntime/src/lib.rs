@@ -908,9 +908,6 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
         *v = 0.0;
     }
 
-    // Sum of active source weights for auto-normalization.
-    let total_weight: f32 = sources.iter().filter(|s| s.is_active()).map(|s| s.weight).sum();
-
     resolved_layer.parts_vec.clear();
     resolved_layer.parts_vec.reserve(num_parts);
     if resolved_layer.raw_vertex_deform.len() != num_parts {
@@ -926,8 +923,21 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
         let primary_state = primary.parts_vec[i];
         let mut mixed = primary_state;
 
-        if total_weight > 0.0 {
-            let inv_total = 1.0 / total_weight;
+        // Auto-normalization is per part, not global. A blend source's layer is
+        // sized to its own animation's part count, which can be shorter than the
+        // primary's when a caller blends mismatched part lists; parts are
+        // correlated positionally, so a source simply does not cover the indices
+        // past its end. Summing over all active sources there would leave the
+        // covering sources scaled below 1 — those parts would blend toward the
+        // origin and fade out rather than degrade gracefully. When every active
+        // source covers the part this sums the same weights in the same order as
+        // a global sum would, so the common path is unchanged.
+        let part_weight: f32 = sources.iter().enumerate().filter(|(j, src)| src.is_active() && i < layers[*j].parts_vec.len()).map(|(_, src)| src.weight).sum();
+
+        // Zero means no active source has this part at all: leave `mixed` as the
+        // primary's pose rather than writing zeroed attributes over it.
+        if part_weight > 0.0 {
+            let inv_total = 1.0 / part_weight;
             let mut pos_x = 0.0_f32;
             let mut pos_y = 0.0_f32;
             let mut pos_z = 0.0_f32;
@@ -965,13 +975,10 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
                     continue;
                 }
                 let w = src.weight * inv_total;
-                // Defensive: a blend source's layer is sized to its own
-                // animation's part count, which can be shorter than the
-                // primary's when a caller blends mismatched part lists. Parts
-                // are correlated positionally by index, so skip a missing part
-                // instead of indexing out of bounds — a mismatched-part-count
-                // blend then degrades gracefully rather than panicking and
-                // aborting the host.
+                // A source that does not cover this index was already excluded
+                // from `part_weight`; skipping it here instead of indexing out of
+                // bounds is what keeps a mismatched-part-count blend from
+                // panicking and aborting the host.
                 let Some(s) = layers[j].parts_vec.get(i) else {
                     continue;
                 };
@@ -4383,6 +4390,168 @@ mod tests {
         assert_eq!(r.rotation_z(), 1.5);
         assert_eq!(r.scale_x(), 2.0);
         assert_eq!(r.alpha(), 0.5);
+    }
+
+    /// Every continuous `PartState` attribute set to a distinct value
+    /// (`bias + 1.0` … `bias + 28.0`, skipping `bias + 13.0` which is the slot
+    /// of the discrete `priority`), so a swapped or dropped attribute cannot
+    /// pass a comparison by coincidence.
+    fn fully_attributed_part_state(bias: f32) -> runtime::framedata::ss::runtime::PartState {
+        let mut ps = runtime::framedata::ss::runtime::PartState::default();
+        ps.set_position_x(bias + 1.0);
+        ps.set_position_y(bias + 2.0);
+        ps.set_position_z(bias + 3.0);
+        ps.set_rotation_x(bias + 4.0);
+        ps.set_rotation_y(bias + 5.0);
+        ps.set_rotation_z(bias + 6.0);
+        ps.set_scale_x(bias + 7.0);
+        ps.set_scale_y(bias + 8.0);
+        ps.set_local_scale_x(bias + 9.0);
+        ps.set_local_scale_y(bias + 10.0);
+        ps.set_alpha(bias + 11.0);
+        ps.set_local_alpha(bias + 12.0);
+        ps.set_pivot_x(bias + 14.0);
+        ps.set_pivot_y(bias + 15.0);
+        ps.set_anchor_x(bias + 16.0);
+        ps.set_anchor_y(bias + 17.0);
+        ps.set_size_x(bias + 18.0);
+        ps.set_size_y(bias + 19.0);
+        ps.set_uv_translation_x(bias + 20.0);
+        ps.set_uv_translation_y(bias + 21.0);
+        ps.set_uv_rotation_z(bias + 22.0);
+        ps.set_uv_scale_x(bias + 23.0);
+        ps.set_uv_scale_y(bias + 24.0);
+        ps.set_bounding_radius(bias + 25.0);
+        ps.set_mask(bias + 26.0);
+        ps.set_skew_x(bias + 27.0);
+        ps.set_skew_y(bias + 28.0);
+        ps
+    }
+
+    /// Pins the full continuous/discrete split: all 27 continuous attributes
+    /// must be weighted-summed and every discrete one must come from the
+    /// primary verbatim. The narrower TRSA blend tests below would not notice a
+    /// dropped skew or a pivot that stopped blending.
+    #[test]
+    fn mix_poses_blends_every_continuous_attribute() {
+        use runtime::framedata::ss::runtime::UpdateAttributeFlags;
+
+        let mut primary_part = fully_attributed_part_state(0.0);
+        primary_part.set_priority(13.0);
+        primary_part.set_part_index(7);
+        primary_part.set_cell(3);
+        primary_part.set_update_flag(UpdateAttributeFlags::AttributePosX);
+
+        let mut secondary_part = fully_attributed_part_state(100.0);
+        secondary_part.set_priority(999.0);
+        secondary_part.set_part_index(-1);
+        secondary_part.set_cell(-1);
+        secondary_part.set_update_flag(UpdateAttributeFlags::AttributeAlpha);
+
+        let mut layers = Vec::new();
+        for part in [primary_part, secondary_part] {
+            let mut layer = LayerState::new();
+            layer.parts_vec.push(part);
+            layer.raw_vertex_deform.push(crate::core::framedata::RawVertexDeform::default());
+            layers.push(layer);
+        }
+
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let mut resolved = LayerState::new();
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        // A 50/50 blend of `n` and `n + 100` is `n + 50`, exact in f32.
+        let r = &resolved.parts_vec[0];
+        assert_eq!(r.position_x(), 51.0);
+        assert_eq!(r.position_y(), 52.0);
+        assert_eq!(r.position_z(), 53.0);
+        assert_eq!(r.rotation_x(), 54.0);
+        assert_eq!(r.rotation_y(), 55.0);
+        assert_eq!(r.rotation_z(), 56.0);
+        assert_eq!(r.scale_x(), 57.0);
+        assert_eq!(r.scale_y(), 58.0);
+        assert_eq!(r.local_scale_x(), 59.0);
+        assert_eq!(r.local_scale_y(), 60.0);
+        assert_eq!(r.alpha(), 61.0);
+        assert_eq!(r.local_alpha(), 62.0);
+        assert_eq!(r.pivot_x(), 64.0);
+        assert_eq!(r.pivot_y(), 65.0);
+        assert_eq!(r.anchor_x(), 66.0);
+        assert_eq!(r.anchor_y(), 67.0);
+        assert_eq!(r.size_x(), 68.0);
+        assert_eq!(r.size_y(), 69.0);
+        assert_eq!(r.uv_translation_x(), 70.0);
+        assert_eq!(r.uv_translation_y(), 71.0);
+        assert_eq!(r.uv_rotation_z(), 72.0);
+        assert_eq!(r.uv_scale_x(), 73.0);
+        assert_eq!(r.uv_scale_y(), 74.0);
+        assert_eq!(r.bounding_radius(), 75.0);
+        assert_eq!(r.mask(), 76.0);
+        assert_eq!(r.skew_x(), 77.0);
+        assert_eq!(r.skew_y(), 78.0);
+
+        // Discrete attributes: primary's values, never blended.
+        assert_eq!(r.priority(), 13.0);
+        assert_eq!(r.part_index(), 7);
+        assert_eq!(r.cell(), 3);
+        assert_eq!(r.update_flag(), UpdateAttributeFlags::AttributePosX | UpdateAttributeFlags::AttributeAlpha);
+    }
+
+    /// A source shorter than the primary must not drag the parts it does not
+    /// cover toward the origin: weights are renormalized over the sources that
+    /// actually have the part.
+    #[test]
+    fn mix_poses_renormalizes_weights_per_part() {
+        let primary = build_mix_layer(&[(10.0, 20.0, 0.0, 1.0, 1.0, None), (70.0, 80.0, 0.0, 4.0, 0.25, None)]);
+        let secondary = build_mix_layer(&[(50.0, 60.0, 0.0, 3.0, 0.0, None)]);
+        let layers = vec![primary, secondary];
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        // Part 0 is covered by both: an ordinary 50/50 blend.
+        let p0 = &resolved.parts_vec[0];
+        assert_eq!(p0.position_x(), 30.0);
+        assert_eq!(p0.position_y(), 40.0);
+        assert_eq!(p0.scale_x(), 2.0);
+        assert_eq!(p0.alpha(), 0.5);
+
+        // Part 1 exists only in the primary, so it keeps the primary's pose at
+        // full weight. A global normalization would halve every attribute here.
+        let p1 = &resolved.parts_vec[1];
+        assert_eq!(p1.position_x(), 70.0);
+        assert_eq!(p1.position_y(), 80.0);
+        assert_eq!(p1.scale_x(), 4.0);
+        assert_eq!(p1.alpha(), 0.25);
+    }
+
+    /// When no active source covers a part, the mixer must leave the primary's
+    /// pose alone rather than write zeroed accumulators over it.
+    #[test]
+    fn mix_poses_keeps_primary_pose_for_uncovered_parts() {
+        let primary = build_mix_layer(&[(10.0, 20.0, 0.0, 1.0, 1.0, None), (70.0, 80.0, 0.0, 4.0, 0.25, None)]);
+        let secondary = build_mix_layer(&[(50.0, 60.0, 0.0, 3.0, 0.5, None)]);
+        let layers = vec![primary, secondary];
+        // The primary source is inactive, so only the shorter secondary blends.
+        let sources = vec![mix_source(0.0), mix_source(1.0)];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        // Part 0: the secondary is the only contributor, at full weight.
+        let p0 = &resolved.parts_vec[0];
+        assert_eq!(p0.position_x(), 50.0);
+        assert_eq!(p0.position_y(), 60.0);
+        assert_eq!(p0.scale_x(), 3.0);
+        assert_eq!(p0.alpha(), 0.5);
+
+        // Part 1: nothing covers it, so the primary's pose survives untouched.
+        let p1 = &resolved.parts_vec[1];
+        assert_eq!(p1.position_x(), 70.0);
+        assert_eq!(p1.position_y(), 80.0);
+        assert_eq!(p1.scale_x(), 4.0);
+        assert_eq!(p1.alpha(), 0.25);
     }
 
     #[test]
