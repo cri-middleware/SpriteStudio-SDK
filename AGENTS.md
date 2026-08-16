@@ -55,7 +55,13 @@ The auto-fix variant uses `--allow-staged` (not `--allow-dirty`) so clippy's edi
 
 The docs site build is **not** run on a pull request — `pages.yml` only fires on `release: published` and dispatch — so the local build is the only gate on a broken link, a stale heading anchor, or a page missing its `日本語 | English` switcher line. Run it before merging any change under `libs/ssruntime/docs`. Note `serve` validates nothing: `zensical serve --strict` is accepted and currently does nothing.
 
-`scripts/build-docs.sh` is what `pages.yml` runs too, so CI and the local gate cannot drift: it generates the guide trees, then builds English and Japanese in that order, both `--strict`. It takes `key=value` options and `--help` like the other scripts here (`locale=ja`, `venv=…`). Every repository in the family spells this pair the same way; the `-docs` suffix keeps it apart from the scripts that build the code. What it does *not* build is the rustdoc the published site carries at `/api/` — that stays `cargo doc --workspace` in the workflow, so a locally built `site/` has no `/api/`.
+`scripts/build-docs.sh` generates the guide trees, then builds English and Japanese in that order, both `--strict`. It takes `key=value` options and `--help` like the other scripts here (`locale=ja`, `venv=…`). Every repository in the family spells this pair the same way; the `-docs` suffix keeps it apart from the scripts that build the code. What it does *not* build is the rustdoc the published site carries at `/api/`.
+
+`scripts/build-pages.sh` is the whole published site: that docs build, then `cargo doc --workspace --no-deps --all-features` grafted onto it at `site/api/` — which has to come second, because the English build clears `site/`. `pages.yml`'s build job **is** this script (`prepare=no docs=yes api=yes serve=no`, every option spelled out so a publish cannot change because a default did), so CI and the local build cannot drift. `serve=yes` then serves the tree over HTTP, which is the only way to check the language selector and the nav's Rust API entry the way a reader meets them; `api=no` skips the rustdoc when only prose changed.
+
+```bash
+scripts/build-pages.sh serve=yes    # docs + rustdoc -> http://localhost:8000/
+```
 
 ### How the site is built
 

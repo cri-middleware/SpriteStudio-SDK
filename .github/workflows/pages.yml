@@ -48,13 +48,22 @@ jobs:
       # spelled out, the better.
       #
       # prepare-docs.sh creates .venv and installs the pins from docs/requirements.txt;
-      # build-docs.sh then finds zensical there. (It falls back to PATH when there is no
+      # build-pages.sh then finds zensical there. (It falls back to PATH when there is no
       # venv, so a plain `pip install -r docs/requirements.txt` step would still work here —
-      # but then CI and the README would be running different things.)
+      # but then CI and the README would be running different things.) It stays a step of
+      # its own so a dependency failure is legible as one in the run summary, which is also
+      # why build-pages.sh is invoked below with prepare=no.
       - name: Install dependencies
         run: ./scripts/prepare-docs.sh
 
-      # Three things, in the one script:
+      # The rustdoc half of the site needs a toolchain; the documentation half does not.
+      - name: setup for SpriteStudio-SDK
+        uses: ./.github/actions/setup
+        with:
+          platform: linux
+          os: ubuntu-latest
+
+      # scripts/build-pages.sh is the whole site, in the order that works:
       #
       #   scripts/build-docs-tree.py first — the guide is authored with each page next to
       #   its `.ja.md` translation, which is what makes it readable on GitHub, while
@@ -63,46 +72,28 @@ jobs:
       #
       #   Then one build per locale, English first: the ja build writes into site/ja and
       #   the English build wipes site/ on the way in, so the opposite order publishes a
-      #   site with no Japanese pages at all.
+      #   site with no Japanese pages at all. Both --strict, which fails on a broken link,
+      #   a missing nav entry, or a heading anchor renamed out from under a
+      #   cross-reference. This run and the local build are the only gates there are.
       #
-      #   Both --strict, which fails on a broken link, a missing nav entry, or a heading
-      #   anchor renamed out from under a cross-reference. This run and the local build are
-      #   the only gates there are.
-      - name: Build docs, both locales (strict validation)
-        run: ./scripts/build-docs.sh
-
-      - name: setup for SpriteStudio-SDK
-        uses: ./.github/actions/setup
-        with:
-          platform: linux
-          os: ubuntu-latest
-
-      # Deliberately without `RUSTDOCFLAGS: -D warnings`, unlike the same command in ci.yml:
-      # that gate belongs on the pull request. Enforcing it again here would mean a single
-      # bad intra-doc link publishes no documentation at all rather than documentation with
-      # one bad link in it.
-      - name: Build rustdoc (workspace)
-        run: cargo doc --workspace --no-deps --all-features
-
-      # `cargo doc` writes no index.html at the root of a workspace — with six crates there
-      # is no single page to land on. The nav entry in both locale configs therefore links
-      # straight to ssruntime, and this redirect covers anyone who trims the URL back to
-      # /api/. This step has to stay after both locale builds: the English one clears site/.
+      #   Then `cargo doc --workspace --no-deps --all-features` grafted onto the site at
+      #   /api/, with the redirect that covers anyone who trims the URL back to it —
+      #   `cargo doc` writes no index.html at the root of a workspace, and the nav entry in
+      #   both locale configs links straight to ssruntime. It lands at /api/ only, not
+      #   /ja/api/: rustdoc output is English-only and both navs point at the same absolute
+      #   URL. Deliberately without `RUSTDOCFLAGS: -D warnings`, unlike the same command in
+      #   ci.yml — that gate belongs on the pull request, and enforcing it again here would
+      #   mean a single bad intra-doc link publishes no documentation at all rather than
+      #   documentation with one bad link in it.
       #
-      # Note it lands at /api/ only, not /ja/api/ — rustdoc output is English-only, and both
-      # navs point at the same absolute URL.
-      - name: Graft rustdoc onto the site at /api/
-        run: |
-          mkdir -p site/api
-          cp -R target/doc/. site/api/
-          cat > site/api/index.html <<'HTML'
-          <!doctype html>
-          <meta charset="utf-8">
-          <title>SpriteStudio SDK — Rust API</title>
-          <meta http-equiv="refresh" content="0; url=ssruntime/index.html">
-          <link rel="canonical" href="ssruntime/index.html">
-          <a href="ssruntime/index.html">SpriteStudio SDK Rust API reference</a>
-          HTML
+      # build-pages.sh owns that order, and running it here is what keeps this workflow and
+      # the local build from drifting apart — before it existed the graft lived only in this
+      # file, so a locally built site had no /api/ for anyone to check.
+      #
+      # Every option is spelled out rather than left to the script's defaults: they are
+      # chosen for a working tree, and a publish should not change because one of them did.
+      - name: Build the Pages tree (docs both locales + rustdoc)
+        run: ./scripts/build-pages.sh prepare=no docs=yes api=yes serve=no
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
