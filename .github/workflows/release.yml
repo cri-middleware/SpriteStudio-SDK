@@ -276,6 +276,20 @@ jobs:
           name: ssconverter-cli-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: bin
           if-no-files-found: error
+          # A week, not the 90-day default, on every artifact this workflow
+          # uploads. What is meant to last is attached to the GitHub Release,
+          # which never expires; these are scaffolding — the matrix's handoff to
+          # the package job, and a copy of the archives for a run that uploaded
+          # nothing. At ~90 MB a run the default filled the org's shared storage
+          # quota, and a full quota does not degrade: `upload-artifact` fails, so
+          # every release build fails, in a step that has nothing to do with
+          # whatever was being released.
+          #
+          # The one thing this shortens is replaying the packaging locally
+          # (`gh run download <run-id>` — see scripts/build-release.sh): only
+          # runs from the last week can be replayed. That is the recent ones,
+          # which are the ones worth replaying.
+          retention-days: 7
 
       - name: Upload artifact ssconverter-cli (Windows arm64)
         if: matrix.platform == 'windows'
@@ -284,6 +298,7 @@ jobs:
           name: ssconverter-cli-windows-arm64
           path: bin-arm64
           if-no-files-found: error
+          retention-days: 7 # see the first upload step
 
       - name: Upload artifact libraries
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -291,6 +306,7 @@ jobs:
           name: spritestudio-sdk-libraries-${{ matrix.platform }}${{ (matrix.platform == 'linux' && matrix.arch == 'aarch64') && '-aarch64' || '' }}
           path: lib
           if-no-files-found: error
+          retention-days: 7 # see the first upload step
 
   package:
     needs: release
@@ -350,6 +366,7 @@ jobs:
           name: spritestudio-sdk-release-dist
           path: release-dist
           if-no-files-found: error
+          retention-days: 7 # see the first upload step
 
       - name: Create GitHub Release
         if: inputs.upload_release
