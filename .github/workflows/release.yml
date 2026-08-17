@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       upload_release:
-        description: 'Create a draft GitHub Release (publish by hand afterwards)'
+        description: 'Create a draft GitHub Release (publish by hand afterwards). Requires dispatching from a v* tag.'
         required: false
         default: false
         type: boolean
@@ -300,210 +300,67 @@ jobs:
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          fetch-depth: 0
+
       - name: Download all artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: artifacts
 
-      - id: commit
-        uses: prompt/actions-commit-hash@9e673021a12f5b5506d4da77ffbb8446e8a37b4a # v4
-
+      # A toolchain, so it stays a step of its own — a failure to install it is
+      # then legible as one in the run summary, the same reason pages.yml keeps
+      # prepare-docs.sh separate. Generating the notices is not a toolchain
+      # concern and lives in the script below.
       - name: Install cargo-about
         uses: taiki-e/install-action@07b4745e0c39a41822af610387492e3e53aa222b # v2
         with:
           tool: cargo-about
 
-      # Generate the third-party notices fresh from the current Cargo.lock into
-      # target/licenses/ (not committed). Each shipped artifact gets the file
-      # for its crate, pinned to the features that crate actually ships with.
-      - name: Generate third-party license notices
-        run: ./scripts/generate-licenses.sh
-
-      - name: Zip all artifacts
+      # A release is a tag that was pushed first and dispatched from second, so
+      # asking to upload from anything else is an operator error, not a mode.
+      # Failing here beats the silent `if: startsWith(github.ref, …)` skip: a
+      # dispatch that was meant to cut a release should not report success and
+      # quietly produce no Release. Leave upload_release=false to build the
+      # artifacts off a branch.
+      - name: Refuse to release from a non-tag ref
+        if: inputs.upload_release && !startsWith(github.ref, 'refs/tags/v')
         run: |
-          cd artifacts
+          echo "::error::upload_release=true needs a v* tag. Push the tag first, then dispatch this workflow from it (Use workflow from → the tag)."
+          exit 1
 
-          rm -rf static
-          mkdir -p static
-          pushd static
-          mkdir -p libs include
-          pushd libs
-          mkdir -p macos
-          mkdir -p web
-          mkdir -p ios
-          mkdir -p linux/x86_64
-          mkdir -p linux/aarch64
-          mkdir -p android/armeabi-v7a
-          mkdir -p android/arm64-v8a
-          mkdir -p android/x86_64
-          mkdir -p windows/x86_64
-          mkdir -p windows/arm64
-          popd # libs
+      # scripts/build-release.sh IS the release package: the third-party notices,
+      # the static/ dynamic/ web/ layout every Player's download-sdk.sh reads, the
+      # archives and SHA256SUMS. Every option is spelled out so a release cannot
+      # change because a default did, and so that the command below is the one a
+      # human runs locally — after `git checkout <tag>` and `gh run download <this
+      # run> -D artifacts` — to reproduce these exact archives without rebuilding
+      # seven platforms.
+      #
+      # The tag is not passed in: the script reads GITHUB_REF_NAME, so the release
+      # is named after the ref this was dispatched from and there is no second
+      # place for that to be decided.
+      - name: Assemble the release archives
+        run: ./scripts/build-release.sh in=artifacts out=release-dist licenses=yes verify=yes clean=yes
 
-          mv ../spritestudio-sdk-libraries-macos/libssconverter.a libs/macos/
-          mv ../spritestudio-sdk-libraries-macos/libssruntime.a libs/macos/
-          mv ../spritestudio-sdk-libraries-web/libssruntime.a libs/web/
-          mv ../spritestudio-sdk-libraries-ios/static/libssruntime.xcframework libs/ios/
-          mv ../spritestudio-sdk-libraries-linux/libssconverter.a libs/linux/x86_64
-          mv ../spritestudio-sdk-libraries-linux/libssruntime.a libs/linux/x86_64
-          mv ../spritestudio-sdk-libraries-linux-aarch64/libssconverter.a libs/linux/aarch64
-          mv ../spritestudio-sdk-libraries-linux-aarch64/libssruntime.a libs/linux/aarch64
-          mv ../spritestudio-sdk-libraries-android/arm64/libssruntime.a libs/android/arm64-v8a
-          mv ../spritestudio-sdk-libraries-android/armv7/libssruntime.a libs/android/armeabi-v7a
-          mv ../spritestudio-sdk-libraries-android/x86_64/libssruntime.a libs/android/x86_64
-          mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.lib libs/windows/x86_64
-          mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.lib libs/windows/x86_64
-          mv ../spritestudio-sdk-libraries-windows/arm64/ssconverter.lib libs/windows/arm64
-          mv ../spritestudio-sdk-libraries-windows/arm64/ssruntime.lib libs/windows/arm64
-
-          cp ../spritestudio-sdk-libraries-linux/include/*.h include/
-          mkdir -p bindings
-          cp ../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
-
-          echo ${{ steps.commit.outputs.hash }} > VERSION
-          cp ../../LICENSE.md ./
-          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md ./
-          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md ./
-          # pushd libs/windows
-          # cp x86_64/ssconverter.lib ssconverter.windows.editor.x86_64.lib
-          # cp x86_64/ssconverter.lib ssconverter.windows.template_debug.x86_64.lib
-          # cp x86_64/ssconverter.lib ssconverter.windows.template_release.x86_64.lib
-          # cp x86_64/ssruntime.lib ssruntime.windows.editor.x86_64.lib
-          # cp x86_64/ssruntime.lib ssruntime.windows.template_debug.x86_64.lib
-          # cp x86_64/ssruntime.lib ssruntime.windows.template_release.x86_64.lib
-          # popd # libs/windows
-
-          popd # static
-
-          rm -rf dynamic
-          mkdir -p dynamic
-          pushd dynamic
-          mkdir -p libs include
-          pushd libs
-          mkdir -p macos
-          mkdir -p ios
-          mkdir -p linux/x86_64
-          mkdir -p linux/aarch64
-          mkdir -p android/armeabi-v7a
-          mkdir -p android/arm64-v8a
-          mkdir -p android/x86_64
-          mkdir -p windows/x86_64
-          mkdir -p windows/arm64
-          popd # libs
-
-          mv ../spritestudio-sdk-libraries-macos/libssconverter.dylib libs/macos/
-          # The macOS runtime ships as two wrappers of the same universal Mach-O:
-          # a .bundle (Unity's native-plugin format) and a versioned .framework
-          # (Ren'Py dlopens it by path; Flutter / CocoaPods link it via
-          # vendored_frameworks, which cannot consume a loadable .bundle). The bare
-          # standalone runtime dylib is no longer shipped — every consumer moved
-          # off it. The bundle has no symlinks so a plain copy is fine; the
-          # framework is untarred to restore its version symlinks + code signature.
-          cp -R ../spritestudio-sdk-libraries-macos/ssruntime.bundle libs/macos/
-          tar -C libs/macos -xf ../spritestudio-sdk-libraries-macos/libssruntime.framework.tar
-          mv ../spritestudio-sdk-libraries-ios/dynamic/libssruntime.xcframework libs/ios/
-          mv ../spritestudio-sdk-libraries-linux/libssconverter.so libs/linux/x86_64
-          mv ../spritestudio-sdk-libraries-linux/libssruntime.so libs/linux/x86_64
-          mv ../spritestudio-sdk-libraries-linux-aarch64/libssconverter.so libs/linux/aarch64
-          mv ../spritestudio-sdk-libraries-linux-aarch64/libssruntime.so libs/linux/aarch64
-          mv ../spritestudio-sdk-libraries-android/arm64/libssruntime.so libs/android/arm64-v8a
-          mv ../spritestudio-sdk-libraries-android/armv7/libssruntime.so libs/android/armeabi-v7a
-          mv ../spritestudio-sdk-libraries-android/x86_64/libssruntime.so libs/android/x86_64
-          mv ../spritestudio-sdk-libraries-windows/x86_64/ssconverter.dll libs/windows/x86_64
-          mv ../spritestudio-sdk-libraries-windows/x86_64/ssruntime.dll libs/windows/x86_64
-          mv ../spritestudio-sdk-libraries-windows/arm64/ssconverter.dll libs/windows/arm64
-          mv ../spritestudio-sdk-libraries-windows/arm64/ssruntime.dll libs/windows/arm64
-
-          mv ../spritestudio-sdk-libraries-linux/include/*.h include/
-          mkdir -p bindings
-          cp ../spritestudio-sdk-libraries-linux/bindings/*.g.cs bindings/
-
-          echo ${{ steps.commit.outputs.hash }} > VERSION
-          cp ../../LICENSE.md ./
-          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md ./
-          cp ../../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md ./
-
-          popd # dynamic
-
-          # web: the three wasm-pack packages are already assembled by the web
-          # build job; collect them under web/ — with each package's third-party
-          # notice, the same way static/ and dynamic/ are assembled above. They
-          # share file names (ssruntime.js, …), so they stay as subdirectories.
-          rm -rf web
-          mkdir -p web
-          mv spritestudio-sdk-libraries-web/runtime-web web/
-          mv spritestudio-sdk-libraries-web/runtime-web-nosimd web/
-          mv spritestudio-sdk-libraries-web/converter-web web/
-          cp ../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md web/runtime-web/THIRD-PARTY-LICENSES.md
-          cp ../target/licenses/THIRD-PARTY-LICENSES.ssruntime.md web/runtime-web-nosimd/THIRD-PARTY-LICENSES.md
-          cp ../target/licenses/THIRD-PARTY-LICENSES.ssconverter.md web/converter-web/THIRD-PARTY-LICENSES.md
-
-          rm -rf ../output
-          mkdir -p ../output
-          mv static ../output/
-          mv dynamic ../output/
-          mv web ../output/
-
+      # Keep the assembled archives on the run even when nothing is uploaded to a
+      # Release, so a dispatch with upload_release=false is still useful — and so
+      # the zips a human reviews are the same bytes the Release would carry.
       - name: Upload final release package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: spritestudio-sdk-static-libs
-          path: output/static
-
-      - name: Upload final release package
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: spritestudio-sdk-dynamic-libs
-          path: output/dynamic
-
-      - name: Upload final release package
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: spritestudio-sdk-web-libs
-          path: output/web
-
-      - name: Archive release packages
-        run: |
-          mkdir -p release-dist
-          # Zip the SDK tree (libs/, include/, bindings/, VERSION, …) at the
-          # archive root — a clean, consumer-neutral layout with no wrapper
-          # directory. Each Player's scripts/download-sdk.sh maps it into that
-          # Player's own build layout.
-          ( cd output/static && zip -r ../../release-dist/spritestudio-sdk-static-libs.zip . )
-          # -y (store symlinks) so the macOS libssruntime.framework's version
-          # symlinks + code signature survive the zip; download-sdk's `unzip`
-          # restores them on extract.
-          ( cd output/dynamic && zip -ry ../../release-dist/spritestudio-sdk-dynamic-libs.zip . )
-
-          # Web packages — runtime-web/, runtime-web-nosimd/ and converter-web/
-          # were assembled into output/web above (they share file names, so they
-          # stay as subdirectories). Zip them like the static/dynamic archives.
-          ( cd output/web && zip -r ../../release-dist/spritestudio-sdk-web-libs.zip . )
-
-          for dir in artifacts/ssconverter-cli-*; do
-            if [ -d "$dir" ]; then
-              platform=${dir#artifacts/ssconverter-cli-}
-              cp LICENSE.md "$dir"/
-              cp target/licenses/THIRD-PARTY-LICENSES.cli.md "$dir"/THIRD-PARTY-LICENSES.md
-              chmod +x "$dir"/ssconverter-cli 2>/dev/null || true
-              zip -rj "release-dist/ssconverter-cli-${platform}.zip" "$dir"
-            fi
-          done
-
-          # Canonical checksum manifest so a consumer can verify each downloaded
-          # zip's integrity (`sha256sum -c SHA256SUMS --ignore-missing` for a
-          # partial download). Generated last, over every zip in release-dist.
-          ( cd release-dist && sha256sum *.zip > SHA256SUMS )
+          name: spritestudio-sdk-release-dist
+          path: release-dist
+          if-no-files-found: error
 
       - name: Create GitHub Release
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.upload_release == 'true'
+        if: inputs.upload_release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
         with:
           files: |
             release-dist/*.zip
             release-dist/SHA256SUMS
+          # The ref this was dispatched from, which the step above has already
+          # established is a v* tag — the same string build-release.sh stamped
+          # into every archive's VERSION.
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
           # 常に draft として作成する。アセットと自動生成リリースノートが揃った
