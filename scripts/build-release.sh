@@ -169,14 +169,18 @@ echo "  clean    => $CLEAN"
 echo "  tag      => $TAG"
 echo "              ($TAG_SOURCE)"
 
-# The tag is what ships, so a manifest that disagrees with it does not stop the
-# build -- but one of the two is then wrong, and the Players pin the tag while
-# the crates carry the version, so say so.
+# A tag that disagrees with the manifest is an error, not a note. The archives
+# would be stamped with the tag while the crates inside call themselves
+# something else, and every Player pins the SDK by that tag in its own
+# scripts/SDK_VERSION.txt -- so the mismatch propagates to six repositories
+# before anyone notices. This cannot fire off a branch: TAG falls back to
+# MANIFEST_TAG when HEAD is not on a release tag.
 if [ "$TAG" != "$MANIFEST_TAG" ]; then
-  echo ""
-  echo "$APP: NOTE: the tag says $TAG, Cargo.toml says $MANIFEST_TAG."
-  echo "$APP: the archives will be stamped $TAG. Bump [workspace.package] version to match"
-  echo "$APP: if this tag is the release -- it is what every Player's SDK_VERSION.txt pins."
+  echo "" >&2
+  echo "$APP: tag $TAG does not match Cargo.toml ($MANIFEST_TAG)." >&2
+  echo "$APP: bump [workspace.package] version, or retag -- the archives would be" >&2
+  echo "$APP: stamped $TAG, which is what every Player's SDK_VERSION.txt pins." >&2
+  exit 1
 fi
 
 # --- preflight ------------------------------------------------------------
