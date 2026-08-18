@@ -127,12 +127,17 @@ track and set weights:
 
 ```cpp
 ss_runtime_setup_animation(context, "walk");
-uint32_t run = ss_runtime_track_add_source(context, 0, "run", 0.0f);
+uint32_t walk = ss_runtime_track_main_source(context, 0);
+uint32_t run  = ss_runtime_track_add_source(context, 0, "run", 0.0f);
 
 // 70% walk, 30% run
+ss_runtime_set_source_weight(context, walk, 0.7f);
 ss_runtime_set_source_weight(context, run, 0.3f);
 ss_runtime_set_source_frame(context, run, 0.0f);
 ```
+
+`ss_runtime_track_main_source` hands you the animation `set_track_animation` (or
+`setup_animation`) put on the track, which starts at weight 1.
 
 Weights are relative, not absolute: `(0.7, 0.3)` and `(7, 3)` mix identically. Each source
 owns its own playback clock, so `ss_runtime_update(delta)` advances them all; sources of
@@ -192,6 +197,7 @@ for (int i = 0; i < n; ++i) {
 
 | Function | Returns | On error |
 |---|---|---|
+| `ss_runtime_track_main_source(ctx, track)` | `uint32_t` handle | `SS_RUNTIME_INVALID_HANDLE` |
 | `ss_runtime_track_add_source(ctx, track, name, weight)` | `uint32_t` handle | `SS_RUNTIME_INVALID_HANDLE` |
 | `ss_runtime_track_add_source_by_hash(ctx, track, hash, weight)` | `uint32_t` handle | The same |
 | `ss_runtime_set_source_weight(ctx, handle, weight)` | `bool` | `false` |

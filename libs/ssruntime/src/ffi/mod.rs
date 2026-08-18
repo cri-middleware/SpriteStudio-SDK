@@ -1318,6 +1318,14 @@ pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, s
     report(ffi_context, |ctx| ctx.set_track_speed(track, speed))
 }
 
+/// Handle of the source carrying the track's animation, so it can be given a
+/// weight once the track holds several. `SS_RUNTIME_INVALID_HANDLE` when the
+/// track has no animation.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_track_main_source(context: *mut c_void, track: u32) -> u32 {
+    get_context(context).and_then(|c| c.ctx.track_main_source(track)).unwrap_or(SS_RUNTIME_INVALID_HANDLE)
+}
+
 /// Add another weighted source to `track` (locomotion-style blending). Returns
 /// `SS_RUNTIME_INVALID_HANDLE` on failure.
 ///

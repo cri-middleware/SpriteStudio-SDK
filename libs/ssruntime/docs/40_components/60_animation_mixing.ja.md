@@ -110,12 +110,16 @@ ss_runtime_fade_track(context, 0, 0.0f, 200.0f);   // 200ms かけてセット�
 
 ```cpp
 ss_runtime_setup_animation(context, "walk");
-uint32_t run = ss_runtime_track_add_source(context, 0, "run", 0.0f);
+uint32_t walk = ss_runtime_track_main_source(context, 0);
+uint32_t run  = ss_runtime_track_add_source(context, 0, "run", 0.0f);
 
 // walk 70% / run 30%
+ss_runtime_set_source_weight(context, walk, 0.7f);
 ss_runtime_set_source_weight(context, run, 0.3f);
 ss_runtime_set_source_frame(context, run, 0.0f);
 ```
+
+`ss_runtime_track_main_source` は、`set_track_animation`（や `setup_animation`）がそのトラックに載せたアニメーションのハンドルを返します。weight 1 から始まります。
 
 weight は絶対値ではなく比率です（`(0.7, 0.3)` と `(7, 3)` は同じ結果）。各ソースは独立した再生クロックを持ち、`ss_runtime_update(delta)` はそれら全てを進めます。**尺の違うソースの位相は同期しません** — 揃えたい場合は自分でシークしてください。
 
@@ -171,6 +175,7 @@ for (int i = 0; i < n; ++i) {
 
 | 関数 | 戻り値 | エラー時 |
 |---|---|---|
+| `ss_runtime_track_main_source(ctx, track)` | `uint32_t` ハンドル | `SS_RUNTIME_INVALID_HANDLE` |
 | `ss_runtime_track_add_source(ctx, track, name, weight)` | `uint32_t` ハンドル | `SS_RUNTIME_INVALID_HANDLE` |
 | `ss_runtime_track_add_source_by_hash(ctx, track, hash, weight)` | `uint32_t` ハンドル | 同上 |
 | `ss_runtime_set_source_weight(ctx, handle, weight)` | `bool` | `false` |

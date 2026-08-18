@@ -1819,6 +1819,14 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
+    /// Handle of the source carrying `track`'s animation. Needed to give that
+    /// animation a weight of its own once a track holds several — the animation
+    /// put there by `set_track_animation` starts at weight 1.
+    pub fn track_main_source(&self, track: u32) -> Option<u32> {
+        let main = self.instance.tracks.get(track as usize)?.main;
+        (main != NO_SOURCE).then_some(main)
+    }
+
     /// Add another weighted source to `track`, for the case a track needs several
     /// animations blended by proportion (locomotion: walk + run). Returns a stable
     /// handle for [`Self::set_source_weight`].

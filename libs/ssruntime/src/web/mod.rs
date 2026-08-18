@@ -719,6 +719,10 @@ impl SSRuntimeContext {
         self.inner.set_track_speed(track, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
+    pub fn track_main_source(&self, track: u32) -> Option<u32> {
+        self.inner.track_main_source(track)
+    }
+
     pub fn track_add_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, JsValue> {
         self.inner.track_add_source(track, name, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
