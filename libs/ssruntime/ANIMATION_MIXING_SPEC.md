@@ -206,7 +206,25 @@ the mixed pose (`Ringo`, `attack1` over locomotion):
 | walk + run + wait1 + dash | 0.300 | **0.070** |
 
 The overlay loses **more than half its strength** by the second base source and 77% by the
-fourth. D1 holds it at 0.300 on every row. Confirmed as predicted (§3.1).
+fourth.
+
+**Re-measured through the shipped track API**, asking for the same 0.3 both ways:
+
+| bases under the overlay | overlay on the **same track** (weight) | overlay on **its own track** (alpha) |
+|---|---|---|
+| walk | 0.231 | **0.300** |
+| walk + run | 0.130 | **0.300** |
+| walk + run + wait1 | 0.091 | **0.300** |
+| walk + run + wait1 + dash | 0.070 | **0.300** |
+
+Both columns are correct: weight *is* a proportion inside one track, so it dilutes by
+construction; alpha is measured against the pose below and does not. This is the whole reason
+both knobs exist, and why the docs lead with which one to reach for.
+
+*Harness note*: recover the strength per (part, attribute) and take the median, not one
+least-squares fit over everything. Where the overlay animates nothing, `mixed == base`, and a
+global fit reads those as "fully diluted" when they only mean "no opinion here" — that
+artifact alone reported 0.213 instead of 0.300 on the last row.
 
 ---
 
