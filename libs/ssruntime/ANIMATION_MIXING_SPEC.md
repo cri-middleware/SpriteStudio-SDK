@@ -57,7 +57,8 @@ Two naming decisions worth not re-litigating:
   `AnimationMixer` and Unity's `AnimationMixerPlayable` — and `blend` is what an author asks
   for.
 - **"Track", not "layer".** `layer` already means the Override Layer feature
-  (`OVERRIDE_LAYER_SPEC.md`) and the internal `LayerState` (one source's extracted pose);
+  (`docs/40_components/65_override_layer.md`) and the internal `LayerState` (one source's
+  extracted pose);
   three meanings for one word is one too many. *Track* is the generic term across Unity
   Timeline, three.js, Ogre and Spine alike — see §5.5 on why that is not a problem.
 
@@ -239,7 +240,7 @@ artifact alone reported 0.213 instead of 0.300 on the last row.
 ## 3. D1 — The track model (**implemented**)
 
 > **Naming**: the stack's unit is a **track**, not a "layer". `layer` is already taken twice —
-> the Override Layer feature (`OVERRIDE_LAYER_SPEC.md`) and the internal `LayerState` (one
+> the Override Layer feature (`docs/40_components/65_override_layer.md`) and the internal `LayerState` (one
 > source's extracted pose) — and three meanings for one word is one too many. "Track" is the
 > generic term across Unity Timeline, three.js, Ogre and Spine alike.
 >
@@ -591,5 +592,5 @@ model itself.
 | Keyframe presence (`Option`) | `src/core/interpolation.rs:230` |
 | Setup pose in the format | `parts_initial_attributes`, written by `ssconverter/src/model_t/animedata.rs:285` and merged into every animation at `:1384-1392` |
 | Player-facing docs | `docs/40_components/60_animation_mixing.{md,ja.md}` |
-| Adjacent spec | `OVERRIDE_LAYER_SPEC.md` (the post-mix overwrite pass) |
+| Adjacent feature | The Override Layer, the post-mix overwrite pass: `src/core/override_layer.rs`, documented in `docs/40_components/65_override_layer.md` |
 | Open work | `ANIMATION_MIXING_HANDOFF.md` |
