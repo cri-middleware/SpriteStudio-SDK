@@ -1,42 +1,43 @@
-# Animation Mixing — Implementation Spec (cold-start)
+# Animation Mixing — Implementation Spec
 
-> Status: **partially implemented / redesign in progress**. SDK-internal implementation spec
-> for the Phase 3 ROADMAP items **"Animation Mixing/Blending"** (shipped) and **"Per-part
-> animation blending"** (this redesign supersedes it). Not Player-facing docs (do not move
-> under `libs/ssruntime/docs/`, which is curated for Players).
+> Status: **implemented**, awaiting a visual pass. SDK-internal spec for the Phase 3 ROADMAP
+> item **Animation Mixing**. Not Player-facing docs — those are
+> `docs/40_components/60_animation_mixing.{md,ja.md}`.
+>
+> Open work and how to pick it up: **`ANIMATION_MIXING_HANDOFF.md`**.
 >
 > Scope: how N animation sources resolve into one pose. **Runtime state + FFI only — no
 > `.fbs` schema change.** The mix runs before emission, so `SCHEMA.md` is unaffected.
 >
-> **The blend C-API is used by no Player** (confirmed 2026-07-17). Additions, signature
-> changes and removals are all free until the first release that ships them. Do not grow
-> `_ex` variants — redesign the existing signatures in place.
+> The blend surface was replaced rather than extended: it had shipped to nobody (the repo is
+> unreleased and no Player called it), which is a window that closes at the first release.
 
-Grounded in the current code (`develop`, HEAD ~`2c1e5c0`). Line numbers are anchors, not
-contracts — re-grep before editing.
+This document is the record of *why* the model is what it is — the survey it came out of, the
+measurements that decided each question, and the things the data corrected. Line numbers are
+anchors, not contracts; re-grep before editing.
 
 ---
 
 ## 0. TL;DR for the implementer
 
-1. **Terminology**: the feature is **Mixing**. `blend` survives only as API vocabulary
-   (`blend source`, `weight`). "Blending" is not a separate feature name (§1).
-2. **Model (D1)**: **layered**. Within a layer, sources are combined by *normalized weighted
-   sum*; between layers, an *ordered overwrite* `lerp(below, layer, alpha)`. Layer 0 with a
-   single implicit layer reproduces today's behavior exactly (§3).
-3. **Coverage (D2)**: an attribute a source does **not key** is excluded from that
-   attribute's weight sum. Presence is decided **per animation** (does the keyframe array
-   exist), never per frame (§4).
-4. A layer carries **alpha + operator (interpolate | additive) + (later) a part mask**.
-   Additive is in scope as the enabler for **SS-Studio Tier 3** modulation axes, and its
-   reference is the **setup pose already carried in every `.ssab`** (§6.2) — no new parameter.
-5. **Discrete attributes stay "primary wins" for now.** Resolving them from the topmost
-   covering layer (§6.3) is specified but **deferred** — the driving product routes mouth /
-   blink / expression through the already-shipped **Override Layer**, not through the mix.
-6. **SpriteStudio has a setup pose**, and the converter bakes it into every animation's
-   keyframe arrays; only attributes keyed by *neither* the animation nor the setup pose fall
-   back to hardcoded defaults (§2.2). D2 acts on that genuinely-absent case, which real assets
-   hit on **20–37% of (part × attribute) pairs** (§2.3, measured over 338 animations).
+1. **Terminology**: the feature is **Mixing**; the unit of the stack is a **track**. "Layer" is
+   taken twice already — the Override Layer feature and the internal `LayerState` (§1).
+2. **The model**: tracks fold onto the **setup pose** in ascending order. Within a track,
+   sources mix by *weight*; between tracks, by the track's *alpha*, either interpolative or
+   additive (§3).
+3. **`alpha` is the strength knob; `weight` is not.** A source that is the only one animating
+   an attribute owns it outright whatever its weight, because there is nothing to be
+   proportional against (§4).
+4. **Coverage rule**: an attribute a source does not key is excluded from that attribute's
+   weight sum. Presence is per animation — does the keyframe array exist — never per frame
+   (§4).
+5. **Track 0 is the structure**: discrete attributes and events come from it, `setup_animation`
+   establishes it, and it cannot be cleared. There is no separate "primary" (§3.3).
+6. **SpriteStudio has a setup pose**, baked by the converter into every animation's keyframe
+   arrays and stored as `parts_initial_attributes`. It is the stack's floor and the additive
+   reference — but it must be transformed into the instance's coordinate space first (§2.2).
+7. **Discrete attributes are not blended.** Resolving them from the topmost covering track
+   (§6.3) is specified but deferred: cell switching goes through the Override Layer.
 
 ---
 
@@ -44,37 +45,44 @@ contracts — re-grep before editing.
 
 | Term | Meaning | Where it is used |
 |---|---|---|
-| **Mixing** | The N-sources → one-pose composition stage. A pure per-frame operation with no state of its own. | Feature name, spec name, pipeline prose |
-| **Blend source** / **weight** | An input to the mix and its share. | API vocabulary (`add_blend_source`, `set_source_weight`) — kept as-is |
-| **Layer** | An ordered group of sources carrying `alpha`, an operator, and (later) a part mask. | The new level introduced by D1 |
-| **Crossfade** | A controller *on top of* mixing that drives weights over time. | Transitions only |
-| **Additive** | A mix operator that adds a delta instead of participating in normalization. | Operator, not a feature |
+| **Mixing** | The N-sources → one-pose composition stage. A per-frame operation with no state of its own. | Feature name, spec name, pipeline prose |
+| **Track** | One level of the stack: an ordered slot carrying `alpha`, an operator, and its sources. | The model's unit |
+| **Source** / **weight** | One animation on a track, and its share among that track's sources. | `track_add_source`, `set_source_weight` |
+| **Crossfade** | A controller on top of mixing that hands a track from one animation to another. | Transitions only |
+| **Additive** | A track operator that adds an offset from the setup pose instead of lerping. | Operator, not a feature |
 
-"Blending" is **not** used as an independent feature name. This matches Godot
-(`AnimationMixer`) and Unity (`AnimationMixerPlayable`), where the machinery is the *mixer*
-and `blend` is what the author asks for. Rename the Player-facing doc accordingly
-(`docs/40_components/60_animation_blending.md` → Animation Mixing).
+Two naming decisions worth not re-litigating:
+
+- **"Blending" is not a feature name.** The machinery is the *mixer* — as in Godot's
+  `AnimationMixer` and Unity's `AnimationMixerPlayable` — and `blend` is what an author asks
+  for.
+- **"Track", not "layer".** `layer` already means the Override Layer feature
+  (`OVERRIDE_LAYER_SPEC.md`) and the internal `LayerState` (one source's extracted pose);
+  three meanings for one word is one too many. *Track* is the generic term across Unity
+  Timeline, three.js, Ogre and Spine alike — see §5.5 on why that is not a problem.
 
 ---
 
-## 2. What the code does today
+## 2. The code and the data it runs on
 
-### 2.1 Current shape
+### 2.1 Where the model lives
 
 | Concern | Where |
 |---|---|
-| `SourceState` (animation_idx, controller, weight, event_threshold) | `src/lib.rs:758` |
-| `CrossfadeState` (from, to, elapsed, duration) | `src/lib.rs:792` |
-| `LayerState` (the extracted pose of one source) | `src/lib.rs:597` |
-| `mix_poses` — the whole composition stage | `src/lib.rs:880` |
-| Per-part weight renormalization | `src/lib.rs:926-940` |
-| `update_flag` OR-merge / write-back | `src/lib.rs:1012`, `src/lib.rs:1051` |
-| Emission seam | `Context::get_frame_data`, `src/lib.rs:1700` |
+| `TrackBlend` (Mix / Additive) | `src/lib.rs:809` |
+| `TrackState` (alpha, blend, main source, fade) | `src/lib.rs:821` |
+| `TrackFade` (crossfade / alpha fade) | `src/lib.rs:847` |
+| `SourceState` (animation_idx, controller, **track**, weight, event_threshold) | `src/lib.rs:767` |
+| `LayerState` — one source's extracted pose, plus its coverage | `src/lib.rs:603` |
+| `layer_coverage` — the coverage lookup, and its "no data means everything" rule | `src/lib.rs:964` |
+| **`mix_tracks`** — the whole two-level fold | `src/lib.rs:1061` |
+| `rebuild_setup_pose` — the floor, in instance space | `src/lib.rs:1906` |
+| `advance_track_fades` | `src/lib.rs:2812` |
+| Emission seam | `Context::get_frame_data`, `src/lib.rs:2017` |
+| Per-animation coverage, computed once at load | `src/core/framedata.rs:339`, built at `:402` |
+| The setup pose, transformed like `evaluate_part` does | `src/core/framedata.rs:597` |
 
-Sources are a **flat array with one `primary_idx`**. Continuous attributes are a normalized
-weighted sum over active sources; every discrete attribute is **copied verbatim from the
-primary**; `update_flag` is OR-composed.
-
+### 2.2 The two data-model facts that drive this spec
 ### 2.2 The two data-model facts that drive this spec
 
 **(a) Poses are dense in value — and SpriteStudio *does* have a setup pose.** Each `.ssae`
@@ -228,7 +236,7 @@ artifact alone reported 0.213 instead of 0.300 on the last row.
 
 ---
 
-## 3. D1 — Track model (evaluation **implemented**, API pending)
+## 3. D1 — The track model (**implemented**)
 
 > **Naming**: the stack's unit is a **track**, not a "layer". `layer` is already taken twice —
 > the Override Layer feature (`OVERRIDE_LAYER_SPEC.md`) and the internal `LayerState` (one
@@ -329,7 +337,7 @@ Three things fall out of the shape rather than needing to be designed:
 
 ---
 
-## 4. D2 — Coverage rule (**implemented**, default ON)
+## 4. D2 — The coverage rule (**implemented**, always on)
 
 > Shipped 2026-08-18. `CachedPartData::coverage` (`core/framedata.rs`) is computed once per
 > animation × part at load; `LayerState::coverage_vec` carries it to the mix; `mix_poses`
@@ -449,6 +457,33 @@ without another data-model change.
 
 ---
 
+### 5.5 "Isn't this Spine?"
+
+Worth answering once, because the question will come from outside too, and SpriteStudio and
+Spine sell into the same market.
+
+**The architecture is the field's, not Spine's.** Ordered levels with a per-level weight are
+Unity's Animation Layers, Unreal, Godot's AnimationTree and Rive's layers; "track" is Unity
+Timeline, three.js `KeyframeTrack` and Ogre `AnimationTrack`; additive blending is in every
+one of the eight runtimes surveyed. Nothing in §3 is a thing only Spine does — solving this
+problem carefully lands everyone in the same place.
+
+**What is distinctly Spine, we did not take.** The `mixingFrom` chain of interrupted mixes,
+`holdPrevious`, the `mixAttachmentThreshold` / `mixDrawOrderThreshold` / `eventThreshold`
+family as named knobs, `MixBlend`'s four values with the `timelineMode` / `HOLD` / `HOLD_MIX`
+machinery, and the `addAnimation` queue. Our dip avoidance is coverage at (part × attribute)
+granularity, derived from a data model Spine does not have — a setup pose the converter bakes
+into every animation.
+
+**Do not adopt Spine's vocabulary.** `TrackEntry`, `mixDuration`, `mixTime`, `holdPrevious`,
+the `*Threshold` names, `MixBlend`, `setEmptyAnimation`: those names are where an
+implementation reads as a port. Generic terms — track, alpha, additive, crossfade, weight —
+are the field's and are fine.
+
+The strongest answer is this document: a survey of eight runtimes at their primary sources,
+then measurements on 338 of our own animations that found the problems and sized them. That is
+a derivation, not a copy.
+
 ## 6. Consequences to specify
 
 ### 6.1 Continuous attributes
@@ -525,32 +560,36 @@ Two attributes need care:
 
 ## 8. Implementation order (cold-start)
 
-1. ~~D2 coverage bitmask + per-attribute renormalization inside the existing flat mix.~~
-   **Done (2026-08-18)** — §4, verified in §2.4.
-2. Layer container: layer index on `SourceState`, `alpha`, ordered fold. Single-layer path
-   must stay bit-identical to today (regression test on the existing `mix_poses_*` tests,
-   `src/lib.rs:4379-4700`).
-3. Additive operator + per-source reference frame (§6.2). This is the SS-Studio Tier 3
-   enabler; steps 1–2 alone already make multi-axis modulation viable, so re-measure the need
-   before building it.
-4. FFI + WASM surface, doc rewrite (`docs/40_components/` → Animation Mixing), and the
-   ROADMAP wording fix (§5.3).
-5. Validate on `ssplayer-wgpu` with a real SS-Studio rig before freezing the C-API.
-6. *Deferred*: discrete-attribute resolution by topmost covering layer (§6.3), including the
+1. ~~D2 coverage rule: per-attribute renormalization.~~ **Done** — §4, verified in §2.4.
+2. ~~The track stack: `TrackState`, `SourceState::track`, `mix_tracks`' two-level fold with the
+   setup pose as its floor.~~ **Done** — §3. The single-track path stays byte-identical, which
+   the pre-track `mix_poses_*` tests still assert through a wrapper.
+3. ~~Additive operator.~~ **Done** — §6.2, referenced against the setup pose.
+4. ~~Public API across Rust / C / WASM, with the old blend surface removed; docs rewritten as
+   `docs/40_components/60_animation_mixing.{md,ja.md}`; ROADMAP wording.~~ **Done** — §3.3.
+5. **Validate by eye on `ssplayer-wgpu`.** The only step still open, and the one that decides
+   whether the two draft PRs can come out of draft. See `ANIMATION_MIXING_HANDOFF.md`.
+6. *Deferred*: discrete-attribute resolution by topmost covering track (§6.3), including the
    post-mix batch-split constraint. Only when something needs cell switching through the mix
    rather than through the Override Layer.
+7. *Deferred*: per-part masks. A track already reaches only as far as its animation keys, which
+   covers overlays authored for the purpose; a mask is what densely-keyed existing assets need
+   to be layered without re-authoring (§2.3 (iii)).
 
 ---
 
 ## 9. File reference index
 
+Duplicates §2.1 for the parts that live outside `mix_tracks`; §2.1 is the one to trust for the
+model itself.
+
 | Concern | Path |
 |---|---|
-| Mix stage | `src/lib.rs:880` (per-part renorm `:926`) |
-| Source / crossfade state | `src/lib.rs:758`, `:792` |
-| Extracted pose | `src/lib.rs:597` |
-| Pose evaluation + defaults | `src/core/framedata.rs:530` (`:547`) |
+| Pose evaluation + hardcoded defaults | `src/core/framedata.rs:530` (defaults at `:547`) |
+| The setup pose, transformed to match it | `src/core/framedata.rs:597` — **keep the two in step** |
+| Per-animation coverage | `src/core/framedata.rs:339`, computed at `:402` |
 | Keyframe presence (`Option`) | `src/core/interpolation.rs:230` |
-| Emission seam | `src/lib.rs:1700` |
-| Player-facing doc to rewrite | `docs/40_components/60_animation_blending.md` (+ `.ja.md`) |
-| Adjacent spec | `OVERRIDE_LAYER_SPEC.md` (post-mix overwrite pass) |
+| Setup pose in the format | `parts_initial_attributes`, written by `ssconverter/src/model_t/animedata.rs:285` and merged into every animation at `:1384-1392` |
+| Player-facing docs | `docs/40_components/60_animation_mixing.{md,ja.md}` |
+| Adjacent spec | `OVERRIDE_LAYER_SPEC.md` (the post-mix overwrite pass) |
+| Open work | `ANIMATION_MIXING_HANDOFF.md` |
