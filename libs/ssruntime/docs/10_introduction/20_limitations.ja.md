@@ -96,17 +96,19 @@ ssab embedded は、`sspj` および `ss*e` ファイルに記載されている
 
 ssab embedded は、そのアニメーションパックが **実際に利用するアセットのみ** を埋め込みます。外部インスタンスとして参照される別の ssab ファイルの本体は埋め込まれないため、**外部インスタンスを利用する場合は参照先の ssab ファイルの実体を別途用意する必要** があります。
 
-## アニメーションブレンド時の制限
+## アニメーションミキシング時の制限
 
-`ss_runtime_add_blend_source` 等で複数アニメーションを合成する際の制約です (Phase 3 API)。
+`ss_runtime_set_track_animation` 等でアニメーションをトラックに積んで合成する際の制約です。
 
-- **同一 SSAB 内のみブレンド可**: 複数 `AnimationResource` をまたぐ合成はサポート対象外。
-- **Cell の一貫性が前提**: ブレンドする全アニメーションは「同一 part に同一 Cell を割り当てている」必要があります。`cell_meta_per_part` は primary から取られるため、Cell が異なるとサイズ・pivot ミスマッチで pose が崩れます。同一 SSAE 内のアニメーションでは通常問題になりません。
-- **`parts_color` の α 二重定義**: `parts_color` を持つ part の視覚 α は primary 由来 (mix された `state.alpha` ではない)。`parts_color` を持たない part は mixed `state.alpha` が反映されるため、α ブレンド自体は機能します。
-- **events 発火は per-source 閾値で制御**: 既定では Primary のみが発火 (`event_threshold = 1.0`)。Secondary も発火させたい場合は `ss_runtime_set_source_event_threshold` で閾値を下げ、`source.weight >= source.event_threshold` を満たした source の events のみ収集されます。Primary は閾値を無視して常に発火。発火元 source の識別は `ss_runtime_get_passed_event_source_handle` で取得 (events と parallel array)。
+- **同一 SSAB 内のみ合成可**: 複数 `AnimationResource` をまたぐ合成はサポート対象外。
+- **Cell の一貫性が前提**: 積む全アニメーションは「同一 part に同一 Cell を割り当てている」必要があります。`cell_meta_per_part` は track 0 から取られるため、Cell が異なるとサイズ・pivot ミスマッチで pose が崩れます。同一 SSAE 内のアニメーションでは通常問題になりません。
+- **`parts_color` の α 二重定義**: `parts_color` を持つ part の視覚 α は track 0 由来 (mix された `state.alpha` ではない)。`parts_color` を持たない part は mixed `state.alpha` が反映されるため、α ブレンド自体は機能します。
+- **位相同期はなし**: 尺の違うソースは独立したクロックで進みます。揃えたい場合は自分でシークしてください。
+- **トラックが効く範囲はそのアニメーションのキー次第**: パーツ単位のマスクは無いため、オーバーレイは作画した範囲に限られます。
+- **events 発火は per-source 閾値で制御**: 既定ではそのトラックの完全な重みを持つアニメーションのみが発火 (`event_threshold = 1.0`)。他のソースも発火させたい場合は `ss_runtime_set_source_event_threshold` で閾値を下げ、`source.weight >= source.event_threshold` を満たした source の events のみ収集されます。track 0 のアニメーションは閾値を無視して常に発火。発火元 source の識別は `ss_runtime_get_passed_event_source_handle` で取得 (events と parallel array)。
 - **ブレンド時の FrameData サイズ増加**: 複数 source のブレンド時、描画に使われない secondary source 分の deform データも FrameData に含まれ、サイズが膨らみます。正確性には影響しません。
 
-> 関連章: [アニメーションブレンド / ミキシング](../40_components/60_animation_blending.ja.md)
+> 関連章: [アニメーションミキシング](../40_components/60_animation_mixing.ja.md)
 
 ## オーディオ（サウンド）の逆再生非対応
 

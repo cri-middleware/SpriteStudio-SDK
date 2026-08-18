@@ -363,6 +363,11 @@ pub struct AnimationMetadata<'a> {
     pub canvas_width: f32,
     pub canvas_height: f32,
     pub cached_parts: Vec<crate::core::framedata::CachedPartData<'a>>,
+    /// The SSAE's setup pose, as stored. It is identical for every animation of
+    /// an AnimationPack — the converter writes the same `isSetup` animation into
+    /// each — and becomes the floor of the track stack once transformed into the
+    /// instance's coordinate space (`Context::rebuild_setup_pose`).
+    pub initial_attributes: flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialPartAttributes<'a>>>,
     pub events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::EventsPerFrame<'a>>>>,
     pub initial_events: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::InitialEvents<'a>>>>,
     pub labels: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::Label<'a>>>>,
@@ -536,6 +541,7 @@ impl<'a> AnimationResource<'a> {
                 canvas_width,
                 canvas_height,
                 cached_parts,
+                initial_attributes: anim.parts_initial_attributes(),
                 events: anim.events(),
                 initial_events: anim.initial_events(),
                 labels: anim.labels(),
@@ -608,6 +614,13 @@ struct LayerState<'a> {
     /// Per-part mesh deform retained from Phase 1 for the Phase 2 skinning pass.
     mesh_deform: Vec<crate::core::framedata::PartDeformFrame>,
     raw_vertex_deform: Vec<crate::core::framedata::RawVertexDeform>,
+    /// Per-part attribute coverage of the animation this layer was extracted
+    /// from (`CachedPartData::coverage`), consulted by [`mix_poses`]. Copied in
+    /// after pose extraction; an **empty** vec means "no coverage data", which
+    /// the mix reads as "covers everything" — that is what keeps hand-built
+    /// layers in unit tests, and any future producer that does not fill it,
+    /// behaving exactly as they did before the coverage rule existed.
+    coverage_vec: Vec<crate::runtime::framedata::ss::runtime::UpdateAttributeFlags>,
 }
 
 impl<'a> LayerState<'a> {
@@ -625,6 +638,7 @@ impl<'a> LayerState<'a> {
             local_vertices: Vec::new(),
             mesh_deform: Vec::new(),
             raw_vertex_deform: Vec::new(),
+            coverage_vec: Vec::new(),
         }
     }
 
@@ -750,14 +764,12 @@ impl<'a> EvaluationContext<'a> {
     }
 }
 
-/// Sentinel `animation_idx` for "empty" sources that contribute a setup-pose
-/// (zero translations / unit scales / unit alpha) snapshot to the mix. Treated
-/// as active when `weight > 0.0`; carries no controller, animation, or events.
-const EMPTY_ANIMATION_IDX: i32 = -2;
-
 struct SourceState {
     animation_idx: i32,
     controller: core::playback_controller::PlaybackController,
+    /// Which track this source plays on. Sources sharing a track are mixed by
+    /// weight; tracks fold onto each other by `TrackState::alpha`.
+    track: u16,
     weight: f32,
     /// Minimum weight at which this source's events should fire (only meaningful
     /// for non-primary sources). Default `1.0` preserves the legacy "Primary
@@ -768,11 +780,20 @@ struct SourceState {
 
 impl SourceState {
     fn new() -> Self {
-        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), weight: 1.0, event_threshold: 1.0 }
+        Self { animation_idx: -1, controller: core::playback_controller::PlaybackController::new(), track: 0, weight: 1.0, event_threshold: 1.0 }
     }
 
     fn is_active(&self) -> bool {
         self.animation_idx != -1 && self.weight > 0.0
+    }
+
+    /// Release the slot. It keeps its position so live handles never shift, and
+    /// `attach_source` may hand it out again.
+    fn deactivate(&mut self) {
+        self.controller.reset_setup();
+        self.animation_idx = -1;
+        self.weight = 0.0;
+        self.event_threshold = 1.0;
     }
 
     /// True for slots that carry a real animation (i.e. not inactive `-1` and
@@ -783,17 +804,60 @@ impl SourceState {
     }
 }
 
-/// Auto-crossfade timer state. When set, [`Context::update`] advances the
-/// timer using the same `delta` value that drives the playback controllers,
-/// and rebalances `from`/`to` source weights linearly from (1.0, 0.0) to
-/// (0.0, 1.0). On completion `to` becomes the primary, `from` is deactivated,
-/// and the state is cleared.
+/// How a track folds onto the pose the tracks below it produced.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrackBlend {
+    /// `resolved = lerp(below, track_pose, alpha)`. The default.
+    Mix,
+    /// `resolved = below + alpha * (track_pose - setup_pose)`. For overlays that
+    /// offset what is underneath instead of replacing it.
+    Additive,
+}
+
+/// One track of the stack. Tracks fold in ascending index order onto the setup
+/// pose; `alpha` is the strength knob (unlike a source's `weight`, which only
+/// decides proportions *within* a track).
 #[derive(Debug, Clone, Copy)]
-struct CrossfadeState {
-    from: u32,
-    to: u32,
-    elapsed: f32,
-    duration: f32,
+struct TrackState {
+    alpha: f32,
+    blend: TrackBlend,
+    /// Handle of the source carrying this track's animation, or [`NO_SOURCE`].
+    /// Extra sources added for weighted blending sit alongside it.
+    main: u32,
+    fade: Option<TrackFade>,
+}
+
+/// `TrackState::main` when a track has no animation on it.
+const NO_SOURCE: u32 = u32::MAX;
+
+impl TrackState {
+    fn new() -> Self {
+        Self { alpha: 1.0, blend: TrackBlend::Mix, main: NO_SOURCE, fade: None }
+    }
+
+    /// A track contributes nothing at alpha 0 — `Mix` returns the pose below and
+    /// `Additive` adds a zero-scaled delta.
+    fn is_audible(&self) -> bool {
+        self.alpha > 0.0
+    }
+}
+
+/// A fade in flight on one track. Advanced by [`Context::update`].
+#[derive(Debug, Clone, Copy)]
+enum TrackFade {
+    /// Rebalance two sources' weights from `(1, 0)` to `(0, 1)`, then retire `from`.
+    Cross { from: u32, to: u32, elapsed: f32, duration: f32 },
+    /// Drive the track's `alpha` from `start` to `target`.
+    Alpha { start: f32, target: f32, elapsed: f32, duration: f32 },
+}
+
+impl TrackFade {
+    fn progress(&self) -> f32 {
+        let (elapsed, duration) = match self {
+            TrackFade::Cross { elapsed, duration, .. } | TrackFade::Alpha { elapsed, duration, .. } => (*elapsed, *duration),
+        };
+        (elapsed / duration).clamp(0.0, 1.0)
+    }
 }
 
 fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize, usize, usize, usize) {
@@ -822,62 +886,179 @@ fn count_attribute_capacities(metadata: &AnimationMetadata<'_>) -> (usize, usize
     (cell_c, color_c, shader_c, vertex_c, deform_c)
 }
 
-/// Identity-pose `PartState` template — built once per call site and copied
-/// into every slot of an empty source's layer. Setting it up lazily (rather
-/// than as a `const`) keeps us out of the flatbuffers byte-layout business:
-/// the 8 setters write through the same accessors that `extract_pose` uses,
-/// so any future schema change to the byte offsets stays automatically in
-/// sync.
+// Indices into the mix's per-attribute weight / accumulator arrays. One entry
+// per continuous value the mix blends; `MIX_ATTR_FLAGS` maps each to the
+// coverage bit that decides whether a source votes on it.
+const MIX_POS_X: usize = 0;
+const MIX_POS_Y: usize = 1;
+const MIX_POS_Z: usize = 2;
+const MIX_ROT_X: usize = 3;
+const MIX_ROT_Y: usize = 4;
+const MIX_ROT_Z: usize = 5;
+const MIX_SCL_X: usize = 6;
+const MIX_SCL_Y: usize = 7;
+const MIX_LOSCL_X: usize = 8;
+const MIX_LOSCL_Y: usize = 9;
+const MIX_ALPHA: usize = 10;
+const MIX_LOCAL_ALPHA: usize = 11;
+const MIX_PIVOT_X: usize = 12;
+const MIX_PIVOT_Y: usize = 13;
+const MIX_ANCHOR_X: usize = 14;
+const MIX_ANCHOR_Y: usize = 15;
+const MIX_SIZE_X: usize = 16;
+const MIX_SIZE_Y: usize = 17;
+const MIX_UV_TX: usize = 18;
+const MIX_UV_TY: usize = 19;
+const MIX_UV_RZ: usize = 20;
+const MIX_UV_SX: usize = 21;
+const MIX_UV_SY: usize = 22;
+const MIX_BOUND_R: usize = 23;
+const MIX_MASK: usize = 24;
+const MIX_SKEW_X: usize = 25;
+const MIX_SKEW_Y: usize = 26;
+const MIX_ATTR_COUNT: usize = 27;
+
+/// Coverage bit gating each mixed attribute, in `MIX_*` index order.
+/// `skew_x` / `skew_y` come from one source array and therefore share one bit.
+const MIX_ATTR_FLAGS: [runtime::framedata::ss::runtime::UpdateAttributeFlags; MIX_ATTR_COUNT] = {
+    use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
+    [
+        F::AttributePosX,
+        F::AttributePosY,
+        F::AttributePosZ,
+        F::AttributeRotX,
+        F::AttributeRotY,
+        F::AttributeRotZ,
+        F::AttributeSclX,
+        F::AttributeSclY,
+        F::AttributeLosclX,
+        F::AttributeLosclY,
+        F::AttributeAlpha,
+        F::AttributeLoAlpha,
+        F::AttributePivotX,
+        F::AttributePivotY,
+        F::AttributeAnchorX,
+        F::AttributeAnchorY,
+        F::AttributeSizeX,
+        F::AttributeSizeY,
+        F::AttributeUvtX,
+        F::AttributeUvtY,
+        F::AttributeUvrZ,
+        F::AttributeUvsX,
+        F::AttributeUvsY,
+        F::AttributeBoundr,
+        F::AttributeMask,
+        F::AttributeSkew,
+        F::AttributeSkew,
+    ]
+};
+
+/// Which attributes `layer`'s source animates on `part`.
+///
+/// An empty `coverage_vec` means no coverage was recorded for this layer, which
+/// reads as "covers everything" — the pre-coverage behavior. That is what keeps
+/// hand-built layers (unit tests) working unchanged, and it fails safe: an
+/// unrecorded layer contributes as it always did rather than silently dropping
+/// out of the mix.
 #[inline]
-fn identity_part_state() -> runtime::framedata::ss::runtime::PartState {
-    let mut state = runtime::framedata::ss::runtime::PartState::default();
-    state.set_scale_x(1.0);
-    state.set_scale_y(1.0);
-    state.set_local_scale_x(1.0);
-    state.set_local_scale_y(1.0);
-    state.set_alpha(1.0);
-    state.set_local_alpha(1.0);
-    state.set_uv_scale_x(1.0);
-    state.set_uv_scale_y(1.0);
-    state
+fn layer_coverage(layer: &LayerState<'_>, part: usize) -> runtime::framedata::ss::runtime::UpdateAttributeFlags {
+    layer.coverage_vec.get(part).copied().unwrap_or(runtime::framedata::ss::runtime::UpdateAttributeFlags::all())
 }
 
-/// Populate `layer.parts_vec` with `num_parts` identity-pose `PartState`
-/// entries — `scale`, `local_scale`, `alpha`, `local_alpha`, `uv_scale` set
-/// to `1.0`, every other continuous attribute left at `0.0`, `update_flag`
-/// empty — and clear `raw_vertex_deform`. Used as the per-frame Stage A
-/// output for empty blend sources so the mix step fades the resolved pose
-/// toward setup-pose values without an actual animation to interpolate.
-///
-/// `size` deliberately stays at `0.0`: SS7 has no explicit cell-independent
-/// setup size, and 0 is the canonical "no override" value at the schema
-/// level. Mixes that need to preserve primary's size during fade-out should
-/// use a real secondary source rather than an empty one.
-///
-/// Uses `Vec::resize` with a precomputed identity `PartState` so the inner
-/// fill collapses to a `memcpy`-style loop (the field setters run once at
-/// the template, not `N × 8` times per call). LLVM's loop vectorizer turns
-/// the resulting copies into SIMD `memcpy` on x86/ARM.
-fn fill_layer_with_identity_pose(layer: &mut LayerState<'_>, num_parts: usize) {
-    layer.parts_vec.clear();
-    layer.parts_vec.resize(num_parts, identity_part_state());
-    layer.raw_vertex_deform.clear();
-    layer.raw_vertex_deform.resize(num_parts, crate::core::framedata::RawVertexDeform::default());
+/// Read a `PartState`'s mixed attributes into `out`, in `MIX_*` index order.
+#[inline]
+fn read_attrs(s: &runtime::framedata::ss::runtime::PartState, out: &mut [f32; MIX_ATTR_COUNT]) {
+    out[MIX_POS_X] = s.position_x();
+    out[MIX_POS_Y] = s.position_y();
+    out[MIX_POS_Z] = s.position_z();
+    out[MIX_ROT_X] = s.rotation_x();
+    out[MIX_ROT_Y] = s.rotation_y();
+    out[MIX_ROT_Z] = s.rotation_z();
+    out[MIX_SCL_X] = s.scale_x();
+    out[MIX_SCL_Y] = s.scale_y();
+    out[MIX_LOSCL_X] = s.local_scale_x();
+    out[MIX_LOSCL_Y] = s.local_scale_y();
+    out[MIX_ALPHA] = s.alpha();
+    out[MIX_LOCAL_ALPHA] = s.local_alpha();
+    out[MIX_PIVOT_X] = s.pivot_x();
+    out[MIX_PIVOT_Y] = s.pivot_y();
+    out[MIX_ANCHOR_X] = s.anchor_x();
+    out[MIX_ANCHOR_Y] = s.anchor_y();
+    out[MIX_SIZE_X] = s.size_x();
+    out[MIX_SIZE_Y] = s.size_y();
+    out[MIX_UV_TX] = s.uv_translation_x();
+    out[MIX_UV_TY] = s.uv_translation_y();
+    out[MIX_UV_RZ] = s.uv_rotation_z();
+    out[MIX_UV_SX] = s.uv_scale_x();
+    out[MIX_UV_SY] = s.uv_scale_y();
+    out[MIX_BOUND_R] = s.bounding_radius();
+    out[MIX_MASK] = s.mask();
+    out[MIX_SKEW_X] = s.skew_x();
+    out[MIX_SKEW_Y] = s.skew_y();
 }
 
-/// Mix per-source poses in `layers` into `resolved_layer` using each
-/// source's `weight`. Continuous PartState attributes (TRSA, geometry, UV,
-/// skew, mask, bounding_radius) and `raw_vertex_deform` are weighted-summed
-/// across active sources after auto-normalization (sum of weights = 1).
-/// Discrete attributes (cell/part_color/shader/vertex/deform indices, the
-/// per-attribute vecs, flip flags, hide, priority, texture, cell_meta,
-/// mesh_deform) are taken from `layers[primary_idx]`. `update_flag` is
-/// OR-merged across active sources so Stage B sees every attribute that
-/// contributed.
+/// Write back the attributes some track spoke for; the rest keep what the
+/// primary's extracted pose already held.
+#[inline]
+fn write_attrs(s: &mut runtime::framedata::ss::runtime::PartState, v: &[f32; MIX_ATTR_COUNT], touched: &[bool; MIX_ATTR_COUNT]) {
+    macro_rules! w {
+        ($idx:expr, $setter:ident) => {
+            if touched[$idx] {
+                s.$setter(v[$idx]);
+            }
+        };
+    }
+    w!(MIX_POS_X, set_position_x);
+    w!(MIX_POS_Y, set_position_y);
+    w!(MIX_POS_Z, set_position_z);
+    w!(MIX_ROT_X, set_rotation_x);
+    w!(MIX_ROT_Y, set_rotation_y);
+    w!(MIX_ROT_Z, set_rotation_z);
+    w!(MIX_SCL_X, set_scale_x);
+    w!(MIX_SCL_Y, set_scale_y);
+    w!(MIX_LOSCL_X, set_local_scale_x);
+    w!(MIX_LOSCL_Y, set_local_scale_y);
+    w!(MIX_ALPHA, set_alpha);
+    w!(MIX_LOCAL_ALPHA, set_local_alpha);
+    w!(MIX_PIVOT_X, set_pivot_x);
+    w!(MIX_PIVOT_Y, set_pivot_y);
+    w!(MIX_ANCHOR_X, set_anchor_x);
+    w!(MIX_ANCHOR_Y, set_anchor_y);
+    w!(MIX_SIZE_X, set_size_x);
+    w!(MIX_SIZE_Y, set_size_y);
+    w!(MIX_UV_TX, set_uv_translation_x);
+    w!(MIX_UV_TY, set_uv_translation_y);
+    w!(MIX_UV_RZ, set_uv_rotation_z);
+    w!(MIX_UV_SX, set_uv_scale_x);
+    w!(MIX_UV_SY, set_uv_scale_y);
+    w!(MIX_BOUND_R, set_bounding_radius);
+    w!(MIX_MASK, set_mask);
+    w!(MIX_SKEW_X, set_skew_x);
+    w!(MIX_SKEW_Y, set_skew_y);
+}
+
+/// Resolve every track onto one pose in `resolved_layer`.
 ///
-/// A source is "active" when `animation_idx >= 0 && weight > 0.0`. When no
-/// source is active, the resolved pose equals `layers[primary_idx]`.
-fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx: usize, resolved_layer: &mut LayerState<'b>) {
+/// Two levels. **Within a track**, its sources are weighted-summed, normalized
+/// **per attribute** so a source that does not animate an attribute neither
+/// contributes to it nor dilutes the sources that do (the coverage rule).
+/// **Between tracks**, each track folds onto the pose below it in ascending
+/// order — `Mix` lerps by the track's `alpha`, `Additive` adds `alpha` times the
+/// track's offset from the setup pose. The stack's floor is the setup pose, so a
+/// track's `alpha` always means something even where nothing below it has an
+/// opinion; a source's `weight`, by contrast, only decides proportions among the
+/// sources of one track.
+///
+/// Attributes no track speaks for keep `layers[primary_idx]`'s value, and every
+/// discrete attribute (cell / part_color / shader / vertex / deform indices, flip
+/// flags, hide, priority, texture, cell_meta, mesh_deform) is copied from there
+/// verbatim — tracks never blend those. `update_flag` is OR-merged across every
+/// contributing source so Stage B sees each attribute that took part.
+///
+/// A source is "active" when `animation_idx >= 0 && weight > 0.0`; a track is
+/// audible when `alpha > 0.0`. With neither, the resolved pose equals
+/// `layers[primary_idx]`.
+fn mix_tracks<'b>(sources: &[SourceState], layers: &[LayerState<'b>], tracks: &[TrackState], primary_idx: usize, setup_pose: &[runtime::framedata::ss::runtime::PartState], resolved_layer: &mut LayerState<'b>) {
     let primary = &layers[primary_idx];
     let num_parts = primary.parts_vec.len();
 
@@ -923,136 +1104,142 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
         let primary_state = primary.parts_vec[i];
         let mut mixed = primary_state;
 
-        // Auto-normalization is per part, not global. A blend source's layer is
-        // sized to its own animation's part count, which can be shorter than the
-        // primary's when a caller blends mismatched part lists; parts are
-        // correlated positionally, so a source simply does not cover the indices
-        // past its end. Summing over all active sources there would leave the
-        // covering sources scaled below 1 — those parts would blend toward the
-        // origin and fade out rather than degrade gracefully. When every active
-        // source covers the part this sums the same weights in the same order as
-        // a global sum would, so the common path is unchanged.
-        let part_weight: f32 = sources.iter().enumerate().filter(|(j, src)| src.is_active() && i < layers[*j].parts_vec.len()).map(|(_, src)| src.weight).sum();
+        // The stack starts at the setup pose and each track folds onto it in
+        // ascending order. `cur` carries the running resolved value per attribute;
+        // `touched` records which ones any track actually spoke for, so the rest
+        // keep the primary's value exactly as they did before tracks existed.
+        let floor = setup_pose.get(i).copied().unwrap_or(primary_state);
+        let mut cur = [0.0f32; MIX_ATTR_COUNT];
+        let mut base = [0.0f32; MIX_ATTR_COUNT];
+        read_attrs(&floor, &mut cur);
+        base.copy_from_slice(&cur);
+        let mut touched = [false; MIX_ATTR_COUNT];
 
-        // Zero means no active source has this part at all: leave `mixed` as the
-        // primary's pose rather than writing zeroed attributes over it.
-        if part_weight > 0.0 {
-            let inv_total = 1.0 / part_weight;
-            let mut pos_x = 0.0_f32;
-            let mut pos_y = 0.0_f32;
-            let mut pos_z = 0.0_f32;
-            let mut rot_x = 0.0_f32;
-            let mut rot_y = 0.0_f32;
-            let mut rot_z = 0.0_f32;
-            let mut scl_x = 0.0_f32;
-            let mut scl_y = 0.0_f32;
-            let mut loscl_x = 0.0_f32;
-            let mut loscl_y = 0.0_f32;
-            let mut alpha = 0.0_f32;
-            let mut local_alpha = 0.0_f32;
-            let mut pivot_x = 0.0_f32;
-            let mut pivot_y = 0.0_f32;
-            let mut anchor_x = 0.0_f32;
-            let mut anchor_y = 0.0_f32;
-            let mut size_x = 0.0_f32;
-            let mut size_y = 0.0_f32;
-            let mut uv_tx = 0.0_f32;
-            let mut uv_ty = 0.0_f32;
-            let mut uv_rz = 0.0_f32;
-            let mut uv_sx = 0.0_f32;
-            let mut uv_sy = 0.0_f32;
-            let mut bound_r = 0.0_f32;
-            let mut mask = 0.0_f32;
-            let mut skew_x = 0.0_f32;
-            let mut skew_y = 0.0_f32;
+        let mut cur_dx = wide::f32x4::splat(0.0);
+        let mut cur_dy = wide::f32x4::splat(0.0);
+        let mut deform_present = false;
+        let mut flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
+
+        for (t, track) in tracks.iter().enumerate() {
+            // A silent track is not skipped: its sources still decide which
+            // attributes the stack speaks for, and folding at `alpha == 0` is a
+            // no-op that leaves the floor showing. That is what makes fading a
+            // track to 0 resolve to the setup pose instead of freezing the pose
+            // the source last produced.
+
+            // Level 1: weighted mix of this track's own sources. Weights are summed
+            // **per attribute** (the coverage rule): a source that carries no
+            // keyframe array for an attribute does not vote on it, so it neither
+            // contributes a value nor dilutes the sources that do. Without this a
+            // source would vote `evaluate_part`'s hardcoded default and drag the
+            // result toward a number that means nothing — up to thousands of pixels
+            // on real assets. Coverage is per animation (`CachedPartData::coverage`),
+            // never per frame.
+            let mut wsum = [0.0f32; MIX_ATTR_COUNT];
+            let mut acc = [0.0f32; MIX_ATTR_COUNT];
+            let mut deform_weight = 0.0_f32;
             let mut dx_acc = wide::f32x4::splat(0.0);
             let mut dy_acc = wide::f32x4::splat(0.0);
-            let mut deform_present = false;
-            let mut flag = runtime::framedata::ss::runtime::UpdateAttributeFlags::empty();
 
             for (j, src) in sources.iter().enumerate() {
-                if !src.is_active() {
+                if src.track as usize != t || !src.is_active() {
                     continue;
                 }
-                let w = src.weight * inv_total;
-                // A source that does not cover this index was already excluded
-                // from `part_weight`; skipping it here instead of indexing out of
-                // bounds is what keeps a mismatched-part-count blend from
-                // panicking and aborting the host.
-                let Some(s) = layers[j].parts_vec.get(i) else {
+                // A source whose layer is shorter than the primary's part list does
+                // not cover the trailing indices at all (mismatched part counts,
+                // parts correlated positionally). Skipping it here instead of
+                // indexing out of bounds is what keeps such a blend from panicking
+                // and aborting the host.
+                let Some(state) = layers[j].parts_vec.get(i) else {
                     continue;
                 };
-                pos_x += w * s.position_x();
-                pos_y += w * s.position_y();
-                pos_z += w * s.position_z();
-                rot_x += w * s.rotation_x();
-                rot_y += w * s.rotation_y();
-                rot_z += w * s.rotation_z();
-                scl_x += w * s.scale_x();
-                scl_y += w * s.scale_y();
-                loscl_x += w * s.local_scale_x();
-                loscl_y += w * s.local_scale_y();
-                alpha += w * s.alpha();
-                local_alpha += w * s.local_alpha();
-                pivot_x += w * s.pivot_x();
-                pivot_y += w * s.pivot_y();
-                anchor_x += w * s.anchor_x();
-                anchor_y += w * s.anchor_y();
-                size_x += w * s.size_x();
-                size_y += w * s.size_y();
-                uv_tx += w * s.uv_translation_x();
-                uv_ty += w * s.uv_translation_y();
-                uv_rz += w * s.uv_rotation_z();
-                uv_sx += w * s.uv_scale_x();
-                uv_sy += w * s.uv_scale_y();
-                bound_r += w * s.bounding_radius();
-                mask += w * s.mask();
-                skew_x += w * s.skew_x();
-                skew_y += w * s.skew_y();
-                flag |= s.update_flag();
 
+                // Per-attribute weights: `w` where this source covers the attribute,
+                // 0 where it does not. Materializing them keeps the accumulation
+                // branch-free and straight-line, which is what lets LLVM keep
+                // vectorizing it.
+                //
+                // This table costs ~22% of the mix stage (65 parts, 2 sources:
+                // 9.9us -> 12.1us per get_frame_data). Two attempts to win it back
+                // measured no better and were dropped: a "coverage is uniform across
+                // sources" fast path (almost never fires — a part is only uniform
+                // when all 26 bits agree) and a branch-free bit-mask form (identical
+                // timing; the cost is the stores, not the branches). Single-source
+                // playback does not reach here at all — `get_frame_data` swaps the
+                // layer instead — so nothing that ships today pays it.
+                let w = src.weight;
+                let cov = layer_coverage(&layers[j], i);
+                let mut wk = [0.0f32; MIX_ATTR_COUNT];
+                for (k, f) in MIX_ATTR_FLAGS.iter().enumerate() {
+                    if cov.contains(*f) {
+                        wk[k] = w;
+                        wsum[k] += w;
+                    }
+                }
+
+                let mut v = [0.0f32; MIX_ATTR_COUNT];
+                read_attrs(state, &mut v);
+                for k in 0..MIX_ATTR_COUNT {
+                    acc[k] += wk[k] * v[k];
+                }
+                flag |= state.update_flag();
+
+                // `raw_vertex_deform` carries its own presence flag, which is the
+                // same signal as coverage for the other attributes: normalize over
+                // the sources that actually have a deform, so a source without one
+                // does not pull the deltas toward zero.
                 if let Some(rvd) = layers[j].raw_vertex_deform.get(i)
                     && rvd.present
                 {
-                    deform_present = true;
+                    deform_weight += w;
                     let w_v = wide::f32x4::splat(w);
                     dx_acc = w_v.mul_add(wide::f32x4::from(rvd.dx), dx_acc);
                     dy_acc = w_v.mul_add(wide::f32x4::from(rvd.dy), dy_acc);
                 }
             }
 
-            mixed.set_position_x(pos_x);
-            mixed.set_position_y(pos_y);
-            mixed.set_position_z(pos_z);
-            mixed.set_rotation_x(rot_x);
-            mixed.set_rotation_y(rot_y);
-            mixed.set_rotation_z(rot_z);
-            mixed.set_scale_x(scl_x);
-            mixed.set_scale_y(scl_y);
-            mixed.set_local_scale_x(loscl_x);
-            mixed.set_local_scale_y(loscl_y);
-            mixed.set_alpha(alpha);
-            mixed.set_local_alpha(local_alpha);
-            mixed.set_pivot_x(pivot_x);
-            mixed.set_pivot_y(pivot_y);
-            mixed.set_anchor_x(anchor_x);
-            mixed.set_anchor_y(anchor_y);
-            mixed.set_size_x(size_x);
-            mixed.set_size_y(size_y);
-            mixed.set_uv_translation_x(uv_tx);
-            mixed.set_uv_translation_y(uv_ty);
-            mixed.set_uv_rotation_z(uv_rz);
-            mixed.set_uv_scale_x(uv_sx);
-            mixed.set_uv_scale_y(uv_sy);
-            mixed.set_bounding_radius(bound_r);
-            mixed.set_mask(mask);
-            mixed.set_skew_x(skew_x);
-            mixed.set_skew_y(skew_y);
-            mixed.set_update_flag(flag);
-
-            if deform_present {
-                resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx: dx_acc.to_array(), dy: dy_acc.to_array() };
+            // Level 2: fold this track's pose onto everything below it. Attributes
+            // the track says nothing about pass through untouched — that is what
+            // lets a track that only animates part of the rig act as an overlay
+            // without an explicit mask.
+            let alpha = track.alpha;
+            for k in 0..MIX_ATTR_COUNT {
+                if wsum[k] <= 0.0 {
+                    continue;
+                }
+                let v = acc[k] / wsum[k];
+                cur[k] = match track.blend {
+                    TrackBlend::Mix => cur[k] + (v - cur[k]) * alpha,
+                    TrackBlend::Additive => cur[k] + (v - base[k]) * alpha,
+                };
+                touched[k] = true;
             }
+
+            if deform_weight > 0.0 {
+                let inv = wide::f32x4::splat(1.0 / deform_weight);
+                let (dx, dy) = (dx_acc * inv, dy_acc * inv);
+                let a = wide::f32x4::splat(alpha);
+                match track.blend {
+                    // The setup pose carries no deform, so the additive reference is zero.
+                    TrackBlend::Mix => {
+                        cur_dx += (dx - cur_dx) * a;
+                        cur_dy += (dy - cur_dy) * a;
+                    }
+                    TrackBlend::Additive => {
+                        cur_dx += dx * a;
+                        cur_dy += dy * a;
+                    }
+                }
+                deform_present = true;
+            }
+        }
+
+        if touched.iter().any(|t| *t) {
+            write_attrs(&mut mixed, &cur, &touched);
+            mixed.set_update_flag(flag);
+        }
+        if deform_present {
+            resolved_layer.raw_vertex_deform[i] = crate::core::framedata::RawVertexDeform { present: true, dx: cur_dx.to_array(), dy: cur_dy.to_array() };
         }
 
         resolved_layer.parts_vec.push(mixed);
@@ -1071,6 +1258,13 @@ fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx
 /// authoritative source for events and non-blendable discrete attributes.
 struct InstanceState<'a> {
     sources: Vec<SourceState>,
+    /// The setup pose in this instance's coordinate space — the floor the track
+    /// stack folds onto, and the reference an additive track offsets from.
+    /// Rebuilt on `setup_animation` and whenever a coordinate setting changes.
+    setup_pose: Vec<crate::runtime::framedata::ss::runtime::PartState>,
+    /// The track stack, ascending. Always holds at least track 0, which carries
+    /// the structure (discrete attributes and events) for the whole instance.
+    tracks: Vec<TrackState>,
     layers: Vec<LayerState<'a>>,
     resolved_layer: LayerState<'a>,
     primary: u32,
@@ -1086,7 +1280,6 @@ struct InstanceState<'a> {
     origin: crate::core::SsOrigin,
     unit: crate::core::SsUnit,
     render_mode: crate::core::RenderMode,
-    crossfade: Option<CrossfadeState>,
     /// Per-part runtime Override Layer table (Phase 2). Dense by `part_index`,
     /// `None` = no override; sized to `num_parts` on `setup_animation`. Empty
     /// until an animation is set up.
@@ -1101,6 +1294,8 @@ impl<'a> InstanceState<'a> {
     fn new() -> Self {
         Self {
             sources: alloc::vec![SourceState::new()],
+            setup_pose: Vec::new(),
+            tracks: alloc::vec![TrackState::new()],
             layers: alloc::vec![LayerState::new()],
             resolved_layer: LayerState::new(),
             primary: 0,
@@ -1112,7 +1307,6 @@ impl<'a> InstanceState<'a> {
             origin: crate::core::SsOrigin::default(),
             unit: crate::core::SsUnit::default(),
             render_mode: crate::core::RenderMode::default(),
-            crossfade: None,
             part_overrides: Vec::new(),
             override_cell_uv_meta: Vec::new(),
         }
@@ -1161,12 +1355,17 @@ impl<'a> InstanceState<'a> {
         self.primary as usize
     }
 
-    fn collapse_to_primary(&mut self) {
+    /// Reset the stack to a single track carrying a single source. Called when a
+    /// new animation is set up: an instance's tracks belong to the animation that
+    /// established them, so they do not survive a re-setup.
+    fn collapse_to_track_zero(&mut self) {
         self.sources.truncate(1);
         self.layers.truncate(1);
         self.sources[0] = SourceState::new();
+        self.tracks.truncate(1);
+        self.tracks[0] = TrackState::new();
+        self.tracks[0].main = 0;
         self.primary = 0;
-        self.crossfade = None;
     }
 
     fn primary_source(&self) -> &SourceState {
@@ -1183,12 +1382,19 @@ impl<'a> InstanceState<'a> {
     /// yield primary's pose verbatim with `inv_total * primary.weight == 1.0`,
     /// so the swap is byte-equivalent to running `mix_poses` while skipping
     /// the per-part vec clone + 27 per-part PartState setter calls.
-    fn primary_is_only_active(&self) -> bool {
+    fn is_single_full_track(&self) -> bool {
         let primary_idx = self.primary_idx();
-        if !self.sources[primary_idx].is_active() {
+        let primary = &self.sources[primary_idx];
+        if !primary.is_active() {
             return false;
         }
-        !self.sources.iter().enumerate().any(|(i, s)| i != primary_idx && s.is_active())
+        // Any second audible source, or a track that would lerp/offset rather than
+        // pass its source through, means the fold has real work to do.
+        let track = &self.tracks[primary.track as usize];
+        if track.alpha != 1.0 || track.blend != TrackBlend::Mix {
+            return false;
+        }
+        !self.sources.iter().enumerate().any(|(i, s)| i != primary_idx && s.is_active() && self.tracks[s.track as usize].is_audible())
     }
 }
 
@@ -1211,7 +1417,7 @@ impl<'a> Context<'a> {
     pub fn reset(&mut self) {
         self.eval.resource = None;
         self.eval.fb.reset();
-        self.instance.collapse_to_primary();
+        self.instance.collapse_to_track_zero();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
         self.instance.coordinate_system = crate::core::SsCoordinateSystem::default();
@@ -1233,7 +1439,7 @@ impl<'a> Context<'a> {
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
         self.eval.resource = Some(resource);
         self.eval.fb.reset();
-        self.instance.collapse_to_primary();
+        self.instance.collapse_to_track_zero();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
         // A new SSAB invalidates part identity — drop all overrides.
@@ -1407,7 +1613,7 @@ impl<'a> Context<'a> {
         };
 
         let metadata = &resource.animations[index];
-        self.instance.collapse_to_primary();
+        self.instance.collapse_to_track_zero();
         let primary = self.instance.primary_source_mut();
         primary.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
         primary.animation_idx = index as i32;
@@ -1443,101 +1649,203 @@ impl<'a> Context<'a> {
         globals.mesh_index_offsets.clear();
 
         self.instance.z_order.setup(&metadata.cached_parts);
+        self.rebuild_setup_pose();
 
         Ok(())
     }
 
-    /// Adds a secondary blend source. Returns a stable `u32` handle (slot
-    /// index) that can be used with `set_source_weight`, `set_primary`,
-    /// `set_source_frame`, `set_source_speed`, and `remove_blend_source`.
+    /// Put `name` on `track`, replacing whatever it was playing.
+    ///
+    /// Tracks are addressed by index and grow on demand: setting track 3 creates
+    /// 0..=3, the new ones silent. Track 0 is the structure track — its animation
+    /// supplies every discrete attribute and drives events — so it must be set up
+    /// first (`setup_animation` does exactly that), and this errors with
+    /// `AnimationNotFound` until it has been.
     ///
     /// The animation must live in the currently bound `AnimationResource`
-    /// (same-SSAB constraint). Call `setup_animation` first to establish
-    /// the primary; this method errors with `AnimationNotFound` until then.
-    pub fn add_blend_source(&mut self, name: &str, weight: f32) -> Result<u32, error::SSRuntimeError> {
-        let hash = fnv1a_hash_str(name);
-        self.add_blend_source_by_hash(hash, weight)
+    /// (same-SSAB constraint). Cancels any fade in flight on the track.
+    pub fn set_track_animation(&mut self, track: u32, name: &str) -> Result<(), error::SSRuntimeError> {
+        self.set_track_animation_by_hash(track, fnv1a_hash_str(name))
     }
 
-    pub fn add_blend_source_by_hash(&mut self, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
-        let Some(resource) = self.eval.resource else {
-            return Err(error::SSRuntimeError::NotLoaded);
-        };
-        if !self.instance.primary_source().has_real_animation() {
-            return Err(error::SSRuntimeError::AnimationNotFound);
-        }
-        let Some(index) = resource.find_animation_index_by_hash(hash) else {
-            return Err(error::SSRuntimeError::AnimationNotFound);
-        };
-
-        let metadata = &resource.animations[index];
-        let num_parts = metadata.cached_parts.len();
-        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
-
-        let mut source = SourceState::new();
-        source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
-        source.animation_idx = index as i32;
-        source.weight = weight;
-        self.instance.sources.push(source);
-
-        let mut layer = LayerState::new();
-        layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
-        self.instance.layers.push(layer);
-
-        Ok((self.instance.sources.len() - 1) as u32)
+    pub fn set_track_animation_by_hash(&mut self, track: u32, hash: u32) -> Result<(), error::SSRuntimeError> {
+        let index = self.resolve_animation(hash)?;
+        self.ensure_track(track)?;
+        let handle = self.attach_source(track, index, 1.0)?;
+        self.replace_track_main(track, handle);
+        Ok(())
     }
 
-    /// Marks the given slot as inactive. Stable handles: the slot remains
-    /// in `sources`/`layers` (so other handles do not shift), but mix
-    /// iteration skips it. Cannot remove the primary slot; call
-    /// `set_primary` to relocate the primary first. Cancels any in-flight
-    /// crossfade that referenced this slot.
-    pub fn remove_blend_source(&mut self, handle: u32) -> Result<(), error::SSRuntimeError> {
-        if handle == self.instance.primary {
+    /// The strength of a track, i.e. how much of it survives onto the pose the
+    /// tracks below produced. **This is the knob that always means something**: a
+    /// source's `weight` only decides proportions among the sources sharing one
+    /// track, and is silent when a source is the only one animating an attribute.
+    ///
+    /// Alpha is not clamped — values above 1 extrapolate, which is occasionally
+    /// what an overlay wants — but `alpha <= 0` makes the track contribute
+    /// nothing. Track 0 at alpha 0 resolves to the setup pose, which is how an
+    /// animation fades out to rest.
+    pub fn set_track_alpha(&mut self, track: u32, alpha: f32) -> Result<(), error::SSRuntimeError> {
+        let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        if alpha.is_nan() {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
-        let idx = handle as usize;
-        let Some(source) = self.instance.sources.get_mut(idx) else {
+        t.alpha = alpha;
+        Ok(())
+    }
+
+    pub fn track_alpha(&self, track: u32) -> Option<f32> {
+        self.instance.tracks.get(track as usize).map(|t| t.alpha)
+    }
+
+    /// How the track folds onto what is below: [`TrackBlend::Mix`] lerps toward
+    /// the track's pose, [`TrackBlend::Additive`] adds the track's offset from the
+    /// setup pose. Additive is for overlays that displace a performance rather
+    /// than replace it.
+    pub fn set_track_blend(&mut self, track: u32, blend: TrackBlend) -> Result<(), error::SSRuntimeError> {
+        let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        t.blend = blend;
+        Ok(())
+    }
+
+    pub fn track_blend(&self, track: u32) -> Option<TrackBlend> {
+        self.instance.tracks.get(track as usize).map(|t| t.blend)
+    }
+
+    /// Number of tracks that exist, including silent ones. Always at least 1.
+    pub fn track_count(&self) -> u32 {
+        self.instance.tracks.len() as u32
+    }
+
+    /// Silence a track: every source on it is deactivated and its fade cancelled.
+    /// Track 0 cannot be cleared — it carries the structure, and an instance with
+    /// no structure has no pose to emit. Fade it to alpha 0 instead.
+    pub fn clear_track(&mut self, track: u32) -> Result<(), error::SSRuntimeError> {
+        if track == 0 {
             return Err(error::SSRuntimeError::InvalidParameter);
-        };
-        source.controller.reset_setup();
-        source.animation_idx = -1;
-        source.weight = 0.0;
-        source.event_threshold = 1.0;
-        if let Some(cf) = self.instance.crossfade
-            && (cf.from == handle || cf.to == handle)
-        {
-            self.instance.crossfade = None;
+        }
+        let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        t.main = NO_SOURCE;
+        t.fade = None;
+        for source in self.instance.sources.iter_mut() {
+            if source.track as u32 == track {
+                source.deactivate();
+            }
         }
         Ok(())
     }
 
-    /// Deactivates every non-primary slot. The primary stays untouched.
-    /// Cancels any in-flight crossfade.
-    pub fn clear_blend_sources(&mut self) {
-        let primary_idx = self.instance.primary_idx();
-        for (i, source) in self.instance.sources.iter_mut().enumerate() {
-            if i == primary_idx {
-                continue;
-            }
-            source.controller.reset_setup();
-            source.animation_idx = -1;
-            source.weight = 0.0;
-            source.event_threshold = 1.0;
-        }
-        self.instance.crossfade = None;
+    /// Fade `track` to `name` over `duration_ms` (the same time unit as
+    /// [`Context::update`]'s `delta`). The fade starts from whatever the track is
+    /// already playing, so there are no handles to pair up and nothing to clean up
+    /// afterwards: on completion the incoming animation becomes the track's, and
+    /// the outgoing source is deactivated.
+    ///
+    /// Starting a crossfade while one is running on the same track **completes the
+    /// old one first** (the incoming animation becomes current at its present
+    /// weight) and fades from there. That is deliberately simpler than keeping a
+    /// chain of half-finished fades: it can snap when fades are restarted faster
+    /// than they run, and it can never leave a source stuck at a stale weight.
+    pub fn crossfade(&mut self, track: u32, name: &str, duration_ms: f32) -> Result<(), error::SSRuntimeError> {
+        self.crossfade_by_hash(track, fnv1a_hash_str(name), duration_ms)
     }
 
-    pub fn blend_source_count(&self) -> u32 {
-        self.instance.sources.iter().filter(|s| s.animation_idx != -1).count() as u32
-    }
-
-    pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), error::SSRuntimeError> {
-        let idx = handle as usize;
-        let Some(source) = self.instance.sources.get_mut(idx) else {
+    pub fn crossfade_by_hash(&mut self, track: u32, hash: u32, duration_ms: f32) -> Result<(), error::SSRuntimeError> {
+        if duration_ms.is_nan() || duration_ms <= 0.0 {
             return Err(error::SSRuntimeError::InvalidParameter);
-        };
-        if source.animation_idx == -1 {
+        }
+        let index = self.resolve_animation(hash)?;
+        self.ensure_track(track)?;
+        self.settle_fade(track);
+
+        let from = self.instance.tracks[track as usize].main;
+        if from == NO_SOURCE {
+            // Nothing to fade from — this is just "start playing".
+            let handle = self.attach_source(track, index, 1.0)?;
+            self.replace_track_main(track, handle);
+            return Ok(());
+        }
+
+        let to = self.attach_source(track, index, 0.0)?;
+        self.instance.sources[from as usize].weight = 1.0;
+        let t = &mut self.instance.tracks[track as usize];
+        t.fade = Some(TrackFade::Cross { from, to, elapsed: 0.0, duration: duration_ms });
+        Ok(())
+    }
+
+    /// Drive a track's `alpha` to `target` over `duration_ms`. Fading track 0 to 0
+    /// resolves the instance to its setup pose, which is what "fade out to rest"
+    /// means here — no placeholder animation required.
+    pub fn fade_track(&mut self, track: u32, target: f32, duration_ms: f32) -> Result<(), error::SSRuntimeError> {
+        if duration_ms.is_nan() || duration_ms <= 0.0 || target.is_nan() {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        t.fade = Some(TrackFade::Alpha { start: t.alpha, target, elapsed: 0.0, duration: duration_ms });
+        Ok(())
+    }
+
+    /// Progress of the fade in flight on `track`, in `[0.0, 1.0]`; `None` when the
+    /// track is not fading.
+    pub fn track_fade_progress(&self, track: u32) -> Option<f32> {
+        self.instance.tracks.get(track as usize)?.fade.as_ref().map(TrackFade::progress)
+    }
+
+    /// Cancel the fade on `track`, leaving alpha and weights where they stand.
+    pub fn cancel_track_fade(&mut self, track: u32) -> Result<(), error::SSRuntimeError> {
+        let t = self.instance.tracks.get_mut(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        t.fade = None;
+        Ok(())
+    }
+
+    /// Seek the track's current animation. This is how a modulation axis is
+    /// driven: author the axis as an animation and scrub it with the tracked
+    /// value.
+    pub fn set_track_frame(&mut self, track: u32, frame: f32) -> Result<(), error::SSRuntimeError> {
+        let handle = self.track_main(track)?;
+        self.instance.sources[handle as usize].controller.set_frame_no(frame);
+        Ok(())
+    }
+
+    pub fn track_frame(&self, track: u32) -> Option<f32> {
+        let handle = self.instance.tracks.get(track as usize)?.main;
+        let source = self.instance.sources.get(handle as usize)?;
+        (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
+    }
+
+    pub fn set_track_speed(&mut self, track: u32, speed: f32) -> Result<(), error::SSRuntimeError> {
+        let handle = self.track_main(track)?;
+        self.instance.sources[handle as usize].controller.set_animation_speed(speed);
+        Ok(())
+    }
+
+    /// Add another weighted source to `track`, for the case a track needs several
+    /// animations blended by proportion (locomotion: walk + run). Returns a stable
+    /// handle for [`Self::set_source_weight`].
+    ///
+    /// Most tracks never need this — one animation plus the track's `alpha`
+    /// covers layering, and `crossfade` covers transitions.
+    pub fn track_add_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, error::SSRuntimeError> {
+        self.track_add_source_by_hash(track, fnv1a_hash_str(name), weight)
+    }
+
+    pub fn track_add_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
+        let index = self.resolve_animation(hash)?;
+        self.ensure_track(track)?;
+        let handle = self.attach_source(track, index, weight)?;
+        // The first animation to land on a track becomes its main one, so callers
+        // may build a track entirely out of `track_add_source` calls.
+        if self.instance.tracks[track as usize].main == NO_SOURCE {
+            self.replace_track_main(track, handle);
+        }
+        Ok(handle)
+    }
+
+    /// Proportion of one source **within its track**. See [`Self::set_track_alpha`]
+    /// for the strength of the track as a whole.
+    pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), error::SSRuntimeError> {
+        let source = self.instance.sources.get_mut(handle as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        if source.animation_idx < 0 {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
         source.weight = weight;
@@ -1546,29 +1854,11 @@ impl<'a> Context<'a> {
 
     pub fn source_weight(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
-        (source.animation_idx != -1).then_some(source.weight)
-    }
-
-    pub fn set_primary(&mut self, handle: u32) -> Result<(), error::SSRuntimeError> {
-        let Some(source) = self.instance.sources.get(handle as usize) else {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        };
-        if source.animation_idx < 0 {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
-        self.instance.primary = handle;
-        Ok(())
-    }
-
-    pub fn primary_handle(&self) -> u32 {
-        self.instance.primary
+        (source.animation_idx >= 0).then_some(source.weight)
     }
 
     pub fn set_source_frame(&mut self, handle: u32, frame: f32) -> Result<(), error::SSRuntimeError> {
-        let idx = handle as usize;
-        let Some(source) = self.instance.sources.get_mut(idx) else {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        };
+        let source = self.instance.sources.get_mut(handle as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
         if source.animation_idx < 0 {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
@@ -1581,66 +1871,13 @@ impl<'a> Context<'a> {
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
     }
 
-    pub fn set_source_speed(&mut self, handle: u32, speed: f32) -> Result<(), error::SSRuntimeError> {
-        let idx = handle as usize;
-        let Some(source) = self.instance.sources.get_mut(idx) else {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        };
-        if source.animation_idx < 0 {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        }
-        source.controller.set_animation_speed(speed);
-        Ok(())
-    }
-
-    /// Adds an "empty" blend source that contributes identity values (scale /
-    /// alpha / uv_scale = 1, all other continuous attributes = 0) to the mix
-    /// — i.e. the SS analog of Spine's `setEmptyAnimation`. Returns a stable
-    /// slot handle.
-    ///
-    /// Empty sources do not own an animation, controller, or events, so
-    /// `set_source_frame`, `set_source_speed`, `set_primary`, and
-    /// `set_source_event_threshold` reject them with `InvalidParameter`.
-    /// `set_source_weight`, `source_weight`, `remove_blend_source`, and
-    /// `clear_blend_sources` operate on them like any other slot.
-    ///
-    /// Primary must already be set up (real animation); use this to fade the
-    /// existing primary toward a setup/identity pose.
-    pub fn add_empty_blend_source(&mut self, weight: f32) -> Result<u32, error::SSRuntimeError> {
-        let Some(resource) = self.eval.resource else {
-            return Err(error::SSRuntimeError::NotLoaded);
-        };
-        let primary_anim_idx = self.instance.primary_source().animation_idx;
-        if primary_anim_idx < 0 {
-            return Err(error::SSRuntimeError::AnimationNotFound);
-        }
-        let num_parts = resource.animations[primary_anim_idx as usize].cached_parts.len();
-
-        let mut source = SourceState::new();
-        source.animation_idx = EMPTY_ANIMATION_IDX;
-        source.weight = weight;
-        self.instance.sources.push(source);
-
-        let mut layer = LayerState::new();
-        layer.resize_for_parts(num_parts, 0, 0, 0, 0, 0);
-        self.instance.layers.push(layer);
-
-        Ok((self.instance.sources.len() - 1) as u32)
-    }
-
-    /// Per-source event firing threshold. Default `1.0` for every slot —
-    /// secondaries with the default threshold never fire events (legacy
-    /// "Primary-only" behavior). Lowering the threshold below the source's
-    /// current `weight` opts it into event collection; events from multiple
-    /// sources can be distinguished via [`Self::get_passed_event_source_handles`].
-    ///
-    /// Primary always fires its events regardless of this setting; rejects
-    /// empty sources (`InvalidParameter`).
+    /// Per-source event firing threshold. Default `1.0` — a source fires events
+    /// only once its weight reaches the threshold, so by default only a track's
+    /// fully-weighted animation does. Track 0's main source always fires,
+    /// regardless of this setting. Distinguish sources with
+    /// [`Self::get_passed_event_source_handles`].
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), error::SSRuntimeError> {
-        let idx = handle as usize;
-        let Some(source) = self.instance.sources.get_mut(idx) else {
-            return Err(error::SSRuntimeError::InvalidParameter);
-        };
+        let source = self.instance.sources.get_mut(handle as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
         if !source.has_real_animation() {
             return Err(error::SSRuntimeError::InvalidParameter);
         }
@@ -1653,48 +1890,120 @@ impl<'a> Context<'a> {
         source.has_real_animation().then_some(source.event_threshold)
     }
 
-    /// Starts a linear weight crossfade from `from` to `to` over `duration_ms`
-    /// (same time unit as [`Context::update`]'s `delta`). Each subsequent
-    /// `update(delta)` advances the timer, rebalances the two source weights
-    /// from `(1.0, 0.0)` to `(0.0, 1.0)`, and on completion promotes `to` to
-    /// primary and deactivates `from`. Cancels any in-flight crossfade and
-    /// overwrites the current weights of `from`/`to` immediately on this call
-    /// to `(1.0, 0.0)` so the fade always starts from a defined state.
-    ///
-    /// Errors: `InvalidParameter` when handles are invalid / inactive /
-    /// identical, or `duration_ms <= 0.0`. Empty sources are accepted as
-    /// `to` (useful for fade-out to setup pose); `from` must carry a real
-    /// animation so the post-fade primary is well-defined.
-    pub fn crossfade(&mut self, from: u32, to: u32, duration_ms: f32) -> Result<(), error::SSRuntimeError> {
-        if from == to || duration_ms.is_nan() || duration_ms <= 0.0 {
-            return Err(error::SSRuntimeError::InvalidParameter);
+    // ---- internals shared by the track API ---------------------------------
+
+    /// Transform the setup pose into this instance's coordinate space. Cheap and
+    /// rare — it only has to run when the animation or a coordinate setting
+    /// changes, never per frame.
+    fn rebuild_setup_pose(&mut self) {
+        self.instance.setup_pose.clear();
+        let Some(resource) = self.eval.resource else {
+            return;
+        };
+        let anim_idx = self.instance.primary_source().animation_idx;
+        if anim_idx < 0 {
+            return;
         }
-        let from_idx = from as usize;
-        let to_idx = to as usize;
-        let from_source = self.instance.sources.get(from_idx).ok_or(error::SSRuntimeError::InvalidParameter)?;
-        if !from_source.has_real_animation() {
-            return Err(error::SSRuntimeError::InvalidParameter);
+        let metadata = &resource.animations[anim_idx as usize];
+        let (coordinate_system, origin, unit) = (self.instance.coordinate_system, self.instance.origin, self.instance.unit);
+        for (i, a) in metadata.initial_attributes.iter().enumerate() {
+            let parent_index = metadata.cached_parts.get(i).map_or(-1, |p| p.parent_index);
+            self.instance.setup_pose.push(crate::core::framedata::setup_pose_part(&a, parent_index, coordinate_system, origin, unit, metadata.canvas_width, metadata.canvas_height));
         }
-        let to_source = self.instance.sources.get(to_idx).ok_or(error::SSRuntimeError::InvalidParameter)?;
-        if to_source.animation_idx == -1 {
-            return Err(error::SSRuntimeError::InvalidParameter);
+    }
+
+    fn resolve_animation(&self, hash: u32) -> Result<usize, error::SSRuntimeError> {
+        let Some(resource) = self.eval.resource else {
+            return Err(error::SSRuntimeError::NotLoaded);
+        };
+        resource.find_animation_index_by_hash(hash).ok_or(error::SSRuntimeError::AnimationNotFound)
+    }
+
+    /// Grow the stack so `track` exists. Every track but 0 may be created this
+    /// way; track 0 exists from construction, but until `setup_animation` has run
+    /// there is no structure to layer onto, so this reports `AnimationNotFound`.
+    fn ensure_track(&mut self, track: u32) -> Result<(), error::SSRuntimeError> {
+        if track != 0 && !self.instance.sources[self.instance.primary_idx()].has_real_animation() {
+            return Err(error::SSRuntimeError::AnimationNotFound);
         }
-        self.instance.sources[from_idx].weight = 1.0;
-        self.instance.sources[to_idx].weight = 0.0;
-        self.instance.crossfade = Some(CrossfadeState { from, to, elapsed: 0.0, duration: duration_ms });
+        if track as usize >= self.instance.tracks.len() {
+            self.instance.tracks.resize(track as usize + 1, TrackState::new());
+        }
         Ok(())
     }
 
-    /// Returns the in-flight crossfade's progress in `[0.0, 1.0]`, or `None`
-    /// when no crossfade is active.
-    pub fn crossfade_progress(&self) -> Option<f32> {
-        self.instance.crossfade.map(|cf| (cf.elapsed / cf.duration).clamp(0.0, 1.0))
+    /// Park a new source on `track`, reusing a slot left behind by a finished
+    /// fade when one is free so a long-lived instance does not grow a slot per
+    /// transition. Handles stay stable: a slot is only reused once inactive.
+    fn attach_source(&mut self, track: u32, animation_idx: usize, weight: f32) -> Result<u32, error::SSRuntimeError> {
+        let Some(resource) = self.eval.resource else {
+            return Err(error::SSRuntimeError::NotLoaded);
+        };
+        let metadata = &resource.animations[animation_idx];
+        let num_parts = metadata.cached_parts.len();
+        let (cell_c, color_c, shader_c, vertex_c, deform_c) = count_attribute_capacities(metadata);
+
+        let mut source = SourceState::new();
+        source.controller.setup(metadata.start_frame, metadata.end_frame, metadata.fps);
+        source.animation_idx = animation_idx as i32;
+        source.weight = weight;
+        source.track = track as u16;
+
+        let free = self.instance.sources.iter().position(|s| s.animation_idx < 0);
+        let handle = match free {
+            Some(i) => {
+                self.instance.sources[i] = source;
+                self.instance.layers[i].resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+                i
+            }
+            None => {
+                self.instance.sources.push(source);
+                let mut layer = LayerState::new();
+                layer.resize_for_parts(num_parts, cell_c, color_c, shader_c, vertex_c, deform_c);
+                self.instance.layers.push(layer);
+                self.instance.sources.len() - 1
+            }
+        };
+        Ok(handle as u32)
     }
 
-    /// Cancels the in-flight crossfade. Source weights are left at their
-    /// current value — call [`Self::set_source_weight`] to normalize them.
-    pub fn cancel_crossfade(&mut self) {
-        self.instance.crossfade = None;
+    /// Make `handle` the track's animation, retiring whatever held that role.
+    fn replace_track_main(&mut self, track: u32, handle: u32) {
+        let previous = self.instance.tracks[track as usize].main;
+        if previous != NO_SOURCE && previous != handle {
+            self.instance.sources[previous as usize].deactivate();
+        }
+        // Any other source on this track belonged to the animation being replaced.
+        for (i, source) in self.instance.sources.iter_mut().enumerate() {
+            if i as u32 != handle && source.track as u32 == track {
+                source.deactivate();
+            }
+        }
+        let t = &mut self.instance.tracks[track as usize];
+        t.main = handle;
+        t.fade = None;
+        if track == 0 {
+            self.instance.primary = handle;
+        }
+    }
+
+    fn track_main(&self, track: u32) -> Result<u32, error::SSRuntimeError> {
+        let t = self.instance.tracks.get(track as usize).ok_or(error::SSRuntimeError::InvalidParameter)?;
+        if t.main == NO_SOURCE {
+            return Err(error::SSRuntimeError::InvalidParameter);
+        }
+        Ok(t.main)
+    }
+
+    /// Finish a crossfade in flight on `track` immediately: the incoming
+    /// animation becomes the track's, the outgoing source is released.
+    fn settle_fade(&mut self, track: u32) {
+        let Some(TrackFade::Cross { from, to, .. }) = self.instance.tracks[track as usize].fade else {
+            return;
+        };
+        self.instance.sources[from as usize].deactivate();
+        self.instance.sources[to as usize].weight = 1.0;
+        self.replace_track_main(track, to);
     }
 
     pub fn get_frame_data(&mut self, frame_no: f32) -> Result<&[u8], error::SSRuntimeError> {
@@ -1719,27 +2028,20 @@ impl<'a> Context<'a> {
         let unit = self.instance.unit;
 
         // Stage A: per-source pose extraction. Each source uses its own
-        // controller-driven frame; primary uses the explicit `frame_no`
-        // argument to preserve single-animation backward compatibility.
-        // Primary is always extracted regardless of its weight — `mix_poses`
-        // uses it as the discrete-attribute / structure source even when its
-        // continuous-value contribution is zero. Empty sources (sentinel
-        // `EMPTY_ANIMATION_IDX`) skip `extract_pose` and fill their layer
-        // with an identity pose so the weighted sum fades the resolved pose
-        // toward setup-pose values.
+        // controller-driven frame; track 0's main source uses the explicit
+        // `frame_no` argument to preserve single-animation behavior. That source
+        // is always extracted regardless of its weight — `mix_tracks` uses it as
+        // the discrete-attribute / structure source even when its continuous
+        // contribution is zero.
         let primary_idx = self.instance.primary_idx();
         let primary_num_parts = primary_metadata.cached_parts.len();
         let num_sources = self.instance.sources.len();
         for i in 0..num_sources {
             let source_anim_idx = self.instance.sources[i].animation_idx;
-            if source_anim_idx == -1 {
+            if source_anim_idx < 0 {
                 continue;
             }
             if i != primary_idx && self.instance.sources[i].weight <= 0.0 {
-                continue;
-            }
-            if source_anim_idx == EMPTY_ANIMATION_IDX {
-                fill_layer_with_identity_pose(&mut self.instance.layers[i], primary_num_parts);
                 continue;
             }
             let frame_for_source = if i == primary_idx { frame_no } else { self.instance.sources[i].controller.get_frame_no() };
@@ -1771,14 +2073,24 @@ impl<'a> Context<'a> {
                 &mut self.eval.deform_result_index_workspace,
                 &mut self.eval.inheritance_alphas_workspace,
             );
+
+            // Record which attributes this animation actually carries, per part,
+            // for the mix's coverage rule. Animation-level and therefore constant
+            // for the source's lifetime; copied per frame because a source can be
+            // repointed at another animation at any time.
+            layer.coverage_vec.clear();
+            layer.coverage_vec.extend(metadata.cached_parts.iter().map(|p| p.coverage));
         }
 
-        if self.instance.primary_is_only_active() {
-            // Fast path: weighted sum with one active source = identity. Swap
-            // is O(1) vs `mix_poses`'s per-part vec clone + 27 setters.
+        if self.instance.is_single_full_track() {
+            // Fast path: one audible track at full alpha with one active source
+            // resolves to that source's pose verbatim, so the whole two-level fold
+            // collapses to a swap — O(1) against `mix_tracks`'s per-part vec clone
+            // and 27 setters. The floor is unobservable here: an attribute nothing
+            // keys reads the same from the setup pose as from the extracted pose.
             ::core::mem::swap(&mut self.instance.layers[primary_idx], &mut self.instance.resolved_layer);
         } else {
-            mix_poses(&self.instance.sources, &self.instance.layers, primary_idx, &mut self.instance.resolved_layer);
+            mix_tracks(&self.instance.sources, &self.instance.layers, &self.instance.tracks, primary_idx, &self.instance.setup_pose, &mut self.instance.resolved_layer);
         }
 
         // ⟵ SEAM: apply the per-part runtime Override Layer on the resolved
@@ -2434,6 +2746,8 @@ impl<'a> Context<'a> {
 
     pub fn set_coordinate_system(&mut self, coordinate_system: crate::core::SsCoordinateSystem) {
         self.instance.coordinate_system = coordinate_system;
+        // The stack's floor lives in this space, so it has to move with it.
+        self.rebuild_setup_pose();
     }
 
     pub fn get_coordinate_system(&self) -> crate::core::SsCoordinateSystem {
@@ -2442,6 +2756,8 @@ impl<'a> Context<'a> {
 
     pub fn set_origin(&mut self, origin: crate::core::SsOrigin) {
         self.instance.origin = origin;
+        // The stack's floor lives in this space, so it has to move with it.
+        self.rebuild_setup_pose();
     }
 
     pub fn get_origin(&self) -> crate::core::SsOrigin {
@@ -2450,6 +2766,8 @@ impl<'a> Context<'a> {
 
     pub fn set_unit(&mut self, unit: crate::core::SsUnit) {
         self.instance.unit = unit;
+        // The stack's floor lives in this space, so it has to move with it.
+        self.rebuild_setup_pose();
     }
 
     pub fn get_unit(&self) -> crate::core::SsUnit {
@@ -2471,44 +2789,53 @@ impl<'a> Context<'a> {
             }
         }
 
-        self.advance_crossfade(delta);
+        self.advance_track_fades(delta);
         self.collect_events();
 
         primary_frame
     }
 
-    /// Advance an in-flight crossfade by `delta`. Linearly rebalances the
-    /// `from`/`to` source weights, and on completion promotes `to` to primary
-    /// and deactivates `from`. No-op when no crossfade is active. Safe against
-    /// `from`/`to` having been removed externally — the slot's `-1` sentinel
-    /// causes the crossfade to be cancelled.
-    fn advance_crossfade(&mut self, delta: f32) {
-        let Some(mut cf) = self.instance.crossfade else { return };
-        let from_idx = cf.from as usize;
-        let to_idx = cf.to as usize;
-        if self.instance.sources.get(from_idx).is_none_or(|s| !s.has_real_animation()) || self.instance.sources.get(to_idx).is_none_or(|s| s.animation_idx == -1) {
-            self.instance.crossfade = None;
-            return;
-        }
-        cf.elapsed += delta;
-        let t = (cf.elapsed / cf.duration).clamp(0.0, 1.0);
-        self.instance.sources[from_idx].weight = 1.0 - t;
-        self.instance.sources[to_idx].weight = t;
-        if cf.elapsed >= cf.duration {
-            // Completion: only swap primary if `to` is a real animation. An
-            // empty `to` (fade-out target) keeps the original primary so the
-            // discrete-attribute source stays valid; the caller can call
-            // `set_primary` or `remove_blend_source` next to finalize the
-            // fade-out.
-            if self.instance.sources[to_idx].has_real_animation() {
-                self.instance.primary = cf.to;
-                self.instance.sources[from_idx].animation_idx = -1;
-                self.instance.sources[from_idx].weight = 0.0;
-                self.instance.sources[from_idx].controller.reset_setup();
+    /// Advance every track's fade by `delta`.
+    ///
+    /// A crossfade rebalances its two sources' weights linearly and, on
+    /// completion, hands the track to the incoming animation and releases the
+    /// outgoing slot. An alpha fade drives the track's `alpha` to its target.
+    /// A fade whose sources were released elsewhere cancels itself.
+    fn advance_track_fades(&mut self, delta: f32) {
+        for track in 0..self.instance.tracks.len() {
+            let Some(fade) = self.instance.tracks[track].fade else {
+                continue;
+            };
+            match fade {
+                TrackFade::Cross { from, to, mut elapsed, duration } => {
+                    let released = self.instance.sources.get(from as usize).is_none_or(|s| !s.has_real_animation()) || self.instance.sources.get(to as usize).is_none_or(|s| !s.has_real_animation());
+                    if released {
+                        self.instance.tracks[track].fade = None;
+                        continue;
+                    }
+                    elapsed += delta;
+                    let t = (elapsed / duration).clamp(0.0, 1.0);
+                    self.instance.sources[from as usize].weight = 1.0 - t;
+                    self.instance.sources[to as usize].weight = t;
+                    if elapsed >= duration {
+                        self.instance.sources[from as usize].deactivate();
+                        self.replace_track_main(track as u32, to);
+                    } else {
+                        self.instance.tracks[track].fade = Some(TrackFade::Cross { from, to, elapsed, duration });
+                    }
+                }
+                TrackFade::Alpha { start, target, mut elapsed, duration } => {
+                    elapsed += delta;
+                    let t = (elapsed / duration).clamp(0.0, 1.0);
+                    self.instance.tracks[track].alpha = start + (target - start) * t;
+                    if elapsed >= duration {
+                        self.instance.tracks[track].alpha = target;
+                        self.instance.tracks[track].fade = None;
+                    } else {
+                        self.instance.tracks[track].fade = Some(TrackFade::Alpha { start, target, elapsed, duration });
+                    }
+                }
             }
-            self.instance.crossfade = None;
-        } else {
-            self.instance.crossfade = Some(cf);
         }
     }
 
@@ -4368,6 +4695,13 @@ mod tests {
         layer
     }
 
+    /// Resolve one `Mix` track at full alpha, with the primary's own pose as the
+    /// floor — the shape every pre-track test was written against, so those tests
+    /// keep asserting exactly what they did before the stack existed.
+    fn mix_poses<'b>(sources: &[SourceState], layers: &[LayerState<'b>], primary_idx: usize, resolved_layer: &mut LayerState<'b>) {
+        mix_tracks(sources, layers, &[TrackState::new()], primary_idx, &[], resolved_layer);
+    }
+
     fn mix_source(weight: f32) -> SourceState {
         let mut s = SourceState::new();
         s.animation_idx = 0; // any non-negative value makes it active
@@ -4526,6 +4860,195 @@ mod tests {
         assert_eq!(p1.alpha(), 0.25);
     }
 
+    /// Give `layer` explicit per-part coverage. Without this a hand-built layer
+    /// reports "covers everything" (see [`layer_coverage`]), which is what keeps
+    /// the pre-coverage tests above meaningful.
+    fn set_mix_layer_coverage(layer: &mut LayerState<'static>, coverage: &[runtime::framedata::ss::runtime::UpdateAttributeFlags]) {
+        layer.coverage_vec.clear();
+        layer.coverage_vec.extend_from_slice(coverage);
+    }
+
+    /// Put `source` on `track`.
+    fn mix_source_on(track: u16, weight: f32) -> SourceState {
+        let mut s = mix_source(weight);
+        s.track = track;
+        s
+    }
+
+    fn setup_pose_of(parts: &[MixLayerPart]) -> Vec<runtime::framedata::ss::runtime::PartState> {
+        build_mix_layer(parts).parts_vec
+    }
+
+    /// A track's `alpha` lerps its pose against everything below it — and unlike a
+    /// source's `weight`, it means the same thing no matter what is underneath.
+    #[test]
+    fn track_alpha_lerps_against_the_track_below() {
+        let base = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let over = build_mix_layer(&[(100.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let setup = setup_pose_of(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layers = vec![base, over];
+        let sources = vec![mix_source_on(0, 1.0), mix_source_on(1, 1.0)];
+        let mut tracks = vec![TrackState::new(), TrackState::new()];
+        tracks[1].alpha = 0.3;
+        let mut resolved = LayerState::new();
+
+        mix_tracks(&sources, &layers, &tracks, 0, &setup, &mut resolved);
+
+        // lerp(0, 100, 0.3); f32 rounding of 0.3 puts it a ULP off an exact 30.
+        assert!((resolved.parts_vec[0].position_x() - 30.0).abs() < 1e-4);
+    }
+
+    /// The overlay's strength must not depend on how many sources sit underneath —
+    /// the failure that flat normalization has and the track stack does not.
+    #[test]
+    fn track_alpha_is_independent_of_the_sources_below() {
+        let setup = setup_pose_of(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let mut tracks = vec![TrackState::new(), TrackState::new()];
+        tracks[1].alpha = 0.3;
+
+        for extra_bases in 0..3 {
+            let mut layers = vec![build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)])];
+            let mut sources = vec![mix_source_on(0, 1.0)];
+            for _ in 0..extra_bases {
+                layers.push(build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]));
+                sources.push(mix_source_on(0, 1.0));
+            }
+            layers.push(build_mix_layer(&[(100.0, 0.0, 0.0, 1.0, 1.0, None)]));
+            sources.push(mix_source_on(1, 1.0));
+
+            let mut resolved = LayerState::new();
+            mix_tracks(&sources, &layers, &tracks, 0, &setup, &mut resolved);
+            assert!((resolved.parts_vec[0].position_x() - 30.0).abs() < 1e-4, "with {extra_bases} extra base sources");
+        }
+    }
+
+    /// An additive track offsets what is below by its distance from the setup pose,
+    /// so stacking it does not replace the performance underneath.
+    #[test]
+    fn additive_track_offsets_by_its_distance_from_setup() {
+        // setup pose puts the part at x=10; the overlay animates it to x=40, i.e. +30.
+        let setup = setup_pose_of(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let base = build_mix_layer(&[(70.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let over = build_mix_layer(&[(40.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let layers = vec![base, over];
+        let sources = vec![mix_source_on(0, 1.0), mix_source_on(1, 1.0)];
+        let mut tracks = vec![TrackState::new(), TrackState::new()];
+        tracks[1].blend = TrackBlend::Additive;
+        let mut resolved = LayerState::new();
+
+        mix_tracks(&sources, &layers, &tracks, 0, &setup, &mut resolved);
+        assert_eq!(resolved.parts_vec[0].position_x(), 100.0, "70 + (40 - 10)");
+
+        // Half strength halves the offset rather than pulling toward the overlay.
+        tracks[1].alpha = 0.5;
+        let mut resolved = LayerState::new();
+        mix_tracks(&sources, &layers, &tracks, 0, &setup, &mut resolved);
+        assert_eq!(resolved.parts_vec[0].position_x(), 85.0, "70 + 0.5 * (40 - 10)");
+    }
+
+    /// A track that animates only part of the rig passes everything else through,
+    /// which is what makes an overlay work without an explicit mask.
+    #[test]
+    fn track_passes_through_attributes_it_does_not_animate() {
+        use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
+
+        let setup = setup_pose_of(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let mut base = build_mix_layer(&[(70.0, 0.0, 0.0, 2.0, 1.0, None)]);
+        let mut over = build_mix_layer(&[(0.0, 0.0, 45.0, 1.0, 1.0, None)]);
+        set_mix_layer_coverage(&mut base, &[F::AttributePosX | F::AttributeSclX]);
+        set_mix_layer_coverage(&mut over, &[F::AttributeRotZ]); // rotation only
+
+        let layers = vec![base, over];
+        let sources = vec![mix_source_on(0, 1.0), mix_source_on(1, 1.0)];
+        let tracks = vec![TrackState::new(), TrackState::new()];
+        let mut resolved = LayerState::new();
+
+        mix_tracks(&sources, &layers, &tracks, 0, &setup, &mut resolved);
+
+        let p = &resolved.parts_vec[0];
+        assert_eq!(p.rotation_z(), 45.0, "the overlay owns what it animates");
+        assert_eq!(p.position_x(), 70.0, "and leaves the rest of the pose alone");
+        assert_eq!(p.scale_x(), 2.0);
+    }
+
+    /// D2, the coverage rule: an attribute a source does not animate must not be
+    /// summed in at all. Before this rule the non-covering source voted
+    /// `evaluate_part`'s hardcoded default and dragged the result halfway to a
+    /// number that means nothing.
+    #[test]
+    fn mix_poses_excludes_sources_that_do_not_key_the_attribute() {
+        use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
+
+        let mut primary = build_mix_layer(&[(100.0, 0.0, 0.0, 1.0, 0.25, None)]);
+        let mut secondary = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        // The primary animates position_x and alpha; the secondary animates
+        // neither, and merely reports the defaults for them (0.0 / 1.0).
+        set_mix_layer_coverage(&mut primary, &[F::AttributePosX | F::AttributeAlpha]);
+        set_mix_layer_coverage(&mut secondary, &[F::AttributeSclX]);
+
+        let layers = vec![primary, secondary];
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        let p = &resolved.parts_vec[0];
+        // Only the primary covers these, so it owns them outright. A global
+        // normalization would give 50.0 and 0.625 instead.
+        assert_eq!(p.position_x(), 100.0);
+        assert_eq!(p.alpha(), 0.25);
+        // scale_x is covered only by the secondary, which holds 1.0.
+        assert_eq!(p.scale_x(), 1.0);
+    }
+
+    /// An attribute nobody animates keeps the primary's value rather than
+    /// collapsing to a zero-weighted sum.
+    #[test]
+    fn mix_poses_uncovered_attribute_keeps_primary_value() {
+        use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
+
+        let mut primary = build_mix_layer(&[(10.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let mut secondary = build_mix_layer(&[(90.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        set_mix_layer_coverage(&mut primary, &[F::AttributePosX]);
+        set_mix_layer_coverage(&mut secondary, &[F::AttributePosX]);
+
+        let layers = vec![primary, secondary];
+        let sources = vec![mix_source(1.0), mix_source(1.0)];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        let p = &resolved.parts_vec[0];
+        assert_eq!(p.position_x(), 50.0, "covered by both: an ordinary 50/50 blend");
+        // size_x is covered by neither. `build_mix_layer` sets 10.0 on both, and
+        // the primary's value is what survives.
+        assert_eq!(p.size_x(), 10.0);
+    }
+
+    /// Weights still normalize among the sources that *do* cover an attribute,
+    /// so an uneven split stays proportional.
+    #[test]
+    fn mix_poses_coverage_normalizes_among_covering_sources_only() {
+        use runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
+
+        let mut a = build_mix_layer(&[(0.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let mut b = build_mix_layer(&[(100.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        let mut c = build_mix_layer(&[(999.0, 0.0, 0.0, 1.0, 1.0, None)]);
+        set_mix_layer_coverage(&mut a, &[F::AttributePosX]);
+        set_mix_layer_coverage(&mut b, &[F::AttributePosX]);
+        set_mix_layer_coverage(&mut c, &[F::AttributeAlpha]); // does not cover position_x
+
+        let layers = vec![a, b, c];
+        // c carries the largest weight, but it has no say in position_x.
+        let sources = vec![mix_source(1.0), mix_source(3.0), mix_source(96.0)];
+        let mut resolved = LayerState::new();
+
+        mix_poses(&sources, &layers, 0, &mut resolved);
+
+        // 1:3 between the two covering sources => 75.0, not 3.0.
+        assert_eq!(resolved.parts_vec[0].position_x(), 75.0);
+    }
+
     /// When no active source covers a part, the mixer must leave the primary's
     /// pose alone rather than write zeroed accumulators over it.
     #[test]
@@ -4670,32 +5193,40 @@ mod tests {
         ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
     }
 
+    /// Sample the resolved pose of every part, for comparing two setups.
+    fn resolved_of(ctx: &Context<'_>) -> Vec<(f32, f32, f32, f32)> {
+        ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect()
+    }
+
+    fn ringo_ctx<'a>(resource: &'a AnimationResource<'a>, anim: &str) -> (Context<'a>, f32) {
+        let mut ctx = Context::new();
+        ctx.bind_resource(resource);
+        ctx.setup_animation(anim).unwrap();
+        let start = ctx.instance.primary_source().controller.get_start_frame() as f32;
+        (ctx, start)
+    }
+
+    /// Two sources on one track blend by weight, exactly as they did before the
+    /// stack existed — `track_add_source` is the locomotion path.
     #[test]
-    fn ringo_blend_walk_run_at_50_50_is_midpoint() {
+    fn two_sources_on_one_track_blend_by_weight() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
         let walk = evaluate_ringo(&resource, "walk");
         let run = evaluate_ringo(&resource, "run");
 
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
-        let handle = ctx.add_blend_source("run", 1.0).expect("add_blend_source(run) failed");
-        let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame() as f32;
-        ctx.set_source_frame(handle, run_start).unwrap();
-        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
-        let mixed: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
+        let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
+        let handle = ctx.track_add_source(0, "run", 1.0).expect("track_add_source(run)");
+        let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame();
+        ctx.set_source_frame(handle, run_start as f32).unwrap();
+        ctx.get_frame_data(walk_start).expect("get_frame_data");
+        let mixed = resolved_of(&ctx);
 
-        assert_eq!(walk.len(), run.len());
-        assert_eq!(walk.len(), mixed.len());
         for i in 0..walk.len() {
             let (wx, wy, wr, wa) = walk[i];
             let (rx, ry, rr, ra) = run[i];
             let (mx, my, mr, ma) = mixed[i];
-            // Auto-normalized 1.0 / 1.0 weights → 50/50 midpoint per attribute.
-            assert!((mx - 0.5 * (wx + rx)).abs() < 1e-3, "part {i} position_x: mixed={mx} expected_midpoint={}", 0.5 * (wx + rx));
+            assert!((mx - 0.5 * (wx + rx)).abs() < 1e-3, "part {i} position_x");
             assert!((my - 0.5 * (wy + ry)).abs() < 1e-3, "part {i} position_y");
             assert!((mr - 0.5 * (wr + rr)).abs() < 1e-3, "part {i} rotation_z");
             assert!((ma - 0.5 * (wa + ra)).abs() < 1e-3, "part {i} alpha");
@@ -4703,267 +5234,272 @@ mod tests {
     }
 
     #[test]
-    fn ringo_blend_zero_weight_secondary_equals_primary() {
+    fn zero_weight_source_contributes_nothing() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
         let walk_only = evaluate_ringo(&resource, "walk");
 
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
-        let _ = ctx.add_blend_source("run", 0.0).expect("add_blend_source(run) failed");
-        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
-        let with_inactive: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
-
-        // Zero-weight secondary contributes nothing; resolved must equal primary verbatim.
-        assert_eq!(walk_only, with_inactive);
+        let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
+        ctx.track_add_source(0, "run", 0.0).unwrap();
+        ctx.get_frame_data(walk_start).expect("get_frame_data");
+        assert_eq!(walk_only, resolved_of(&ctx));
     }
 
+    /// A second track at alpha 0 must be inaudible, and at alpha 1 must take over
+    /// the attributes it animates.
     #[test]
-    fn ringo_blend_removed_source_equals_primary() {
+    fn second_track_alpha_controls_how_much_of_it_lands() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
         let walk_only = evaluate_ringo(&resource, "walk");
 
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
-        let handle = ctx.add_blend_source("run", 1.0).expect("add_blend_source(run) failed");
-        ctx.remove_blend_source(handle).expect("remove_blend_source failed");
-        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
-        let after_remove: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
+        let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.set_track_frame(1, ctx.track_frame(1).unwrap()).unwrap();
 
-        assert_eq!(walk_only, after_remove);
+        ctx.set_track_alpha(1, 0.0).unwrap();
+        ctx.get_frame_data(walk_start).expect("get_frame_data");
+        assert_eq!(walk_only, resolved_of(&ctx), "an alpha-0 track must not be audible");
+
+        ctx.set_track_alpha(1, 1.0).unwrap();
+        ctx.get_frame_data(walk_start).expect("get_frame_data");
+        assert_ne!(walk_only, resolved_of(&ctx), "at full alpha it must take over what it animates");
     }
 
+    /// Track 0 faded to alpha 0 resolves to the setup pose. This is what replaced
+    /// the empty blend source: the stack's floor *is* the setup pose, so fading
+    /// out needs no placeholder animation.
     #[test]
-    fn ringo_blend_api_validates_state() {
+    fn track_zero_at_alpha_zero_resolves_to_the_setup_pose() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, start) = ringo_ctx(&resource, "walk");
 
-        // add_blend_source before setup_animation -> AnimationNotFound.
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        assert!(matches!(ctx.add_blend_source("run", 1.0), Err(error::SSRuntimeError::AnimationNotFound)));
+        ctx.set_track_alpha(0, 0.0).unwrap();
+        ctx.get_frame_data(start).expect("get_frame_data");
 
-        ctx.setup_animation("walk").unwrap();
-
-        // Unknown animation name -> AnimationNotFound.
-        assert!(matches!(ctx.add_blend_source("not_a_real_anim", 1.0), Err(error::SSRuntimeError::AnimationNotFound)));
-
-        // Cannot remove the primary slot.
-        let primary = ctx.primary_handle();
-        assert!(matches!(ctx.remove_blend_source(primary), Err(error::SSRuntimeError::InvalidParameter)));
-
-        // Invalid handle on weight/frame/primary/speed setters.
-        assert!(matches!(ctx.set_source_weight(99, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.set_source_frame(99, 0.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.set_source_speed(99, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.set_primary(99), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(ctx.source_weight(99).is_none());
-        assert!(ctx.source_frame(99).is_none());
-    }
-
-    #[test]
-    fn ringo_set_primary_routes_to_new_primary() {
-        // After set_primary, all primary-targeted accessors must route to
-        // the new primary's controller; the old primary's state must remain
-        // independent.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-
-        let walk_handle = ctx.primary_handle();
-        let run_handle = ctx.add_blend_source("run", 1.0).unwrap();
-        assert_eq!(ctx.primary_handle(), walk_handle);
-
-        // Set walk to frame 5 via primary-targeted setter.
-        ctx.set_frame_no(5.0);
-        assert_eq!(ctx.get_frame_no(), 5.0);
-
-        // Swap primary to run; primary-targeted setter now targets run.
-        ctx.set_primary(run_handle).unwrap();
-        assert_eq!(ctx.primary_handle(), run_handle);
-        ctx.set_frame_no(20.0);
-        assert_eq!(ctx.get_frame_no(), 20.0);
-
-        // Swap back to walk; walk's frame must be unchanged by run-period mutations.
-        ctx.set_primary(walk_handle).unwrap();
-        assert_eq!(ctx.primary_handle(), walk_handle);
-        assert_eq!(ctx.get_frame_no(), 5.0, "walk's controller must be independent of run's");
-
-        // And one more swap confirms run's frame is also preserved.
-        ctx.set_primary(run_handle).unwrap();
-        assert_eq!(ctx.get_frame_no(), 20.0);
-    }
-
-    #[test]
-    fn ringo_clear_blend_sources_deactivates_secondaries() {
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-
-        let primary_handle = ctx.primary_handle();
-        let h1 = ctx.add_blend_source("run", 1.0).unwrap();
-        let h2 = ctx.add_blend_source("dance", 1.0).unwrap();
-        let h3 = ctx.add_blend_source("jump", 1.0).unwrap();
-        assert_eq!(ctx.blend_source_count(), 4);
-
-        ctx.clear_blend_sources();
-
-        // Primary stays active; every secondary is deactivated.
-        assert_eq!(ctx.blend_source_count(), 1);
-        assert_eq!(ctx.primary_handle(), primary_handle);
-        assert!(ctx.source_weight(primary_handle).is_some());
-        assert!(ctx.source_weight(h1).is_none());
-        assert!(ctx.source_weight(h2).is_none());
-        assert!(ctx.source_weight(h3).is_none());
-
-        // get_frame_data still produces a non-empty pose after clear.
-        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
-        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data should succeed after clear");
-        assert!(!ctx.instance.resolved_layer.parts_vec.is_empty());
-    }
-
-    #[test]
-    fn ringo_blend_set_source_speed() {
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let handle = ctx.add_blend_source("run", 1.0).unwrap();
-
-        // Valid handle: any positive speed accepted.
-        assert!(ctx.set_source_speed(handle, 2.0).is_ok());
-        assert!(ctx.set_source_speed(handle, 0.5).is_ok());
-
-        // Removed slot returns InvalidParameter.
-        ctx.remove_blend_source(handle).unwrap();
-        assert!(matches!(ctx.set_source_speed(handle, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
-    }
-
-    #[test]
-    fn ringo_blend_primary_weight_zero_keeps_structure() {
-        // Regression for the bug where Stage A skipped the primary when its
-        // weight was 0, leaving the resolved pose empty. Primary is the
-        // discrete/structure source and must always be extracted regardless
-        // of weight; its weight only controls its continuous-value share.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
-        let run_only = evaluate_ringo(&resource, "run");
-
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
-        let primary_handle = ctx.primary_handle();
-        let handle = ctx.add_blend_source("run", 1.0).expect("add_blend_source(run) failed");
-        let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame() as f32;
-        ctx.set_source_frame(handle, run_start).unwrap();
-        ctx.set_source_weight(primary_handle, 0.0).unwrap();
-        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
-        let resolved: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
-
-        // Primary's structure must be preserved: parts count matches run (same SSAE).
-        assert!(!resolved.is_empty(), "resolved parts_vec must not be empty when primary weight=0");
-        assert_eq!(resolved.len(), run_only.len());
-
-        // Continuous values must equal the secondary verbatim (total_weight = 1.0, w = 1.0 for run only).
-        for i in 0..resolved.len() {
-            let (mx, my, mr, ma) = resolved[i];
-            let (rx, ry, rr, ra) = run_only[i];
-            assert!((mx - rx).abs() < 1e-3, "part {i} position_x: mixed={mx} run={rx}");
-            assert!((my - ry).abs() < 1e-3, "part {i} position_y");
-            assert!((mr - rr).abs() < 1e-3, "part {i} rotation_z");
-            assert!((ma - ra).abs() < 1e-3, "part {i} alpha");
+        let setup = ctx.instance.setup_pose.clone();
+        for (i, part) in ctx.instance.resolved_layer.parts_vec.iter().enumerate() {
+            assert!((part.position_x() - setup[i].position_x()).abs() < 1e-4, "part {i} position_x: resolved={} setup={}", part.position_x(), setup[i].position_x());
+            assert!((part.rotation_z() - setup[i].rotation_z()).abs() < 1e-4, "part {i} rotation_z");
+            assert!((part.scale_x() - setup[i].scale_x()).abs() < 1e-4, "part {i} scale_x");
         }
     }
 
     #[test]
-    fn setup_animation_after_add_blend_clears_secondary() {
+    fn crossfade_hands_the_track_over_and_releases_the_old_source() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        let walk = ctx.instance.tracks[0].main;
 
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let _run = ctx.add_blend_source("run", 0.5).unwrap();
-        assert_eq!(ctx.blend_source_count(), 2);
+        ctx.crossfade(0, "run", 1000.0).unwrap();
+        assert_eq!(ctx.track_fade_progress(0), Some(0.0));
+        assert_eq!(ctx.source_weight(walk), Some(1.0));
+
+        ctx.update(500.0);
+        let p = ctx.track_fade_progress(0).unwrap();
+        assert!((p - 0.5).abs() < 1e-3, "progress {p}");
+        assert!((ctx.source_weight(walk).unwrap() - 0.5).abs() < 1e-3);
+
+        ctx.update(600.0);
+        // The incoming animation now owns the track and the old slot is free.
+        assert!(ctx.track_fade_progress(0).is_none());
+        assert_ne!(ctx.instance.tracks[0].main, walk);
+        assert!(ctx.source_weight(walk).is_none(), "the outgoing source is released");
+        assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main, "track 0 still carries the structure");
+    }
+
+    /// Restarting a crossfade completes the one in flight rather than layering a
+    /// second fade on top, so no source is left at a stale weight.
+    #[test]
+    fn crossfade_restart_settles_the_previous_fade() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        let walk = ctx.instance.tracks[0].main;
+
+        ctx.crossfade(0, "run", 1000.0).unwrap();
+        ctx.update(300.0);
+        ctx.crossfade(0, "dance", 1000.0).unwrap();
+
+        // `run` took over cleanly and now fades to `dance`; nothing is left at a
+        // weight from the abandoned fade.
+        let from = ctx.instance.tracks[0].main;
+        assert_eq!(ctx.source_weight(from), Some(1.0));
+        assert_eq!(ctx.track_fade_progress(0), Some(0.0));
+        let active: Vec<f32> = ctx.instance.sources.iter().filter(|s| s.animation_idx >= 0).map(|s| s.weight).collect();
+        assert_eq!(active.len(), 2, "only the outgoing and incoming animations remain");
+    }
+
+    #[test]
+    fn crossfade_on_an_empty_track_just_starts_playing() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+
+        ctx.crossfade(1, "run", 500.0).unwrap();
+        assert!(ctx.track_fade_progress(1).is_none(), "nothing to fade from");
+        assert_eq!(ctx.track_alpha(1), Some(1.0));
+        assert!(ctx.track_frame(1).is_some());
+    }
+
+    #[test]
+    fn fade_track_drives_alpha_to_its_target() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+
+        ctx.fade_track(0, 0.0, 400.0).unwrap();
+        ctx.update(200.0);
+        let a = ctx.track_alpha(0).unwrap();
+        assert!((a - 0.5).abs() < 1e-3, "alpha {a}");
+
+        ctx.update(300.0);
+        assert_eq!(ctx.track_alpha(0), Some(0.0));
+        assert!(ctx.track_fade_progress(0).is_none());
+    }
+
+    #[test]
+    fn cancel_track_fade_leaves_the_weights_alone() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        let walk = ctx.instance.tracks[0].main;
+
+        ctx.crossfade(0, "run", 1000.0).unwrap();
+        ctx.update(250.0);
+        let held = ctx.source_weight(walk).unwrap();
+        ctx.cancel_track_fade(0).unwrap();
+        ctx.update(500.0);
+
+        assert!(ctx.track_fade_progress(0).is_none());
+        assert_eq!(ctx.source_weight(walk), Some(held), "weights freeze where the fade stopped");
+    }
+
+    #[test]
+    fn set_track_animation_replaces_what_the_track_was_playing() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+
+        let extra = ctx.track_add_source(0, "run", 1.0).unwrap();
+        ctx.set_track_animation(0, "dance").unwrap();
+
+        assert!(ctx.source_weight(extra).is_none(), "the replaced animation's extra sources go with it");
+        assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main);
+    }
+
+    #[test]
+    fn clear_track_silences_a_track_but_never_track_zero() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let walk_only = evaluate_ringo(&resource, "walk");
+        let (mut ctx, start) = ringo_ctx(&resource, "walk");
+
+        ctx.set_track_animation(1, "run").unwrap();
+        ctx.clear_track(1).unwrap();
+        ctx.get_frame_data(start).expect("get_frame_data");
+        assert_eq!(walk_only, resolved_of(&ctx));
+
+        assert!(matches!(ctx.clear_track(0), Err(error::SSRuntimeError::InvalidParameter)), "track 0 carries the structure");
+    }
+
+    #[test]
+    fn setup_animation_collapses_the_stack() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+
+        ctx.set_track_animation(2, "run").unwrap();
+        ctx.set_track_alpha(2, 0.4).unwrap();
+        assert_eq!(ctx.track_count(), 3);
 
         ctx.setup_animation("dance").unwrap();
-
-        assert_eq!(ctx.blend_source_count(), 1, "secondary slots must be cleared by setup_animation");
-        assert_eq!(ctx.primary_handle(), 0);
-        assert_eq!(ctx.instance.sources.len(), 1);
-        assert_eq!(ctx.instance.layers.len(), 1);
+        assert_eq!(ctx.track_count(), 1, "a new setup starts from one track again");
+        assert_eq!(ctx.track_alpha(0), Some(1.0));
+        assert_eq!(ctx.instance.primary, 0);
     }
 
     #[test]
-    fn setup_animation_resets_primary_handle() {
+    fn track_api_validates_state() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
 
+        // Layering onto an instance with no structure yet is refused.
         let mut ctx = Context::new();
         ctx.bind_resource(&resource);
+        assert!(matches!(ctx.set_track_animation(1, "run"), Err(error::SSRuntimeError::AnimationNotFound)));
+
         ctx.setup_animation("walk").unwrap();
-        let run = ctx.add_blend_source("run", 0.5).unwrap();
-        ctx.set_primary(run).unwrap();
-        assert_eq!(ctx.primary_handle(), run);
+        assert!(matches!(ctx.set_track_animation(1, "not_a_real_anim"), Err(error::SSRuntimeError::AnimationNotFound)));
 
-        ctx.setup_animation("dance").unwrap();
+        // Tracks that do not exist, and out-of-range handles.
+        assert!(matches!(ctx.set_track_alpha(9, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(ctx.track_alpha(9).is_none());
+        assert!(matches!(ctx.set_track_frame(9, 0.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.set_source_weight(99, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(ctx.source_weight(99).is_none());
+        assert!(ctx.source_frame(99).is_none());
 
-        assert_eq!(ctx.primary_handle(), 0, "setup_animation must reset primary to slot 0");
-        assert_eq!(ctx.instance.sources.len(), 1);
+        // NaN alpha would poison every attribute the track touches.
+        assert!(matches!(ctx.set_track_alpha(0, f32::NAN), Err(error::SSRuntimeError::InvalidParameter)));
     }
 
     #[test]
-    fn bind_resource_clears_blend_state() {
+    fn crossfade_validates_arguments() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let _ = ctx.add_blend_source("run", 0.5).unwrap();
-        assert_eq!(ctx.blend_source_count(), 2);
-
-        // Re-bind to the same resource (same effect as switching to a new one
-        // for blend-state semantics). The blend slots must collapse.
-        ctx.bind_resource(&resource);
-
-        assert_eq!(ctx.instance.sources.len(), 1);
-        assert_eq!(ctx.instance.layers.len(), 1);
-        assert_eq!(ctx.primary_handle(), 0);
-        // Primary is also reset: animation_idx < 0 → blend_source_count is 0.
-        assert_eq!(ctx.blend_source_count(), 0);
+        assert!(matches!(ctx.crossfade(0, "run", 0.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.crossfade(0, "run", -10.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.crossfade(0, "run", f32::NAN), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.crossfade(0, "not_a_real_anim", 100.0), Err(error::SSRuntimeError::AnimationNotFound)));
+        assert!(matches!(ctx.fade_track(0, f32::NAN, 100.0), Err(error::SSRuntimeError::InvalidParameter)));
+        assert!(matches!(ctx.fade_track(9, 0.0, 100.0), Err(error::SSRuntimeError::InvalidParameter)));
     }
 
     #[test]
-    fn ringo_blend_weight_round_trip() {
+    fn bind_resource_clears_track_state() {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.set_track_animation(1, "run").unwrap();
 
-        let mut ctx = Context::new();
         ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let handle = ctx.add_blend_source("run", 0.42).unwrap();
-        assert_eq!(ctx.source_weight(handle), Some(0.42));
+        assert_eq!(ctx.track_count(), 1);
+        assert_eq!(ctx.instance.primary, 0);
+    }
 
-        ctx.set_source_weight(handle, 0.9).unwrap();
-        assert_eq!(ctx.source_weight(handle), Some(0.9));
+    /// Only a track's fully-weighted animation fires events by default; a source
+    /// opts in by lowering its threshold below its weight.
+    #[test]
+    fn source_event_threshold_round_trips() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
-        ctx.remove_blend_source(handle).unwrap();
-        assert!(ctx.source_weight(handle).is_none());
+        let handle = ctx.track_add_source(0, "run", 1.0).unwrap();
+        assert_eq!(ctx.source_event_threshold(handle), Some(1.0), "default keeps secondaries quiet");
+        ctx.set_source_event_threshold(handle, 0.5).unwrap();
+        assert_eq!(ctx.source_event_threshold(handle), Some(0.5));
+        assert!(matches!(ctx.set_source_event_threshold(99, 0.5), Err(error::SSRuntimeError::InvalidParameter)));
+    }
+
+    #[test]
+    fn set_track_speed_and_frame_target_the_tracks_animation() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "walk");
+        ctx.set_track_animation(1, "run").unwrap();
+
+        ctx.set_track_frame(1, 3.0).unwrap();
+        assert_eq!(ctx.track_frame(1), Some(3.0));
+
+        ctx.set_track_speed(1, 0.0).unwrap();
+        ctx.update(1000.0);
+        assert_eq!(ctx.track_frame(1), Some(3.0), "speed 0 parks the track");
     }
 
     #[test]
@@ -4985,361 +5521,6 @@ mod tests {
         let f = resolved.parts_vec[0].update_flag();
         assert!(f.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePosX));
         assert!(f.contains(runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeRotZ));
-    }
-
-    #[test]
-    fn crossfade_rebalances_weights_and_completes() {
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-
-        let walk = ctx.primary_handle();
-        let run = ctx.add_blend_source("run", 0.0).unwrap();
-        ctx.crossfade(walk, run, 1000.0).unwrap();
-
-        // Initial state: weights overwritten to (1, 0); progress at 0.
-        assert_eq!(ctx.source_weight(walk), Some(1.0));
-        assert_eq!(ctx.source_weight(run), Some(0.0));
-        assert_eq!(ctx.crossfade_progress(), Some(0.0));
-
-        // Halfway.
-        ctx.update(500.0);
-        let p = ctx.crossfade_progress().unwrap();
-        assert!((p - 0.5).abs() < 1e-3, "progress at midpoint = {p}");
-        assert!((ctx.source_weight(walk).unwrap() - 0.5).abs() < 1e-3);
-        assert!((ctx.source_weight(run).unwrap() - 0.5).abs() < 1e-3);
-        // Primary unchanged mid-fade.
-        assert_eq!(ctx.primary_handle(), walk);
-
-        // Past completion: primary swaps, `from` deactivated, crossfade cleared.
-        ctx.update(600.0);
-        assert!(ctx.crossfade_progress().is_none());
-        assert_eq!(ctx.primary_handle(), run);
-        assert!(ctx.source_weight(walk).is_none(), "walk should be deactivated");
-        assert_eq!(ctx.source_weight(run), Some(1.0));
-    }
-
-    #[test]
-    fn crossfade_validates_arguments() {
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk = ctx.primary_handle();
-        let run = ctx.add_blend_source("run", 1.0).unwrap();
-
-        // Identical handles.
-        assert!(matches!(ctx.crossfade(walk, walk, 100.0), Err(error::SSRuntimeError::InvalidParameter)));
-        // Zero / negative duration.
-        assert!(matches!(ctx.crossfade(walk, run, 0.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.crossfade(walk, run, -10.0), Err(error::SSRuntimeError::InvalidParameter)));
-        // Invalid handle.
-        assert!(matches!(ctx.crossfade(walk, 99, 100.0), Err(error::SSRuntimeError::InvalidParameter)));
-        // `from` must be a real animation (not empty / not removed).
-        ctx.remove_blend_source(run).unwrap();
-        assert!(matches!(ctx.crossfade(run, walk, 100.0), Err(error::SSRuntimeError::InvalidParameter)));
-    }
-
-    #[test]
-    fn crossfade_cancelled_when_referenced_slot_removed() {
-        // `remove_blend_source` on a slot that the in-flight crossfade
-        // references must clear the crossfade so subsequent `update`s do not
-        // touch dangling slot weights.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk = ctx.primary_handle();
-        let run = ctx.add_blend_source("run", 0.0).unwrap();
-        ctx.crossfade(walk, run, 1000.0).unwrap();
-        assert!(ctx.crossfade_progress().is_some());
-
-        ctx.remove_blend_source(run).unwrap();
-        assert!(ctx.crossfade_progress().is_none(), "removing `to` must cancel crossfade");
-    }
-
-    #[test]
-    fn crossfade_to_empty_keeps_primary() {
-        // `to` = empty source: the fade interpolates toward setup pose without
-        // changing primary (empty cannot be promoted). On completion the
-        // crossfade clears but primary is unchanged so discrete attributes
-        // (Cell, blend_type, events) keep firing from the original primary.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk = ctx.primary_handle();
-        let empty = ctx.add_empty_blend_source(0.0).unwrap();
-        ctx.crossfade(walk, empty, 500.0).unwrap();
-
-        ctx.update(500.0);
-        assert!(ctx.crossfade_progress().is_none());
-        assert_eq!(ctx.primary_handle(), walk, "empty `to` keeps original primary");
-        assert_eq!(ctx.source_weight(empty), Some(1.0));
-        assert_eq!(ctx.source_weight(walk), Some(0.0));
-    }
-
-    #[test]
-    fn empty_blend_source_fades_to_identity_pose() {
-        // walk + empty at 50/50 must produce a pose midway between walk's
-        // pose and identity (scale = 1, alpha = 1, translations/rotations = 0).
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
-        let walk = evaluate_ringo(&resource, "walk");
-
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk_start = ctx.instance.primary_source().controller.get_start_frame() as f32;
-        ctx.set_source_weight(ctx.primary_handle(), 1.0).unwrap();
-        let _ = ctx.add_empty_blend_source(1.0).unwrap();
-        let _ = ctx.get_frame_data(walk_start).expect("get_frame_data failed");
-        let mixed: Vec<(f32, f32, f32, f32)> = ctx.instance.resolved_layer.parts_vec.iter().map(|p| (p.position_x(), p.position_y(), p.rotation_z(), p.alpha())).collect();
-
-        assert_eq!(walk.len(), mixed.len());
-        for i in 0..walk.len() {
-            let (wx, wy, wr, wa) = walk[i];
-            let (mx, my, mr, ma) = mixed[i];
-            // Empty contributes (0, 0, 0, 1) for (pos_x, pos_y, rot_z, alpha).
-            assert!((mx - 0.5 * wx).abs() < 1e-3, "part {i} position_x: mixed={mx} expected={}", 0.5 * wx);
-            assert!((my - 0.5 * wy).abs() < 1e-3, "part {i} position_y");
-            assert!((mr - 0.5 * wr).abs() < 1e-3, "part {i} rotation_z");
-            assert!((ma - 0.5 * (wa + 1.0)).abs() < 1e-3, "part {i} alpha: mixed={ma} expected={}", 0.5 * (wa + 1.0));
-        }
-    }
-
-    #[test]
-    fn empty_blend_source_rejects_unsupported_setters() {
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let empty = ctx.add_empty_blend_source(0.5).unwrap();
-
-        // Allowed: weight setter/getter.
-        assert!(ctx.set_source_weight(empty, 0.8).is_ok());
-        assert_eq!(ctx.source_weight(empty), Some(0.8));
-
-        // Rejected: frame, speed, event threshold, set_primary (no controller / no animation).
-        assert!(matches!(ctx.set_source_frame(empty, 0.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.set_source_speed(empty, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.set_source_event_threshold(empty, 0.5), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(matches!(ctx.set_primary(empty), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(ctx.source_frame(empty).is_none());
-        assert!(ctx.source_event_threshold(empty).is_none());
-    }
-
-    #[test]
-    fn empty_blend_source_requires_real_primary() {
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        // No setup_animation called yet -> primary is still inactive.
-        assert!(matches!(ctx.add_empty_blend_source(1.0), Err(error::SSRuntimeError::AnimationNotFound)));
-    }
-
-    #[test]
-    fn event_threshold_default_fires_primary_only() {
-        // Default threshold is 1.0 for every source so only the primary's
-        // events appear in collected output; source-handle parallel array is
-        // uniformly the primary handle.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk = ctx.primary_handle();
-        let _run = ctx.add_blend_source("run", 1.0).unwrap();
-        // Spin enough updates to cover walk's full frame range.
-        for _ in 0..200 {
-            ctx.update(16.0);
-            for &h in ctx.get_passed_event_source_handles() {
-                assert_eq!(h, walk, "default threshold should fire primary events only");
-            }
-        }
-    }
-
-    #[test]
-    fn event_threshold_secondary_opt_in() {
-        // Lowering a secondary's threshold below its weight enrolls its
-        // events into the collected output, tagged with the secondary handle.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
-        // Find an animation in the Ringo fixture that owns at least one event;
-        // skip the test gracefully if none exists.
-        let mut anim_with_events: Option<&str> = None;
-        for name in ["walk", "run", "dance", "jump", "Wait", "wait"] {
-            let mut probe = Context::new();
-            probe.bind_resource(&resource);
-            if probe.setup_animation(name).is_err() {
-                continue;
-            }
-            let anim_idx = probe.instance.primary_source().animation_idx as usize;
-            if resource.animations[anim_idx].events.is_some_and(|e| !e.is_empty()) {
-                anim_with_events = Some(name);
-                break;
-            }
-        }
-        let Some(event_anim) = anim_with_events else {
-            // Ringo fixture has no events on any tried animation: passthrough.
-            return;
-        };
-
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let secondary = ctx.add_blend_source(event_anim, 1.0).unwrap();
-        ctx.set_source_event_threshold(secondary, 0.5).unwrap();
-        assert_eq!(ctx.source_event_threshold(secondary), Some(0.5));
-
-        let mut saw_secondary = false;
-        for _ in 0..200 {
-            ctx.update(16.0);
-            for &h in ctx.get_passed_event_source_handles() {
-                if h == secondary {
-                    saw_secondary = true;
-                }
-            }
-            if saw_secondary {
-                break;
-            }
-        }
-        assert!(saw_secondary, "secondary with threshold below weight should fire events");
-    }
-
-    #[test]
-    fn event_threshold_below_weight_required() {
-        // weight (1.0) < threshold (1.5) → secondary still does not fire.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let primary = ctx.primary_handle();
-        let secondary = ctx.add_blend_source("run", 1.0).unwrap();
-        ctx.set_source_event_threshold(secondary, 1.5).unwrap();
-        for _ in 0..200 {
-            ctx.update(16.0);
-            for &h in ctx.get_passed_event_source_handles() {
-                assert_eq!(h, primary, "threshold above weight should silence secondary");
-            }
-        }
-    }
-
-    #[test]
-    fn event_threshold_at_weight_boundary_fires() {
-        // Boundary case: weight == event_threshold. Firing rule is
-        // `weight >= threshold` so the secondary must fire at the exact
-        // boundary, mirroring the documented `>=` semantics.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-
-        let mut anim_with_events: Option<&str> = None;
-        for name in ["walk", "run", "dance", "jump", "Wait", "wait"] {
-            let mut probe = Context::new();
-            probe.bind_resource(&resource);
-            if probe.setup_animation(name).is_err() {
-                continue;
-            }
-            let anim_idx = probe.instance.primary_source().animation_idx as usize;
-            if resource.animations[anim_idx].events.is_some_and(|e| !e.is_empty()) {
-                anim_with_events = Some(name);
-                break;
-            }
-        }
-        let Some(event_anim) = anim_with_events else {
-            return;
-        };
-
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let secondary = ctx.add_blend_source(event_anim, 0.5).unwrap();
-        ctx.set_source_event_threshold(secondary, 0.5).unwrap();
-
-        let mut saw_secondary = false;
-        for _ in 0..200 {
-            ctx.update(16.0);
-            for &h in ctx.get_passed_event_source_handles() {
-                if h == secondary {
-                    saw_secondary = true;
-                }
-            }
-            if saw_secondary {
-                break;
-            }
-        }
-        assert!(saw_secondary, "weight == threshold must fire (>= semantics)");
-    }
-
-    #[test]
-    fn crossfade_cancel_preserves_weights() {
-        // `cancel_crossfade` clears the in-flight state but leaves source
-        // weights at their current mid-fade value (documented contract for
-        // caller-driven normalization). Subsequent `update` must not rebalance
-        // them further.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk = ctx.primary_handle();
-        let run = ctx.add_blend_source("run", 0.0).unwrap();
-
-        ctx.crossfade(walk, run, 1000.0).unwrap();
-        ctx.update(500.0);
-        let walk_w = ctx.source_weight(walk).unwrap();
-        let run_w = ctx.source_weight(run).unwrap();
-        assert!((walk_w - 0.5).abs() < 1e-3);
-        assert!((run_w - 0.5).abs() < 1e-3);
-
-        ctx.cancel_crossfade();
-        assert!(ctx.crossfade_progress().is_none(), "cancel clears progress");
-
-        // Subsequent updates must not rebalance the cancelled fade.
-        ctx.update(300.0);
-        assert_eq!(ctx.source_weight(walk), Some(walk_w), "walk weight frozen after cancel");
-        assert_eq!(ctx.source_weight(run), Some(run_w), "run weight frozen after cancel");
-        // Primary unchanged.
-        assert_eq!(ctx.primary_handle(), walk);
-    }
-
-    #[test]
-    fn crossfade_overwrites_in_flight() {
-        // Re-invoking `crossfade` mid-fade discards the in-flight one and
-        // re-initializes weights of the new `from`/`to` to (1, 0). Progress
-        // resets to 0.
-        let ssab = load_ringo_resource();
-        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
-        let mut ctx = Context::new();
-        ctx.bind_resource(&resource);
-        ctx.setup_animation("walk").unwrap();
-        let walk = ctx.primary_handle();
-        let run = ctx.add_blend_source("run", 0.0).unwrap();
-
-        ctx.crossfade(walk, run, 1000.0).unwrap();
-        ctx.update(500.0);
-        assert!((ctx.crossfade_progress().unwrap() - 0.5).abs() < 1e-3);
-
-        // Same handles, new duration → weights snap back to (1, 0) and progress restarts at 0.
-        ctx.crossfade(walk, run, 200.0).unwrap();
-        assert_eq!(ctx.crossfade_progress(), Some(0.0), "overwrite resets progress");
-        assert_eq!(ctx.source_weight(walk), Some(1.0), "overwrite resets from weight to 1.0");
-        assert_eq!(ctx.source_weight(run), Some(0.0), "overwrite resets to weight to 0.0");
-
-        // New fade completes in 200ms, not the 500ms remaining of the discarded one.
-        ctx.update(200.0);
-        assert!(ctx.crossfade_progress().is_none(), "new fade completes per new duration");
-        assert_eq!(ctx.primary_handle(), run);
     }
 
     /// Drives an independent instance child for `ticks` one-frame steps and

@@ -25,8 +25,8 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 *(Phase 3 is post-release work, implemented without `.fbs` schema changes — additions go to FFI APIs and runtime state only; any item that turns out to need a schema change is reconsidered for an earlier phase.)*
 
-*   [x] Animation Mixing/Blending in `ssruntime` (whole-animation weighted blend).
-*   [ ] Per-part animation blending (layered animation / per-bone mask) — backward-compatible extension of the whole-animation blend API. Optional per-source per-part weights or mask covering common use cases (upper-body aim while lower-body runs, damage reactions, additive overlays). Also considers an Additive blend mode (delta-from-base) alongside the existing interpolative mix.
+*   [x] Animation Mixing in `ssruntime` — a track stack: tracks fold onto the setup pose in order, each with its own `alpha` and an interpolative or additive operator; several animations can share a track and mix by weight.
+*   [ ] Per-part masks for mixing — an explicit per-track part mask. A track already reaches only as far as its animation keys, which covers overlays authored for the purpose (upper-body aim, damage reactions); a mask is what densely-keyed existing assets need to be layered without re-authoring.
 *   [ ] Instance Lifecycle API — one cohesive surface covering both:
     *   Animation Instancing: shared evaluation context for driving many instances of the same animation, consumable by Players (e.g., crowd-style rendering).
     *   Dynamic instance swap: runtime replacement of the animation mounted on an Instance part (equivalent to legacy `AnimationChangeInstance`). Must remain compatible with the shared-context semantics above.
@@ -50,7 +50,7 @@ Each item below states a **primary deliverable**. A few entries also list **Co-d
 
 ## Design notes: Override / Mixing / State machine
 
-These three runtime features — the **Override Layer API** (Phase 2), **Animation Mixing/Blending** and the **State machine** (Phase 3) — all live *inside* the `FrameData` / `DrawBatch` boundary and attach at different stages of one evaluation pipeline. Per-feature scope lives in the items above; the cross-cutting picture is here.
+These three runtime features — the **Override Layer API** (Phase 2), **Animation Mixing** and the **State machine** (Phase 3) — all live *inside* the `FrameData` / `DrawBatch` boundary and attach at different stages of one evaluation pipeline. Per-feature scope lives in the items above; the cross-cutting picture is here.
 
 **Shared invariant.** All three change only the values that flow across the `FrameData` / `DrawBatch` boundary, never the schema. A single resolved `FrameData` is still emitted each frame, so every Player follows along with **no rendering-code change**, and each feature can ship on its own.
 

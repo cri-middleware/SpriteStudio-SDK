@@ -96,17 +96,19 @@ ssab embedded uses the **asset file paths** recorded in the `sspj` and `ss*e` fi
 
 ssab embedded embeds **only the assets that the animation pack actually uses**. The body of another ssab file referenced as an external instance is not embedded, so **when you use external instances you must supply the referenced ssab files separately**.
 
-## Limitations When Blending Animations
+## Limitations When Mixing Animations
 
-Constraints that apply when compositing several animations with `ss_runtime_add_blend_source` and friends (Phase 3 API).
+Constraints that apply when several animations are stacked on tracks (`ss_runtime_set_track_animation` and friends).
 
-- **Blending is possible only within the same SSAB**: compositing across multiple `AnimationResource`s is out of scope.
-- **Cell consistency is a prerequisite**: every blended animation must "assign the same Cell to the same part". `cell_meta_per_part` is taken from the primary source, so differing Cells break the pose through size / pivot mismatches. Animations within the same SSAE are normally fine.
-- **Double definition of `parts_color` alpha**: the visual alpha of a part that has `parts_color` comes from the primary source (not the mixed `state.alpha`). Parts without `parts_color` reflect the mixed `state.alpha`, so alpha blending itself works.
-- **Event firing is controlled by a per-source threshold**: by default only the Primary fires (`event_threshold = 1.0`). To let a Secondary fire as well, lower the threshold with `ss_runtime_set_source_event_threshold`; only the events of sources satisfying `source.weight >= source.event_threshold` are collected. The Primary ignores the threshold and always fires. Identify the source an event came from with `ss_runtime_get_passed_event_source_handle` (a parallel array to the events).
+- **Mixing is possible only within the same SSAB**: stacking across multiple `AnimationResource`s is out of scope.
+- **Cell consistency is a prerequisite**: every stacked animation must "assign the same Cell to the same part". `cell_meta_per_part` is taken from track 0, so differing Cells break the pose through size / pivot mismatches. Animations within the same SSAE are normally fine.
+- **Double definition of `parts_color` alpha**: the visual alpha of a part that has `parts_color` comes from track 0 (not the mixed `state.alpha`). Parts without `parts_color` reflect the mixed `state.alpha`, so alpha blending itself works.
+- **No phase synchronisation**: sources of different lengths run on independent clocks. Seek them yourself if they need to stay in step.
+- **A track reaches only as far as its animation keys**: there is no per-part mask, so an overlay is confined by what you authored into it.
+- **Event firing is controlled by a per-source threshold**: by default only a track's fully-weighted animation fires (`event_threshold = 1.0`). To let another source fire, lower the threshold with `ss_runtime_set_source_event_threshold`; only sources satisfying `source.weight >= source.event_threshold` are collected. Track 0's animation ignores the threshold and always fires. Identify the source an event came from with `ss_runtime_get_passed_event_source_handle` (a parallel array to the events).
 - **FrameData grows when blending**: when several sources are blended, the deform data of secondary sources that are not drawn is also included in the FrameData, inflating its size. This does not affect correctness.
 
-> Related chapter: [Animation Blending](../40_components/60_animation_blending.md)
+> Related chapter: [Animation Mixing](../40_components/60_animation_mixing.md)
 
 ## No Reverse Playback of Audio
 

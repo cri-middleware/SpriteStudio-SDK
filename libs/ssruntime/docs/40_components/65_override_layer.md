@@ -21,7 +21,7 @@ per-source keyframe expansion
         ↓
    compose / FrameData output
 ```
-> For details of the weighted mix (blending), see [Animation Blending / Mixing](./60_animation_blending.md).
+> For details of the weighted mix, see [Animation Mixing](./60_animation_mixing.md).
 
 It overwrites the resolved pose **after** the mix and **before** the output. Consequently an override ends up **overwriting the keyframe values and the blend result**.
 

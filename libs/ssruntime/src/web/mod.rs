@@ -641,28 +641,90 @@ impl SSRuntimeContext {
         self.inner.prev_frame();
     }
 
-    // Animation blending (Phase 3). Mirrors the C FFI surface; see
-    // `Context::add_blend_source` for the "Primary owns the structure,
-    // secondaries contribute continuous values" model.
+    // Animation mixing — the track stack, mirroring the C FFI surface. Tracks
+    // fold onto the setup pose in ascending order: a track's `alpha` is its
+    // strength, while a source's `weight` only sets proportions among several
+    // sources sharing one track. Track 0 carries the structure and events.
 
-    pub fn add_blend_source(&mut self, name: &str, weight: f32) -> Result<u32, JsValue> {
-        self.inner.add_blend_source(name, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn set_track_animation(&mut self, track: u32, name: &str) -> Result<(), JsValue> {
+        self.inner.set_track_animation(track, name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    pub fn add_blend_source_by_hash(&mut self, hash: u32, weight: f32) -> Result<u32, JsValue> {
-        self.inner.add_blend_source_by_hash(hash, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn set_track_animation_by_hash(&mut self, track: u32, hash: u32) -> Result<(), JsValue> {
+        self.inner.set_track_animation_by_hash(track, hash).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    pub fn remove_blend_source(&mut self, handle: u32) -> Result<(), JsValue> {
-        self.inner.remove_blend_source(handle).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    pub fn set_track_alpha(&mut self, track: u32, alpha: f32) -> Result<(), JsValue> {
+        self.inner.set_track_alpha(track, alpha).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
-    pub fn clear_blend_sources(&mut self) {
-        self.inner.clear_blend_sources();
+    pub fn track_alpha(&self, track: u32) -> Option<f32> {
+        self.inner.track_alpha(track)
     }
 
-    pub fn blend_source_count(&self) -> u32 {
-        self.inner.blend_source_count()
+    /// `blend`: 0 = mix (lerp onto what is below), 1 = additive (offset from the setup pose).
+    pub fn set_track_blend(&mut self, track: u32, blend: u32) -> Result<(), JsValue> {
+        let blend = match blend {
+            0 => crate::TrackBlend::Mix,
+            1 => crate::TrackBlend::Additive,
+            _ => return Err(JsValue::from_str("blend must be 0 (mix) or 1 (additive)")),
+        };
+        self.inner.set_track_blend(track, blend).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn track_blend(&self, track: u32) -> Option<u32> {
+        self.inner.track_blend(track).map(|b| match b {
+            crate::TrackBlend::Mix => 0,
+            crate::TrackBlend::Additive => 1,
+        })
+    }
+
+    pub fn track_count(&self) -> u32 {
+        self.inner.track_count()
+    }
+
+    pub fn clear_track(&mut self, track: u32) -> Result<(), JsValue> {
+        self.inner.clear_track(track).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn crossfade(&mut self, track: u32, name: &str, duration_ms: f32) -> Result<(), JsValue> {
+        self.inner.crossfade(track, name, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn crossfade_by_hash(&mut self, track: u32, hash: u32, duration_ms: f32) -> Result<(), JsValue> {
+        self.inner.crossfade_by_hash(track, hash, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn fade_track(&mut self, track: u32, target_alpha: f32, duration_ms: f32) -> Result<(), JsValue> {
+        self.inner.fade_track(track, target_alpha, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn track_fade_progress(&self, track: u32) -> Option<f32> {
+        self.inner.track_fade_progress(track)
+    }
+
+    pub fn cancel_track_fade(&mut self, track: u32) -> Result<(), JsValue> {
+        self.inner.cancel_track_fade(track).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn set_track_frame(&mut self, track: u32, frame: f32) -> Result<(), JsValue> {
+        self.inner.set_track_frame(track, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn track_frame(&self, track: u32) -> Option<f32> {
+        self.inner.track_frame(track)
+    }
+
+    pub fn set_track_speed(&mut self, track: u32, speed: f32) -> Result<(), JsValue> {
+        self.inner.set_track_speed(track, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn track_add_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, JsValue> {
+        self.inner.track_add_source(track, name, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+    }
+
+    pub fn track_add_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, JsValue> {
+        self.inner.track_add_source_by_hash(track, hash, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
     pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), JsValue> {
@@ -673,14 +735,6 @@ impl SSRuntimeContext {
         self.inner.source_weight(handle)
     }
 
-    pub fn set_primary(&mut self, handle: u32) -> Result<(), JsValue> {
-        self.inner.set_primary(handle).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
-    pub fn primary_handle(&self) -> u32 {
-        self.inner.primary_handle()
-    }
-
     pub fn set_source_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
         self.inner.set_source_frame(handle, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
@@ -689,32 +743,12 @@ impl SSRuntimeContext {
         self.inner.source_frame(handle)
     }
 
-    pub fn set_source_speed(&mut self, handle: u32, speed: f32) -> Result<(), JsValue> {
-        self.inner.set_source_speed(handle, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
-    pub fn add_empty_blend_source(&mut self, weight: f32) -> Result<u32, JsValue> {
-        self.inner.add_empty_blend_source(weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
         self.inner.set_source_event_threshold(handle, threshold).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
     }
 
     pub fn source_event_threshold(&self, handle: u32) -> Option<f32> {
         self.inner.source_event_threshold(handle)
-    }
-
-    pub fn crossfade(&mut self, from: u32, to: u32, duration_ms: f32) -> Result<(), JsValue> {
-        self.inner.crossfade(from, to, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
-    }
-
-    pub fn crossfade_progress(&self) -> Option<f32> {
-        self.inner.crossfade_progress()
-    }
-
-    pub fn cancel_crossfade(&mut self) {
-        self.inner.cancel_crossfade();
     }
 
     pub fn get_passed_event_source_handle(&self, index: i32) -> u32 {
