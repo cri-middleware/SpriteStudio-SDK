@@ -118,7 +118,37 @@ The web target is packaged by `scripts/release-web.sh` into `pkg/converter-web/`
 ## Codegen and release scripts
 
 *   **FlatBuffers schemas:** if you change `.fbs` files under `libs/ssab/fbs/` or `libs/ssruntime/fbs/`, regenerate the Rust bindings with the platform script in the affected library's `scripts/` directory (`generate.sh` or `generate.ps1`). Requires `flatc`.
-*   **Release builds:** see `scripts/release-*.sh` / `.ps1`. Each handles cross-compilation and platform-specific packaging (e.g., `lipo` for macOS universal binaries).
+*   **Release builds:** see `scripts/release-*.sh` / `.ps1`. Each handles cross-compilation and platform-specific packaging (e.g., `lipo` for macOS universal binaries). One per platform, and each builds only what its own operating system can.
+*   **Release packaging:** `scripts/build-release.sh` turns those per-platform outputs into the archives a consumer downloads — the third-party notices, the `static/` `dynamic/` `web/` layout, the zips and `SHA256SUMS`. `release.yml`'s package job **is** this script (`in=artifacts out=release-dist licenses=yes verify=yes clean=yes`, every option spelled out so a release cannot change because a default did), so CI and a local run cannot drift.
+*   **Release version:** `scripts/release-version.sh` prints `[workspace.package] version` from `Cargo.toml`. It is not what names a release — the tag is — but it is what a release *should* be tagged as, and `build-release.sh` says so when the two disagree.
+
+### Cutting a release
+
+A release is a tag, pushed first and built second:
+
+```bash
+git tag v7.0.0-beta.1 && git push origin v7.0.0-beta.1
+# Actions → release → "Use workflow from" = v7.0.0-beta.1, upload_release = true
+# → a draft Release on that tag → review the assets and notes → Publish from the UI
+```
+
+Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME` (or, locally, the tag `HEAD` is checked out at) and stamps it into every archive's `VERSION`, and `release.yml` uses the same ref for `tag_name`. Dispatching from a branch is an artifact build, not a release — `upload_release=true` from anything but a `v*` tag fails the run rather than silently skipping the Release.
+
+Bump `[workspace.package] version` to match the tag before tagging. It is the string every Player pins in its own `scripts/SDK_VERSION.txt`.
+
+### Reproducing the archives locally
+
+The packaging step is the one part of a release that never needed the build matrix: it is pure layout, and six Players' `scripts/download-sdk.sh` read that layout. Trying a change to it used to mean pushing it and waiting for seven platforms to rebuild. Any past run's artifacts can be replayed through it in seconds instead:
+
+```bash
+git checkout v7.0.0-beta.1                # which release
+gh run download <run-id> -D artifacts     # which build's artifacts
+scripts/build-release.sh                  # assemble + verify
+```
+
+Those are three steps on purpose. `build-release.sh` is the phase *after* it has been settled what is being released, so it takes no option that re-decides the tag or the source — the same reason `release.yml` keeps its checkout and its artifact download as steps of their own. Re-running is free: the input tree is copied from, never moved out of, so one download serves any number of attempts.
+
+`verify=yes` (the default) re-opens the finished zips and checks what has actually broken releases before: a missing or empty archive, a tree that lost the root layout `download-sdk.sh` navigates, a macOS `libssruntime.framework` whose version symlinks the zip dereferenced (which invalidates its code signature), a `SHA256SUMS` that covers the wrong set. It does **not** build anything — seven platforms need seven operating systems, and a locally built "release" would only ever be a partial one.
 
 ## Workspace conventions
 
