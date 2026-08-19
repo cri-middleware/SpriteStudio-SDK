@@ -31,7 +31,7 @@ what they cost.
 | Visual pass on `ssplayer-wgpu` | done as far as Ringo allows; check 5 needs `param_head_yaw` |
 | `param_head_yaw` axis, and judging the scrub with it | not done, needs authoring |
 | Vtuber product spec rewrite | done 2026-08-19 — attachment replaced |
-| Per-part masks | deferred by design (`SPEC` §8 item 7) |
+| Per-part masks | deferred by design (`SPEC` §7 item 9) |
 | Shortest-path rotation, sign-crossing scale | measured, left open (`SPEC` §7 items 7-8) |
 
 ## Getting back to a working tree

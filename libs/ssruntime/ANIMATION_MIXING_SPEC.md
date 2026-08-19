@@ -1,7 +1,7 @@
 # Animation Mixing — Implementation Spec
 
-> Status: **implemented**, awaiting a visual pass. SDK-internal spec for the Phase 3 ROADMAP
-> item **Animation Mixing**. Not Player-facing docs — those are
+> Status: **implemented and measured**. SDK-internal record for the Phase 3 ROADMAP item
+> **Animation Mixing**. Not Player-facing docs — those are
 > `docs/40_components/60_animation_mixing.{md,ja.md}`.
 >
 > Open work and how to pick it up: **`ANIMATION_MIXING_HANDOFF.md`**.
@@ -618,8 +618,9 @@ Two attributes need care:
 - **Now**: "a source that does not animate a part drags the result toward the defaults" — D2.
 - **Now**: "an overlay's strength depends on how many sources sit under it" — D1. This is the
   one the SS-Studio spec explicitly designs around (§5.2 item 6).
-- **Later, with §6.3**: "only animations with the same cell assignment can be blended"
-  (docs §8), and "`parts_color` is taken from the primary".
+- **Later, with §6.3**: the two the Player docs still list under §9 Limitations —
+  "discrete attributes come from track 0, so an overlay track cannot swap a cell" and
+  "`parts_color` follows track 0".
 
 ---
 
@@ -664,27 +665,7 @@ Two attributes need care:
 
 ---
 
-## 8. Implementation order (cold-start)
-
-1. ~~D2 coverage rule: per-attribute renormalization.~~ **Done** — §4, verified in §2.4.
-2. ~~The track stack: `TrackState`, `SourceState::track`, `mix_tracks`' two-level fold with the
-   setup pose as its floor.~~ **Done** — §3. The single-track path stays byte-identical, which
-   the pre-track `mix_poses_*` tests still assert through a wrapper.
-3. ~~Additive operator.~~ **Done** — §6.2, referenced against the setup pose.
-4. ~~Public API across Rust / C / WASM, with the old blend surface removed; docs rewritten as
-   `docs/40_components/60_animation_mixing.{md,ja.md}`; ROADMAP wording.~~ **Done** — §3.3.
-5. **Validate by eye on `ssplayer-wgpu`.** The only step still open, and the one that decides
-   whether the two draft PRs can come out of draft. See `ANIMATION_MIXING_HANDOFF.md`.
-6. *Deferred*: discrete-attribute resolution by topmost covering track (§6.3), including the
-   post-mix batch-split constraint. Only when something needs cell switching through the mix
-   rather than through the Override Layer.
-7. *Deferred*: per-part masks. A track already reaches only as far as its animation keys, which
-   covers overlays authored for the purpose; a mask is what densely-keyed existing assets need
-   to be layered without re-authoring (§2.3 (iii)).
-
----
-
-## 9. File reference index
+## 8. File reference index
 
 Duplicates §2.1 for the parts that live outside `mix_tracks`; §2.1 is the one to trust for the
 model itself.
@@ -698,4 +679,4 @@ model itself.
 | Setup pose in the format | `parts_initial_attributes`, written by `ssconverter/src/model_t/animedata.rs:285` and merged into every animation at `:1384-1392` |
 | Player-facing docs | `docs/40_components/60_animation_mixing.{md,ja.md}` |
 | Adjacent feature | The Override Layer, the post-mix overwrite pass: `src/core/override_layer.rs`, documented in `docs/40_components/65_override_layer.md` |
-| Open work | `ANIMATION_MIXING_HANDOFF.md` |
+| Open work, until both PRs merge | `ANIMATION_MIXING_HANDOFF.md` (transient) |
