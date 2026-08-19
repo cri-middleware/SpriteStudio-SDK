@@ -443,7 +443,7 @@ excludes only the genuinely absent case, where the alternative is a hardcoded co
 means nothing. **No schema change is needed** — resist adding an "authored by this animation"
 mask to the `.fbs` unless a measurement shows the distinction matters.
 
-Precompute a per-(animation × part) coverage bitmask at `setup_animation` / `add_blend_source`
+Precompute a per-(animation × part) coverage bitmask at `setup_animation` / `track_add_source`
 time so the mix loop reads a `u64` rather than re-deriving presence per frame.
 
 ---

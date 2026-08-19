@@ -2911,8 +2911,9 @@ impl<'a> Context<'a> {
 
     /// Parallel to [`Self::get_passed_event_indices`]: source handle that fired
     /// each collected event. With every source at the default event threshold
-    /// (`1.0`), entries are uniformly `primary_handle()`. Diverges once
-    /// secondaries opt-in to event firing via [`Self::set_source_event_threshold`].
+    /// (`1.0`), entries are uniformly [`Self::track_main_source`] of track 0.
+    /// Diverges once secondaries opt-in to event firing via
+    /// [`Self::set_source_event_threshold`].
     pub fn get_passed_event_source_handles(&self) -> &[u32] {
         &self.instance.collected_event_source_handles
     }
