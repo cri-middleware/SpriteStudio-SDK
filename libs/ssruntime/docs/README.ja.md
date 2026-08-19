@@ -51,7 +51,7 @@ graph LR
 - [**メッシュとデフォーム (Mesh)**](./40_components/30_mesh.ja.md)
 - [**Mask の実装**](./40_components/40_mask.ja.md)
 - [**パーツカラー (Parts Color)**](./40_components/50_parts_color.ja.md)
-- [**アニメーションブレンド / ミキシング**](./40_components/60_animation_blending.ja.md) — クロスフェードと whole-animation 合成 (Phase 3)
+- [**アニメーションミキシング**](./40_components/60_animation_mixing.ja.md) — トラックに積んで合成する: クロスフェード・オーバーレイ・加算
 - [**パーツオーバーライド (Override Layer API)**](./40_components/65_override_layer.ja.md) — カラー / セル / 表示のパーツ単位の実行時上書き (Phase 2)
 - [**外部リソースとテクスチャの管理**](./40_components/70_external_resources.ja.md) — テクスチャの解決 / 作画によるテクスチャ変更 (TCHG) / 外部 SSAB 参照
 - [**シーケンス (Sequence)**](./40_components/80_sequence.ja.md)

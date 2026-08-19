@@ -56,7 +56,7 @@ Per part-type implementation details for richer expression.
 - [**Mesh & Deform**](./40_components/30_mesh.md)
 - [**Mask**](./40_components/40_mask.md)
 - [**Parts Color**](./40_components/50_parts_color.md)
-- [**Animation Blending**](./40_components/60_animation_blending.md)
+- [**Animation Mixing**](./40_components/60_animation_mixing.md) — stacking animations on tracks: crossfades, overlays, additive blending
 - [**Part Overrides (Override Layer API)**](./40_components/65_override_layer.md) — per-part runtime overrides for color / cell / visibility (Phase 2)
 - [**External Resources & Textures**](./40_components/70_external_resources.md) — texture resolution / authored texture change (TCHG) / external SSAB references
 - [**Sequence**](./40_components/80_sequence.md)

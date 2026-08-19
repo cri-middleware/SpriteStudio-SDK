@@ -237,7 +237,7 @@ The `frame_no` accepted by `ss_runtime_get_frame_data(frame_no)` is the half-ope
 > Note however that this range is that of **the whole animation data (the clip)**. When you have limited the playback range with `set_animation_section`, the runtime does not clamp to the section boundaries and evaluates the real keyframes within the clip even beyond the section. When combining section playback with sub-frame playback, **clamp `frame_no` to the section boundary on the Player side** for display purposes.
 
 ### Blending several animations (state machine / locomotion blend)
-To implement crossfades or locomotion composition (walk + run, and so on), see [Animation Blending / Mixing](../40_components/60_animation_blending.md). It covers independent frame and speed control per source, switching the structural source with `set_primary`, and more.
+To implement crossfades or to stack animations, see [Animation Mixing](../40_components/60_animation_mixing.md). It covers tracks and their `alpha`, additive overlays, and blending several animations on one track by weight.
 
 ---
 [Back to Table of Contents](../README.md)

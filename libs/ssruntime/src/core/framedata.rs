@@ -325,6 +325,18 @@ impl NinesBuffers {
 pub struct CachedPartData<'a> {
     pub part_index: i16,
     pub parent_index: i16,
+    /// Which continuous attributes this animation actually carries a keyframe
+    /// array for, on this part. Decided **per animation** (the array exists at
+    /// all), never per frame — a per-frame signal would flip at the first key
+    /// and make the part pop in and out of the mix mid-playback.
+    ///
+    /// The mix consults this to keep a source that does not animate an
+    /// attribute from voting `evaluate_part`'s hardcoded default into the
+    /// weighted sum. Note the converter seeds every animation with the setup
+    /// pose, so "has an array" means "authored by the animator **or** by the
+    /// setup pose" — both are real poses, and only the genuinely absent case
+    /// is excluded.
+    pub coverage: crate::runtime::framedata::ss::runtime::UpdateAttributeFlags,
     /// `fnv1a_hash_str(PartData.name)`, cached for the Override Layer's
     /// `name -> part_index` resolver. Stable within an SSAB (part identity is
     /// AnimationPack-scoped and 1:1 with `parts_animation_data`).
@@ -381,6 +393,49 @@ pub struct CachedPartData<'a> {
     pub texture_array: Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<ssab::ssab::ss::format::PartAnimationDataUIntValue<'a>>>>,
 }
 
+/// Which of the weighted (continuous) attributes this animation carries data
+/// for on this part. Only the attributes the mix actually blends are listed —
+/// discrete ones come from the primary and never take part in a weighted sum.
+///
+/// `skew_x` / `skew_y` share one source array and therefore one flag, matching
+/// how `evaluate_part` sets `AttributeSkew`.
+fn mixed_attribute_coverage(part: &ssab::ssab::ss::format::PartAnimationData<'_>) -> crate::runtime::framedata::ss::runtime::UpdateAttributeFlags {
+    use crate::runtime::framedata::ss::runtime::UpdateAttributeFlags as F;
+    let mut f = F::empty();
+    let mut set = |present: bool, flag: F| {
+        if present {
+            f |= flag;
+        }
+    };
+    set(part.position_x_array().is_some(), F::AttributePosX);
+    set(part.position_y_array().is_some(), F::AttributePosY);
+    set(part.position_z_array().is_some(), F::AttributePosZ);
+    set(part.rotation_x_array().is_some(), F::AttributeRotX);
+    set(part.rotation_y_array().is_some(), F::AttributeRotY);
+    set(part.rotation_z_array().is_some(), F::AttributeRotZ);
+    set(part.scale_x_array().is_some(), F::AttributeSclX);
+    set(part.scale_y_array().is_some(), F::AttributeSclY);
+    set(part.local_scale_x_array().is_some(), F::AttributeLosclX);
+    set(part.local_scale_y_array().is_some(), F::AttributeLosclY);
+    set(part.alpha_array().is_some(), F::AttributeAlpha);
+    set(part.local_alpha_array().is_some(), F::AttributeLoAlpha);
+    set(part.pivot_x_array().is_some(), F::AttributePivotX);
+    set(part.pivot_y_array().is_some(), F::AttributePivotY);
+    set(part.anchor_x_array().is_some(), F::AttributeAnchorX);
+    set(part.anchor_y_array().is_some(), F::AttributeAnchorY);
+    set(part.size_x_array().is_some(), F::AttributeSizeX);
+    set(part.size_y_array().is_some(), F::AttributeSizeY);
+    set(part.uv_translation_x_array().is_some(), F::AttributeUvtX);
+    set(part.uv_translation_y_array().is_some(), F::AttributeUvtY);
+    set(part.uv_rotation_z_array().is_some(), F::AttributeUvrZ);
+    set(part.uv_scale_x_array().is_some(), F::AttributeUvsX);
+    set(part.uv_scale_y_array().is_some(), F::AttributeUvsY);
+    set(part.bounding_radius_array().is_some(), F::AttributeBoundr);
+    set(part.mask_array().is_some(), F::AttributeMask);
+    set(part.skew_array().is_some(), F::AttributeSkew);
+    f
+}
+
 impl<'a> CachedPartData<'a> {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -402,6 +457,7 @@ impl<'a> CachedPartData<'a> {
             part_index,
             parent_index,
             name_hash,
+            coverage: mixed_attribute_coverage(&part),
             resolved_cells,
             shape_kind,
             nines,
@@ -462,6 +518,10 @@ pub(crate) fn cached_part_stub(part_index: i16, parent_index: i16, part_type_dis
         part_index,
         parent_index,
         name_hash: 0,
+        // The stub has no keyframe tracks at all, but callers use it to exercise
+        // per-part logic rather than the mix; claiming full coverage keeps it from
+        // silently disabling attributes if one of them ever runs a blend.
+        coverage: crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::all(),
         resolved_cells: alloc::vec::Vec::new(),
         shape_kind: None,
         nines: None,
@@ -524,6 +584,70 @@ pub struct PartEvaluationResult {
     /// next `evaluate_part` overwrites them, so the caller must consume
     /// them within the same loop iteration.
     pub deform_present: bool,
+}
+
+/// The setup pose of one part, in the same space `evaluate_part` produces.
+///
+/// **Keep in step with `evaluate_part` below**: the coordinate-system flips,
+/// the root part's origin offset and the unit normalization applied there have
+/// to be applied here too, or the stack's floor lands in a different space than
+/// the poses folded onto it (a track at `alpha < 1` would then drift toward a
+/// mis-transformed rest pose).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn setup_pose_part(
+    a: &ssab::ssab::ss::format::InitialPartAttributes<'_>,
+    parent_index: i16,
+    coordinate_system: SsCoordinateSystem,
+    origin: SsOrigin,
+    unit: SsUnit,
+    canvas_width: f32,
+    canvas_height: f32,
+) -> runtime::framedata::ss::runtime::PartState {
+    let mut s = runtime::framedata::ss::runtime::PartState::default();
+
+    let mut pos_x = a.position_x();
+    let mut pos_y = if coordinate_system == SsCoordinateSystem::YDown { -a.position_y() } else { a.position_y() };
+    if origin == SsOrigin::TopLeft && parent_index == -1 {
+        pos_x += canvas_width / 2.0;
+        if coordinate_system == SsCoordinateSystem::YDown {
+            pos_y += canvas_height / 2.0;
+        } else {
+            pos_y -= canvas_height / 2.0;
+        }
+    }
+    if unit == SsUnit::Normalized && canvas_width != 0.0 && canvas_height != 0.0 {
+        pos_x /= canvas_width;
+        pos_y /= canvas_height;
+    }
+    s.set_position_x(pos_x);
+    s.set_position_y(pos_y);
+    s.set_position_z(a.position_z());
+
+    let flip = coordinate_system == SsCoordinateSystem::YDown;
+    s.set_rotation_x(if flip { -a.rotation_x() } else { a.rotation_x() });
+    s.set_rotation_y(a.rotation_y());
+    s.set_rotation_z(if flip { -a.rotation_z() } else { a.rotation_z() });
+
+    s.set_scale_x(a.scale_x());
+    s.set_scale_y(a.scale_y());
+    s.set_local_scale_x(a.local_scale_x());
+    s.set_local_scale_y(a.local_scale_y());
+    s.set_alpha(a.alpha());
+    s.set_local_alpha(a.local_alpha());
+    s.set_pivot_x(a.pivot_x());
+    s.set_pivot_y(if flip { -a.pivot_y() } else { a.pivot_y() });
+    s.set_anchor_x(a.anchor_x());
+    s.set_anchor_y(a.anchor_y());
+    s.set_size_x(a.size_x());
+    s.set_size_y(a.size_y());
+    s.set_uv_translation_x(a.uv_translation_x());
+    s.set_uv_translation_y(a.uv_translation_y());
+    s.set_uv_rotation_z(a.uv_rotation_z());
+    s.set_uv_scale_x(a.uv_scale_x());
+    s.set_uv_scale_y(a.uv_scale_y());
+    s.set_bounding_radius(a.bounding_radius());
+    s.set_mask(a.mask());
+    s
 }
 
 #[allow(clippy::too_many_arguments)]
