@@ -7,15 +7,17 @@ Last updated 2026-08-19.
 
 ## Where it stands
 
-The track stack is **implemented and merged into neither repo yet**. Two draft PRs are open.
-A headless geometric pass has now been run over the whole downstream (`SPEC` §2.5) and the
-model came out clean; it also found and fixed one real bug. What is left before the PRs come
-out of draft is an eye on the parts a number cannot judge.
+The track stack is **implemented and merged into neither repo yet**. Both PRs are **open and
+out of draft** (2026-08-19).
+A headless geometric pass has been run over the whole downstream (`SPEC` §2.5) and the model
+came out clean; it also found and fixed one real bug. What is left is review and merge — plus
+`param_head_yaw`, which is the only way to judge whether additive and frame scrubbing are worth
+what they cost.
 
 | | |
 |---|---|
-| **SDK** | [#362](https://github.com/cri-middleware/SpriteStudio-SDK/pull/362) draft → `develop`, branch `feat/animation-mixing-tracks` |
-| **wgpu** | [SSPlayerForWgpu#44](https://github.com/cri-middleware/SSPlayerForWgpu/pull/44) draft → `main`, branch `feat/track-api-passthrough` |
+| **SDK** | [#362](https://github.com/cri-middleware/SpriteStudio-SDK/pull/362) → `develop`, branch `feat/animation-mixing-tracks` |
+| **wgpu** | [SSPlayerForWgpu#44](https://github.com/cri-middleware/SSPlayerForWgpu/pull/44) → `main`, branch `feat/track-api-passthrough` |
 
 | Piece | State |
 |---|---|
@@ -26,9 +28,9 @@ out of draft is an eye on the parts a number cannot judge.
 | `update()` stale-frame bug across a completing crossfade | found and fixed here |
 | Player-facing docs, `20_limitations`, README, ROADMAP, CHANGELOG | done |
 | `ssplayer-wgpu` pass-throughs + viewer bindings + seam tests | done |
-| **Visual pass on `ssplayer-wgpu`** | **checks 3 and 5 only — this is what blocks the PRs** |
+| Visual pass on `ssplayer-wgpu` | done as far as Ringo allows; check 5 needs `param_head_yaw` |
 | `param_head_yaw` axis, and judging the scrub with it | not done, needs authoring |
-| Vtuber product spec §4-5 / §5-1 rewrite | not done |
+| Vtuber product spec rewrite | done 2026-08-19 — attachment replaced |
 | Per-part masks | deferred by design (`SPEC` §8 item 7) |
 | Shortest-path rotation, sign-crossing scale | measured, left open (`SPEC` §7 items 7-8) |
 
@@ -98,16 +100,24 @@ scrubbing *feels* like a performance is the question `param_head_yaw` exists to 
 
 ## What to do next, in order
 
-1. **Checks 3 and 5 by eye.** If they pass, both PRs come out of draft.
+1. ~~**Checks 3 and 5 by eye.**~~ Check 3 was walked in the viewer 2026-08-19 and additive was
+   kept (`SPEC` §6.2 records the measurement behind that). **Check 5 cannot be settled on
+   Ringo** — whether scrubbing reads as a performance is what item 2 exists to answer, so it was
+   ruled undecidable without the asset rather than passed. **Both PRs are out of draft.**
+   Merge order is SDK first; wgpu#44's submodule pointer still needs re-pointing at the merged
+   SHA before it lands.
 2. **Author `param_head_yaw`** — one axis, ~61 frames, sweeping a neck bone −30°→+30°, with the
    **centre frame matching the setup pose** (that is what makes the additive delta correct).
    Then redo check 5 and judge the feel. This is the evidence the Vtuber product spec's central
    bet — that frame scrubbing carries continuous control — actually needs.
-3. **Rewrite the Vtuber spec's §4-5 and §5-1** (Evernote note "Vtuber 検討", attachment
-   `vtuber_and_effect_tools_spec.md`). Both reasons it gives for avoiding multi-axis modulation
-   are now obsolete: "軸を足すほど全部の効きが弱くなる" is what track alpha fixes, and
-   "キーを持たないパーツには setup pose 値が混ざる" is what the coverage rule fixes. Its tier
-   table can be redrawn — additive is no longer the price of admission to Tier 3.
+3. ~~**Rewrite the Vtuber spec's §4-5 and §5-1**~~ **Done 2026-08-19.** The attachment on the
+   Evernote note "Vtuber 検討" was replaced (verified byte-identical on round-trip). Nine places
+   changed, not two: §4-5 rewritten with the measured tables, plus the 要約, §4-2, §4-4, §4-7,
+   §4-10's tier table, §5-1 through §5-4, and open question #2. **The correction that mattered
+   most**: the old text named additive as the fix for dilution, which is wrong — track `alpha`
+   fixes that; additive fixes something else (holding an offset without damping the performance
+   underneath). Every tier is now SDK-change-zero.
+
 4. **Per-part masks**, when a densely-keyed existing asset needs layering without re-authoring.
    Not before: a track already reaches only as far as its animation keys.
 
