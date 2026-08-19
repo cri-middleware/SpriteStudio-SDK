@@ -235,6 +235,54 @@ least-squares fit over everything. Where the overlay animates nothing, `mixed ==
 global fit reads those as "fully diluted" when they only mean "no opinion here" — that
 artifact alone reported 0.213 instead of 0.300 on the last row.
 
+### 2.5 Geometric pass (harness, 2026-08-19)
+
+§2.4 measures the mix one attribute at a time. This one measures what comes out the far end:
+world matrices, transformed quad corners and skinned mesh vertices — post-mix, post-hierarchy,
+post-skinning, the same buffers the Player draws from. It exists because the checks in the
+handoff are all statements about geometry ("collapses to the origin", "shrinks", "a dip
+mid-transition"), and geometry can be measured instead of squinted at. Harness:
+`scratchpad/mixgeom` (throwaway, path-dep on `ssruntime` with `features = ["std"]` to match the
+Player's own build). Subject: `Ringo`, 24 animations, **552 ordered pairs, swept exhaustively**.
+
+| Check | Result |
+|---|---|
+| `alpha = 0` on track 1 reproduces the base **exactly** | 0.000000px over 552 pairs |
+| Additive at `alpha = 0` reproduces the base **exactly** (no jump) | 0.000000px |
+| Additive is distinguishable from mix at `alpha = 1` | 337–343px apart |
+| Any part shrinking below **both** endpoints mid-sweep | worst **0.023%** — nothing |
+| Fading track 0 to 0 lands on the rest pose | spread 157→162 (103%), no collapse, no explosion |
+| Crossfade dip, `wait1`→`attack1`, `dead`→`run`, `walk`→`attack1`, `wait1`→`dead` | none; no part vanishes; finite throughout |
+| Frame scrubbing continuity | max step 4.44px vs mean 2.40px per 0.25 frame |
+
+**Two things it found that are not faults of the model**, both now §7 items 7 and 8: the
+long-way rotation (264/552 pairs, worst 1.16× the character's spread) and sign-crossing scale
+(85/552 pairs pass a mirrored part through zero). Both are visible, and both look like the
+dipping D2 exists to prevent — which is the main reason to have written them down.
+
+**One thing it found that *was* a fault**, fixed in this branch: `update()` returned the frame
+of whichever source was primary *before* the fades were advanced. On the tick a crossfade
+completes the track changes hands, so the caller got the outgoing animation's frame while
+`get_frame_data` validated it against the incoming one — `InvalidParameter` on
+`wait1`(80 frames)→`attack1`(20) at frame 45. This is the documented
+`get_frame_data(update(dt))` pairing failing on an ordinary transition, and it reached the C
+API too (`ss_runtime_update` returns the same value). `ssplayer-wgpu` happened to be immune
+because it reads `get_frame_no()` instead. Regression test:
+`update_returns_a_frame_get_frame_data_accepts_across_a_crossfade`.
+
+**Traps in this harness, same spirit as §2.4's.** Both cost a wrong answer before they were
+caught:
+
+- **Whole-pose averages hide everything.** A dip is a handful of parts pulled toward a default;
+  60 well-behaved parts drown them out. The first version of this harness measured the point
+  cloud's RMS spread and passed happily **with the coverage rule deliberately disabled**. Only
+  a *per-part* series — each part's own world-basis lengths, against its own endpoints — has
+  the resolution to see it.
+- **Do not measure a part's radius from the pose centroid.** The centroid moves, so a joint
+  that merely passes near the middle of the character reads as a 97% collapse. Compare a part
+  against *its own* endpoints (distance from the segment joining them), never against a
+  moving reference.
+
 ---
 
 ## 3. D1 — The track model (**implemented**)
@@ -261,6 +309,12 @@ artifact alone reported 0.213 instead of 0.300 on the last row.
 > `evaluate_part`), not the raw `parts_initial_attributes`. Fading track 0 to alpha 0 against an
 > untransformed floor drifts toward a mis-placed rest pose. It is rebuilt on `setup_animation`
 > and whenever a coordinate setting changes — never per frame.
+>
+> A second correction, found by the geometric pass (§2.5): **`update()` must read the frame
+> back after `advance_track_fades`, not before.** A completing crossfade hands the track to its
+> incoming source and so changes which source is primary; sampling the frame first returned the
+> outgoing animation's, which `get_frame_data` then rejected whenever the incoming animation was
+> the shorter of the two.
 
 
 ### 3.1 Why not flat normalization
@@ -553,8 +607,23 @@ Two attributes need care:
 6. **Reserved transitions** (Spine `addAnimation` + `delay`, Unity exit time) — not needed by
    the Vtuber case; revisit with the state machine item.
 7. **Shortest-path rotation** (Spine `shortestRotation`) — we mix raw degrees, so a
-   180°-crossing mix takes the long way. Cheap to add, needs a default.
-8. **Per-part masks** — deferred per §5.4. When added, they belong on the layer, alongside
+   180°-crossing mix takes the long way. Cheap to add, needs a default. **Measured (§2.5):
+   this is not a corner case.** On `Ringo`, **264 of 552** animation pairs swing some part
+   **≥0.5× the character's own spread** off the straight path between its endpoints; the worst,
+   `slipdown_wait`+`dance` part 17, travels **1.16×** because the part sits at **+131.08° in one
+   source and −141.98° in the other** — an 87° gap that the raw-degree mix walks the other way
+   round, 273°. Any mid-alpha hold on such a pair is visibly wrong, so this is the open item
+   with the most evidence behind it.
+8. **Sign-crossing scale** — a part one source mirrors and the other does not (`scale_y` +1 vs
+   −1) is linearly mixed straight through **zero**: at `alpha = 0.5` the part is squashed to
+   nothing, then reappears mirrored. **85 of 552** `Ringo` pairs mirror at least one part —
+   every pair involving `dead` does. Same family as item 7, and the reason §2.5's dip check
+   excludes mirrored parts: **it looks exactly like the dipping the coverage rule exists to
+   prevent, and it is not that.** *Lean: leave it. A mirrored part is a different pose, not a
+   pose with an in-between, and the alternatives (mixing the sign discretely, or on a
+   threshold) all invent a rule the author did not ask for. Document it and, if it bites,
+   reach for §6.3's topmost-covering-track resolution rather than a special case here.*
+9. **Per-part masks** — deferred per §5.4. When added, they belong on the layer, alongside
    alpha and the operator.
 
 ---

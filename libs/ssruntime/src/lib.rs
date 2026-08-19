@@ -41,8 +41,9 @@
 //! ctx.play();
 //!
 //! // 3. Each tick: advance time, then ask for that frame's data.
+//! //    `update` takes **milliseconds**, matching the animation's fps.
 //! while ctx.is_playing() {
-//!     let frame_no = ctx.update(1.0 / 60.0);
+//!     let frame_no = ctx.update(1000.0 / 60.0);
 //!     let framedata: &[u8] = ctx.get_frame_data(frame_no)?;
 //!     // `framedata` is a FlatBuffer — see SCHEMA.md for how to read it.
 //! }
@@ -2784,23 +2785,28 @@ impl<'a> Context<'a> {
 
     // Playback control
 
+    /// Advance every source's controller by `delta` milliseconds and return the
+    /// frame to hand to [`Self::get_frame_data`].
+    ///
+    /// The frame is read *after* the fades settle, because a completing
+    /// crossfade hands the track to its incoming source and so changes which
+    /// source is primary. Returning the frame sampled before that swap gave the
+    /// caller the outgoing animation's frame while `get_frame_data` validated it
+    /// against the incoming one, which failed with `InvalidParameter` on the
+    /// completion tick whenever the incoming animation was the shorter of the
+    /// two.
     pub fn update(&mut self, delta: f32) -> f32 {
-        let primary_idx = self.instance.primary_idx();
-        let mut primary_frame = 0.0;
-        for (i, source) in self.instance.sources.iter_mut().enumerate() {
+        for source in self.instance.sources.iter_mut() {
             if !source.has_real_animation() {
                 continue;
             }
-            let frame = source.controller.update(delta);
-            if i == primary_idx {
-                primary_frame = frame;
-            }
+            source.controller.update(delta);
         }
 
         self.advance_track_fades(delta);
         self.collect_events();
 
-        primary_frame
+        self.get_frame_no()
     }
 
     /// Advance every track's fade by `delta`.
@@ -5316,6 +5322,35 @@ mod tests {
         assert_ne!(ctx.instance.tracks[0].main, walk);
         assert!(ctx.source_weight(walk).is_none(), "the outgoing source is released");
         assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main, "track 0 still carries the structure");
+    }
+
+    /// `update` returns the frame of whichever source is primary *after* the
+    /// fades settle. On the tick a crossfade completes the track changes hands,
+    /// and returning the outgoing animation's frame handed the caller a number
+    /// `get_frame_data` then rejected — `wait1` (80 frames) to `attack1` (20)
+    /// failed at frame 45, which is the documented `get_frame_data(update(dt))`
+    /// pairing breaking on a perfectly ordinary transition.
+    #[test]
+    fn update_returns_a_frame_get_frame_data_accepts_across_a_crossfade() {
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (mut ctx, _) = ringo_ctx(&resource, "wait1");
+        ctx.set_loop(-1);
+        ctx.play();
+
+        // Get well past `attack1`'s last frame before handing the track over.
+        for _ in 0..45 {
+            let frame = ctx.update(1000.0 / 60.0);
+            ctx.get_frame_data(frame).expect("frame data while playing");
+        }
+        assert!(ctx.get_frame_no() > 20.0, "frame {} is not past attack1's range", ctx.get_frame_no());
+
+        ctx.crossfade(0, "attack1", 400.0).unwrap();
+        for tick in 0..40 {
+            let frame = ctx.update(1000.0 / 60.0);
+            ctx.get_frame_data(frame).unwrap_or_else(|e| panic!("tick {tick}: get_frame_data({frame}) failed: {e:?}"));
+        }
+        assert!(ctx.track_fade_progress(0).is_none(), "the crossfade should have completed");
     }
 
     /// Restarting a crossfade completes the one in flight rather than layering a
