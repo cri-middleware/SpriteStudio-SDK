@@ -4,8 +4,6 @@
 > **Animation Mixing**. Not Player-facing docs — those are
 > `docs/40_components/60_animation_mixing.{md,ja.md}`.
 >
-> Open work and how to pick it up: **`ANIMATION_MIXING_HANDOFF.md`**.
->
 > Scope: how N animation sources resolve into one pose. **Runtime state + FFI only — no
 > `.fbs` schema change.** The mix runs before emission, so `SCHEMA.md` is unaffected.
 >
@@ -593,8 +591,15 @@ alpha**, which is the whole argument for having a second operator.
 Ringo's overlays are whole-body performances, so adding one displaces the rig by 342.8px
 (against mix's 11.0px) — mechanically correct, visually nonsense. The handoff's visual check 3
 therefore confirms the mechanism and nothing more. Judging whether additive is worth authoring
-for needs an axis-shaped animation — a small delta from the setup pose — which is what
-`param_head_yaw` is for. **Decision (2026-08-19): additive stays.** Kept on the strength of the
+for needs an axis-shaped animation — a small delta from the setup pose.
+
+**The asset to author, when someone gets to it**: `param_head_yaw`, one axis, ~61 frames,
+sweeping a neck bone −30°→+30°, with the **centre frame matching the setup pose**. The centre
+frame is what makes the delta read as "no offset" at the middle of the axis; the runtime reads
+the setup pose directly, so a centre frame that drifts is forgiven, but one that is deliberately
+elsewhere is not. That asset settles two things at once — whether additive earns its place, and
+whether frame scrubbing (§3.3 `set_track_frame`) carries continuous control the way the
+SS-Studio spec bets it does. **Decision (2026-08-19): additive stays.** Kept on the strength of the
 measurement above plus standard practice (Unity additive layers, Spine, three.js
 `makeClipAdditive`, Unreal), with its product value still unproven until that axis exists.
 
@@ -679,4 +684,3 @@ model itself.
 | Setup pose in the format | `parts_initial_attributes`, written by `ssconverter/src/model_t/animedata.rs:285` and merged into every animation at `:1384-1392` |
 | Player-facing docs | `docs/40_components/60_animation_mixing.{md,ja.md}` |
 | Adjacent feature | The Override Layer, the post-mix overwrite pass: `src/core/override_layer.rs`, documented in `docs/40_components/65_override_layer.md` |
-| Open work, until both PRs merge | `ANIMATION_MIXING_HANDOFF.md` (transient) |
