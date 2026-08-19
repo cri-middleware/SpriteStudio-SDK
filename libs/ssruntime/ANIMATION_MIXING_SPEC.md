@@ -559,9 +559,40 @@ correct even when an author's centre frame drifts from it, and it removes the "w
 neutral?" question from the API entirely. (three.js needs `makeClipAdditive(clip, frame)`
 because glTF has no setup pose to appeal to; SpriteStudio does.)
 
-Additive layers are **outside normalization** by construction. Open: whether `scale` should be
-additive on `(s − 1)` (proposed: yes, uniform treatment — additive of the delta) and whether
-`alpha` participates at all.
+Additive layers are **outside normalization** by construction. The shipped fold is
+`cur[k] + (v - base[k]) * alpha` against `Mix`'s `cur[k] + (v - cur[k]) * alpha`
+(`src/lib.rs:1214`), applied uniformly — `scale` is additive on `s − s_setup` (which is the
+proposed `s − 1` wherever the setup pose is unscaled) and `alpha` participates on the same
+terms. The open question in §7 item 2 was resolved this way by the implementation; it is
+recorded here rather than left hanging.
+
+**Why the operator earns its place — measured 2026-08-19, and keep this: it is the only
+evidence additive has.** The case for additive is that an overlay *held at a value* should
+displace an ongoing performance rather than replace it. Held `attack1` on track 1 over a
+playing `walk` at `alpha = 0.5`, measuring how much of `walk`'s own motion survives on the 63
+parts it actually moves (per-part stddev of world position over 40 frames, against `walk`
+alone):
+
+| | motion surviving |
+|---|---|
+| `walk` alone | 100.0% (reference) |
+| **Mix**, alpha 0.5 | **49.6%** |
+| **Additive**, alpha 0.5 | **106.0%** |
+
+Mix damps the performance underneath by exactly its alpha — that is what a lerp toward a static
+pose *is*, and no parameter choice avoids it. The worst-hit part goes 9.87px → 2.95px. Additive
+leaves it at 9.79px; the 6% overshoot is a parent's offset widening its children's swing
+through the hierarchy, not an error. **This behaviour is not expressible with `Mix` at any
+alpha**, which is the whole argument for having a second operator.
+
+**What this does *not* show.** No asset in the repo demonstrates additive being *useful*.
+Ringo's overlays are whole-body performances, so adding one displaces the rig by 342.8px
+(against mix's 11.0px) — mechanically correct, visually nonsense. The handoff's visual check 3
+therefore confirms the mechanism and nothing more. Judging whether additive is worth authoring
+for needs an axis-shaped animation — a small delta from the setup pose — which is what
+`param_head_yaw` is for. **Decision (2026-08-19): additive stays.** Kept on the strength of the
+measurement above plus standard practice (Unity additive layers, Spine, three.js
+`makeClipAdditive`, Unreal), with its product value still unproven until that axis exists.
 
 ### 6.3 Discrete attributes — specified, deferred
 Today: verbatim from the primary (`src/lib.rs:884-903`). **Not in the first scope** — the
@@ -592,8 +623,9 @@ Two attributes need care:
 
 1. **§6.3 threshold semantics** — one per-layer threshold, or Spine's split into
    attachment/draw-order/alpha thresholds? *Lean: one, until a case splits it.*
-2. **§6.2 additive and `scale`/`alpha`** — delta-on-value for everything, or per-attribute
-   rules? *Lean: uniform delta; document the scale case.*
+2. ~~**§6.2 additive and `scale`/`alpha`** — delta-on-value for everything, or per-attribute
+   rules?~~ **Closed**: uniform delta against the setup pose, no per-attribute rules
+   (`src/lib.rs:1214`). Documented in §6.2, along with the measurement that kept the operator.
 3. **Interruption / stale weights** — `crossfade` currently discards a running fade and
    restarts from `(1, 0)`, leaving whatever weights the abandoned sources had. Spine keeps a
    `mixingFrom` chain so three animations can be mixing at once. *Lean: define a cleanup rule
