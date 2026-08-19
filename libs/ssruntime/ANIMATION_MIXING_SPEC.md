@@ -377,8 +377,12 @@ bool     ss_runtime_set_source_weight(ctx, handle, weight);
 ```
 
 **Removed**: `add_blend_source` / `_by_hash`, `add_empty_blend_source`, `remove_blend_source`,
-`clear_blend_sources`, `blend_source_count`, `set_primary`, `primary_handle`, and the
-`set_source_frame` / `set_source_speed` pair (superseded by the track forms).
+`clear_blend_sources`, `blend_source_count`, `set_primary`, `primary_handle`, and
+`set_source_speed` (superseded by `set_track_speed`).
+
+**`set_source_frame` stays**, across Rust, C and WASM. `set_track_frame` drives only the
+track's *main* source, so a track carrying several weighted sources — the locomotion case
+`track_add_source` exists for — has no other way to seek the others independently.
 
 Three things fall out of the shape rather than needing to be designed:
 
