@@ -1,0 +1,42 @@
+[package]
+name = "ssconverter-ffi"
+publish = false
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description.workspace = true
+
+[lib]
+name = "ssconverter"
+crate-type = ["staticlib", "cdylib"]
+doc = false
+
+[dependencies]
+ssconverter = { workspace = true }
+
+[features]
+default = ["ffi"]
+ffi = ["ssconverter/ffi"]
+native = ["ssconverter/native"]
+parallel = ["ssconverter/parallel"]
+scan = ["ssconverter/scan"]
+web = ["ssconverter/web"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+    "-Oz",
+    "--enable-bulk-memory",
+    "--enable-mutable-globals",
+    "--enable-sign-ext",
+    "--enable-nontrapping-float-to-int",
+    "--enable-multivalue",
+    "--enable-reference-types",
+]
+
+[build-dependencies]
+cbindgen = { workspace = true }
+csbindgen = { workspace = true }

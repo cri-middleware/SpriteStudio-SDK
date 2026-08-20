@@ -98,8 +98,8 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" == "web" ]; then
             # Build for general FFI and Web (Stable)
-            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "ffi,std"
-            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime --no-default-features --features "web"
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "ffi,std"
+            cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "web"
 
             # Browser converter (shipped as lib/converter-web by release-web.sh).
             # rayon spans ssconverter AND sspj, so this is the only check that the
@@ -111,7 +111,7 @@ jobs:
             cargo +nightly rustc -Z build-std=core,alloc \
               --target wasm32-unknown-unknown \
               --verbose \
-              -p ssruntime \
+              -p ssruntime-ffi \
               --no-default-features \
               --features "wasm_alloc,panic-handler" \
               --crate-type staticlib,rlib
@@ -121,12 +121,12 @@ jobs:
             ./scripts/release-emscripten.sh
           else
             cargo build --verbose
-            cargo build --verbose -p ssruntime --features "libc_alloc,panic-handler"
+            cargo build --verbose -p ssruntime-ffi --features "libc_alloc,panic-handler"
 
             # Custom-allocator (console/engine) build. staticlib only: the
             # ss_custom_* symbols stay unresolved until the host links them, so a
             # cdylib link would fail standalone on macOS/MSVC.
-            cargo rustc --verbose -p ssruntime --features "custom_alloc,panic-handler" --crate-type staticlib
+            cargo rustc --verbose -p ssruntime-ffi --features "custom_alloc,panic-handler" --crate-type staticlib
           fi
         shell: bash
 

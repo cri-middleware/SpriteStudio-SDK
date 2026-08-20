@@ -43,7 +43,7 @@ try {
         Remove-Item -Recurse -Force "pkg/runtime-web/$buildMode"
     }
 
-    & $wasmPack build libs/ssruntime @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features
+    & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features
 
     # ssruntime no-SIMD variant -> pkg/runtime-web-nosimd. For hosts whose WASM
     # engine lacks simd128 — notably the NW.js bundled with RPG Maker MZ, whose
@@ -59,7 +59,7 @@ try {
     $oldRustFlagsRuntime = $env:RUSTFLAGS
     try {
         $env:RUSTFLAGS = "-C target-feature=-simd128"
-        & $wasmPack build libs/ssruntime @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features
+        & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features
     } finally {
         $env:RUSTFLAGS = $oldRustFlagsRuntime
     }
@@ -76,7 +76,7 @@ try {
     $oldRustFlags = $env:RUSTFLAGS
     try {
         $env:RUSTFLAGS = "-C target-feature=-simd128"
-        & $wasmPack build libs/ssconverter @wasmPackFlags --target web --out-dir $converterOutDir -- --features web --no-default-features
+        & $wasmPack build libs/ssconverter-ffi @wasmPackFlags --target web --out-dir $converterOutDir -- --features web --no-default-features
     } finally {
         $env:RUSTFLAGS = $oldRustFlags
     }

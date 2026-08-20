@@ -26,16 +26,16 @@ Representative commands per environment:
 
 ```bash
 # no_std staticlib for mobile / console / desktop (recommended)
-cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
+cargo build -p ssruntime-ffi --release --features "libc_alloc,panic-handler"
 
 # no_std build for Wasm (browser / WebWorker / wasm-bindgen)
-cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "web"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "web"
 
 # no_std build for pure Wasm (JS-independent; for WASI and embedded Wasm engines)
-cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
 
 # Embedding as an rlib in Rust natively (when the host provides the allocator / panic_handler)
-cargo build -p ssruntime --release --no-default-features --features "ffi"
+cargo build -p ssruntime-ffi --release --no-default-features --features "ffi"
 ```
 
 ---
@@ -47,7 +47,7 @@ When calling `ssruntime` over FFI from a C/C++ game engine, you can avoid the ov
 To build for an environment where "`std` is unavailable but the C standard library (`malloc` / `free`) can be used" - typical console and mobile environments:
 
 ```bash
-cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
+cargo build -p ssruntime-ffi --release --features "libc_alloc,panic-handler"
 ```
 
 This produces a static library (`.a` or `.lib`) that stays `no_std` while falling back to C's `malloc` for memory allocation, with a panic handler injected. On a panic, `libc::abort()` is called and the process terminates safely (or breaks into the debugger).
@@ -55,7 +55,7 @@ This produces a static library (`.a` or `.lib`) that stays `no_std` while fallin
 To compile `ssruntime` for an embedded pure-Wasm environment that depends on neither WASI nor JS, specify `wasm_alloc` as below. `dlmalloc` is linked internally.
 
 ```bash
-cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
 ```
 
 ---
@@ -86,11 +86,11 @@ With this, messages are forwarded to the host (C/C++ or C#) whenever a parse err
 
 When calling `ssruntime` from your own Rust game engine (a `no_std` application), arranging the allocator and panic handler is normally the job of the top-level executable.
 
-Add the following to `Cargo.toml` with `default-features = false` to use it as a pure `no_std` library (`rlib`) with `libc_alloc` disabled.
+Add the following to `Cargo.toml`. Nothing is on by default, so this is already the pure `no_std` library (`rlib`) with no allocator feature and no C-API exports.
 
 ```toml
 [dependencies]
-ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
+ssruntime = "7.0.0-beta.1"
 ```
 
 > [!NOTE]
@@ -107,11 +107,11 @@ If you want to "use neither C's standard `malloc` nor anything else, only the de
 1. When building `ssruntime`, specify `custom_alloc` instead of `libc_alloc`. Since what you ship is the **staticlib (`libssruntime.a` / `.lib`)**, build with the staticlib crate type explicitly.
 
 ```bash
-cargo rustc -p ssruntime --release --features "custom_alloc,panic-handler" --crate-type staticlib
+cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" --crate-type staticlib
 ```
 
 > [!IMPORTANT]
-> With `custom_alloc`, the `ss_custom_*` symbols and C runtime functions such as `memcpy` are **left unresolved on the ssruntime side** and are resolved when finally linking against the engine. Therefore running a plain `cargo build -p ssruntime`, whose `crate-type` includes `cdylib`, fails at the `cdylib` link stage on macOS / Windows (MSVC), whose linkers do not permit unresolved symbols. Build with `--crate-type staticlib` explicitly as above (the artifact is `target/release/libssruntime.a`).
+> With `custom_alloc`, the `ss_custom_*` symbols and C runtime functions such as `memcpy` are **left unresolved on the ssruntime side** and are resolved when finally linking against the engine. Therefore running a plain `cargo build -p ssruntime-ffi`, whose `crate-type` includes `cdylib`, fails at the `cdylib` link stage on macOS / Windows (MSVC), whose linkers do not permit unresolved symbols. Build with `--crate-type staticlib` explicitly as above (the artifact is `target/release/libssruntime.a`).
 
 2. In the C/C++ project you link against (Unreal Engine, for example), define the following three `extern "C"` functions. In addition to these, C runtime functions such as `memcpy` / `memset` / `memmove` / `memcmp` / `strlen` are also required at final link time, but the game engine's CRT normally provides them (on bare metal, supply them separately).
 

@@ -1,7 +1,7 @@
+use crate::interpolate::*;
 use crate::runtime;
 use alloc::vec::Vec;
 use ssab::ssab::ss::format::InterpolationType;
-use ssinterpolate::interpolate::*;
 
 const UPDATE_FLAG_ON: runtime::framedata::ss::runtime::UpdateAttributeFlags = runtime::framedata::ss::runtime::UpdateAttributeFlags::all();
 

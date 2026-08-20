@@ -39,7 +39,6 @@ graph LR
 
     subgraph Runtime ["Runtime (Playback)"]
         BIN --> RT(" libssruntime ")
-        RT -.-> INT(" libssinterpolate ")
         RT --> STATE[" Part States / Mesh Info<br/>+ DrawBatch Plan "]
     end
 
@@ -76,7 +75,6 @@ graph LR
 - Libraries
     - [libsspj](./libs/sspj/README.md): a library that parses `sspj` projects, which consist of `sspj`, `ssae`, `ssce`, `ssee`, `ssqe`, `ssse` and bitmap-font character map (`fnt` / `json`) files.
     - [libssab](./libs/ssab/README.md): a library that creates and parses `ssab` files, which are animation binary files.
-    - [libssinterpolate](./libs/ssinterpolate/README.md): a platform-agnostic math library for animation interpolations.
     - [libssconverter](./libs/ssconverter/README.md): a library that parses `sspj` projects and creates `ssab` files.
     - [libssruntime](./libs/ssruntime/README.md): the playback Brain. Computes per-frame part states (transforms, mesh deformations, color) and emits a cross-engine `DrawBatch` plan that any renderer can consume.
 - Tool

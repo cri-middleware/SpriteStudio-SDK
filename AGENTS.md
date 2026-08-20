@@ -22,7 +22,6 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | `libs/sspj` | Parses `.sspj` / `.ssae` / `.ssee` (quick-xml + serde). | — |
 | `libs/ssconverter` | Converts parsed sspj → `.ssab` binary. C-API. | [USAGE](./libs/ssconverter/docs/USAGE.md) / [ja](./libs/ssconverter/docs/USAGE.ja.md) |
 | `libs/ssab` | `.ssab` schema and FlatBuffers (zero-copy). | [SCHEMA](./libs/ssab/SCHEMA.md) |
-| `libs/ssinterpolate` | Platform-agnostic interpolation math (Hermite, Bezier, SIMD). | — |
 | `libs/ssruntime` | Playback Brain — state, interpolation, DrawBatch emission. C-API + WASM bindings. `no_std`-first. | [Player Guide (ja)](./libs/ssruntime/docs/README.ja.md), [FrameData SCHEMA](./libs/ssruntime/SCHEMA.md) / [ja](./libs/ssruntime/SCHEMA.ja.md) |
 
 > Before implementing a Player, read [**Limitations**](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md) and [**Batched Rendering Contract**](./libs/ssruntime/docs/30_core/30_render_loop.ja.md).
@@ -45,9 +44,9 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | Tests | `cargo test --workspace --all-features` |
 | Rustdoc (broken links) | `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features` |
 | Doctests only | `cargo test --doc --workspace` |
-| `no_std` standalone (mobile-style) | `cargo build -p ssruntime --features libc_alloc,panic-handler` |
-| `no_std` custom allocator (console/engine) | `cargo rustc -p ssruntime --features custom_alloc,panic-handler --crate-type staticlib` |
-| `std` opt-in (desktop DX) | `cargo build -p ssruntime --features std` |
+| `no_std` standalone (mobile-style) | `cargo build -p ssruntime-ffi --features libc_alloc,panic-handler` |
+| `no_std` custom allocator (console/engine) | `cargo rustc -p ssruntime-ffi --features custom_alloc,panic-handler --crate-type staticlib` |
+| `std` opt-in (desktop DX) | `cargo build -p ssruntime-ffi --features std` |
 | `ssconverter` web (browser WASM) | `cargo build -p ssconverter --no-default-features --features web --target wasm32-unknown-unknown` |
 | Docs site (after editing `libs/ssruntime/docs`) | `scripts/prepare-docs.sh` once, then `scripts/build-docs.sh` — `.ps1` twins on Windows |
 
@@ -99,7 +98,7 @@ Doctests need an allocator, so a lone `cargo test --doc -p ssruntime` fails on "
 | `web` | `wasm-bindgen` bindings for JS/TS interop. |
 | `std` | Enables `std` on `flatbuffers` / `ssab` and pulls in `ssconverter` (tests only). Never used by release scripts. |
 
-All release deliverables for `ssruntime` (mobile / desktop / WASM) are pure no_std. Desktop scripts build the workspace first (to emit `ssconverter` / `ssconverter-cli`), then re-build `ssruntime` with `libc_alloc,panic-handler` to overwrite its `cdylib` / `staticlib`. WASM uses `wasm_alloc,panic-handler` with `--no-default-features`. `cargo build -p ssruntime` alone needs the allocator/panic features explicit because `ssconverter` (which transitively fulfills them via `std`) is not in the graph.
+All release deliverables for `ssruntime` (mobile / desktop / WASM) are pure no_std. Desktop scripts build the workspace first (to emit `ssconverter` / `ssconverter-cli`), then re-build `ssruntime` with `libc_alloc,panic-handler` to overwrite its `cdylib` / `staticlib`. WASM uses `wasm_alloc,panic-handler` with `--no-default-features`. `cargo build -p ssruntime-ffi` alone needs the allocator/panic features explicit because `ssconverter` (which transitively fulfills them via `std`) is not in the graph.
 
 ## `ssconverter` feature layout
 

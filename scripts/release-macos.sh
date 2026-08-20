@@ -35,9 +35,9 @@ SHORT_VERSION="${WORKSPACE_VERSION%%-*}"
 BUNDLE_ID="jp.co.cri-mw.spritestudio.ssruntime"
 
 cargo build --target aarch64-apple-darwin ${CARGO_FLAGS}
-cargo build --target aarch64-apple-darwin ${CARGO_FLAGS} -p ssruntime --features libc_alloc,panic-handler
+cargo build --target aarch64-apple-darwin ${CARGO_FLAGS} -p ssruntime-ffi --features libc_alloc,panic-handler
 cargo build --target x86_64-apple-darwin ${CARGO_FLAGS}
-cargo build --target x86_64-apple-darwin ${CARGO_FLAGS} -p ssruntime --features libc_alloc,panic-handler
+cargo build --target x86_64-apple-darwin ${CARGO_FLAGS} -p ssruntime-ffi --features libc_alloc,panic-handler
 
 OUTPUT=target/universal-apple-darwin/${BUILD_MODE}
 /bin/mkdir -p ${OUTPUT}
@@ -66,7 +66,7 @@ done
 # the signing block below does NOT re-sign it.
 FRAMEWORK=${OUTPUT}/libssruntime.framework
 # The framework's public header + module-map umbrella is the plain-C header
-# (libs/ssruntime/target/ssruntime.h). A C umbrella keeps the clang module
+# (libs/ssruntime-ffi/target/ssruntime.h). A C umbrella keeps the clang module
 # importable from Swift/ObjC, and its `extern "C"` guards keep it importable from
 # ObjC++/C++ too.
 "${BASEDIR}/make-macos-framework.sh" \
@@ -75,7 +75,7 @@ FRAMEWORK=${OUTPUT}/libssruntime.framework
     "${SHORT_VERSION}" \
     "${BUNDLE_ID}" \
     "${MACOSX_DEPLOYMENT_TARGET}" \
-    "${ROOTDIR}/libs/ssruntime/target/ssruntime.h"
+    "${ROOTDIR}/libs/ssruntime-ffi/target/ssruntime.h"
 
 # --- macOS .bundle packaging (Unity) ----------------------------------------
 # Unity's documented macOS native-plugin format is a loadable *.bundle*. The

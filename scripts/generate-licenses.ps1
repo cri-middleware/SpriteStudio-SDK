@@ -42,7 +42,6 @@ try {
         @{ Path = "libs/sspj";        Flags = @() },
         @{ Path = "libs/ssab";        Flags = @() },
         @{ Path = "libs/ssruntime";   Flags = @("--no-default-features", "--features", "ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler") },
-        @{ Path = "libs/ssinterpolate"; Flags = @() }
     )
 
     New-Item -ItemType Directory -Path $OutDir -Force | Out-Null

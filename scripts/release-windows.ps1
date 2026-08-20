@@ -11,8 +11,8 @@ $rootDirectory = Split-Path -Parent $baseDirectory
 
 pushd $rootDirectory
 cargo build --target x86_64-pc-windows-msvc --release
-cargo build --target x86_64-pc-windows-msvc --release -p ssruntime --features libc_alloc,panic-handler
+cargo build --target x86_64-pc-windows-msvc --release -p ssruntime-ffi --features libc_alloc,panic-handler
 # cargo build --target i686-pc-windows-msvc --release
-# cargo build --target i686-pc-windows-msvc --release -p ssruntime --features libc_alloc,panic-handler
+# cargo build --target i686-pc-windows-msvc --release -p ssruntime-ffi --features libc_alloc,panic-handler
 
 popd

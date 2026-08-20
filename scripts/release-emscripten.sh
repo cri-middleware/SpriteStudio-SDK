@@ -37,7 +37,7 @@ export RUSTFLAGS="-C relocation-model=pic -C target-cpu=mvp -C target-feature=+s
 
 cargo +nightly rustc -Z build-std=core,alloc \
     --target wasm32-unknown-unknown \
-    -p ssruntime \
+    -p ssruntime-ffi \
     ${CARGO_FLAGS} \
     --no-default-features \
     --features "emscripten_alloc,panic-handler,ffi" \

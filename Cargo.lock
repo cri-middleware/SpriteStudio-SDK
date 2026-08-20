@@ -698,8 +698,6 @@ dependencies = [
 name = "ssconverter"
 version = "7.0.0-beta.1"
 dependencies = [
- "cbindgen",
- "csbindgen",
  "flatbuffers",
  "js-sys",
  "ordered-float",
@@ -722,11 +720,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ssinterpolate"
+name = "ssconverter-ffi"
 version = "7.0.0-beta.1"
 dependencies = [
- "libm",
- "wide",
+ "cbindgen",
+ "csbindgen",
+ "ssconverter",
 ]
 
 [[package]]
@@ -742,17 +741,23 @@ dependencies = [
 name = "ssruntime"
 version = "7.0.0-beta.1"
 dependencies = [
- "cbindgen",
- "csbindgen",
  "dlmalloc",
  "flatbuffers",
  "libc",
  "libm",
  "ssab",
  "ssconverter",
- "ssinterpolate",
  "wasm-bindgen",
  "wide",
+]
+
+[[package]]
+name = "ssruntime-ffi"
+version = "7.0.0-beta.1"
+dependencies = [
+ "cbindgen",
+ "csbindgen",
+ "ssruntime",
 ]
 
 [[package]]

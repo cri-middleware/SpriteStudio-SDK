@@ -43,11 +43,16 @@
 //!
 //! | Feature | Purpose |
 //! |---|---|
-//! | `ffi` *(default)* | C-API exports (the `ffi` module). Implies `native`. |
-//! | `native` | Filesystem conversion paths. Implies `parallel` and `scan`. |
+//! | `ffi` | C-API exports (the `ffi` module). Implies `native`. For `ssconverter-ffi`, not for Rust dependents — see below. |
+//! | `native` *(default)* | Filesystem conversion paths. Implies `parallel` and `scan`. |
 //! | `parallel` | rayon-backed parallel conversion; also switches [`sspj`] to parallel parsing. |
 //! | `scan` | Directory traversal (the `scan` module) for batch conversion. |
-//! | `web` | Browser WASM bindings (the `web` module). Sequential — rayon cannot spawn threads on `wasm32-unknown-unknown`. |
+//! | `web` | Browser WASM bindings (the `web` module). Sequential — rayon cannot spawn threads on `wasm32-unknown-unknown`. Same caveat as `ffi`. |
+//!
+//! `ffi` and `web` exist for `ssconverter-ffi`, the sibling crate that emits this one as
+//! a `staticlib` / `cdylib`. Enabling either from a Rust dependency compiles
+//! `#[no_mangle] extern "C"` symbols into your binary, and those collide if the same
+//! binary also links a prebuilt `libssconverter`.
 //!
 //! `parallel` spans two crates: the web entry path is itself parallel inside [`sspj`],
 //! so the feature gates rayon in both, with a sequential fallback in each crate's

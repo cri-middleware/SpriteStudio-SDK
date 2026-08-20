@@ -26,16 +26,16 @@ SDK が公式に配布する **すべてのバイナリ (iOS / Android / macOS /
 
 ```bash
 # モバイル / コンソール / デスクトップ用 no_std staticlib (推奨)
-cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
+cargo build -p ssruntime-ffi --release --features "libc_alloc,panic-handler"
 
 # Wasm (ブラウザ / WebWorker / wasm-bindgen) 用 no_std ビルド
-cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "web"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "web"
 
 # Pure Wasm (JS 非依存・WASI や組み込み Wasm エンジン向け) 用 no_std ビルド
-cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
 
 # Rust ネイティブで rlib として組み込む (ホストが allocator/panic_handler を提供する場合)
-cargo build -p ssruntime --release --no-default-features --features "ffi"
+cargo build -p ssruntime-ffi --release --no-default-features --features "ffi"
 ```
 
 ---
@@ -47,7 +47,7 @@ C/C++ 製のゲームエンジンから FFI を経由して `ssruntime` を呼�
 「`std` は使えないが、C 言語の標準ライブラリ (`malloc` / `free`) は利用できる」という環境（一般的なコンソールゲーム機やモバイル環境）向けにビルドするには:
 
 ```bash
-cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
+cargo build -p ssruntime-ffi --release --features "libc_alloc,panic-handler"
 ```
 
 これにより `no_std` を維持しつつ、メモリアロケーションを C 言語の `malloc` にフォールバックさせ、パニックハンドラを注入した静的ライブラリ (`.a` または `.lib`) が生成されます。パニック発生時は `libc::abort()` が呼ばれて安全にプロセスが終了 (またはデバッガにブレーク) します。
@@ -55,7 +55,7 @@ cargo build -p ssruntime --release --features "libc_alloc,panic-handler"
 WASI や JS に依存しない組み込み Pure Wasm 環境に `ssruntime` をコンパイルする場合は、以下のように `wasm_alloc` を指定します。内部で `dlmalloc` がリンクされます。
 
 ```bash
-cargo build -p ssruntime --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
+cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
 ```
 
 ---
@@ -86,11 +86,11 @@ ss_runtime_set_log_callback(my_log_callback);
 
 自作の Rust 製ゲームエンジン (`no_std` アプリケーション) から `ssruntime` を呼び出す場合、アロケータやパニックハンドラの手配は上位の実行バイナリ (Executable) が担うのが一般的です。
 
-`Cargo.toml` に以下のように追加し、`default-features = false` にすることで、`libc_alloc` を無効化した純粋な `no_std` ライブラリ (`rlib`) として利用可能です。
+`Cargo.toml` に以下のように追加します。デフォルトで有効になる機能は無いため、これがそのままアロケータ機能も C-API エクスポートも持たない純粋な `no_std` ライブラリ (`rlib`) になります。
 
 ```toml
 [dependencies]
-ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
+ssruntime = "7.0.0-beta.1"
 ```
 
 > [!NOTE]
@@ -107,11 +107,11 @@ ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
 1. `ssruntime` をビルドする際に、`libc_alloc` の代わりに `custom_alloc` を指定します。配布物として使うのは **staticlib (`libssruntime.a` / `.lib`)** なので、staticlib を明示してビルドします。
 
 ```bash
-cargo rustc -p ssruntime --release --features "custom_alloc,panic-handler" --crate-type staticlib
+cargo rustc -p ssruntime-ffi --release --features "custom_alloc,panic-handler" --crate-type staticlib
 ```
 
 > [!IMPORTANT]
-> `custom_alloc` では `ss_custom_*` シンボルや `memcpy` 等の C ランタイム関数は **ssruntime 側では未解決のまま**にしておき、最終的にエンジン側とリンクするときに解決します。そのため `crate-type` に `cdylib` を含む素の `cargo build -p ssruntime` を実行すると、未解決シンボルを許さない macOS / Windows (MSVC) のリンカが `cdylib` のリンク段階で失敗します。上記のように `--crate-type staticlib` を明示してビルドしてください（成果物は `target/release/libssruntime.a`）。
+> `custom_alloc` では `ss_custom_*` シンボルや `memcpy` 等の C ランタイム関数は **ssruntime 側では未解決のまま**にしておき、最終的にエンジン側とリンクするときに解決します。そのため `crate-type` に `cdylib` を含む素の `cargo build -p ssruntime-ffi` を実行すると、未解決シンボルを許さない macOS / Windows (MSVC) のリンカが `cdylib` のリンク段階で失敗します。上記のように `--crate-type staticlib` を明示してビルドしてください（成果物は `target/release/libssruntime.a`）。
 
 2. リンクする C/C++ のプロジェクト（Unreal Engine など）側で、以下の 3 つの `extern "C"` 関数を定義します。これらに加えて、`memcpy` / `memset` / `memmove` / `memcmp` / `strlen` といった C ランタイム関数も最終リンク時に必要になりますが、通常はリンクするゲームエンジンの CRT が提供します（ベアメタル環境では別途用意してください）。
 
