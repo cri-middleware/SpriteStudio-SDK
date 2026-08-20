@@ -102,7 +102,7 @@
 //! A Rust dependent takes the crate as it comes:
 //!
 //! ```toml
-//! ssruntime = "7.0"
+//! ssruntime = "7.0.0-beta.1"
 //! ```
 //!
 //! The binary deliverables are built from `ssruntime-ffi`, which passes these through:

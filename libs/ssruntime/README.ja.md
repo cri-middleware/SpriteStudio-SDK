@@ -21,17 +21,23 @@
 
 `libssruntime` は `no_std` 環境と互換性があるように設計されており、組み込みシステムやカスタムゲームエンジンのコアでの利用に適しています。
 
-`no_std` 環境で使用する場合は、`Cargo.toml` でデフォルト機能を無効にします：
+Rust から依存する場合は、そのまま追加します。デフォルトで有効になる機能はありません：
 
 ```toml
+ssruntime = "7.0.0-beta.1"
+```
+
+バイナリ成果物は、このクレートを `staticlib` / `cdylib` として出力する隣のクレート `ssruntime-ffi` からビルドします。ターゲットに合う機能セットを選んでください：
+
+```sh
 # モバイル / コンソール / デスクトップ用 no_std (C-API 利用)
-ssruntime = { version = "7.0", default-features = false, features = ["ffi", "libc_alloc", "panic-handler"] }
+cargo build -p ssruntime-ffi --no-default-features --features ffi,libc_alloc,panic-handler
 
 # Web Wasm (ブラウザ / wasm-bindgen) 用 no_std
-ssruntime = { version = "7.0", default-features = false, features = ["web"] }
+cargo build -p ssruntime-ffi --no-default-features --features web
 
 # Pure Wasm (WASI / カスタム Wasm エンジン) 用 no_std
-ssruntime = { version = "7.0", default-features = false, features = ["wasm_alloc", "panic-handler"] }
+cargo build -p ssruntime-ffi --no-default-features --features wasm_alloc,panic-handler
 ```
 
 *注意: `no_std` モードでも、アニメーションの状態やメタデータを管理するためにアロケータ (`alloc` クレート) は必要です。*

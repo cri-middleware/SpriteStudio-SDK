@@ -86,11 +86,11 @@ With this, messages are forwarded to the host (C/C++ or C#) whenever a parse err
 
 When calling `ssruntime` from your own Rust game engine (a `no_std` application), arranging the allocator and panic handler is normally the job of the top-level executable.
 
-Add the following to `Cargo.toml` with `default-features = false` to use it as a pure `no_std` library (`rlib`) with `libc_alloc` disabled.
+Add the following to `Cargo.toml`. Nothing is on by default, so this is already the pure `no_std` library (`rlib`) with no allocator feature and no C-API exports.
 
 ```toml
 [dependencies]
-ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
+ssruntime = "7.0.0-beta.1"
 ```
 
 > [!NOTE]

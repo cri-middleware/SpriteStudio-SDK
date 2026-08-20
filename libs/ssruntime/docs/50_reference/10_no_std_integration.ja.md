@@ -86,11 +86,11 @@ ss_runtime_set_log_callback(my_log_callback);
 
 自作の Rust 製ゲームエンジン (`no_std` アプリケーション) から `ssruntime` を呼び出す場合、アロケータやパニックハンドラの手配は上位の実行バイナリ (Executable) が担うのが一般的です。
 
-`Cargo.toml` に以下のように追加し、`default-features = false` にすることで、`libc_alloc` を無効化した純粋な `no_std` ライブラリ (`rlib`) として利用可能です。
+`Cargo.toml` に以下のように追加します。デフォルトで有効になる機能は無いため、これがそのままアロケータ機能も C-API エクスポートも持たない純粋な `no_std` ライブラリ (`rlib`) になります。
 
 ```toml
 [dependencies]
-ssruntime = { version = "7.0", default-features = false, features = ["ffi"] }
+ssruntime = "7.0.0-beta.1"
 ```
 
 > [!NOTE]
