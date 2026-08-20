@@ -143,14 +143,14 @@ jobs:
           # cbindgen emits one plain-C header (.h) per crate. It carries
           # `extern "C"` guards, so it serves C and C++ alike (ffigen and the
           # framework module map need this one).
-          cp libs/ssruntime/target/ssruntime.h lib/include/
-          cp libs/ssconverter/target/ssconverter.h lib/include/
+          cp libs/ssruntime-ffi/target/ssruntime.h lib/include/
+          cp libs/ssconverter-ffi/target/ssconverter.h lib/include/
           # csbindgen C# FFI bindings (platform-independent; Linux is the canonical
           # source, mirroring how the .h headers above are collected). Consumers
           # such as SSPlayerForUnity need these to compile against the libs.
           mkdir -p lib/bindings
-          cp libs/ssruntime/target/SSRuntimeMethods.g.cs lib/bindings/
-          cp libs/ssconverter/target/SSConverterMethods.g.cs lib/bindings/
+          cp libs/ssruntime-ffi/target/SSRuntimeMethods.g.cs lib/bindings/
+          cp libs/ssconverter-ffi/target/SSConverterMethods.g.cs lib/bindings/
 
       # release-macos.sh signs the universal dylibs + CLI (hardened runtime +
       # timestamp) and notarizes everything it ships — CLI, libssconverter.dylib,

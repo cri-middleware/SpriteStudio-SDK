@@ -5,9 +5,10 @@ use std::path::PathBuf;
 
 fn main() {
     // Tell cargo to rerun this script if src directory changes
-    println!("cargo:rerun-if-changed=src");
+    println!("cargo:rerun-if-changed=../ssruntime/src");
 
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let core_dir = PathBuf::from(&crate_dir).join("..").join("ssruntime");
 
     // Emit a plain C header (.h): the Flutter Body runs `dart run ffigen` over
     // it, and it is the module-map umbrella for the macOS/iOS framework.
@@ -22,7 +23,7 @@ fn main() {
     // This is the only header the SDK ships; no Player consumes a C++-only
     // variant.
     let c_output_file = PathBuf::from(&crate_dir).join("target").join("ssruntime.h");
-    match cbindgen::Builder::new().with_crate(&crate_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).generate() {
+    match cbindgen::Builder::new().with_crate(&core_dir).with_language(cbindgen::Language::C).with_cpp_compat(true).generate() {
         Ok(bindings) => {
             bindings.write_to_file(&c_output_file);
         }
@@ -34,8 +35,8 @@ fn main() {
 
     let csharp_output_path = "target/SSRuntimeMethods.g.cs";
     match csbindgen::Builder::default()
-        .input_extern_file("src/ffi/mod.rs")
-        .input_extern_file("src/types.rs")
+        .input_extern_file("../ssruntime/src/ffi/mod.rs")
+        .input_extern_file("../ssruntime/src/types.rs")
         .csharp_dll_name("ssruntime")
         .csharp_class_accessibility("public")
         .csharp_namespace("SpriteStudio.SsRuntime")

@@ -35,7 +35,7 @@ try {
 
     & cargo +nightly rustc -Z build-std=core,alloc `
         --target wasm32-unknown-unknown `
-        -p ssruntime `
+        -p ssruntime-ffi `
         @cargoFlags `
         --no-default-features `
         --features "emscripten_alloc,panic-handler,ffi" `

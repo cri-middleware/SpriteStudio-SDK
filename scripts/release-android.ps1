@@ -20,9 +20,9 @@ if ($args.Count -gt 0 -and $args[0] -eq "debug") {
 pushd $rootDirectory
 
 try {
-    & cargo ndk --target aarch64-linux-android build -p ssruntime --features libc_alloc,panic-handler @cargoFlags
-    & cargo ndk --target armv7-linux-androideabi build -p ssruntime --features libc_alloc,panic-handler @cargoFlags
-    & cargo ndk --target x86_64-linux-android build -p ssruntime --features libc_alloc,panic-handler @cargoFlags
+    & cargo ndk --target aarch64-linux-android build -p ssruntime-ffi --features libc_alloc,panic-handler @cargoFlags
+    & cargo ndk --target armv7-linux-androideabi build -p ssruntime-ffi --features libc_alloc,panic-handler @cargoFlags
+    & cargo ndk --target x86_64-linux-android build -p ssruntime-ffi --features libc_alloc,panic-handler @cargoFlags
 }
 finally {
     popd

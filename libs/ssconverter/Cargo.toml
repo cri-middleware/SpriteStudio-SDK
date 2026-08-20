@@ -10,7 +10,7 @@ homepage.workspace = true
 description.workspace = true
 
 [lib]
-crate-type = ["rlib", "staticlib", "cdylib"]
+crate-type = ["rlib"]
 
 [dependencies]
 flatbuffers = { workspace = true, features = ["std"] }
@@ -23,7 +23,7 @@ wasm-bindgen = { workspace = true, optional = true }
 js-sys = { workspace = true, optional = true }
 
 [features]
-default = ["ffi"]
+default = ["native"]
 # C-API exports. Requires the native (filesystem) conversion paths.
 ffi = ["native"]
 # Native build (CLI / Tauri backend): parallel conversion, filesystem I/O,
@@ -38,24 +38,6 @@ scan = ["dep:walkdir"]
 # Build with: --no-default-features --features web
 web = ["dep:wasm-bindgen", "wasm-bindgen/std", "dep:js-sys"]
 
-# Browser WASM packaging (wasm-pack). SIMD is disabled at compile time by
-# `release-web.sh` (RUSTFLAGS=-simd128; the repo-wide `+simd128` in
-# `.cargo/config.toml` is for the runtime, not the converter). Enable exactly
-# rustc's default wasm32 features so wasm-opt accepts the input; `--enable-simd`
-# is intentionally omitted so the output stays SIMD-free. Do NOT use
-# `--all-features`: on newer wasm-opt (v112+) it also enables experimental
-# *output* proposals, producing type encodings that browsers/V8 reject at
-# instantiation ("invalid value type" in `wasm.initialize`). `-Oz` keeps it small.
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = [
-    "-Oz",
-    "--enable-bulk-memory",
-    "--enable-mutable-globals",
-    "--enable-sign-ext",
-    "--enable-nontrapping-float-to-int",
-    "--enable-multivalue",
-    "--enable-reference-types",
-]
 
 [lints.clippy]
 field_reassign_with_default = "allow"
@@ -65,6 +47,4 @@ no_effect = "allow"
 unnecessary_get_then_check = "allow"
 
 [build-dependencies]
-cbindgen = { workspace = true }
 vergen-gitcl = { workspace = true }
-csbindgen = { workspace = true }

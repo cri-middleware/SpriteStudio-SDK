@@ -1,3 +1,20 @@
+//! Interpolation math for SpriteStudio animation curves.
+//!
+//! Curve evaluation with no dependency on `ssab` or any other SpriteStudio type — just
+//! numbers in, numbers out. Linear, Hermite and Bezier interpolation plus the easing rate
+//! functions, all generic over [`SsFloat`] so the same code serves `f32` and `f64`.
+//!
+//! ```
+//! use ssruntime::interpolate::{linear, rate_ease_in};
+//!
+//! assert_eq!(linear(0.0f32, 100.0, 0.5), 50.0);
+//! assert_eq!(linear(0.0f64, 100.0, 0.5), 50.0); // same code path, f64
+//!
+//! // Easing shapes the rate, which then drives the interpolation.
+//! let eased = linear(0.0f32, 100.0, rate_ease_in(0.5, 2.0));
+//! assert!(eased < 50.0);
+//! ```
+
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// A trait to abstract floating-point operations for generic interpolation.

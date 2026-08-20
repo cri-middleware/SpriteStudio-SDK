@@ -12,7 +12,6 @@ description.workspace = true
 [dependencies]
 flatbuffers = { workspace = true }
 ssab = { workspace = true }
-ssinterpolate = { workspace = true }
 libm = { workspace = true }
 wasm-bindgen = { workspace = true, optional = true }
 dlmalloc = { workspace = true, optional = true, features = ["global"] }
@@ -27,10 +26,10 @@ wide = { workspace = true }
 ssconverter = { workspace = true }
 
 [features]
-default = ["ffi"]
+default = []
 ffi = []
 web = ["wasm-bindgen/std"]
-std = ["flatbuffers/std", "ssab/std", "wasm-bindgen/std"]
+std = ["flatbuffers/std", "ssab/std", "wasm-bindgen?/std"]
 libc_alloc = ["dep:libc"]
 wasm_alloc = ["dep:dlmalloc"]
 emscripten_alloc = []
@@ -41,25 +40,6 @@ panic-handler = []
 too_many_arguments = "allow"
 
 [lib]
-crate-type = ["rlib", "staticlib", "cdylib"]
+crate-type = ["rlib"]
 
-# Enable exactly the wasm features rustc emits (`+simd128` from `.cargo/config.toml`
-# plus its wasm32 defaults). Do NOT use `--all-features`: on newer wasm-opt (v112+)
-# it also enables experimental *output* proposals, producing type encodings that
-# browsers/V8 reject at instantiation ("invalid value type" in `wasm.initialize`).
-# There is no `target_features` custom section to auto-detect, so these are required.
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = [
-    "-Oz",
-    "--enable-simd",
-    "--enable-bulk-memory",
-    "--enable-mutable-globals",
-    "--enable-sign-ext",
-    "--enable-nontrapping-float-to-int",
-    "--enable-multivalue",
-    "--enable-reference-types",
-]
 
-[build-dependencies]
-cbindgen = { workspace = true }
-csbindgen = { workspace = true }

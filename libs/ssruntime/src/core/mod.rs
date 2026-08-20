@@ -3,7 +3,7 @@
 //! | Module | Responsibility |
 //! |---|---|
 //! | [`playback_controller`] | Transport, loop counting, ping-pong, seek, FPS and playback range. |
-//! | [`interpolation`] | Keyframe curve evaluation (delegates the maths to `ssinterpolate`). |
+//! | [`interpolation`] | Keyframe curve evaluation (delegates the maths to [`crate::interpolate`]). |
 //! | [`matrix`] / [`geometry`] | Transform composition and vertex/mesh geometry. |
 //! | [`framedata`] | Builds the per-frame FlatBuffer and the DrawBatch plan a Player consumes. |
 //! | [`override_layer`] | Per-part runtime overrides of color, cell and visibility. |

@@ -39,7 +39,6 @@ CRATES=(
     "libs/sspj|"
     "libs/ssab|"
     "libs/ssruntime|--no-default-features --features ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler"
-    "libs/ssinterpolate|"
 )
 
 /bin/mkdir -p "${OUT_DIR}"

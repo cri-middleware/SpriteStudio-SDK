@@ -314,6 +314,8 @@ pub mod error;
 
 pub use crate::core::SsCoordinateSystem;
 
+pub mod interpolate;
+
 pub mod types;
 
 #[cfg(feature = "ffi")]
