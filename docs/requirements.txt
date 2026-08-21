@@ -7,4 +7,4 @@
 # per-page language switcher, and `exclude_docs` are all gone. The first, third and fourth
 # are replaced by scripts/build-docs-tree.py; the second by Zensical's native `> [!NOTE]`
 # parsing (`pymdownx.quotes`).
-zensical==0.0.54
+zensical==0.0.56
