@@ -28,9 +28,9 @@ ssconverter = { version = "7.0.0-beta.1", path = "libs/ssconverter" }
 ssab = { version = "7.0.0-beta.1", path = "libs/ssab", default-features = false }
 ssruntime = { version = "7.0.0-beta.1", path = "libs/ssruntime" }
 flatbuffers = { version = "25.12.19", default-features = false }
-wide = { version = "1.6.0", default-features = false }
+wide = { version = "1.6.1", default-features = false }
 libm = "0.2.16"
-wasm-bindgen = { version = "0.2.126", default-features = false }
+wasm-bindgen = { version = "0.2.127", default-features = false }
 dlmalloc = "0.2.14"
 rayon = "1.12.0"
 # `default-features = false` is load-bearing: libc's default feature set enables
@@ -38,13 +38,13 @@ rayon = "1.12.0"
 libc = { version = "0.2.189", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
 quick-xml = { version = "0.41.0", features = ["serialize"] }
-clap = { version = "4.6.4", features = ["derive"] }
+clap = { version = "4.6.6", features = ["derive"] }
 ordered-float = "5.3.0"
 walkdir = "2.5.0"
-js-sys = "0.3.103"
+js-sys = "0.3.104"
 cbindgen = "0.29.4"
 csbindgen = "1.9.8"
-vergen-gitcl = { version = "10.0.1", features = ["build"] }
+vergen-gitcl = { version = "10.0.2", features = ["build"] }
 
 [profile.dev]
 panic = "abort"
