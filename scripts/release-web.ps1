@@ -36,6 +36,16 @@ try {
     # package job runs scripts/generate-licenses.ps1 and copies it into each
     # package). Run that script manually first if you want the notice locally.
 
+    # The browser pays for every byte it downloads, so both runtime builds override
+    # the workspace `[profile.release]` `opt-level = 3` with `z`. That is rustc-level
+    # size optimization, on top of the wasm-opt `-Oz` that
+    # `[package.metadata.wasm-pack]` already applies; together they cut the shipped
+    # `ssruntime_bg.wasm` by about a third. It is passed as `--config` rather than
+    # `RUSTFLAGS` because the no-SIMD build below replaces RUSTFLAGS wholesale, which
+    # would drop it. ssconverter keeps `opt-level = 3`: it is a one-shot conversion
+    # tool, not a per-page download.
+    $sizeOpt = @('--config', 'profile.release.opt-level="z"')
+
     # ssruntime (playback Brain) -> pkg/runtime-web. Inherits the repo-wide
     # `+simd128` (.cargo/config.toml); primary build for modern browsers.
     $outDir = "../../pkg/runtime-web/$buildMode"
@@ -43,7 +53,7 @@ try {
         Remove-Item -Recurse -Force "pkg/runtime-web/$buildMode"
     }
 
-    & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features
+    & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $outDir -- --features web --no-default-features @sizeOpt
 
     # ssruntime no-SIMD variant -> pkg/runtime-web-nosimd. For hosts whose WASM
     # engine lacks simd128 — notably the NW.js bundled with RPG Maker MZ, whose
@@ -59,7 +69,7 @@ try {
     $oldRustFlagsRuntime = $env:RUSTFLAGS
     try {
         $env:RUSTFLAGS = "-C target-feature=-simd128"
-        & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features
+        & $wasmPack build libs/ssruntime-ffi @wasmPackFlags --target web --out-dir $nosimdOutDir -- --features web --no-default-features @sizeOpt
     } finally {
         $env:RUSTFLAGS = $oldRustFlagsRuntime
     }

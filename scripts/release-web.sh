@@ -36,11 +36,20 @@ pushd ${ROOTDIR} > /dev/null
 # package job runs scripts/generate-licenses.sh and copies it into each
 # package). Run that script manually first if you want the notice locally.
 
+# The browser pays for every byte it downloads, so both runtime builds override the
+# workspace `[profile.release]` `opt-level = 3` with `z`. That is rustc-level size
+# optimization, on top of the wasm-opt `-Oz` that `[package.metadata.wasm-pack]`
+# already applies; together they cut the shipped `ssruntime_bg.wasm` by about a
+# third. It is passed as `--config` rather than `RUSTFLAGS` because the no-SIMD
+# build below replaces RUSTFLAGS wholesale, which would drop it. ssconverter keeps
+# `opt-level = 3`: it is a one-shot conversion tool, not a per-page download.
+SIZE_OPT='--config profile.release.opt-level="z"'
+
 # ssruntime (playback Brain) -> pkg/runtime-web. Inherits the repo-wide
 # `+simd128` (.cargo/config.toml); this is the primary build for modern browsers.
 OUT_DIR="../../pkg/runtime-web/${BUILD_MODE}"
 /bin/rm -rf "pkg/runtime-web/${BUILD_MODE}"
-$WASM_PACK build libs/ssruntime-ffi ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_DIR} -- --features web --no-default-features
+$WASM_PACK build libs/ssruntime-ffi ${WASM_PACK_FLAGS} --target web --out-dir ${OUT_DIR} -- --features web --no-default-features ${SIZE_OPT}
 
 # ssruntime no-SIMD variant -> pkg/runtime-web-nosimd. For hosts whose WASM
 # engine lacks simd128 — notably the NW.js bundled with RPG Maker MZ, whose
@@ -50,7 +59,7 @@ $WASM_PACK build libs/ssruntime-ffi ${WASM_PACK_FLAGS} --target web --out-dir ${
 # the repo-wide `+simd128` with `-simd128` for this build.
 NOSIMD_OUT_DIR="../../pkg/runtime-web-nosimd/${BUILD_MODE}"
 /bin/rm -rf "pkg/runtime-web-nosimd/${BUILD_MODE}"
-RUSTFLAGS="-C target-feature=-simd128" $WASM_PACK build libs/ssruntime-ffi ${WASM_PACK_FLAGS} --target web --out-dir ${NOSIMD_OUT_DIR} -- --features web --no-default-features
+RUSTFLAGS="-C target-feature=-simd128" $WASM_PACK build libs/ssruntime-ffi ${WASM_PACK_FLAGS} --target web --out-dir ${NOSIMD_OUT_DIR} -- --features web --no-default-features ${SIZE_OPT}
 
 # ssconverter (sspj -> .ssab) -> pkg/converter-web. Sequential conversion;
 # JS supplies project files in-memory (no rayon, no filesystem on wasm).
