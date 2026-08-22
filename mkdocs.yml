@@ -41,7 +41,8 @@ extra:
 
 # Mirrors the table of contents in README.md; the numeric directory prefixes are the reading
 # order, so keep the two in step when a page is added. Paths are locale-relative and
-# identical to the ones in mkdocs.ja.yml; only the labels differ.
+# identical to the ones in mkdocs.ja.yml; only the labels differ. The one exception is the
+# last entry, which leaves `docs_dir` for the rustdoc build-pages.sh grafts onto site/api/.
 nav:
   - 🏠 Home: README.md
   - 🚀 Introduction:
@@ -72,7 +73,4 @@ nav:
       - Troubleshooting: 50_reference/20_troubleshooting.md
   - 🛠️ Tooling:
       - Editor Integration & Conversion: 60_tooling/10_editor_integration.md
-  # rustdoc is not built here; pages.yml drops `cargo doc` output into site/api/ after both
-  # locale builds. An absolute URL because the target does not exist at build time -- it
-  # points at production, so it is dead during a local `zensical serve`.
-  - 📦 Rust API (rustdoc): https://cri-middleware.github.io/SpriteStudio-SDK/api/ssruntime/index.html
+  - 📦 Rust API (rustdoc): api/ssruntime/index.html

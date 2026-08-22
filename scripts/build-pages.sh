@@ -11,7 +11,7 @@
 #
 # Two builds that know nothing about each other, and one tree they both land in.
 # scripts/build-docs.sh generates the per-locale guide trees and runs zensical
-# over them; `cargo doc` renders the six crates. Neither is aware of the other,
+# over them; `cargo doc` renders the workspace. Neither is aware of the other,
 # which is exactly why the order matters and why it is written down in one place:
 # the English documentation build clears site/, and both the Japanese site
 # (site/ja) and the rustdoc (site/api) live inside it -- so the rustdoc goes in
@@ -209,10 +209,18 @@ build_api () {
   mkdir -p "$API_DIR"
   cp -R "$doc_dir/." "$API_DIR/"
 
-  # `cargo doc` writes no index.html at the root of a workspace -- with six
+  # `cargo doc` writes no index.html at the root of a workspace -- with several
   # crates there is no single page to land on. The nav entry in both locale
   # configs links straight to ssruntime, and this redirect covers anyone who
   # trims the URL back to /api/. Keep it identical to the one in pages.yml.
+  #
+  # Five of the seven workspace members land here: libs/ssruntime-ffi and
+  # libs/ssconverter-ffi set `doc = false`, deliberately. They are cdylib +
+  # staticlib with no rlib, so nothing can `use` them from Rust; their surface is
+  # the C API, documented by the cbindgen headers and the Player Porting Guide.
+  # More to the point, each renames its lib to the crate it wraps (`ssruntime`,
+  # `ssconverter`), so documenting them would write two crates into one
+  # target/doc/ssruntime and clobber the real one.
   cat > "$API_DIR/index.html" <<'HTML'
 <!doctype html>
 <meta charset="utf-8">
