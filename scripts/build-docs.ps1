@@ -25,9 +25,21 @@
 #      spelled out here because it is what the docs tell people to run.
 #
 # What this does not build is the rustdoc the published site carries at /api/:
-# that is `cargo doc --workspace --no-deps --all-features`, which pages.yml runs
-# and copies into site/api after both locale builds. A locally built site has no
-# /api/, and the nav entry pointing into it goes nowhere until the workflow runs.
+# that is `cargo doc --workspace --no-deps --all-features`, copied into site/api
+# after both locale builds. scripts/build-pages.sh is this script's Bash sibling
+# plus that graft, in that order, and is what pages.yml runs -- there is no
+# build-pages.ps1, deliberately: the workflow builds on Linux, so a PowerShell
+# port would be a second copy of that order that nothing ever runs.
+#
+# The nav's Rust API entry is a site-relative path, so a site built by this
+# script alone has no /api/ for it to reach and it 404s locally. To complete the
+# tree by hand after this script finishes:
+#
+#   cargo doc --workspace --no-deps --all-features
+#   Copy-Item -Recurse -Force target/doc site/api
+#
+# then serve the whole tree at once (`python -m http.server 8000 -d site`), which
+# is also the only way the language selector resolves.
 #
 # The -docs suffix keeps this apart from the scripts that build the code itself;
 # the whole SpriteStudio family spells the documentation pair the same way.

@@ -80,8 +80,8 @@ jobs:
       #   /api/, with the redirect that covers anyone who trims the URL back to it —
       #   `cargo doc` writes no index.html at the root of a workspace, and the nav entry in
       #   both locale configs links straight to ssruntime. It lands at /api/ only, not
-      #   /ja/api/: rustdoc output is English-only and both navs point at the same absolute
-      #   URL. Deliberately without `RUSTDOCFLAGS: -D warnings`, unlike the same command in
+      #   /ja/api/: rustdoc output is English-only and both navs point at that one tree.
+      #   Deliberately without `RUSTDOCFLAGS: -D warnings`, unlike the same command in
       #   ci.yml — that gate belongs on the pull request, and enforcing it again here would
       #   mean a single bad intra-doc link publishes no documentation at all rather than
       #   documentation with one bad link in it.

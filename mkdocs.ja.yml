@@ -41,7 +41,9 @@ extra:
       link: https://x.com/spritestudio
       name: X の SpriteStudio
 
-# The Japanese counterpart of the `nav` in mkdocs.yml -- same paths, translated labels.
+# The Japanese counterpart of the `nav` in mkdocs.yml -- same paths, translated labels. The
+# last entry is the exception: it needs the extra `../` the English one does not, because
+# this site builds into site/ja and the rustdoc it points at is grafted onto site/api/.
 # This replaces the old `nav_translations` map: labels are written where they are used
 # instead of being looked up by their English string, so a renamed English title can no
 # longer silently leave the Japanese label untranslated.
@@ -75,4 +77,4 @@ nav:
       - トラブルシューティング: 50_reference/20_troubleshooting.md
   - 🛠️ ツール連携:
       - エディタインテグレーションとコンバート: 60_tooling/10_editor_integration.md
-  - 📦 Rust API (rustdoc): https://cri-middleware.github.io/SpriteStudio-SDK/api/ssruntime/index.html
+  - 📦 Rust API (rustdoc): ../api/ssruntime/index.html

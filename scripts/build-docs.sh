@@ -25,9 +25,10 @@
 #
 # What this does not build is the rustdoc the published site carries at /api/:
 # that is `cargo doc --workspace --no-deps --all-features`, copied into site/api
-# after both locale builds. A site built by this script alone has no /api/, and
-# the nav entry pointing into it goes nowhere -- scripts/build-pages.sh is this
-# script plus that graft, in that order, and is what pages.yml runs.
+# after both locale builds. The nav's Rust API entry is a site-relative path, so a
+# site built by this script alone has no /api/ for it to reach and it 404s --
+# scripts/build-pages.sh is this script plus that graft, in that order, and is
+# what pages.yml runs.
 #
 # The -docs suffix keeps this apart from the scripts that build the code itself;
 # the whole SpriteStudio family spells the documentation pair the same way.
