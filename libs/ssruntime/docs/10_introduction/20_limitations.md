@@ -18,7 +18,7 @@ It collects the things that directly affect Player design decisions: `ssruntime`
 - [No Validation of Input Data (Security Note)](#no-validation-of-input-data-security-note)
 - [Lifetime of AnimationResource and Context](#lifetime-of-animationresource-and-context)
 - [Limitations of ssab Embedded Mode](#limitations-of-ssab-embedded-mode)
-- [Limitations When Blending Animations](#limitations-when-blending-animations)
+- [Limitations When Mixing Animations](#limitations-when-mixing-animations)
 - [No Reverse Playback of Audio](#no-reverse-playback-of-audio)
 
 ---
