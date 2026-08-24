@@ -264,6 +264,7 @@ impl PlaybackController {
         self.end_frame = 0;
         self.fps_override = None;
         self.fps_rate = 1.0;
+        self.is_skip_frames = true;
 
         self.update_interval = 0.0;
         self.passed_frames.clear();
@@ -328,6 +329,25 @@ impl PlaybackController {
 
     pub fn set_skip_frames(&mut self, skip: bool) {
         self.is_skip_frames = skip;
+    }
+
+    /// Carries the host's playback policy onto a controller that has just been
+    /// rebuilt, so a rebuild of the slot's internals is not observable as a
+    /// reset of settings the host owns.
+    ///
+    /// The track stack rebuilds the primary source wholesale when it collapses
+    /// to a single track, which every `setup_animation` does. Without this, the
+    /// speed / frame-skip / frame-rate override that `setup` is careful to keep
+    /// would be discarded a moment earlier by the rebuild — the settings live on
+    /// the controller, and the controller is what gets replaced.
+    ///
+    /// `update_interval` is left alone: the `setup` that follows computes it
+    /// from the new animation's frame rate, and until then there is no animation
+    /// to advance.
+    pub(crate) fn adopt_host_policy(&mut self, from: &PlaybackController) {
+        self.fps_rate = from.fps_rate;
+        self.fps_override = from.fps_override;
+        self.is_skip_frames = from.is_skip_frames;
     }
 
     /**
