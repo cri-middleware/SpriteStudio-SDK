@@ -274,6 +274,9 @@ impl PlaybackController {
         self.fps_override = None;
         self.fps_rate = 1.0;
         self.is_skip_frames = true;
+        self.playback_direction = PlaybackDirection::Forward;
+        self.playback_style = PlaybackStyle::Normal;
+        self.playback_forward = 1;
 
         self.update_interval = 0.0;
         self.passed_frames.clear();
@@ -325,9 +328,12 @@ impl PlaybackController {
         // first cycle.
         self.set_loops(-1);
 
-        self.playback_style = PlaybackStyle::Normal;
-        self.playback_direction = PlaybackDirection::Forward;
-        self.playback_forward = 1;
+        // The direction and style are the host's, like the speed and the frame
+        // skip: "play this backwards" describes the playback, not the clip that
+        // happens to be loaded. Only the *heading* is re-derived -- ping-pong
+        // may have flipped it mid-cycle, and a new animation starts on the
+        // outward leg of whatever direction is in force.
+        self.playback_forward = if self.playback_direction == PlaybackDirection::Forward { 1 } else { -1 };
         // Carries the retained rate and any retained override onto the new
         // animation. Reading `anime_data_fps` directly here would ignore the
         // override, which used to be invisible only because `setup` overwrote it.
@@ -369,6 +375,9 @@ impl PlaybackController {
         self.fps_rate = from.fps_rate;
         self.fps_override = from.fps_override;
         self.is_skip_frames = from.is_skip_frames;
+        self.playback_direction = from.playback_direction;
+        self.playback_style = from.playback_style;
+        self.playback_forward = from.playback_forward;
     }
 
     /**
@@ -1894,9 +1903,9 @@ mod tests {
 
     #[test]
     fn setup_keeps_the_speed_and_frame_skip_the_host_chose() {
-        // The two settings a *different* system owns — a slow-motion effect, a
-        // "show every frame" capture mode — must not be clobbered by an
-        // animation transition. Everything the transition itself specifies does
+        // The settings a *different* system owns — a slow-motion effect, a
+        // "show every frame" capture mode, a rewind mode — must not be clobbered
+        // by an animation transition. What the transition itself specifies does
         // reset, so transitions stay independent of the one before them.
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
@@ -1913,10 +1922,41 @@ mod tests {
         assert_eq!(t.fps_rate, 2.0, "speed is the host's, not the clip's");
         assert!(!t.get_skip_frames(), "frame skip is the host's, not the clip's");
 
+        assert!(t.playback_direction == PlaybackDirection::Backward, "direction is the host's, not the clip's");
+        assert!(t.playback_style == PlaybackStyle::PingPong, "style is the host's, not the clip's");
+        assert_eq!(t.playback_forward, -1, "and the heading is re-derived from it");
+
         assert_eq!(t.get_loops(), -1, "loop count is per-transition");
-        assert!(t.playback_direction == PlaybackDirection::Forward, "direction is per-transition");
-        assert!(t.playback_style == PlaybackStyle::Normal, "style is per-transition");
         assert_eq!((t.start_frame, t.end_frame), (0, 9), "the section is the new clip's own range");
+    }
+
+    #[test]
+    fn setup_restarts_a_ping_pong_on_the_outward_leg() {
+        // The direction survives, but the *heading* does not: a ping-pong that
+        // was on its way back when the animation changed would otherwise start
+        // the new one walking the wrong way out of the gate.
+        let mut t = PlaybackController::new();
+        t.setup(0, 9, 30);
+        t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
+        t.playback_forward = -1; // mid-cycle: the return leg
+
+        t.setup(0, 9, 30);
+
+        assert!(t.playback_style == PlaybackStyle::PingPong, "the mode is kept");
+        assert_eq!(t.playback_forward, 1, "but the new animation starts outbound");
+    }
+
+    #[test]
+    fn releasing_a_slot_resets_the_direction() {
+        // reset_setup hands the slot to a different owner, so unlike setup it
+        // must not leak the previous one's direction.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+        t.reset_setup();
+        assert!(t.playback_direction == PlaybackDirection::Forward);
+        assert!(t.playback_style == PlaybackStyle::Normal);
+        assert_eq!(t.playback_forward, 1);
     }
 
     #[test]
