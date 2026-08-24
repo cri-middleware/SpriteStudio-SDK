@@ -27,8 +27,35 @@ ss_runtime_play(context);
 | `-1` | Infinite loop |
 | `0` | Infinite loop (an alias of `-1`; anything ≤ 0 is normalized to `-1`) |
 
+### What `setup_animation` resets
+
+`setup_animation` is the primitive a Player's state machine calls on every
+transition, so what it resets is drawn along one line: **who sets it.**
+
+| Setting | Survives `setup_animation`? | Why |
+| :--- | :--- | :--- |
+| Playback section | no | Frame indices mean nothing against a different clip |
+| Frame rate (authored) | no | It is the clip's own data |
+| Loop count | no | The transition states it; see below |
+| Direction / style | no | The transition states it |
+| **Speed (`set_animation_speed`)** | **yes** | A *different* system sets it — slow motion, a haste buff, a difficulty scale |
+| **Frame skip** | **yes** | A Player policy — "show every frame" for a capture or a frame-counted cutscene |
+
+Anything the transition itself specifies is reset, so **transitions stay
+independent of the one before them**. Were the loop count to persist, a `1` meant
+for an attack would quietly follow the character into its walk, and the bug's
+reproduction would live in the transition history rather than in the transition.
+
+Speed and frame skip are the other way round: nothing in the state machine sets
+them, so resetting them would let an animation transition clobber a setting it
+never knew about. A Player's own sub-frame flag is the same kind of setting and
+already behaves this way, simply because it lives on the Player's side of the
+C-API.
+
 > [!NOTE]
-> `setup_animation` resets the loop count to its default (infinite). Re-apply it after `setup_animation` and before `play`. `play` re-arms the counter with the loop count in effect at that moment, so replaying a finished animation with `play` applies the same loop count again.
+> `play` re-arms the loop counter with the count in effect at that moment, so
+> replaying a finished animation applies the same count again. Set the loop count
+> after `setup_animation` and before `play`.
 
 ### Moving the playhead
 - **Seek**: jump to an arbitrary frame with `ss_runtime_set_frame_no(context, frame)`.
@@ -282,7 +309,7 @@ Benefits:
 With this design, also providing a `started` callback as the notification for playback beginning makes it easier for users to distinguish `set_animation` (swapping) from `play` (starting).
 
 > [!NOTE]
-> Because `setup_animation` resets the loop count, speed, playback direction, and so on to their defaults, re-apply them inside `setAnimation` (or before `play`).
+> `setup_animation` resets the loop count, the playback direction / style and the section, so set those inside `setAnimation` (or before `play`). Speed and frame skip survive it — see [What `setup_animation` resets](#what-setup_animation-resets) — so a Player does **not** need to re-apply them, and one that does is simply writing the same value back.
 
 ### Sub-frame playback
 `libssruntime` manages the frame number as an `f32`, which allows "interpolation" between integer frames. To achieve smooth motion on high-refresh-rate displays, we recommend that the Player support `f32` frame management too.
