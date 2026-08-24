@@ -98,7 +98,11 @@ pub struct PlaybackController {
 
     start_frame: i32,
     end_frame: i32,
-    fps: i32,
+    /// The rate the host asked for, when it asked for one at all. Kept apart
+    /// from `anime_data_fps` so `setup` can re-read the clip's own rate without
+    /// having to guess whether the current value was a host's choice or just
+    /// what the previous clip happened to be authored at.
+    fps_override: Option<i32>,
     fps_rate: f32,
     loops: i32,
 
@@ -197,7 +201,7 @@ impl PlaybackController {
     }
 
     pub fn get_fps(&self) -> i32 {
-        self.fps
+        self.effective_fps()
     }
 
     pub fn get_passed_frames(&self) -> &[i32] {
@@ -226,7 +230,7 @@ impl PlaybackController {
 
             start_frame: 0,
             end_frame: 0,
-            fps: 0,
+            fps_override: None,
             fps_rate: 1.0,
 
             update_interval: 0.0,
@@ -258,7 +262,7 @@ impl PlaybackController {
 
         self.start_frame = 0;
         self.end_frame = 0;
-        self.fps = 0;
+        self.fps_override = None;
         self.fps_rate = 1.0;
 
         self.update_interval = 0.0;
@@ -304,7 +308,6 @@ impl PlaybackController {
         self.anime_data_fps = fps;
         self.start_frame = self.anime_data_start_frame;
         self.end_frame = self.anime_data_end_frame;
-        self.fps = self.anime_data_fps;
 
         self.current_frame = start_frame as f32;
         // Resets `remain_loops` too: a stale count from a previous animation
@@ -315,8 +318,10 @@ impl PlaybackController {
         self.playback_style = PlaybackStyle::Normal;
         self.playback_direction = PlaybackDirection::Forward;
         self.playback_forward = 1;
-        // Carries the retained `fps_rate` onto the new animation's frame rate.
-        self.update_interval = 1000.0 / (self.anime_data_fps as f32 * self.fps_rate);
+        // Carries the retained rate and any retained override onto the new
+        // animation. Reading `anime_data_fps` directly here would ignore the
+        // override, which used to be invisible only because `setup` overwrote it.
+        self.update_interval = 1000.0 / (self.effective_fps() as f32 * self.fps_rate);
         self.passed_frames.clear();
         self.needs_evaluation = false;
     }
@@ -339,9 +344,24 @@ impl PlaybackController {
         self.remain_loops = self.loops;
     }
 
+    /// Overrides the rate the clip was authored at. `0` or any negative value
+    /// clears the override, handing playback back to the authored rate.
+    ///
+    /// This is an *absolute* rate — "this player runs at n fps" — where
+    /// [`Self::set_animation_speed`] is a multiple of whatever the clip was
+    /// authored at. Both are the host's, so both survive `setup`.
     pub fn set_frame_rate(&mut self, fps: i32) {
-        self.fps = if fps > 0 { fps } else { self.anime_data_fps };
-        self.update_interval = 1000.0 / (self.fps as f32 * self.fps_rate);
+        self.fps_override = if fps > 0 { Some(fps) } else { None };
+        self.update_interval = 1000.0 / (self.effective_fps() as f32 * self.fps_rate);
+    }
+
+    /// The rate playback actually runs at: the host's override when it set one,
+    /// otherwise the rate the current clip was authored at.
+    fn effective_fps(&self) -> i32 {
+        match self.fps_override {
+            Some(fps) => fps,
+            None => self.anime_data_fps,
+        }
     }
 
     /**
@@ -357,7 +377,7 @@ impl PlaybackController {
 
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
         self.fps_rate = if speed_rate > 0.0 { speed_rate } else { 1.0 };
-        self.update_interval = 1000.0 / (self.fps as f32 * self.fps_rate);
+        self.update_interval = 1000.0 / (self.effective_fps() as f32 * self.fps_rate);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
@@ -1876,5 +1896,69 @@ mod tests {
         t.set_animation_speed(2.0);
         t.reset_setup();
         assert_eq!(t.fps_rate, 1.0);
+    }
+
+    #[test]
+    fn an_fps_override_survives_setup_and_the_authored_rate_does_not() {
+        // `set_frame_rate` is the host saying "this player runs at n fps", so it
+        // outlives a transition the way the speed multiplier does. The clip's own
+        // rate is data and is re-read every time.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 30);
+        assert_eq!(t.get_fps(), 30, "no override yet: the clip's own rate");
+
+        t.set_frame_rate(60);
+        assert_eq!(t.get_fps(), 60);
+
+        t.setup(0, 1000, 24); // a different clip, authored at 24
+        assert_eq!(t.get_fps(), 60, "the host's rate outlives the transition");
+
+        // ...and clearing it hands playback back to the *new* clip's rate, not
+        // the one that was current when the override was set.
+        t.set_frame_rate(0);
+        assert_eq!(t.get_fps(), 24);
+    }
+
+    #[test]
+    fn setup_folds_the_override_into_the_update_interval() {
+        // Regression: `setup` used to compute the interval from `anime_data_fps`
+        // while every other writer used the effective rate. That was invisible
+        // while `setup` also cleared the override, and would advance at the
+        // authored rate the moment it stopped.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 30);
+        t.set_skip_frames(true);
+        t.set_frame_rate(60);
+
+        t.setup(0, 1000, 24); // authored 24, override 60
+        t.play();
+        t.update(1000.0);
+
+        assert!((t.get_frame_no() - 60.0).abs() < 1.0, "expected ~60 frames (the override), got {} (24 would mean setup ignored it)", t.get_frame_no());
+    }
+
+    #[test]
+    fn the_override_and_the_speed_multiply() {
+        // They compose: 60fps at x0.5 is 30 frames a second, whatever the clip
+        // was authored at.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 24);
+        t.set_skip_frames(true);
+        t.set_frame_rate(60);
+        t.set_animation_speed(0.5);
+        t.play();
+        t.update(1000.0);
+
+        assert!((t.get_frame_no() - 30.0).abs() < 1.0, "expected ~30 frames, got {}", t.get_frame_no());
+    }
+
+    #[test]
+    fn releasing_a_slot_clears_the_override_too() {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_frame_rate(60);
+        t.reset_setup();
+        t.setup(0, 4, 30);
+        assert_eq!(t.get_fps(), 30, "a recycled slot must not inherit the previous owner's rate");
     }
 }

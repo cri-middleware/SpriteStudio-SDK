@@ -35,11 +35,20 @@ transition, so what it resets is drawn along one line: **who sets it.**
 | Setting | Survives `setup_animation`? | Why |
 | :--- | :--- | :--- |
 | Playback section | no | Frame indices mean nothing against a different clip |
-| Frame rate (authored) | no | It is the clip's own data |
+| Authored frame rate | no | It is the clip's own data, re-read every time |
 | Loop count | no | The transition states it; see below |
 | Direction / style | no | The transition states it |
 | **Speed (`set_animation_speed`)** | **yes** | A *different* system sets it — slow motion, a haste buff, a difficulty scale |
+| **Frame-rate override (`set_frame_rate`)** | **yes** | A Player policy — "this player runs at 60fps", whatever a clip was authored at |
 | **Frame skip** | **yes** | A Player policy — "show every frame" for a capture or a frame-counted cutscene |
+
+The two rate controls are both the host's and compose, but they say different
+things. `set_animation_speed` is a **multiple** of whatever the clip was authored
+at, so it means the same thing against every clip. `set_frame_rate` is an
+**absolute** rate, so its effect does depend on the clip — 60 against a 30fps
+clip is double speed and against a 60fps clip is none. That is the point of it:
+it normalizes, where the multiplier scales. `set_frame_rate(0)` clears the
+override and hands playback back to the authored rate.
 
 Anything the transition itself specifies is reset, so **transitions stay
 independent of the one before them**. Were the loop count to persist, a `1` meant
