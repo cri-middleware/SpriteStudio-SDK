@@ -32,7 +32,66 @@ ss_runtime_play(context);
 
 ### 再生ヘッドの操作
 - **シーク**: `ss_runtime_set_frame_no(context, frame)` で任意のフレームへジャンプできます。
-- **一時停止**: `ss_runtime_pause(context)` で再生を一時停止/再開（トグル）します。
+- **一時停止 / 再開**: `ss_runtime_pause(context)` がその場で保持し、`ss_runtime_resume(context)` が保持を解除します。どちらも冪等です。
+
+### トランスポートの契約
+
+各 Player が公開すべきセマンティクスです。`resume` を `play` に畳み込まず、4 つの動詞として公開してください。
+
+| 呼び出し | 意味 | 再生ヘッド | `is_playing` | `is_pausing` |
+| :--- | :--- | :--- | :--- | :--- |
+| `ss_runtime_play` | **先頭出し。** 区間の先頭（逆方向なら末尾）へ巻き戻し、ループカウンタを再武装します | 巻き戻る | `true` | `false` |
+| `ss_runtime_play_with_start_frame` | 指定フレームからの先頭出し | そのフレーム | `true` | `false` |
+| `ss_runtime_pause` | その場で保持します。冪等 | 保持 | `true` | `true` |
+| `ss_runtime_resume` | 保持を解除し、その場から再開します。冪等で、停止中のアニメを**開始はしません** | 保持 | `true` | `false` |
+| `ss_runtime_stop` | 再生を終了します。巻き戻さないため、停止したフレームを描画し続けます | 保持 | `false` | `false` |
+
+### 再生の状態遷移
+
+2 つのフラグが表す状態は **3 つだけ**です。`is_pausing` が真なら `is_playing` も真
+であり、「停止しているのに一時停止中」には到達できません。これにより Player 側は
+`is_playing` を併せて見ることなく `is_pausing` 単独で判定できます。
+
+| 状態 | `is_playing` | `is_pausing` | `update` で進むか |
+| :--- | :--- | :--- | :--- |
+| **Stopped**（初期状態でもある） | `false` | `false` | 進まない |
+| **Playing** | `true` | `false` | 進む |
+| **Held**（一時停止） | `true` | `true` | 進まない |
+
+```mermaid
+stateDiagram-v2
+    [*] --> Stopped
+    Stopped --> Playing : play
+    Playing --> Held : pause
+    Held --> Playing : resume
+    Held --> Playing : play (巻き戻る)
+    Playing --> Playing : play (巻き戻る)
+    Playing --> Stopped : stop
+    Held --> Stopped : stop
+```
+
+上図に無い呼び出しはすべて意図的に **no-op** です。ホストは現在の状態を先に調べる
+ことなく、意図どおりの動詞を呼べます。
+
+| 現在の状態 | `play` | `pause` | `resume` | `stop` |
+| :--- | :--- | :--- | :--- | :--- |
+| **Stopped** | → Playing（区間の先頭から） | *no-op* | *no-op* | *no-op* |
+| **Playing** | → Playing（区間の先頭へ巻き戻す） | → Held | *no-op* | → Stopped（再生ヘッド保持） |
+| **Held** | → Playing（巻き戻し、保持も解除） | *no-op* | → Playing（再生ヘッド保持） | → Stopped（再生ヘッド保持） |
+
+`setup_animation` は状態を **Stopped** に戻し、前のアニメーションが残した保持も落とします。
+
+Player 側で取り違えられやすいのは次の 2 点です。
+
+- **`play` を呼ぶまで何も進みません。** `update` は `is_playing` でゲートしているため、
+  セットアップしただけのコンテキストを毎フレーム tick しても動きません。
+- **`stop` は巻き戻しません。** 再生ヘッドはその場に留まるため、ホストは停止したフレーム
+  を描画し続けます。別の位置にしたい場合はシークしてください。
+
+> [!IMPORTANT]
+> **`play` は再開ではありません。** 常に先頭出しになるため、一時停止の解除に使うと再生ヘッドが無言で先頭に戻ります。再開は `ss_runtime_resume` を使ってください。
+>
+> **一時停止は「保持」であって「停止」ではありません。** 一時停止中も `ss_runtime_is_playing` は `true` のままで、両者を区別するのが `ss_runtime_is_pausing` です。Player が `is_paused` を公開する場合は `is_pausing` をそのまま渡して構いません。一度も再生していないアニメでは `false`、`stop` 後も `false` になります。
 
 ## 2. 毎フレームの更新と終了検知
 

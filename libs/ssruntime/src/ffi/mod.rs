@@ -1085,10 +1085,27 @@ pub extern "C" fn ss_runtime_play_with_start_frame(context: *mut c_void, frame_n
     }
 }
 
+/// Holds playback where it stands, keeping the current frame.
+///
+/// Idempotent: pausing an already-paused animation leaves it paused.
+/// `ss_runtime_is_playing` stays true while held — a pause is a hold, not a
+/// stop — so tell the two apart with `ss_runtime_is_pausing`. Lift the hold
+/// with [`ss_runtime_resume`]; `ss_runtime_play` rewinds and cannot resume.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_pause(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.pause();
+    }
+}
+
+/// Lifts a [`ss_runtime_pause`], carrying on from the frame it stopped at.
+///
+/// Idempotent, and a no-op on an animation that was never paused. It does not
+/// start a stopped animation; use `ss_runtime_play` for that.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_resume(context: *mut c_void) {
+    if let Some(ffi_context) = get_context(context) {
+        ffi_context.ctx.resume();
     }
 }
 

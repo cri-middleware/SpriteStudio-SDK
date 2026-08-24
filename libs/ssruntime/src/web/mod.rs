@@ -621,8 +621,15 @@ impl SSRuntimeContext {
         self.inner.play_with_start_frame(frame_no);
     }
 
+    /// Holds playback in place (idempotent). `is_playing` stays true; read
+    /// `is_pausing` to tell a held animation from a running one.
     pub fn pause(&mut self) {
         self.inner.pause();
+    }
+
+    /// Lifts a `pause` (idempotent). `play` rewinds, so it is not a resume.
+    pub fn resume(&mut self) {
+        self.inner.resume();
     }
 
     pub fn stop(&mut self) {
