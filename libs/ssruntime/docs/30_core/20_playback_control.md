@@ -47,6 +47,50 @@ distinct verbs — do not fold `resume` into `play`.
 | `ss_runtime_resume` | Lifts the hold, carrying on in place. Idempotent; does **not** start a stopped animation | kept | `true` | `false` |
 | `ss_runtime_stop` | Ends playback. Nothing rewinds, so the host keeps drawing the frame it stopped on | kept | `false` | `false` |
 
+### Playback states
+
+The two flags describe **three** states, and only three — `is_pausing` implies
+`is_playing`, so "stopped, and also paused" is not reachable. That is what lets a
+Player read `is_pausing` on its own without also testing `is_playing`.
+
+| State | `is_playing` | `is_pausing` | Advances on `update` |
+| :--- | :--- | :--- | :--- |
+| **Stopped** (also the initial state) | `false` | `false` | no |
+| **Playing** | `true` | `false` | yes |
+| **Held** (paused) | `true` | `true` | no |
+
+```mermaid
+stateDiagram-v2
+    [*] --> Stopped
+    Stopped --> Playing : play
+    Playing --> Held : pause
+    Held --> Playing : resume
+    Held --> Playing : play (rewinds)
+    Playing --> Playing : play (rewinds)
+    Playing --> Stopped : stop
+    Held --> Stopped : stop
+```
+
+Every call not drawn above is a **no-op**, deliberately, so a host can call the
+verb that matches its intent without first checking the state:
+
+| From | `play` | `pause` | `resume` | `stop` |
+| :--- | :--- | :--- | :--- | :--- |
+| **Stopped** | → Playing, from the section start | *no-op* | *no-op* | *no-op* |
+| **Playing** | → Playing, rewound to the section start | → Held | *no-op* | → Stopped, playhead kept |
+| **Held** | → Playing, rewound and no longer held | *no-op* | → Playing, playhead kept | → Stopped, playhead kept |
+
+`setup_animation` returns the controller to **Stopped**, dropping any hold left by
+the animation before it.
+
+Two consequences worth stating outright, because they are what Players get wrong:
+
+- **Nothing advances until `play`.** `update` gates on `is_playing`, so a
+  controller that has only been set up can be ticked every frame and will not
+  move.
+- **`stop` does not rewind.** The playhead stays where it was, so the host keeps
+  drawing the frame it stopped on. Seek if you want it elsewhere.
+
 > [!IMPORTANT]
 > **`play` is not a resume.** It always heads out, so using it to lift a pause silently sends the playhead back to the start. Resume with `ss_runtime_resume`.
 >

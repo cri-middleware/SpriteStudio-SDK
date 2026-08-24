@@ -46,6 +46,48 @@ ss_runtime_play(context);
 | `ss_runtime_resume` | 保持を解除し、その場から再開します。冪等で、停止中のアニメを**開始はしません** | 保持 | `true` | `false` |
 | `ss_runtime_stop` | 再生を終了します。巻き戻さないため、停止したフレームを描画し続けます | 保持 | `false` | `false` |
 
+### 再生の状態遷移
+
+2 つのフラグが表す状態は **3 つだけ**です。`is_pausing` が真なら `is_playing` も真
+であり、「停止しているのに一時停止中」には到達できません。これにより Player 側は
+`is_playing` を併せて見ることなく `is_pausing` 単独で判定できます。
+
+| 状態 | `is_playing` | `is_pausing` | `update` で進むか |
+| :--- | :--- | :--- | :--- |
+| **Stopped**（初期状態でもある） | `false` | `false` | 進まない |
+| **Playing** | `true` | `false` | 進む |
+| **Held**（一時停止） | `true` | `true` | 進まない |
+
+```mermaid
+stateDiagram-v2
+    [*] --> Stopped
+    Stopped --> Playing : play
+    Playing --> Held : pause
+    Held --> Playing : resume
+    Held --> Playing : play (巻き戻る)
+    Playing --> Playing : play (巻き戻る)
+    Playing --> Stopped : stop
+    Held --> Stopped : stop
+```
+
+上図に無い呼び出しはすべて意図的に **no-op** です。ホストは現在の状態を先に調べる
+ことなく、意図どおりの動詞を呼べます。
+
+| 現在の状態 | `play` | `pause` | `resume` | `stop` |
+| :--- | :--- | :--- | :--- | :--- |
+| **Stopped** | → Playing（区間の先頭から） | *no-op* | *no-op* | *no-op* |
+| **Playing** | → Playing（区間の先頭へ巻き戻す） | → Held | *no-op* | → Stopped（再生ヘッド保持） |
+| **Held** | → Playing（巻き戻し、保持も解除） | *no-op* | → Playing（再生ヘッド保持） | → Stopped（再生ヘッド保持） |
+
+`setup_animation` は状態を **Stopped** に戻し、前のアニメーションが残した保持も落とします。
+
+Player 側で取り違えられやすいのは次の 2 点です。
+
+- **`play` を呼ぶまで何も進みません。** `update` は `is_playing` でゲートしているため、
+  セットアップしただけのコンテキストを毎フレーム tick しても動きません。
+- **`stop` は巻き戻しません。** 再生ヘッドはその場に留まるため、ホストは停止したフレーム
+  を描画し続けます。別の位置にしたい場合はシークしてください。
+
 > [!IMPORTANT]
 > **`play` は再開ではありません。** 常に先頭出しになるため、一時停止の解除に使うと再生ヘッドが無言で先頭に戻ります。再開は `ss_runtime_resume` を使ってください。
 >

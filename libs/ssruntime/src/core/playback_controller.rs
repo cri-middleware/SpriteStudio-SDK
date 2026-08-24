@@ -524,7 +524,16 @@ impl PlaybackController {
     /// hold, not a stop — so a caller telling the two apart reads
     /// [`Self::is_pausing`]. Use [`Self::resume`] to lift the hold; `play`
     /// rewinds and is not a resume.
+    ///
+    /// Ignored when nothing is playing. Holding a stopped animation would mean
+    /// nothing — `play` clears the hold on its way out anyway — and it is the
+    /// one way left to reach "stopped, and also paused", the combination the
+    /// seed value and [`Self::stop`] were both cleaned up to avoid. Keeping it
+    /// unreachable is what lets `is_pausing` be read on its own.
     pub fn pause(&mut self) {
+        if !self.is_playing {
+            return;
+        }
         self.is_pausing = true;
     }
 
@@ -1766,5 +1775,28 @@ mod tests {
         t.setup(0, 9, 30);
         assert!(!t.is_pausing());
         assert!(!t.is_playing());
+    }
+
+    #[test]
+    fn pausing_while_stopped_is_ignored() {
+        // `is_pausing` implies `is_playing`: "stopped, and also paused" is not a
+        // state this controller can be put into, so a host may read is_pausing
+        // on its own without also testing is_playing.
+        let mut t = primed(-1);
+        t.pause();
+        assert!(!t.is_pausing(), "pausing a never-played animation must do nothing");
+
+        t.play();
+        t.update(1000.0 / 30.0);
+        t.stop();
+        t.pause();
+        assert!(!t.is_pausing(), "pausing a stopped animation must do nothing");
+        assert!(!t.is_playing());
+
+        // The hold is still available the moment something is actually playing.
+        t.play();
+        t.pause();
+        assert!(t.is_pausing());
+        assert!(t.is_playing());
     }
 }
