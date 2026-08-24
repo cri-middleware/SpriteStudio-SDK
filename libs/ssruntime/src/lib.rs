@@ -3087,8 +3087,15 @@ impl<'a> Context<'a> {
         self.instance.primary_source_mut().controller.play_with_start_frame(frame_no);
     }
 
+    /// Holds playback in place. Idempotent; `is_playing` stays `true`.
     pub fn pause(&mut self) {
         self.instance.primary_source_mut().controller.pause();
+    }
+
+    /// Lifts a [`Self::pause`]. Idempotent, and not a way to start a stopped
+    /// animation — `play` rewinds, so it cannot serve as a resume.
+    pub fn resume(&mut self) {
+        self.instance.primary_source_mut().controller.resume();
     }
 
     pub fn stop(&mut self) {

@@ -220,8 +220,10 @@ Design guidelines for the minimum API interface a user needs in order to control
 - **play(loop, startFrame)**: starts playing the already set-up animation with the given play count and start frame (a light operation with no allocation).
 - **stop()**: stops animation playback completely.
 - **pause()**: pauses the playing animation.
-- **resume()**: resumes a paused animation.
-- **isPlaying()**: returns whether an animation is currently playing.
+- **resume()**: resumes a paused animation. Map it to `ss_runtime_resume`, not to a second `play` — `play` heads out and would lose the playhead.
+- **isPlaying()**: returns whether an animation is currently playing. Stays true while paused; publish `isPaused` from `ss_runtime_is_pausing` alongside it.
+
+The exact semantics of these five, and what each does to the playhead, are in [Playback Control & Events](../30_core/20_playback_control.md#the-transport-contract).
 
 ### Time / frame control
 - **setFrame(frame) / getFrame()**: directly specifies (seeks) or obtains the current playback frame.

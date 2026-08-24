@@ -214,7 +214,10 @@ impl Default for PlaybackController {
 impl PlaybackController {
     pub fn new() -> Self {
         Self {
-            is_pausing: true,
+            // Not paused and not playing are different things: a controller
+            // that has never played must not report itself as held, or every
+            // Player's `is_paused` inherits a meaningless `true`.
+            is_pausing: false,
             is_playing: false,
 
             anime_data_start_frame: 0,
@@ -247,7 +250,7 @@ impl PlaybackController {
     pub fn reset_setup(&mut self) {
         self.reset_state();
 
-        self.is_pausing = true;
+        self.is_pausing = false;
         self.is_playing = false;
         self.anime_data_start_frame = 0;
         self.anime_data_end_frame = 0;
@@ -274,7 +277,7 @@ impl PlaybackController {
     pub fn setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
         self.reset_state();
 
-        self.is_pausing = true;
+        self.is_pausing = false;
         self.is_playing = false;
 
         self.anime_data_start_frame = start_frame;
@@ -516,12 +519,33 @@ impl PlaybackController {
         self.needs_evaluation = true;
     }
 
+    /// Holds playback where it stands. Idempotent: pausing an already-paused
+    /// animation leaves it paused. `is_playing` stays `true` — a pause is a
+    /// hold, not a stop — so a caller telling the two apart reads
+    /// [`Self::is_pausing`]. Use [`Self::resume`] to lift the hold; `play`
+    /// rewinds and is not a resume.
     pub fn pause(&mut self) {
-        self.is_pausing = !self.is_pausing;
+        self.is_pausing = true;
     }
 
+    /// Lifts the hold set by [`Self::pause`], carrying on from the frame it
+    /// stopped at. Idempotent, and a no-op on an animation that was never
+    /// paused. Does not start a stopped animation — that is `play`'s job.
+    pub fn resume(&mut self) {
+        self.is_pausing = false;
+    }
+
+    /// Ends playback. The playhead stays where it stands — nothing rewinds —
+    /// so the host keeps drawing the frame it stopped on. Seek, or `play`,
+    /// to move it.
     pub fn stop(&mut self) {
         self.is_playing = false;
+        // A stopped animation is not a held one. Leaving the hold set would
+        // surface through every Player as "stopped, and also paused", the same
+        // meaningless state the seed value used to produce. Nothing internal
+        // reads it while `is_playing` is false, so this only cleans up what the
+        // getter reports.
+        self.is_pausing = false;
     }
 
     pub fn set_frame_no(&mut self, frame: f32) {
@@ -1588,5 +1612,129 @@ mod tests {
         t.update(interval);
         assert!(!t.is_looped(), "Should not loop on final end");
         assert!(t.is_end_frame_reached(), "Should reach end frame on last loop");
+    }
+
+    // ---- pause / resume / stop contract ------------------------------------
+    //
+    // The four transport verbs are what every Player publishes, so their
+    // semantics are pinned here rather than left to each Player to rediscover.
+
+    fn primed(loops: i32) -> PlaybackController {
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_loops(loops);
+        t.set_skip_frames(false);
+        t
+    }
+
+    #[test]
+    fn a_controller_that_never_played_is_neither_playing_nor_paused() {
+        // `is_pausing` used to be seeded `true`, which surfaced through every
+        // Player as "paused" on an animation that had never run.
+        let t = PlaybackController::new();
+        assert!(!t.is_playing());
+        assert!(!t.is_pausing());
+
+        let t = primed(-1);
+        assert!(!t.is_playing(), "setup() alone must not start playback");
+        assert!(!t.is_pausing(), "setup() alone must not report a hold");
+    }
+
+    #[test]
+    fn pause_is_idempotent_and_never_resumes() {
+        let mut t = primed(-1);
+        t.play();
+        t.update(1000.0 / 30.0);
+        let held_at = t.get_frame_no();
+
+        t.pause();
+        assert!(t.is_pausing());
+        t.pause();
+        assert!(t.is_pausing(), "a second pause() must not lift the hold");
+
+        // Held: time passes, the playhead does not.
+        for _ in 0..4 {
+            t.update(1000.0 / 30.0);
+        }
+        assert_eq!(t.get_frame_no(), held_at, "a paused animation must not advance");
+        assert!(t.is_playing(), "a pause is a hold, not a stop");
+    }
+
+    #[test]
+    fn resume_is_idempotent_and_carries_on_in_place() {
+        let mut t = primed(-1);
+        t.play();
+        t.update(1000.0 / 30.0);
+        t.pause();
+        let held_at = t.get_frame_no();
+
+        t.resume();
+        assert!(!t.is_pausing());
+        t.resume();
+        assert!(!t.is_pausing(), "a second resume() must not re-pause");
+        assert_eq!(t.get_frame_no(), held_at, "resume() must not move the playhead");
+
+        t.update(1000.0 / 30.0);
+        assert!(t.get_frame_no() > held_at, "resume() must let the playhead advance again");
+    }
+
+    #[test]
+    fn resume_does_not_start_a_stopped_animation() {
+        let mut t = primed(-1);
+        t.play();
+        t.update(1000.0 / 30.0);
+        t.stop();
+        assert!(!t.is_playing());
+
+        t.resume();
+        assert!(!t.is_playing(), "resume() lifts a hold; starting is play()'s job");
+    }
+
+    #[test]
+    fn play_clears_a_hold_and_rewinds_to_the_section_start() {
+        let mut t = primed(-1);
+        t.play();
+        for _ in 0..3 {
+            t.update(1000.0 / 30.0);
+        }
+        t.pause();
+        assert!(t.is_pausing());
+        assert!(t.get_frame_no() > 0.0);
+
+        // play() is a head-out, not a resume: it drops the hold *and* rewinds.
+        t.play();
+        assert!(!t.is_pausing(), "play() must clear the hold");
+        assert_eq!(t.get_frame_no(), 0.0, "play() must rewind to the section start");
+    }
+
+    #[test]
+    fn stop_clears_the_hold_and_holds_the_playhead() {
+        let mut t = primed(-1);
+        t.play();
+        for _ in 0..3 {
+            t.update(1000.0 / 30.0);
+        }
+        t.pause();
+        let stopped_at = t.get_frame_no();
+
+        t.stop();
+        assert!(!t.is_playing());
+        assert!(!t.is_pausing(), "a stopped animation must not report itself held");
+        assert_eq!(t.get_frame_no(), stopped_at, "stop() does not rewind");
+    }
+
+    #[test]
+    fn setup_clears_a_hold_left_by_the_previous_animation() {
+        let mut t = primed(-1);
+        t.play();
+        t.update(1000.0 / 30.0);
+        t.pause();
+        assert!(t.is_pausing());
+
+        // Switching animations must not carry the hold across, or the next
+        // play() would look like it did nothing.
+        t.setup(0, 9, 30);
+        assert!(!t.is_pausing());
+        assert!(!t.is_playing());
     }
 }

@@ -32,7 +32,24 @@ ss_runtime_play(context);
 
 ### 再生ヘッドの操作
 - **シーク**: `ss_runtime_set_frame_no(context, frame)` で任意のフレームへジャンプできます。
-- **一時停止**: `ss_runtime_pause(context)` で再生を一時停止/再開（トグル）します。
+- **一時停止 / 再開**: `ss_runtime_pause(context)` がその場で保持し、`ss_runtime_resume(context)` が保持を解除します。どちらも冪等です。
+
+### トランスポートの契約
+
+各 Player が公開すべきセマンティクスです。`resume` を `play` に畳み込まず、4 つの動詞として公開してください。
+
+| 呼び出し | 意味 | 再生ヘッド | `is_playing` | `is_pausing` |
+| :--- | :--- | :--- | :--- | :--- |
+| `ss_runtime_play` | **先頭出し。** 区間の先頭（逆方向なら末尾）へ巻き戻し、ループカウンタを再武装します | 巻き戻る | `true` | `false` |
+| `ss_runtime_play_with_start_frame` | 指定フレームからの先頭出し | そのフレーム | `true` | `false` |
+| `ss_runtime_pause` | その場で保持します。冪等 | 保持 | `true` | `true` |
+| `ss_runtime_resume` | 保持を解除し、その場から再開します。冪等で、停止中のアニメを**開始はしません** | 保持 | `true` | `false` |
+| `ss_runtime_stop` | 再生を終了します。巻き戻さないため、停止したフレームを描画し続けます | 保持 | `false` | `false` |
+
+> [!IMPORTANT]
+> **`play` は再開ではありません。** 常に先頭出しになるため、一時停止の解除に使うと再生ヘッドが無言で先頭に戻ります。再開は `ss_runtime_resume` を使ってください。
+>
+> **一時停止は「保持」であって「停止」ではありません。** 一時停止中も `ss_runtime_is_playing` は `true` のままで、両者を区別するのが `ss_runtime_is_pausing` です。Player が `is_paused` を公開する場合は `is_pausing` をそのまま渡して構いません。一度も再生していないアニメでは `false`、`stop` 後も `false` になります。
 
 ## 2. 毎フレームの更新と終了検知
 
