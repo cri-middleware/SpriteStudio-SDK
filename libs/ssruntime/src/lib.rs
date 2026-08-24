@@ -1380,7 +1380,14 @@ impl<'a> InstanceState<'a> {
     fn collapse_to_track_zero(&mut self) {
         self.sources.truncate(1);
         self.layers.truncate(1);
-        self.sources[0] = SourceState::new();
+        // Rebuilding the slot must not read as a reset of the host's playback
+        // policy: this runs inside every `setup_animation`, and the speed /
+        // frame-skip / frame-rate override deliberately outlive an animation
+        // change. `Context::reset` clears them explicitly afterwards, because
+        // that one really is a teardown.
+        // `::core` spelled out: this crate has its own `core` module.
+        let previous = ::core::mem::replace(&mut self.sources[0], SourceState::new());
+        self.sources[0].controller.adopt_host_policy(&previous.controller);
         self.tracks.truncate(1);
         self.tracks[0] = TrackState::new();
         self.tracks[0].main = 0;
@@ -1437,6 +1444,9 @@ impl<'a> Context<'a> {
         self.eval.resource = None;
         self.eval.fb.reset();
         self.instance.collapse_to_track_zero();
+        // A teardown, not an animation change: the host's playback policy goes
+        // with it, which `collapse_to_track_zero` alone would have carried over.
+        self.instance.primary_source_mut().controller.reset_setup();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
         self.instance.coordinate_system = crate::core::SsCoordinateSystem::default();
@@ -4306,6 +4316,64 @@ mod tests {
     // trailing interval the pose holds the last keyframe — byte-for-byte
     // identical to `end_frame`, i.e. no extrapolation. The upper bound is
     // exclusive, and the lower bound is unchanged.
+    #[test]
+    fn the_hosts_playback_policy_survives_setup_animation() {
+        // Through the *public* path, which is the one that matters: a Player only
+        // ever reaches `PlaybackController::setup` via `Context::setup_animation`,
+        // and that collapses the track stack first — rebuilding the source, and
+        // with it the controller. Asserting on the controller alone would pass
+        // while the behaviour a Player sees stayed broken.
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+
+        let names = resource.get_animation_names();
+        assert!(names.len() >= 2, "fixture sanity: Ringo.ssab holds many animations");
+
+        let mut context = Context::new();
+        context.bind_resource(&resource);
+        context.setup_animation(&names[0]).expect("Failed to setup animation");
+
+        let authored_fps = context.get_fps();
+        context.set_animation_speed(2.0);
+        context.set_skip_frames(false);
+        context.set_frame_rate(authored_fps + 17);
+        context.set_loop(3);
+
+        // A transition to another clip in the same pack.
+        context.setup_animation(&names[1]).expect("Failed to setup the second animation");
+
+        assert!(!context.get_skip_frames(), "frame skip is the host's, and must survive the transition");
+        assert_eq!(context.get_fps(), authored_fps + 17, "the frame-rate override must survive the transition");
+        assert_eq!(context.get_loops(), -1, "the loop count is per-transition and must reset");
+
+        // Frame skip survived as `false`, which means fixed stepping: exactly one
+        // frame per update, however much time is handed over.
+        context.play();
+        let before = context.get_frame_no();
+        context.update(10_000.0);
+        let stepped = context.get_frame_no() - before;
+        assert!((stepped - 1.0).abs() < 1e-3, "fixed stepping should advance exactly one frame, got {stepped}");
+
+        // Speed has no getter of its own, so read it off the advance rate. That
+        // needs timed stepping, and turning it back on is the host's call — it
+        // touches neither the retained rate nor the override. Advance a quarter of
+        // the clip so the loop cannot wrap and hide the result.
+        context.set_skip_frames(true);
+        let effective_fps = (authored_fps + 17) as f32 * 2.0;
+        let span = (context.get_end_frame() - context.get_start_frame()) as f32;
+        assert!(span >= 4.0, "fixture sanity: the clip needs a few frames to measure across");
+        let quarter = span * 0.25;
+
+        context.play();
+        let before = context.get_frame_no();
+        context.update(quarter / effective_fps * 1000.0);
+        let advanced = context.get_frame_no() - before;
+        assert!((advanced - quarter).abs() < span * 0.1, "the retained speed and override should give ~{quarter} frames, got {advanced}");
+    }
+
     #[test]
     fn get_frame_data_accepts_subframe_overshoot_at_animation_end() {
         prepare();
