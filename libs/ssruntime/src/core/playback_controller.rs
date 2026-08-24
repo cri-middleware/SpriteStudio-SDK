@@ -1641,6 +1641,36 @@ mod tests {
     }
 
     #[test]
+    fn update_does_not_advance_until_play_is_called() {
+        // `is_pausing` no longer starts life `true`, so the guard that keeps a
+        // never-played controller still is `is_playing` alone. Pin that: the
+        // playhead must not move, and no frame must be reported as passed, for
+        // a controller that was only set up.
+        let mut t = primed(-1);
+        assert!(!t.is_playing());
+        assert!(!t.is_pausing());
+
+        for _ in 0..20 {
+            t.update(1000.0 / 30.0);
+            assert_eq!(t.get_frame_no(), 0.0, "setup() alone must not advance the playhead");
+            assert!(!t.is_playing(), "update() must not start playback on its own");
+            assert!(!t.is_looped());
+            assert!(!t.is_finished());
+        }
+
+        // ...and the same after a stop, which also leaves is_pausing false.
+        t.play();
+        t.update(1000.0 / 30.0);
+        t.stop();
+        let stopped_at = t.get_frame_no();
+        assert!(!t.is_pausing());
+        for _ in 0..20 {
+            t.update(1000.0 / 30.0);
+            assert_eq!(t.get_frame_no(), stopped_at, "a stopped controller must not advance");
+        }
+    }
+
+    #[test]
     fn pause_is_idempotent_and_never_resumes() {
         let mut t = primed(-1);
         t.play();
