@@ -2755,6 +2755,10 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.get_fps()
     }
 
+    pub fn get_animation_speed(&self) -> f32 {
+        self.instance.primary_source().controller.get_animation_speed()
+    }
+
     // Playback setup
 
     pub fn set_skip_frames(&mut self, skip: bool) {
@@ -4347,6 +4351,7 @@ mod tests {
 
         assert!(!context.get_skip_frames(), "frame skip is the host's, and must survive the transition");
         assert_eq!(context.get_fps(), authored_fps + 17, "the frame-rate override must survive the transition");
+        assert_eq!(context.get_animation_speed(), 2.0, "the speed is the host's, and must survive the transition");
         assert_eq!(context.get_loops(), -1, "the loop count is per-transition and must reset");
 
         // Frame skip survived as `false`, which means fixed stepping: exactly one
@@ -4357,10 +4362,11 @@ mod tests {
         let stepped = context.get_frame_no() - before;
         assert!((stepped - 1.0).abs() < 1e-3, "fixed stepping should advance exactly one frame, got {stepped}");
 
-        // Speed has no getter of its own, so read it off the advance rate. That
-        // needs timed stepping, and turning it back on is the host's call — it
-        // touches neither the retained rate nor the override. Advance a quarter of
-        // the clip so the loop cannot wrap and hide the result.
+        // The getter above says the rate was *kept*; this says it is *applied* —
+        // folded into the step against the new clip's frame rate rather than the
+        // old one's. That needs timed stepping, and turning it back on is the
+        // host's call: it touches neither the retained rate nor the override.
+        // Advance a quarter of the clip so the loop cannot wrap and hide it.
         context.set_skip_frames(true);
         let effective_fps = (authored_fps + 17) as f32 * 2.0;
         let span = (context.get_end_frame() - context.get_start_frame()) as f32;

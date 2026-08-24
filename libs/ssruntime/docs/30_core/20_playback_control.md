@@ -100,6 +100,12 @@ distinct verbs — do not fold `resume` into `play`.
 > value said — and a host that passed a negative rate hoping for reverse got
 > forward at full speed with no indication the request was unsupported.
 
+`ss_runtime_get_animation_speed` reads the rate back, so a Player does not have
+to keep a copy of what it last set — the copy is what drifts. It returns the
+value that was **stored**, which is not always the one that was passed: the two
+clamped rows above read back as `0.0`, so a host can tell that its negative
+became a stop instead of assuming it became reverse playback.
+
 ### Playback states
 
 The two flags describe **three** states, and only three — `is_pausing` implies
