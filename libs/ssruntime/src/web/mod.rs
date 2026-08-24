@@ -560,6 +560,10 @@ impl SSRuntimeContext {
         self.inner.get_fps()
     }
 
+    pub fn get_animation_speed(&self) -> f32 {
+        self.inner.get_animation_speed()
+    }
+
     // Playback setup
     pub fn set_skip_frames(&mut self, skip: bool) {
         self.inner.set_skip_frames(skip);

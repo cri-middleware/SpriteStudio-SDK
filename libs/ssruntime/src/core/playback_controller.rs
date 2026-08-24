@@ -204,6 +204,15 @@ impl PlaybackController {
         self.effective_fps()
     }
 
+    /// The playback speed in effect, as a multiple of [`Self::get_fps`].
+    ///
+    /// This is what [`Self::set_animation_speed`] *stored*, not what it was
+    /// handed: a negative rate clamps to `0.0` on the way in, so a host that
+    /// reads this back sees the stop it actually got.
+    pub fn get_animation_speed(&self) -> f32 {
+        self.fps_rate
+    }
+
     pub fn get_passed_frames(&self) -> &[i32] {
         &self.passed_frames
     }
@@ -1928,6 +1937,26 @@ mod tests {
         // 60fps x2 = 120 frames in a second, not 60 (rate lost) and not 30
         // (old clip's fps).
         assert!((t.get_frame_no() - 120.0).abs() < 1.0, "expected ~120 frames, got {}", t.get_frame_no());
+    }
+
+    #[test]
+    fn the_speed_reads_back_as_it_was_stored() {
+        // The getter exists so a host does not have to keep its own copy of the
+        // rate — the copy is what drifts. What it returns is the value that was
+        // *stored*, so a clamped negative reads back as the stop it became
+        // rather than as the reverse playback it was mistaken for.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        assert_eq!(t.get_animation_speed(), 1.0, "the default is 1x");
+
+        t.set_animation_speed(2.5);
+        assert_eq!(t.get_animation_speed(), 2.5);
+
+        t.set_animation_speed(0.0);
+        assert_eq!(t.get_animation_speed(), 0.0, "zero is a setting, not 'unset'");
+
+        t.set_animation_speed(-1.0);
+        assert_eq!(t.get_animation_speed(), 0.0, "a negative rate clamps to a stop, and reads back as one");
     }
 
     #[test]

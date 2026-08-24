@@ -1016,6 +1016,18 @@ pub extern "C" fn ss_runtime_get_fps(context: *mut c_void) -> i32 {
     0
 }
 
+/// The playback speed in effect, as a multiple of `ss_runtime_get_fps`.
+///
+/// Reads back what `ss_runtime_set_animation_speed` stored, which is not
+/// always what it was handed: a negative rate clamps to `0.0`.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_animation_speed(context: *mut c_void) -> c_float {
+    if let Some(ffi_context) = get_context(context) {
+        return ffi_context.ctx.get_animation_speed();
+    }
+    0.0
+}
+
 // Playback setup
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_set_skip_frames(context: *mut c_void, skip: bool) {
