@@ -322,13 +322,25 @@ impl PlaybackController {
         // Carries the retained rate and any retained override onto the new
         // animation. Reading `anime_data_fps` directly here would ignore the
         // override, which used to be invisible only because `setup` overwrote it.
-        self.update_interval = 1000.0 / (self.effective_fps() as f32 * self.fps_rate);
+        self.recompute_update_interval();
         self.passed_frames.clear();
         self.needs_evaluation = false;
     }
 
     pub fn set_skip_frames(&mut self, skip: bool) {
         self.is_skip_frames = skip;
+    }
+
+    /// Recomputes the per-frame interval from the effective frame rate and the
+    /// speed multiplier.
+    ///
+    /// A rate of zero — a speed of `0.0`, or no animation set up yet — leaves no
+    /// interval to advance by, and is stored as `0.0`: the sentinel `update`
+    /// already reads as "do not advance". Dividing by it instead would put an
+    /// infinity in the field and rely on the arithmetic to work out.
+    fn recompute_update_interval(&mut self) {
+        let rate = self.effective_fps() as f32 * self.fps_rate;
+        self.update_interval = if rate > 0.0 { 1000.0 / rate } else { 0.0 };
     }
 
     /// Carries the host's playback policy onto a controller that has just been
@@ -372,7 +384,7 @@ impl PlaybackController {
     /// authored at. Both are the host's, so both survive `setup`.
     pub fn set_frame_rate(&mut self, fps: i32) {
         self.fps_override = if fps > 0 { Some(fps) } else { None };
-        self.update_interval = 1000.0 / (self.effective_fps() as f32 * self.fps_rate);
+        self.recompute_update_interval();
     }
 
     /// The rate playback actually runs at: the host's override when it set one,
@@ -395,9 +407,20 @@ impl PlaybackController {
         self.playback_forward = if self.playback_direction == PlaybackDirection::Forward { 1 } else { -1 };
     }
 
+    /// Sets the playback speed as a multiple of the effective frame rate.
+    ///
+    /// `0.0` **stops the playhead** where it stands, rather than meaning "no
+    /// setting": time passes, `is_playing` stays true, and nothing advances.
+    /// That matches what a host means by a zero time scale, and what engine
+    /// animation players do with one.
+    ///
+    /// A negative rate is **not** reverse playback — direction is
+    /// [`Self::set_playback_direction`]'s business — and is clamped to a stop
+    /// rather than silently running forward at full speed, which is what
+    /// normalizing it to `1.0` used to do.
     pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.fps_rate = if speed_rate > 0.0 { speed_rate } else { 1.0 };
-        self.update_interval = 1000.0 / (self.effective_fps() as f32 * self.fps_rate);
+        self.fps_rate = if speed_rate > 0.0 { speed_rate } else { 0.0 };
+        self.recompute_update_interval();
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
@@ -1980,5 +2003,62 @@ mod tests {
         t.reset_setup();
         t.setup(0, 4, 30);
         assert_eq!(t.get_fps(), 30, "a recycled slot must not inherit the previous owner's rate");
+    }
+
+    #[test]
+    fn a_zero_speed_freezes_the_playhead() {
+        // It used to normalize to 1.0, so dragging a speed slider to its minimum
+        // played at full speed — the opposite of what the value says.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 30);
+        t.set_skip_frames(true);
+        t.play();
+        t.update(1000.0 / 30.0);
+        let held_at = t.get_frame_no();
+        assert!(held_at > 0.0, "sanity: it was advancing before the speed changed");
+
+        t.set_animation_speed(0.0);
+        for _ in 0..10 {
+            t.update(1000.0);
+        }
+        assert_eq!(t.get_frame_no(), held_at, "a zero speed must not advance the playhead");
+        assert!(t.is_playing(), "frozen is not stopped");
+        assert!(!t.is_pausing(), "nor is it the pause flag");
+
+        // ...and it is not a one-way door.
+        t.set_animation_speed(1.0);
+        t.update(1000.0 / 30.0);
+        assert!(t.get_frame_no() > held_at, "restoring a positive speed resumes advancing");
+    }
+
+    #[test]
+    fn a_zero_speed_freezes_fixed_stepping_too() {
+        // The other advance path: with frame skip off, `update` accumulates time
+        // against the interval instead of dividing by it.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 30);
+        t.set_skip_frames(false);
+        t.set_animation_speed(0.0);
+        t.play();
+        let held_at = t.get_frame_no();
+        for _ in 0..10 {
+            t.update(1000.0);
+        }
+        assert_eq!(t.get_frame_no(), held_at);
+    }
+
+    #[test]
+    fn a_negative_speed_stops_rather_than_running_forward() {
+        // Reverse is `set_playback_direction`'s job. Clamping to a stop makes an
+        // unsupported request visible; normalizing to 1.0 hid it behind
+        // full-speed forward playback.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 30);
+        t.set_skip_frames(true);
+        t.set_animation_speed(-1.0);
+        t.play();
+        let held_at = t.get_frame_no();
+        t.update(1000.0);
+        assert_eq!(t.get_frame_no(), held_at);
     }
 }

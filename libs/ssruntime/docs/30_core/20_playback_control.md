@@ -83,6 +83,23 @@ distinct verbs — do not fold `resume` into `play`.
 | `ss_runtime_resume` | Lifts the hold, carrying on in place. Idempotent; does **not** start a stopped animation | kept | `true` | `false` |
 | `ss_runtime_stop` | Ends playback. Nothing rewinds, so the host keeps drawing the frame it stopped on | kept | `false` | `false` |
 
+### Speed and the frame rate
+
+`ss_runtime_set_animation_speed` is a multiple of the effective frame rate.
+
+| Value | Effect |
+| :--- | :--- |
+| `1.0` | As authored |
+| `0.5` / `2.0` | Half / double |
+| **`0.0`** | **The playhead stops.** Time still passes and `is_playing` stays true; nothing advances |
+| **negative** | **Also stops.** Reverse playback is `ss_runtime_set_playback_direction`'s business, not the speed's |
+
+> [!NOTE]
+> `0.0` and negative values used to normalize to `1.0`, so a host that dragged a
+> speed slider to its minimum got full-speed playback — the opposite of what the
+> value said — and a host that passed a negative rate hoping for reverse got
+> forward at full speed with no indication the request was unsupported.
+
 ### Playback states
 
 The two flags describe **three** states, and only three — `is_pausing` implies
