@@ -4343,6 +4343,10 @@ mod tests {
         let authored_fps = context.get_fps();
         context.set_animation_speed(2.0);
         context.set_skip_frames(false);
+        context.set_playback_direction(
+            core::playback_controller::PlaybackDirection::Backward,
+            core::playback_controller::PlaybackStyle::PingPong,
+        );
         context.set_frame_rate(authored_fps + 17);
         context.set_loop(3);
 
@@ -4352,15 +4356,26 @@ mod tests {
         assert!(!context.get_skip_frames(), "frame skip is the host's, and must survive the transition");
         assert_eq!(context.get_fps(), authored_fps + 17, "the frame-rate override must survive the transition");
         assert_eq!(context.get_animation_speed(), 2.0, "the speed is the host's, and must survive the transition");
+        assert!(
+            context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward,
+            "the playback direction is the host's, and must survive the transition",
+        );
+        assert!(
+            context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong,
+            "so is the ping-pong style",
+        );
         assert_eq!(context.get_loops(), -1, "the loop count is per-transition and must reset");
 
         // Frame skip survived as `false`, which means fixed stepping: exactly one
-        // frame per update, however much time is handed over.
+        // frame per update, however much time is handed over. Measured as a
+        // magnitude, because the retained direction walks the head down rather
+        // than up -- which is itself the direction surviving, end to end.
         context.play();
         let before = context.get_frame_no();
         context.update(10_000.0);
         let stepped = context.get_frame_no() - before;
-        assert!((stepped - 1.0).abs() < 1e-3, "fixed stepping should advance exactly one frame, got {stepped}");
+        assert!(stepped < 0.0, "the retained backward direction should walk the head down, got {stepped}");
+        assert!((stepped.abs() - 1.0).abs() < 1e-3, "fixed stepping should move exactly one frame, got {stepped}");
 
         // The getter above says the rate was *kept*; this says it is *applied* —
         // folded into the step against the new clip's frame rate rather than the
@@ -4376,7 +4391,7 @@ mod tests {
         context.play();
         let before = context.get_frame_no();
         context.update(quarter / effective_fps * 1000.0);
-        let advanced = context.get_frame_no() - before;
+        let advanced = (context.get_frame_no() - before).abs();
         assert!((advanced - quarter).abs() < span * 0.1, "the retained speed and override should give ~{quarter} frames, got {advanced}");
     }
 

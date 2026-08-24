@@ -37,10 +37,14 @@ transition, so what it resets is drawn along one line: **who sets it.**
 | Playback section | no | Frame indices mean nothing against a different clip |
 | Authored frame rate | no | It is the clip's own data, re-read every time |
 | Loop count | no | The transition states it; see below |
-| Direction / style | no | The transition states it |
+| **Direction / style (`set_playback_direction`)** | **yes** | "Play this backwards" describes the playback, not the clip that happens to be loaded |
 | **Speed (`set_animation_speed`)** | **yes** | A *different* system sets it — slow motion, a haste buff, a difficulty scale |
 | **Frame-rate override (`set_frame_rate`)** | **yes** | A Player policy — "this player runs at 60fps", whatever a clip was authored at |
 | **Frame skip** | **yes** | A Player policy — "show every frame" for a capture or a frame-counted cutscene |
+
+The direction survives; the *heading* does not. A ping-pong that was on its
+return leg when the animation changed starts the new one walking outward again,
+so a transition never begins mid-bounce.
 
 The two rate controls are both the host's and compose, but they say different
 things. `set_animation_speed` is a **multiple** of whatever the clip was authored
@@ -341,7 +345,7 @@ Benefits:
 With this design, also providing a `started` callback as the notification for playback beginning makes it easier for users to distinguish `set_animation` (swapping) from `play` (starting).
 
 > [!NOTE]
-> `setup_animation` resets the loop count, the playback direction / style and the section, so set those inside `setAnimation` (or before `play`). Speed and frame skip survive it — see [What `setup_animation` resets](#what-setup_animation-resets) — so a Player does **not** need to re-apply them, and one that does is simply writing the same value back.
+> `setup_animation` resets the loop count and the section, so set those inside `setAnimation` (or before `play`). Speed, the frame-rate override, frame skip and the playback direction / style all survive it — see [What `setup_animation` resets](#what-setup_animation-resets) — so a Player does **not** need to re-apply them, and one that does is simply writing the same value back.
 
 ### Sub-frame playback
 `libssruntime` manages the frame number as an `f32`, which allows "interpolation" between integer frames. To achieve smooth motion on high-refresh-rate displays, we recommend that the Player support `f32` frame management too.
