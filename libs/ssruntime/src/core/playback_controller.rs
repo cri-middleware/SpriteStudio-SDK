@@ -274,6 +274,25 @@ impl PlaybackController {
         self.needs_evaluation = false;
     }
 
+    /// Binds a new animation to this source.
+    ///
+    /// What resets and what survives is deliberate, and the line is **who sets
+    /// it**. A Player's state machine calls this on every transition, so
+    /// anything the transition itself specifies is reset — otherwise state N's
+    /// behaviour would depend on state N-1, and a `loops = 1` meant for an
+    /// attack would quietly follow the character into its walk. That covers the
+    /// section (frame indices mean nothing against a different clip), the loop
+    /// count, and the direction / style.
+    ///
+    /// `fps_rate` and `is_skip_frames` survive, because a *different* system
+    /// sets them: a slow-motion effect, a haste buff, a "show every frame"
+    /// capture mode. Resetting those here would let an animation transition
+    /// clobber a setting the state machine never knew about. The Players'
+    /// sub-frame flag is the same kind of setting and already behaves this way
+    /// — it simply lives on their side of the FFI, so this never touched it.
+    ///
+    /// [`Self::reset_setup`] does reset both: it releases the slot for a
+    /// different owner, rather than handing the same one a new clip.
     pub fn setup(&mut self, start_frame: i32, end_frame: i32, fps: i32) {
         self.reset_state();
 
@@ -286,7 +305,6 @@ impl PlaybackController {
         self.start_frame = self.anime_data_start_frame;
         self.end_frame = self.anime_data_end_frame;
         self.fps = self.anime_data_fps;
-        self.fps_rate = 1.0;
 
         self.current_frame = start_frame as f32;
         // Resets `remain_loops` too: a stale count from a previous animation
@@ -294,10 +312,10 @@ impl PlaybackController {
         // first cycle.
         self.set_loops(-1);
 
-        self.is_skip_frames = true;
         self.playback_style = PlaybackStyle::Normal;
         self.playback_direction = PlaybackDirection::Forward;
         self.playback_forward = 1;
+        // Carries the retained `fps_rate` onto the new animation's frame rate.
         self.update_interval = 1000.0 / (self.anime_data_fps as f32 * self.fps_rate);
         self.passed_frames.clear();
         self.needs_evaluation = false;
@@ -1798,5 +1816,65 @@ mod tests {
         t.pause();
         assert!(t.is_pausing());
         assert!(t.is_playing());
+    }
+
+    // ---- what survives set_animation --------------------------------------
+
+    #[test]
+    fn setup_keeps_the_speed_and_frame_skip_the_host_chose() {
+        // The two settings a *different* system owns — a slow-motion effect, a
+        // "show every frame" capture mode — must not be clobbered by an
+        // animation transition. Everything the transition itself specifies does
+        // reset, so transitions stay independent of the one before them.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+
+        t.set_animation_speed(2.0);
+        t.set_skip_frames(false);
+        t.set_loops(3);
+        t.set_animation_section(1, 3);
+        t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
+
+        // A different clip, at a different frame rate.
+        t.setup(0, 9, 60);
+
+        assert_eq!(t.fps_rate, 2.0, "speed is the host's, not the clip's");
+        assert!(!t.get_skip_frames(), "frame skip is the host's, not the clip's");
+
+        assert_eq!(t.get_loops(), -1, "loop count is per-transition");
+        assert!(t.playback_direction == PlaybackDirection::Forward, "direction is per-transition");
+        assert!(t.playback_style == PlaybackStyle::Normal, "style is per-transition");
+        assert_eq!((t.start_frame, t.end_frame), (0, 9), "the section is the new clip's own range");
+    }
+
+    #[test]
+    fn a_retained_speed_applies_to_the_new_animations_frame_rate() {
+        // Observable rather than field-level: the retained rate has to be folded
+        // into `update_interval` against the *new* clip's fps, not the old one's.
+        // The clip is long enough that one second cannot wrap the loop and hide
+        // the result behind a modulo.
+        let mut t = PlaybackController::new();
+        t.setup(0, 1000, 30);
+        t.set_skip_frames(true);
+        t.set_animation_speed(2.0);
+
+        t.setup(0, 1000, 60); // same host, new clip at 60fps
+        t.play();
+        t.update(1000.0); // one second
+
+        // 60fps x2 = 120 frames in a second, not 60 (rate lost) and not 30
+        // (old clip's fps).
+        assert!((t.get_frame_no() - 120.0).abs() < 1.0, "expected ~120 frames, got {}", t.get_frame_no());
+    }
+
+    #[test]
+    fn releasing_a_slot_does_reset_the_speed() {
+        // reset_setup hands the slot to a different owner, so unlike setup it
+        // must not leak the previous one's settings.
+        let mut t = PlaybackController::new();
+        t.setup(0, 4, 30);
+        t.set_animation_speed(2.0);
+        t.reset_setup();
+        assert_eq!(t.fps_rate, 1.0);
     }
 }
