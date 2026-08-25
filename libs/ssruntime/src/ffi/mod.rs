@@ -1693,6 +1693,29 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
     -1
 }
 
+/// Which source fired the collected event at `index` — parallel to
+/// `ss_runtime_get_passed_event_index`, and read with the same index.
+///
+/// With every source at the default event threshold (`1.0`) this is uniformly
+/// `ss_runtime_track_main_source` of track 0, so a Player that does not use
+/// animation mixing can ignore it. It diverges once a secondary source opts in
+/// to firing events via `ss_runtime_set_source_event_threshold`, and that is
+/// when a host needs it: without it, two blended animations' events arrive in
+/// one undifferentiated list.
+///
+/// Returns `U32_MAX` for a negative or out-of-range `index`, which no live
+/// handle ever equals.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_passed_event_source_handle(context: *mut c_void, index: i32) -> u32 {
+    if index >= 0
+        && let Some(ffi_context) = get_context(context)
+        && let Some(&handle) = ffi_context.ctx.get_passed_event_source_handles().get(index as usize)
+    {
+        return handle;
+    }
+    u32::MAX
+}
+
 /// Resolve the active `EventInstance` for `slot_index` on the parent's
 /// currently selected animation, at the current frame. Returns SS6
 /// default semantics (`is_synthetic_default = true`, `loop_num = 1`,

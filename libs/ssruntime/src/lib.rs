@@ -189,9 +189,9 @@ mod emscripten_allocator {
         #[link_name = "malloc"]
         fn em_malloc(size: usize) -> *mut u8;
         #[link_name = "free"]
-        fn em_free(ptr: *mut core::ffi::c_void);
+        fn em_free(ptr: *mut ::core::ffi::c_void);
         #[link_name = "posix_memalign"]
-        fn em_posix_memalign(memptr: *mut *mut core::ffi::c_void, align: usize, size: usize) -> i32;
+        fn em_posix_memalign(memptr: *mut *mut ::core::ffi::c_void, align: usize, size: usize) -> i32;
     }
 
     struct EmscriptenAlloc;
@@ -206,15 +206,15 @@ mod emscripten_allocator {
             if layout.align() <= 8 {
                 return unsafe { em_malloc(layout.size()) };
             }
-            let mut ptr = core::ptr::null_mut();
+            let mut ptr = ::core::ptr::null_mut();
             if unsafe { em_posix_memalign(&mut ptr, layout.align(), layout.size()) } != 0 {
-                return core::ptr::null_mut();
+                return ::core::ptr::null_mut();
             }
             ptr as *mut u8
         }
 
         unsafe fn dealloc(&self, ptr: *mut u8, _layout: alloc::alloc::Layout) {
-            unsafe { em_free(ptr as *mut core::ffi::c_void) };
+            unsafe { em_free(ptr as *mut ::core::ffi::c_void) };
         }
     }
 }
@@ -235,7 +235,7 @@ mod emscripten_allocator {
 mod custom_allocator {
     unsafe extern "C" {
         fn ss_custom_alloc(size: usize, align: usize) -> *mut u8;
-        fn ss_custom_free(ptr: *mut core::ffi::c_void, size: usize, align: usize);
+        fn ss_custom_free(ptr: *mut ::core::ffi::c_void, size: usize, align: usize);
     }
 
     struct CustomAlloc;
@@ -249,7 +249,7 @@ mod custom_allocator {
         }
 
         unsafe fn dealloc(&self, ptr: *mut u8, layout: alloc::alloc::Layout) {
-            unsafe { ss_custom_free(ptr as *mut core::ffi::c_void, layout.size(), layout.align()) }
+            unsafe { ss_custom_free(ptr as *mut ::core::ffi::c_void, layout.size(), layout.align()) }
         }
     }
 }
@@ -282,9 +282,9 @@ mod allocator {
             }
             // posix_memalign requires `align` to be a power of two and a multiple of
             // size_of::<*mut _>(); both hold because `align` is a power of two > 8.
-            let mut ptr = core::ptr::null_mut();
+            let mut ptr = ::core::ptr::null_mut();
             if unsafe { libc::posix_memalign(&mut ptr, layout.align(), layout.size()) } != 0 {
-                return core::ptr::null_mut();
+                return ::core::ptr::null_mut();
             }
             ptr as *mut u8
         }
@@ -5634,6 +5634,29 @@ mod tests {
         ctx.set_source_event_threshold(handle, 0.5).unwrap();
         assert_eq!(ctx.source_event_threshold(handle), Some(0.5));
         assert!(matches!(ctx.set_source_event_threshold(99, 0.5), Err(error::SSRuntimeError::InvalidParameter)));
+    }
+
+    /// The C ABI reads the source handles through the same index as the event
+    /// list, and answers `u32::MAX` — a value no live handle takes — outside it.
+    ///
+    /// The accessor exists on the Rust and wasm faces already; this covers the C
+    /// one, which had been left out. Without it a native Player blending two
+    /// animations gets both of their events in one undifferentiated list.
+    #[cfg(feature = "ffi")]
+    #[test]
+    fn passed_event_source_handles_reach_the_c_abi() {
+        use crate::ffi::*;
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let (ctx, _) = ringo_ctx(&resource, "walk");
+
+        let boxed = Box::into_raw(Box::new(ctx)) as *mut ::core::ffi::c_void;
+        // Out of range in either direction is the sentinel, not a read past the
+        // slice — which is the whole reason this is bounds-checked here.
+        assert_eq!(ss_runtime_get_passed_event_source_handle(boxed, -1), u32::MAX);
+        assert_eq!(ss_runtime_get_passed_event_source_handle(boxed, 9999), u32::MAX);
+        assert_eq!(ss_runtime_get_passed_event_source_handle(::core::ptr::null_mut(), 0), u32::MAX);
+        drop(unsafe { Box::from_raw(boxed as *mut Context) });
     }
 
     #[test]
