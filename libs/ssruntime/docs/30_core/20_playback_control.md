@@ -347,6 +347,31 @@ With this design, also providing a `started` callback as the notification for pl
 > [!NOTE]
 > `setup_animation` resets the loop count and the section, so set those inside `setAnimation` (or before `play`). Speed, the frame-rate override, frame skip and the playback direction / style all survive it — see [What `setup_animation` resets](#what-setup_animation-resets) — so a Player does **not** need to re-apply them, and one that does is simply writing the same value back.
 
+#### Selecting the animation already selected must do nothing
+
+`set_animation(name)` is **not** a 1:1 wrapper over `ss_runtime_setup_animation`. When `name` is already the animation set up, the Player returns without calling the C-API at all.
+
+It is a *switch*, so with nothing to switch to there is nothing to do — and the C-API call is very much not nothing. It returns the controller to **Stopped**, rewinds the playhead, drops the playback section, and clears every override that is not `Permanent`. A state machine asserting its current clip every frame —
+
+```cpp
+// Perfectly reasonable host code. Without the guard, this animation never plays.
+player.set_animation(state.clip);
+```
+
+— would rewind the animation on every frame it did that.
+
+There is a second reason, and it bites even a Player that calls `setup_animation` sparingly. Most Players re-apply their own loop count after a setup (the row above says why), and `ss_runtime_set_loop` **re-arms the remaining-loop counter on every write**. So a Player that re-set-up the current animation each frame also reset the loop budget each frame, and a finite loop count never ran out. The guard has to sit **ahead of that re-application**, not inside the native setup.
+
+**Judge "already selected" against what the runtime has**, and invalidate it whenever a resource is bound:
+
+- Comparing against the name the *host* last asked for is wrong twice over. A component whose animation name is serialized already holds it before the first setup, so the first `set_animation` would be skipped and nothing would ever be set up.
+- `ss_runtime_bind_resource` (and any load that calls it) leaves nothing set up. Track the selection so a bind clears it, or a second pack that happens to name an animation the same way as the first is taken for one already selected — leaving that pack bound and unplayable, silently, and only for the packs whose names collide. For a family of characters exported from one project that is the normal case, not the exotic one.
+
+To *restart* an animation, call `play` — that is what heads out. To drop the overrides, call the clear-overrides API. To drop a section, set one covering the whole animation. Each of those was reachable through a re-setup only as a side effect of a switch that was not a switch.
+
+> [!NOTE]
+> All seven official Players behave this way. The internal layer that wraps the C-API keeps the C-API's name and semantics (`SpriteStudioInternalPlayer.SetupAnimation`, `SsInternalPlayer.setupAnimation`, …); the guard belongs to the Player-facing layer above it.
+
 ### Sub-frame playback
 `libssruntime` manages the frame number as an `f32`, which allows "interpolation" between integer frames. To achieve smooth motion on high-refresh-rate displays, we recommend that the Player support `f32` frame management too.
 
