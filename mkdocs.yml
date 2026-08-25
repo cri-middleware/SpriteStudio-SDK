@@ -52,6 +52,7 @@ nav:
       - Preparation & Prerequisites: 20_design/10_preparation.md
       - Architecture & Implementation Approach: 20_design/20_architecture.md
       - Implementation Roadmap: 20_design/30_implementation_roadmap.md
+      - Player API Conventions: 20_design/40_api_conventions.md
   - 🎬 Core Playback:
       - Loading & Initialization: 30_core/10_initialization.md
       - Playback Control & Events: 30_core/20_playback_control.md

@@ -56,6 +56,7 @@ nav:
       - 事前確認とプロジェクトの準備: 20_design/10_preparation.md
       - アーキテクチャと実装方針: 20_design/20_architecture.md
       - 実装ロードマップ: 20_design/30_implementation_roadmap.md
+      - Player API 規約: 20_design/40_api_conventions.md
   - 🎬 コア実装:
       - データのロードと初期化: 30_core/10_initialization.md
       - 再生制御とイベント処理: 30_core/20_playback_control.md

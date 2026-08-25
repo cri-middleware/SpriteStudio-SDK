@@ -42,6 +42,7 @@ graph LR
 - [**Preparation & Prerequisites**](./20_design/10_preparation.md) — environment setup (a prerequisite to implementation)
 - [**Architecture & Implementation Approach**](./20_design/20_architecture.md) — Brain (compute) vs. Body (render)
 - [**Implementation Roadmap**](./20_design/30_implementation_roadmap.md) — staged implementation/verification using `overall.sspj`
+- [**Player API Conventions**](./20_design/40_api_conventions.md) — argument order, name resolution and naming every Player shares
 
 ### 30. Core (Basic Playback)
 Steps to get a minimal animation on screen and control it.

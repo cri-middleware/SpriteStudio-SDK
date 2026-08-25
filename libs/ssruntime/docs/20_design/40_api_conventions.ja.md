@@ -1,0 +1,129 @@
+> **日本語** | [English](./40_api_conventions.md)
+
+# Player API 規約
+
+Brain の契約は 1 つですが、Player の公開 API は各ホスト言語で書かれます。何を揃え、何を各言語に任せるかを決めていないと、同じ機能が Player ごとに違う名前・違う語順で生えます。実際そうなりました。この文書はその境界を定めます。
+
+**揃えるのは語幹と語順です。** `get` 接頭辞の有無、プロパティかメソッドか、見つからないときの戻り値は、各言語の作法に従ってください。`findPartIndex` が Rust で `Option<u32>` を返し、C# で `-1` を返すのは正しい姿です。`partIndexOf` という名前になっているのは正しくありません。
+
+---
+
+## 1. 引数順
+
+オーバーライド系のメソッドは、**設定する値を `part` の直後に置き、修飾子を既定値つきで後ろに続けます。**
+
+```
+setPartVisibilityOverride(part, hide, cascade = false)
+setPartColorOverride(part, color, blendOp = Mix, priority = HoldUntilNextAnimation)
+setPartColorOverrideCorners(part, corners, blendOp = Mix, priority = HoldUntilNextAnimation)
+setPartCellOverride(part, cellmapName, cellName, priority = HoldUntilNextAnimation)
+```
+
+`blendOp` は `color` の後です。この語順でなければ `blendOp` に既定値を置けず、呼び出し側は毎回 `Mix` を書かされることになります。`Mix` は零値であり、色のアルファがそのまま強度になるので「素のまま」を意味します。
+
+既定引数を持たない言語（Rust）では、全引数を必須のままにして構いません。揃えるのは語順であって、既定値はそれが置ける言語での上乗せです。
+
+**`corners` は 1 引数です。** 4 つの色を位置引数に展開しないでください。順序は `lt, rt, lb, rb`（左上・右上・左下・右下）で、これは C ABI の `rgba_ltrtlbrb` と同じ並びです。配列・タプル・構造体のうち、その言語で最も自然なものを使ってください。展開すると `blendOp` の居場所が Player ごとにずれます。
+
+### C ABI とは意図的に違います
+
+C ABI は `ss_runtime_set_part_color_override(context, part, blend_op, rgba, priority_mode)` で、`blend_op` が先です。Player はホスト向けの人間工学レイヤーなので、ここは一致させません。**C ABI を読んでそのまま真似ると規約から外れます。**
+
+---
+
+## 2. 名前解決 — by-name と by-index
+
+**無印の形はパーツ名を取ります。index はその最適化であって、既定ではありません。**
+
+ユーザーが手に持っているのはパーツ名です（エディタから来ます）。index は `findPartIndex` で引いて得るキャッシュにすぎません。既定の形が「先に引いてあること」を要求する API は順序が逆になっています。
+
+index を渡す形の与え方は言語に任せます。
+
+| 言語 | index を渡す形 |
+|---|---|
+| TypeScript | 同じメソッドに union `string \| number` |
+| C# | オーバーロード `(string, …)` / `(int, …)` |
+| Dart | 兄弟メソッド `…ByIndex` |
+| Rust | 兄弟メソッド `…_by_index` |
+| GDScript | 兄弟メソッド `…_by_index` |
+| Python | どちらも受ける単一の形 |
+
+`findPartIndex` が見つからないときの値も言語に任せます。Rust は `Option<u32>`、それ以外は C ABI と揃えて `-1` です。
+
+---
+
+## 3. 命名
+
+**名前の形は、それが何を指しているかで決まります。** 迷ったらこの表で分類してから名前を決めてください。
+
+| 指すもの | 形 | 例 |
+|---|---|---|
+| 継続中の動作 | 現在進行形 `is …ing` | `isPlaying` / `isPausing` / `isPlayingForward` |
+| 完了して持続する状態 | 過去分詞 `is …ed` | `isFinished` |
+| 1 tick 限りのパルス | `is …` を使わない | `justLooped` |
+| 真偽の設定・トグル | 名詞句 + `Enabled` | `frameSkipEnabled` / `subFrameEnabled` |
+| 量 | 名詞句 | `speedScale` / `loopCount` / `frameRate` |
+| 失敗しうる検索 | `find…` | `findPartIndex` |
+
+`isFinished` と `justFinished` は別物です。前者は「設定回数を再生し終えた」という残り続ける状態、後者はその立ち上がりで 1 tick だけ真になるパルスです。完了を一度だけ拾いたいなら後者を読んでください。
+
+3 行目が最も間違えやすいところです。`isLooped` は「直近の update でループ境界を跨いだ」という 1 tick で消えるパルスであって、状態ではありません。`is` は持続する状態を連想させ、1 tick 遅れて読むというバグをそのまま誘います。同じ理由で、パルスを `has…` にするのも誤りです（「これまでに一度でも」と読めてしまいます）。
+
+`isPausing` と `isPaused` については、英語としては後者のほうが自然だという反論があり得ます。それでも前者を採るのは、`isPlaying` と時制が揃うこと、そして Brain 自身が `ss_runtime_is_pausing` であることによります。対になる 2 つの述語で時制がずれているほうが害が大きいと判断しています。
+
+### 標準語彙
+
+同じ概念には同じ語幹を使ってください。大文字小文字と区切りは各言語の作法に従います。
+
+| 概念 | 語幹 |
+|---|---|
+| 再生中か（一時停止中も真） | `isPlaying` |
+| 一時停止で保持中か | `isPausing` |
+| 設定回数を再生し終えたか（sticky） | `isFinished` |
+| 直近の update でループを跨いだか（パルス） | `justLooped` |
+| 直近の update で再生を完了したか（パルス） | `justFinished` |
+| 実際の進行方向が前向きか | `isPlayingForward` |
+| フレームスキップの有無 | `frameSkipEnabled` |
+| サブフレーム補間の有無 | `subFrameEnabled` |
+| 再生速度の倍率 | `speedScale` |
+| ループ回数（`-1` = 無限） | `loopCount` |
+| 再生フレームレート | `frameRate` |
+| 再生区間の設定 | `setAnimationSection` |
+| 再生方向 / 往復スタイル | `playbackDirection` / `playbackStyle` |
+| パーツ名から index を引く | `findPartIndex` |
+| アニメーション名の一覧 | `animationNames` |
+| セルマップ名の一覧 | `cellmapNames` |
+| セル名の一覧 | `cellNames` |
+| 先頭フレームを指定して再生 | `play(startFrame)` |
+
+再生方向は `playbackDirection` と `playbackStyle` の 2 つの列挙型で表します。真偽値 2 本（「逆再生か」「往復か」）にしないでください。1 回の呼び出しで原子的に設定できなくなります。
+
+オーバーライドの優先度は Brain の列挙子名をそのまま使います。`OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`。
+
+### 用語
+
+**`cellmap` は 1 語です。** `cellMap` や `CellMap` と綴らないでください。スキーマと本ドキュメントを通じて `cellmap` に統一されています。
+
+---
+
+## 4. 既定値
+
+同じ機能の既定値が Player ごとに違うと、移植したときに無警告で挙動が変わります。以下は Player 側で決めてよい値ではありません。
+
+| 対象 | 既定 | 理由 |
+|---|---|---|
+| オーバーライドの `priority` | `HoldUntilNextAnimation` | C ABI の既定 |
+| 表示オーバーライドの `cascade` | `false` | SS7 ではキーフレームの hide が子孫に及ばないため、カスケードは opt-in |
+| 色オーバーライドの `blendOp` | `Mix` | 零値。色のアルファが強度になるので「素のまま」を意味する |
+| パーツ追従の非表示時挙動 | 追従を継続する | パーツが 1 フレーム隠れただけで追従対象を消さない |
+| 未再生時の `isPlayingForward` | `true` | 前進が静止状態。偽を返すとホストの音声が初回フレームで塞がれる |
+
+`subFrameEnabled` と `frameSkipEnabled` の既定は、ホストエンジンの慣習に合わせて構いません。ここだけは Player の裁量です。
+
+---
+
+## 5. この規約から外れるとき
+
+外れてよい場合はあります。ホスト言語やエンジンの慣習と正面から衝突するときです。その場合は**コードのそばに理由を書いてください。** 「なぜ違うのか」が書かれていない逸脱は、次に読む人には規約違反と区別がつきません。
+
+Unity が座標系に Y-up を渡し、他の Player が Y-down を渡しているのは、正当な逸脱の例です。エンジンの座標系がそうなっているからで、そのことがコードに書かれています。

@@ -37,6 +37,7 @@ graph LR
 - [**事前確認とプロジェクトの準備**](./20_design/10_preparation.ja.md) — 開発環境のセットアップ（実装の前提条件）
 - [**アーキテクチャと実装方針**](./20_design/20_architecture.ja.md) — Brain (計算) と Body (描画) の役割分担
 - [**実装ロードマップ**](./20_design/30_implementation_roadmap.ja.md) — `overall.sspj` を参照して実装していく順序・検証計画
+- [**Player API 規約**](./20_design/40_api_conventions.ja.md) — 全 Player で揃える引数順・名前解決・命名
 
 ### 30. コア実装 (Core / 基本再生)
 最小限のアニメーションを画面に出し、制御するまでのステップです。
