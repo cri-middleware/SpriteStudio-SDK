@@ -120,6 +120,19 @@ A default that differs between Players changes behaviour silently when a project
 
 `subFrameEnabled` and `frameSkipEnabled` may default to whatever suits the host engine. Those two are the Player's call.
 
+### Part-following options
+
+A Player that offers part following — an attachment, a tracker, an anchor — offers the same options with the same defaults.
+
+| Option | Default | Why |
+|---|---|---|
+| position | `true` | A follower that does not follow the position is not following |
+| rotation | `true` | A weapon in a hand turns with the hand |
+| scale | **`false`** | A follower is placed **at** the part, not **sized by** it. A health bar over a head or a name plate rarely wants to stretch with the part's scale animation |
+| on hidden | keep following | A part hidden for one frame should not take its follower with it |
+
+**The prefix is the host's business.** What is unified is the set of three and their defaults, not the spelling. Where a bare `scale` would read as the host transform's own, a `drive` / `update` prefix is fine — ForGodot uses `update_position` and its siblings because it is modelled on `RemoteTransform2D`.
+
 ---
 
 ## 5. Departing from this document
