@@ -4343,10 +4343,7 @@ mod tests {
         let authored_fps = context.get_fps();
         context.set_animation_speed(2.0);
         context.set_skip_frames(false);
-        context.set_playback_direction(
-            core::playback_controller::PlaybackDirection::Backward,
-            core::playback_controller::PlaybackStyle::PingPong,
-        );
+        context.set_playback_direction(core::playback_controller::PlaybackDirection::Backward, core::playback_controller::PlaybackStyle::PingPong);
         context.set_frame_rate(authored_fps + 17);
         context.set_loop(3);
 
@@ -4356,14 +4353,8 @@ mod tests {
         assert!(!context.get_skip_frames(), "frame skip is the host's, and must survive the transition");
         assert_eq!(context.get_fps(), authored_fps + 17, "the frame-rate override must survive the transition");
         assert_eq!(context.get_animation_speed(), 2.0, "the speed is the host's, and must survive the transition");
-        assert!(
-            context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward,
-            "the playback direction is the host's, and must survive the transition",
-        );
-        assert!(
-            context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong,
-            "so is the ping-pong style",
-        );
+        assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward, "the playback direction is the host's, and must survive the transition");
+        assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong, "so is the ping-pong style");
         assert_eq!(context.get_loops(), -1, "the loop count is per-transition and must reset");
 
         // Frame skip survived as `false`, which means fixed stepping: exactly one
