@@ -115,7 +115,8 @@ Constraints that apply when several animations are stacked on tracks (`ss_runtim
 We recommend restricting audio playback to the times when **the animation is advancing forward along the time axis**.
 
 - Most audio engines (the Web Audio API and others) do not support playing an audio file in reverse as standard.
-- In your Player implementation, compare the runtime's `is_playing_forward()` (the current direction, accounting for the outbound / return legs of PingPong and the Backward setting) with the sign of the user-set playback speed (`speedScale`), and process `audios` events only when the effective playback direction is forward.
+- Gate on `ss_runtime_is_playing_forward()` — the current heading, accounting for the Backward setting and for the outbound / return legs of PingPong. Do **not** also test the sign of `ss_runtime_get_animation_speed()`: the speed can no longer be negative (a zero or negative rate clamps to a stop, see [Playback Control](../30_core/20_playback_control.md#speed-and-the-frame-rate)), so a comparison against it is dead code that reads as if reverse playback could come from the speed.
+- **Gate the playing, not the reporting.** Keep dispatching `audios` events whichever way the playhead is walking, and let the audio backend decide — the event is an observation channel a host may be using for something other than sound (a subtitle cue, a haptic, a log). ForGodot, ForUnity and ForRen'Py all emit the notification unconditionally and gate only their built-in playback; a Player that suppresses the event instead hides the key from every other consumer.
 
 > Related chapter: [Audio](../40_components/90_audio.md)
 
