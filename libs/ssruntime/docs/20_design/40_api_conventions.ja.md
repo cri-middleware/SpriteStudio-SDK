@@ -92,12 +92,22 @@ index を渡す形の与え方は言語に任せます。
 | 再生方向 / 往復スタイル | `playbackDirection` / `playbackStyle` |
 | パーツ名から index を引く | `findPartIndex` |
 | アニメーション名の一覧 | `animationNames` |
+| 現在セットアップされているアニメ | `currentAnimation` |
 | セルマップ名の一覧 | `cellmapNames` |
 | セル名の一覧 | `cellNames` |
 | 先頭フレームを指定して再生 | `play(startFrame)` |
 | 再生ヘッドの位置（小数） | `frameNo` |
 | 再生ヘッドを動かす | `frameNo`（プロパティ形）/ `seek(frameNo)`（動詞形） |
 | パーツ名の一覧（パーツ index 順） | `partNames` |
+
+**`animationName` ではなく `currentAnimation`。** 前者は `animationNames` と 1 文字しか
+違わず、しかもこの 2 つはホストが一緒に使う組です（一覧を出してピッカーを作り、どれが
+選ばれているかを読み戻す）。Godot 自身がこの概念を `AnimationPlayer.current_animation` と
+呼んでいます。`AnimatedSprite2D.animation` のほうは、自前のトランスポートを持たない
+スプライトにおける選択枠です。
+
+選択する操作は `setAnimation(name)` のままです。呼び出しではなくプロパティで選択を表す
+ホストでは、そのプロパティが読み出し側の語幹を名乗ります。
 
 **`frame` ではなく `frameNo`。** この値は小数です（サブフレーム補間で再生ヘッドは
 authored フレームの間に来ます）。また `frame` は描画フレームや 1 tick が生む `FrameData`

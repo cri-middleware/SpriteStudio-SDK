@@ -92,12 +92,22 @@ Use the same stem for the same concept. Casing and word separation follow the la
 | Heading and round-trip style | `playbackDirection` / `playbackStyle` |
 | Resolve a part name to its index | `findPartIndex` |
 | Names of the animations | `animationNames` |
+| The animation that is set up | `currentAnimation` |
 | Names of the cellmaps | `cellmapNames` |
 | Names of the cells in a cellmap | `cellNames` |
 | Play from a given frame | `play(startFrame)` |
 | Where the playhead is (fractional) | `frameNo` |
 | Move the playhead | `frameNo` (property form) / `seek(frameNo)` (verb form) |
 | Names of the parts, in part-index order | `partNames` |
+
+**`currentAnimation`, not `animationName`.** The latter sits one character from
+`animationNames`, and those two are the pair a host uses together — list them to
+build a picker, read back which is selected. Godot names this same thing
+`AnimationPlayer.current_animation`; `AnimatedSprite2D.animation` is the selection
+on a sprite that has no transport of its own.
+
+Selecting one stays `setAnimation(name)`. Where a host models selection as a
+property instead of a call, that property carries the read's stem.
 
 **`frameNo`, not `frame`.** The value is fractional — sub-frame interpolation puts
 the playhead between two authored frames — and `frame` is already the word for a
