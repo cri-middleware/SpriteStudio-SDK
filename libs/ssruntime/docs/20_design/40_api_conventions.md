@@ -124,8 +124,11 @@ A Player publishes six events. **How** they are delivered is the host's business
 
 The `on` prefix, the casing and the word separator follow the host: a Godot signal
 is `animation_finished`, a C# event `OnAnimationFinished`, a TypeScript
-subscription `onAnimationFinished`, a Python constructor kwarg `on_finished`.
-What is unified is the stem.
+subscription `onAnimationFinished`, a Python constructor kwarg
+`on_animation_finished`. What is unified is the stem — **all of it.** Shortening
+`animationFinished` to `finished` is not a spelling difference, it is a different
+name, and `finished` alone does not say *what* finished on an object that also
+owns effect slots, instance slots, audio and textures.
 
 The last three name the same things §3's vocabulary table already names —
 `isFinished`, `justLooped`. **Keep the pair spelled the same.** An event called
