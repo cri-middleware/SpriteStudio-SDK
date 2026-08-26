@@ -95,6 +95,24 @@ Use the same stem for the same concept. Casing and word separation follow the la
 | Names of the cellmaps | `cellmapNames` |
 | Names of the cells in a cellmap | `cellNames` |
 | Play from a given frame | `play(startFrame)` |
+| Where the playhead is (fractional) | `frameNo` |
+| Move the playhead | `frameNo` (property form) / `seek(frameNo)` (verb form) |
+| Names of the parts, in part-index order | `partNames` |
+
+**`frameNo`, not `frame`.** The value is fractional — sub-frame interpolation puts
+the playhead between two authored frames — and `frame` is already the word for a
+rendered frame and for the `FrameData` a tick produces. `AnimatedSprite2D.frame` in
+Godot is an *integer* index into a `SpriteFrames` set, so borrowing that spelling
+would promise a Godot reader the wrong type. The Brain calls it `frame_no`.
+
+Moving the playhead follows §2's rule about properties and methods: where the host
+writes through a property, it is the same stem written to; where the host prefers a
+verb, it is `seek`. Both are listed because both are correct — what is not correct
+is a third stem.
+
+**`partNames` is required, and a part *count* is not a substitute.** A count cannot
+turn the `partIndex` on an event back into something a human reads, and cannot fill
+a part picker. The length of the list is the count.
 
 Playback heading is two enums, `playbackDirection` and `playbackStyle`. Do not model it as two booleans ("is it reversed", "is it ping-pong") — that makes it impossible to set the pair atomically in one call.
 
@@ -172,7 +190,25 @@ events, not a gap in the Players that have them.
 
 ---
 
-## 5. Defaults
+## 5. The tick is the host's clock
+
+A Player driven by the host takes a delta. **Its unit follows the host clock** —
+seconds where the engine hands you seconds (`_process(delta)`, `Time.deltaTime`),
+milliseconds where it hands you milliseconds (`requestAnimationFrame`), a
+`Duration` where the host has one. Converting on the way in only adds a place for
+a factor of 1000 to hide.
+
+What is required is that **the signature says which**: a parameter named `deltaMs`
+/ `dt_ms` / `delta_secs`, or a type that carries the unit itself. A bare `delta`
+passes only where the host's own clock makes it unambiguous — Godot's `delta` and
+Unity's `deltaTime` are seconds to every reader of that engine.
+
+The verb is the host's too. `update` and `advance` are both in use and neither is
+worth churning a quickstart over.
+
+---
+
+## 6. Defaults
 
 A default that differs between Players changes behaviour silently when a project is ported. These are not the Player's to choose.
 
@@ -201,7 +237,7 @@ A Player that offers part following — an attachment, a tracker, an anchor — 
 
 ---
 
-## 6. Departing from this document
+## 7. Departing from this document
 
 There are legitimate reasons to depart — chiefly a head-on collision with the host language's or engine's conventions. When you do, **write the reason next to the code.** A departure with no stated reason is indistinguishable from a mistake to whoever reads it next.
 
