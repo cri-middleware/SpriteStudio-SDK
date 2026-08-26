@@ -124,7 +124,10 @@ Player は 6 つのイベントを公開します。**配達方式**はホスト
 
 `on` 接頭辞・大文字小文字・語の区切りはホストに従います。Godot のシグナルなら
 `animation_finished`、C# の event なら `OnAnimationFinished`、TypeScript の購読なら
-`onAnimationFinished`、Python のコンストラクタ引数なら `on_finished`。揃えるのは語幹です。
+`onAnimationFinished`、Python のコンストラクタ引数なら `on_animation_finished`。
+揃えるのは語幹**全体**です。`animationFinished` を `finished` に縮めるのは綴りの違いでは
+なく別の名前であり、エフェクトスロットもインスタンススロットも音声もテクスチャも持つ
+オブジェクトの上で `finished` だけでは「何が」終わったのか分かりません。
 
 後ろの 3 つは、§3 の語彙表が既に名前を与えている概念そのものです（`isFinished` /
 `justLooped`）。**対になる名前は綴りを揃えてください。** `isFinished` という状態の隣に
