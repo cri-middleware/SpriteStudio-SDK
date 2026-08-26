@@ -4,7 +4,7 @@
 
 The Brain has one contract, but a Player's public API is written in its host's language. Without a line drawn between what is unified and what is left to the language, the same feature grows a different name and a different argument order in every Player. That is what happened. This document draws the line.
 
-**What is unified is the stem and the argument order.** Whether a `get` prefix appears, whether something is a property or a method, and what a failed lookup returns all follow the host language. `findPartIndex` returning `Option<u32>` in Rust and `-1` in C# is correct. Being called `partIndexOf` is not.
+**What is unified is the stem, the argument order and the set.** Whether a `get` prefix appears, whether something is a property or a method, how an event is delivered, and what a failed lookup returns all follow the host language. `findPartIndex` returning `Option<u32>` in Rust and `-1` in C# is correct. Being called `partIndexOf` is not.
 
 ---
 
@@ -106,7 +106,70 @@ Override priority takes the Brain's own enumerator names: `OverwriteOnNextKeyfra
 
 ---
 
-## 4. Defaults
+## 4. Events
+
+A Player publishes six events. **How** they are delivered is the host's business;
+**what they are called** and **which ones exist** are not.
+
+### Stems
+
+| What it reports | Stem |
+|---|---|
+| A **User Data** key was crossed | `userData` |
+| A **Signal** key was crossed | `signal` |
+| An **Audio** key was crossed | `audio` |
+| Playback headed out | `animationStarted` |
+| Every configured loop has played | `animationFinished` |
+| The playhead crossed a loop boundary | `animationLooped` |
+
+The `on` prefix, the casing and the word separator follow the host: a Godot signal
+is `animation_finished`, a C# event `OnAnimationFinished`, a TypeScript
+subscription `onAnimationFinished`, a Python constructor kwarg `on_finished`.
+What is unified is the stem.
+
+The last three name the same things §3's vocabulary table already names —
+`isFinished`, `justLooped`. **Keep the pair spelled the same.** An event called
+`onComplete` or `onAnimationEnd` sitting next to a state called `isFinished`
+describes one concept with two words, and neither name finds the other.
+
+### The set
+
+Those six are the required set. Publishing fewer leaves a host unable to observe
+something every sibling exposes; the three timeline events in particular are the
+whole point of authoring keys.
+
+Three more show up in some Players and are **not** required:
+
+| Not required | Where it earns its place |
+|---|---|
+| an animation-changed event | The host called `setAnimation` itself, so it already knows. Publish one only where a Player has another route in — an inspector field, a declarative prop — and say so next to it |
+| a per-frame hook | Only meaningful in a Player that owns a scene graph, where it is the seam part-following hangs off, after the frame's matrices are final |
+| a raw, undecoded event feed | An escape hatch past the decoded three. Worth having where decoding is expensive or the host wants the indices; never a substitute for the decoded events |
+
+### Delivery is the host's
+
+Signals in Godot, `event` plus `UnityEvent` in Unity, a subscribe call returning an
+unsubscribe in TypeScript, an assignable callback in Dart and React, a queue the
+host drains in Ren'Py, a slice it polls in Rust. Every one of those is right in its
+host. Do not unify them.
+
+Two things do follow from that, though.
+
+**Say how many listeners you take.** That is the host's call as well — a Flutter
+widget callback and a React prop are single-slot by nature, a Godot signal and a
+C# event are not — but it is not something a caller can discover safely. A host
+that assumed it could add a second listener finds out when the first one silently
+stops firing. Write which one you built.
+
+**A Player with no callback mechanism at all publishes the pulses instead.** Where
+the host polls rather than subscribes, there is nothing to take the completion edge
+from, so `justFinished` joins `justLooped` in the read-outs. That is why
+`justFinished` exists in exactly one Player: it is the compensation for having no
+events, not a gap in the Players that have them.
+
+---
+
+## 5. Defaults
 
 A default that differs between Players changes behaviour silently when a project is ported. These are not the Player's to choose.
 
@@ -135,7 +198,7 @@ A Player that offers part following — an attachment, a tracker, an anchor — 
 
 ---
 
-## 5. Departing from this document
+## 6. Departing from this document
 
 There are legitimate reasons to depart — chiefly a head-on collision with the host language's or engine's conventions. When you do, **write the reason next to the code.** A departure with no stated reason is indistinguishable from a mistake to whoever reads it next.
 
