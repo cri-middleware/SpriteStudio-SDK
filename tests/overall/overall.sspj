@@ -270,6 +270,8 @@
 		<value>Bounding.ssae</value>
 		<value>Effect.ssae</value>
 		<value>Instance.ssae</value>
+		<value>InstancePropagation.ssae</value>
+		<value>InstancePropagation_Source01.ssae</value>
 		<value>Instance_SourceAnime.ssae</value>
 		<value>Interpolation.ssae</value>
 		<value>Interpolation_Easing_v1.ssae</value>
@@ -304,9 +306,9 @@
 			</value>
 		</files>
 	</ExternalTextures>
-	<lastAnimeFile>Interpolation_Easing_v1.ssae</lastAnimeFile>
-	<lastAnimeName>easeIn</lastAnimeName>
-	<lastPart>イーズインアウト</lastPart>
+	<lastAnimeFile>InstancePropagation.ssae</lastAnimeFile>
+	<lastAnimeName>anime_1</lastAnimeName>
+	<lastPart></lastPart>
 	<lastCellMapFile>common.ssce</lastCellMapFile>
 	<lastCell>Arrow</lastCell>
 	<lastCharMapFile>font/RoundedMPlus.fnt</lastCharMapFile>
@@ -321,6 +323,8 @@
 		<value>Instance.ssae</value>
 		<value>Instance_SourceAnime.ssae</value>
 		<value>Interpolation.ssae</value>
+		<value>Interpolation_Easing_v1.ssae</value>
+		<value>Mask.ssae</value>
 		<value>Mesh.ssae</value>
 		<value>NineSlice.ssae</value>
 		<value>PartsColor.ssae</value>
