@@ -41,7 +41,7 @@ try {
         @{ Path = "libs/ssconverter"; Flags = @("--all-features") },
         @{ Path = "libs/sspj";        Flags = @() },
         @{ Path = "libs/ssab";        Flags = @() },
-        @{ Path = "libs/ssruntime";   Flags = @("--no-default-features", "--features", "ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler") },
+        @{ Path = "libs/ssruntime";   Flags = @("--no-default-features", "--features", "ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler") }
     )
 
     New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
@@ -49,9 +49,11 @@ try {
     # 1. Sync the root license into each crate. cargo-about (and cargo publish)
     # read the license text from a file inside the crate; without it,
     # cargo-about falls back to the generic SPDX template and drops the real
-    # copyright holder. These per-crate LICENSE.md copies ARE committed.
+    # copyright holder. These per-crate LICENSE.md copies ARE committed. The
+    # translation rides along; cargo includes every LICENSE* in the packaged crate.
     foreach ($crate in $crates) {
         Copy-Item "LICENSE.md" "$($crate.Path)/LICENSE.md" -Force
+        Copy-Item "LICENSE.ja.md" "$($crate.Path)/LICENSE.ja.md" -Force
     }
 
     # 2. Generate the third-party notices into $OutDir as
