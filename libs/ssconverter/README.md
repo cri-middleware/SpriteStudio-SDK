@@ -64,8 +64,8 @@ void convert() {
 
 # Build Features
 
-- **`ffi`** (default): Enables C-API and static/dynamic library generation. Implies `native`.
-- **`native`**: Native build (CLI / Tauri backend) — parallel conversion, filesystem I/O, and directory scanning. Implies `parallel` and `scan`.
+- **`ffi`**: Enables C-API and static/dynamic library generation. Implies `native`.
+- **`native`** (default): Native build (CLI / Tauri backend) — parallel conversion, filesystem I/O, and directory scanning. Implies `parallel` and `scan`.
 - **`parallel`**: Parallel conversion via `rayon`. Propagates to `sspj`'s parallel parsing.
 - **`scan`**: Directory traversal (`walkdir`) for batch conversion.
 - **`web`**: Browser WASM bindings (`wasm32-unknown-unknown`). Sequential, since `rayon` cannot spawn threads there. Build with `--no-default-features --features web`.
