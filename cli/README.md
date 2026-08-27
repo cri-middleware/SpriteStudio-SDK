@@ -2,7 +2,7 @@
 
 # ssconverter-cli
 
-The build-time tool of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.md) workflow: parses SpriteStudio 7 project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
+The build-time tool of the [SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.md) workflow: parses SpriteStudio project files (`.sspj` and the referenced `.ssae` / `.ssee` / `.ssqe` / `.ssce`) and emits the runtime binaries the SDK plays back — `.ssab` (animation) and `.ssqb` (sequence pack).
 
 This CLI wraps [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter) and exposes the same conversion pipeline that the SDK's release artifacts are built with. The runtime side lives in [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime).
 

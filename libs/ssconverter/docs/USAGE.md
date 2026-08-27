@@ -1,6 +1,6 @@
 # libssconverter Integration Guide
 
-`libssconverter` is a C-compatible library for converting SpriteStudio 7 project files (`.sspj`) into a runtime-optimized binary format (`.ssab`).
+`libssconverter` is a C-compatible library for converting SpriteStudio project files (`.sspj`) into a runtime-optimized binary format (`.ssab`).
 It is designed to be integrated into custom game engines, tools, or development editors for in-process conversion.
 
 ## 1. Preparation

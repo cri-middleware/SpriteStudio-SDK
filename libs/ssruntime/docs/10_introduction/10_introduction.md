@@ -2,7 +2,7 @@
 
 # Introduction
 
-This document is a set of guidelines for implementing a SpriteStudio 7 animation playback Player for your own game engine or platform using `libssruntime`.
+This document is a set of guidelines for implementing a SpriteStudio animation playback Player for your own game engine or platform using `libssruntime`.
 
 ## Purpose of this document
 
@@ -12,7 +12,7 @@ This guide covers the basic architecture for implementing a Player, the order in
 
 ## Intended audience
 
-- Engineers who want to add SpriteStudio 7 support to their own game engine
+- Engineers who want to add SpriteStudio support to their own game engine
 - Developers who want to build a more heavily customized Player for an existing engine such as Unity or Godot
 - Developers porting to resource-constrained embedded environments or to WebAssembly
 

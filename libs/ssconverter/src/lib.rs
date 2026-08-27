@@ -1,4 +1,4 @@
-//! Converts SpriteStudio 7 projects into the runtime binary format.
+//! Converts SpriteStudio projects into the runtime binary format.
 //!
 //! `ssconverter` is the offline half of the SDK: it takes a `.sspj` project — parsed
 //! into typed structs by [`sspj`] — and emits the compact FlatBuffers binaries

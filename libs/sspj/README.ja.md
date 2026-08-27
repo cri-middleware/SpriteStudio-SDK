@@ -2,7 +2,7 @@
 
 # libsspj
 
-OPTPiX SpriteStudio 7 のプロジェクトファイル (`.sspj`) および、それに関連する XML アセットを解析するための Rust ライブラリです。
+SpriteStudio のプロジェクトファイル (`.sspj`) および、それに関連する XML アセットを解析するための Rust ライブラリです。
 `quick-xml` と `serde` を使用して、XML 構造を型安全な Rust の構造体にデシリアライズします。
 
 # 対応フォーマット

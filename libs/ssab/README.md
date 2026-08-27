@@ -2,7 +2,7 @@
 
 # libssab
 
-A Rust library for reading and writing SpriteStudio 7 animation binary data (`.ssab`, `.ssqb`).
+A Rust library for reading and writing SpriteStudio animation binary data (`.ssab`, `.ssqb`).
 It uses Google FlatBuffers for serialization and deserialization.
 
 # Supported Formats

@@ -17,7 +17,7 @@ site_dir: site/ja
 site_url: "https://cri-middleware.github.io/SpriteStudio-SDK/ja/"
 # Feeds <meta name="description"> and the Open Graph tags on every ja page. Without it they
 # would inherit the English `site_description`.
-site_description: "SpriteStudio SDK の Player 移植ガイド - 任意のエンジンに SpriteStudio 7 Player を実装する"
+site_description: "SpriteStudio SDK の Player 移植ガイド - 任意のエンジンに SpriteStudio Player を実装する"
 
 theme:
   # Drives the UI string translations, the `html lang` attribute, and -- because the search
@@ -41,7 +41,7 @@ extra:
       name: GitHub の cri-middleware
     - icon: material/web
       link: https://www.webtech.co.jp/spritestudio/
-      name: OPTPiX SpriteStudio
+      name: SpriteStudio
     - icon: fontawesome/brands/x-twitter
       link: https://x.com/spritestudio
       name: X の SpriteStudio

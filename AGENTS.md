@@ -10,7 +10,7 @@
 
 ## Architecture in one paragraph
 
-A Rust workspace that converts SpriteStudio 7 projects (`.sspj` / XML) into a compact FlatBuffers binary (`.ssab`) and plays them back through `libssruntime` — a stateless "Brain" that emits per-frame state plus cross-engine **DrawBatch** plans. Player implementations (the "Body") handle rendering and platform integration. The runtime is `no_std`-first; `std` is opt-in for developer ergonomics only.
+A Rust workspace that converts SpriteStudio projects (`.sspj` / XML) into a compact FlatBuffers binary (`.ssab`) and plays them back through `libssruntime` — a stateless "Brain" that emits per-frame state plus cross-engine **DrawBatch** plans. Player implementations (the "Body") handle rendering and platform integration. The runtime is `no_std`-first; `std` is opt-in for developer ergonomics only.
 
 See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP.md) for planned work. [MAINTAINING_PLAYERS.md](./MAINTAINING_PLAYERS.md) holds the working agreement for the official Players' getting-started experience — our repositories, not the porting guide's subject.
 

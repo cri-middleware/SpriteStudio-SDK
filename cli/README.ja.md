@@ -2,7 +2,7 @@
 
 # ssconverter-cli
 
-[SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio 7 のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
+[SpriteStudio-SDK](https://github.com/cri-middleware/SpriteStudio-SDK/blob/main/README.ja.md) のワークフローにおけるビルド時のツールです。SpriteStudio のプロジェクトファイル (`.sspj` と、そこから参照される `.ssae` / `.ssee` / `.ssqe` / `.ssce`) を解析し、SDK が再生するランタイムバイナリ — `.ssab`（アニメーション）と `.ssqb`（シーケンスパック） — を生成します。
 
 本 CLI は [libssconverter](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter) のラッパーであり、SDK のリリース成果物のビルドに使われているのと同じ変換パイプラインを公開しています。ランタイム側は [libssruntime](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssruntime) を参照してください。
 

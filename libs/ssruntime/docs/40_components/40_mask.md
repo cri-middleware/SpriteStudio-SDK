@@ -2,7 +2,7 @@
 
 # Implementing Mask
 
-An implementation guide for SpriteStudio 7's "mask" and "clipping mask" features. Both are realized by the same stencil mechanism, but **they are different features**. This document treats the feature definitions as primary and the implementation patterns as subordinate to them.
+An implementation guide for SpriteStudio's "mask" and "clipping mask" features. Both are realized by the same stencil mechanism, but **they are different features**. This document treats the feature definitions as primary and the implementation patterns as subordinate to them.
 
 ---
 

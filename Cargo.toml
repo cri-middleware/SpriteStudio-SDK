@@ -20,7 +20,7 @@ homepage = "https://www.webtech.co.jp/eng/spritestudio/"
 # Inherited only by the two `publish = false` FFI crates. Every crate that goes to
 # crates.io spells out its own `description` / `keywords` / `categories`: those are
 # what a reader sees in search results, and a published version can never edit them.
-description = "Software development kit for OPTPiX SpriteStudio 7 projects"
+description = "Software development kit for SpriteStudio projects"
 
 
 [workspace.dependencies]

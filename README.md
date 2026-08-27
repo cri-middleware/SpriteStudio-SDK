@@ -1,19 +1,19 @@
 [**日本語**](./README.ja.md) | [**English**](./README.md)
 # SpriteStudio-SDK
 
-A high-performance, engine-agnostic animation player SDK for **OPTPiX SpriteStudio 7**.
+A high-performance, engine-agnostic animation player SDK for **SpriteStudio**.
 This SDK allows you to easily implement and play **raster-based 2D animations** on any game engine or rendering framework.
 
 📚 How this SDK, the official players, and the conversion tools fit together is documented in [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/), the portal for the whole ecosystem — 🚧 live after the first release.
 
 ## 🎯 Compatibility
 
-SpriteStudio-SDK `7.x.x` supports projects authored in **OPTPiX SpriteStudio 7.5 or later**.
+SpriteStudio-SDK `7.x.x` supports projects authored in **SpriteStudio 7.5 or later**.
 
 ## 🔄 The Workflow (How it works)
 
 1. **Convert:** Use the provided CLI tool (`ssconverter-cli`) to convert your SpriteStudio project (`.sspj`) into a highly optimized binary format (`.ssab`).
-2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio 7 feature set out of the box. Text drawing and audio playback are the Player's side of the split — see [Supported scope of drawing and playback features](./libs/ssruntime/docs/10_introduction/20_limitations.md#supported-scope-of-drawing-and-playback-features).
+2. **Play Anywhere:** Pass the `.ssab` file to this SDK runtime. **The SDK is designed to play any `.ssab` file**, supporting the SpriteStudio feature set out of the box. Text drawing and audio playback are the Player's side of the split — see [Supported scope of drawing and playback features](./libs/ssruntime/docs/10_introduction/20_limitations.md#supported-scope-of-drawing-and-playback-features).
 
 The following diagram shows the workflow of converting assets and playing animations using this SDK:
 
@@ -109,7 +109,7 @@ Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions 
 
 ### Sample Data
 
-This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio 7:
+This repository includes several sample projects in the `tests/` directory to verify different features of SpriteStudio:
 
 - `tests/overall/overall.sspj`: A comprehensive project covering basic to advanced features (recommended for initial testing).
 - `tests/allAttributeV7/allAttributeV7.sspj`: Verifies all animation attributes.
