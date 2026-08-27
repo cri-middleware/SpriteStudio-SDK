@@ -24,7 +24,7 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 | `libs/ssab` | `.ssab` schema and FlatBuffers (zero-copy). | [SCHEMA](./libs/ssab/SCHEMA.md) |
 | `libs/ssruntime` | Playback Brain — state, interpolation, DrawBatch emission. C-API + WASM bindings. `no_std`-first. | [Player Guide (ja)](./libs/ssruntime/docs/README.ja.md), [FrameData SCHEMA](./libs/ssruntime/SCHEMA.md) / [ja](./libs/ssruntime/SCHEMA.ja.md) |
 
-> Before implementing a Player, read [**Limitations**](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md) and [**Batched Rendering Contract**](./libs/ssruntime/docs/30_core/30_render_loop.ja.md).
+> Before implementing a Player, read [**Limitations**](./libs/ssruntime/docs/10_introduction/20_limitations.md) and [**Batched Rendering Contract**](./libs/ssruntime/docs/30_core/30_render_loop.md).
 
 ## Hard constraints
 

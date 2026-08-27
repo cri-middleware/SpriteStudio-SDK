@@ -121,7 +121,7 @@ Inline `struct` (fixed-size, no vtable) keyed by position in `draw_batches`:
 |:---|:---|
 | `Normal` | Standard sprite quad — driven by `vertex` pool + `cell` pool (texture from `texture_hash`: `cellmap_name_hash`, or the TCHG texture name when overridden). |
 | `Shape` | Procedural shape from `PartTypeShape` (no texture). |
-| `Instance` | Sub-anime instance slot — see [Player Guide](./docs/README.ja.md) for slot pulling. |
+| `Instance` | Sub-anime instance slot — see [Player Guide](./docs/README.md) for slot pulling. |
 | `Effect` | Particle quads from the matching `EffectSlot` (see `effect_draw_plan.fbs`). |
 | `Mesh` | Indexed mesh with bone-skinned vertices using `PartMeshBinding`. |
 | `Text` | A text part's slot in the draw order — one part per batch, with no geometry (`vertex_count` / `index_count` are `0`) and no `texture_hash`. Glyph layout, rasterisation and font resolution are the Player's (see [Limitations](./docs/10_introduction/20_limitations.md)); text parts authored as masks are omitted from the plan. |
