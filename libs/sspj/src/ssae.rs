@@ -207,7 +207,7 @@ impl FromStr for SsMeshBindInfo {
         }
         // Chunk layout: one header field followed by influence groups of 4
         // values each (bone, weight, offset_x, offset_y). The header is the
-        // per-vertex influence count in SS7 exports, but the part's total bone
+        // per-vertex influence count in SpriteStudio exports, but the part's total bone
         // count in older (pre-V7) exports — where each vertex still lists only
         // the bones that actually influence it. So the header can't be trusted
         // as the influence count; derive the count from the data length.

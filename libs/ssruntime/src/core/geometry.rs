@@ -480,7 +480,7 @@ pub type SkinnedMeshDeform<'a> = (&'a [i16], &'a [f32], &'a [f32], &'a SsMatrix4
 /// Y-up; set `flip_y` when the bone world matrices are Y-down so the bind-pose
 /// invariant (each influence resolves to the same rest position) holds.
 ///
-/// Skins exactly `out_x.len()` vertices from the front of the binding. The SS7
+/// Skins exactly `out_x.len()` vertices from the front of the binding. The SpriteStudio
 /// meshList appends 4 unbound placeholder vertices (the cell-quad corners) after
 /// the rendered mesh, so `influence_offsets` may be longer than `out_x.len() + 1`;
 /// the trailing entries are simply never read.

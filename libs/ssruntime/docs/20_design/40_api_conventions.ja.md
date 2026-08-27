@@ -218,7 +218,7 @@ Dart や React の代入コールバック、Ren'Py のホストが吸い出す�
 | 対象 | 既定 | 理由 |
 |---|---|---|
 | オーバーライドの `priority` | `HoldUntilNextAnimation` | C ABI の既定 |
-| 表示オーバーライドの `cascade` | `false` | SS7 ではキーフレームの hide が子孫に及ばないため、カスケードは opt-in |
+| 表示オーバーライドの `cascade` | `false` | SpriteStudio ではキーフレームの hide が子孫に及ばないため、カスケードは opt-in |
 | 色オーバーライドの `blendOp` | `Mix` | 零値。色のアルファが強度になるので「素のまま」を意味する |
 | パーツ追従の非表示時挙動 | 追従を継続する | パーツが 1 フレーム隠れただけで追従対象を消さない |
 | 未再生時の `isPlayingForward` | `true` | 前進が静止状態。偽を返すとホストの音声が初回フレームで塞がれる |

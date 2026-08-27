@@ -256,7 +256,7 @@ for (int i = 0; i < count; i++) {
             emit_signal("user_data", user->part_index(), user->value());
         }
     }
-    // Handling Signal (SpriteStudio v7 and later)
+    // Handling Signal
     if (events->signals()) {
         for (auto sig : *events->signals()) {
             if (!sig || !sig->value() || !sig->value()->active()) continue;

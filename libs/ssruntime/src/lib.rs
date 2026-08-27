@@ -2268,7 +2268,7 @@ impl<'a> Context<'a> {
             let skeletal = cached.mesh_binding.as_ref().map(|b| !b.bone_indices.is_empty()).unwrap_or(false);
             if skeletal {
                 let binding = cached.mesh_binding.as_ref().unwrap();
-                // The SS7 `.ssae` meshList carries the N rendered mesh vertices
+                // The SpriteStudio `.ssae` meshList carries the N rendered mesh vertices
                 // followed by 4 trailing placeholder entries (the cell-quad
                 // corners, bound to no bone), so a well-formed binding has
                 // `cell_count + 4` vertices. `compute_skinned_mesh_vertices`
@@ -3382,7 +3382,7 @@ impl<'a> EffectSlot<'a> {
     }
 
     pub fn step(&mut self, ev: crate::types::ss_effect_event_info, parent_frame: f32, delta_seconds: f32, fps: f32, parent_looped: bool, y_flip: bool, vert_stride: u8) -> crate::types::ss_effect_step_result {
-        // While the slot is playing independently, the SS7 implicit frame-0
+        // While the slot is playing independently, the SpriteStudio implicit frame-0
         // playback key (synthetic default) is ignored — the independent effect
         // keeps running across the parent's loop instead of being reset to it.
         // Only a real authored EventEffect re-transitions the slot.
@@ -3662,7 +3662,7 @@ impl InstanceSlot {
     /// edges and advances its frame either by parent-relative seek or by
     /// delta-time update depending on `independent`.
     pub fn step(&mut self, ev: crate::types::ss_event_instance_info, child_ctx: &mut Context<'_>, parent_frame: f32, delta_seconds: f32, parent_looped: bool) -> crate::types::ss_instance_step_result {
-        // While the slot drives its child independently, the SS7 implicit
+        // While the slot drives its child independently, the SpriteStudio implicit
         // frame-0 playback key (synthetic default) is ignored — the independent
         // child keeps running across the parent's loop instead of being
         // re-seeked to it. Only a real authored EventInstance re-transitions it.

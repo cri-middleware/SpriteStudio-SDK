@@ -248,7 +248,7 @@ for (int i = 0; i < count; i++) {
             emit_signal("user_data", user->part_index(), user->value());
         }
     }
-    // Signal の処理 (SpriteStudio v7以降)
+    // Signal の処理
     if (events->signals()) {
         for (auto sig : *events->signals()) {
             if (!sig || !sig->value() || !sig->value()->active()) continue;
