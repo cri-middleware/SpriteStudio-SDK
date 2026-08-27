@@ -120,6 +120,7 @@ The web target is packaged by `scripts/release-web.sh` into `pkg/converter-web/`
 *   **Release builds:** see `scripts/release-*.sh` / `.ps1`. Each handles cross-compilation and platform-specific packaging (e.g., `lipo` for macOS universal binaries). One per platform, and each builds only what its own operating system can.
 *   **Release packaging:** `scripts/build-release.sh` turns those per-platform outputs into the archives a consumer downloads — the third-party notices, the `static/` `dynamic/` `web/` layout, the zips and `SHA256SUMS`. `release.yml`'s package job **is** this script (`in=artifacts out=release-dist licenses=yes verify=yes clean=yes`, every option spelled out so a release cannot change because a default did), so CI and a local run cannot drift.
 *   **Release version:** `scripts/release-version.sh` prints `[workspace.package] version` from `Cargo.toml`. It is not what names a release — the tag is — but it is what a release *should* be tagged as, and `build-release.sh` says so when the two disagree.
+*   **Pre-release markers:** `scripts/list-prerelease-markers.sh` lists every "🚧 after the first release" / "準備中" marker across this repository and the Player checkouts beside it. Exits non-zero while any remain, so a release step can gate on it.
 
 ### Cutting a release
 
@@ -134,6 +135,13 @@ git tag v7.0.0-beta.1 && git push origin v7.0.0-beta.1
 Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME` (or, locally, the tag `HEAD` is checked out at) and stamps it into every archive's `VERSION`, and `release.yml` uses the same ref for `tag_name`. Dispatching from a branch is an artifact build, not a release — `upload_release=true` from anything but a `v*` tag fails the run rather than silently skipping the Release.
 
 Bump `[workspace.package] version` to match the tag before tagging. It is the string every Player pins in its own `scripts/SDK_VERSION.txt`.
+
+The family advertises what has not shipped yet — hosted doc sites, npm and pub packages, the Releases page itself — behind the marker convention `SpriteStudio-Docs/AGENTS.md` defines. Those all come true at once, and a stale one is invisible from the inside: it reads correctly to anyone who knows the release has not happened. Walk the list rather than the memory:
+
+```bash
+scripts/list-prerelease-markers.sh --count   # per repository
+scripts/list-prerelease-markers.sh           # every marker, file and line
+```
 
 ### Reproducing the archives locally
 
