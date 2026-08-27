@@ -2,7 +2,7 @@
 
 # libssconverter
 
-A library for converting SpriteStudio 7 project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
+A library for converting SpriteStudio project files (`.sspj`) into runtime-optimized binary formats (`.ssab`, `.ssqb`).
 
 It utilizes `sspj` to parse the project and `ssab` to generate FlatBuffers binaries.
 

@@ -7,7 +7,7 @@ Entries follow [Conventional Commits](https://www.conventionalcommits.org/); new
 ## v7.0.0-beta.1 - Unreleased
 
 ### Adds APIs / Features
-- **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting OPTPiX SpriteStudio 7.
+- **Initial Public Release**: SpriteStudio-SDK (`ssconverter-cli` + `libssruntime`), supporting SpriteStudio.
 - **Core Runtime**: Engine-agnostic, `#![no_std]` brain with zero-math integration and SIMD (f32x4) state computation.
 - **Features**: Supports Mesh Deformation, Particles (SSEE), Instances, and SS7.1 parts (Skew, 9-Slice, Shape).
 - **Integrations**: C-API and Web (WASM) ready.

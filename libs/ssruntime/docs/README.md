@@ -1,8 +1,8 @@
 > [日本語](./README.ja.md) | **English**
 
-# SpriteStudio 7 Player Porting Guide
+# SpriteStudio Player Porting Guide
 
-This guide explains how to implement a **SpriteStudio 7 Player** for your own game engine or platform using `libssruntime` (the Brain).
+This guide explains how to implement a **SpriteStudio Player** for your own game engine or platform using `libssruntime` (the Brain).
 
 > Every page of this guide is available in English; each page links to its Japanese source at the top. The Japanese version remains the source of truth — if the two ever disagree, follow the Japanese page and please report the discrepancy.
 

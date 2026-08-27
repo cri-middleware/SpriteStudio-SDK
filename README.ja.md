@@ -1,19 +1,19 @@
 [**English**](./README.md) | [**日本語**](./README.ja.md)
 # SpriteStudio-SDK
 
-**OPTPiX SpriteStudio 7** 向けの、ハイパフォーマンスでエンジン非依存なアニメーションプレイヤー SDK です。
+**SpriteStudio** 向けの、ハイパフォーマンスでエンジン非依存なアニメーションプレイヤー SDK です。
 この SDK を使用することで、あらゆるゲームエンジンやレンダリングフレームワーク上で、**ラスターベースの 2D アニメーション**を簡単に実装・再生することができます。
 
 📚 この SDK・各公式 Player・変換ツールの関係は、エコシステム全体のポータル [**SpriteStudio Docs**](https://cri-middleware.github.io/SpriteStudio-Docs/ja/) にまとまっています — 🚧 初回リリース後に公開。
 
 ## 🎯 対応バージョン (Compatibility)
 
-SpriteStudio-SDK `7.x.x` は **OPTPiX SpriteStudio 7.5 以上**で作成されたプロジェクトに対応しています。
+SpriteStudio-SDK `7.x.x` は **SpriteStudio 7.5 以上**で作成されたプロジェクトに対応しています。
 
 ## 🔄 ワークフロー (The Workflow)
 
 1. **変換 (Convert):** 同梱の CLI ツール (`ssconverter-cli`) を使用して、SpriteStudio のプロジェクト (`.sspj`) を極限まで最適化されたバイナリフォーマット (`.ssab`) に変換します。
-2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio 7 の機能を標準でサポートします。テキスト描画とサウンド再生は責務分担として Player 側の担当です（[描画・再生機能のサポート範囲](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md#描画再生機能のサポート範囲) を参照）。
+2. **どこでも再生 (Play Anywhere):** 生成された `.ssab` ファイルを本 SDK のランタイムに渡します。**SDK はすべての `.ssab` ファイルを再生できるよう設計されており**、SpriteStudio の機能を標準でサポートします。テキスト描画とサウンド再生は責務分担として Player 側の担当です（[描画・再生機能のサポート範囲](./libs/ssruntime/docs/10_introduction/20_limitations.ja.md#描画再生機能のサポート範囲) を参照）。
 
 この SDK を使用してアセットを変換し、アニメーションを再生する際の流れを以下の図に示します：
 
@@ -109,7 +109,7 @@ graph LR
 
 ### サンプルデータについて
 
-このリポジトリの `tests/` ディレクトリには、SpriteStudio 7 の各種機能を検証するためのサンプルプロジェクトが含まれています：
+このリポジトリの `tests/` ディレクトリには、SpriteStudio の各種機能を検証するためのサンプルプロジェクトが含まれています：
 
 - `tests/overall/overall.sspj`: 基本から応用までを網羅した包括的なプロジェクト（最初のテストにおすすめです）。
 - `tests/allAttributeV7/allAttributeV7.sspj`: 全てのアニメーションアトリビュートを網羅しています。

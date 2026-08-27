@@ -2,7 +2,7 @@
 
 # libssconverter
 
-SpriteStudio 7 のプロジェクトファイル (`.sspj`) を、ランタイムに最適化されたバイナリ形式 (`.ssab`, `.ssqb`) に変換するためのライブラリです。
+SpriteStudio のプロジェクトファイル (`.sspj`) を、ランタイムに最適化されたバイナリ形式 (`.ssab`, `.ssqb`) に変換するためのライブラリです。
 
 `sspj` クレートを使用してプロジェクトを解析し、`ssab` クレートを使用して FlatBuffers バイナリを生成します。
 

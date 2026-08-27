@@ -2,7 +2,7 @@
 
 # libsspj
 
-A Rust library for parsing OPTPiX SpriteStudio 7 project files (`.sspj`) and associated XML assets.
+A Rust library for parsing SpriteStudio project files (`.sspj`) and associated XML assets.
 It deserializes the XML structure into strongly-typed Rust structs using `quick-xml` and `serde`.
 
 # Supported Formats

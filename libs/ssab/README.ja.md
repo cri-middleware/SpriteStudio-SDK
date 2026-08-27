@@ -2,7 +2,7 @@
 
 # libssab
 
-SpriteStudio 7 のアニメーションバイナリデータ (`.ssab`, `.ssqb`) を読み書きするための Rust ライブラリです。
+SpriteStudio のアニメーションバイナリデータ (`.ssab`, `.ssqb`) を読み書きするための Rust ライブラリです。
 Google FlatBuffers を使用してシリアライズ/デシリアライズを行います。
 
 # 対応フォーマット

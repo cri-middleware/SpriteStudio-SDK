@@ -1,7 +1,7 @@
 //! `ssconverter-cli` — command-line front end for
 //! [`ssconverter`](https://github.com/cri-middleware/SpriteStudio-SDK/tree/main/libs/ssconverter).
 //!
-//! Converts SpriteStudio 7 projects (`.sspj`) into the runtime binaries (`.ssab`,
+//! Converts SpriteStudio projects (`.sspj`) into the runtime binaries (`.ssab`,
 //! `.ssqb`) in either single or batch mode, the latter walking directories for projects
 //! and converting them in parallel. It is a thin shell around the library: argument
 //! parsing, progress logging, and exit codes only — the conversion itself, and therefore
@@ -20,7 +20,7 @@ const VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "+", env!("VERGEN_GIT_S
 #[command(
     name = "ssconverter-cli",
     version = VERSION,
-    about = "Converts SpriteStudio 7 projects (.sspj) to optimized binary files (.ssab)",
+    about = "Converts SpriteStudio projects (.sspj) to optimized binary files (.ssab)",
     override_usage = "
   single mode: convert a single sspj project
   usage:

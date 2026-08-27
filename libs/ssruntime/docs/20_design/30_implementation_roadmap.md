@@ -2,7 +2,7 @@
 
 # Implementation Roadmap: verifying features with overall.sspj
 
-When implementing a Player, the most important and most reliable verification method is **to constantly compare the display and behavior in the SpriteStudio 7 editor itself against the behavior of the Player you are implementing**.
+When implementing a Player, the most important and most reliable verification method is **to constantly compare the display and behavior in the SpriteStudio editor itself against the behavior of the Player you are implementing**.
 
 For staged feature verification, **we strongly recommend using the test project `tests/overall/overall.sspj` bundled with this SDK**. That project covers an animation per feature, and working through the steps below lets you complete your Player's functionality with confidence.
 

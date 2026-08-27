@@ -1,4 +1,4 @@
-//! Parser for SpriteStudio 7 project files — the SDK's XML front end.
+//! Parser for SpriteStudio project files — the SDK's XML front end.
 //!
 //! A SpriteStudio project is a tree of XML documents: a `.sspj` that references anime
 //! packs, cell maps, effects, sequences and sound lists. This crate deserializes all of
