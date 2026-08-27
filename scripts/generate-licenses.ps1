@@ -41,7 +41,7 @@ try {
         @{ Path = "libs/ssconverter"; Flags = @("--all-features") },
         @{ Path = "libs/sspj";        Flags = @() },
         @{ Path = "libs/ssab";        Flags = @() },
-        @{ Path = "libs/ssruntime";   Flags = @("--no-default-features", "--features", "ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler") },
+        @{ Path = "libs/ssruntime";   Flags = @("--no-default-features", "--features", "ffi,libc_alloc,wasm_alloc,emscripten_alloc,web,panic-handler") }
     )
 
     New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
