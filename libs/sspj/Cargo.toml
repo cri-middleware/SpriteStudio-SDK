@@ -7,7 +7,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "Parser for SpriteStudio project files (.sspj / .ssae / .ssce / .ssee / .ssqe / .ssse)"
+keywords = ["spritestudio", "2d-animation", "gamedev", "parser", "xml"]
+categories = ["parser-implementations", "game-development", "graphics"]
 
 [lib]
 crate-type = ["rlib"]

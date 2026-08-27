@@ -7,7 +7,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
-description.workspace = true
+description = "Command-line converter from SpriteStudio projects to .ssab / .ssqb runtime binaries"
+keywords = ["spritestudio", "2d-animation", "gamedev", "cli", "converter"]
+categories = ["command-line-utilities", "game-development"]
 
 [dependencies]
 clap = { workspace = true }
