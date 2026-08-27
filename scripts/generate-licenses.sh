@@ -46,10 +46,12 @@ CRATES=(
 # 1. Sync the root license into each crate. cargo-about (and `cargo publish`)
 # read the license text from a file inside the crate; without it, cargo-about
 # falls back to the generic SPDX template and drops the real copyright holder.
-# These per-crate LICENSE.md copies ARE committed (publish requirement).
+# These per-crate LICENSE.md copies ARE committed (publish requirement). The
+# translation rides along; cargo includes every LICENSE* in the packaged crate.
 for entry in "${CRATES[@]}"; do
     path="${entry%%|*}"
     /bin/cp "LICENSE.md" "${path}/LICENSE.md"
+    /bin/cp "LICENSE.ja.md" "${path}/LICENSE.ja.md"
 done
 
 # 2. Generate the third-party notices into OUT_DIR as

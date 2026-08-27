@@ -405,7 +405,7 @@ EOF
 place_docs () { # <tree-root>
   local root="$1"
   printf '%s\n' "$TAG" > "$root/VERSION"
-  cp "$ROOT_DIR/LICENSE.md" "$root/"
+  cp "$ROOT_DIR/LICENSE.md" "$ROOT_DIR/LICENSE.ja.md" "$root/"
   cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssruntime.md" "$root/"
   cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.ssconverter.md" "$root/"
 }
@@ -456,7 +456,7 @@ for cli in $CLI_ARTIFACTS; do
   staging="$WORK/cli/$platform"
   mkdir -p "$staging"
   cp -R "$IN/$cli/." "$staging/"
-  cp "$ROOT_DIR/LICENSE.md" "$staging/"
+  cp "$ROOT_DIR/LICENSE.md" "$ROOT_DIR/LICENSE.ja.md" "$staging/"
   cp "$LICENSE_DIR/THIRD-PARTY-LICENSES.cli.md" "$staging/THIRD-PARTY-LICENSES.md"
   # The executable bit does not survive a Windows-built artifact upload, and a
   # CLI that unzips without it is a support ticket. Absent on the Windows zips,
@@ -501,7 +501,7 @@ if [ "$VERIFY" = "yes" ]; then
   for zipfile in spritestudio-sdk-static-libs.zip spritestudio-sdk-dynamic-libs.zip; do
     [ -s "$OUT/$zipfile" ] || continue
     entries="$(unzip -Z1 "$OUT/$zipfile")"
-    for expected in VERSION LICENSE.md libs/ include/ bindings/; do
+    for expected in VERSION LICENSE.md LICENSE.ja.md libs/ include/ bindings/; do
       case "$expected" in
         */) printf '%s\n' "$entries" | grep -q "^$expected" || fail "$zipfile has no $expected at the archive root" ;;
         *)  printf '%s\n' "$entries" | grep -qx "$expected"  || fail "$zipfile has no $expected at the archive root" ;;
