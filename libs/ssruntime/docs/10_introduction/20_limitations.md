@@ -51,7 +51,7 @@ Setting `independent=true` on an Instance or Effect part **does not work correct
 - It breaks under the parent's **reverse playback** (the child's clock increases monotonically and cannot run backwards) and under the parent's **seeking** (the child's "accumulated time" at an arbitrary past frame is not uniquely determined).
 - The parent's **forward frame skips** are supported.
 
-**Recommended practice**: author your SS7 animations without `independent=true`. If you must use it, tell your Player's users explicitly that the corresponding child instances are only drawn correctly during forward playback.
+**Recommended practice**: author your SpriteStudio animations without `independent=true`. If you must use it, tell your Player's users explicitly that the corresponding child instances are only drawn correctly during forward playback.
 
 > Related chapter: [Instance Parts](../40_components/10_instance.md)
 

@@ -154,7 +154,7 @@ fn convert_events_per_frames_part(
                         instance_t.independent = key.value.independent;
                         instance_t.reverse = key.value.reverse;
                         // SS6's `SsInstanceAttr` carried both `infinity: bool`
-                        // and `loop_num: i32`; SS7's `PartAttributeInstance`
+                        // and `loop_num: i32`; SpriteStudio's `PartAttributeInstance`
                         // collapses them into a single `loop_num` where -1
                         // means infinite, matching `PlaybackController`'s
                         // convention. Encode the `infinity` flag here so the
@@ -835,7 +835,7 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_
     parts_initial_attributes_t
 }
 
-/// Bakes SS7's per-part HIDE inheritance into the setup-pose `hide` of each
+/// Bakes SpriteStudio's per-part HIDE inheritance into the setup-pose `hide` of each
 /// part's [`InitialPartAttributes`] — the scalar counterpart of
 /// `bake_hide_inheritance`, which does the same for the per-frame `hide_array`.
 /// A part that inherits HIDE (`ineheritRates/HIDE`) adopts its parent's
@@ -1412,9 +1412,9 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
     parts_animation_data_t
 }
 
-/// Bakes SS7's per-part HIDE inheritance into each part's `hide_array`.
+/// Bakes SpriteStudio's per-part HIDE inheritance into each part's `hide_array`.
 ///
-/// In SS7 the `hide` attribute does NOT unconditionally cascade to children:
+/// In SpriteStudio the `hide` attribute does NOT unconditionally cascade to children:
 /// whether a part follows its parent's hidden state is controlled per-part by
 /// the `ineheritRates/HIDE` flag (`SsPart.inherit_rates.hide`). The runtime
 /// treats `hide` as a pure per-part attribute and never propagates it, so any
@@ -1594,7 +1594,7 @@ fn build_part_color_key_value_color_t(
             let rate_u8 = (src.rate * 255.0).clamp(0.0, 255.0) as u8;
             (rate_u8, (src.rgba.a as f32) / 255.0)
         }
-        // All other blend types (Add/Sub/Mul and the SS7 additions): the blend
+        // All other blend types (Add/Sub/Mul and the newer additions): the blend
         // weight is implicitly 1.0; XML `rate` is unused; `rgba.a` is the final alpha.
         _ => (src.rgba.a, 1.0),
     };
@@ -1618,7 +1618,7 @@ fn build_part_color_key_value_color_t(
     color
 }
 
-// SS7 stores PartColor with a `target` of either Whole (single overall color in `color`)
+// SpriteStudio stores PartColor with a `target` of either Whole (single overall color in `color`)
 // or Vertex (four per-corner colors). The `.ssab` schema only carries four corners,
 // so Whole is expanded into four identical corner entries here. See
 // `build_part_color_key_value_color_t` for the rate/alpha mediation applied per corner.

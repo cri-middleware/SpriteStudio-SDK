@@ -148,7 +148,7 @@ Swapping a cell makes the seam rewrite **four families** of data. What is mainly
 - **There is no priority mode.** It always beats keyframes, and it is **always cleared** when a new animation is `setup` (behaviorally equivalent to the `HoldUntilNextAnimation` priority mode).
 - With `cascade != 0`, the forced hiding cascades to every descendant part.
 
-> **The cascade propagates only "hiding that came from an override"**: SS7's keyframe `hide` is **per part** and does **not** propagate to descendants. This asymmetry is deliberate. If the Player implements its own propagation of "if the parent is hidden, do not draw the children", the meaning of the keyframe `hide` changes. **`PartState.hide` expresses only whether that part itself is drawn.**
+> **The cascade propagates only "hiding that came from an override"**: SpriteStudio's keyframe `hide` is **per part** and does **not** propagate to descendants. This asymmetry is deliberate. If the Player implements its own propagation of "if the parent is hidden, do not draw the children", the meaning of the keyframe `hide` changes. **`PartState.hide` expresses only whether that part itself is drawn.**
 
 > **It does not reach inside instance parts**: a child animation runs as a separate context, so the parent context's overrides do not affect the parts inside the child. When you force-hide an instance part itself, not drawing the child animation beneath it is **the Player's responsibility**.
 

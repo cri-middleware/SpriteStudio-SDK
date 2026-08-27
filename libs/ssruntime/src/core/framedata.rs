@@ -1012,7 +1012,7 @@ pub fn extract_pose<'a>(
         let effective_alpha = if has_local_alpha { result.state.local_alpha() } else { inh_alpha };
         result.state.set_alpha(effective_alpha);
 
-        // Hide is per-part in SS7: a hidden parent does NOT hide its children.
+        // Hide is per-part in SpriteStudio: a hidden parent does NOT hide its children.
         // The hierarchy is a transform hierarchy, and hidden parts are routinely
         // used as pure transform anchors with visible children (e.g. a hidden
         // hand part anchoring a visible weapon). Only alpha inherits down the

@@ -225,7 +225,7 @@ A default that differs between Players changes behaviour silently when a project
 | Setting | Default | Why |
 |---|---|---|
 | Override `priority` | `HoldUntilNextAnimation` | The C ABI's own default |
-| Visibility override `cascade` | `false` | A keyframed hide never cascades in SS7, so cascading is the opt-in |
+| Visibility override `cascade` | `false` | A keyframed hide never cascades in SpriteStudio, so cascading is the opt-in |
 | Colour override `blendOp` | `Mix` | The zero value; the colour's alpha carries the strength, so it means "plain" |
 | Part following on a hidden part | Keep following | A part hidden for one frame should not take its follower with it |
 | `isPlayingForward` before playback | `true` | Forward is the resting state; false would gate a host's audio off on its first frame |

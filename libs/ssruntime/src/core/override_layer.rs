@@ -185,7 +185,7 @@ pub fn apply_part_overrides(
     // propagates an "ancestor force-hidden (cascading)" flag through
     // `parent_index` handles the cascade without building child lists. Note
     // this cascade is *override-only* behavior: keyframed `hide` is per-part in
-    // SS7 and never cascades (see `core/framedata.rs`), so we must not key the
+    // SpriteStudio and never cascades (see `core/framedata.rs`), so we must not key the
     // cascade off `parts_vec[parent].hide()` — only off overrides.
     override_hide_workspace.clear();
     override_hide_workspace.resize(n, false);
