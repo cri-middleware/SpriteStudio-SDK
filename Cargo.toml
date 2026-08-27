@@ -17,9 +17,10 @@ authors = ["CRI Middleware Co., Ltd."]
 license = "BSD-3-Clause"
 repository = "https://github.com/cri-middleware/SpriteStudio-SDK"
 homepage = "https://www.webtech.co.jp/eng/spritestudio/"
+# Inherited only by the two `publish = false` FFI crates. Every crate that goes to
+# crates.io spells out its own `description` / `keywords` / `categories`: those are
+# what a reader sees in search results, and a published version can never edit them.
 description = "Software development kit for OPTPiX SpriteStudio 7 projects"
-keywords = ["spritestudio", "2d-animation", "gamedev", "motion-graphics", "skeletal"]
-categories = ["game-development", "graphics", "multimedia", "no-std"]
 
 
 [workspace.dependencies]

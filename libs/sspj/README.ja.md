@@ -23,7 +23,7 @@ OPTPiX SpriteStudio 7 のプロジェクトファイル (`.sspj`) および、�
 
 ```toml
 [dependencies]
-sspj = { path = "libs/sspj" }
+sspj = "7.0.0-beta.1"
 ```
 
 # 使い方

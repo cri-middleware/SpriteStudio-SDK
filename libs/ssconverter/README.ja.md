@@ -19,7 +19,7 @@ SpriteStudio 7 のプロジェクトファイル (`.sspj`) を、ランタイム
 
 ```toml
 [dependencies]
-ssconverter = { path = "libs/ssconverter" }
+ssconverter = "7.0.0-beta.1"
 ```
 
 # FFI (C/C++)
@@ -62,8 +62,8 @@ void convert() {
 
 # ビルド機能 (Features)
 
-- **`ffi`** (default): C-API および静的/動的ライブラリの生成を有効にします。`native` を含みます。
-- **`native`**: ネイティブビルド（CLI / Tauri バックエンド）— 並列変換、ファイルシステム I/O、ディレクトリ走査。`parallel` と `scan` を含みます。
+- **`ffi`**: C-API および静的/動的ライブラリの生成を有効にします。`native` を含みます。
+- **`native`** (default): ネイティブビルド（CLI / Tauri バックエンド）— 並列変換、ファイルシステム I/O、ディレクトリ走査。`parallel` と `scan` を含みます。
 - **`parallel`**: `rayon` による並列変換。`sspj` の並列パースにも波及します。
 - **`scan`**: バッチ変換用のディレクトリ走査（`walkdir`）。
 - **`web`**: ブラウザ向け WASM バインディング（`wasm32-unknown-unknown`）。`rayon` がスレッドを起動できないため逐次実行です。`--no-default-features --features web` でビルドします。

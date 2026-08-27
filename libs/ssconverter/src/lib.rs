@@ -15,7 +15,7 @@
 //! Both profiles share one in-memory conversion core, so the bytes they produce are
 //! identical; they differ only in how assets get in and out.
 //!
-//! - **Native** (`native`, implied by the default `ffi`) — filesystem I/O, directory
+//! - **Native** (`native`, the default; also implied by `ffi`) — filesystem I/O, directory
 //!   scanning, and rayon-parallel conversion. This is what `ssconverter-cli` and the
 //!   Tauri GUI use, and what Unity / Godot / Ren'Py embed to convert in place.
 //! - **Web** (`web`) — `wasm-bindgen` bindings for `wasm32-unknown-unknown`. Sequential,

@@ -18,7 +18,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab" }
+ssab = "7.0.0-beta.1"
 ```
 
 # Features
@@ -33,7 +33,7 @@ Suitable for game runtimes or players that only need to playback data.
 
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab" }
+ssab = "7.0.0-beta.1"
 ```
 
 ## `no_std` Support
@@ -41,7 +41,7 @@ ssab = { path = "libs/ssab" }
 
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab", default-features = false }
+ssab = { version = "7.0.0-beta.1", default-features = false }
 ```
 
 ## `converter`
@@ -51,7 +51,7 @@ Enables FlatBuffers Object API (`--gen-object-api`), allowing manipulation of da
 - **Characteristics**: Read/Write access, Object API (T-structs) available.
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab", features = ["converter"] }
+ssab = { version = "7.0.0-beta.1", features = ["converter"] }
 ```
 
 # Usage
