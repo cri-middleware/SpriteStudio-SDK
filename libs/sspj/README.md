@@ -23,7 +23,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-sspj = { path = "libs/sspj" }
+sspj = "7.0.0-beta.1"
 ```
 
 # Usage

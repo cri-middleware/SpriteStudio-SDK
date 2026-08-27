@@ -19,7 +19,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ssconverter = { path = "libs/ssconverter" }
+ssconverter = "7.0.0-beta.1"
 ```
 
 # FFI (C/C++)

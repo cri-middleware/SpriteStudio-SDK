@@ -19,7 +19,7 @@ SpriteStudio 7 のプロジェクトファイル (`.sspj`) を、ランタイム
 
 ```toml
 [dependencies]
-ssconverter = { path = "libs/ssconverter" }
+ssconverter = "7.0.0-beta.1"
 ```
 
 # FFI (C/C++)

@@ -18,7 +18,7 @@ Google FlatBuffers を使用してシリアライズ/デシリアライズを行
 
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab" }
+ssab = "7.0.0-beta.1"
 ```
 
 # Features (機能フラグ)
@@ -32,7 +32,7 @@ ssab = { path = "libs/ssab" }
 - **特徴**: Read-only アクセス、ゼロコピー読み込み。
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab" }
+ssab = "7.0.0-beta.1"
 ```
 
 ## `no_std` サポート
@@ -40,7 +40,7 @@ ssab = { path = "libs/ssab" }
 
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab", default-features = false }
+ssab = { version = "7.0.0-beta.1", default-features = false }
 ```
 
 ## `converter`
@@ -50,7 +50,7 @@ FlatBuffers の Object API (`--gen-object-api`) が有効になり、Rust の構
 - **特徴**: Read/Write アクセス、Object API (T構造体) の利用可能。
 ```toml
 [dependencies]
-ssab = { path = "libs/ssab", features = ["converter"] }
+ssab = { version = "7.0.0-beta.1", features = ["converter"] }
 ```
 
 # 使用例
