@@ -273,10 +273,14 @@ impl SsMatrix4x4 {
             col1 = new_col1;
         }
 
-        // Skew
+        // Skew. SpriteStudio's Skew is a per-part Vertex-deform mode that does
+        // NOT inherit, so by default it is applied to local vertices instead of
+        // here (see crate::core::SKEW_PROPAGATES and geometry::skew_local_tans).
+        // This branch is the propagate path, kept ready for a future
+        // SpriteStudio that makes Skew inherit; it is gated off today.
         let skew_x = state.skew_x() * core::f32::consts::PI / 180.0;
         let skew_y = state.skew_y() * core::f32::consts::PI / 180.0;
-        if skew_x != 0.0 || skew_y != 0.0 {
+        if crate::core::SKEW_PROPAGATES && (skew_x != 0.0 || skew_y != 0.0) {
             let sx = tanf(skew_x);
             let sy = tanf(skew_y);
             let new_col0 = col1.mul_add(f32x4::splat(sy), col0);
@@ -822,15 +826,24 @@ mod tests {
         let tan30 = tanf(30.0f32 * core::f32::consts::PI / 180.0);
         let tan45 = tanf(45.0f32 * core::f32::consts::PI / 180.0);
 
-        // col0' = col0 + col1 * tan(sy)
-        // col1' = col1 + col0 * tan(sx)
-        // Since col0=[1,0,0,0], col1=[0,1,0,0]
-        // col0' = [1, tan45, 0, 0]
-        // col1' = [tan30, 1, 0, 0]
-
-        assert_f32_eq(inh.m[0], 1.0);
-        assert_f32_eq(inh.m[1], tan45);
-        assert_f32_eq(inh.m[4], tan30);
-        assert_f32_eq(inh.m[5], 1.0);
+        if crate::core::SKEW_PROPAGATES {
+            // Propagate mode: Skew is folded into the world matrix so it
+            // inherits down to children.
+            //   col0' = col0 + col1 * tan(sy) = [1, tan45, 0, 0]
+            //   col1' = col1 + col0 * tan(sx) = [tan30, 1, 0, 0]
+            assert_f32_eq(inh.m[0], 1.0);
+            assert_f32_eq(inh.m[1], tan45);
+            assert_f32_eq(inh.m[4], tan30);
+            assert_f32_eq(inh.m[5], 1.0);
+        } else {
+            // Non-propagate (SpriteStudio default): Skew is a per-part local
+            // vertex deform, so it must NOT touch the world matrix — otherwise
+            // it would inherit to children, which SpriteStudio does not do.
+            let _ = (tan30, tan45);
+            assert_f32_eq(inh.m[0], 1.0);
+            assert_f32_eq(inh.m[1], 0.0);
+            assert_f32_eq(inh.m[4], 0.0);
+            assert_f32_eq(inh.m[5], 1.0);
+        }
     }
 }

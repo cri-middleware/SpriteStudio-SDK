@@ -883,6 +883,10 @@ pub(crate) fn evaluate_part(
     }
 
     if let Some((val_x, val_y, mask)) = cached_part.skew_array.and_then(|arr| evaluate_skew(arr, frame_no, &mut part_cursors[IDX_ATTRIBUTESKEW])) {
+        // Skew is stored raw here (no coordinate-system flip). It is a
+        // Vertex-deform-mode attribute, so the Y-down conversion happens where
+        // the shear is applied to local vertices — the same authored-Y-up path
+        // the 4-corner Vertex deform takes.
         part_state.set_skew_x(val_x);
         part_state.set_skew_y(val_y);
         update_flag |= runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributeSkew & mask;
@@ -1131,6 +1135,9 @@ pub fn compute_nines_geometry_for_parts(
         let mirror_u = state.flip_h() != state.img_flip_h();
         let mirror_v = state.flip_v() != state.img_flip_v();
         let deform = raw_vertex_deform.get(i).filter(|d| d.present);
+        // Skew shares the Vertex-deform slot; applied as a shear about the pivot
+        // origin in Y-up, before the Y-down flip, like the 4-corner deform.
+        let skew = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y());
 
         for v in start..start + vertex_count as usize {
             let (mut fx, mut fy) = (out.box_coords[v * 2], out.box_coords[v * 2 + 1]);
@@ -1149,6 +1156,11 @@ pub fn compute_nines_geometry_for_parts(
                 let (dx, dy) = crate::core::geometry::bilinear_box_deform(&d.dx, &d.dy, fx, fy);
                 x += dx;
                 y += dy;
+            }
+            if let Some((tan_x, tan_y)) = skew {
+                let (nx, ny) = crate::core::geometry::skew_point_yup(x, y, tan_x, tan_y);
+                x = nx;
+                y = ny;
             }
             if coordinate_system == SsCoordinateSystem::YDown {
                 y = -y;
@@ -1199,7 +1211,18 @@ pub fn compute_local_vertices_for_parts(
             pivot_y = -pivot_y;
         }
 
-        let (vx, mut vy) = crate::core::geometry::compute_local_vertices((state.size_x(), state.size_y()), pivot, (state.pivot_x(), pivot_y), (state.img_flip_h(), state.img_flip_v()), deform.as_ref().map(|(x, y)| (x, y)));
+        let (mut vx, mut vy) = crate::core::geometry::compute_local_vertices((state.size_x(), state.size_y()), pivot, (state.pivot_x(), pivot_y), (state.img_flip_h(), state.img_flip_v()), deform.as_ref().map(|(x, y)| (x, y)));
+
+        // Skew: a Vertex-deform-mode shear about the pivot origin, applied in
+        // the authored Y-up space before the Y-down flip below (mutually
+        // exclusive with the 4-corner deform, so `vx`/`vy` are the plain box).
+        if let Some((tan_x, tan_y)) = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y()) {
+            for k in 0..vx.len() {
+                let (nx, ny) = crate::core::geometry::skew_point_yup(vx[k], vy[k], tan_x, tan_y);
+                vx[k] = nx;
+                vy[k] = ny;
+            }
+        }
 
         if coordinate_system == SsCoordinateSystem::YDown {
             for y in vy.iter_mut() {
