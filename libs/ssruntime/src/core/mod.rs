@@ -35,18 +35,8 @@ pub enum SsCoordinateSystem {
 }
 
 /// Whether a part's Skew (shear) inherits down to its children.
-///
-/// SpriteStudio authors Skew as a mode of the Vertex-deform attribute — a
-/// per-part quad deformation that does **not** propagate to children (verified
-/// in the editor: a child of a skewed parent stays undeformed). So Skew is
-/// applied at the local-vertex stage (`compute_local_vertices_for_parts`, the
-/// shape pass and the nine-slice pass) and is deliberately kept out of the
-/// world / inheritance matrix, which would otherwise carry it down the tree.
-///
-/// If a future SpriteStudio makes Skew propagate, flip this to `true`: the
-/// local-vertex shear is then skipped ([`geometry::skew_local_tans`] returns
-/// `None`) and the matrix path in [`matrix::SsMatrix4x4::compute_world_matrix`]
-/// is re-enabled instead. Nothing else has to move.
+/// true == inherits down to children.
+/// false == does not inherit.
 pub const SKEW_PROPAGATES: bool = false;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
