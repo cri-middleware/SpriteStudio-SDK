@@ -1172,7 +1172,7 @@ pub fn compute_nines_geometry_for_parts(
         // Mirroring one axis reverses each triangle's orientation; restore it
         // so Players that cull back faces still see the grid.
         if mirror_u != mirror_v {
-            for tri in out.indices[index_start..].chunks_exact_mut(3) {
+            for tri in out.indices[index_start..].as_chunks_mut::<3>().0 {
                 tri.swap(1, 2);
             }
         }

@@ -395,9 +395,8 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
 
     let mut out_x = [0.0; 16];
     let mut out_y = [0.0; 16];
-    let count;
 
-    match shape_type {
+    let count = match shape_type {
         ShapeType::Rectangle => {
             // Center + 4 corners (perimeter winding) + closing vertex — a
             // TRIANGLE_FAN layout matching the other shapes. A deformed or
@@ -408,7 +407,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             out_y[0] = 0.0;
             out_x[1..6].copy_from_slice(&[-hw, hw, hw, -hw, -hw]);
             out_y[1..6].copy_from_slice(&[hh, hh, -hh, -hh, hh]);
-            count = 6;
+            6
         }
         ShapeType::Triangle => {
             // Center + 3 points
@@ -428,7 +427,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
 
             out_x[4] = out_x[1]; // Close the fan
             out_y[4] = out_y[1];
-            count = 5;
+            5
         }
         ShapeType::Star => {
             // Center + 10 outer points + closing vertex (so a TRIANGLE_FAN consumer
@@ -457,7 +456,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             }
             out_x[11] = out_x[1];
             out_y[11] = out_y[1];
-            count = 12;
+            12
         }
         ShapeType::Arrow => {
             let sx = hw * 0.5;
@@ -465,9 +464,9 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             // 7 points
             out_x[0..7].copy_from_slice(&[-sx / 2.0, sx / 2.0, sx / 2.0, hw, 0.0, -hw, -sx / 2.0]);
             out_y[0..7].copy_from_slice(&[-hh, -hh, sy, sy, hh, sy, sy]);
-            count = 7;
+            7
         }
-    }
+    };
 
     (count, out_x, out_y)
 }
