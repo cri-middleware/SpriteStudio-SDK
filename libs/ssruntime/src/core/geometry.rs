@@ -39,6 +39,31 @@ pub fn compute_local_vertices(size: (f32, f32), pivot: (f32, f32), pivot_offset:
     ([vx_arr[0], vx_arr[1], vx_arr[2], vx_arr[3], cx], [vy_arr[0], vy_arr[1], vy_arr[2], vy_arr[3], cy])
 }
 
+/// `Some((tan(skew_x), tan(skew_y)))` when a part's Skew must be applied as a
+/// local-vertex shear, or `None` when there is no skew or when Skew runs in
+/// propagate mode (folded into the world matrix instead). See
+/// [`crate::core::SKEW_PROPAGATES`]. Angles are in degrees.
+#[inline]
+#[must_use]
+pub fn skew_local_tans(skew_x_deg: f32, skew_y_deg: f32) -> Option<(f32, f32)> {
+    if crate::core::SKEW_PROPAGATES || (skew_x_deg == 0.0 && skew_y_deg == 0.0) {
+        return None;
+    }
+    let r = core::f32::consts::PI / 180.0;
+    Some((crate::core::math::tanf(skew_x_deg * r), crate::core::math::tanf(skew_y_deg * r)))
+}
+
+/// Shears one local-space vertex about the pivot origin, in the part's Y-up
+/// authored space — callers apply the Y-down flip afterwards, exactly as they
+/// do for the 4-corner Vertex deform, so the sign matches that path. `tan_x` /
+/// `tan_y` come from [`skew_local_tans`]. This is the same shear the world
+/// matrix applies in propagate mode: `(x, y) -> (x + tan_x·y, y + tan_y·x)`.
+#[inline]
+#[must_use]
+pub fn skew_point_yup(x: f32, y: f32, tan_x: f32, tan_y: f32) -> (f32, f32) {
+    (x + tan_x * y, y + tan_y * x)
+}
+
 /// Computes the local UV coordinates for a part, including UV animation (translate, rotate, scale) and flipping.
 /// Returns a tuple containing the u and v coordinates for the 5 vertices.
 pub fn compute_local_uvs(
@@ -370,9 +395,8 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
 
     let mut out_x = [0.0; 16];
     let mut out_y = [0.0; 16];
-    let count;
 
-    match shape_type {
+    let count = match shape_type {
         ShapeType::Rectangle => {
             // Center + 4 corners (perimeter winding) + closing vertex — a
             // TRIANGLE_FAN layout matching the other shapes. A deformed or
@@ -383,7 +407,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             out_y[0] = 0.0;
             out_x[1..6].copy_from_slice(&[-hw, hw, hw, -hw, -hw]);
             out_y[1..6].copy_from_slice(&[hh, hh, -hh, -hh, hh]);
-            count = 6;
+            6
         }
         ShapeType::Triangle => {
             // Center + 3 points
@@ -403,7 +427,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
 
             out_x[4] = out_x[1]; // Close the fan
             out_y[4] = out_y[1];
-            count = 5;
+            5
         }
         ShapeType::Star => {
             // Center + 10 outer points + closing vertex (so a TRIANGLE_FAN consumer
@@ -432,7 +456,7 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             }
             out_x[11] = out_x[1];
             out_y[11] = out_y[1];
-            count = 12;
+            12
         }
         ShapeType::Arrow => {
             let sx = hw * 0.5;
@@ -440,9 +464,9 @@ pub fn compute_shape_vertices(shape_type: ShapeType, size: (f32, f32)) -> (usize
             // 7 points
             out_x[0..7].copy_from_slice(&[-sx / 2.0, sx / 2.0, sx / 2.0, hw, 0.0, -hw, -sx / 2.0]);
             out_y[0..7].copy_from_slice(&[-hh, -hh, sy, sy, hh, sy, sy]);
-            count = 7;
+            7
         }
-    }
+    };
 
     (count, out_x, out_y)
 }
@@ -1280,5 +1304,35 @@ mod tests {
         compute_skinned_mesh_vertices(&offsets, &bone_indices, &weights, &coords_x, &coords_y, &bones, None, true, &mut out_x, &mut out_y);
         assert_arr_approx_eq(&out_x, &[10.0, 20.0, 30.0, 40.0, 50.0, 60.0], 6);
         assert_arr_approx_eq(&out_y, &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], 6);
+    }
+
+    #[test]
+    fn test_skew_local_tans_gate() {
+        // No skew -> nothing to apply.
+        assert!(skew_local_tans(0.0, 0.0).is_none());
+        // With skew (and propagate off, the default) -> the tan pair.
+        if crate::core::SKEW_PROPAGATES {
+            assert!(skew_local_tans(30.0, 0.0).is_none());
+        } else {
+            let (tx, ty) = skew_local_tans(30.0, 45.0).expect("skew present");
+            assert!((tx - crate::core::math::tanf(30.0 * core::f32::consts::PI / 180.0)).abs() < 1e-6);
+            assert!((ty - crate::core::math::tanf(45.0 * core::f32::consts::PI / 180.0)).abs() < 1e-6);
+        }
+    }
+
+    #[test]
+    fn test_skew_point_yup() {
+        // A horizontal shear (skew_x only) slides x by tan·y and leaves y.
+        let t = crate::core::math::tanf(30.0 * core::f32::consts::PI / 180.0);
+        // Top vertex (y > 0) moves +x; bottom (y < 0) moves -x: a lean.
+        let (tx, ty) = skew_point_yup(0.0, 10.0, t, 0.0);
+        assert!((tx - t * 10.0).abs() < 1e-6);
+        assert!((ty - 10.0).abs() < 1e-6);
+        let (bx, by) = skew_point_yup(0.0, -10.0, t, 0.0);
+        assert!((bx + t * 10.0).abs() < 1e-6);
+        assert!((by + 10.0).abs() < 1e-6);
+        // The pivot origin is the shear's fixed point.
+        let (ox, oy) = skew_point_yup(0.0, 0.0, t, t);
+        assert!(ox.abs() < 1e-6 && oy.abs() < 1e-6);
     }
 }

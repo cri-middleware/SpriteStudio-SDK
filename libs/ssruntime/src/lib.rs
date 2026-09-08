@@ -2512,6 +2512,9 @@ impl<'a> Context<'a> {
             // added in Y-up space, before the YDown negation, so the dy sign
             // matches the 4-corner deform path in `compute_local_vertices`.
             let deform = layer.raw_vertex_deform.get(i).filter(|d| d.present);
+            // Skew shares the Vertex-deform slot; applied as a shear about the
+            // pivot origin in Y-up, before the Y-down flip, like the deform.
+            let skew = crate::core::geometry::skew_local_tans(state.skew_x(), state.skew_y());
 
             let offset = i * stride;
             for v in 0..count {
@@ -2523,6 +2526,11 @@ impl<'a> Context<'a> {
                     let (ddx, ddy) = crate::core::geometry::bilinear_box_deform(&d.dx, &d.dy, fx, fy);
                     dvx += ddx;
                     dvy += ddy;
+                }
+                if let Some((tan_x, tan_y)) = skew {
+                    let (nx, ny) = crate::core::geometry::skew_point_yup(dvx, dvy, tan_x, tan_y);
+                    dvx = nx;
+                    dvy = ny;
                 }
 
                 let mut y = dvy;

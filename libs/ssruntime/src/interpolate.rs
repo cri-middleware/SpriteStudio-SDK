@@ -115,20 +115,16 @@ fn linear_batch_f32x4(start: f32x4, end: f32x4, rate: f32x4) -> f32x4 {
 pub fn interpolate_array_linear(start: &[f32], end: &[f32], rate: f32, out: &mut [f32]) {
     let rate_v = f32x4::splat(rate);
 
-    let mut start_chunks = start.chunks_exact(4);
-    let mut end_chunks = end.chunks_exact(4);
-    let mut out_chunks = out.chunks_exact_mut(4);
+    let (start_chunks, start_rem) = start.as_chunks::<4>();
+    let (end_chunks, end_rem) = end.as_chunks::<4>();
+    let (out_chunks, out_rem) = out.as_chunks_mut::<4>();
 
-    for ((s, e), o) in start_chunks.by_ref().zip(end_chunks.by_ref()).zip(out_chunks.by_ref()) {
+    for ((s, e), o) in start_chunks.iter().zip(end_chunks).zip(out_chunks) {
         let s_v = f32x4::from([s[0], s[1], s[2], s[3]]);
         let e_v = f32x4::from([e[0], e[1], e[2], e[3]]);
         let res = linear_batch_f32x4(s_v, e_v, rate_v);
         o.copy_from_slice(&res.to_array());
     }
-
-    let start_rem = start_chunks.remainder();
-    let end_rem = end_chunks.remainder();
-    let out_rem = out_chunks.into_remainder();
 
     for i in 0..start_rem.len() {
         out_rem[i] = linear(start_rem[i], end_rem[i], rate);
@@ -138,7 +134,7 @@ pub fn interpolate_array_linear(start: &[f32], end: &[f32], rate: f32, out: &mut
 /// Batch linear interpolation for Vertex attribute (fixed 8 floats: LT.x, LT.y, RT.x, RT.y, LB.x, LB.y, RB.x, RB.y).
 pub fn interpolate_vertex_linear(start: &[f32; 8], end: &[f32; 8], rate: f32, out: &mut [f32; 8]) {
     let rate_v = f32x4::splat(rate);
-    for ((s, e), o) in start.chunks_exact(4).zip(end.chunks_exact(4)).zip(out.chunks_exact_mut(4)) {
+    for ((s, e), o) in start.as_chunks::<4>().0.iter().zip(end.as_chunks::<4>().0).zip(out.as_chunks_mut::<4>().0) {
         let s_v = f32x4::from([s[0], s[1], s[2], s[3]]);
         let e_v = f32x4::from([e[0], e[1], e[2], e[3]]);
         let res = linear_batch_f32x4(s_v, e_v, rate_v);
@@ -149,7 +145,7 @@ pub fn interpolate_vertex_linear(start: &[f32; 8], end: &[f32; 8], rate: f32, ou
 /// Batch linear interpolation for PartColor attribute (fixed 16 floats: LT.rgba, RT.rgba, LB.rgba, RB.rgba).
 pub fn interpolate_color_linear(start: &[f32; 16], end: &[f32; 16], rate: f32, out: &mut [f32; 16]) {
     let rate_v = f32x4::splat(rate);
-    for ((s, e), o) in start.chunks_exact(4).zip(end.chunks_exact(4)).zip(out.chunks_exact_mut(4)) {
+    for ((s, e), o) in start.as_chunks::<4>().0.iter().zip(end.as_chunks::<4>().0).zip(out.as_chunks_mut::<4>().0) {
         let s_v = f32x4::from([s[0], s[1], s[2], s[3]]);
         let e_v = f32x4::from([e[0], e[1], e[2], e[3]]);
         let res = linear_batch_f32x4(s_v, e_v, rate_v);

@@ -34,6 +34,11 @@ pub enum SsCoordinateSystem {
     YDown,
 }
 
+/// Whether a part's Skew (shear) inherits down to its children.
+/// true == inherits down to children.
+/// false == does not inherit.
+pub const SKEW_PROPAGATES: bool = false;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SsOrigin {
     #[default]

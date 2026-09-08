@@ -408,8 +408,8 @@ impl EffectInstanceState {
         }
 
         // SIMD batch processing
-        let mut chunks = self.active_indices_workspace.chunks_exact(4);
-        for chunk in &mut chunks {
+        let (chunks, chunks_remainder) = self.active_indices_workspace.as_chunks::<4>();
+        for chunk in chunks {
             let p_ids_with_cycle = [
                 self.state.emitter_states[emitter_idx].particle_state.id[chunk[0]] + self.state.emitter_states[emitter_idx].particle_state.cycle[chunk[0]],
                 self.state.emitter_states[emitter_idx].particle_state.id[chunk[1]] + self.state.emitter_states[emitter_idx].particle_state.cycle[chunk[1]],
@@ -475,7 +475,7 @@ impl EffectInstanceState {
             }
         }
 
-        for &id in chunks.remainder() {
+        for &id in chunks_remainder {
             let p_id_with_cycle = self.state.emitter_states[emitter_idx].particle_state.id[id] + self.state.emitter_states[emitter_idx].particle_state.cycle[id];
             let stime = self.state.emitter_states[emitter_idx].particle_state.stime[id];
             let endtime = self.state.emitter_states[emitter_idx].particle_state.endtime[id];
