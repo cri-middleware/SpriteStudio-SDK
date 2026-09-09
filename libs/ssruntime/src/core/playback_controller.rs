@@ -200,6 +200,18 @@ impl PlaybackController {
         self.end_frame
     }
 
+    /// The bound animation's own range, which `set_animation_section` never
+    /// touches. `get_start_frame` / `get_end_frame` report the section, so a
+    /// caller that computes a section from them feeds its own last narrowing
+    /// back in.
+    pub fn get_anime_data_start_frame(&self) -> i32 {
+        self.anime_data_start_frame
+    }
+
+    pub fn get_anime_data_end_frame(&self) -> i32 {
+        self.anime_data_end_frame
+    }
+
     pub fn get_fps(&self) -> i32 {
         self.effective_fps()
     }

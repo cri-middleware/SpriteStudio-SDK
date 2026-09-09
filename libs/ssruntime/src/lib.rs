@@ -2759,6 +2759,14 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.get_end_frame()
     }
 
+    pub fn get_anime_data_start_frame(&self) -> i32 {
+        self.instance.primary_source().controller.get_anime_data_start_frame()
+    }
+
+    pub fn get_anime_data_end_frame(&self) -> i32 {
+        self.instance.primary_source().controller.get_anime_data_end_frame()
+    }
+
     pub fn get_fps(&self) -> i32 {
         self.instance.primary_source().controller.get_fps()
     }
@@ -3690,14 +3698,13 @@ impl InstanceSlot {
         let transitioned = !ignore_implicit && (self.last_event_frame == -1 || self.last_event_frame != ev.event_frame || self.last_is_synthetic != ev.is_synthetic_default);
 
         if transitioned {
-            // `default_end` mirrors the original C++ fallback: `getTotalFrames()-1`,
-            // i.e. (end - start). Labels resolve against absolute frame time, so
-            // the fallback is only used when label_hash == 0 — preserving the
-            // pre-refactor behavior.
-            let child_total = child_ctx.get_end_frame() - child_ctx.get_start_frame() + 1;
-            let default_end = if child_total > 0 { child_total - 1 } else { 0 };
-            let start_label_time = child_ctx.resolve_label_time(ev.start_label_hash, 0);
-            let end_label_time = child_ctx.resolve_label_time(ev.end_label_hash, default_end);
+            // `_start` / `_end` are implicit — they are not in the label table,
+            // so these fallbacks are what every default key resolves to. They
+            // read the animation's own range, never the section: the
+            // `set_animation_section` below narrows that, and reading it back
+            // shrinks the section again on every re-transition.
+            let start_label_time = child_ctx.resolve_label_time(ev.start_label_hash, child_ctx.get_anime_data_start_frame());
+            let end_label_time = child_ctx.resolve_label_time(ev.end_label_hash, child_ctx.get_anime_data_end_frame());
             let start_frame = start_label_time + ev.start_offset;
             let mut end_frame = end_label_time + ev.end_offset;
             if end_frame < start_frame {
@@ -5767,6 +5774,29 @@ mod tests {
         let ticks = cycle * 6;
         let looped = count_independent_child_loops(ev, ticks);
         assert_eq!(looped, 3, "pingpong child over {ticks} ticks of a {cycle}-frame animation");
+    }
+
+    #[test]
+    fn re_transition_keeps_the_offset_section_instead_of_shrinking_it() {
+        // A start-offset key re-fired (a replay, or a second authored key)
+        // must resolve `_end` against the animation, not against the section
+        // the previous transition left behind.
+        let ssab = load_ringo_resource();
+        let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
+        let mut child_ctx = Context::new();
+        child_ctx.bind_resource(&resource);
+        child_ctx.setup_animation("walk").unwrap();
+        let last = child_ctx.get_anime_data_end_frame();
+
+        let mut slot = InstanceSlot::new();
+        let ev = crate::types::ss_event_instance_info { event_frame: 0, loop_num: -1, speed: 1.0, start_offset: 3, is_synthetic_default: false, ..Default::default() };
+
+        slot.step(ev, &mut child_ctx, 0.0, 0.0, false);
+        assert_eq!((child_ctx.get_start_frame(), child_ctx.get_end_frame()), (3, last));
+
+        slot.reset();
+        slot.step(ev, &mut child_ctx, 0.0, 0.0, false);
+        assert_eq!((child_ctx.get_start_frame(), child_ctx.get_end_frame()), (3, last), "the section must not shrink when the same key re-fires");
     }
 
     #[test]
