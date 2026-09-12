@@ -1,4 +1,4 @@
-[**日本語**](./README.ja.md) | [**English**](./README.md)
+[**English**](./README.md) | [**日本語**](./README.ja.md)
 # SpriteStudio-SDK
 
 A high-performance, engine-agnostic animation player SDK for **SpriteStudio**.
