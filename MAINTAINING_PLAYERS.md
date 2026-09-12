@@ -4,7 +4,7 @@
 
 The API conventions stop the same feature from growing a different name in every Player. But an aligned API loses most of its value **if the first five minutes are a different experience in every Player.** The shared vocabulary pays off for the reader moving to their second Player; the reader touching their first one meets the README.
 
-This document fixes what the first screen answers. **What is shared is four questions and their order. How they are answered belongs to the host.**
+This document fixes what the first screen answers, and who it answers to. **What is shared is four questions, their order, and the two doors past them. How they are answered belongs to the host.**
 
 ---
 
@@ -15,9 +15,11 @@ This document fixes what the first screen answers. **What is shared is four ques
 | 1 | What do I install? | One package-manager line, or "extract this and drop it in" |
 | 2 | How does a `.sspj` become a `.ssab`? | Drag it onto the editor, or one conversion command |
 | 3 | How do I get it on screen? | Place the node / component / element, assign the `.ssab`, play |
-| 4 | Where do I read next? | Three links at most |
+| 4 | Where do I read next? | Getting started, basic playback, and what this Player cannot do |
 
 **The order is part of the convention.** Do not put concept explanations, architecture diagrams or feature lists before question 1. Whoever is reading there has not decided to use this Player yet.
+
+**Question 4 is three kinds of link, not a link budget.** Getting started, basic playback, and the Player's own Limitations & Scope — the last because a reader deciding whether to adopt asks what it cannot do before they ask anything else, and because every Player publishes that page. Past those three, a link earns its place by answering a question a *reader of the README* has: how do I troubleshoot this, how do I migrate from the old Player. **A list that reproduces the documentation site's navigation has moved the nav rather than summarised it**, and the reader who needed the nav was already going to the site.
 
 When the distribution route is not the host's usual one, **put one sentence of reason right next to that line.** "Package Manager's Add package from URL does not work for this package, since the native binaries ship only in the tarball" is a good example. A detour with no reason beside it is indistinguishable from carelessness.
 
@@ -34,9 +36,13 @@ Players come in two shapes.
 
 **Opening the bundled sample must produce a first frame without the reader supplying a `.sspj`.** A Player that does not manage this is asking them to author before they can try.
 
-### 3.1 The sample to show is `tests/Ringo`
+### 3.1 One character, and the same one wherever a Player can manage it
 
-The SDK's `tests/` holds five projects, and they are not the same kind of thing. **`Ringo` is the one to show; `overall` is the one to verify against.** Standardise the getting-started sample on `Ringo`. The same picture appearing in every Player is how someone working across several of them confirms they have arrived.
+The SDK's `tests/` holds five projects, and they are not the same kind of thing. **`Ringo` is the first frame; `overall` is what you verify against.** The same picture appearing in every Player is how someone working across several of them confirms they have arrived, so a Player that ships a getting-started sample separate from its verification project points that sample at `Ringo` — Godot's `examples/Ringo` and Unity's `examples/SampleProject` are it.
+
+**A Player that ships one example project rather than two has it doing both jobs, and `overall` is the right content for that** — a feature tour with a single character is not a feature tour. What it owes the reader instead is that **opening it puts one character on screen straight away**, not a menu, a file picker or a blank canvas. That is the property `Ringo` was standing in for; where the project count makes the picture impossible, the property still holds.
+
+`overall` is the verification project either way, and never the thing a first-time reader is sent to on its own.
 
 ### 3.2 Keep the development project and the verification project apart
 
@@ -62,6 +68,48 @@ Godot's add-on reads the cfg and converts on open, so it commits no example bina
 
 A committed `.ssab` is a build output, and it goes stale when the SDK's `tests/` change. **Provide a `deploy-examples` script and run it at release time.** `ssconverter-cli` performs the conversion, so the Player's editor is not needed for it.
 
-## 4. Departing from this document
+## 4. Two doors, and what may not be behind the first one
+
+Past the four questions there are two readers, not three: someone **using** the Player, and someone
+**working on** it. The boundary is a question the reader can answer about themselves — *can I do
+this with what I installed?*
+
+Events, per-part overrides, textures, attaching host content to a part: all of these are the first
+reader, further in. They are not a third audience, and the docs already say so — six of the seven
+Players shelve them next to basic playback rather than apart from it.
+
+**Put the two doors at the top of the Quick Start, in two lines.** Not a table, and not before the
+Quick Start: a reader who has to finish a routing table before reaching question 1 has been made to
+read something in order to find out that it was not for them.
+
+```
+**Using it in your app?** Read on — install, convert, play. Everything after that
+(events, per-part overrides, textures) is the same path further in: <link>.
+**Working on the Player, or the runtime under it?** <link to CONTRIBUTING / from-source>.
+```
+
+### 4.1 Nothing behind the first door may need a clone
+
+**A clone, a submodule or a toolchain inside the "using it" path is the defect this section
+exists to prevent.** The moment a reader who wanted a package meets `git clone --recursive`, they
+have to decide whether they are still the intended audience — and the answer the page wanted to give
+them was yes.
+
+Where a checkout genuinely is the only way in today — the packages are not published yet, the SDK is
+private — that is not a violation, but it has to **look** like the exception it is: mark it 🚧, give
+it its own heading, and keep it out of the numbered install steps. An unmarked checkout inside the
+install path and a marked one beside it read completely differently, and only one of them is true.
+
+### 4.2 The other two axes sit underneath this one
+
+**Goal** — try the bundled sample / install into your project — belongs *inside* the Quick Start, as
+Godot and Unity have it. **Host** — Rust / C++ / browser — belongs inside the install step of a
+Player serving several, as wgpu has it. Both are useful; neither tells a reader whether the page is
+for them, which is what the two doors are for.
+
+A Player whose documentation genuinely has a third shelf — SSPlayerForWeb's `customize/` — names it
+from the first door's line rather than growing a row for it.
+
+## 5. Departing from this document
 
 The same as [Player API conventions §7](./libs/ssruntime/docs/20_design/40_api_conventions.md#7-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
