@@ -126,6 +126,8 @@ a part picker. The length of the list is the count.
 
 Playback heading is two enums, `playbackDirection` and `playbackStyle`. Do not model it as two booleans ("is it reversed", "is it ping-pong") — that makes it impossible to set the pair atomically in one call.
 
+**Both take the Brain's own enumerator names** — `Forward` / `Backward` and `Normal` / `PingPong` — the way override priority does below. Casing and word separation follow the host, the stem does not: `Reverse` is not a spelling of `Backward`, it is a second word for one concept, and a reader who has the family's docs open will not find it. Two enums also means two prefixes where a language needs them: pair `DIRECTION_*` with `STYLE_*`, not `PLAY_*` with `STYLE_*`.
+
 Override priority takes the Brain's own enumerator names: `OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`.
 
 ### Terminology

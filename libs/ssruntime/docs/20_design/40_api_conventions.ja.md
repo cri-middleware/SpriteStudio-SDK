@@ -125,6 +125,8 @@ Brain 自身の名前は `frame_no` です。
 
 再生方向は `playbackDirection` と `playbackStyle` の 2 つの列挙型で表します。真偽値 2 本（「逆再生か」「往復か」）にしないでください。1 回の呼び出しで原子的に設定できなくなります。
 
+**どちらも Brain の列挙子名をそのまま使います** — `Forward` / `Backward` と `Normal` / `PingPong`。下のオーバーライド優先度と同じ扱いです。大文字小文字と区切りはホストに従いますが、語幹は従いません。`Reverse` は `Backward` の綴り違いではなく 1 つの概念に対する 2 つ目の語で、family のドキュメントを開いている読者はそれを見つけられません。列挙型が 2 つあるということは、接頭辞が要る言語では接頭辞も 2 つということです。`PLAY_*` と `STYLE_*` ではなく `DIRECTION_*` と `STYLE_*` で対にしてください。
+
 オーバーライドの優先度は Brain の列挙子名をそのまま使います。`OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`。
 
 ### 用語
