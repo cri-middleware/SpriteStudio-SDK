@@ -631,6 +631,10 @@ CLAUDE.md
 # Antigravity CLI
 .antigravitycli/
 
+# Documentation toolchain virtualenv, created by scripts/prepare-docs.sh; the
+# pins it installs live in docs/requirements.txt and nothing else needs the tree.
+/.venv/
+
 # MkDocs build output. `site/` is the default site_dir for the docs site defined by
 # mkdocs.yml; pages.yml uploads it and nothing else should ever commit it.
 /site/
