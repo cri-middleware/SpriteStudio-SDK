@@ -99,6 +99,13 @@ Use the same stem for the same concept. Casing and word separation follow the la
 | Where the playhead is (fractional) | `frameNo` |
 | Move the playhead | `frameNo` (property form) / `seek(frameNo)` (verb form) |
 | Names of the parts, in part-index order | `partNames` |
+| How many frames the animation has | `totalFrames` |
+| Hold, and lift the hold | `pause` / `resume` |
+| End playback where it stands | `stop` |
+| Mirror the drawing, without moving the host transform | `flipX` / `flipY` |
+| A part's composed matrix for this frame | `partTransform` |
+| Whether a part is hidden on this frame | `isPartHidden` |
+| Whether a part is a skinned mesh | `isPartSkinnedMesh` |
 
 **`currentAnimation`, not `animationName`.** The latter sits one character from
 `animationNames`, and those two are the pair a host uses together — list them to
@@ -129,6 +136,45 @@ Playback heading is two enums, `playbackDirection` and `playbackStyle`. Do not m
 **Both take the Brain's own enumerator names** — `Forward` / `Backward` and `Normal` / `PingPong` — the way override priority does below. Casing and word separation follow the host, the stem does not: `Reverse` is not a spelling of `Backward`, it is a second word for one concept, and a reader who has the family's docs open will not find it. Two enums also means two prefixes where a language needs them: pair `DIRECTION_*` with `STYLE_*`, not `PLAY_*` with `STYLE_*`.
 
 Override priority takes the Brain's own enumerator names: `OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`.
+
+### Motion blending
+
+The track stack is one implementation deep — `ssplayer-wgpu` — and registered here
+**because** of that. The vocabulary for it is being written down before the second
+Player writes its own, since that is the only moment it costs nothing: the stems
+below come from the C ABI the Brain already publishes, and ForWgpu's Rust surface
+already spells them this way.
+
+A **track** folds onto the pose the tracks below it produced. A **source** is one
+animation blended within a track; a track's `main` source is the one supplying its
+structure.
+
+| Concept | Stem |
+|---|---|
+| How many tracks exist | `trackCount` |
+| Put an animation on a track | `setTrackAnimation` |
+| The track's main source | `trackMainSource` |
+| Empty a track | `clearTrack` |
+| How strongly a track folds onto the pose below | `trackAlpha` |
+| How it folds (`Mix` / `Additive`) | `trackBlend` |
+| The track's playhead | `trackFrame` |
+| The track's speed | `trackSpeed` |
+| Fade a track from one animation to another | `crossfade` |
+| Fade the track's own alpha | `fadeTrack` |
+| How far the fade in flight has got | `trackFadeProgress` |
+| Stop the fade in flight | `cancelTrackFade` |
+| Blend another animation into a track | `trackAddSource` |
+| A source's weight within its track | `sourceWeight` |
+| A source's playhead | `sourceFrame` |
+| The weight below which a source stops firing events | `sourceEventThreshold` |
+
+**`crossfade` is not `fadeTrack`.** The first replaces what a track is playing; the
+second changes how much of the track is heard at all. A Player that offers one and
+names it for the other leaves the second unnameable.
+
+A read and its write share the stem, per §3 — `trackAlpha` is both, spelled the way
+the host spells a settable. `setTrackAnimation` keeps its verb because there is no
+matching read: what comes back is a source handle, and that is `trackMainSource`.
 
 ### Terminology
 
