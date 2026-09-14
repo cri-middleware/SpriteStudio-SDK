@@ -2169,6 +2169,22 @@ mod tests {
         }
     }
 
+    /// The wasm face reports through `js_error`, never by formatting an error
+    /// itself.
+    ///
+    /// `Debug` on an error prints the Rust variant name, and twenty-eight call
+    /// sites were doing exactly that — handing a JS caller `AnimationNotFound`,
+    /// an identifier from a language they are not writing, which then reaches
+    /// their user through whatever the Player shows. It also drops what
+    /// `InvalidVersion` knows. One closure copied twenty-eight times is how that
+    /// happened, so what is pinned here is that there are none left.
+    #[test]
+    fn the_wasm_face_does_not_debug_format_an_error() {
+        let web = std::fs::read_to_string("src/web/mod.rs").expect("read web/mod.rs");
+        assert!(web.contains("fn js_error("), "js_error is gone; this test is pinning nothing");
+        assert!(!web.contains("{:?}"), "src/web/mod.rs formats something with Debug. A fallible binding reports through `js_error`.");
+    }
+
     /// The `ss_*` symbols this module actually exports, read from its own source
     /// rather than from the generated header — the header is a build artifact,
     /// and a test that needs one built first is a test that gets skipped.

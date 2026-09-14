@@ -2,7 +2,9 @@
 //!
 //! This module mirrors the C FFI surface in `src/ffi/mod.rs` 1:1 for JS/TS
 //! Players. The FFI side is authoritative — when adding or modifying public
-//! API, update `src/ffi/mod.rs` first and reflect the change here. POD return
+//! API, update `src/ffi/mod.rs` first and reflect the change here. A fallible
+//! one reports through `js_error` — never by formatting the error itself, which
+//! is how twenty-eight call sites came to hand JS the Rust variant name. POD return
 //! types (`ss_event_instance_info`, `ss_effect_event_info`) are exposed as
 //! wasm-bindgen wrapper classes (`WebEventInstanceInfo`,
 //! `WebEffectEventInfo`) because wasm-bindgen cannot expose `#[repr(C)]`
@@ -249,6 +251,22 @@ impl From<WebEffectEventInfo> for crate::types::ss_effect_event_info {
     }
 }
 
+/// How every fallible call here reports: the Brain's own wording, as the string
+/// of a JS exception.
+///
+/// `Display`, not `Debug`. `Debug` prints the Rust variant name — a JS caller
+/// was being handed `AnimationNotFound`, which is an identifier from a language
+/// they are not writing, and it reaches their user through whatever the Player
+/// puts in front of them. `Display` also carries what a variant knows:
+/// `InvalidVersion` names the version expected and the one that arrived, which
+/// is the whole of what a stale pack needs someone to be told.
+///
+/// One function rather than a closure per call site, because there were
+/// twenty-eight of them and they have to agree.
+fn js_error(e: crate::error::SSRuntimeError) -> JsValue {
+    JsValue::from_str(&alloc::format!("{}", e))
+}
+
 #[wasm_bindgen]
 pub struct SSRuntimeResource {
     pub(crate) inner: Arc<SsabResource>,
@@ -324,20 +342,20 @@ impl SSRuntimeContext {
     }
 
     pub fn setup_animation(&mut self, name: &str) -> Result<(), JsValue> {
-        self.inner.setup_animation(name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.setup_animation(name).map_err(js_error)
     }
 
     pub fn setup_animation_by_hash(&mut self, name_hash: u32) -> Result<(), JsValue> {
-        self.inner.setup_animation_by_hash(name_hash).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.setup_animation_by_hash(name_hash).map_err(js_error)
     }
 
     // Zero-copy getters
     pub fn get_frame_data_buf(&mut self, frame_no: f32) -> Result<*const u8, JsValue> {
-        self.inner.get_frame_data(frame_no).map(|s| s.as_ptr()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.get_frame_data(frame_no).map(|s| s.as_ptr()).map_err(js_error)
     }
 
     pub fn get_frame_data_len(&mut self, frame_no: f32) -> Result<usize, JsValue> {
-        self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(js_error)
     }
 
     pub fn get_world_matrices_buf(&self) -> *const f32 {
@@ -661,15 +679,15 @@ impl SSRuntimeContext {
     // sources sharing one track. Track 0 carries the structure and events.
 
     pub fn set_track_animation(&mut self, track: u32, name: &str) -> Result<(), JsValue> {
-        self.inner.set_track_animation(track, name).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_track_animation(track, name).map_err(js_error)
     }
 
     pub fn set_track_animation_by_hash(&mut self, track: u32, hash: u32) -> Result<(), JsValue> {
-        self.inner.set_track_animation_by_hash(track, hash).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_track_animation_by_hash(track, hash).map_err(js_error)
     }
 
     pub fn set_track_alpha(&mut self, track: u32, alpha: f32) -> Result<(), JsValue> {
-        self.inner.set_track_alpha(track, alpha).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_track_alpha(track, alpha).map_err(js_error)
     }
 
     pub fn track_alpha(&self, track: u32) -> Option<f32> {
@@ -683,7 +701,7 @@ impl SSRuntimeContext {
             1 => crate::TrackBlend::Additive,
             _ => return Err(JsValue::from_str("blend must be 0 (mix) or 1 (additive)")),
         };
-        self.inner.set_track_blend(track, blend).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_track_blend(track, blend).map_err(js_error)
     }
 
     pub fn track_blend(&self, track: u32) -> Option<u32> {
@@ -698,19 +716,19 @@ impl SSRuntimeContext {
     }
 
     pub fn clear_track(&mut self, track: u32) -> Result<(), JsValue> {
-        self.inner.clear_track(track).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.clear_track(track).map_err(js_error)
     }
 
     pub fn crossfade(&mut self, track: u32, name: &str, duration_ms: f32) -> Result<(), JsValue> {
-        self.inner.crossfade(track, name, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.crossfade(track, name, duration_ms).map_err(js_error)
     }
 
     pub fn crossfade_by_hash(&mut self, track: u32, hash: u32, duration_ms: f32) -> Result<(), JsValue> {
-        self.inner.crossfade_by_hash(track, hash, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.crossfade_by_hash(track, hash, duration_ms).map_err(js_error)
     }
 
     pub fn fade_track(&mut self, track: u32, target_alpha: f32, duration_ms: f32) -> Result<(), JsValue> {
-        self.inner.fade_track(track, target_alpha, duration_ms).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.fade_track(track, target_alpha, duration_ms).map_err(js_error)
     }
 
     pub fn track_fade_progress(&self, track: u32) -> Option<f32> {
@@ -718,11 +736,11 @@ impl SSRuntimeContext {
     }
 
     pub fn cancel_track_fade(&mut self, track: u32) -> Result<(), JsValue> {
-        self.inner.cancel_track_fade(track).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.cancel_track_fade(track).map_err(js_error)
     }
 
     pub fn set_track_frame(&mut self, track: u32, frame: f32) -> Result<(), JsValue> {
-        self.inner.set_track_frame(track, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_track_frame(track, frame).map_err(js_error)
     }
 
     pub fn track_frame(&self, track: u32) -> Option<f32> {
@@ -730,7 +748,7 @@ impl SSRuntimeContext {
     }
 
     pub fn set_track_speed(&mut self, track: u32, speed: f32) -> Result<(), JsValue> {
-        self.inner.set_track_speed(track, speed).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_track_speed(track, speed).map_err(js_error)
     }
 
     pub fn track_main_source(&self, track: u32) -> Option<u32> {
@@ -738,15 +756,15 @@ impl SSRuntimeContext {
     }
 
     pub fn track_add_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, JsValue> {
-        self.inner.track_add_source(track, name, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.track_add_source(track, name, weight).map_err(js_error)
     }
 
     pub fn track_add_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, JsValue> {
-        self.inner.track_add_source_by_hash(track, hash, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.track_add_source_by_hash(track, hash, weight).map_err(js_error)
     }
 
     pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), JsValue> {
-        self.inner.set_source_weight(handle, weight).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_source_weight(handle, weight).map_err(js_error)
     }
 
     pub fn source_weight(&self, handle: u32) -> Option<f32> {
@@ -754,7 +772,7 @@ impl SSRuntimeContext {
     }
 
     pub fn set_source_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
-        self.inner.set_source_frame(handle, frame).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_source_frame(handle, frame).map_err(js_error)
     }
 
     pub fn source_frame(&self, handle: u32) -> Option<f32> {
@@ -762,7 +780,7 @@ impl SSRuntimeContext {
     }
 
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
-        self.inner.set_source_event_threshold(handle, threshold).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_source_event_threshold(handle, threshold).map_err(js_error)
     }
 
     pub fn source_event_threshold(&self, handle: u32) -> Option<f32> {
@@ -808,19 +826,19 @@ impl SSRuntimeContext {
     /// Mirror of `ss_runtime_set_part_visibility_override`.
     /// `force`: 0=clear/revert, 1=force-hide, 2=force-visible (reserved).
     pub fn set_part_visibility_override(&mut self, part: u32, force: u8, cascade: bool) -> Result<(), JsValue> {
-        self.inner.set_part_visibility_override(part, force, cascade).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_part_visibility_override(part, force, cascade).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_clear_part_visibility_override`.
     pub fn clear_part_visibility_override(&mut self, part: u32) -> Result<(), JsValue> {
-        self.inner.clear_part_visibility_override(part).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.clear_part_visibility_override(part).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_set_part_color_override`. `rgba` packed `0xRRGGBBAA`
     /// (fills all four corners); `blend_op`: 0=Mix 1=Mul 2=Add 3=Sub;
     /// `priority_mode`: 0=OverwriteOnNextKeyframe 1=HoldUntilNextAnimation 2=Permanent.
     pub fn set_part_color_override(&mut self, part: u32, blend_op: u8, rgba: u32, priority_mode: u8) -> Result<(), JsValue> {
-        self.inner.set_part_color_override(part, blend_op, rgba, priority_mode).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_part_color_override(part, blend_op, rgba, priority_mode).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_set_part_color_override_corners`. `rgba_ltrtlbrb` =
@@ -830,23 +848,23 @@ impl SSRuntimeContext {
             return Err(JsValue::from_str("rgba_ltrtlbrb must have 4 elements"));
         }
         let corners = [rgba_ltrtlbrb[0].to_be_bytes(), rgba_ltrtlbrb[1].to_be_bytes(), rgba_ltrtlbrb[2].to_be_bytes(), rgba_ltrtlbrb[3].to_be_bytes()];
-        self.inner.set_part_color_override_corners(part, blend_op, corners, priority_mode).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_part_color_override_corners(part, blend_op, corners, priority_mode).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_clear_part_color_override`.
     pub fn clear_part_color_override(&mut self, part: u32) -> Result<(), JsValue> {
-        self.inner.clear_part_color_override(part).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.clear_part_color_override(part).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_set_part_cell_override`. `(0, 0)` reverts to the
     /// animation; Normal + Mask parts only; errors if the cell is unresolvable.
     pub fn set_part_cell_override(&mut self, part: u32, cellmap_name_hash: u32, cell_name_hash: u32, priority_mode: u8) -> Result<(), JsValue> {
-        self.inner.set_part_cell_override(part, cellmap_name_hash, cell_name_hash, priority_mode).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.set_part_cell_override(part, cellmap_name_hash, cell_name_hash, priority_mode).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_clear_part_cell_override`.
     pub fn clear_part_cell_override(&mut self, part: u32) -> Result<(), JsValue> {
-        self.inner.clear_part_cell_override(part).map_err(|e| JsValue::from_str(&alloc::format!("{:?}", e)))
+        self.inner.clear_part_cell_override(part).map_err(js_error)
     }
 
     /// Mirror of `ss_runtime_clear_all_part_overrides`.
@@ -878,7 +896,7 @@ impl SSRuntimeEffectSlot {
         let resource_handle = resource.inner.clone();
         match crate::EffectSlot::new(unsafe { &*res_ptr }, effect_name_hash, seed) {
             Ok(inner) => Ok(SSRuntimeEffectSlot { inner, resource_handle, last_draw_plan_ptr: core::ptr::null(), last_draw_plan_len: 0 }),
-            Err(e) => Err(JsValue::from_str(&alloc::format!("{:?}", e))),
+            Err(e) => Err(js_error(e)),
         }
     }
 
