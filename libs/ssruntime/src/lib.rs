@@ -452,11 +452,15 @@ pub struct SsabResource {
     // so it must drop first.
     resource: Option<AnimationResource<'static>>,
     data: SsabData,
+    /// Why `resource` is `None`, kept so the binary faces can say which of the
+    /// several reasons it was. A version mismatch in particular names the two
+    /// versions, and that is the whole of what the user needs to act.
+    parse_error: Option<error::SSRuntimeError>,
 }
 
 impl SsabResource {
     pub fn new(data: SsabData) -> alloc::sync::Arc<Self> {
-        let res = Self { resource: None, data };
+        let res = Self { resource: None, data, parse_error: None };
         let mut arc = alloc::sync::Arc::new(res);
         if let Some(mut_res) = alloc::sync::Arc::get_mut(&mut arc) {
             // SAFETY: `mut_res.data` lives as long as `mut_res` (i.e. as long as the
@@ -465,11 +469,18 @@ impl SsabResource {
             // a self-borrow directly. The `resource()` accessor downgrades the lie
             // back to a self-bound lifetime before exposing it.
             let data_slice: &'static [u8] = unsafe { &*(mut_res.data.as_slice() as *const [u8]) };
-            if let Ok(resource) = AnimationResource::new(data_slice) {
-                mut_res.resource = Some(resource);
+            match AnimationResource::new(data_slice) {
+                Ok(resource) => mut_res.resource = Some(resource),
+                Err(e) => mut_res.parse_error = Some(e),
             }
         }
         arc
+    }
+
+    /// Why [`Self::resource`] is `None`, or `None` when the parse succeeded.
+    #[inline]
+    pub fn parse_error(&self) -> Option<&error::SSRuntimeError> {
+        self.parse_error.as_ref()
     }
 
     /// Returns the parsed animation resource, with its lifetime tied to `&self`.

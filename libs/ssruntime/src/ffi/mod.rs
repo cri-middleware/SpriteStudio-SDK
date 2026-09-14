@@ -22,9 +22,29 @@
 //! # Calling convention
 //!
 //! Fallible calls return `bool` (or a null pointer, or [`SS_RUNTIME_INVALID_HANDLE`]) and
-//! record the reason on the context; read it back with `ss_runtime_get_last_error` and
-//! compare against [`crate::error::SSRuntimeError::as_code`]. Getters that return a float
-//! use `NaN` for "no such thing", which is distinguishable from a legitimate `0.0`.
+//! record the reason on the context. [`ss_runtime_get_last_error`] reads back the stable
+//! code (compare against [`crate::error::SSRuntimeError::as_code`]), and
+//! [`ss_runtime_error_message`] turns that code into the text to put in front of a user —
+//! which is what a Player owes its caller (SDK: `20_design/40_api_conventions.md`, §7).
+//! **The message takes the code, not the context**, so it is a pure lookup with nothing
+//! to own and nothing to outlive. Getters that return a float use `NaN` for "no such
+//! thing", which is distinguishable from a legitimate `0.0`.
+//!
+//! The two `ss_resource_create_*` constructors are the exception: they take no context,
+//! so a null return is the whole report. It needs no more than that, because there are
+//! only two ways to get one — a null `ptr`, which the caller passed, and an `.ssab` whose
+//! schema version this runtime does not read. (Bytes that are not an `.ssab` at all are
+//! not among them; nothing here validates the input. See *Validation* below.)
+//!
+//! # Building a resource
+//!
+//! `ss_resource_create_*` then [`ss_runtime_bind_resource`] is the full form: it leaves
+//! you holding the resource handle, which is what [`ss_effect_slot_create`] takes and
+//! what lets one parsed pack serve several contexts. `ss_runtime_load_ssab_*` is the
+//! one-liner for when you need neither — it creates, binds, and drops its own reference.
+//!
+//! **They are alternatives, not a sequence.** Calling both on the same bytes parses the
+//! pack twice, and the parse is where every animation's metadata is built.
 //!
 //! Buffers handed out through `out_data` / `out_len` pairs point into runtime-owned
 //! memory and stay valid only until the next call that rewrites them. Copy anything you
@@ -83,7 +103,11 @@ pub struct FfiContext {
     pub ctx: crate::Context<'static>,
     // We hold the resource here to keep it alive
     pub bound_resource: Option<Arc<SsabResource>>,
-    pub last_error: i32,
+    /// The reason the last call that tracks one failed, or `None` if it
+    /// succeeded. Held as the error itself rather than its code so that the
+    /// payload `InvalidVersion` carries is still here for a Rust caller and the
+    /// wasm face, both of which format it.
+    pub last_error: Option<crate::error::SSRuntimeError>,
 }
 impl Default for FfiContext {
     fn default() -> Self {
@@ -93,7 +117,7 @@ impl Default for FfiContext {
 
 impl FfiContext {
     pub fn new() -> Self {
-        Self { ctx: crate::Context::new(), bound_resource: None, last_error: 0 }
+        Self { ctx: crate::Context::new(), bound_resource: None, last_error: None }
     }
 }
 
@@ -105,12 +129,18 @@ fn get_context<'a>(ptr: *mut c_void) -> Option<&'a mut FfiContext> {
     unsafe { Some(&mut *(ptr as *mut FfiContext)) }
 }
 
-fn create_ffi_resource(data: crate::SsabData) -> *mut c_void {
+/// Parse `data` into a resource handle, keeping the reason on failure.
+///
+/// The reason is the point: a version mismatch and a malformed buffer both come
+/// back as a null handle from the two `ss_resource_create_*` entry points, which
+/// have no context to record on. The entry points that DO have one record the
+/// difference, readable through [`ss_runtime_get_last_error`].
+fn create_ffi_resource(data: crate::SsabData) -> Result<*mut c_void, crate::error::SSRuntimeError> {
     let arc = SsabResource::new(data);
     if arc.resource().is_none() {
-        return core::ptr::null_mut();
+        return Err(arc.parse_error().cloned().unwrap_or(crate::error::SSRuntimeError::Unknown));
     }
-    Arc::into_raw(arc) as *mut c_void
+    Ok(Arc::into_raw(arc) as *mut c_void)
 }
 
 #[unsafe(no_mangle)]
@@ -132,7 +162,7 @@ pub unsafe extern "C" fn ss_resource_create_copy(ptr: *const c_uchar, len: usize
     }
     let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
-        Ok(ssab_data) => create_ffi_resource(ssab_data),
+        Ok(ssab_data) => create_ffi_resource(ssab_data).unwrap_or(core::ptr::null_mut()),
         Err(_) => core::ptr::null_mut(),
     }
 }
@@ -156,7 +186,7 @@ pub unsafe extern "C" fn ss_resource_create_borrow(ptr: *const c_uchar, len: usi
         return core::ptr::null_mut();
     }
     match unsafe { crate::SsabData::load_borrow(ptr, len) } {
-        Ok(ssab_data) => create_ffi_resource(ssab_data),
+        Ok(ssab_data) => create_ffi_resource(ssab_data).unwrap_or(core::ptr::null_mut()),
         Err(_) => core::ptr::null_mut(),
     }
 }
@@ -191,8 +221,71 @@ pub extern "C" fn ss_runtime_reset(context: *mut c_void) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.ctx.reset();
         ffi_context.bound_resource = None;
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
     }
+}
+
+/// Why the last call that tracks a reason failed, as the stable code from
+/// [`crate::error::SSRuntimeError::as_code`]. `0` means the last such call
+/// succeeded, and so does a null `context`.
+///
+/// Every fallible entry point that has a context to write to clears this on
+/// entry, so it always describes the most recent one rather than some earlier
+/// failure. The exceptions are the resource constructors
+/// (`ss_resource_create_borrow` / `ss_resource_create_copy`), which take no
+/// context and so have nowhere to record: a null return from those is all there
+/// is.
+///
+/// Reading does not clear it. Read it immediately after the call that returned
+/// `false`, before making another on the same context.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_get_last_error(context: *mut c_void) -> i32 {
+    match get_context(context) {
+        Some(ffi_context) => ffi_context.last_error.as_ref().map_or(0, |e| e.as_code()),
+        None => 0,
+    }
+}
+
+/// The wording behind a code from [`ss_runtime_get_last_error`], as
+/// NUL-terminated UTF-8.
+///
+/// **Takes the code, not a context**, so it is a pure lookup: no lifetime to
+/// respect, nothing to free, and the same answer forever. An unrecognised code
+/// — including `0`, which is "no error" — gives an empty string, so the result
+/// goes straight into a log call without a branch.
+///
+/// The text carries no numbers. `InvalidVersion` reads "Invalid SSAB version";
+/// a Player that wants to say *which* versions should compare
+/// [`ss_runtime_ssab_schema_version`] against the pack's own `version` field,
+/// which gives it two integers rather than a sentence to parse.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_error_message(code: i32) -> *const c_char {
+    // `&'static CStr` literals: no allocation, and nothing for the caller to own.
+    // Keyed off the code rather than a variant because the code is what crossed
+    // the ABI; `error_message_matches_every_variant` pins the two together.
+    let text: &'static CStr = match code {
+        0 => c"",
+        1 => c"SSAB data is empty",
+        2 => c"Invalid SSAB version",
+        3 => c"Animation not found",
+        4 => c"SSAB data is not loaded",
+        5 => c"Invalid parameter",
+        6 => c"Memory allocation failed",
+        7 => c"Effect data is malformed",
+        99 => c"Unknown error occurred",
+        _ => c"",
+    };
+    text.as_ptr()
+}
+
+/// The `.ssab` schema version this runtime reads.
+///
+/// The counterpart of `ss_converter_ssab_schema_version`, and what turns an
+/// `InvalidVersion` failure into something a Player can say: compare it against
+/// the `version` field of the pack it just failed to load.
+#[unsafe(no_mangle)]
+pub extern "C" fn ss_runtime_ssab_schema_version() -> u32 {
+    ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version
 }
 
 /// Binds an AnimationResource to a Context.
@@ -207,7 +300,9 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
+    ffi_context.last_error = None;
     if resource.is_null() {
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
 
@@ -221,6 +316,9 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
     // stays valid because `bound_resource` owns the surrounding Arc.
     let res_ptr = arc_clone.resource_static_ptr();
     if res_ptr.is_null() {
+        // The resource handle is live but carries no parsed animations — the
+        // bytes behind it were not a readable SSAB.
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::EmptyData);
         return false;
     }
     ffi_context.bound_resource = Some(arc_clone);
@@ -238,26 +336,31 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     if ptr.is_null() {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
 
     let data = unsafe { ::core::slice::from_raw_parts(ptr, len) };
     match crate::SsabData::load_copy(data) {
         Ok(ssab_data) => {
-            let res_ptr = create_ffi_resource(ssab_data);
-            if res_ptr.is_null() {
-                ffi_context.last_error = crate::error::SSRuntimeError::MemoryError.as_code();
-                return false;
-            }
+            // The real reason, not `MemoryError`: this fails on a version
+            // mismatch far more often than on an allocation, and the two want
+            // opposite things from the user.
+            let res_ptr = match create_ffi_resource(ssab_data) {
+                Ok(p) => p,
+                Err(e) => {
+                    ffi_context.last_error = Some(e);
+                    return false;
+                }
+            };
             let success = ss_runtime_bind_resource(context, res_ptr);
             ss_resource_destroy(res_ptr);
             success
         }
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -273,25 +376,30 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     if ptr.is_null() {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
 
     match unsafe { crate::SsabData::load_borrow(ptr, len) } {
         Ok(ssab_data) => {
-            let res_ptr = create_ffi_resource(ssab_data);
-            if res_ptr.is_null() {
-                ffi_context.last_error = crate::error::SSRuntimeError::MemoryError.as_code();
-                return false;
-            }
+            // The real reason, not `MemoryError`: this fails on a version
+            // mismatch far more often than on an allocation, and the two want
+            // opposite things from the user.
+            let res_ptr = match create_ffi_resource(ssab_data) {
+                Ok(p) => p,
+                Err(e) => {
+                    ffi_context.last_error = Some(e);
+                    return false;
+                }
+            };
             let success = ss_runtime_bind_resource(context, res_ptr);
             ss_resource_destroy(res_ptr);
             success
         }
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -315,7 +423,7 @@ pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mu
                 }
             }
         } else {
-            ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
+            ffi_context.last_error = Some(crate::error::SSRuntimeError::NotLoaded);
         }
     }
 }
@@ -326,7 +434,7 @@ pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_ucha
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.as_ptr() as *const c_uchar;
         } else {
-            ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
+            ffi_context.last_error = Some(crate::error::SSRuntimeError::NotLoaded);
         }
     }
     core::ptr::null()
@@ -338,7 +446,7 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.len();
         } else {
-            ffi_context.last_error = crate::error::SSRuntimeError::NotLoaded.as_code();
+            ffi_context.last_error = Some(crate::error::SSRuntimeError::NotLoaded);
         }
     }
     0
@@ -354,9 +462,9 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     if name.is_null() {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
     let c_buf = unsafe { CStr::from_ptr(name) };
@@ -364,7 +472,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
     match ffi_context.ctx.setup_animation(a) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -378,11 +486,11 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.setup_animation_by_hash(name_hash) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -396,7 +504,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *mut c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         match ffi_context.ctx.get_frame_data(frame_no) {
             Ok(ret) => unsafe {
                 if !out_data.is_null() {
@@ -407,7 +515,7 @@ pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_n
                 }
             },
             Err(e) => {
-                ffi_context.last_error = e.as_code();
+                ffi_context.last_error = Some(e);
             }
         }
     }
@@ -421,7 +529,7 @@ pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_n
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_world_matrices_ptr();
@@ -441,7 +549,7 @@ pub unsafe extern "C" fn ss_runtime_get_world_matrices(context: *mut c_void, out
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_local_uvs_ptr();
@@ -469,7 +577,7 @@ pub unsafe extern "C" fn ss_runtime_get_local_uvs(context: *mut c_void, out_data
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_cell_meta_ptr();
@@ -499,7 +607,7 @@ pub unsafe extern "C" fn ss_runtime_get_cell_meta(context: *mut c_void, out_data
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_local_vertices_ptr();
@@ -528,7 +636,7 @@ pub unsafe extern "C" fn ss_runtime_get_local_vertices(context: *mut c_void, out
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_shape_vertices_ptr();
@@ -556,7 +664,7 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertices(context: *mut c_void, out
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_shape_vertex_box_coords_ptr();
@@ -580,7 +688,7 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_box_coords(context: *mut c_
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_shape_vertex_counts_ptr();
@@ -606,7 +714,7 @@ pub unsafe extern "C" fn ss_runtime_get_shape_vertex_counts(context: *mut c_void
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_mesh_vertices_x_ptr();
@@ -630,7 +738,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_x(context: *mut c_void, ou
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_mesh_vertices_y_ptr();
@@ -655,7 +763,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertices_y(context: *mut c_void, ou
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_mesh_vertex_offsets_ptr();
@@ -680,7 +788,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_vertex_offsets(context: *mut c_void
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_mesh_uvs_ptr();
@@ -704,7 +812,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_uvs(context: *mut c_void, out_data:
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_mesh_indices_ptr();
@@ -728,7 +836,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_indices(context: *mut c_void, out_d
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_mesh_index_offsets_ptr();
@@ -760,7 +868,7 @@ pub unsafe extern "C" fn ss_runtime_get_mesh_index_offsets(context: *mut c_void,
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_nines_vertices_ptr();
@@ -785,7 +893,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertices(context: *mut c_void, out
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_nines_uvs_ptr();
@@ -814,7 +922,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_uvs(context: *mut c_void, out_data
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, out_data: *mut *const c_float, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_nines_box_coords_ptr();
@@ -839,7 +947,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_box_coords(context: *mut c_void, o
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_data: *mut *const i32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_nines_indices_ptr();
@@ -864,7 +972,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_indices(context: *mut c_void, out_
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_nines_vertex_offsets_ptr();
@@ -888,7 +996,7 @@ pub unsafe extern "C" fn ss_runtime_get_nines_vertex_offsets(context: *mut c_voi
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
 pub unsafe extern "C" fn ss_runtime_get_nines_index_offsets(context: *mut c_void, out_data: *mut *const u32, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.last_error = 0;
+        ffi_context.last_error = None;
         unsafe {
             if !out_data.is_null() {
                 *out_data = ffi_context.ctx.get_nines_index_offsets_ptr();
@@ -1159,7 +1267,7 @@ where
     match f(&mut ffi_context.ctx) {
         Ok(()) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1196,9 +1304,9 @@ pub unsafe extern "C" fn ss_runtime_set_track_animation(context: *mut c_void, tr
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     let Some(a) = (unsafe { cstr_to_string(name) }) else {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     };
     report(ffi_context, |ctx| ctx.set_track_animation(track, &a))
@@ -1209,7 +1317,7 @@ pub extern "C" fn ss_runtime_set_track_animation_by_hash(context: *mut c_void, t
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_track_animation_by_hash(track, hash))
 }
 
@@ -1218,7 +1326,7 @@ pub extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, a
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_track_alpha(track, alpha))
 }
 
@@ -1235,12 +1343,12 @@ pub extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, b
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     let blend = match blend {
         SS_RUNTIME_TRACK_BLEND_MIX => crate::TrackBlend::Mix,
         SS_RUNTIME_TRACK_BLEND_ADDITIVE => crate::TrackBlend::Additive,
         _ => {
-            ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+            ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
             return false;
         }
     };
@@ -1267,7 +1375,7 @@ pub extern "C" fn ss_runtime_clear_track(context: *mut c_void, track: u32) -> bo
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.clear_track(track))
 }
 
@@ -1282,9 +1390,9 @@ pub unsafe extern "C" fn ss_runtime_crossfade(context: *mut c_void, track: u32, 
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     let Some(a) = (unsafe { cstr_to_string(name) }) else {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     };
     report(ffi_context, |ctx| ctx.crossfade(track, &a, duration_ms))
@@ -1295,7 +1403,7 @@ pub extern "C" fn ss_runtime_crossfade_by_hash(context: *mut c_void, track: u32,
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.crossfade_by_hash(track, hash, duration_ms))
 }
 
@@ -1304,7 +1412,7 @@ pub extern "C" fn ss_runtime_fade_track(context: *mut c_void, track: u32, target
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.fade_track(track, target_alpha, duration_ms))
 }
 
@@ -1319,7 +1427,7 @@ pub extern "C" fn ss_runtime_cancel_track_fade(context: *mut c_void, track: u32)
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.cancel_track_fade(track))
 }
 
@@ -1328,7 +1436,7 @@ pub extern "C" fn ss_runtime_set_track_frame(context: *mut c_void, track: u32, f
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_track_frame(track, frame))
 }
 
@@ -1343,7 +1451,7 @@ pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, s
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_track_speed(track, speed))
 }
 
@@ -1366,15 +1474,15 @@ pub unsafe extern "C" fn ss_runtime_track_add_source(context: *mut c_void, track
     let Some(ffi_context) = get_context(context) else {
         return SS_RUNTIME_INVALID_HANDLE;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     let Some(a) = (unsafe { cstr_to_string(name) }) else {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return SS_RUNTIME_INVALID_HANDLE;
     };
     match ffi_context.ctx.track_add_source(track, &a, weight) {
         Ok(h) => h,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             SS_RUNTIME_INVALID_HANDLE
         }
     }
@@ -1385,11 +1493,11 @@ pub extern "C" fn ss_runtime_track_add_source_by_hash(context: *mut c_void, trac
     let Some(ffi_context) = get_context(context) else {
         return SS_RUNTIME_INVALID_HANDLE;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.track_add_source_by_hash(track, hash, weight) {
         Ok(h) => h,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             SS_RUNTIME_INVALID_HANDLE
         }
     }
@@ -1400,7 +1508,7 @@ pub extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_source_weight(handle, weight))
 }
 
@@ -1416,7 +1524,7 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_source_frame(handle, frame))
 }
 
@@ -1430,7 +1538,7 @@ pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, ha
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     report(ffi_context, |ctx| ctx.set_source_event_threshold(handle, threshold))
 }
 
@@ -1789,11 +1897,11 @@ pub extern "C" fn ss_runtime_set_part_visibility_override(context: *mut c_void, 
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.set_part_visibility_override(part, force, cascade != 0) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1805,11 +1913,11 @@ pub extern "C" fn ss_runtime_clear_part_visibility_override(context: *mut c_void
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.clear_part_visibility_override(part) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1824,11 +1932,11 @@ pub extern "C" fn ss_runtime_set_part_color_override(context: *mut c_void, part:
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.set_part_color_override(part, blend_op, rgba, priority_mode) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1842,9 +1950,9 @@ pub extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_voi
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     if rgba_ltrtlbrb.is_null() {
-        ffi_context.last_error = crate::error::SSRuntimeError::InvalidParameter.as_code();
+        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
     let packed = unsafe { core::slice::from_raw_parts(rgba_ltrtlbrb, 4) };
@@ -1852,7 +1960,7 @@ pub extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_voi
     match ffi_context.ctx.set_part_color_override_corners(part, blend_op, corners, priority_mode) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1864,11 +1972,11 @@ pub extern "C" fn ss_runtime_clear_part_color_override(context: *mut c_void, par
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.clear_part_color_override(part) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1883,11 +1991,11 @@ pub extern "C" fn ss_runtime_set_part_cell_override(context: *mut c_void, part: 
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.set_part_cell_override(part, cellmap_name_hash, cell_name_hash, priority_mode) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1899,11 +2007,11 @@ pub extern "C" fn ss_runtime_clear_part_cell_override(context: *mut c_void, part
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     match ffi_context.ctx.clear_part_cell_override(part) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = e.as_code();
+            ffi_context.last_error = Some(e);
             false
         }
     }
@@ -1915,7 +2023,246 @@ pub extern "C" fn ss_runtime_clear_all_part_overrides(context: *mut c_void) -> b
     let Some(ffi_context) = get_context(context) else {
         return false;
     };
-    ffi_context.last_error = 0;
+    ffi_context.last_error = None;
     ffi_context.ctx.clear_all_part_overrides();
     true
+}
+
+#[cfg(all(test, feature = "std"))]
+mod tests {
+    use super::*;
+    use core::ffi::c_void;
+    use std::ffi::{CStr, CString};
+
+    /// The code a context is holding, and the wording that code maps to.
+    fn read_error(ctx: *mut c_void) -> (i32, std::string::String) {
+        let code = ss_runtime_get_last_error(ctx);
+        let text = unsafe { CStr::from_ptr(ss_runtime_error_message(code)) };
+        (code, text.to_string_lossy().into_owned())
+    }
+
+    /// A valid FlatBuffer root whose `version` is not the one this runtime was
+    /// built against — the failure a user hits by playing a pack from a
+    /// different converter, and the reason the message has to carry numbers.
+    fn ssab_with_wrong_version() -> std::vec::Vec<u8> {
+        use ssab::ssab::ss::format as fmt;
+        let mut b = flatbuffers::FlatBufferBuilder::new();
+        let name = b.create_string("wrong_version");
+        let parts = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::PartData>>(&[]);
+        let animations = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::AnimationData>>(&[]);
+        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: fmt::SsAnimeBinaryArgs::default().version + 1, name: Some(name), parts: Some(parts), animations: Some(animations), ..Default::default() });
+        fmt::finish_ss_anime_binary_buffer(&mut b, root);
+        b.finished_data().to_vec()
+    }
+
+    #[test]
+    fn a_fresh_context_reports_no_error() {
+        let ctx = ss_runtime_create();
+        assert_eq!(read_error(ctx), (0, std::string::String::new()));
+        ss_runtime_destroy(ctx);
+    }
+
+    #[test]
+    fn a_failure_reports_a_code_and_the_matching_text() {
+        let ctx = ss_runtime_create();
+        let name = CString::new("walk").unwrap();
+        // Nothing bound, so the runtime has no animation to set up.
+        assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
+        let (code, text) = read_error(ctx);
+        assert_eq!(code, crate::error::SSRuntimeError::NotLoaded.as_code());
+        assert_eq!(text, "SSAB data is not loaded");
+        ss_runtime_destroy(ctx);
+    }
+
+    #[test]
+    fn the_reason_is_always_the_most_recent_one() {
+        let ctx = ss_runtime_create();
+        let name = CString::new("walk").unwrap();
+        assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
+        assert_eq!(ss_runtime_get_last_error(ctx), crate::error::SSRuntimeError::NotLoaded.as_code());
+
+        // A different failure replaces it rather than being masked by it.
+        assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, core::ptr::null(), 0) });
+        assert_eq!(ss_runtime_get_last_error(ctx), crate::error::SSRuntimeError::InvalidParameter.as_code());
+
+        // And a success clears it: the field says "did the last call fail", not
+        // "has anything ever failed".
+        let ssab = ssab_with_wrong_version();
+        let _ = unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) };
+        ss_runtime_reset(ctx);
+        assert_eq!(read_error(ctx), (0, std::string::String::new()));
+        ss_runtime_destroy(ctx);
+    }
+
+    /// The message no longer carries the two version numbers — `as_str` is
+    /// payload-free and the numbers come from `ss_runtime_ssab_schema_version`.
+    /// What this pins is the classification: a pack from another converter used
+    /// to arrive as `MemoryError`, which sends the user looking at the wrong
+    /// thing entirely.
+    #[test]
+    fn a_version_mismatch_is_not_reported_as_a_memory_error() {
+        let ctx = ss_runtime_create();
+        let ssab = ssab_with_wrong_version();
+        assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) });
+
+        let (code, text) = read_error(ctx);
+        // Not MemoryError, which is what this path used to report for every
+        // failed parse.
+        assert_eq!(code, crate::error::SSRuntimeError::InvalidVersion { expected: 0, got: 0 }.as_code());
+        assert_eq!(text, "Invalid SSAB version");
+        ss_runtime_destroy(ctx);
+    }
+
+    /// The porting guide may only name C entry points that exist.
+    ///
+    /// This has gone wrong three times, and the expensive one was silent:
+    /// `ss_runtime_get_last_error` was described in two places as the way to
+    /// retrieve a failure's reason while no such symbol was ever exported, so
+    /// every Player built on the C ABI reported "it failed" and nothing more.
+    /// A reader has no way to tell a documented-but-absent API from one they
+    /// merely cannot find, so the guide has to be checked against the exports
+    /// rather than against memory.
+    #[test]
+    fn the_guide_only_names_entry_points_that_exist() {
+        // Names the guide is allowed to mention without exporting them.
+        const ALLOWED: &[(&str, &str)] = &[("ss_runtime_get_parts_color", "the page names it in order to say there is no such API")];
+
+        // Both C ABIs the guide covers: the runtime's, and the converter's —
+        // the editor-integration page documents `ss_converter_*`, and a check
+        // that only knew about this crate would call every one of them a ghost.
+        let mut exported = exported_c_symbols(&std::fs::read_to_string("src/ffi/mod.rs").expect("read ffi/mod.rs"));
+        exported.extend(exported_c_symbols(&std::fs::read_to_string("../ssconverter/src/ffi/mod.rs").expect("read ssconverter's ffi/mod.rs")));
+        assert!(exported.len() > 100, "the export scan found only {} symbols; the scan itself is broken", exported.len());
+        let families: std::collections::BTreeSet<&str> = exported.iter().map(|s| family_of(s)).collect();
+
+        let mut ghosts = std::vec::Vec::new();
+        let mut pages = 0usize;
+        for entry in walk_markdown(std::path::Path::new("docs")) {
+            pages += 1;
+            let text = std::fs::read_to_string(&entry).expect("read a guide page");
+            for name in backticked_ss_names(&text) {
+                // Only names in a family this ABI actually exports. Derived from
+                // the exports rather than listed, so a new family is covered the
+                // day it lands — and so that `ss_partcolor_blend` (a GLSL helper
+                // in a shader example) and `ss_player_release` (prose about a
+                // Player's own disposal call) are read as what they are rather
+                // than as missing entry points.
+                if !families.contains(family_of(&name)) || exported.contains(&name) || ALLOWED.iter().any(|(p, _)| name.starts_with(p)) {
+                    continue;
+                }
+                ghosts.push(std::format!("{}: `{}`", entry.display(), name));
+            }
+        }
+        assert!(pages > 20, "the page walk found only {pages} pages; the walk itself is broken");
+        ghosts.sort();
+        ghosts.dedup();
+        assert!(ghosts.is_empty(), "the guide names C entry points that are not exported:\n  {}", ghosts.join("\n  "));
+    }
+
+    /// The first two segments of a C entry point's name — `ss_runtime_play` is
+    /// in the `ss_runtime` family. What tells one of this ABI's names apart from
+    /// any other identifier that happens to start with `ss_`.
+    fn family_of(name: &str) -> &str {
+        match name.match_indices('_').nth(1) {
+            Some((i, _)) => &name[..i],
+            None => name,
+        }
+    }
+
+    /// The `ss_*` symbols this module actually exports, read from its own source
+    /// rather than from the generated header — the header is a build artifact,
+    /// and a test that needs one built first is a test that gets skipped.
+    fn exported_c_symbols(source: &str) -> std::collections::BTreeSet<std::string::String> {
+        let mut out = std::collections::BTreeSet::new();
+        for line in source.lines() {
+            let line = line.trim_start();
+            let Some(rest) = line.strip_prefix("pub ") else { continue };
+            let rest = rest.strip_prefix("unsafe ").unwrap_or(rest);
+            let Some(rest) = rest.strip_prefix("extern \"C\" fn ") else { continue };
+            let name: std::string::String = rest.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+            if name.starts_with("ss_") {
+                out.insert(name);
+            }
+        }
+        out
+    }
+
+    /// Every `ss_…`-looking identifier written in backticks. Backticks are the
+    /// filter that matters: prose says "the `ss_resource_create_*` pair", and a
+    /// trailing `*` or `_` is a wildcard rather than a name, so those are
+    /// dropped instead of being reported as missing.
+    fn backticked_ss_names(text: &str) -> std::vec::Vec<std::string::String> {
+        let mut out = std::vec::Vec::new();
+        for span in text.split('`').skip(1).step_by(2) {
+            let span = span.trim();
+            if !span.starts_with("ss_") {
+                continue;
+            }
+            let name: std::string::String = span.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+            // A wildcard stem, not a symbol.
+            if span.len() > name.len() && span.as_bytes()[name.len()] == b'*' {
+                continue;
+            }
+            if name.ends_with('_') {
+                continue;
+            }
+            out.push(name);
+        }
+        out
+    }
+
+    fn walk_markdown(dir: &std::path::Path) -> std::vec::Vec<std::path::PathBuf> {
+        let mut out = std::vec::Vec::new();
+        let Ok(entries) = std::fs::read_dir(dir) else { return out };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                out.extend(walk_markdown(&path));
+            } else if path.extension().is_some_and(|e| e == "md") {
+                out.push(path);
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn a_null_context_answers_without_dereferencing_it() {
+        let null = core::ptr::null_mut();
+        assert_eq!(ss_runtime_get_last_error(null), 0);
+        // 0 is "no error", and the message for it is empty rather than null, so
+        // a caller can log the result without checking either.
+        let msg = ss_runtime_error_message(0);
+        assert!(!msg.is_null());
+        assert_eq!(unsafe { CStr::from_ptr(msg) }.to_bytes(), b"");
+    }
+
+    /// The `match code` in `ss_runtime_error_message` and the `match self` in
+    /// `SSRuntimeError::as_str` are two tables for one mapping. Every drift this
+    /// session came from exactly that shape, so pin them to each other.
+    #[test]
+    fn error_message_matches_every_variant() {
+        use crate::error::SSRuntimeError::*;
+        let every_variant = [EmptyData, InvalidVersion { expected: 1, got: 2 }, AnimationNotFound, NotLoaded, InvalidParameter, MemoryError, MalformedEffect, Unknown];
+        for e in every_variant {
+            let via_abi = unsafe { CStr::from_ptr(ss_runtime_error_message(e.as_code())) };
+            assert_eq!(via_abi.to_str().unwrap(), e.as_str(), "code {} disagrees with the variant", e.as_code());
+            assert!(!e.as_str().is_empty(), "{:?} has no wording", e);
+        }
+        // An unknown code is not a panic and not a null.
+        assert_eq!(unsafe { CStr::from_ptr(ss_runtime_error_message(12345)) }.to_bytes(), b"");
+    }
+
+    /// The runtime says which `.ssab` version it reads, so a Player can report a
+    /// mismatch in numbers instead of parsing them out of a sentence.
+    #[test]
+    fn the_runtime_publishes_the_schema_version_it_expects() {
+        let expected = ss_runtime_ssab_schema_version();
+        assert_ne!(expected, 0);
+        // The pack built one version off is exactly what `InvalidVersion` is for.
+        let ctx = ss_runtime_create();
+        let ssab = ssab_with_wrong_version();
+        assert!(!unsafe { ss_runtime_load_ssab_borrow(ctx, ssab.as_ptr(), ssab.len()) });
+        assert_eq!(ss_runtime_get_last_error(ctx), crate::error::SSRuntimeError::InvalidVersion { expected: 0, got: 0 }.as_code());
+        ss_runtime_destroy(ctx);
+    }
 }

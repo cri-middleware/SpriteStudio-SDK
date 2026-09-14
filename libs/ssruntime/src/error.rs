@@ -5,6 +5,16 @@
 //! code with `ss_runtime_get_last_error`. **These numbers are a compatibility surface** —
 //! existing variants keep their codes, and new ones take fresh numbers rather than
 //! reusing a retired one.
+//!
+//! [`SSRuntimeError::as_str`] is the other half, reached across FFI as
+//! `ss_runtime_error_message(code)`. A code tells a Player's *code* what happened; the
+//! text is what it shows its user, so it is written to be read by someone holding a
+//! `.sspj` rather than a debugger. Keep a new variant's wording in that register.
+//!
+//! **The text carries no payload.** `InvalidVersion` knows two version numbers, but a
+//! Player that wants them should read `ss_runtime_ssab_schema_version` and the pack's own
+//! `version` field — two integers it can act on, rather than a sentence it would have to
+//! parse. [`core::fmt::Display`] does append them, for Rust callers and the wasm face.
 
 /// Everything that can go wrong loading or playing back an animation.
 #[derive(Debug, Clone, PartialEq)]
@@ -43,19 +53,34 @@ impl SSRuntimeError {
     }
 }
 
+impl SSRuntimeError {
+    /// The wording, without the payload any variant carries.
+    ///
+    /// Static, so it crosses the C ABI as a plain pointer with no context to
+    /// borrow from and no lifetime to respect — which is what
+    /// `ss_runtime_error_message` hands out. [`core::fmt::Display`] builds on
+    /// this rather than repeating it, so there is one wording per variant.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SSRuntimeError::EmptyData => "SSAB data is empty",
+            SSRuntimeError::InvalidVersion { .. } => "Invalid SSAB version",
+            SSRuntimeError::AnimationNotFound => "Animation not found",
+            SSRuntimeError::NotLoaded => "SSAB data is not loaded",
+            SSRuntimeError::InvalidParameter => "Invalid parameter",
+            SSRuntimeError::MemoryError => "Memory allocation failed",
+            SSRuntimeError::MalformedEffect => "Effect data is malformed",
+            SSRuntimeError::Unknown => "Unknown error occurred",
+        }
+    }
+}
+
 impl core::fmt::Display for SSRuntimeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            SSRuntimeError::EmptyData => write!(f, "SSAB data is empty"),
             SSRuntimeError::InvalidVersion { expected, got } => {
-                write!(f, "Invalid SSAB version. expected: {}, got: {}", expected, got)
+                write!(f, "{}. expected: {}, got: {}", self.as_str(), expected, got)
             }
-            SSRuntimeError::AnimationNotFound => write!(f, "Animation not found"),
-            SSRuntimeError::NotLoaded => write!(f, "SSAB data is not loaded"),
-            SSRuntimeError::InvalidParameter => write!(f, "Invalid parameter"),
-            SSRuntimeError::MemoryError => write!(f, "Memory allocation failed"),
-            SSRuntimeError::MalformedEffect => write!(f, "Effect data is malformed"),
-            SSRuntimeError::Unknown => write!(f, "Unknown error occurred"),
+            _ => f.write_str(self.as_str()),
         }
     }
 }

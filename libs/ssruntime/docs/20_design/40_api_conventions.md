@@ -249,7 +249,64 @@ A Player that offers part following — an attachment, a tracker, an anchor — 
 
 ---
 
-## 7. Departing from this document
+## 7. Reporting failure
+
+**Which mechanism reports a failure is the host's. What the report says is not.**
+
+A `false`, a `null`, an exception, a `Result`, an `Option` — each is right in its own language, the same way §2 leaves `findPartIndex`'s miss to the language. What is unified is that the failure is *legible*: the caller can tell what they asked for, what was there instead, and therefore what to write next.
+
+### A lookup may fail quietly. A command may not.
+
+| Shape | On failure |
+|---|---|
+| `find…` — a lookup that can fail | The return value is the whole report |
+| `setAnimation` / `load…` / a `set…Override` — a command that did nothing | Return **and** report |
+
+`findPartIndex` returning `-1` is a complete answer to "is this part here?" — §3 classifies it as a lookup precisely so that the caller is expected to branch on it. `setAnimation` returning `false` is not the same thing. It is a command the caller believed would take effect, and the symptom is a sprite still playing the previous clip, or drawing nothing at all. **A boolean nobody is obliged to read is not a report.**
+
+### The report carries what only it knows
+
+**Required is what the caller cannot get any other way** — the same test that
+decides what the API exposes at all. That is two things, and they are cheap
+because a failing call is already holding both:
+
+| Call | The report names |
+|---|---|
+| `setAnimation` | the pack, and the name it was given |
+| Pack load | the URL / path / asset key it was given, **and the underlying cause, verbatim** |
+| Texture resolution | the file it looked for, and the cellmap it belongs to |
+| `setPartCellOverride` | the pack, and the cellmap and cell it was given |
+| The part-name form of any override | the part name it was given |
+
+The cause on the load row is there because nothing else carries it: a version
+mismatch knows which version was expected and which arrived, and if the report
+drops those numbers they are gone.
+
+**Listing what *would* have worked is not required.** It reads as the obvious
+kindness, and it is where this rule was first written too broadly. `animationNames`,
+`partNames`, `cellmapNames` and `cellNames` are all in §3's required vocabulary —
+a caller who wants the list can already print it, and in a host with an inspector
+it is on screen. Meanwhile a required list costs every Player a truncation policy
+for the pack with two hundred animations. Include one where it is short and
+obviously helpful; do not build one to satisfy this section.
+
+**Name what the caller wrote.** They wrote `"wakl"`; they did not write `0x4f3a21bc`. A name hash is the Brain's identity for a name, not a name — reporting one asks the caller to run a hash by hand to find out which of their own strings is wrong. The same goes for a part index in a report about a call that took a part name, and for a load failure that reports the cause but drops the path it was handed.
+
+### Report once, at one layer
+
+**Once**, because these calls sit on the hot path and **a failing one is not covered by the guard that makes a repeating one cheap.** A state machine may assert its clip every frame; a Player skips that work by comparing against the animation it has set up — and the name that failed never became the one it has set up, so every frame takes the failing branch again. An unguarded log turns one wrong string into a frame-rate-speed flood that buries everything else in the console. Key the guard on the failure rather than on the call site, so that a second wrong name still gets its own line — ForRenPy warns once per `(kind, name)` pair.
+
+**At one layer**, because a Player with an internal player under its public one has two places to write the same line. Report from the layer the host called. The inner one names a type the caller cannot act on.
+
+### Where it goes, and how loudly, is the host's
+
+Godot's Output panel, Unity's Console, the browser console, `FlutterError`, Ren'Py's log. Where the host has a structured error channel the caller opted into — an `onError` prop, a rejected `Future`, a `Result` that must be consumed — that channel is the route, and the log is the backstop for the caller who wired up neither.
+
+The level follows the blast radius. A pack that did not load leaves the Player unable to draw anything: that is an error. A `setAnimation` that did not take leaves it drawing the previous clip: that is a warning.
+
+---
+
+## 8. Departing from this document
 
 There are legitimate reasons to depart — chiefly a head-on collision with the host language's or engine's conventions. When you do, **write the reason next to the code.** A departure with no stated reason is indistinguishable from a mistake to whoever reads it next.
 

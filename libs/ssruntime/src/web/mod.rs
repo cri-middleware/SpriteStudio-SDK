@@ -261,7 +261,10 @@ impl SSRuntimeResource {
         let ssab_data = SsabData::load_copy(data).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let inner = SsabResource::new(ssab_data);
         if inner.resource().is_none() {
-            return Err(JsValue::from_str("Failed to parse SSAB data"));
+            // The reason, not just the fact: a version mismatch names both
+            // versions, which is the whole of what the user needs to act.
+            let reason = inner.parse_error().map_or_else(|| alloc::string::String::from("Failed to parse SSAB data"), |e| alloc::format!("{}", e));
+            return Err(JsValue::from_str(&reason));
         }
         Ok(SSRuntimeResource { inner })
     }
