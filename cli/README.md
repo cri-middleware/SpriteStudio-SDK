@@ -56,7 +56,7 @@ Download a release for **Windows**, **macOS**, or **Linux** from the [GitHub Rel
 
 ## Build from source
 
-Requires a Rust toolchain ([rustup](https://rustup.rs/)), version **1.97 or newer**. From the repository root:
+Requires a Rust toolchain ([rustup](https://rustup.rs/)), version **1.98 or newer**. From the repository root:
 
 ```bash
 $ cargo install --path cli

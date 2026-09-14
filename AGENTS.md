@@ -151,7 +151,7 @@ Those are three steps on purpose. `build-release.sh` is the phase *after* it has
 
 ## Workspace conventions
 
-*   Single Cargo workspace, Rust edition 2024, MSRV 1.97.1.
+*   Single Cargo workspace, Rust edition 2024, MSRV 1.98.
 *   Centralized versioning via `[workspace.package]` in the root `Cargo.toml`; member crates inherit.
 *   Inter-crate deps use `{ workspace = true }` or `{ path = "..." }`.
 *   `cbindgen` generates C/C++ headers for `ssconverter` and `ssruntime`.

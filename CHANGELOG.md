@@ -16,4 +16,4 @@ Entries follow [Conventional Commits](https://www.conventionalcommits.org/); new
 - **Documentation**: Overhauled bilingual (EN/JA) README and contribution guidelines.
 
 ### Updates
-- **Minimum Supported Rust Version**: building from source requires Rust 1.97 or newer.
+- **Minimum Supported Rust Version**: building from source requires Rust 1.98 or newer.
