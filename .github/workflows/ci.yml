@@ -40,8 +40,11 @@ jobs:
         run: cargo fmt --all -- --check
         shell: bash
 
+      # --all-features, like the rustdoc step below: the test modules sit behind
+      # `feature = "std"`, so without it the largest body of code in the
+      # workspace is the one part clippy never sees.
       - name: Clippy (workspace)
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
         shell: bash
 
       # Catches broken intra-doc links, which `cargo test --doc` does not see.

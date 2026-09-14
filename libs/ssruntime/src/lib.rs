@@ -4088,7 +4088,7 @@ mod tests {
             let f = context.update(interval);
             context.get_frame_data(f).expect("frame");
         }
-        assert!(context.instance.part_overrides[idx].as_ref().map_or(true, |o| o.color.is_none()), "NON hands over one-shot after decoding a key");
+        assert!(context.instance.part_overrides[idx].as_ref().is_none_or(|o| o.color.is_none()), "NON hands over one-shot after decoding a key");
 
         // NOW: wins the keyframe every frame regardless of what the animation drives.
         context.set_part_color_override(idx as u32, 0, 0x0102_03FF, 1).expect("set NOW");
@@ -4248,7 +4248,7 @@ mod tests {
             let f = context.update(interval);
             context.get_frame_data(f).expect("frame");
         }
-        assert!(context.instance.part_overrides[cell_part].as_ref().map_or(true, |o| o.cell.is_none()), "cell NON hands over after decoding a key");
+        assert!(context.instance.part_overrides[cell_part].as_ref().is_none_or(|o| o.cell.is_none()), "cell NON hands over after decoding a key");
 
         // NOW: wins the keyframed cell every frame.
         context.set_part_cell_override(cell_part as u32, base_cm, alt, 1).expect("set NOW");
@@ -5490,6 +5490,10 @@ mod tests {
         // `run` took over cleanly and now fades to `dance`; nothing is left at a
         // weight from the abandoned fade.
         let from = ctx.instance.tracks[0].main;
+        // The restart completed the fade in flight instead of abandoning it, so
+        // the track's main is `run` now. Still `walk` would mean the first
+        // crossfade never landed — the bug this test is named for.
+        assert_ne!(from, walk, "the track is still on the source it started from");
         assert_eq!(ctx.source_weight(from), Some(1.0));
         assert_eq!(ctx.track_fade_progress(0), Some(0.0));
         let active: Vec<f32> = ctx.instance.sources.iter().filter(|s| s.animation_idx >= 0).map(|s| s.weight).collect();
@@ -5842,7 +5846,11 @@ mod tests {
         (context, part_index)
     }
 
-    fn nines_buffers(context: &Context<'_>) -> (alloc::vec::Vec<f32>, alloc::vec::Vec<f32>, alloc::vec::Vec<f32>, alloc::vec::Vec<i32>, alloc::vec::Vec<u32>, alloc::vec::Vec<u32>) {
+    /// What `nines_buffers` hands back: vertices, UVs and box coords, then the
+    /// indices and the two per-part offset tables that cut them into parts.
+    type NinesBuffers = (alloc::vec::Vec<f32>, alloc::vec::Vec<f32>, alloc::vec::Vec<f32>, alloc::vec::Vec<i32>, alloc::vec::Vec<u32>, alloc::vec::Vec<u32>);
+
+    fn nines_buffers(context: &Context<'_>) -> NinesBuffers {
         unsafe {
             let f = |p: *const f32, n: usize| ::core::slice::from_raw_parts(p, n).to_vec();
             (
@@ -6014,7 +6022,7 @@ mod tests {
         let (verts, uvs, box_coords, _indices, vertex_offsets, index_offsets) = nines_buffers(&context);
         let (vs, ve) = (vertex_offsets[part_index] as usize, vertex_offsets[part_index + 1] as usize);
         assert_eq!(ve - vs, (quads * 4) as usize);
-        assert_eq!((index_offsets[part_index + 1] - index_offsets[part_index]) as u32, quads * 6);
+        assert_eq!(index_offsets[part_index + 1] - index_offsets[part_index], quads * 6);
 
         // Every repeat stays inside the part's box and inside the cell rect.
         let (rect_left, rect_top) = (cell_meta[part_index * 6 + 4], cell_meta[part_index * 6 + 5]);
