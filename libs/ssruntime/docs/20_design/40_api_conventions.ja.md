@@ -99,6 +99,13 @@ index を渡す形の与え方は言語に任せます。
 | 再生ヘッドの位置（小数） | `frameNo` |
 | 再生ヘッドを動かす | `frameNo`（プロパティ形）/ `seek(frameNo)`（動詞形） |
 | パーツ名の一覧（パーツ index 順） | `partNames` |
+| アニメーションの総フレーム数 | `totalFrames` |
+| 保持する／保持を解く | `pause` / `resume` |
+| その場で再生を終える | `stop` |
+| ホストのトランスフォームを動かさずに描画を反転する | `flipX` / `flipY` |
+| そのフレームのパーツの合成行列 | `partTransform` |
+| そのフレームでパーツが非表示か | `isPartHidden` |
+| パーツがスキンメッシュか | `isPartSkinnedMesh` |
 
 **`animationName` ではなく `currentAnimation`。** 前者は `animationNames` と 1 文字しか
 違わず、しかもこの 2 つはホストが一緒に使う組です（一覧を出してピッカーを作り、どれが
@@ -128,6 +135,42 @@ Brain 自身の名前は `frame_no` です。
 **どちらも Brain の列挙子名をそのまま使います** — `Forward` / `Backward` と `Normal` / `PingPong`。下のオーバーライド優先度と同じ扱いです。大文字小文字と区切りはホストに従いますが、語幹は従いません。`Reverse` は `Backward` の綴り違いではなく 1 つの概念に対する 2 つ目の語で、family のドキュメントを開いている読者はそれを見つけられません。列挙型が 2 つあるということは、接頭辞が要る言語では接頭辞も 2 つということです。`PLAY_*` と `STYLE_*` ではなく `DIRECTION_*` と `STYLE_*` で対にしてください。
 
 オーバーライドの優先度は Brain の列挙子名をそのまま使います。`OverwriteOnNextKeyframe` / `HoldUntilNextAnimation` / `Permanent`。
+
+### モーションブレンディング
+
+トラックスタックの実装は 1 本だけ（`ssplayer-wgpu`）で、**だからこそ**ここに登録します。
+2 本目の Player が自前の名前を書く前に書き留めておくのが、これが無償で済む唯一の瞬間だからです。
+下の語幹は Brain が既に公開している C ABI から採ったもので、ForWgpu の Rust 面も同じ綴りです。
+
+**トラック**は、その下のトラックが作ったポーズの上に畳み込まれます。**ソース**はトラック内で
+ブレンドされる 1 つのアニメーションで、トラックの `main` ソースがその構造を供給します。
+
+| 概念 | 語幹 |
+|---|---|
+| トラックがいくつあるか | `trackCount` |
+| トラックにアニメーションを載せる | `setTrackAnimation` |
+| トラックの main ソース | `trackMainSource` |
+| トラックを空にする | `clearTrack` |
+| 下のポーズにどれだけ畳み込むか | `trackAlpha` |
+| どう畳み込むか（`Mix` / `Additive`） | `trackBlend` |
+| トラックの再生ヘッド | `trackFrame` |
+| トラックの速度 | `trackSpeed` |
+| トラックのアニメーションを差し替えながらフェードする | `crossfade` |
+| トラック自身のアルファをフェードする | `fadeTrack` |
+| 進行中のフェードの進捗 | `trackFadeProgress` |
+| 進行中のフェードを止める | `cancelTrackFade` |
+| トラックに別のアニメーションをブレンドで足す | `trackAddSource` |
+| トラック内でのソースの重み | `sourceWeight` |
+| ソースの再生ヘッド | `sourceFrame` |
+| ソースがイベントを発火しなくなる重みの下限 | `sourceEventThreshold` |
+
+**`crossfade` は `fadeTrack` ではありません。** 前者はトラックが再生している内容を差し替え、
+後者はそのトラックがどれだけ聞こえるかを変えます。片方だけを実装して他方の名前を付けた Player は、
+残りの 1 つを名指す手段を失います。
+
+読みと書きは §3 のとおり語幹を共有します（`trackAlpha` は両方で、ホストが settable を綴る形に従います）。
+`setTrackAnimation` が動詞のままなのは、対になる読みが無いからです。返るのはソースハンドルで、
+それは `trackMainSource` です。
 
 ### 用語
 
