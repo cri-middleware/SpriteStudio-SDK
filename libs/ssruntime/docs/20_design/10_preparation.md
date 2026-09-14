@@ -62,7 +62,7 @@ Many game engines (Unity, Godot, Unreal Engine, and others) have their own resou
     - When using the `Reference` scheme (external texture references), being able to pass the Player the directory path that contains the `.ssab` file makes resolving texture load paths much easier.
 
 # Coordinate-system setup and the "double flip" trap
-You must set the correct flag with `ss_runtime_set_coordinate_system` (Y-Up = `0`, Y-Down = `1`) to match the coordinate system of the target engine (Unity is Y-Up, Godot is Y-Down, and so on).
+You must set the correct flag with `ss_context_set_coordinate_system` (Y-Up = `0`, Y-Down = `1`) to match the coordinate system of the target engine (Unity is Y-Up, Godot is Y-Down, and so on).
 If you overlook the fact that the vertical flip is already applied during local-space vertex computation and flip the Y axis again yourself in the world-matrix computation, you get a "double flip" (double mirror) and the display breaks. Align the engine's specification with the specification of the data provided, and take care that the transform is not applied twice.
 
 # Verification: the build passes

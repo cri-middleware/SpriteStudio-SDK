@@ -14,7 +14,7 @@ Using APIs such as `ss_runtime_get_world_matrices(ctx, &ptr, &len)`, you can ref
 | :--- | :--- | :--- |
 | **World matrices** | `ss_runtime_get_world_matrices` | Each part's final position / rotation / scale (4x4 matrix) |
 | **Local vertices** | `ss_runtime_get_local_vertices` | Vertex coordinates with pivot flipping and so on already applied (5 vertices x 2 axes) |
-| **Texture hashes** | `ss_runtime_get_cell_texture_hashes` | The identifier of the texture on the **cell** side of the part (not what you bind — see §2) |
+| **Texture hashes** | `FrameData.cells[PartState.cell].cellmap_name_hash` | The identifier of the texture on the **cell** side of the part. Read off `FrameData`, not through a C function, and **not what you bind** — see §2 |
 | **UV / cell meta** | `ss_runtime_get_local_uvs`, `cell_meta` | Animated UV coordinates and cell sizes |
 
 ### World matrices can be reflections — do not decompose them naively
@@ -82,7 +82,7 @@ for (auto batch : *batches) {
 
 Whether an override applies is folded into the batch key, so **this loop needs no changes**. Two things to watch, though:
 
-- `ss_runtime_get_cell_texture_hashes` (§1) returns the hash of the **cellmap the cell belongs to** and does not reflect a texture change. Do not use it to decide what to bind; always use `DrawBatch.texture_hash`.
+- The cell-side hash (§1) is the hash of the **cellmap the cell belongs to** and does not reflect a texture change. Do not use it to decide what to bind; always use `DrawBatch.texture_hash`.
 - A texture change or a cell override means **the split points, and the batch count, vary from frame to frame**. Avoid optimizations that assume a fixed batch count.
 
 See [Managing External Resources and Textures](../40_components/70_external_resources.md) for details.

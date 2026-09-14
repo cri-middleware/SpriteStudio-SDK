@@ -37,8 +37,8 @@ See [README.md](./README.md) for the workflow diagram and [ROADMAP.md](./ROADMAP
 
 | Check | Command |
 |---|---|
-| Lint (check) | `cargo clippy --workspace --all-targets -- -D warnings` |
-| Lint (auto-fix) | **After `git add` your edits**: `cargo clippy --workspace --all-targets --fix --allow-staged -- -D warnings` |
+| Lint (check) | `cargo clippy --workspace --all-targets --all-features -- -D warnings` |
+| Lint (auto-fix) | **After `git add` your edits**: `cargo clippy --workspace --all-targets --all-features --fix --allow-staged -- -D warnings` |
 | Format check | `cargo fmt --all -- --check` |
 | Format apply | `cargo fmt` |
 | Tests | `cargo test --workspace --all-features` |
@@ -155,4 +155,4 @@ Those are three steps on purpose. `build-release.sh` is the phase *after* it has
 *   Centralized versioning via `[workspace.package]` in the root `Cargo.toml`; member crates inherit.
 *   Inter-crate deps use `{ workspace = true }` or `{ path = "..." }`.
 *   `cbindgen` generates C/C++ headers for `ssconverter` and `ssruntime`.
-*   CI enforces `cargo fmt --check` and `cargo clippy -D warnings`.
+*   CI enforces `cargo fmt --check` and `cargo clippy -D warnings`. **`--all-features` is load-bearing on the clippy line** — the test modules are behind `feature = "std"`, so without it they are the one body of code nothing lints.

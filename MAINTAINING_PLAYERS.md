@@ -112,4 +112,4 @@ from the first door's line rather than growing a row for it.
 
 ## 5. Departing from this document
 
-The same as [Player API conventions §7](./libs/ssruntime/docs/20_design/40_api_conventions.md#7-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
+The same as [Player API conventions §8](./libs/ssruntime/docs/20_design/40_api_conventions.md#8-departing-from-this-document). Depart when the host's conventions genuinely collide with this one. **Write the reason where the departure is.**
