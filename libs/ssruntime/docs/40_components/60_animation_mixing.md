@@ -100,7 +100,7 @@ no handles to pair up and nothing to clean up afterwards:
 ss_runtime_crossfade(context, 0, "run", 300.0f);   // 300ms, same unit as update()'s delta
 
 ss_runtime_update(context, delta_ms);
-float progress = ss_runtime_track_fade_progress(context, 0);  // 0..1, NaN when not fading
+float progress = ss_runtime_get_track_fade_progress(context, 0);  // 0..1, NaN when not fading
 ```
 
 On completion the incoming animation becomes the track's and the outgoing one is released.
@@ -127,8 +127,8 @@ track and set weights:
 
 ```cpp
 ss_runtime_setup_animation(context, "walk");
-uint32_t walk = ss_runtime_track_main_source(context, 0);
-uint32_t run  = ss_runtime_track_add_source(context, 0, "run", 0.0f);
+uint32_t walk = ss_runtime_get_track_main_source(context, 0);
+uint32_t run  = ss_runtime_add_track_source(context, 0, "run", 0.0f);
 
 // 70% walk, 30% run
 ss_runtime_set_source_weight(context, walk, 0.7f);
@@ -136,7 +136,7 @@ ss_runtime_set_source_weight(context, run, 0.3f);
 ss_runtime_set_source_frame(context, run, 0.0f);
 ```
 
-`ss_runtime_track_main_source` hands you the animation `set_track_animation` (or
+`ss_runtime_get_track_main_source` hands you the animation `set_track_animation` (or
 `setup_animation`) put on the track, which starts at weight 1.
 
 Weights are relative, not absolute: `(0.7, 0.3)` and `(7, 3)` mix identically. Each source
@@ -174,13 +174,13 @@ for (int i = 0; i < n; ++i) {
 | `ss_runtime_set_track_animation(ctx, track, name)` | `bool` | `false` |
 | `ss_runtime_set_track_animation_by_hash(ctx, track, hash)` | `bool` | `false` |
 | `ss_runtime_set_track_alpha(ctx, track, alpha)` | `bool` | `false` |
-| `ss_runtime_track_alpha(ctx, track)` | `float` | `NaN` |
+| `ss_runtime_get_track_alpha(ctx, track)` | `float` | `NaN` |
 | `ss_runtime_set_track_blend(ctx, track, blend)` | `bool` | `false` |
-| `ss_runtime_track_blend(ctx, track)` | `uint32_t` (`0` mix / `1` additive) | `SS_RUNTIME_INVALID_HANDLE` |
-| `ss_runtime_track_count(ctx)` | `uint32_t` | `0` |
+| `ss_runtime_get_track_blend(ctx, track)` | `uint32_t` (`0` mix / `1` additive) | `SS_RUNTIME_INVALID_HANDLE` |
+| `ss_runtime_get_track_count(ctx)` | `uint32_t` | `0` |
 | `ss_runtime_clear_track(ctx, track)` | `bool` | `false` (track 0 is rejected) |
 | `ss_runtime_set_track_frame(ctx, track, frame)` | `bool` | `false` |
-| `ss_runtime_track_frame(ctx, track)` | `float` | `NaN` |
+| `ss_runtime_get_track_frame(ctx, track)` | `float` | `NaN` |
 | `ss_runtime_set_track_speed(ctx, track, speed)` | `bool` | `false` |
 
 ### 7.2 Transitions
@@ -190,22 +190,22 @@ for (int i = 0; i < n; ++i) {
 | `ss_runtime_crossfade(ctx, track, name, duration_ms)` | `bool` | `false` |
 | `ss_runtime_crossfade_by_hash(ctx, track, hash, duration_ms)` | `bool` | `false` |
 | `ss_runtime_fade_track(ctx, track, target_alpha, duration_ms)` | `bool` | `false` |
-| `ss_runtime_track_fade_progress(ctx, track)` | `float` (0-1) | `NaN` (not fading) |
+| `ss_runtime_get_track_fade_progress(ctx, track)` | `float` (0-1) | `NaN` (not fading) |
 | `ss_runtime_cancel_track_fade(ctx, track)` | `bool` | `false` |
 
 ### 7.3 Several sources on one track
 
 | Function | Returns | On error |
 |---|---|---|
-| `ss_runtime_track_main_source(ctx, track)` | `uint32_t` handle | `SS_RUNTIME_INVALID_HANDLE` |
-| `ss_runtime_track_add_source(ctx, track, name, weight)` | `uint32_t` handle | `SS_RUNTIME_INVALID_HANDLE` |
-| `ss_runtime_track_add_source_by_hash(ctx, track, hash, weight)` | `uint32_t` handle | The same |
+| `ss_runtime_get_track_main_source(ctx, track)` | `uint32_t` handle | `SS_RUNTIME_INVALID_HANDLE` |
+| `ss_runtime_add_track_source(ctx, track, name, weight)` | `uint32_t` handle | `SS_RUNTIME_INVALID_HANDLE` |
+| `ss_runtime_add_track_source_by_hash(ctx, track, hash, weight)` | `uint32_t` handle | The same |
 | `ss_runtime_set_source_weight(ctx, handle, weight)` | `bool` | `false` |
-| `ss_runtime_source_weight(ctx, handle)` | `float` | `NaN` |
+| `ss_runtime_get_source_weight(ctx, handle)` | `float` | `NaN` |
 | `ss_runtime_set_source_frame(ctx, handle, frame)` | `bool` | `false` |
-| `ss_runtime_source_frame(ctx, handle)` | `float` | `NaN` |
+| `ss_runtime_get_source_frame(ctx, handle)` | `float` | `NaN` |
 | `ss_runtime_set_source_event_threshold(ctx, handle, threshold)` | `bool` | `false` |
-| `ss_runtime_source_event_threshold(ctx, handle)` | `float` | `NaN` |
+| `ss_runtime_get_source_event_threshold(ctx, handle)` | `float` | `NaN` |
 
 Error codes come from `ss_runtime_get_last_error(ctx)`. The `NaN` sentinel exists so a valid
 `0.0` stays distinguishable from "no such track/source" — test with `isnan` / `isnanf` in C,
@@ -224,9 +224,9 @@ ctx.set_track_blend(1, 1);          // 1 = additive
 ctx.set_track_alpha(1, 0.4);
 
 ctx.crossfade(0, "run", 300.0);
-const progress = ctx.track_fade_progress(0);   // number | undefined
+const progress = ctx.get_track_fade_progress(0);   // number | undefined
 
-const run = ctx.track_add_source(0, "run", 0.3);
+const run = ctx.add_track_source(0, "run", 0.3);
 ctx.set_source_weight(run, 0.5);
 ```
 

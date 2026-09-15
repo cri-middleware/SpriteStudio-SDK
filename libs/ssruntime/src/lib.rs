@@ -37,7 +37,7 @@
 //! let mut ctx = Context::new();
 //! ctx.bind_resource(&resource);
 //! ctx.setup_animation("Wait")?;
-//! ctx.set_loop(-1); // -1 = loop forever
+//! ctx.set_loop_count(-1); // -1 = loop forever
 //! ctx.play();
 //!
 //! // 3. Each tick: advance time, then ask for that frame's data.
@@ -756,6 +756,10 @@ impl GlobalBuffers {
 struct EvaluationContext<'a> {
     resource: Option<&'a AnimationResource<'a>>,
     fb: flatbuffers::FlatBufferBuilder<'a>,
+    /// Whether `fb` currently holds a finished frame-data buffer. Guards the
+    /// zero-copy accessors: `finished_data()` asserts on an unfinished builder,
+    /// and `panic = "abort"` makes that assert fatal.
+    frame_data_ready: bool,
 
     // Workspace buffers to avoid per-frame allocations
     draw_order_workspace: Vec<u16>,
@@ -779,6 +783,7 @@ impl<'a> EvaluationContext<'a> {
         Self {
             resource: None,
             fb: flatbuffers::FlatBufferBuilder::new(),
+            frame_data_ready: false,
             draw_order_workspace: Vec::new(),
             batches_workspace: Vec::new(),
             mask_indices_workspace: Vec::new(),
@@ -1454,6 +1459,7 @@ impl<'a> Context<'a> {
     pub fn reset(&mut self) {
         self.eval.resource = None;
         self.eval.fb.reset();
+        self.eval.frame_data_ready = false;
         self.instance.collapse_to_track_zero();
         // A teardown, not an animation change: the host's playback policy goes
         // with it, which `collapse_to_track_zero` alone would have carried over.
@@ -1479,6 +1485,7 @@ impl<'a> Context<'a> {
     pub fn bind_resource(&mut self, resource: &'a AnimationResource<'a>) {
         self.eval.resource = Some(resource);
         self.eval.fb.reset();
+        self.eval.frame_data_ready = false;
         self.instance.collapse_to_track_zero();
         self.instance.layers[0].cursors.clear();
         self.instance.resolved_layer.cursors.clear();
@@ -1734,7 +1741,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn track_alpha(&self, track: u32) -> Option<f32> {
+    pub fn get_track_alpha(&self, track: u32) -> Option<f32> {
         self.instance.tracks.get(track as usize).map(|t| t.alpha)
     }
 
@@ -1748,12 +1755,12 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn track_blend(&self, track: u32) -> Option<TrackBlend> {
+    pub fn get_track_blend(&self, track: u32) -> Option<TrackBlend> {
         self.instance.tracks.get(track as usize).map(|t| t.blend)
     }
 
     /// Number of tracks that exist, including silent ones. Always at least 1.
-    pub fn track_count(&self) -> u32 {
+    pub fn get_track_count(&self) -> u32 {
         self.instance.tracks.len() as u32
     }
 
@@ -1827,7 +1834,7 @@ impl<'a> Context<'a> {
 
     /// Progress of the fade in flight on `track`, in `[0.0, 1.0]`; `None` when the
     /// track is not fading.
-    pub fn track_fade_progress(&self, track: u32) -> Option<f32> {
+    pub fn get_track_fade_progress(&self, track: u32) -> Option<f32> {
         self.instance.tracks.get(track as usize)?.fade.as_ref().map(TrackFade::progress)
     }
 
@@ -1847,7 +1854,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn track_frame(&self, track: u32) -> Option<f32> {
+    pub fn get_track_frame(&self, track: u32) -> Option<f32> {
         let handle = self.instance.tracks.get(track as usize)?.main;
         let source = self.instance.sources.get(handle as usize)?;
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
@@ -1855,14 +1862,14 @@ impl<'a> Context<'a> {
 
     pub fn set_track_speed(&mut self, track: u32, speed: f32) -> Result<(), error::SSRuntimeError> {
         let handle = self.track_main(track)?;
-        self.instance.sources[handle as usize].controller.set_animation_speed(speed);
+        self.instance.sources[handle as usize].controller.set_speed_scale(speed);
         Ok(())
     }
 
     /// Handle of the source carrying `track`'s animation. Needed to give that
     /// animation a weight of its own once a track holds several — the animation
     /// put there by `set_track_animation` starts at weight 1.
-    pub fn track_main_source(&self, track: u32) -> Option<u32> {
+    pub fn get_track_main_source(&self, track: u32) -> Option<u32> {
         let main = self.instance.tracks.get(track as usize)?.main;
         (main != NO_SOURCE).then_some(main)
     }
@@ -1873,16 +1880,16 @@ impl<'a> Context<'a> {
     ///
     /// Most tracks never need this — one animation plus the track's `alpha`
     /// covers layering, and `crossfade` covers transitions.
-    pub fn track_add_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, error::SSRuntimeError> {
-        self.track_add_source_by_hash(track, fnv1a_hash_str(name), weight)
+    pub fn add_track_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, error::SSRuntimeError> {
+        self.add_track_source_by_hash(track, fnv1a_hash_str(name), weight)
     }
 
-    pub fn track_add_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
+    pub fn add_track_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, error::SSRuntimeError> {
         let index = self.resolve_animation(hash)?;
         self.ensure_track(track)?;
         let handle = self.attach_source(track, index, weight)?;
         // The first animation to land on a track becomes its main one, so callers
-        // may build a track entirely out of `track_add_source` calls.
+        // may build a track entirely out of `add_track_source` calls.
         if self.instance.tracks[track as usize].main == NO_SOURCE {
             self.replace_track_main(track, handle);
         }
@@ -1900,7 +1907,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn source_weight(&self, handle: u32) -> Option<f32> {
+    pub fn get_source_weight(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
         (source.animation_idx >= 0).then_some(source.weight)
     }
@@ -1914,7 +1921,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn source_frame(&self, handle: u32) -> Option<f32> {
+    pub fn get_source_frame(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
         (source.animation_idx >= 0).then(|| source.controller.get_frame_no())
     }
@@ -1933,7 +1940,7 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    pub fn source_event_threshold(&self, handle: u32) -> Option<f32> {
+    pub fn get_source_event_threshold(&self, handle: u32) -> Option<f32> {
         let source = self.instance.sources.get(handle as usize)?;
         source.has_real_animation().then_some(source.event_threshold)
     }
@@ -2070,6 +2077,7 @@ impl<'a> Context<'a> {
         }
 
         self.eval.fb.reset();
+        self.eval.frame_data_ready = false;
 
         let coordinate_system = self.instance.coordinate_system;
         let origin = self.instance.origin;
@@ -2207,6 +2215,7 @@ impl<'a> Context<'a> {
         Self::resolve_global_state(&mut self.instance, primary_metadata);
 
         self.eval.fb.finish_minimal(offset);
+        self.eval.frame_data_ready = true;
         Ok(self.eval.fb.finished_data())
     }
 
@@ -2573,8 +2582,30 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.is_finished()
     }
 
-    pub fn is_looped(&self) -> bool {
-        self.instance.primary_source().controller.is_looped()
+    pub fn just_looped(&self) -> bool {
+        self.instance.primary_source().controller.just_looped()
+    }
+
+    /// Pointer to the frame data built by the last [`get_frame_data`] call,
+    /// without re-evaluating it. Null until the first call, and again after
+    /// `reset` / `bind_resource`; valid until the next `get_frame_data`.
+    ///
+    /// [`get_frame_data`]: Self::get_frame_data
+    pub fn get_frame_data_ptr(&self) -> *const u8 {
+        if !self.eval.frame_data_ready {
+            return ::core::ptr::null();
+        }
+        self.eval.fb.finished_data().as_ptr()
+    }
+
+    /// Byte length of the buffer [`get_frame_data_ptr`] points at.
+    ///
+    /// [`get_frame_data_ptr`]: Self::get_frame_data_ptr
+    pub fn get_frame_data_len(&self) -> usize {
+        if !self.eval.frame_data_ready {
+            return 0;
+        }
+        self.eval.fb.finished_data().len()
     }
 
     pub fn get_world_matrices_ptr(&self) -> *const f32 {
@@ -2754,12 +2785,12 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.get_playback_style()
     }
 
-    pub fn get_loops(&self) -> i32 {
-        self.instance.primary_source().controller.get_loops()
+    pub fn get_loop_count(&self) -> i32 {
+        self.instance.primary_source().controller.get_loop_count()
     }
 
-    pub fn get_remain_loops(&self) -> i32 {
-        self.instance.primary_source().controller.get_remain_loops()
+    pub fn get_remaining_loops(&self) -> i32 {
+        self.instance.primary_source().controller.get_remaining_loops()
     }
 
     pub fn get_start_frame(&self) -> i32 {
@@ -2778,12 +2809,12 @@ impl<'a> Context<'a> {
         self.instance.primary_source().controller.get_anime_data_end_frame()
     }
 
-    pub fn get_fps(&self) -> i32 {
-        self.instance.primary_source().controller.get_fps()
+    pub fn get_frame_rate(&self) -> i32 {
+        self.instance.primary_source().controller.get_frame_rate()
     }
 
-    pub fn get_animation_speed(&self) -> f32 {
-        self.instance.primary_source().controller.get_animation_speed()
+    pub fn get_speed_scale(&self) -> f32 {
+        self.instance.primary_source().controller.get_speed_scale()
     }
 
     // Playback setup
@@ -2792,20 +2823,20 @@ impl<'a> Context<'a> {
         self.instance.primary_source_mut().controller.set_skip_frames(skip);
     }
 
-    pub fn set_loop(&mut self, loops: i32) {
-        self.instance.primary_source_mut().controller.set_loops(loops);
+    pub fn set_loop_count(&mut self, loop_count: i32) {
+        self.instance.primary_source_mut().controller.set_loop_count(loop_count);
     }
 
-    pub fn set_frame_rate(&mut self, fps: i32) {
-        self.instance.primary_source_mut().controller.set_frame_rate(fps);
+    pub fn set_frame_rate(&mut self, frame_rate: i32) {
+        self.instance.primary_source_mut().controller.set_frame_rate(frame_rate);
     }
 
     pub fn set_playback_direction(&mut self, direction: core::playback_controller::PlaybackDirection, style: core::playback_controller::PlaybackStyle) {
         self.instance.primary_source_mut().controller.set_playback_direction(direction, style);
     }
 
-    pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.instance.primary_source_mut().controller.set_animation_speed(speed_rate);
+    pub fn set_speed_scale(&mut self, speed_scale: f32) {
+        self.instance.primary_source_mut().controller.set_speed_scale(speed_scale);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
@@ -2970,7 +3001,7 @@ impl<'a> Context<'a> {
 
     /// Parallel to [`Self::get_passed_event_indices`]: source handle that fired
     /// each collected event. With every source at the default event threshold
-    /// (`1.0`), entries are uniformly [`Self::track_main_source`] of track 0.
+    /// (`1.0`), entries are uniformly [`Self::get_track_main_source`] of track 0.
     /// Diverges once secondaries opt-in to event firing via
     /// [`Self::set_source_event_threshold`].
     pub fn get_passed_event_source_handles(&self) -> &[u32] {
@@ -3726,7 +3757,7 @@ impl InstanceSlot {
             let style = if ev.pingpong { crate::core::playback_controller::PlaybackStyle::PingPong } else { crate::core::playback_controller::PlaybackStyle::Normal };
             child_ctx.set_playback_direction(dir, style);
             child_ctx.set_animation_section(start_frame, end_frame);
-            child_ctx.set_loop(ev.loop_num);
+            child_ctx.set_loop_count(ev.loop_num);
 
             self.last_event_frame = ev.event_frame;
             self.last_is_synthetic = ev.is_synthetic_default;
@@ -3761,7 +3792,7 @@ impl InstanceSlot {
         // instance/effect slots, so it re-arms the grandchildren's playback keys:
         // an independent child runs on its own clock, making its loop — not the
         // parent animation's — the edge they must re-fire on.
-        let child_looped = independent && delta_seconds > 0.0 && !transitioned && child_ctx.is_looped();
+        let child_looped = independent && delta_seconds > 0.0 && !transitioned && child_ctx.just_looped();
 
         self.last_independent = independent;
 
@@ -3798,6 +3829,42 @@ mod tests {
                 let _ = ssconverter::convert_sspj_to_ssab_files(sspj.as_path(), &config, &|_msg: &str| {});
             });
         });
+    }
+
+    /// The zero-copy pair reports the frame the last `get_frame_data` built, and
+    /// reports nothing when there is not one. Without the guard the accessors
+    /// would read an unfinished `FlatBufferBuilder`, which asserts — and under
+    /// `panic = "abort"` that assert ends the host process.
+    #[test]
+    fn the_frame_data_accessors_never_read_an_unfinished_buffer() {
+        prepare();
+        let ssab_path = get_test_base_path().join("tests/Ringo/Ringo/Ringo.ssab");
+        let input_buf = std::fs::read(&ssab_path).expect("Failed to read Ringo.ssab");
+        let ssab_data = SsabData::load_copy(&input_buf).expect("Failed to load SsabData");
+        let resource = AnimationResource::new(ssab_data.as_slice()).expect("Failed to load resource");
+
+        let mut context = Context::new();
+        assert!(context.get_frame_data_ptr().is_null(), "nothing has been built yet");
+        assert_eq!(context.get_frame_data_len(), 0);
+
+        context.bind_resource(&resource);
+        let names = resource.get_animation_names();
+        context.setup_animation(&names[0]).expect("Failed to setup animation");
+        assert!(context.get_frame_data_ptr().is_null(), "binding a resource does not build a frame");
+
+        let (built_ptr, built_len) = {
+            let frame = context.get_frame_data(0.0).expect("Failed to build frame 0");
+            (frame.as_ptr(), frame.len())
+        };
+        assert!(built_len > 0, "fixture sanity: frame 0 of Ringo is not empty");
+        assert_eq!(context.get_frame_data_ptr(), built_ptr, "the accessor must report the buffer just built");
+        assert_eq!(context.get_frame_data_len(), built_len);
+
+        // A teardown resets the builder, so there is no finished buffer to hand
+        // out any more -- and the accessors have to say so rather than read it.
+        context.reset();
+        assert!(context.get_frame_data_ptr().is_null(), "reset drops the built frame");
+        assert_eq!(context.get_frame_data_len(), 0);
     }
 
     #[test]
@@ -4079,7 +4146,7 @@ mod tests {
         part_color_lt(&context, idx).expect("keyframed color present at frame 0");
         assert!(context.instance.resolved_layer.parts_vec[idx].update_flag().contains(crate::runtime::framedata::ss::runtime::UpdateAttributeFlags::AttributePartColor));
 
-        let interval = 1000.0 / context.get_fps().max(1) as f32;
+        let interval = 1000.0 / context.get_frame_rate().max(1) as f32;
         context.play();
 
         // NON set right after play(): the first update sits on frame 0 (its own
@@ -4237,7 +4304,7 @@ mod tests {
             return; // single-cell cellmap — nothing distinct to prove priority with
         };
 
-        let interval = 1000.0 / context.get_fps().max(1) as f32;
+        let interval = 1000.0 / context.get_frame_rate().max(1) as f32;
         context.play();
 
         // NON set right after play(): the first update sits on the frame-0 cell
@@ -4366,22 +4433,22 @@ mod tests {
         context.bind_resource(&resource);
         context.setup_animation(&names[0]).expect("Failed to setup animation");
 
-        let authored_fps = context.get_fps();
-        context.set_animation_speed(2.0);
+        let authored_fps = context.get_frame_rate();
+        context.set_speed_scale(2.0);
         context.set_skip_frames(false);
         context.set_playback_direction(core::playback_controller::PlaybackDirection::Backward, core::playback_controller::PlaybackStyle::PingPong);
         context.set_frame_rate(authored_fps + 17);
-        context.set_loop(3);
+        context.set_loop_count(3);
 
         // A transition to another clip in the same pack.
         context.setup_animation(&names[1]).expect("Failed to setup the second animation");
 
         assert!(!context.get_skip_frames(), "frame skip is the host's, and must survive the transition");
-        assert_eq!(context.get_fps(), authored_fps + 17, "the frame-rate override must survive the transition");
-        assert_eq!(context.get_animation_speed(), 2.0, "the speed is the host's, and must survive the transition");
+        assert_eq!(context.get_frame_rate(), authored_fps + 17, "the frame-rate override must survive the transition");
+        assert_eq!(context.get_speed_scale(), 2.0, "the speed is the host's, and must survive the transition");
         assert!(context.get_playback_direction() == core::playback_controller::PlaybackDirection::Backward, "the playback direction is the host's, and must survive the transition");
         assert!(context.get_playback_style() == core::playback_controller::PlaybackStyle::PingPong, "so is the ping-pong style");
-        assert_eq!(context.get_loops(), -1, "the loop count is per-transition and must reset");
+        assert_eq!(context.get_loop_count(), -1, "the loop count is per-transition and must reset");
 
         // Frame skip survived as `false`, which means fixed stepping: exactly one
         // frame per update, however much time is handed over. Measured as a
@@ -5353,7 +5420,7 @@ mod tests {
     }
 
     /// Two sources on one track blend by weight, exactly as they did before the
-    /// stack existed — `track_add_source` is the locomotion path.
+    /// stack existed — `add_track_source` is the locomotion path.
     #[test]
     fn two_sources_on_one_track_blend_by_weight() {
         let ssab = load_ringo_resource();
@@ -5362,7 +5429,7 @@ mod tests {
         let run = evaluate_ringo(&resource, "run");
 
         let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
-        let handle = ctx.track_add_source(0, "run", 1.0).expect("track_add_source(run)");
+        let handle = ctx.add_track_source(0, "run", 1.0).expect("track_add_source(run)");
         let run_start = ctx.instance.sources[handle as usize].controller.get_start_frame();
         ctx.set_source_frame(handle, run_start as f32).unwrap();
         ctx.get_frame_data(walk_start).expect("get_frame_data");
@@ -5386,7 +5453,7 @@ mod tests {
         let walk_only = evaluate_ringo(&resource, "walk");
 
         let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
-        ctx.track_add_source(0, "run", 0.0).unwrap();
+        ctx.add_track_source(0, "run", 0.0).unwrap();
         ctx.get_frame_data(walk_start).expect("get_frame_data");
         assert_eq!(walk_only, resolved_of(&ctx));
     }
@@ -5401,7 +5468,7 @@ mod tests {
 
         let (mut ctx, walk_start) = ringo_ctx(&resource, "walk");
         ctx.set_track_animation(1, "run").unwrap();
-        ctx.set_track_frame(1, ctx.track_frame(1).unwrap()).unwrap();
+        ctx.set_track_frame(1, ctx.get_track_frame(1).unwrap()).unwrap();
 
         ctx.set_track_alpha(1, 0.0).unwrap();
         ctx.get_frame_data(walk_start).expect("get_frame_data");
@@ -5440,19 +5507,19 @@ mod tests {
         let walk = ctx.instance.tracks[0].main;
 
         ctx.crossfade(0, "run", 1000.0).unwrap();
-        assert_eq!(ctx.track_fade_progress(0), Some(0.0));
-        assert_eq!(ctx.source_weight(walk), Some(1.0));
+        assert_eq!(ctx.get_track_fade_progress(0), Some(0.0));
+        assert_eq!(ctx.get_source_weight(walk), Some(1.0));
 
         ctx.update(500.0);
-        let p = ctx.track_fade_progress(0).unwrap();
+        let p = ctx.get_track_fade_progress(0).unwrap();
         assert!((p - 0.5).abs() < 1e-3, "progress {p}");
-        assert!((ctx.source_weight(walk).unwrap() - 0.5).abs() < 1e-3);
+        assert!((ctx.get_source_weight(walk).unwrap() - 0.5).abs() < 1e-3);
 
         ctx.update(600.0);
         // The incoming animation now owns the track and the old slot is free.
-        assert!(ctx.track_fade_progress(0).is_none());
+        assert!(ctx.get_track_fade_progress(0).is_none());
         assert_ne!(ctx.instance.tracks[0].main, walk);
-        assert!(ctx.source_weight(walk).is_none(), "the outgoing source is released");
+        assert!(ctx.get_source_weight(walk).is_none(), "the outgoing source is released");
         assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main, "track 0 still carries the structure");
     }
 
@@ -5467,7 +5534,7 @@ mod tests {
         let ssab = load_ringo_resource();
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "wait1");
-        ctx.set_loop(-1);
+        ctx.set_loop_count(-1);
         ctx.play();
 
         // Get well past `attack1`'s last frame before handing the track over.
@@ -5482,7 +5549,7 @@ mod tests {
             let frame = ctx.update(1000.0 / 60.0);
             ctx.get_frame_data(frame).unwrap_or_else(|e| panic!("tick {tick}: get_frame_data({frame}) failed: {e:?}"));
         }
-        assert!(ctx.track_fade_progress(0).is_none(), "the crossfade should have completed");
+        assert!(ctx.get_track_fade_progress(0).is_none(), "the crossfade should have completed");
     }
 
     /// Restarting a crossfade completes the one in flight rather than layering a
@@ -5505,8 +5572,8 @@ mod tests {
         // the track's main is `run` now. Still `walk` would mean the first
         // crossfade never landed — the bug this test is named for.
         assert_ne!(from, walk, "the track is still on the source it started from");
-        assert_eq!(ctx.source_weight(from), Some(1.0));
-        assert_eq!(ctx.track_fade_progress(0), Some(0.0));
+        assert_eq!(ctx.get_source_weight(from), Some(1.0));
+        assert_eq!(ctx.get_track_fade_progress(0), Some(0.0));
         let active: Vec<f32> = ctx.instance.sources.iter().filter(|s| s.animation_idx >= 0).map(|s| s.weight).collect();
         assert_eq!(active.len(), 2, "only the outgoing and incoming animations remain");
     }
@@ -5518,9 +5585,9 @@ mod tests {
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
         ctx.crossfade(1, "run", 500.0).unwrap();
-        assert!(ctx.track_fade_progress(1).is_none(), "nothing to fade from");
-        assert_eq!(ctx.track_alpha(1), Some(1.0));
-        assert!(ctx.track_frame(1).is_some());
+        assert!(ctx.get_track_fade_progress(1).is_none(), "nothing to fade from");
+        assert_eq!(ctx.get_track_alpha(1), Some(1.0));
+        assert!(ctx.get_track_frame(1).is_some());
     }
 
     #[test]
@@ -5531,12 +5598,12 @@ mod tests {
 
         ctx.fade_track(0, 0.0, 400.0).unwrap();
         ctx.update(200.0);
-        let a = ctx.track_alpha(0).unwrap();
+        let a = ctx.get_track_alpha(0).unwrap();
         assert!((a - 0.5).abs() < 1e-3, "alpha {a}");
 
         ctx.update(300.0);
-        assert_eq!(ctx.track_alpha(0), Some(0.0));
-        assert!(ctx.track_fade_progress(0).is_none());
+        assert_eq!(ctx.get_track_alpha(0), Some(0.0));
+        assert!(ctx.get_track_fade_progress(0).is_none());
     }
 
     #[test]
@@ -5548,12 +5615,12 @@ mod tests {
 
         ctx.crossfade(0, "run", 1000.0).unwrap();
         ctx.update(250.0);
-        let held = ctx.source_weight(walk).unwrap();
+        let held = ctx.get_source_weight(walk).unwrap();
         ctx.cancel_track_fade(0).unwrap();
         ctx.update(500.0);
 
-        assert!(ctx.track_fade_progress(0).is_none());
-        assert_eq!(ctx.source_weight(walk), Some(held), "weights freeze where the fade stopped");
+        assert!(ctx.get_track_fade_progress(0).is_none());
+        assert_eq!(ctx.get_source_weight(walk), Some(held), "weights freeze where the fade stopped");
     }
 
     #[test]
@@ -5562,10 +5629,10 @@ mod tests {
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
-        let extra = ctx.track_add_source(0, "run", 1.0).unwrap();
+        let extra = ctx.add_track_source(0, "run", 1.0).unwrap();
         ctx.set_track_animation(0, "dance").unwrap();
 
-        assert!(ctx.source_weight(extra).is_none(), "the replaced animation's extra sources go with it");
+        assert!(ctx.get_source_weight(extra).is_none(), "the replaced animation's extra sources go with it");
         assert_eq!(ctx.instance.primary, ctx.instance.tracks[0].main);
     }
 
@@ -5592,11 +5659,11 @@ mod tests {
 
         ctx.set_track_animation(2, "run").unwrap();
         ctx.set_track_alpha(2, 0.4).unwrap();
-        assert_eq!(ctx.track_count(), 3);
+        assert_eq!(ctx.get_track_count(), 3);
 
         ctx.setup_animation("dance").unwrap();
-        assert_eq!(ctx.track_count(), 1, "a new setup starts from one track again");
-        assert_eq!(ctx.track_alpha(0), Some(1.0));
+        assert_eq!(ctx.get_track_count(), 1, "a new setup starts from one track again");
+        assert_eq!(ctx.get_track_alpha(0), Some(1.0));
         assert_eq!(ctx.instance.primary, 0);
     }
 
@@ -5615,11 +5682,11 @@ mod tests {
 
         // Tracks that do not exist, and out-of-range handles.
         assert!(matches!(ctx.set_track_alpha(9, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(ctx.track_alpha(9).is_none());
+        assert!(ctx.get_track_alpha(9).is_none());
         assert!(matches!(ctx.set_track_frame(9, 0.0), Err(error::SSRuntimeError::InvalidParameter)));
         assert!(matches!(ctx.set_source_weight(99, 1.0), Err(error::SSRuntimeError::InvalidParameter)));
-        assert!(ctx.source_weight(99).is_none());
-        assert!(ctx.source_frame(99).is_none());
+        assert!(ctx.get_source_weight(99).is_none());
+        assert!(ctx.get_source_frame(99).is_none());
 
         // NaN alpha would poison every attribute the track touches.
         assert!(matches!(ctx.set_track_alpha(0, f32::NAN), Err(error::SSRuntimeError::InvalidParameter)));
@@ -5647,7 +5714,7 @@ mod tests {
         ctx.set_track_animation(1, "run").unwrap();
 
         ctx.bind_resource(&resource);
-        assert_eq!(ctx.track_count(), 1);
+        assert_eq!(ctx.get_track_count(), 1);
         assert_eq!(ctx.instance.primary, 0);
     }
 
@@ -5659,10 +5726,10 @@ mod tests {
         let resource = AnimationResource::new(ssab.as_slice()).expect("Failed to load resource");
         let (mut ctx, _) = ringo_ctx(&resource, "walk");
 
-        let handle = ctx.track_add_source(0, "run", 1.0).unwrap();
-        assert_eq!(ctx.source_event_threshold(handle), Some(1.0), "default keeps secondaries quiet");
+        let handle = ctx.add_track_source(0, "run", 1.0).unwrap();
+        assert_eq!(ctx.get_source_event_threshold(handle), Some(1.0), "default keeps secondaries quiet");
         ctx.set_source_event_threshold(handle, 0.5).unwrap();
-        assert_eq!(ctx.source_event_threshold(handle), Some(0.5));
+        assert_eq!(ctx.get_source_event_threshold(handle), Some(0.5));
         assert!(matches!(ctx.set_source_event_threshold(99, 0.5), Err(error::SSRuntimeError::InvalidParameter)));
     }
 
@@ -5697,11 +5764,11 @@ mod tests {
         ctx.set_track_animation(1, "run").unwrap();
 
         ctx.set_track_frame(1, 3.0).unwrap();
-        assert_eq!(ctx.track_frame(1), Some(3.0));
+        assert_eq!(ctx.get_track_frame(1), Some(3.0));
 
         ctx.set_track_speed(1, 0.0).unwrap();
         ctx.update(1000.0);
-        assert_eq!(ctx.track_frame(1), Some(3.0), "speed 0 parks the track");
+        assert_eq!(ctx.get_track_frame(1), Some(3.0), "speed 0 parks the track");
     }
 
     #[test]
@@ -5737,7 +5804,7 @@ mod tests {
         child_ctx.setup_animation("walk").unwrap();
 
         let mut slot = InstanceSlot::new();
-        let delta = 1.0 / child_ctx.get_fps() as f32;
+        let delta = 1.0 / child_ctx.get_frame_rate() as f32;
 
         // Transition tick: the slot configures the child, the host plays it.
         let r = slot.step(ev, &mut child_ctx, 0.0, 0.0, false);
@@ -5827,7 +5894,7 @@ mod tests {
         child_ctx.setup_animation("walk").unwrap();
 
         let mut slot = InstanceSlot::new();
-        let delta = 1.0 / child_ctx.get_fps() as f32;
+        let delta = 1.0 / child_ctx.get_frame_rate() as f32;
         let cycle = (child_ctx.get_end_frame() - child_ctx.get_start_frame() + 1) as usize;
 
         let ev = crate::types::ss_event_instance_info { event_frame: 0, loop_num: 1, speed: 1.0, independent: true, is_synthetic_default: false, ..Default::default() };

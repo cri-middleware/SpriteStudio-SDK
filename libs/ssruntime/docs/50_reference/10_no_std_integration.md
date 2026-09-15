@@ -78,7 +78,16 @@ void my_log_callback(int level, const char* message) {
 ss_runtime_set_log_callback(my_log_callback);
 ```
 
-With this, messages are forwarded to the host (C/C++ or C#) whenever a parse error or warning occurs inside Rust.
+`level` is one of `SS_RUNTIME_LOG_ERROR` (1), `SS_RUNTIME_LOG_WARN` (2) or
+`SS_RUNTIME_LOG_INFO` (3). Only `ERROR` is emitted today; the other two are
+reserved so that a `switch` written now does not go stale.
+
+Every C-API call that records a failure also emits one `ERROR` line, prefixed
+with the entry point that failed (`ss_runtime_setup_animation: Animation not
+found`). That is the same failure `ss_runtime_get_last_error` reports — the
+log is for the caller that does not check a return value, not a second source of
+truth. There is no cost when no callback is registered: the message is not
+formatted at all.
 
 ---
 

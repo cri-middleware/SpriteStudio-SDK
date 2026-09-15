@@ -65,13 +65,14 @@ use alloc::sync::Arc;
 use core::ffi::{CStr, c_char, c_float, c_int, c_uchar, c_void};
 use core::sync::atomic::{AtomicPtr, Ordering};
 
-// Placeholder for eprintln! in no_std
-#[allow(unused_macros)]
-macro_rules! eprintln {
-    ($($arg:tt)*) => {
-        $crate::ffi::ss_log!(3, $($arg)*)
-    };
-}
+/// Severity passed to [`SsLogCallback`]. The runtime only ever emits `ERROR`
+/// today; `WARN` and `INFO` are reserved so a host can switch on the level
+/// without its arms going stale when the runtime starts using them.
+pub const SS_RUNTIME_LOG_ERROR: c_int = 1;
+/// See [`SS_RUNTIME_LOG_ERROR`].
+pub const SS_RUNTIME_LOG_WARN: c_int = 2;
+/// See [`SS_RUNTIME_LOG_ERROR`].
+pub const SS_RUNTIME_LOG_INFO: c_int = 3;
 
 pub type SsLogCallback = extern "C" fn(level: core::ffi::c_int, message: *const core::ffi::c_char);
 #[doc(hidden)]
@@ -84,17 +85,19 @@ pub extern "C" fn ss_runtime_set_log_callback(callback: SsLogCallback) {
 
 #[macro_export]
 macro_rules! ss_log {
-    ($level:expr, $($arg:tt)*) => {
-        unsafe {
-            let cb_ptr = $crate::ffi::LOG_CALLBACK.load(::core::sync::atomic::Ordering::Relaxed);
-            if !cb_ptr.is_null() {
-                let cb: $crate::ffi::SsLogCallback = ::core::mem::transmute(cb_ptr);
-                if let Ok(s) = ::alloc::ffi::CString::new(::alloc::format!($($arg)*)) {
-                    cb($level, s.as_ptr());
-                }
-            }
+    ($level:expr, $($arg:tt)*) => {{
+        let cb_ptr = $crate::ffi::LOG_CALLBACK.load(::core::sync::atomic::Ordering::Relaxed);
+        // Nothing is formatted while no callback is registered, so an unwatched
+        // build pays one relaxed load per failure and no allocation.
+        if !cb_ptr.is_null()
+            && let Ok(message) = ::alloc::ffi::CString::new(::alloc::format!($($arg)*))
+        {
+            // Safety: `LOG_CALLBACK` only ever holds what
+            // `ss_runtime_set_log_callback` stored, which is this type.
+            let cb: $crate::ffi::SsLogCallback = unsafe { ::core::mem::transmute(cb_ptr) };
+            cb($level, message.as_ptr());
         }
-    };
+    }};
 }
 
 use crate::SsabResource;
@@ -109,6 +112,17 @@ pub struct FfiContext {
     /// wasm face, both of which format it.
     pub last_error: Option<crate::error::SSRuntimeError>,
 }
+impl FfiContext {
+    /// Record a failure on both faces: [`ss_runtime_get_last_error`] for the
+    /// caller that checks the return value, and the log callback for the one
+    /// that does not. `api` names the entry point, because the error text
+    /// alone ("Animation not found") does not say which call produced it.
+    fn fail(&mut self, api: &str, err: crate::error::SSRuntimeError) {
+        ss_log!(SS_RUNTIME_LOG_ERROR, "{}: {}", api, err);
+        self.last_error = Some(err);
+    }
+}
+
 impl Default for FfiContext {
     fn default() -> Self {
         Self::new()
@@ -302,7 +316,7 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
     };
     ffi_context.last_error = None;
     if resource.is_null() {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_bind_resource", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
 
@@ -318,7 +332,7 @@ pub extern "C" fn ss_runtime_bind_resource(context: *mut c_void, resource: *mut 
     if res_ptr.is_null() {
         // The resource handle is live but carries no parsed animations — the
         // bytes behind it were not a readable SSAB.
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::EmptyData);
+        ffi_context.fail("ss_runtime_bind_resource", crate::error::SSRuntimeError::EmptyData);
         return false;
     }
     ffi_context.bound_resource = Some(arc_clone);
@@ -338,7 +352,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
     };
     ffi_context.last_error = None;
     if ptr.is_null() {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_load_ssab_copy", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
 
@@ -351,7 +365,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
             let res_ptr = match create_ffi_resource(ssab_data) {
                 Ok(p) => p,
                 Err(e) => {
-                    ffi_context.last_error = Some(e);
+                    ffi_context.fail("ss_runtime_load_ssab_copy", e);
                     return false;
                 }
             };
@@ -360,7 +374,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_copy(context: *mut c_void, ptr: *c
             success
         }
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_load_ssab_copy", e);
             false
         }
     }
@@ -378,7 +392,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
     };
     ffi_context.last_error = None;
     if ptr.is_null() {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_load_ssab_borrow", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
 
@@ -390,7 +404,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
             let res_ptr = match create_ffi_resource(ssab_data) {
                 Ok(p) => p,
                 Err(e) => {
-                    ffi_context.last_error = Some(e);
+                    ffi_context.fail("ss_runtime_load_ssab_borrow", e);
                     return false;
                 }
             };
@@ -399,7 +413,7 @@ pub unsafe extern "C" fn ss_runtime_load_ssab_borrow(context: *mut c_void, ptr: 
             success
         }
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_load_ssab_borrow", e);
             false
         }
     }
@@ -423,7 +437,7 @@ pub unsafe extern "C" fn ss_runtime_get_ssab(context: *mut c_void, out_data: *mu
                 }
             }
         } else {
-            ffi_context.last_error = Some(crate::error::SSRuntimeError::NotLoaded);
+            ffi_context.fail("ss_runtime_get_ssab", crate::error::SSRuntimeError::NotLoaded);
         }
     }
 }
@@ -434,7 +448,7 @@ pub extern "C" fn ss_runtime_get_ssab_buf(context: *mut c_void) -> *const c_ucha
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.as_ptr() as *const c_uchar;
         } else {
-            ffi_context.last_error = Some(crate::error::SSRuntimeError::NotLoaded);
+            ffi_context.fail("ss_runtime_get_ssab_buf", crate::error::SSRuntimeError::NotLoaded);
         }
     }
     core::ptr::null()
@@ -446,7 +460,7 @@ pub extern "C" fn ss_runtime_get_ssab_len(context: *mut c_void) -> usize {
         if let Some(ssab_buf) = ffi_context.ctx.get_ssab_data() {
             return ssab_buf.len();
         } else {
-            ffi_context.last_error = Some(crate::error::SSRuntimeError::NotLoaded);
+            ffi_context.fail("ss_runtime_get_ssab_len", crate::error::SSRuntimeError::NotLoaded);
         }
     }
     0
@@ -464,7 +478,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
     };
     ffi_context.last_error = None;
     if name.is_null() {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_setup_animation", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
     let c_buf = unsafe { CStr::from_ptr(name) };
@@ -472,7 +486,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation(context: *mut c_void, name: 
     match ffi_context.ctx.setup_animation(a) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_setup_animation", e);
             false
         }
     }
@@ -490,7 +504,7 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
     match ffi_context.ctx.setup_animation_by_hash(name_hash) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_setup_animation_by_hash", e);
             false
         }
     }
@@ -502,20 +516,20 @@ pub unsafe extern "C" fn ss_runtime_setup_animation_by_hash(context: *mut c_void
 ///
 /// This function is unsafe because it dereferences raw pointers for output.
 /// The caller must ensure `out_data` and `out_len` are valid if they are not null.
-pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *mut c_uchar, out_len: *mut usize) {
+pub unsafe extern "C" fn ss_runtime_get_frame_data(context: *mut c_void, frame_no: c_float, out_data: *mut *const c_uchar, out_len: *mut usize) {
     if let Some(ffi_context) = get_context(context) {
         ffi_context.last_error = None;
         match ffi_context.ctx.get_frame_data(frame_no) {
             Ok(ret) => unsafe {
                 if !out_data.is_null() {
-                    *out_data = ret.as_ptr() as *mut c_uchar;
+                    *out_data = ret.as_ptr();
                 }
                 if !out_len.is_null() {
                     *out_len = ret.len();
                 }
             },
             Err(e) => {
-                ffi_context.last_error = Some(e);
+                ffi_context.fail("ss_runtime_get_frame_data", e);
             }
         }
     }
@@ -1032,9 +1046,9 @@ pub extern "C" fn ss_runtime_is_finished(context: *mut c_void) -> bool {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_is_looped(context: *mut c_void) -> bool {
+pub extern "C" fn ss_runtime_just_looped(context: *mut c_void) -> bool {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.is_looped();
+        return ffi_context.ctx.just_looped();
     }
     false
 }
@@ -1085,17 +1099,17 @@ pub extern "C" fn ss_runtime_get_playback_style(context: *mut c_void) -> i32 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_loops(context: *mut c_void) -> i32 {
+pub extern "C" fn ss_runtime_get_loop_count(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_loops();
+        return ffi_context.ctx.get_loop_count();
     }
     0
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_remain_loops(context: *mut c_void) -> i32 {
+pub extern "C" fn ss_runtime_get_remaining_loops(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_remain_loops();
+        return ffi_context.ctx.get_remaining_loops();
     }
     0
 }
@@ -1117,21 +1131,21 @@ pub extern "C" fn ss_runtime_get_end_frame(context: *mut c_void) -> i32 {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_fps(context: *mut c_void) -> i32 {
+pub extern "C" fn ss_runtime_get_frame_rate(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_fps();
+        return ffi_context.ctx.get_frame_rate();
     }
     0
 }
 
-/// The playback speed in effect, as a multiple of `ss_runtime_get_fps`.
+/// The playback speed in effect, as a multiple of `ss_runtime_get_frame_rate`.
 ///
-/// Reads back what `ss_runtime_set_animation_speed` stored, which is not
+/// Reads back what `ss_runtime_set_speed_scale` stored, which is not
 /// always what it was handed: a negative rate clamps to `0.0`.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_get_animation_speed(context: *mut c_void) -> c_float {
+pub extern "C" fn ss_runtime_get_speed_scale(context: *mut c_void) -> c_float {
     if let Some(ffi_context) = get_context(context) {
-        return ffi_context.ctx.get_animation_speed();
+        return ffi_context.ctx.get_speed_scale();
     }
     0.0
 }
@@ -1145,16 +1159,16 @@ pub extern "C" fn ss_runtime_set_skip_frames(context: *mut c_void, skip: bool) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_loop(context: *mut c_void, loops: c_int) {
+pub extern "C" fn ss_runtime_set_loop_count(context: *mut c_void, loop_count: c_int) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.set_loop(loops);
+        ffi_context.ctx.set_loop_count(loop_count);
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_frame_rate(context: *mut c_void, fps: c_int) {
+pub extern "C" fn ss_runtime_set_frame_rate(context: *mut c_void, frame_rate: c_int) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.set_frame_rate(fps);
+        ffi_context.ctx.set_frame_rate(frame_rate);
     }
 }
 
@@ -1168,9 +1182,9 @@ pub extern "C" fn ss_runtime_set_playback_direction(context: *mut c_void, direct
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_set_animation_speed(context: *mut c_void, speed_rate: c_float) {
+pub extern "C" fn ss_runtime_set_speed_scale(context: *mut c_void, speed_scale: c_float) {
     if let Some(ffi_context) = get_context(context) {
-        ffi_context.ctx.set_animation_speed(speed_rate);
+        ffi_context.ctx.set_speed_scale(speed_scale);
     }
 }
 
@@ -1267,7 +1281,7 @@ where
     match f(&mut ffi_context.ctx) {
         Ok(()) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_prev_frame", e);
             false
         }
     }
@@ -1306,7 +1320,7 @@ pub unsafe extern "C" fn ss_runtime_set_track_animation(context: *mut c_void, tr
     };
     ffi_context.last_error = None;
     let Some(a) = (unsafe { cstr_to_string(name) }) else {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_set_track_animation", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     };
     report(ffi_context, |ctx| ctx.set_track_animation(track, &a))
@@ -1333,8 +1347,8 @@ pub extern "C" fn ss_runtime_set_track_alpha(context: *mut c_void, track: u32, a
 /// Returns `NaN` for a track that does not exist, so callers can tell it apart
 /// from a valid `alpha` of 0.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_alpha(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.track_alpha(track)).unwrap_or(f32::NAN)
+pub extern "C" fn ss_runtime_get_track_alpha(context: *mut c_void, track: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_track_alpha(track)).unwrap_or(f32::NAN)
 }
 
 /// `blend` is one of `SS_RUNTIME_TRACK_BLEND_*`.
@@ -1348,7 +1362,7 @@ pub extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, b
         SS_RUNTIME_TRACK_BLEND_MIX => crate::TrackBlend::Mix,
         SS_RUNTIME_TRACK_BLEND_ADDITIVE => crate::TrackBlend::Additive,
         _ => {
-            ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+            ffi_context.fail("ss_runtime_set_track_blend", crate::error::SSRuntimeError::InvalidParameter);
             return false;
         }
     };
@@ -1357,8 +1371,8 @@ pub extern "C" fn ss_runtime_set_track_blend(context: *mut c_void, track: u32, b
 
 /// Returns `SS_RUNTIME_INVALID_HANDLE` for a track that does not exist.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_blend(context: *mut c_void, track: u32) -> u32 {
-    match get_context(context).and_then(|c| c.ctx.track_blend(track)) {
+pub extern "C" fn ss_runtime_get_track_blend(context: *mut c_void, track: u32) -> u32 {
+    match get_context(context).and_then(|c| c.ctx.get_track_blend(track)) {
         Some(crate::TrackBlend::Mix) => SS_RUNTIME_TRACK_BLEND_MIX,
         Some(crate::TrackBlend::Additive) => SS_RUNTIME_TRACK_BLEND_ADDITIVE,
         None => SS_RUNTIME_INVALID_HANDLE,
@@ -1366,8 +1380,8 @@ pub extern "C" fn ss_runtime_track_blend(context: *mut c_void, track: u32) -> u3
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_count(context: *mut c_void) -> u32 {
-    get_context(context).map_or(0, |c| c.ctx.track_count())
+pub extern "C" fn ss_runtime_get_track_count(context: *mut c_void) -> u32 {
+    get_context(context).map_or(0, |c| c.ctx.get_track_count())
 }
 
 #[unsafe(no_mangle)]
@@ -1392,7 +1406,7 @@ pub unsafe extern "C" fn ss_runtime_crossfade(context: *mut c_void, track: u32, 
     };
     ffi_context.last_error = None;
     let Some(a) = (unsafe { cstr_to_string(name) }) else {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_crossfade", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     };
     report(ffi_context, |ctx| ctx.crossfade(track, &a, duration_ms))
@@ -1418,8 +1432,8 @@ pub extern "C" fn ss_runtime_fade_track(context: *mut c_void, track: u32, target
 
 /// Progress in `[0, 1]` of the fade on `track`; `NaN` when it is not fading.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_fade_progress(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.track_fade_progress(track)).unwrap_or(f32::NAN)
+pub extern "C" fn ss_runtime_get_track_fade_progress(context: *mut c_void, track: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_track_fade_progress(track)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
@@ -1442,8 +1456,8 @@ pub extern "C" fn ss_runtime_set_track_frame(context: *mut c_void, track: u32, f
 
 /// Returns `NaN` when the track has no animation on it.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_frame(context: *mut c_void, track: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.track_frame(track)).unwrap_or(f32::NAN)
+pub extern "C" fn ss_runtime_get_track_frame(context: *mut c_void, track: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_track_frame(track)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
@@ -1459,8 +1473,8 @@ pub extern "C" fn ss_runtime_set_track_speed(context: *mut c_void, track: u32, s
 /// weight once the track holds several. `SS_RUNTIME_INVALID_HANDLE` when the
 /// track has no animation.
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_main_source(context: *mut c_void, track: u32) -> u32 {
-    get_context(context).and_then(|c| c.ctx.track_main_source(track)).unwrap_or(SS_RUNTIME_INVALID_HANDLE)
+pub extern "C" fn ss_runtime_get_track_main_source(context: *mut c_void, track: u32) -> u32 {
+    get_context(context).and_then(|c| c.ctx.get_track_main_source(track)).unwrap_or(SS_RUNTIME_INVALID_HANDLE)
 }
 
 /// Add another weighted source to `track` (locomotion-style blending). Returns
@@ -1470,34 +1484,34 @@ pub extern "C" fn ss_runtime_track_main_source(context: *mut c_void, track: u32)
 /// `name` must be a valid null-terminated UTF-8 (or lossy-decodable) string.
 #[unsafe(no_mangle)]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub unsafe extern "C" fn ss_runtime_track_add_source(context: *mut c_void, track: u32, name: *const c_char, weight: c_float) -> u32 {
+pub unsafe extern "C" fn ss_runtime_add_track_source(context: *mut c_void, track: u32, name: *const c_char, weight: c_float) -> u32 {
     let Some(ffi_context) = get_context(context) else {
         return SS_RUNTIME_INVALID_HANDLE;
     };
     ffi_context.last_error = None;
     let Some(a) = (unsafe { cstr_to_string(name) }) else {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_add_track_source", crate::error::SSRuntimeError::InvalidParameter);
         return SS_RUNTIME_INVALID_HANDLE;
     };
-    match ffi_context.ctx.track_add_source(track, &a, weight) {
+    match ffi_context.ctx.add_track_source(track, &a, weight) {
         Ok(h) => h,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_add_track_source", e);
             SS_RUNTIME_INVALID_HANDLE
         }
     }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_track_add_source_by_hash(context: *mut c_void, track: u32, hash: u32, weight: c_float) -> u32 {
+pub extern "C" fn ss_runtime_add_track_source_by_hash(context: *mut c_void, track: u32, hash: u32, weight: c_float) -> u32 {
     let Some(ffi_context) = get_context(context) else {
         return SS_RUNTIME_INVALID_HANDLE;
     };
     ffi_context.last_error = None;
-    match ffi_context.ctx.track_add_source_by_hash(track, hash, weight) {
+    match ffi_context.ctx.add_track_source_by_hash(track, hash, weight) {
         Ok(h) => h,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_add_track_source_by_hash", e);
             SS_RUNTIME_INVALID_HANDLE
         }
     }
@@ -1515,8 +1529,8 @@ pub extern "C" fn ss_runtime_set_source_weight(context: *mut c_void, handle: u32
 /// Returns `NaN` for an invalid or released handle, so `weight == 0` stays
 /// distinguishable from "no such source".
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_source_weight(context: *mut c_void, handle: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.source_weight(handle)).unwrap_or(f32::NAN)
+pub extern "C" fn ss_runtime_get_source_weight(context: *mut c_void, handle: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_source_weight(handle)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
@@ -1529,8 +1543,8 @@ pub extern "C" fn ss_runtime_set_source_frame(context: *mut c_void, handle: u32,
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_source_frame(context: *mut c_void, handle: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.source_frame(handle)).unwrap_or(f32::NAN)
+pub extern "C" fn ss_runtime_get_source_frame(context: *mut c_void, handle: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_source_frame(handle)).unwrap_or(f32::NAN)
 }
 
 #[unsafe(no_mangle)]
@@ -1543,8 +1557,8 @@ pub extern "C" fn ss_runtime_set_source_event_threshold(context: *mut c_void, ha
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ss_runtime_source_event_threshold(context: *mut c_void, handle: u32) -> c_float {
-    get_context(context).and_then(|c| c.ctx.source_event_threshold(handle)).unwrap_or(f32::NAN)
+pub extern "C" fn ss_runtime_get_source_event_threshold(context: *mut c_void, handle: u32) -> c_float {
+    get_context(context).and_then(|c| c.ctx.get_source_event_threshold(handle)).unwrap_or(f32::NAN)
 }
 
 /// Create a new EffectSlot bound to `resource`. Returns null on failure
@@ -1715,7 +1729,7 @@ pub unsafe extern "C" fn ss_runtime_get_render_mode(context: *mut c_void) -> u8 
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_context_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
+pub unsafe extern "C" fn ss_runtime_set_coordinate_system(context: *mut c_void, coordinate_system: i32) {
     if let Some(ffi_context) = get_context(context) {
         let cs = match coordinate_system {
             1 => crate::core::SsCoordinateSystem::YDown,
@@ -1726,7 +1740,7 @@ pub unsafe extern "C" fn ss_context_set_coordinate_system(context: *mut c_void, 
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_context_get_coordinate_system(context: *mut c_void) -> i32 {
+pub unsafe extern "C" fn ss_runtime_get_coordinate_system(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
         match ffi_context.ctx.get_coordinate_system() {
             crate::core::SsCoordinateSystem::YDown => 1,
@@ -1738,7 +1752,7 @@ pub unsafe extern "C" fn ss_context_get_coordinate_system(context: *mut c_void) 
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_context_set_origin(context: *mut c_void, origin: i32) {
+pub unsafe extern "C" fn ss_runtime_set_origin(context: *mut c_void, origin: i32) {
     if let Some(ffi_context) = get_context(context) {
         let o = match origin {
             1 => crate::core::SsOrigin::TopLeft,
@@ -1749,7 +1763,7 @@ pub unsafe extern "C" fn ss_context_set_origin(context: *mut c_void, origin: i32
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_context_get_origin(context: *mut c_void) -> i32 {
+pub unsafe extern "C" fn ss_runtime_get_origin(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
         match ffi_context.ctx.get_origin() {
             crate::core::SsOrigin::TopLeft => 1,
@@ -1761,7 +1775,7 @@ pub unsafe extern "C" fn ss_context_get_origin(context: *mut c_void) -> i32 {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_context_set_unit(context: *mut c_void, unit: i32) {
+pub unsafe extern "C" fn ss_runtime_set_unit(context: *mut c_void, unit: i32) {
     if let Some(ffi_context) = get_context(context) {
         let u = match unit {
             1 => crate::core::SsUnit::Normalized,
@@ -1772,7 +1786,7 @@ pub unsafe extern "C" fn ss_context_set_unit(context: *mut c_void, unit: i32) {
 }
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn ss_context_get_unit(context: *mut c_void) -> i32 {
+pub unsafe extern "C" fn ss_runtime_get_unit(context: *mut c_void) -> i32 {
     if let Some(ffi_context) = get_context(context) {
         match ffi_context.ctx.get_unit() {
             crate::core::SsUnit::Normalized => 1,
@@ -1805,7 +1819,7 @@ pub extern "C" fn ss_runtime_get_passed_event_index(context: *mut c_void, index:
 /// `ss_runtime_get_passed_event_index`, and read with the same index.
 ///
 /// With every source at the default event threshold (`1.0`) this is uniformly
-/// `ss_runtime_track_main_source` of track 0, so a Player that does not use
+/// `ss_runtime_get_track_main_source` of track 0, so a Player that does not use
 /// animation mixing can ignore it. It diverges once a secondary source opts in
 /// to firing events via `ss_runtime_set_source_event_threshold`, and that is
 /// when a host needs it: without it, two blended animations' events arrive in
@@ -1901,7 +1915,7 @@ pub extern "C" fn ss_runtime_set_part_visibility_override(context: *mut c_void, 
     match ffi_context.ctx.set_part_visibility_override(part, force, cascade != 0) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_set_part_visibility_override", e);
             false
         }
     }
@@ -1917,7 +1931,7 @@ pub extern "C" fn ss_runtime_clear_part_visibility_override(context: *mut c_void
     match ffi_context.ctx.clear_part_visibility_override(part) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_clear_part_visibility_override", e);
             false
         }
     }
@@ -1936,7 +1950,7 @@ pub extern "C" fn ss_runtime_set_part_color_override(context: *mut c_void, part:
     match ffi_context.ctx.set_part_color_override(part, blend_op, rgba, priority_mode) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_set_part_color_override", e);
             false
         }
     }
@@ -1952,7 +1966,7 @@ pub extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_voi
     };
     ffi_context.last_error = None;
     if rgba_ltrtlbrb.is_null() {
-        ffi_context.last_error = Some(crate::error::SSRuntimeError::InvalidParameter);
+        ffi_context.fail("ss_runtime_set_part_color_override_corners", crate::error::SSRuntimeError::InvalidParameter);
         return false;
     }
     let packed = unsafe { core::slice::from_raw_parts(rgba_ltrtlbrb, 4) };
@@ -1960,7 +1974,7 @@ pub extern "C" fn ss_runtime_set_part_color_override_corners(context: *mut c_voi
     match ffi_context.ctx.set_part_color_override_corners(part, blend_op, corners, priority_mode) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_set_part_color_override_corners", e);
             false
         }
     }
@@ -1976,7 +1990,7 @@ pub extern "C" fn ss_runtime_clear_part_color_override(context: *mut c_void, par
     match ffi_context.ctx.clear_part_color_override(part) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_clear_part_color_override", e);
             false
         }
     }
@@ -1995,7 +2009,7 @@ pub extern "C" fn ss_runtime_set_part_cell_override(context: *mut c_void, part: 
     match ffi_context.ctx.set_part_cell_override(part, cellmap_name_hash, cell_name_hash, priority_mode) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_set_part_cell_override", e);
             false
         }
     }
@@ -2011,7 +2025,7 @@ pub extern "C" fn ss_runtime_clear_part_cell_override(context: *mut c_void, part
     match ffi_context.ctx.clear_part_cell_override(part) {
         Ok(_) => true,
         Err(e) => {
-            ffi_context.last_error = Some(e);
+            ffi_context.fail("ss_runtime_clear_part_cell_override", e);
             false
         }
     }
@@ -2053,6 +2067,33 @@ mod tests {
         let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: fmt::SsAnimeBinaryArgs::default().version + 1, name: Some(name), parts: Some(parts), animations: Some(animations), ..Default::default() });
         fmt::finish_ss_anime_binary_buffer(&mut b, root);
         b.finished_data().to_vec()
+    }
+
+    /// A failure is reported on both faces: the code for the caller that checks
+    /// the return value, and a log line for the one that does not. The line
+    /// names the entry point, because "SSAB data is not loaded" on its own does
+    /// not say which call said so.
+    #[test]
+    fn a_failure_reaches_the_log_callback_tagged_with_its_entry_point() {
+        static LINES: std::sync::Mutex<std::vec::Vec<(i32, std::string::String)>> = std::sync::Mutex::new(std::vec::Vec::new());
+
+        extern "C" fn record(level: c_int, message: *const c_char) {
+            let text = unsafe { CStr::from_ptr(message) }.to_string_lossy().into_owned();
+            LINES.lock().unwrap().push((level, text));
+        }
+        ss_runtime_set_log_callback(record);
+
+        let ctx = ss_runtime_create();
+        let name = CString::new("walk").unwrap();
+        // Nothing bound, so the runtime has no animation to set up.
+        assert!(!unsafe { ss_runtime_setup_animation(ctx, name.as_ptr()) });
+        ss_runtime_destroy(ctx);
+
+        // The callback is a process-global the ABI gives no way to clear, so
+        // other tests' failures land in here too -- look for this one rather
+        // than counting.
+        let lines = LINES.lock().unwrap();
+        assert!(lines.iter().any(|(level, text)| *level == SS_RUNTIME_LOG_ERROR && text.starts_with("ss_runtime_setup_animation: ")), "the failure never reached the log callback: {lines:?}");
     }
 
     #[test]
