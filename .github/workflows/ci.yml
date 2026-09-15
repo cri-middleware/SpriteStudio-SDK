@@ -104,10 +104,21 @@ jobs:
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "ffi,std"
             cargo build --target wasm32-unknown-unknown --verbose -p ssruntime-ffi --no-default-features --features "web"
 
-            # Browser converter (shipped as lib/converter-web by release-web.sh).
-            # rayon spans ssconverter AND sspj, so this is the only check that the
-            # sequential `parallel`-off fallback still compiles for wasm32.
+            # Browser converter, the library. rayon spans ssconverter AND sspj, so
+            # this is the check that the sequential `parallel`-off fallback still
+            # compiles for wasm32.
             cargo build --target wasm32-unknown-unknown --verbose -p ssconverter --no-default-features --features "web"
+
+            # Browser converter, the artifact. This is the crate release-web.sh
+            # actually ships as pkg/converter-web, and building the library alone
+            # says nothing about it: features are resolved per dependency edge, so
+            # the wrapper can drag `native` (rayon + walkdir + std::fs) into the
+            # graph while the line above stays green. It did.
+            cargo build --target wasm32-unknown-unknown --verbose -p ssconverter-ffi --no-default-features --features "web"
+            if cargo tree --target wasm32-unknown-unknown -p ssconverter-ffi --no-default-features --features "web" -e normal | grep -qE '\b(rayon|walkdir)\b'; then
+              echo "::error::the browser converter pulled in a native-only dependency (rayon / walkdir)"
+              exit 1
+            fi
 
             # Build for Godot GDExtension (Nightly + PIC)
             export RUSTFLAGS="-C relocation-model=pic"

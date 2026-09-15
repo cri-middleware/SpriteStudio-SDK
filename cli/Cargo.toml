@@ -14,7 +14,8 @@ categories = ["command-line-utilities", "game-development"]
 [dependencies]
 clap = { workspace = true }
 rayon = { workspace = true }
-ssconverter = { workspace = true }
+# The CLI is the native path by definition: it walks directories and converts in parallel.
+ssconverter = { workspace = true, features = ["native"] }
 
 [build-dependencies]
 vergen-gitcl = { workspace = true }
