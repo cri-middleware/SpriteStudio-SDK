@@ -116,6 +116,7 @@ This repository includes several sample projects in the `tests/` directory to ve
 - `tests/allPartsV7/allPartsV7.sspj`: Verifies all part types.
 - `tests/ParticleEffect/ParticleEffect.sspj`: Verifies particle effects.
 - `tests/Ringo/Ringo.sspj`: Test project for Ringo.
+- `tests/Doll/Doll.sspj`: A character combining instance and effect parts.
 
 You can use these projects as references when implementing your own player or verifying the SDK's behavior.
 
