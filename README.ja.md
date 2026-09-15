@@ -116,6 +116,7 @@ graph LR
 - `tests/allPartsV7/allPartsV7.sspj`: 全てのパーツ種別の検証用プロジェクトです。
 - `tests/ParticleEffect/ParticleEffect.sspj`: パーティクルエフェクトの検証用プロジェクトです。
 - `tests/Ringo/Ringo.sspj`: Ringoのテスト用プロジェクトです。
+- `tests/Doll/Doll.sspj`: インスタンスパーツとエフェクトパーツを組み合わせたキャラクターのプロジェクトです。
 
 これらは Player の実装時や動作確認の際の参照用データとして自由にご利用いただけます。
 

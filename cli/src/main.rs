@@ -108,7 +108,7 @@ mod tests {
     use rayon::prelude::*;
     use std::path::{Path, PathBuf};
 
-    static TARGET_SSPJ_FILES: [&str; 4] = ["tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/overall/overall.sspj"];
+    static TARGET_SSPJ_FILES: [&str; 5] = ["tests/ParticleEffect/ParticleEffect.sspj", "tests/allAttributeV7/allAttributeV7.sspj", "tests/allPartsV7/allPartsV7.sspj", "tests/overall/overall.sspj", "tests/Doll/Doll.sspj"];
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").parent().expect("Failed to get the base directory").to_path_buf()

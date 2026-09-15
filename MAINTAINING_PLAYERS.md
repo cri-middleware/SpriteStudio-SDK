@@ -38,7 +38,7 @@ Players come in two shapes.
 
 ### 3.1 One character, and the same one wherever a Player can manage it
 
-The SDK's `tests/` holds five projects, and they are not the same kind of thing. **`Ringo` is the first frame; `overall` is what you verify against.** The same picture appearing in every Player is how someone working across several of them confirms they have arrived, so a Player that ships a getting-started sample separate from its verification project points that sample at `Ringo` — Godot's `examples/Ringo` and Unity's `examples/SampleProject` are it.
+The SDK's `tests/` holds six projects, and they are not the same kind of thing. **`Ringo` is the first frame; `overall` is what you verify against.** The same picture appearing in every Player is how someone working across several of them confirms they have arrived, so a Player that ships a getting-started sample separate from its verification project points that sample at `Ringo` — Godot's `examples/Ringo` and Unity's `examples/SampleProject` are it.
 
 **A Player that ships one example project rather than two has it doing both jobs, and `overall` is the right content for that** — a feature tour with a single character is not a feature tour. What it owes the reader instead is that **opening it puts one character on screen straight away**, not a menu, a file picker or a blank canvas. That is the property `Ringo` was standing in for; where the project count makes the picture impossible, the property still holds.
 
