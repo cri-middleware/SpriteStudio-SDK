@@ -13,13 +13,13 @@ Specify the animation you want to play on the `libssruntime` context by name and
 ss_runtime_setup_animation(context, "attack_pose");
 
 // 2. Playback settings (loop count: -1 = infinite, 1 = once)
-ss_runtime_set_loop(context, -1);
+ss_runtime_set_loop_count(context, -1);
 
 // 3. Start playback
 ss_runtime_play(context);
 ```
 
-### Values for `ss_runtime_set_loop`
+### Values for `ss_runtime_set_loop_count`
 
 | Value | Meaning |
 | :--- | :--- |
@@ -38,7 +38,7 @@ transition, so what it resets is drawn along one line: **who sets it.**
 | Authored frame rate | no | It is the clip's own data, re-read every time |
 | Loop count | no | The transition states it; see below |
 | **Direction / style (`set_playback_direction`)** | **yes** | "Play this backwards" describes the playback, not the clip that happens to be loaded |
-| **Speed (`set_animation_speed`)** | **yes** | A *different* system sets it — slow motion, a haste buff, a difficulty scale |
+| **Speed (`set_speed_scale`)** | **yes** | A *different* system sets it — slow motion, a haste buff, a difficulty scale |
 | **Frame-rate override (`set_frame_rate`)** | **yes** | A Player policy — "this player runs at 60fps", whatever a clip was authored at |
 | **Frame skip** | **yes** | A Player policy — "show every frame" for a capture or a frame-counted cutscene |
 
@@ -47,7 +47,7 @@ return leg when the animation changed starts the new one walking outward again,
 so a transition never begins mid-bounce.
 
 The two rate controls are both the host's and compose, but they say different
-things. `set_animation_speed` is a **multiple** of whatever the clip was authored
+things. `set_speed_scale` is a **multiple** of whatever the clip was authored
 at, so it means the same thing against every clip. `set_frame_rate` is an
 **absolute** rate, so its effect does depend on the clip — 60 against a 30fps
 clip is double speed and against a 60fps clip is none. That is the point of it:
@@ -89,7 +89,7 @@ distinct verbs — do not fold `resume` into `play`.
 
 ### Speed and the frame rate
 
-`ss_runtime_set_animation_speed` is a multiple of the effective frame rate.
+`ss_runtime_set_speed_scale` is a multiple of the effective frame rate.
 
 | Value | Effect |
 | :--- | :--- |
@@ -104,7 +104,7 @@ distinct verbs — do not fold `resume` into `play`.
 > value said — and a host that passed a negative rate hoping for reverse got
 > forward at full speed with no indication the request was unsupported.
 
-`ss_runtime_get_animation_speed` reads the rate back, so a Player does not have
+`ss_runtime_get_speed_scale` reads the rate back, so a Player does not have
 to keep a copy of what it last set — the copy is what drifts. It returns the
 value that was **stored**, which is not always the one that was passed: the two
 clamped rows above read back as `0.0`, so a host can tell that its negative
@@ -176,7 +176,7 @@ class MyPlayer {
         ss_runtime_update(context, delta_seconds * 1000.0f);
 
         // 2. looped is a "pulse". Read it as-is immediately after update
-        if (ss_runtime_is_looped(context)) {
+        if (ss_runtime_just_looped(context)) {
             emit_looped();
         }
 
@@ -199,12 +199,12 @@ class MyPlayer {
 
 | API | Meaning | Lifetime | How to handle it |
 | :--- | :--- | :--- | :--- |
-| `ss_runtime_is_looped` | The playhead **returned to the start** (completed one cycle) | A **pulse**. Cleared at the top of every `update` | Notify as-is |
+| `ss_runtime_just_looped` | The playhead **returned to the start** (completed one cycle) | A **pulse**. Cleared at the top of every `update` | Notify as-is |
 | `ss_runtime_is_finished` | **All** the specified loops have completed | A **state**. Stays `true` until the next `play` / `setup_animation` | Notify **on the edge** |
 
-- `is_looped` collapses into a single occurrence even when several cycles complete within one `update` (a large `delta` with frame skipping enabled).
+- `just_looped` collapses into a single occurrence even when several cycles complete within one `update` (a large `delta` with frame skipping enabled).
 - `is_finished` is not raised by `stop()`. It is raised only when the specified loop count completes.
-- `is_finished` is never raised for an infinite loop (the default). To detect the end of an infinite loop, count `looped` or decide it on the Player side by calling `stop()`.
+- `is_finished` is never raised for an infinite loop (the default). To detect the end of an infinite loop, count `just_looped` or decide it on the Player side by calling `stop()`.
 
 ### Common mistakes
 
@@ -225,7 +225,7 @@ These are real defects that occurred in several Players. None of them happen if 
 
 ### Example event sequence
 
-Playing a 0-4 frame animation with `set_loop(3)`:
+Playing a 0-4 frame animation with `set_loop_count(3)`:
 
 | Cycle | Notification |
 | :--- | :--- |
@@ -360,7 +360,7 @@ player.set_animation(state.clip);
 
 — would rewind the animation on every frame it did that.
 
-There is a second reason, and it bites even a Player that calls `setup_animation` sparingly. Most Players re-apply their own loop count after a setup (the row above says why), and `ss_runtime_set_loop` **re-arms the remaining-loop counter on every write**. So a Player that re-set-up the current animation each frame also reset the loop budget each frame, and a finite loop count never ran out. The guard has to sit **ahead of that re-application**, not inside the native setup.
+There is a second reason, and it bites even a Player that calls `setup_animation` sparingly. Most Players re-apply their own loop count after a setup (the row above says why), and `ss_runtime_set_loop_count` **re-arms the remaining-loop counter on every write**. So a Player that re-set-up the current animation each frame also reset the loop budget each frame, and a finite loop count never ran out. The guard has to sit **ahead of that re-application**, not inside the native setup.
 
 **Judge "already selected" against what the runtime has**, and invalidate it whenever a resource is bound:
 

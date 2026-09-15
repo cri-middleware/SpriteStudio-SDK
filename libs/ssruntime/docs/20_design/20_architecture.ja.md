@@ -177,11 +177,11 @@ SpriteStudio エディタ上の「キャンバス」と、ゲームエンジン�
 
 これらを Player 側で手動で計算し直すと、親子構造の回転方向やオフセット計算でミスが発生しやすくなります。`libssruntime` の **`Context` 設定 API** を利用することで、ライブラリ内部でこれらを一貫して吸収し、エンジンにそのまま流し込める値として取得できます。
 
-- **Y 軸の向き (`ss_context_set_coordinate_system`)**: 上向き（Y-Up）か、下向き（Y-Down）か。
+- **Y 軸の向き (`ss_runtime_set_coordinate_system`)**: 上向き（Y-Up）か、下向き（Y-Down）か。
     - `Y-Down` (1) を指定すると、ライブラリ内部で Y 座標と回転方向が自動的に反転されます。エンジンの 2D 座標系が Y-Down の場合はこちらを選択してください。
-- **原点の位置 (`ss_context_set_origin`)**: 中心（Center）か、左上（Top-Left）か。
+- **原点の位置 (`ss_runtime_set_origin`)**: 中心（Center）か、左上（Top-Left）か。
     - `Top-Left` (1) を指定すると、キャンバスサイズに基づいたオフセットが自動的に適用されます。UI システムのように左上基準で配置したい場合に有効です。
-- **単位 (`ss_context_set_unit`)**: ピクセル単位（Pixel）か、正規化座標（Normalized）か。
+- **単位 (`ss_runtime_set_unit`)**: ピクセル単位（Pixel）か、正規化座標（Normalized）か。
     - `Normalized` (1) を指定すると、すべての座標値がキャンバスサイズで除算され、0.0 〜 1.0 の範囲に正規化されます。解像度独立な描画を行いたい場合に適しています。
 
 ## 3. アセット管理戦略

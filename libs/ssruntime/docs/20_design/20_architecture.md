@@ -178,11 +178,11 @@ The "canvas" in the SpriteStudio editor and the "world space" in a game engine t
 
 Recomputing these by hand on the Player side invites mistakes in rotation direction and offset computation within parent/child structures. Using `libssruntime`'s **`Context` configuration APIs**, the library absorbs all of this consistently and you obtain values you can feed straight into your engine.
 
-- **Y-axis direction (`ss_context_set_coordinate_system`)**: up (Y-Up) or down (Y-Down).
+- **Y-axis direction (`ss_runtime_set_coordinate_system`)**: up (Y-Up) or down (Y-Down).
     - Specifying `Y-Down` (1) makes the library flip the Y coordinate and the rotation direction automatically. Choose this when your engine's 2D coordinate system is Y-Down.
-- **Origin position (`ss_context_set_origin`)**: center or top-left.
+- **Origin position (`ss_runtime_set_origin`)**: center or top-left.
     - Specifying `Top-Left` (1) applies an offset based on the canvas size automatically. This is useful when you want to place things relative to the top-left, as in a UI system.
-- **Units (`ss_context_set_unit`)**: pixels or normalized coordinates.
+- **Units (`ss_runtime_set_unit`)**: pixels or normalized coordinates.
     - Specifying `Normalized` (1) divides every coordinate value by the canvas size, normalizing it into the 0.0-1.0 range. This suits resolution-independent drawing.
 
 ## 3. Asset-management strategy

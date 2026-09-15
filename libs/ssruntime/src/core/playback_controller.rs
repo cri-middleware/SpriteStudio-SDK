@@ -102,8 +102,8 @@ pub struct PlaybackController {
     /// from `anime_data_fps` so `setup` can re-read the clip's own rate without
     /// having to guess whether the current value was a host's choice or just
     /// what the previous clip happened to be authored at.
-    fps_override: Option<i32>,
-    fps_rate: f32,
+    frame_rate_override: Option<i32>,
+    speed_scale: f32,
     loops: i32,
 
     update_interval: f32,
@@ -116,7 +116,7 @@ pub struct PlaybackController {
     next_frame_time: f32,
     remain_loops: i32,
     end_frame_reached: bool,
-    is_looped: bool,
+    just_looped: bool,
 
     passed_frames: Vec<i32>,
     needs_evaluation: bool,
@@ -156,8 +156,8 @@ impl PlaybackController {
     /// start frame. Cleared on entry to every `update`, so it must be polled
     /// after each one or the pulse is lost. Never raised on the final cycle of
     /// a finite loop count — that cycle finishes instead of looping.
-    pub fn is_looped(&self) -> bool {
-        self.is_looped
+    pub fn just_looped(&self) -> bool {
+        self.just_looped
     }
 
     pub fn is_playing(&self) -> bool {
@@ -184,11 +184,11 @@ impl PlaybackController {
         self.playback_style
     }
 
-    pub fn get_loops(&self) -> i32 {
+    pub fn get_loop_count(&self) -> i32 {
         self.loops
     }
 
-    pub fn get_remain_loops(&self) -> i32 {
+    pub fn get_remaining_loops(&self) -> i32 {
         self.remain_loops
     }
 
@@ -212,17 +212,17 @@ impl PlaybackController {
         self.anime_data_end_frame
     }
 
-    pub fn get_fps(&self) -> i32 {
-        self.effective_fps()
+    pub fn get_frame_rate(&self) -> i32 {
+        self.effective_frame_rate()
     }
 
-    /// The playback speed in effect, as a multiple of [`Self::get_fps`].
+    /// The playback speed in effect, as a multiple of [`Self::get_frame_rate`].
     ///
-    /// This is what [`Self::set_animation_speed`] *stored*, not what it was
+    /// This is what [`Self::set_speed_scale`] *stored*, not what it was
     /// handed: a negative rate clamps to `0.0` on the way in, so a host that
     /// reads this back sees the stop it actually got.
-    pub fn get_animation_speed(&self) -> f32 {
-        self.fps_rate
+    pub fn get_speed_scale(&self) -> f32 {
+        self.speed_scale
     }
 
     pub fn get_passed_frames(&self) -> &[i32] {
@@ -251,8 +251,8 @@ impl PlaybackController {
 
             start_frame: 0,
             end_frame: 0,
-            fps_override: None,
-            fps_rate: 1.0,
+            frame_rate_override: None,
+            speed_scale: 1.0,
 
             update_interval: 0.0,
             playback_style: PlaybackStyle::Normal,
@@ -265,7 +265,7 @@ impl PlaybackController {
             loops: -1,
             remain_loops: -1,
             end_frame_reached: false,
-            is_looped: false,
+            just_looped: false,
 
             passed_frames: Vec::new(),
             needs_evaluation: false,
@@ -283,8 +283,8 @@ impl PlaybackController {
 
         self.start_frame = 0;
         self.end_frame = 0;
-        self.fps_override = None;
-        self.fps_rate = 1.0;
+        self.frame_rate_override = None;
+        self.speed_scale = 1.0;
         self.is_skip_frames = true;
         self.playback_direction = PlaybackDirection::Forward;
         self.playback_style = PlaybackStyle::Normal;
@@ -298,7 +298,7 @@ impl PlaybackController {
         self.next_frame_time = 0.0;
         self.current_frame = 0.0;
         self.end_frame_reached = false;
-        self.is_looped = false;
+        self.just_looped = false;
         self.passed_frames.clear();
         self.needs_evaluation = false;
     }
@@ -313,7 +313,7 @@ impl PlaybackController {
     /// section (frame indices mean nothing against a different clip), the loop
     /// count, and the direction / style.
     ///
-    /// `fps_rate` and `is_skip_frames` survive, because a *different* system
+    /// `speed_scale` and `is_skip_frames` survive, because a *different* system
     /// sets them: a slow-motion effect, a haste buff, a "show every frame"
     /// capture mode. Resetting those here would let an animation transition
     /// clobber a setting the state machine never knew about. The Players'
@@ -338,7 +338,7 @@ impl PlaybackController {
         // Resets `remain_loops` too: a stale count from a previous animation
         // would otherwise raise `end_frame_reached` at the end of this one's
         // first cycle.
-        self.set_loops(-1);
+        self.set_loop_count(-1);
 
         // The direction and style are the host's, like the speed and the frame
         // skip: "play this backwards" describes the playback, not the clip that
@@ -366,7 +366,7 @@ impl PlaybackController {
     /// already reads as "do not advance". Dividing by it instead would put an
     /// infinity in the field and rely on the arithmetic to work out.
     fn recompute_update_interval(&mut self) {
-        let rate = self.effective_fps() as f32 * self.fps_rate;
+        let rate = self.effective_frame_rate() as f32 * self.speed_scale;
         self.update_interval = if rate > 0.0 { 1000.0 / rate } else { 0.0 };
     }
 
@@ -384,8 +384,8 @@ impl PlaybackController {
     /// from the new animation's frame rate, and until then there is no animation
     /// to advance.
     pub(crate) fn adopt_host_policy(&mut self, from: &PlaybackController) {
-        self.fps_rate = from.fps_rate;
-        self.fps_override = from.fps_override;
+        self.speed_scale = from.speed_scale;
+        self.frame_rate_override = from.frame_rate_override;
         self.is_skip_frames = from.is_skip_frames;
         self.playback_direction = from.playback_direction;
         self.playback_style = from.playback_style;
@@ -401,7 +401,7 @@ impl PlaybackController {
      * `0` and every negative value normalize to `-1` so that `update` and
      * `resolve_frame` agree on the infinite sentinel.
      */
-    pub fn set_loops(&mut self, loops: i32) {
+    pub fn set_loop_count(&mut self, loops: i32) {
         self.loops = if loops > 0 { loops } else { -1 };
         self.remain_loops = self.loops;
     }
@@ -410,17 +410,17 @@ impl PlaybackController {
     /// clears the override, handing playback back to the authored rate.
     ///
     /// This is an *absolute* rate — "this player runs at n fps" — where
-    /// [`Self::set_animation_speed`] is a multiple of whatever the clip was
+    /// [`Self::set_speed_scale`] is a multiple of whatever the clip was
     /// authored at. Both are the host's, so both survive `setup`.
-    pub fn set_frame_rate(&mut self, fps: i32) {
-        self.fps_override = if fps > 0 { Some(fps) } else { None };
+    pub fn set_frame_rate(&mut self, frame_rate: i32) {
+        self.frame_rate_override = if frame_rate > 0 { Some(frame_rate) } else { None };
         self.recompute_update_interval();
     }
 
     /// The rate playback actually runs at: the host's override when it set one,
     /// otherwise the rate the current clip was authored at.
-    fn effective_fps(&self) -> i32 {
-        match self.fps_override {
+    fn effective_frame_rate(&self) -> i32 {
+        match self.frame_rate_override {
             Some(fps) => fps,
             None => self.anime_data_fps,
         }
@@ -448,8 +448,8 @@ impl PlaybackController {
     /// [`Self::set_playback_direction`]'s business — and is clamped to a stop
     /// rather than silently running forward at full speed, which is what
     /// normalizing it to `1.0` used to do.
-    pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.fps_rate = if speed_rate > 0.0 { speed_rate } else { 0.0 };
+    pub fn set_speed_scale(&mut self, speed_scale: f32) {
+        self.speed_scale = if speed_scale > 0.0 { speed_scale } else { 0.0 };
         self.recompute_update_interval();
     }
 
@@ -463,7 +463,7 @@ impl PlaybackController {
 
     pub fn update(&mut self, delta: f32) -> f32 {
         self.passed_frames.clear();
-        self.is_looped = false;
+        self.just_looped = false;
 
         if self.needs_evaluation {
             self.passed_frames.push(floorf(self.current_frame) as i32);
@@ -527,7 +527,7 @@ impl PlaybackController {
                                 if self.remain_loops == -1 {
                                     // infinite loop
                                     frame_no = start_limit;
-                                    self.is_looped = true;
+                                    self.just_looped = true;
                                 } else {
                                     self.remain_loops -= 1;
                                     if self.remain_loops == 0 {
@@ -545,7 +545,7 @@ impl PlaybackController {
                                     } else {
                                         // continue to play the animation
                                         frame_no = start_limit;
-                                        self.is_looped = true;
+                                        self.just_looped = true;
                                     }
                                 }
                             }
@@ -571,11 +571,11 @@ impl PlaybackController {
                                             next_frame_decimal = 0.0;
                                             break;
                                         } else {
-                                            self.is_looped = true;
+                                            self.just_looped = true;
                                         }
                                     } else {
                                         // infinite loop
-                                        self.is_looped = true;
+                                        self.just_looped = true;
                                     }
                                 } else {
                                     next_frame_decimal = 1.0 - next_frame_decimal;
@@ -617,7 +617,7 @@ impl PlaybackController {
         // advancing update.
         self.remain_loops = self.loops;
         self.end_frame_reached = false;
-        self.is_looped = false;
+        self.just_looped = false;
 
         let mut current_frame = match &self.playback_direction {
             PlaybackDirection::Forward => self.start_frame as f32,
@@ -880,7 +880,7 @@ mod tests {
         t.setup(0, 100, 30);
         // section [10, 20] inclusive → 11-frame cycle
         t.set_animation_section(10, 20);
-        t.set_loops(-1);
+        t.set_loop_count(-1);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::Normal);
 
         t.set_frame_relative(0.0);
@@ -903,7 +903,7 @@ mod tests {
         let mut was_finished = false;
         for i in 0..steps {
             t.update(interval);
-            if t.is_looped() {
+            if t.just_looped() {
                 events.push((i, "looped"));
             }
             if t.is_finished() && !was_finished {
@@ -918,7 +918,7 @@ mod tests {
     fn set_loops_3_emits_looped_looped_finished() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(3);
+        t.set_loop_count(3);
         t.set_skip_frames(false);
         t.play();
 
@@ -955,7 +955,7 @@ mod tests {
         // the wrap and the child freezes on the section end.
         let mut t = PlaybackController::new();
         t.setup(0, 10, 60);
-        t.set_loops(-1);
+        t.set_loop_count(-1);
         t.play();
 
         let quarter_frame = 1000.0 / 60.0 / 4.0;
@@ -964,7 +964,7 @@ mod tests {
             t.update(quarter_frame);
             let reported = t.get_frame_no();
             t.set_frame_no(reported);
-            if t.is_looped() {
+            if t.just_looped() {
                 looped += 1;
             }
         }
@@ -975,7 +975,7 @@ mod tests {
     fn infinite_loop_emits_looped_only_and_never_finishes() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(-1);
+        t.set_loop_count(-1);
         t.set_skip_frames(false);
         t.play();
 
@@ -990,9 +990,9 @@ mod tests {
     fn set_loops_0_is_infinite() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(0);
-        assert_eq!(t.get_loops(), -1, "0 normalizes to the infinite sentinel");
-        assert_eq!(t.get_remain_loops(), -1);
+        t.set_loop_count(0);
+        assert_eq!(t.get_loop_count(), -1, "0 normalizes to the infinite sentinel");
+        assert_eq!(t.get_remaining_loops(), -1);
         t.set_skip_frames(false);
         t.play();
 
@@ -1007,7 +1007,7 @@ mod tests {
         // stop() part-way through must not read as finished...
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(3);
+        t.set_loop_count(3);
         t.set_skip_frames(false);
         t.play();
         t.update(1000.0 / 30.0);
@@ -1019,7 +1019,7 @@ mod tests {
         // non-final cycle, where end_frame_reached is legitimately set.
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(3);
+        t.set_loop_count(3);
         t.set_skip_frames(false);
         t.play();
         for _ in 0..4 {
@@ -1034,20 +1034,20 @@ mod tests {
     fn setup_rearms_loop_count_for_the_next_animation() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
         for _ in 0..6 {
             t.update(1000.0 / 30.0);
         }
         assert!(t.is_finished());
-        assert_eq!(t.get_remain_loops(), 0);
+        assert_eq!(t.get_remaining_loops(), 0);
 
         // A stale remain_loops == 0 would raise end_frame_reached at the end of
         // the next animation's first cycle even though it loops forever.
         t.setup(0, 4, 30);
-        assert_eq!(t.get_loops(), -1);
-        assert_eq!(t.get_remain_loops(), -1, "remain_loops must not leak across setup()");
+        assert_eq!(t.get_loop_count(), -1);
+        assert_eq!(t.get_remaining_loops(), -1, "remain_loops must not leak across setup()");
         t.set_skip_frames(false);
         t.play();
         let kinds: Vec<_> = collect_events(&mut t, 12).into_iter().map(|(_, k)| k).collect();
@@ -1059,7 +1059,7 @@ mod tests {
     fn replaying_a_finished_animation_rearms_the_loop_count() {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(2);
+        t.set_loop_count(2);
         t.set_skip_frames(false);
         t.play();
         let kinds: Vec<_> = collect_events(&mut t, 30).into_iter().map(|(_, k)| k).collect();
@@ -1092,7 +1092,7 @@ mod tests {
         // user-data / signal / audio key authored on the last frame.
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 8), [0, 1, 2, 3, 4]);
@@ -1105,7 +1105,7 @@ mod tests {
         // just reported the end frame.
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(true);
         t.play();
         t.update((1000.0 / 30.0) * 10.0);
@@ -1117,7 +1117,7 @@ mod tests {
     fn single_frame_clip_reports_its_only_frame_once() {
         let mut t = PlaybackController::new();
         t.setup(5, 5, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 6), [5]);
@@ -1128,7 +1128,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(5, 5, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.set_loops(3);
+        t.set_loop_count(3);
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 8), [5, 5, 5]);
@@ -1139,7 +1139,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(5, 5, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
-        t.set_loops(3);
+        t.set_loop_count(3);
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 8), [5, 5, 5]);
@@ -1149,7 +1149,7 @@ mod tests {
     fn narrowing_the_section_to_one_frame_reports_it() {
         let mut t = PlaybackController::new();
         t.setup(0, 9, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
         collect_passed(&mut t, 1);
@@ -1161,7 +1161,7 @@ mod tests {
     fn a_new_section_reports_its_own_start_frame() {
         let mut t = PlaybackController::new();
         t.setup(0, 9, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
         collect_passed(&mut t, 1);
@@ -1174,7 +1174,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 9, 30);
         t.set_animation_section(2, 5);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
 
@@ -1191,7 +1191,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 3, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
         // Out 0..3, back 3..0. The trailing 0 -- where playback stops -- must be
@@ -1204,7 +1204,7 @@ mod tests {
     fn looping_still_reports_every_frame_of_every_cycle() {
         let mut t = PlaybackController::new();
         t.setup(0, 2, 30);
-        t.set_loops(2);
+        t.set_loop_count(2);
         t.set_skip_frames(false);
         t.play();
         assert_eq!(collect_passed(&mut t, 8), [0, 1, 2, 0, 1, 2]);
@@ -1214,7 +1214,7 @@ mod tests {
     fn test_normal_playback_no_loop() {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
 
@@ -1240,7 +1240,7 @@ mod tests {
     fn test_normal_playback_loops() {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
-        t.set_loops(2);
+        t.set_loop_count(2);
         t.set_skip_frames(false);
         t.play();
 
@@ -1252,12 +1252,12 @@ mod tests {
         }
         assert!(t.is_end_frame_reached(), "end_frame_reached should be true after first loop");
         assert_eq!(t.get_frame_no(), 10.0);
-        assert_eq!(t.get_remain_loops(), 2);
+        assert_eq!(t.get_remaining_loops(), 2);
 
         // Transition to second loop (shows frame 0)
         let frame = t.update(interval);
         assert_eq!(frame, 0.0, "Should jump back to start frame");
-        assert_eq!(t.get_remain_loops(), 1);
+        assert_eq!(t.get_remaining_loops(), 1);
         assert!(!t.is_end_frame_reached(), "end_frame_reached should reset at start of new loop");
 
         // Second loop: 0 -> 10
@@ -1269,7 +1269,7 @@ mod tests {
         // Final update stops
         t.update(interval);
         assert!(!t.is_playing(), "Should stop playing after 2 loops");
-        assert_eq!(t.get_remain_loops(), 0);
+        assert_eq!(t.get_remaining_loops(), 0);
     }
 
     #[test]
@@ -1277,7 +1277,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
 
@@ -1330,7 +1330,7 @@ mod tests {
     fn test_infinite_loop() {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
-        t.set_loops(-1);
+        t.set_loop_count(-1);
         t.play();
 
         let interval = 1000.0 / 30.0;
@@ -1340,7 +1340,7 @@ mod tests {
         }
 
         assert!(t.is_playing(), "Infinite loop should never stop");
-        assert_eq!(t.get_remain_loops(), -1);
+        assert_eq!(t.get_remaining_loops(), -1);
     }
 
     #[test]
@@ -1370,7 +1370,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
 
@@ -1392,7 +1392,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::Normal);
-        t.set_loops(2);
+        t.set_loop_count(2);
         t.set_skip_frames(false);
         t.play();
 
@@ -1425,7 +1425,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
-        t.set_loops(1);
+        t.set_loop_count(1);
         t.set_skip_frames(false);
         t.play();
 
@@ -1477,7 +1477,7 @@ mod tests {
     fn test_skip_frames_loop_boundary() {
         let mut t = PlaybackController::new();
         t.setup(0, 10, 30);
-        t.set_loops(2);
+        t.set_loop_count(2);
         t.set_skip_frames(true);
         t.play();
 
@@ -1490,7 +1490,7 @@ mod tests {
         assert_eq!(floorf(frame), 0.0, "Should have looped back to start frame");
         let decimal = frame - floorf(frame);
         assert!(decimal > 0.4 && decimal < 0.6, "Should have 0.5 decimal after loop, got {}", decimal);
-        assert_eq!(t.get_remain_loops(), 1, "Should have 1 loop remaining");
+        assert_eq!(t.get_remaining_loops(), 1, "Should have 1 loop remaining");
     }
 
     #[test]
@@ -1522,7 +1522,7 @@ mod tests {
     fn test_passed_frames_looping() {
         let mut t = PlaybackController::new();
         t.setup(0, 5, 30); // 0 to 5
-        t.set_loops(2);
+        t.set_loop_count(2);
         t.set_skip_frames(true);
         t.play();
 
@@ -1600,7 +1600,7 @@ mod tests {
     fn test_passed_frames_multiple_loops() {
         let mut t = PlaybackController::new();
         t.setup(0, 5, 30); // Total 6 frames (0,1,2,3,4,5)
-        t.set_loops(-1); // Infinite
+        t.set_loop_count(-1); // Infinite
         t.set_skip_frames(true);
         t.play();
 
@@ -1656,7 +1656,7 @@ mod tests {
     fn test_is_looped_flag_normal_infinite() {
         let mut t = PlaybackController::new();
         t.setup(0, 5, 30); // 0 to 5 (6 frames)
-        t.set_loops(-1); // Infinite
+        t.set_loop_count(-1); // Infinite
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::Normal);
         t.set_skip_frames(false);
         t.play();
@@ -1666,24 +1666,24 @@ mod tests {
         // 0..4
         for _ in 0..5 {
             t.update(interval);
-            assert!(!t.is_looped(), "Should not be looped yet");
+            assert!(!t.just_looped(), "Should not be looped yet");
         }
 
         // Frame 5 -> 0 (Loop)
         t.update(interval);
-        assert!(t.is_looped(), "Should be looped at boundary");
+        assert!(t.just_looped(), "Should be looped at boundary");
         assert!(!t.is_end_frame_reached(), "Should not reach end frame in infinite loop");
 
         // Next frame, flag should reset
         t.update(interval);
-        assert!(!t.is_looped(), "is_looped should reset on next update");
+        assert!(!t.just_looped(), "just_looped should reset on next update");
     }
 
     #[test]
     fn test_is_looped_flag_pingpong() {
         let mut t = PlaybackController::new();
         t.setup(0, 5, 30); // 0 to 5
-        t.set_loops(2); // 2 loops
+        t.set_loop_count(2); // 2 loops
         t.set_playback_direction(PlaybackDirection::Forward, PlaybackStyle::PingPong);
         t.set_skip_frames(false);
         t.play();
@@ -1693,44 +1693,44 @@ mod tests {
         // Forward 0..4
         for _ in 0..5 {
             t.update(interval);
-            assert!(!t.is_looped(), "Should not be looped during forward");
+            assert!(!t.just_looped(), "Should not be looped during forward");
         }
 
         // Frame 5 -> Start backward
         t.update(interval);
         // In ping-pong, hitting the far end doesn't count as a "loop" completion until we return to origin
-        assert!(!t.is_looped(), "Should not loop at far end of pingpong");
+        assert!(!t.just_looped(), "Should not loop at far end of pingpong");
 
         // Backward 4..1
         for _ in 0..4 {
             t.update(interval);
-            assert!(!t.is_looped(), "Should not be looped during backward");
+            assert!(!t.just_looped(), "Should not be looped during backward");
         }
 
         // Frame 0 -> 1 (Loop 1 complete)
         t.update(interval);
-        assert!(t.is_looped(), "Should be looped when returning to origin in pingpong");
+        assert!(t.just_looped(), "Should be looped when returning to origin in pingpong");
         assert!(!t.is_end_frame_reached());
 
         // Forward 1..4 again
         for _ in 0..4 {
             t.update(interval);
-            assert!(!t.is_looped());
+            assert!(!t.just_looped());
         }
 
         // Frame 5 -> Start backward again
         t.update(interval);
-        assert!(!t.is_looped());
+        assert!(!t.just_looped());
 
         // Backward 4..1
         for _ in 0..4 {
             t.update(interval);
-            assert!(!t.is_looped());
+            assert!(!t.just_looped());
         }
 
         // Frame 0 -> End
         t.update(interval);
-        assert!(!t.is_looped(), "Should not loop on final end");
+        assert!(!t.just_looped(), "Should not loop on final end");
         assert!(t.is_end_frame_reached(), "Should reach end frame on last loop");
     }
 
@@ -1742,7 +1742,7 @@ mod tests {
     fn primed(loops: i32) -> PlaybackController {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_loops(loops);
+        t.set_loop_count(loops);
         t.set_skip_frames(false);
         t
     }
@@ -1774,7 +1774,7 @@ mod tests {
             t.update(1000.0 / 30.0);
             assert_eq!(t.get_frame_no(), 0.0, "setup() alone must not advance the playhead");
             assert!(!t.is_playing(), "update() must not start playback on its own");
-            assert!(!t.is_looped());
+            assert!(!t.just_looped());
             assert!(!t.is_finished());
         }
 
@@ -1922,23 +1922,23 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
 
-        t.set_animation_speed(2.0);
+        t.set_speed_scale(2.0);
         t.set_skip_frames(false);
-        t.set_loops(3);
+        t.set_loop_count(3);
         t.set_animation_section(1, 3);
         t.set_playback_direction(PlaybackDirection::Backward, PlaybackStyle::PingPong);
 
         // A different clip, at a different frame rate.
         t.setup(0, 9, 60);
 
-        assert_eq!(t.fps_rate, 2.0, "speed is the host's, not the clip's");
+        assert_eq!(t.speed_scale, 2.0, "speed is the host's, not the clip's");
         assert!(!t.get_skip_frames(), "frame skip is the host's, not the clip's");
 
         assert!(t.playback_direction == PlaybackDirection::Backward, "direction is the host's, not the clip's");
         assert!(t.playback_style == PlaybackStyle::PingPong, "style is the host's, not the clip's");
         assert_eq!(t.playback_forward, -1, "and the heading is re-derived from it");
 
-        assert_eq!(t.get_loops(), -1, "loop count is per-transition");
+        assert_eq!(t.get_loop_count(), -1, "loop count is per-transition");
         assert_eq!((t.start_frame, t.end_frame), (0, 9), "the section is the new clip's own range");
     }
 
@@ -1980,7 +1980,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 1000, 30);
         t.set_skip_frames(true);
-        t.set_animation_speed(2.0);
+        t.set_speed_scale(2.0);
 
         t.setup(0, 1000, 60); // same host, new clip at 60fps
         t.play();
@@ -1999,16 +1999,16 @@ mod tests {
         // rather than as the reverse playback it was mistaken for.
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        assert_eq!(t.get_animation_speed(), 1.0, "the default is 1x");
+        assert_eq!(t.get_speed_scale(), 1.0, "the default is 1x");
 
-        t.set_animation_speed(2.5);
-        assert_eq!(t.get_animation_speed(), 2.5);
+        t.set_speed_scale(2.5);
+        assert_eq!(t.get_speed_scale(), 2.5);
 
-        t.set_animation_speed(0.0);
-        assert_eq!(t.get_animation_speed(), 0.0, "zero is a setting, not 'unset'");
+        t.set_speed_scale(0.0);
+        assert_eq!(t.get_speed_scale(), 0.0, "zero is a setting, not 'unset'");
 
-        t.set_animation_speed(-1.0);
-        assert_eq!(t.get_animation_speed(), 0.0, "a negative rate clamps to a stop, and reads back as one");
+        t.set_speed_scale(-1.0);
+        assert_eq!(t.get_speed_scale(), 0.0, "a negative rate clamps to a stop, and reads back as one");
     }
 
     #[test]
@@ -2017,9 +2017,9 @@ mod tests {
         // must not leak the previous one's settings.
         let mut t = PlaybackController::new();
         t.setup(0, 4, 30);
-        t.set_animation_speed(2.0);
+        t.set_speed_scale(2.0);
         t.reset_setup();
-        assert_eq!(t.fps_rate, 1.0);
+        assert_eq!(t.speed_scale, 1.0);
     }
 
     #[test]
@@ -2029,18 +2029,18 @@ mod tests {
         // rate is data and is re-read every time.
         let mut t = PlaybackController::new();
         t.setup(0, 1000, 30);
-        assert_eq!(t.get_fps(), 30, "no override yet: the clip's own rate");
+        assert_eq!(t.get_frame_rate(), 30, "no override yet: the clip's own rate");
 
         t.set_frame_rate(60);
-        assert_eq!(t.get_fps(), 60);
+        assert_eq!(t.get_frame_rate(), 60);
 
         t.setup(0, 1000, 24); // a different clip, authored at 24
-        assert_eq!(t.get_fps(), 60, "the host's rate outlives the transition");
+        assert_eq!(t.get_frame_rate(), 60, "the host's rate outlives the transition");
 
         // ...and clearing it hands playback back to the *new* clip's rate, not
         // the one that was current when the override was set.
         t.set_frame_rate(0);
-        assert_eq!(t.get_fps(), 24);
+        assert_eq!(t.get_frame_rate(), 24);
     }
 
     #[test]
@@ -2069,7 +2069,7 @@ mod tests {
         t.setup(0, 1000, 24);
         t.set_skip_frames(true);
         t.set_frame_rate(60);
-        t.set_animation_speed(0.5);
+        t.set_speed_scale(0.5);
         t.play();
         t.update(1000.0);
 
@@ -2083,7 +2083,7 @@ mod tests {
         t.set_frame_rate(60);
         t.reset_setup();
         t.setup(0, 4, 30);
-        assert_eq!(t.get_fps(), 30, "a recycled slot must not inherit the previous owner's rate");
+        assert_eq!(t.get_frame_rate(), 30, "a recycled slot must not inherit the previous owner's rate");
     }
 
     #[test]
@@ -2098,7 +2098,7 @@ mod tests {
         let held_at = t.get_frame_no();
         assert!(held_at > 0.0, "sanity: it was advancing before the speed changed");
 
-        t.set_animation_speed(0.0);
+        t.set_speed_scale(0.0);
         for _ in 0..10 {
             t.update(1000.0);
         }
@@ -2107,7 +2107,7 @@ mod tests {
         assert!(!t.is_pausing(), "nor is it the pause flag");
 
         // ...and it is not a one-way door.
-        t.set_animation_speed(1.0);
+        t.set_speed_scale(1.0);
         t.update(1000.0 / 30.0);
         assert!(t.get_frame_no() > held_at, "restoring a positive speed resumes advancing");
     }
@@ -2119,7 +2119,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 1000, 30);
         t.set_skip_frames(false);
-        t.set_animation_speed(0.0);
+        t.set_speed_scale(0.0);
         t.play();
         let held_at = t.get_frame_no();
         for _ in 0..10 {
@@ -2136,7 +2136,7 @@ mod tests {
         let mut t = PlaybackController::new();
         t.setup(0, 1000, 30);
         t.set_skip_frames(true);
-        t.set_animation_speed(-1.0);
+        t.set_speed_scale(-1.0);
         t.play();
         let held_at = t.get_frame_no();
         t.update(1000.0);

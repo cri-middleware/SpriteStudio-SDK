@@ -352,7 +352,58 @@ The level follows the blast radius. A pack that did not load leaves the Player u
 
 ---
 
-## 8. Departing from this document
+## 8. The C ABI's own rules
+
+Everything above governs a Player's public API. The C ABI is the other frozen
+surface, and it is the one every Player reads while writing that API — so it
+needs its own rules, written down, or the drift lands in seven repositories at
+once.
+
+**Every exported symbol is `ss_<object>_<verb>_<noun>`.** The object is
+`runtime` for anything that takes a context, and `resource`, `effect_slot` or
+`instance_slot` for the three handle types that own themselves.
+
+**The verb comes first and is never omitted.** `get_` / `set_` / `clear_` /
+`find_` / `add_` / `load_` / `bind_` / `cancel_` / `fade_`. Every reader is
+`get_`, every writer is `set_`, and a pair spells its noun identically —
+`ss_runtime_get_frame_rate` against `ss_runtime_set_frame_rate`, never `get_fps`
+against `set_frame_rate`. A hash-keyed twin takes the `_by_hash` suffix and
+nothing else changes.
+
+**The noun is §3's stem.** The C ABI is not exempt from the vocabulary table; it
+is where the stem is first spelled out, and a Player that copies it verbatim
+should land inside this document rather than outside it. **Where the C ABI and
+the table disagree, the C ABI is the one that is wrong.** The test is whether a
+Player has to *translate* rather than merely re-spell: re-spelling
+`ss_runtime_just_looped` as `justLooped`, `JustLooped()` or `just_looped()` is
+the host's business and costs nothing, but every Player having to explain in a
+comment why its name differs from the Brain's is the symptom of a bad stem.
+
+**An out-parameter that points at runtime-owned memory is `const`.** The buffer
+belongs to the context until the next call that rebuilds it; `const unsigned
+char **` says so, and the compiler enforces it on the C and C++ hosts. The
+hosts without `const` — C#, `ctypes`, `ffigen` — are unaffected either way, so
+there is no cost to being right here.
+
+**Failure crosses as a code, never as a string.** A call reports failure by
+return value; the caller retrieves the reason with `ss_runtime_get_last_error`
+and turns it into text with `ss_runtime_error_message`. The numbers are a
+compatibility surface in their own right — see `libs/ssruntime/src/error.rs`.
+
+The deliberate departures from the Player layer are listed where they arise:
+argument order (§1) and the `get_` prefix itself, which §3 leaves to the host
+and which the C ABI settles as "always".
+
+### Why this section exists
+
+Before the first release a rename costs a submodule bump the Players are taking
+anyway, plus the call sites. After it, the same rename is a deprecation cycle
+across every Player and a migration note for anyone who shipped. **Names are
+therefore settled here, before publication, and the window does not reopen.**
+
+---
+
+## 9. Departing from this document
 
 There are legitimate reasons to depart — chiefly a head-on collision with the host language's or engine's conventions. When you do, **write the reason next to the code.** A departure with no stated reason is indistinguishable from a mistake to whoever reads it next.
 

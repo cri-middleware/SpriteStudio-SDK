@@ -350,12 +350,24 @@ impl SSRuntimeContext {
     }
 
     // Zero-copy getters
-    pub fn get_frame_data_buf(&mut self, frame_no: f32) -> Result<*const u8, JsValue> {
-        self.inner.get_frame_data(frame_no).map(|s| s.as_ptr()).map_err(js_error)
+
+    /// Build the frame data for `frame_no` and return its byte length. Read the
+    /// bytes with `get_frame_data_buf`, which does not evaluate again.
+    ///
+    /// Evaluating the frame is the expensive half of a tick, so it happens here
+    /// once. The buf/len pair is pure, like every other one on this type.
+    pub fn prepare_frame_data(&mut self, frame_no: f32) -> Result<usize, JsValue> {
+        self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(js_error)
     }
 
-    pub fn get_frame_data_len(&mut self, frame_no: f32) -> Result<usize, JsValue> {
-        self.inner.get_frame_data(frame_no).map(|s| s.len()).map_err(js_error)
+    /// Pointer to what the last `prepare_frame_data` built. Null before the
+    /// first call; valid until the next one.
+    pub fn get_frame_data_buf(&self) -> *const u8 {
+        self.inner.get_frame_data_ptr()
+    }
+
+    pub fn get_frame_data_len(&self) -> usize {
+        self.inner.get_frame_data_len()
     }
 
     pub fn get_world_matrices_buf(&self) -> *const f32 {
@@ -532,8 +544,8 @@ impl SSRuntimeContext {
         self.inner.is_finished()
     }
 
-    pub fn is_looped(&self) -> bool {
-        self.inner.is_looped()
+    pub fn just_looped(&self) -> bool {
+        self.inner.just_looped()
     }
 
     // setting getter functions
@@ -561,12 +573,12 @@ impl SSRuntimeContext {
         self.inner.get_playback_style().into()
     }
 
-    pub fn get_loops(&self) -> i32 {
-        self.inner.get_loops()
+    pub fn get_loop_count(&self) -> i32 {
+        self.inner.get_loop_count()
     }
 
-    pub fn get_remain_loops(&self) -> i32 {
-        self.inner.get_remain_loops()
+    pub fn get_remaining_loops(&self) -> i32 {
+        self.inner.get_remaining_loops()
     }
 
     pub fn get_start_frame(&self) -> i32 {
@@ -577,12 +589,12 @@ impl SSRuntimeContext {
         self.inner.get_end_frame()
     }
 
-    pub fn get_fps(&self) -> i32 {
-        self.inner.get_fps()
+    pub fn get_frame_rate(&self) -> i32 {
+        self.inner.get_frame_rate()
     }
 
-    pub fn get_animation_speed(&self) -> f32 {
-        self.inner.get_animation_speed()
+    pub fn get_speed_scale(&self) -> f32 {
+        self.inner.get_speed_scale()
     }
 
     // Playback setup
@@ -590,20 +602,20 @@ impl SSRuntimeContext {
         self.inner.set_skip_frames(skip);
     }
 
-    pub fn set_loop(&mut self, loops: i32) {
-        self.inner.set_loop(loops);
+    pub fn set_loop_count(&mut self, loop_count: i32) {
+        self.inner.set_loop_count(loop_count);
     }
 
-    pub fn set_frame_rate(&mut self, fps: i32) {
-        self.inner.set_frame_rate(fps);
+    pub fn set_frame_rate(&mut self, frame_rate: i32) {
+        self.inner.set_frame_rate(frame_rate);
     }
 
     pub fn set_playback_direction(&mut self, direction: WebPlaybackDirection, style: WebPlaybackStyle) {
         self.inner.set_playback_direction(direction.into(), style.into());
     }
 
-    pub fn set_animation_speed(&mut self, speed_rate: f32) {
-        self.inner.set_animation_speed(speed_rate);
+    pub fn set_speed_scale(&mut self, speed_scale: f32) {
+        self.inner.set_speed_scale(speed_scale);
     }
 
     pub fn set_animation_section(&mut self, start_frame: i32, end_frame: i32) {
@@ -690,8 +702,8 @@ impl SSRuntimeContext {
         self.inner.set_track_alpha(track, alpha).map_err(js_error)
     }
 
-    pub fn track_alpha(&self, track: u32) -> Option<f32> {
-        self.inner.track_alpha(track)
+    pub fn get_track_alpha(&self, track: u32) -> Option<f32> {
+        self.inner.get_track_alpha(track)
     }
 
     /// `blend`: 0 = mix (lerp onto what is below), 1 = additive (offset from the setup pose).
@@ -704,15 +716,15 @@ impl SSRuntimeContext {
         self.inner.set_track_blend(track, blend).map_err(js_error)
     }
 
-    pub fn track_blend(&self, track: u32) -> Option<u32> {
-        self.inner.track_blend(track).map(|b| match b {
+    pub fn get_track_blend(&self, track: u32) -> Option<u32> {
+        self.inner.get_track_blend(track).map(|b| match b {
             crate::TrackBlend::Mix => 0,
             crate::TrackBlend::Additive => 1,
         })
     }
 
-    pub fn track_count(&self) -> u32 {
-        self.inner.track_count()
+    pub fn get_track_count(&self) -> u32 {
+        self.inner.get_track_count()
     }
 
     pub fn clear_track(&mut self, track: u32) -> Result<(), JsValue> {
@@ -731,8 +743,8 @@ impl SSRuntimeContext {
         self.inner.fade_track(track, target_alpha, duration_ms).map_err(js_error)
     }
 
-    pub fn track_fade_progress(&self, track: u32) -> Option<f32> {
-        self.inner.track_fade_progress(track)
+    pub fn get_track_fade_progress(&self, track: u32) -> Option<f32> {
+        self.inner.get_track_fade_progress(track)
     }
 
     pub fn cancel_track_fade(&mut self, track: u32) -> Result<(), JsValue> {
@@ -743,48 +755,48 @@ impl SSRuntimeContext {
         self.inner.set_track_frame(track, frame).map_err(js_error)
     }
 
-    pub fn track_frame(&self, track: u32) -> Option<f32> {
-        self.inner.track_frame(track)
+    pub fn get_track_frame(&self, track: u32) -> Option<f32> {
+        self.inner.get_track_frame(track)
     }
 
     pub fn set_track_speed(&mut self, track: u32, speed: f32) -> Result<(), JsValue> {
         self.inner.set_track_speed(track, speed).map_err(js_error)
     }
 
-    pub fn track_main_source(&self, track: u32) -> Option<u32> {
-        self.inner.track_main_source(track)
+    pub fn get_track_main_source(&self, track: u32) -> Option<u32> {
+        self.inner.get_track_main_source(track)
     }
 
-    pub fn track_add_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, JsValue> {
-        self.inner.track_add_source(track, name, weight).map_err(js_error)
+    pub fn add_track_source(&mut self, track: u32, name: &str, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_track_source(track, name, weight).map_err(js_error)
     }
 
-    pub fn track_add_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, JsValue> {
-        self.inner.track_add_source_by_hash(track, hash, weight).map_err(js_error)
+    pub fn add_track_source_by_hash(&mut self, track: u32, hash: u32, weight: f32) -> Result<u32, JsValue> {
+        self.inner.add_track_source_by_hash(track, hash, weight).map_err(js_error)
     }
 
     pub fn set_source_weight(&mut self, handle: u32, weight: f32) -> Result<(), JsValue> {
         self.inner.set_source_weight(handle, weight).map_err(js_error)
     }
 
-    pub fn source_weight(&self, handle: u32) -> Option<f32> {
-        self.inner.source_weight(handle)
+    pub fn get_source_weight(&self, handle: u32) -> Option<f32> {
+        self.inner.get_source_weight(handle)
     }
 
     pub fn set_source_frame(&mut self, handle: u32, frame: f32) -> Result<(), JsValue> {
         self.inner.set_source_frame(handle, frame).map_err(js_error)
     }
 
-    pub fn source_frame(&self, handle: u32) -> Option<f32> {
-        self.inner.source_frame(handle)
+    pub fn get_source_frame(&self, handle: u32) -> Option<f32> {
+        self.inner.get_source_frame(handle)
     }
 
     pub fn set_source_event_threshold(&mut self, handle: u32, threshold: f32) -> Result<(), JsValue> {
         self.inner.set_source_event_threshold(handle, threshold).map_err(js_error)
     }
 
-    pub fn source_event_threshold(&self, handle: u32) -> Option<f32> {
-        self.inner.source_event_threshold(handle)
+    pub fn get_source_event_threshold(&self, handle: u32) -> Option<f32> {
+        self.inner.get_source_event_threshold(handle)
     }
 
     pub fn get_passed_event_source_handle(&self, index: i32) -> u32 {
