@@ -25,7 +25,7 @@ wide = { workspace = true }
 # that enabling `std` (e.g. a wasm consumer that needs an std allocator) does not
 # drag the native converter into the build graph.
 [dev-dependencies]
-ssconverter = { workspace = true }
+ssconverter = { workspace = true, features = ["native"] }
 
 [features]
 default = []

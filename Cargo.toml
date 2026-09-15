@@ -25,7 +25,11 @@ description = "Software development kit for SpriteStudio projects"
 
 [workspace.dependencies]
 sspj = { version = "7.0.0-beta.1", path = "libs/sspj", default-features = false }
-ssconverter = { version = "7.0.0-beta.1", path = "libs/ssconverter" }
+# `default-features = false` so the browser build can exist at all: a member cannot
+# turn off an inherited dependency's defaults, so leaving `native` (rayon + walkdir
+# + std::fs) on here puts it in every graph, `--no-default-features` included.
+# Members that want it ask for `features = ["native"]`.
+ssconverter = { version = "7.0.0-beta.1", path = "libs/ssconverter", default-features = false }
 ssab = { version = "7.0.0-beta.1", path = "libs/ssab", default-features = false }
 ssruntime = { version = "7.0.0-beta.1", path = "libs/ssruntime" }
 flatbuffers = { version = "25.12.19", default-features = false }

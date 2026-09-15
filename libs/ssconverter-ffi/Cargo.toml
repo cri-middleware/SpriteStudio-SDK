@@ -16,6 +16,8 @@ crate-type = ["staticlib", "cdylib"]
 doc = false
 
 [dependencies]
+# Nothing on by default: every build below says which face it wants, and the
+# browser one must not pick up `native`. `ffi` implies `native` on its own.
 ssconverter = { workspace = true }
 
 [features]
