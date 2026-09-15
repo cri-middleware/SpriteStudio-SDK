@@ -18,7 +18,7 @@ When building the C-API (`cdylib` / `staticlib`) for `no_std`, a global allocato
 Standard output (`println!`, `eprintln!`) is unavailable in a `no_std` environment. To receive error and warning logs from inside libssruntime, you must register a log callback at initialization.
 
 ```cpp
-#include "runtime/ssruntime.h"
+#include "ssruntime.h"
 
 // The callback that receives logs
 void my_log_callback(int level, const char* message) {
@@ -48,7 +48,7 @@ Performing the following checks before handing data to the library rejects most 
 In the C-API, `SsabData` and `AnimationResource` are hidden internally as an `FfiResource`, so initialization takes the following two steps.
 
 ```cpp
-#include "runtime/ssruntime.h"
+#include "ssruntime.h"
 
 // 1. Create the resource (ownership of the data plus the parsed metadata)
 // Use either ss_resource_create_borrow or ss_resource_create_copy

@@ -68,7 +68,7 @@ nav:
       - Mesh & Deform: 40_components/30_mesh.md
       - Mask: 40_components/40_mask.md
       - Parts Color: 40_components/50_parts_color.md
-      - Animation Blending: 40_components/60_animation_blending.md
+      - Animation Mixing: 40_components/60_animation_mixing.md
       - Part Overrides: 40_components/65_override_layer.md
       - External Resources & Textures: 40_components/70_external_resources.md
       - Sequence: 40_components/80_sequence.md

@@ -56,7 +56,8 @@ usage () {
   echo "  -h | --help             Show this help"
   echo ""
   echo "Output: site/ (English) and site/ja/ (Japanese). Both builds are --strict, so a"
-  echo "broken internal link or a nav entry pointing at a missing page fails the build."
+  echo "broken internal link fails the build; a nav entry pointing at a missing page is"
+  echo "caught a step earlier, by build-docs-tree.py, which --strict does not catch at all."
   echo ""
   echo "locale=en on its own DELETES site/ja: the English build clears site/, and the"
   echo "Japanese site lives inside it. Use locale=all before serving or publishing."
@@ -157,7 +158,8 @@ cd "$ROOT_DIR"
 # --- generate -------------------------------------------------------------
 # Both locale trees, before either build and regardless of locale=: the configs
 # read build/docs/en and build/docs/ja, and neither exists in a fresh checkout.
-# It also fails loudly on a guide page that lost its language switcher line.
+# It also fails loudly on a guide page that lost its language switcher line, and on a
+# nav entry and a generated page that do not agree -- the dead nav link --strict misses.
 echo ">> $(basename "$PYTHON") scripts/build-docs-tree.py -> build/docs/{en,ja}"
 "$PYTHON" scripts/build-docs-tree.py
 

@@ -56,7 +56,7 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | Included only if the pack contains Audio-type parts |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | Only bitmap fonts used by Text-type parts with `text_bitmap == true` |
 | `external_textures` | [ExternalTexture] | — | External texture references; sorted by `name_hash`. Union of the project's `<ExternalTextures>` list and every distinct `TextureName` named by a `TCHG` key in this pack (including cellmap images such as `common.png`). This is the reverse-lookup table a Player needs to turn a `TCHG` hash — and hence `DrawBatch.texture_hash` — back into a loadable name, so it must cover both sources. |
-| `external_instances` | [ExternalInstance] | — | Cross-pack instance references; sorted by `anime_name_hash` (the FlatBuffers `(key)`) so the player can `LookupByKey(ref_anime_hash)` directly. Each entry carries `anime_pack_name_hash` (matches `SsAnimeBinary.name_hash` of the target pack), `anime_pack_name` (used to locate the sibling `<pack>.ssab` file), and `anime_name` (diagnostic). |
+| `external_instances` | [ExternalInstance] | — | Cross-pack instance references; sorted by `(anime_pack_name_hash, anime_name_hash)`. The table carries no FlatBuffers `(key)`, so a reader scans the vector rather than calling `LookupByKey`. Each entry carries `anime_pack_name_hash` (matches `SsAnimeBinary.name_hash` of the target pack), `anime_pack_name` (used to locate the sibling `<pack>.ssab` file), `anime_name_hash`, and `anime_name` (diagnostic). |
 | `embedded_assets` | [EmbeddedAsset] | — | Optionally embedded binary assets (images, sounds, etc.) |
 
 ---
@@ -71,8 +71,11 @@ Each `.ssab` is self-contained: it embeds only the ss*e resources that the speci
 | `parent_index` | short | `parent_index` | Parent part index |
 | `bounds_type` | BoundsType | `bounds_type` | Bounding calculation mode |
 | `blend_type` | BlendType | `alpha_blend_type` | Renamed field |
+| `visible_inside_mask` | bool | `visible_inside_mask` | The polarity of a masked drawing part: `1` = draw inside the mask / `0` = draw outside → [Mask implementation §2-4](../ssruntime/docs/40_components/40_mask.md#2-4-polarity-whether-to-draw-inside-or-outside-the-mask) |
+| `mask_write` | bool | `write_mask` | Renamed field. Turns a drawn part into a **clipping** writer. Clipping emits no `DrawBatchKind::Mask`, so the writer list has to be settled from this flag → [Mask implementation §1-2](../ssruntime/docs/40_components/40_mask.md#1-2-part-roles-and-mask_influence) |
 | `mask_influence` | bool | `mask_influence` | **A dual definition whose meaning changes with the role**: on a mask writer it is the OP (`0` = increment / `1` = invert); on a masked drawing part it is the target flag (`1` = affected / `0` = opted out). Clipping is both a writer and a drawing part, so the same value serves both meanings at once. Do not drop either one → [Mask implementation §1-2](../ssruntime/docs/40_components/40_mask.md#1-2-part-roles-and-mask_influence) |
 | `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | Unified pure-mask flag for drawing parts (Shape/Text/Nines). Mutually-exclusive per-type tags in the source .ssae. `PartTypeMask` is always a pure mask regardless of this flag |
+| `output_influence` | bool (default `true`) | `output_influence` | Carried through from the authoring data unchanged; `libssruntime` does not read it |
 | `mesh_binding` | PartMeshBinding | (computed) | Per-vertex bone influences for `PartTypeMesh`. See [Mesh Binding](#mesh-binding) below. Optional; absent for non-mesh parts. |
 | `part_type` | PartType (union) | `part_type` + type-specific fields | See below |
 
@@ -87,7 +90,7 @@ In ssae, the part type is a simple enum (`SsPartType`) and type-specific data (e
 | `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
 | `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family`, etc. |
 | `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
-| `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_hash` (ssae: `ref_anime_pack` + `ref_anime` as strings) |
+| `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_pack` + `ref_anime_pack_hash`, `ref_anime_name` + `ref_anime_name_hash` (ssae: `ref_anime_pack` + `ref_anime` as strings) |
 | `PartTypeArmature` | `SsPartType::Armature` | None |
 | `PartTypeEffect` | `SsPartType::Effect` | `ref_effect_name_hash` (ssae: `ref_effect_name` as string) |
 | `PartTypeMesh` | `SsPartType::Mesh` | None |
@@ -122,17 +125,14 @@ The following ssae `SsPart` fields are editor-only and not included in ssab:
 
 ### Mesh Binding
 
-For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into a flat per-vertex influence list and stores it on `PartData.mesh_binding`. Other part types omit the field.
+For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into per-vertex bone influences and stores them on `PartData.mesh_binding`. Other part types omit the field. The influences are **parallel arrays indexed by a prefix-offset table**, not nested tables: one vector allocation per part rather than one per vertex.
 
-| ssab table | Field | Type | Notes |
-|-----------|-------|------|-------|
-| `PartMeshBinding` | `vertex` | [PartMeshBindingVertex] | One entry per mesh vertex; outer index matches the mesh vertex order. |
-| `PartMeshBindingVertex` | `influence` | [PartMeshBindingInfluence] | All bones that affect this vertex. |
-| `PartMeshBindingInfluence` | `bone` | ushort | Part index of the influencing bone — already remapped from the ssae bone-list index to the corresponding part index, so the runtime can index `parts` directly. |
-| `PartMeshBindingInfluence` | `weight` | float | Influence weight. |
-| `PartMeshBindingInfluence` | `coordinate` | Vec2 | Bind-pose offset of the vertex relative to the influencing bone. |
-
-> **Note:** ssae stores `bone` as an index into `SsModel.bone_list`. The converter remaps this to a part index at convert time so the runtime never needs `bone_list`.
+| Field | Type | Notes |
+|-------|------|-------|
+| `vertex_influence_offset` | [uint32] | Prefix offsets — one per mesh vertex **plus a trailing total**, so it holds `vertex_count + 1` entries. Vertex `i`'s influences are the half-open range `[offset[i], offset[i + 1])` in the four arrays below, and the outer index matches the mesh vertex order. |
+| `influence_bone` | [ushort] | Part index of the influencing bone — already remapped from the ssae bone-list index to the corresponding part index, so the runtime can index `parts` directly. |
+| `influence_weight` | [float] | Influence weight, normalised to `0.0`-`1.0` (ssae authors it as a percentage). |
+| `influence_coord_x` / `influence_coord_y` | [float] | Bind-pose offset of the vertex relative to the influencing bone, split across two arrays. |
 
 ---
 
@@ -309,7 +309,7 @@ AnimationData.events: [EventsPerFrame]
 | `interpolation` | `ip_type` | Interpolation type enum |
 | `value` | `value` | The attribute value |
 
-In ssae, keyframes can also carry `curve` data (`SsCurve`) for Bezier/Hermite interpolation with `start_time`, `start_value`, `end_time`, `end_value`, and `sync_start_end`. In ssab, curve data is not stored per-keyframe; the interpolation type enum alone determines the easing behavior.
+In ssae, keyframes can also carry `curve` data (`SsCurve`) for Bezier/Hermite interpolation with `start_time`, `start_value`, `end_time`, `end_value`, and `sync_start_end`. ssab keeps the four control values per keyframe as `curve: SsCurve`, alongside `easing_rate`, on the seven keyframe tables that need them — `PartAnimationDataFloatValue`, `PartAnimationDataIntValue`, `PartAnimationDataPartColor`, `PartAnimationDataShader`, `PartAnimationDataVertex`, `PartAnimationDataVec2` and `PartAnimationDataDeform`. `sync_start_end` is an authoring-side convenience and is not carried. The remaining keyframe tables (`Cell`, `UInt`, `Bool`, `Instance`, `Effect`) have no curve field: the interpolation type enum alone determines their easing behavior.
 
 ### Cell Attribute
 

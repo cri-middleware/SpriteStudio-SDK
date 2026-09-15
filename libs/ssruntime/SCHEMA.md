@@ -92,13 +92,13 @@ Complex attributes are stored in pools within `FrameData` to avoid duplicating l
 
 ## Draw Plan: Order, Batches, Mask Slice
 
-`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract" referenced from `CLAUDE.md` and the [Batched Rendering Contract](./docs/30_core/30_render_loop.md).
+`FrameData` carries not just per-part state but also a **cross-engine draw plan**: a stable, pre-sorted ordering of parts plus a contiguous batch list that the Player walks once per frame. This is the "DrawBatch contract"; the [Batched Rendering Contract](./docs/30_core/30_render_loop.md) is the reference for consuming it.
 
 | FrameData Field | Type | Description |
 |:---|:---|:---|
 | `draw_order` | `[ushort]` (required) | Parts ordered for rendering. Each value is an **index into `FrameData.parts`** (not `part_index`). Parts that are hidden, masked-out, or otherwise non-drawable are not included. |
 | `draw_batches` | `[DrawBatch]` (required) | Pre-merged draw commands. Each batch covers a contiguous slice of `draw_order` whose entries share the same renderable kind, blend mode, and texture. The Player issues one draw call per batch. |
-| `mask_indices` | `[ushort]` (required) | Indices into `FrameData.parts` for active mask parts in the current frame, in stencil-write order. Used together with `DrawBatchKind::Mask` batches to set up the stencil/clipping state. |
+| `mask_indices` | `[ushort]` (required) | Indices into `FrameData.parts` for the frame's **pure-mask** parts (`PartTypeMask` and `draw_as_mask`), in the same order as `draw_order`. **Not the writer list**: it excludes clipping (`mask_write`) and does not drop masks with `Hide == true`, so it does not agree with `draw_order`. Settle the writers by walking `draw_order` — see [Mask implementation §3-3](./docs/40_components/40_mask.md#3-3-common-notes). |
 
 ### `DrawBatch`
 

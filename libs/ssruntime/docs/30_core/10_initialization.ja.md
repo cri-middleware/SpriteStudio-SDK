@@ -18,7 +18,7 @@ C-API (`cdylib` / `staticlib`) を `no_std` でビルドする際は、内部の
 `no_std` 環境では標準出力 (`println!`, `eprintln!`) が利用できません。libssruntime 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
 
 ```cpp
-#include "runtime/ssruntime.h"
+#include "ssruntime.h"
 
 // ログを受け取るコールバック関数
 void my_log_callback(int level, const char* message) {
@@ -48,7 +48,7 @@ Player の実装者は、入力データが信頼できるソースからのも�
 C-API では `SsabData` と `AnimationResource` は内部的に `FfiResource` として隠蔽されているため、以下の2ステップで初期化します。
 
 ```cpp
-#include "runtime/ssruntime.h"
+#include "ssruntime.h"
 
 // 1. リソース（データの所有権とパース済みメタデータ）の作成
 // ss_resource_create_borrow または ss_resource_create_copy を使用

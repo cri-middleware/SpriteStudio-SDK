@@ -72,6 +72,8 @@ The site runs on [Zensical](https://zensical.org), the successor to MkDocs + Mat
 *   `docs/hooks.py`, which stripped the per-page language switcher line (now a hard error if a page lacks it, rather than a warning `strict` promoted);
 *   `exclude_docs`, which kept `CONTRIBUTING.ja.md` out of the site.
 
+It is also what checks the two `nav` trees against the pages that exist, because **`--strict` does not**: a nav entry naming a file that is not there builds clean, reports "No issues found", and publishes a dead link in the navigation of every page while the real page is generated outside the nav where no reader reaches it. The generator fails on either half of that — a nav entry with no page, and a page no nav lists.
+
 `scripts/build-docs.sh` runs it before either build, every time, so the generated tree cannot go stale. Everything else follows the family pattern: `mkdocs.base.yml` holds what both locales share, `mkdocs.yml` builds English to `site/`, `mkdocs.ja.yml` builds Japanese to `site/ja/` — English first, because it clears `site/`, which contains `site/ja`.
 
 **The three-config split has one rule: a YAML sequence must be defined in exactly one of the three files.** Zensical's `INHERIT` *concatenates* parent and child sequences where MkDocs replaces them, so a `nav` in the base as well as a locale config renders both navigations, one after the other.
@@ -133,7 +135,7 @@ git tag v7.0.0-beta.1 && git push origin v7.0.0-beta.1
 
 Nothing passes the tag around: `build-release.sh` reads `GITHUB_REF_NAME` (or, locally, the tag `HEAD` is checked out at) and stamps it into every archive's `VERSION`, and `release.yml` uses the same ref for `tag_name`. Dispatching from a branch is an artifact build, not a release — `upload_release=true` from anything but a `v*` tag fails the run rather than silently skipping the Release.
 
-Bump `[workspace.package] version` to match the tag before tagging. It is the string every Player pins in its own `scripts/SDK_VERSION.txt`.
+Bump `[workspace.package] version` to match the tag before tagging. It is the string every Player pins in its own `scripts/SDK_VERSION.txt`. Date the `CHANGELOG.md` heading in the same commit — `## v7.0.0-beta.1 - Unreleased` becomes `## v7.0.0-beta.1 - YYYY-MM-DD` — so the tag and the changelog agree.
 
 ### Reproducing the archives locally
 

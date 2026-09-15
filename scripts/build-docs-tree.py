@@ -24,6 +24,11 @@ replaces three things at once:
 * `docs/hooks.py`, which stripped the per-page language switcher line;
 * `exclude_docs`, which kept CONTRIBUTING.ja.md out of the site.
 
+It is also where the two `nav` trees are checked against the pages that exist.
+`zensical build --strict` does not do it: a nav entry naming a file that is not
+there still reports "No issues found", and ships a dead link in the navigation of
+every page while the real page is generated outside the nav entirely.
+
 Zensical silently ignores all three -- it reports "No issues found" and produces
 a flat 47-page tree with `.ja` in half the URLs -- so none of them could simply
 be carried over.
@@ -41,6 +46,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE = REPO_ROOT / "libs" / "ssruntime" / "docs"
 DEST = REPO_ROOT / "build" / "docs"
+
+# One config per locale, each with its own `nav` -- see the note in mkdocs.yml.
+NAV_CONFIGS = {"en": REPO_ROOT / "mkdocs.yml", "ja": REPO_ROOT / "mkdocs.ja.yml"}
+
+# A nav leaf is `- Label: path`. Only the leaves that name a page are of interest:
+# a section header ends in a bare `:`, and the last entry of each nav points out of
+# `docs_dir` at the rustdoc that build-pages.sh grafts onto site/api/.
+NAV_ENTRY = re.compile(r"^\s*-\s+.*?:\s*(\S+\.md)\s*$")
 
 # Contributor-facing style rules for the guide, not part of the guide. It is also
 # the one Japanese page with no English counterpart, and its `./NN_name.md`
@@ -101,6 +114,51 @@ def rewrite_ja_links(text: str) -> str:
     )
 
 
+def nav_pages(config: Path) -> set[Path]:
+    """The `.md` targets of a locale config's `nav`, relative to its `docs_dir`."""
+    pages: set[Path] = set()
+    in_nav = False
+    for line in config.read_text(encoding="utf-8").splitlines():
+        if not in_nav:
+            in_nav = line.rstrip() == "nav:"
+            continue
+        # The block ends at the next top-level key. Blank and comment lines do not
+        # end it, and `nav` is the last key in both configs today regardless.
+        if line.strip() and not line.startswith((" ", "\t", "#")):
+            break
+        match = NAV_ENTRY.match(line)
+        if match:
+            pages.add(Path(match.group(1)))
+    return pages
+
+
+def check_nav(counts: dict[str, int]) -> None:
+    """Fail when a locale's nav and its generated tree disagree, in either direction.
+
+    A nav entry with no file behind it is the failure `--strict` misses: the entry
+    renders as a dead link in every page's navigation, and the page it meant to
+    name is built outside the nav where no reader will find it. The other
+    direction -- a page nothing lists -- publishes the same orphan, so both are
+    errors here.
+    """
+    problems = []
+    for locale, config in NAV_CONFIGS.items():
+        listed = nav_pages(config)
+        if not listed:
+            problems.append(f"{config.name}: no `nav:` entries found")
+            continue
+        generated = {p.relative_to(DEST / locale) for p in (DEST / locale).rglob("*.md")}
+        for page in sorted(listed - generated):
+            problems.append(f"{config.name}: nav lists {page}, which no page generates")
+        for page in sorted(generated - listed):
+            problems.append(f"{config.name}: {page} is generated but listed in no nav entry")
+
+    if problems:
+        sys.exit("error: nav does not match the generated tree\n" + "\n".join(f"  {p}" for p in problems))
+
+    print(f"nav checked: {counts['en']} en + {counts['ja']} ja entries resolve to a generated page")
+
+
 def main() -> None:
     if not SOURCE.is_dir():
         sys.exit(f"error: {SOURCE} does not exist")
@@ -144,6 +202,8 @@ def main() -> None:
             print(f"  warning: no Japanese counterpart for {missing}", file=sys.stderr)
         for missing in sorted(ja - en):
             print(f"  warning: no English counterpart for {missing}", file=sys.stderr)
+
+    check_nav(counts)
 
 
 if __name__ == "__main__":

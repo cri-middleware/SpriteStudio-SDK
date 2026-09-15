@@ -58,7 +58,7 @@ body:
     attributes:
       label: OS / Compiler / Rust Version
       description: OS version, Rust version, compiler info. / OS バージョン、Rust のバージョン、コンパイラの情報など。
-      placeholder: e.g. macOS Sonoma, Rust 1.77
+      placeholder: e.g. macOS Sonoma, Rust 1.98
     validations:
       required: true
 
@@ -74,7 +74,7 @@ body:
         ---
         **🚨 WARNING / 警告 🚨**
         **DO NOT** attach proprietary `.sspj` project files or sensitive data to this public issue. 
-        If you need to share reproduction data, please submit it privately via the [Help Center](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/).
+        If you need to share reproduction data, please submit it privately via the [Help Center](https://www.webtech.co.jp/help/en/spritestudio7/inquiries/ssplayer_tool/).
         
         **絶対に** 機密情報や非公開の `.sspj` プロジェクトデータをここに添付しないでください。
         再現データの提供が必要な場合は、[公式ヘルプセンター](https://www.webtech.co.jp/help/ja/spritestudio7/inquiries/ssplayer_tool/)から非公開で送信してください。

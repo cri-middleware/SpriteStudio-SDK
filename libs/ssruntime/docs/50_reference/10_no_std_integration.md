@@ -35,7 +35,7 @@ cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-defa
 cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
 
 # Embedding as an rlib in Rust natively (when the host provides the allocator / panic_handler)
-cargo build -p ssruntime-ffi --release --no-default-features --features "ffi"
+cargo build -p ssruntime --release
 ```
 
 ---
@@ -66,7 +66,7 @@ In a `no_std` environment, Rust's standard output (`println!`, `eprintln!`) is u
 To receive error and warning logs from inside `ssruntime`, you must therefore register a log callback at initialization.
 
 ```cpp
-#include "runtime/ssruntime.h"
+#include "ssruntime.h"
 
 // The callback that receives logs
 void my_log_callback(int level, const char* message) {

@@ -92,13 +92,13 @@ FrameData (FFI を介したメモリバッファ)
 
 ## 描画プラン: 順序・バッチ・マスクスライス
 
-`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これは `CLAUDE.md` および [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) で言及している「DrawBatch コントラクト」です。
+`FrameData` はパーツ単位の状態だけでなく、**エンジン非依存の描画プラン** も保持します。事前にソートされたパーツ並びと、それを連続スライスに切り出したバッチリストを Player が 1 フレームに 1 度だけ走査します。これが「DrawBatch コントラクト」です。消費側の正典は [Batched Rendering Contract](./docs/30_core/30_render_loop.ja.md) です。
 
 | FrameData フィールド | 型 | 説明 |
 |:---|:---|:---|
 | `draw_order` | `[ushort]` (required) | 描画順に並んだパーツ。値は **`FrameData.parts` のインデックス** （`part_index` ではない）。非表示・マスクで除外されたパーツなど、描画対象外のパーツは含まれません。 |
 | `draw_batches` | `[DrawBatch]` (required) | マージ済みの描画コマンド列。各バッチは `draw_order` の連続スライスを覆い、スライス内で描画種別・ブレンドモード・テクスチャが共通になります。Player は バッチごとに 1 ドローコールを発行します。 |
-| `mask_indices` | `[ushort]` (required) | 現在のフレームでアクティブなマスクパーツの **`FrameData.parts` インデックス** を、ステンシル書き込み順に並べたもの。`DrawBatchKind::Mask` バッチと併用してステンシル／クリッピングを設定します。 |
+| `mask_indices` | `[ushort]` (required) | そのフレームの **pure マスク**（`PartTypeMask` および `draw_as_mask`）の **`FrameData.parts` インデックス** を、`draw_order` と同じ順に並べたもの。**writer リストではありません**: クリッピング (`mask_write`) を含まず、`Hide == true` のマスクも落とさないため `draw_order` と一致しません。writer の確定は `draw_order` を走査して行ってください — [Mask の実装 §3-3](./docs/40_components/40_mask.ja.md#3-3-共通の注意点) 参照。 |
 
 ### `DrawBatch`
 

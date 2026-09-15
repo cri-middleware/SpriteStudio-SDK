@@ -72,7 +72,7 @@ nav:
       - メッシュとデフォーム (Mesh): 40_components/30_mesh.md
       - Mask の実装: 40_components/40_mask.md
       - パーツカラー (Parts Color): 40_components/50_parts_color.md
-      - アニメーションブレンド / ミキシング: 40_components/60_animation_blending.md
+      - アニメーションミキシング: 40_components/60_animation_mixing.md
       - パーツオーバーライド (Override Layer API): 40_components/65_override_layer.md
       - 外部リソースとテクスチャの管理: 40_components/70_external_resources.md
       - シーケンス (Sequence): 40_components/80_sequence.md
