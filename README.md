@@ -105,7 +105,7 @@ Run the downloaded tool to convert one of the bundled test projects into the bin
 The converted `.ssab` files will be generated in the `tests/overall/overall/` directory.
 
 ### 3. Integrate into Your Engine
-Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions on how to load and play these `.ssab` files in your own game engine or application. For detailed implementation steps, see the [Player Implementation Guide](./libs/ssruntime/docs/README.md).
+Refer to the [libssruntime README](./libs/ssruntime/README.md) for instructions on how to load and play these `.ssab` files in your own game engine or application. For detailed implementation steps, see the [Player Implementation Guide](./libs/ssruntime/docs/README.md), also published as a searchable site at [cri-middleware.github.io/SpriteStudio-SDK](https://cri-middleware.github.io/SpriteStudio-SDK/).
 
 ### Sample Data
 

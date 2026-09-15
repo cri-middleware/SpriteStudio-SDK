@@ -9,7 +9,7 @@ The playback **Brain** of the [SpriteStudio-SDK](https://github.com/cri-middlewa
 
 # Key Features
 
-- **Full SpriteStudio feature set**: bone hierarchies, mesh weights and vertex deformations, particle effects, sequence packs (`.ssqe` → `.ssqb`), sub-animation instances, stencil masks, frame-accurate events and user data.
+- **Full SpriteStudio feature set**: bone hierarchies, mesh weights and vertex deformations, particle effects, sub-animation instances, stencil masks, frame-accurate events and user data.
 - **Sub-frame interpolation**: smooth playback beyond the source framerate — Hermite, Bezier, Linear, and easing curves.
 - **`DrawBatch` plan emission**: each frame's output includes a cross-engine batch plan (vertices, mask sequences, particle quad slots, instance / effect slots). See the [Batched Rendering Contract](./docs/30_core/30_render_loop.md).
 - **Deterministic playback**: explicit random-seed control for reproducible particle simulation.

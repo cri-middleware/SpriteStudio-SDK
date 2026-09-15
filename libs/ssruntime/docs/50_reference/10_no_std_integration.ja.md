@@ -35,7 +35,7 @@ cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-defa
 cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-default-features --features "wasm_alloc,panic-handler"
 
 # Rust ネイティブで rlib として組み込む (ホストが allocator/panic_handler を提供する場合)
-cargo build -p ssruntime-ffi --release --no-default-features --features "ffi"
+cargo build -p ssruntime --release
 ```
 
 ---
@@ -66,7 +66,7 @@ cargo build -p ssruntime-ffi --target wasm32-unknown-unknown --release --no-defa
 そのため、`ssruntime` 内部からのエラーや警告ログを受け取るには、初期化時にログコールバックを登録する必要があります。
 
 ```cpp
-#include "runtime/ssruntime.h"
+#include "ssruntime.h"
 
 // ログを受け取るコールバック関数
 void my_log_callback(int level, const char* message) {

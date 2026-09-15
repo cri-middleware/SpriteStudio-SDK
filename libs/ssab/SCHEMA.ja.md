@@ -56,7 +56,7 @@
 | `sound_lists` | [SoundList] | `SsAudioPack` (ssse) | パックに Audio タイプのパーツが含まれる場合のみ |
 | `font_bitmaps` | [FontBitmap] | `SsCharMap` (fnt) | `text_bitmap == true` の Text タイプパーツが使用するビットマップフォントのみ |
 | `external_textures` | [ExternalTexture] | — | 外部テクスチャ参照。`name_hash` でソート。プロジェクトの `<ExternalTextures>` リストと、この pack 内の `TCHG` キーが指す全ての `TextureName`（`common.png` のようなセルマップ画像を含む）の和集合。Player が `TCHG` のハッシュ（ひいては `DrawBatch.texture_hash`）をロード可能な名前へ逆引きするためのテーブルであり、両方の供給元を網羅する必要がある。 |
-| `external_instances` | [ExternalInstance] | — | クロスパックインスタンス参照。`anime_name_hash` でソートされ FlatBuffers の `(key)` になっているため、Player は `LookupByKey(ref_anime_hash)` で直接引ける。各エントリは `anime_pack_name_hash`（参照先 pack の `SsAnimeBinary.name_hash` と一致）、`anime_pack_name`（隣接する `<pack>.ssab` ファイル探索に使用）、`anime_name`（診断用）を持つ。 |
+| `external_instances` | [ExternalInstance] | — | クロスパックインスタンス参照。`(anime_pack_name_hash, anime_name_hash)` でソートされる。このテーブルに FlatBuffers の `(key)` は無いため、`LookupByKey` ではなくベクタを走査して引く。各エントリは `anime_pack_name_hash`（参照先 pack の `SsAnimeBinary.name_hash` と一致）、`anime_pack_name`（隣接する `<pack>.ssab` ファイル探索に使用）、`anime_name_hash`、`anime_name`（診断用）を持つ。 |
 | `embedded_assets` | [EmbeddedAsset] | — | オプションで埋め込まれるバイナリアセット（画像、サウンドなど） |
 
 ---
@@ -71,8 +71,11 @@
 | `parent_index` | short | `parent_index` | 親パーツのインデックス |
 | `bounds_type` | BoundsType | `bounds_type` | バウンディング計算方式 |
 | `blend_type` | BlendType | `alpha_blend_type` | フィールド名変更 |
+| `visible_inside_mask` | bool | `visible_inside_mask` | 被マスク側の描画パーツの極性。`1` = マスクの内側に描画 / `0` = 外側に描画 → [Mask の実装 §2-4](../ssruntime/docs/40_components/40_mask.ja.md#2-4-極性マスクの内側か外側のどちらに描画するか) |
+| `mask_write` | bool | `write_mask` | フィールド名変更。描画パーツを **クリッピング** の writer にするフラグ。クリッピングには `DrawBatchKind::Mask` が出ないため、writer の確定はこのフラグから行う → [Mask の実装 §1-2](../ssruntime/docs/40_components/40_mask.ja.md#1-2-パーツの役割と-mask_influence) |
 | `mask_influence` | bool | `mask_influence` | **役割で意味が変わる二重定義**。マスク writer では OP（`0` = 増分 / `1` = 反転）、被マスク側の描画パーツでは対象フラグ（`1` = 適用される / `0` = オプトアウト）。クリッピングは writer 兼描画パーツなので、同じ値が両方の意味で同時に使われる。片方の意味を捨てないこと → [Mask の実装 §1-2](../ssruntime/docs/40_components/40_mask.ja.md#1-2-パーツの役割と-mask_influence) |
 | `draw_as_mask` | bool | `shape_mask` / `text_mask` / `nines_mask` | 描画パーツ (Shape/Text/Nines) の pure マスク化フラグを統合。ssae では型ごとに排他の別タグ。`PartTypeMask` は常に pure マスクなので本フラグに依らない |
+| `output_influence` | bool (既定 `true`) | `output_influence` | 作画データからそのまま引き継がれる。`libssruntime` は読まない |
 | `mesh_binding` | PartMeshBinding | (変換時生成) | `PartTypeMesh` 用の頂点ごとのボーン影響値。下記 [メッシュバインディング](#メッシュバインディング) 参照。メッシュ以外のパーツでは省略。 |
 | `part_type` | PartType (union) | `part_type` + 型固有フィールド | 後述 |
 
@@ -87,7 +90,7 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 | `PartTypeShape` | `SsPartType::Shape` | `shape_type` |
 | `PartTypeText` | `SsPartType::Text` | `text`, `text_bitmap`, `text_family` 等 |
 | `PartTypeNines` | `SsPartType::Nines` | `nines_margin_l/r/t/b`, `nines_fill_mode` |
-| `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_hash` (ssae: `ref_anime_pack` + `ref_anime` を文字列で保持) |
+| `PartTypeInstance` | `SsPartType::Instance` | `ref_anime_pack` + `ref_anime_pack_hash`、`ref_anime_name` + `ref_anime_name_hash` (ssae: `ref_anime_pack` + `ref_anime` を文字列で保持) |
 | `PartTypeArmature` | `SsPartType::Armature` | なし |
 | `PartTypeEffect` | `SsPartType::Effect` | `ref_effect_name_hash` (ssae: `ref_effect_name` を文字列で保持) |
 | `PartTypeMesh` | `SsPartType::Mesh` | なし |
@@ -122,17 +125,14 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 
 ### メッシュバインディング
 
-`PartTypeMesh` の場合、コンバータは ssae のメッシュウェイト記述を頂点単位のフラットな影響値リストに解決し、`PartData.mesh_binding` に格納します。それ以外のパーツタイプではこのフィールドは省略されます。
+`PartTypeMesh` の場合、コンバータは ssae のメッシュウェイト記述を頂点単位のボーン影響値に解決し、`PartData.mesh_binding` に格納します。それ以外のパーツタイプではこのフィールドは省略されます。影響値は入れ子のテーブルではなく、**プレフィックスオフセット表で引く並行配列** として保持されます（頂点ごとではなくパーツごとに 1 回のベクタ確保で済む）。
 
-| ssab テーブル | フィールド | 型 | 備考 |
-|--------------|----------|----|------|
-| `PartMeshBinding` | `vertex` | [PartMeshBindingVertex] | メッシュ頂点1つにつき1エントリ。外側のインデックスはメッシュ頂点の並びと一致。 |
-| `PartMeshBindingVertex` | `influence` | [PartMeshBindingInfluence] | この頂点に影響する全ボーン。 |
-| `PartMeshBindingInfluence` | `bone` | ushort | 影響を与えるボーンのパーツインデックス。ssae のボーンリスト上のインデックスから対応するパーツインデックスに変換済みで、ランタイムはそのまま `parts` を引ける。 |
-| `PartMeshBindingInfluence` | `weight` | float | 影響度。 |
-| `PartMeshBindingInfluence` | `coordinate` | Vec2 | バインドポーズ時の、影響ボーンからの頂点相対オフセット。 |
-
-> **注:** ssae では `bone` は `SsModel.bone_list` のインデックスとして格納されます。コンバータが変換時にこれをパーツインデックスへ再マップするため、ランタイム側で `bone_list` を参照する必要はありません。
+| フィールド | 型 | 備考 |
+|----------|----|------|
+| `vertex_influence_offset` | [uint32] | プレフィックスオフセット。メッシュ頂点1つにつき1エントリに **末尾の合計値** を加えた `頂点数 + 1` 要素。頂点 `i` の影響値は下記 4 配列の半開区間 `[offset[i], offset[i + 1])`。外側のインデックスはメッシュ頂点の並びと一致。 |
+| `influence_bone` | [ushort] | 影響を与えるボーンのパーツインデックス。ssae のボーンリスト上のインデックスから対応するパーツインデックスに変換済みで、ランタイムはそのまま `parts` を引ける。 |
+| `influence_weight` | [float] | 影響度。`0.0`〜`1.0` に正規化済み（ssae では百分率）。 |
+| `influence_coord_x` / `influence_coord_y` | [float] | バインドポーズ時の、影響ボーンからの頂点相対オフセットを 2 配列に分けたもの。 |
 
 ---
 
@@ -309,7 +309,7 @@ AnimationData.events: [EventsPerFrame]
 | `interpolation` | `ip_type` | 補間タイプの列挙型 |
 | `value` | `value` | 属性値 |
 
-ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (`SsCurve`) を持つことができ、`start_time`, `start_value`, `end_time`, `end_value`, `sync_start_end` を含みます。ssab ではカーブデータはキーフレームごとに格納されず、補間タイプの列挙型のみでイージング動作が決定されます。
+ssae ではキーフレームに Bezier/Hermite 補間用の `curve` データ (`SsCurve`) を持つことができ、`start_time`, `start_value`, `end_time`, `end_value`, `sync_start_end` を含みます。ssab もこのうち 4 つの制御値をキーフレームごとに `curve: SsCurve` として保持します（`easing_rate` も同居）。保持するのは必要な 7 テーブル — `PartAnimationDataFloatValue`, `PartAnimationDataIntValue`, `PartAnimationDataPartColor`, `PartAnimationDataShader`, `PartAnimationDataVertex`, `PartAnimationDataVec2`, `PartAnimationDataDeform` — だけです。`sync_start_end` は作画側の利便フラグなので引き継ぎません。残りのキーフレームテーブル（`Cell`, `UInt`, `Bool`, `Instance`, `Effect`）に curve フィールドは無く、補間タイプの列挙型のみでイージング動作が決まります。
 
 ### セル属性
 

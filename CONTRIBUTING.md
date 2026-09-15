@@ -66,7 +66,7 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 
 ### Rust Guidelines
 - Use `rustfmt` to format your code: `cargo fmt`.
-- Check for common mistakes with `clippy`: `cargo clippy`.
+- Check for common mistakes with `clippy`: `cargo clippy --workspace --all-targets --all-features -- -D warnings`. `--all-features` is load-bearing — the test modules sit behind `feature = "std"`, so without it they are the one body of code nothing lints.
 - Follow [Idiomatic Rust](https://github.com/mre/idiomatic-rust) practices.
 
 ### FFI and C-API
@@ -151,7 +151,7 @@ cargo run -p ssconverter-cli -- <path_to_sspj>
 
 ### Rust のガイドライン
 - `rustfmt` を使用してフォーマットを統一してください: `cargo fmt`
-- `clippy` を使用して一般的なミスをチェックしてください: `cargo clippy`
+- `clippy` を使用して一般的なミスをチェックしてください: `cargo clippy --workspace --all-targets --all-features -- -D warnings`。`--all-features` は必須です — テストモジュールは `feature = "std"` 配下にあるため、付けないとそこだけ lint されません
 - [慣用的な Rust](https://github.com/mre/idiomatic-rust) (Idiomatic Rust) のプラクティスに従ってください。
 
 ### FFI と C-API
