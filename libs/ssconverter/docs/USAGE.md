@@ -77,7 +77,7 @@ void on_conversion_complete(Context* ctx) {
         printf("Conversion successful!\n");
     } else {
         // Retrieve error details
-        char* err_msg = nullptr;
+        const char* err_msg = nullptr;
         uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
@@ -101,36 +101,19 @@ Call `ss_converter_abort` if a long-running process is cancelled by the user.
 ss_converter_abort(ctx);
 ```
 
-## 4. Implementation Example: Godot Plugin Integration
+> **Note**: do not call `ss_converter_destroy` straight after `ss_converter_abort`. Wait for the worker thread to come to a complete stop — keep polling until `ss_converter_is_finished(ctx) == true`, and destroy only then. See the editor-integration best practices below.
 
-In `SSPlayerForGodot`, `libssconverter` is called when a file is dropped into the editor to generate `.ssab` files in-process.
+## 4. Integrating into an editor, and best practices
 
-```cpp
-// Excerpt from gd_ss_import_dock.cpp
+Embedding `libssconverter` as an editor extension for a game engine (Godot, Unity and so on) asks for more than converting a single file:
 
-void GdSsImportControl::_notification(int p_what) {
-    if (p_what == NOTIFICATION_PROCESS) {
-        if (is_importing) {
-            bool all_finished = true;
-            for (void* ctx : import_contexts) {
-                if (!ss_converter_is_finished((Context*)ctx)) {
-                    all_finished = false;
-                    break;
-                }
-            }
+- Recursive batch conversion over several files and directories
+- Polling from the editor's main loop, and showing progress
+- Stopping safely when the user cancels (pairing `abort` with `destroy` so there is no use-after-free)
 
-            if (all_finished) {
-                // Finalization and resource scanning
-                is_importing = false;
-                set_process(false);
-                // ... cleanup contexts ...
-            }
-        }
-    }
-}
-```
+For the implementation patterns, and for concrete Godot and Unity code, see the Player Porting Guide:
 
-This allows multiple files to be converted in parallel (while `libssconverter` itself uses `rayon` for parallel processing, creating multiple contexts allows multiple projects to be handled concurrently).
+👉 **[16. Editor integration and conversion](../../ssruntime/docs/60_tooling/10_editor_integration.md)**
 
 ## 5. Notes
 

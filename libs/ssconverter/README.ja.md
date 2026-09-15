@@ -35,7 +35,7 @@ ssconverter = "7.0.0-beta.1"
 #include "ssconverter.h"
 
 void convert() {
-    ss_converter_context* ctx = ss_converter_create();
+    Context* ctx = ss_converter_create();
     
     // バックグラウンドスレッドで変換を開始
     // 第4引数（embedded）はテクスチャを .ssab に内包します。従来のレイアウトの場合は false を渡します。

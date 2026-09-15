@@ -36,7 +36,7 @@ Headers are generated in `target/ssconverter.h` by `cbindgen`.
 #include "ssconverter.h"
 
 void convert() {
-    ss_converter_context* ctx = ss_converter_create();
+    Context* ctx = ss_converter_create();
     
     // Start conversion in a background thread
     // The 4th argument (embedded) packs textures into the .ssab; pass false for the conventional layout.
