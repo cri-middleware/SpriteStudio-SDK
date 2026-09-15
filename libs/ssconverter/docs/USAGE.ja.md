@@ -77,7 +77,7 @@ void on_conversion_complete(Context* ctx) {
         printf("変換成功！\n");
     } else {
         // エラー詳細の取得
-        char* err_msg = nullptr;
+        const char* err_msg = nullptr;
         uintptr_t len = 0;
         ss_converter_get_error(ctx, &err_msg, &len);
         if (err_msg) {
