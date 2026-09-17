@@ -276,14 +276,14 @@ fn convert_animedatat(
     setup_animation: &sspj::ssae::SsAnimation,
     parts_map: &HashMap<String, &sspj::ssae::SsPart>,
     sound_list_id_to_name_hash: &HashMap<i32, u32>,
-    cellmap_names: &[String],
+    cellmaps: &CellmapResolver,
 ) -> ssab::ssab::ss::format::AnimationDataT {
     let mut anime_data_t = ssab::ssab::ss::format::AnimationDataT::default();
 
     anime_data_t.name = anime_data.name.to_string();
     anime_data_t.name_hash = crate::utils::fnv1a_hash_str(&anime_data.name);
-    anime_data_t.parts_initial_attributes = convert_parts_initial_attributes(setup_animation, parts_map, cellmap_names);
-    anime_data_t.parts_animation_data = convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmap_names);
+    anime_data_t.parts_initial_attributes = convert_parts_initial_attributes(setup_animation, parts_map, cellmaps);
+    anime_data_t.parts_animation_data = convert_parts_animation_data(anime_data, setup_animation, parts_map, cellmaps);
     anime_data_t.initial_events = convert_parts_initial_events(setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.events = convert_events_per_frames(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash);
     anime_data_t.labels = if anime_data.labels.is_empty() { None } else { Some(convert_animedata_labels(&anime_data.labels)) };
@@ -333,7 +333,7 @@ fn convert_interpolation_type(interpolation: &sspj::sstypes::SsInterpolationType
     }
 }
 
-fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind], cellmap_names: &[String], part_type: &sspj::sstypes::SsPartType) {
+fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::format::InitialPartAttributesT, setup_attributes: &[sspj::ssattribute::SsAttributeKind], cellmaps: &CellmapResolver, part_type: &sspj::sstypes::SsPartType) {
     // Only frame-0 ("setup") keys are composited here: the caller builds the
     // initial part attributes from frame 0, so keys with `time == 0` are the
     // ones that matter.
@@ -342,7 +342,7 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
             sspj::ssattribute::SsAttributeKind::Cell(v) => {
                 if let Some(_key) = v.keys.iter().find(|key| key.time == 0) {
                     let mut value = ssab::ssab::ss::format::PartAttributeCellT::default();
-                    value.cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, _key.value.map_id);
+                    value.cellmap_name_hash = cellmaps.name_hash(_key.value.map_id);
                     value.name_hash = crate::utils::fnv1a_hash_str(&_key.value.name);
                     p_args.cell = Some(Box::new(value));
                     p_args.update_flag |= ssab::ssab::ss::format::PartAttributesUpdateFlags::AttributeCell;
@@ -468,9 +468,9 @@ fn merge_setup_attributes_to_part_attribute_t(p_args: &mut ssab::ssab::ss::forma
                     value.param6 = _key.value.param6;
                     value.param7 = _key.value.param7;
 
-                    value.map0_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, _key.value.map0.map_id);
+                    value.map0_cellmap_name_hash = cellmaps.name_hash(_key.value.map0.map_id);
                     value.map0_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map0.name);
-                    value.map1_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, _key.value.map1.map_id);
+                    value.map1_cellmap_name_hash = cellmaps.name_hash(_key.value.map1.map_id);
                     value.map1_name_hash = crate::utils::fnv1a_hash_str(&_key.value.map1.name);
 
                     p_args.shader = Some(Box::new(value));
@@ -801,7 +801,7 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
     }
 }
 
-fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
+fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmaps: &CellmapResolver) -> Vec<ssab::ssab::ss::format::InitialPartAttributesT> {
     // Index-aligned with the part list (same convention as `convert_parts_animation_data`):
     // size to the part count and place each entry by `array_index`, so the runtime can
     // address `parts_initial_attributes[part_index]` directly. Parts absent from the
@@ -816,7 +816,7 @@ fn convert_parts_initial_attributes(anime_data: &sspj::ssae::SsAnimation, parts_
         };
 
         let index_part = p.array_index as usize;
-        merge_setup_attributes_to_part_attribute_t(&mut parts_initial_attributes_t[index_part], &part_anime.attributes, cellmap_names, &p.part_type);
+        merge_setup_attributes_to_part_attribute_t(&mut parts_initial_attributes_t[index_part], &part_anime.attributes, cellmaps, &p.part_type);
 
         // A bone's rest pose lives in the ssae `bonePosition`/`boneRotation` tags
         // rather than in setup keyframes; reflect it into the setup-pose transform
@@ -984,12 +984,12 @@ macro_rules! process_simple_attribute {
     }};
 }
 
-fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime, cellmap_names: &[String], is_setup: bool, part_type: &sspj::sstypes::SsPartType) {
+fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimationDataT, part_anime: &sspj::ssae::SsPartAnime, cellmaps: &CellmapResolver, is_setup: bool, part_type: &sspj::sstypes::SsPartType) {
     part_anime.attributes.iter().for_each(|attribute| match attribute {
         sspj::ssattribute::SsAttributeKind::Cell(v) => {
             process_simple_attribute!(&v.keys, p_arg.cell_array, ssab::ssab::ss::format::PartAnimationDataCellValueT, |k: &sspj::ssattribute::SsAttributeCellKey| {
                 let mut c_args = ssab::ssab::ss::format::PartAttributeCellT::default();
-                c_args.cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, k.value.map_id);
+                c_args.cellmap_name_hash = cellmaps.name_hash(k.value.map_id);
                 c_args.name_hash = crate::utils::fnv1a_hash_str(&k.value.name);
                 Box::new(c_args)
             });
@@ -1118,9 +1118,9 @@ fn convert_part_animation_data(p_arg: &mut ssab::ssab::ss::format::PartAnimation
                 value.param5 = k.value.param5;
                 value.param6 = k.value.param6;
                 value.param7 = k.value.param7;
-                value.map0_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, k.value.map0.map_id);
+                value.map0_cellmap_name_hash = cellmaps.name_hash(k.value.map0.map_id);
                 value.map0_name_hash = crate::utils::fnv1a_hash_str(&k.value.map0.name);
-                value.map1_cellmap_name_hash = cellmap_id_to_name_hash(cellmap_names, k.value.map1.map_id);
+                value.map1_cellmap_name_hash = cellmaps.name_hash(k.value.map1.map_id);
                 value.map1_name_hash = crate::utils::fnv1a_hash_str(&k.value.map1.name);
                 Box::new(value)
             });
@@ -1379,7 +1379,7 @@ fn modify_part_animation_data(p_args: &mut ssab::ssab::ss::format::PartAnimation
     p_args.texture_array = p_args.texture_array.as_ref().and_then(|v| optimize_part_animation_data_texture(v));
 }
 
-fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
+fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_animation: &sspj::ssae::SsAnimation, parts_map: &HashMap<String, &sspj::ssae::SsPart>, cellmaps: &CellmapResolver) -> Vec<ssab::ssab::ss::format::PartAnimationDataT> {
     let mut parts_animation_data_t = Vec::<ssab::ssab::ss::format::PartAnimationDataT>::new();
     parts_animation_data_t.resize(parts_map.len(), ssab::ssab::ss::format::PartAnimationDataT::default());
 
@@ -1390,7 +1390,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names, true, &p.part_type);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmaps, true, &p.part_type);
     }
 
     for part_anime in &anime_data.part_animes {
@@ -1400,7 +1400,7 @@ fn convert_parts_animation_data(anime_data: &sspj::ssae::SsAnimation, setup_anim
         };
 
         let index_part = p.array_index as usize;
-        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmap_names, false, &p.part_type);
+        convert_part_animation_data(&mut parts_animation_data_t[index_part], part_anime, cellmaps, false, &p.part_type);
         modify_part_animation_data(&mut parts_animation_data_t[index_part], &p.part_type, part_anime);
     }
 
@@ -1823,7 +1823,7 @@ pub fn convert_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Vec<ssab::ssab
         .collect::<Vec<_>>()
 }
 
-pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>, cellmap_names: &[String]) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
+pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_map: &HashMap<String, &sspj::ssae::SsPart>, sound_list_id_to_name_hash: &HashMap<i32, u32>, cellmaps: &CellmapResolver) -> Vec<ssab::ssab::ss::format::AnimationDataT> {
     let Some(setup_animation) = anime_pack.anime_list.iter().find(|anime_data| anime_data.is_setup) else {
         // not found setup animation
         return vec![];
@@ -1836,21 +1836,100 @@ pub fn convert_animation_data_list(anime_pack: &sspj::ssae::SsAnimePack, parts_m
             if anime_data == setup_animation {
                 return None;
             }
-            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash, cellmap_names))
+            Some(convert_animedatat(anime_data, setup_animation, parts_map, sound_list_id_to_name_hash, cellmaps))
         })
         .collect::<Vec<ssab::ssab::ss::format::AnimationDataT>>()
 }
 
-fn cellmap_id_to_name_hash(cellmap_names: &[String], map_id: i32) -> u32 {
-    // Negative map_id is the documented "no map" convention in sspj
-    // (e.g. unset shader map slot).
-    if map_id < 0 {
-        return 0;
+/// Resolves a cellmap `map_id` to its name hash.
+///
+/// `map_id` indexes the same `cellmap_names` list that produced it, so a value
+/// outside it means the sspj is malformed. Every lookup happens inside a
+/// `for_each` closure several calls down, which has no way to return an error,
+/// so the first offending id is recorded here and [`Self::check`] reads it once
+/// the walk is over. Without that the index panicked, and `panic = "abort"`
+/// turned a malformed pack into a dead host process.
+pub struct CellmapResolver<'a> {
+    names: &'a [String],
+    out_of_range: core::cell::Cell<Option<i32>>,
+}
+
+impl<'a> CellmapResolver<'a> {
+    pub fn new(names: &'a [String]) -> Self {
+        Self { names, out_of_range: core::cell::Cell::new(None) }
     }
-    // map_id indexes into the same ssae cellmap_names list that produced it,
-    // so out-of-range here means the sspj is malformed.
-    let file_name = &cellmap_names[map_id as usize];
-    crate::utils::fnv1a_hash_str(crate::utils::cellmap_basename(file_name))
+
+    /// Negative `map_id` is the documented "no map" convention in sspj (e.g. an
+    /// unset shader map slot) and resolves to `0`, same as before.
+    fn name_hash(&self, map_id: i32) -> u32 {
+        if map_id < 0 {
+            return 0;
+        }
+        match self.names.get(map_id as usize) {
+            Some(file_name) => crate::utils::fnv1a_hash_str(crate::utils::cellmap_basename(file_name)),
+            None => {
+                if self.out_of_range.get().is_none() {
+                    self.out_of_range.set(Some(map_id));
+                }
+                0
+            }
+        }
+    }
+
+    /// The error for whatever [`Self::name_hash`] could not resolve, or `Ok`.
+    pub fn check(&self, pack_name: &str) -> Result<(), crate::ConverterError> {
+        match self.out_of_range.get() {
+            Some(map_id) => Err(crate::ConverterError::ConversionFailed(format!("{}: a cell references cellmap {}, outside 0..{}", pack_name, map_id, self.names.len()))),
+            None => Ok(()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod cellmap_resolver_tests {
+    use super::*;
+
+    fn names() -> Vec<String> {
+        vec!["ground.ssce".to_string(), "sky.ssce".to_string()]
+    }
+
+    #[test]
+    fn an_in_range_map_id_resolves_and_passes() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        assert_eq!(r.name_hash(0), crate::utils::fnv1a_hash_str("ground"));
+        assert_eq!(r.name_hash(1), crate::utils::fnv1a_hash_str("sky"));
+        r.check("pack").expect("both ids are in range");
+    }
+
+    #[test]
+    fn a_negative_map_id_is_the_no_map_convention() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        assert_eq!(r.name_hash(-1), 0);
+        r.check("pack").expect("negative is sspj's documented \"no map\"");
+    }
+
+    #[test]
+    fn an_out_of_range_map_id_is_an_error() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        assert_eq!(r.name_hash(2), 0, "the walk has to keep going to reach check()");
+        let e = r.check("Action01_Body").expect_err("2 is outside 0..2");
+        let text = format!("{e}");
+        assert!(text.contains("Action01_Body"), "{text}");
+        assert!(text.contains("cellmap 2"), "{text}");
+    }
+
+    #[test]
+    fn the_first_offending_map_id_is_the_one_reported() {
+        let names = names();
+        let r = CellmapResolver::new(&names);
+        r.name_hash(7);
+        r.name_hash(9);
+        let text = format!("{}", r.check("pack").expect_err("both are out of range"));
+        assert!(text.contains("cellmap 7"), "{text}");
+    }
 }
 
 #[cfg(test)]
