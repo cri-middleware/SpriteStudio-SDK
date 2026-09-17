@@ -299,7 +299,7 @@ pub extern "C" fn ss_runtime_error_message(code: i32) -> *const c_char {
 /// the `version` field of the pack it just failed to load.
 #[unsafe(no_mangle)]
 pub extern "C" fn ss_runtime_ssab_schema_version() -> u32 {
-    ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version
+    ssab::SSAB_SCHEMA_VERSION
 }
 
 /// Binds an AnimationResource to a Context.
@@ -2082,7 +2082,7 @@ mod tests {
         let name = b.create_string("wrong_version");
         let parts = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::PartData>>(&[]);
         let animations = b.create_vector::<flatbuffers::ForwardsUOffset<fmt::AnimationData>>(&[]);
-        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: fmt::SsAnimeBinaryArgs::default().version + 1, name: Some(name), parts: Some(parts), animations: Some(animations), ..Default::default() });
+        let root = fmt::SsAnimeBinary::create(&mut b, &fmt::SsAnimeBinaryArgs { version: ssab::SSAB_SCHEMA_VERSION + 1, name: Some(name), parts: Some(parts), animations: Some(animations), ..Default::default() });
         fmt::finish_ss_anime_binary_buffer(&mut b, root);
         b.finished_data().to_vec()
     }

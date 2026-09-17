@@ -2349,6 +2349,7 @@ impl<'a> SsabCache<'a> {
     pub fn create_shared_anime_binary(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, ss_anime_binary_t: &ssab::ssab::ss::format::SsAnimeBinaryT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::SsAnimeBinary<'a>> {
         let mut args = ssab::ssab::ss::format::SsAnimeBinaryArgs::default();
 
+        args.version = ss_anime_binary_t.version;
         args.name_hash = ss_anime_binary_t.name_hash;
         args.name = Some(fb.create_shared_string(&ss_anime_binary_t.name));
         args.parts = Some(self.create_shared_part_list(fb, &ss_anime_binary_t.parts));

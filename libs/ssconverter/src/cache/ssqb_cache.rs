@@ -27,6 +27,7 @@ impl SsqbCache {
     }
     pub fn create_shared_sequence_binary<'a>(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, sequence_binary_t: &ssab::ssqb::ss::format::SsSequenceBinaryT) -> flatbuffers::WIPOffset<ssab::ssqb::ss::format::SsSequenceBinary<'a>> {
         let mut args = ssab::ssqb::ss::format::SsSequenceBinaryArgs::default();
+        args.version = sequence_binary_t.version;
         args.sequence_list = Some({
             let v = sequence_binary_t
                 .sequence_list

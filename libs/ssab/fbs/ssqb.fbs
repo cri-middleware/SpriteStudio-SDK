@@ -23,7 +23,7 @@ table Sequence {
 }
 
 table SsSequenceBinary {
-  version: uint = 0x00000001;
+  version: uint;
 
   sequence_list: [Sequence] (required);
 }

@@ -620,7 +620,7 @@ impl<'a> SsSequenceBinary<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(SsSequenceBinary::VT_VERSION, Some(1)).unwrap()}
+    unsafe { self._tab.get::<u32>(SsSequenceBinary::VT_VERSION, Some(0)).unwrap()}
   }
   #[inline]
   pub fn sequence_list(&self) -> ::flatbuffers::Vector<'a, ::flatbuffers::ForwardsUOffset<Sequence<'a>>> {
@@ -651,7 +651,7 @@ impl<'a> Default for SsSequenceBinaryArgs<'a> {
   #[inline]
   fn default() -> Self {
     SsSequenceBinaryArgs {
-      version: 1,
+      version: 0,
       sequence_list: None, // required field
     }
   }
@@ -664,7 +664,7 @@ pub struct SsSequenceBinaryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a>
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsSequenceBinaryBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_version(&mut self, version: u32) {
-    self.fbb_.push_slot::<u32>(SsSequenceBinary::VT_VERSION, version, 1);
+    self.fbb_.push_slot::<u32>(SsSequenceBinary::VT_VERSION, version, 0);
   }
   #[inline]
   pub fn add_sequence_list(&mut self, sequence_list: ::flatbuffers::WIPOffset<::flatbuffers::Vector<'b , ::flatbuffers::ForwardsUOffset<Sequence<'b >>>>) {
@@ -703,7 +703,7 @@ pub struct SsSequenceBinaryT {
 impl Default for SsSequenceBinaryT {
   fn default() -> Self {
     Self {
-      version: 1,
+      version: 0,
       sequence_list: Default::default(),
     }
   }

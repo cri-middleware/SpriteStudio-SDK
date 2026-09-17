@@ -48,5 +48,10 @@ module_inception = "allow"
 no_effect = "allow"
 unnecessary_get_then_check = "allow"
 
+[dev-dependencies]
+# The integration tests read the emitted packs back; `ssab` is a normal
+# dependency, which an integration test cannot name on its own.
+ssab = { workspace = true, features = ["converter"] }
+
 [build-dependencies]
 vergen-gitcl = { workspace = true }

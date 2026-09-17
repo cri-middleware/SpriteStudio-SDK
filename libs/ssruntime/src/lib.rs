@@ -525,8 +525,8 @@ impl<'a> AnimationResource<'a> {
     pub fn new(data: &'a [u8]) -> Result<Self, error::SSRuntimeError> {
         // Use unchecked for performance, but we still check the version.
         let ssab = unsafe { ssab::ssab::ss::format::root_as_ss_anime_binary_unchecked(data) };
-        if ssab.version() != ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version {
-            return Err(error::SSRuntimeError::InvalidVersion { expected: ssab::ssab::ss::format::SsAnimeBinaryArgs::default().version, got: ssab.version() });
+        if ssab.version() != ssab::SSAB_SCHEMA_VERSION {
+            return Err(error::SSRuntimeError::InvalidVersion { expected: ssab::SSAB_SCHEMA_VERSION, got: ssab.version() });
         }
 
         let mut animations = Vec::new();

@@ -15027,7 +15027,7 @@ impl<'a> SsAnimeBinary<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u32>(SsAnimeBinary::VT_VERSION, Some(1)).unwrap()}
+    unsafe { self._tab.get::<u32>(SsAnimeBinary::VT_VERSION, Some(0)).unwrap()}
   }
   #[inline]
   pub fn name(&self) -> &'a str {
@@ -15148,7 +15148,7 @@ impl<'a> Default for SsAnimeBinaryArgs<'a> {
   #[inline]
   fn default() -> Self {
     SsAnimeBinaryArgs {
-      version: 1,
+      version: 0,
       name: None, // required field
       name_hash: 0,
       parts: None, // required field
@@ -15171,7 +15171,7 @@ pub struct SsAnimeBinaryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAnimeBinaryBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_version(&mut self, version: u32) {
-    self.fbb_.push_slot::<u32>(SsAnimeBinary::VT_VERSION, version, 1);
+    self.fbb_.push_slot::<u32>(SsAnimeBinary::VT_VERSION, version, 0);
   }
   #[inline]
   pub fn add_name(&mut self, name: ::flatbuffers::WIPOffset<&'b  str>) {
