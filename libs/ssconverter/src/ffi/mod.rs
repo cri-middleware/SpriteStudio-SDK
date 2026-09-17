@@ -9,8 +9,13 @@
 //! time** — see [`ss_converter_create`].
 //!
 //! Every entry point tolerates a null context and returns a safe default rather
-//! than dereferencing it, and each one catches a panic from the Rust side so
-//! that a failure cannot unwind into the host.
+//! than dereferencing it, and each one runs its work inside `catch_unwind`.
+//! **That net only exists where the binary was built with unwinding.** This
+//! repository's own profiles set `panic = "abort"`, so in the artifacts it ships
+//! a panic ends the host process instead of being reported here. Reporting
+//! malformed input as [`ConverterError`] rather than panicking is therefore what
+//! the conversion path is held to; the `catch_unwind` above it is a second line
+//! for callers who build with unwinding, not the guarantee.
 //!
 //! # Strings
 //!
