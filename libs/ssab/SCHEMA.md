@@ -184,7 +184,8 @@ For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into
 | `end_frame` | short | `settings.end_frame` | End frame |
 | `total_frame` | short | `settings.frame_count` | Total frame count |
 | `fps` | short | `settings.fps` | Frames per second |
-| `canvas` | Rect | `settings.canvas_size` | Canvas dimensions |
+| `canvas_size` | Vec2 (required) | `settings.canvas_size` | Authored canvas dimensions, in pixels. |
+| `pivot` | Vec2 (required) | `settings.pivot` | Normalized position of the runtime origin within the canvas. Defaults to `0, 0` (canvas center). |
 | `parts_initial_attributes` | [InitialPartAttributes] | Setup animation data | See Initial Attributes section |
 | `parts_animation_data` | [PartAnimationData] | `part_animes` | See Animation Data Layout section |
 | `events` | [EventsPerFrame] | Event attributes per part | See Events section |

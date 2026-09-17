@@ -820,7 +820,8 @@ table AnimationData {
   total_frame: short;
   fps: short;
 
-  canvas: Rect (required);
+  canvas_size: Vec2 (required);
+  pivot: Vec2 (required);
 }
 
 table ExternalTexture {

@@ -78,4 +78,51 @@ mod tests {
         }
         assert!(checked > 0, "no packs were emitted, so nothing was checked");
     }
+
+    /// `canvas_size` is the authored canvas, not the canvas minus the pivot.
+    ///
+    /// The two used to share one `Rect`, so every reader computed the size as
+    /// `x2 - x1` and silently subtracted the pivot from it. A pivot of `0 -0.5`
+    /// is the ordinary way to author a character standing on the ground, which
+    /// is why `Doll` and `ParticleEffect` both carry one: the old reading turned
+    /// their integral canvases into `320.5`.
+    #[test]
+    fn canvas_size_is_independent_of_the_pivot() {
+        let out_dir = get_test_base_path().join("target").join("ssab_canvas_test_output");
+        if out_dir.exists() {
+            std::fs::remove_dir_all(&out_dir).unwrap();
+        }
+
+        let mut checked = 0;
+        let mut saw_offset_pivot = false;
+        for &f in TARGET_SSPJ_FILES.iter() {
+            let p = Path::new(f);
+            let pack_dir = out_dir.join(p.file_stem().unwrap());
+            std::fs::create_dir_all(&pack_dir).unwrap();
+
+            let mut config = ConverterConfig::default();
+            config.output = Some(pack_dir.as_os_str().to_os_string());
+            convert_sspj_to_ssab_files(&get_test_base_path().join(p), &config, &|_msg: &str| {}).expect("conversion failed");
+
+            for entry in std::fs::read_dir(&pack_dir).unwrap() {
+                let path = entry.unwrap().path();
+                if path.extension().and_then(|e| e.to_str()) != Some("ssab") {
+                    continue;
+                }
+                let buf = std::fs::read(&path).unwrap();
+                let pack = ssab::ssab::ss::format::root_as_ss_anime_binary(&buf).expect("not a readable .ssab");
+                for anim in pack.animations() {
+                    let canvas = anim.canvas_size();
+                    let pivot = anim.pivot();
+                    assert_eq!(canvas.v1(), canvas.v1().trunc(), "{} / {} has a fractional canvas width {}", path.display(), anim.name(), canvas.v1());
+                    assert_eq!(canvas.v2(), canvas.v2().trunc(), "{} / {} has a fractional canvas height {}", path.display(), anim.name(), canvas.v2());
+                    assert!(canvas.v1() > 0.0 && canvas.v2() > 0.0, "{} / {} has an empty canvas", path.display(), anim.name());
+                    saw_offset_pivot |= pivot.v1() != 0.0 || pivot.v2() != 0.0;
+                    checked += 1;
+                }
+            }
+        }
+        assert!(checked > 0, "no animations were emitted, so nothing was checked");
+        assert!(saw_offset_pivot, "no animation carried a non-zero pivot, so the fixture no longer exercises the case");
+    }
 }

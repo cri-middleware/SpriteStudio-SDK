@@ -19835,7 +19835,8 @@ impl<'a> AnimationData<'a> {
   pub const VT_END_FRAME: ::flatbuffers::VOffsetT = 20;
   pub const VT_TOTAL_FRAME: ::flatbuffers::VOffsetT = 22;
   pub const VT_FPS: ::flatbuffers::VOffsetT = 24;
-  pub const VT_CANVAS: ::flatbuffers::VOffsetT = 26;
+  pub const VT_CANVAS_SIZE: ::flatbuffers::VOffsetT = 26;
+  pub const VT_PIVOT: ::flatbuffers::VOffsetT = 28;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
@@ -19847,7 +19848,8 @@ impl<'a> AnimationData<'a> {
     args: &'args AnimationDataArgs<'args>
   ) -> ::flatbuffers::WIPOffset<AnimationData<'bldr>> {
     let mut builder = AnimationDataBuilder::new(_fbb);
-    if let Some(x) = args.canvas { builder.add_canvas(x); }
+    if let Some(x) = args.pivot { builder.add_pivot(x); }
+    if let Some(x) = args.canvas_size { builder.add_canvas_size(x); }
     if let Some(x) = args.labels { builder.add_labels(x); }
     if let Some(x) = args.initial_events { builder.add_initial_events(x); }
     if let Some(x) = args.events { builder.add_events(x); }
@@ -19889,8 +19891,12 @@ impl<'a> AnimationData<'a> {
     let end_frame = self.end_frame();
     let total_frame = self.total_frame();
     let fps = self.fps();
-    let canvas = {
-      let x = self.canvas();
+    let canvas_size = {
+      let x = self.canvas_size();
+      alloc::boxed::Box::new(x.unpack())
+    };
+    let pivot = {
+      let x = self.pivot();
       alloc::boxed::Box::new(x.unpack())
     };
     AnimationDataT {
@@ -19905,7 +19911,8 @@ impl<'a> AnimationData<'a> {
       end_frame,
       total_frame,
       fps,
-      canvas,
+      canvas_size,
+      pivot,
     }
   }
 
@@ -19987,11 +19994,18 @@ impl<'a> AnimationData<'a> {
     unsafe { self._tab.get::<i16>(AnimationData::VT_FPS, Some(0)).unwrap()}
   }
   #[inline]
-  pub fn canvas(&self) -> Rect<'a> {
+  pub fn canvas_size(&self) -> Vec2<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Rect>>(AnimationData::VT_CANVAS, None).unwrap()}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(AnimationData::VT_CANVAS_SIZE, None).unwrap()}
+  }
+  #[inline]
+  pub fn pivot(&self) -> Vec2<'a> {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(AnimationData::VT_PIVOT, None).unwrap()}
   }
 }
 
@@ -20012,7 +20026,8 @@ impl ::flatbuffers::Verifiable for AnimationData<'_> {
      .visit_field::<i16>("end_frame", Self::VT_END_FRAME, false)?
      .visit_field::<i16>("total_frame", Self::VT_TOTAL_FRAME, false)?
      .visit_field::<i16>("fps", Self::VT_FPS, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("canvas", Self::VT_CANVAS, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("canvas_size", Self::VT_CANVAS_SIZE, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("pivot", Self::VT_PIVOT, true)?
      .finish();
     Ok(())
   }
@@ -20029,7 +20044,8 @@ pub struct AnimationDataArgs<'a> {
     pub end_frame: i16,
     pub total_frame: i16,
     pub fps: i16,
-    pub canvas: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
+    pub canvas_size: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
+    pub pivot: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
 }
 impl<'a> Default for AnimationDataArgs<'a> {
   #[inline]
@@ -20046,7 +20062,8 @@ impl<'a> Default for AnimationDataArgs<'a> {
       end_frame: 0,
       total_frame: 0,
       fps: 0,
-      canvas: None, // required field
+      canvas_size: None, // required field
+      pivot: None, // required field
     }
   }
 }
@@ -20101,8 +20118,12 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, 
     self.fbb_.push_slot::<i16>(AnimationData::VT_FPS, fps, 0);
   }
   #[inline]
-  pub fn add_canvas(&mut self, canvas: ::flatbuffers::WIPOffset<Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Rect>>(AnimationData::VT_CANVAS, canvas);
+  pub fn add_canvas_size(&mut self, canvas_size: ::flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(AnimationData::VT_CANVAS_SIZE, canvas_size);
+  }
+  #[inline]
+  pub fn add_pivot(&mut self, pivot: ::flatbuffers::WIPOffset<Vec2<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(AnimationData::VT_PIVOT, pivot);
   }
   #[inline]
   pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> AnimationDataBuilder<'a, 'b, A> {
@@ -20118,7 +20139,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> AnimationDataBuilder<'a, 'b, 
     self.fbb_.required(o, AnimationData::VT_NAME,"name");
     self.fbb_.required(o, AnimationData::VT_PARTS_INITIAL_ATTRIBUTES,"parts_initial_attributes");
     self.fbb_.required(o, AnimationData::VT_PARTS_ANIMATION_DATA,"parts_animation_data");
-    self.fbb_.required(o, AnimationData::VT_CANVAS,"canvas");
+    self.fbb_.required(o, AnimationData::VT_CANVAS_SIZE,"canvas_size");
+    self.fbb_.required(o, AnimationData::VT_PIVOT,"pivot");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
@@ -20137,7 +20159,8 @@ impl ::core::fmt::Debug for AnimationData<'_> {
       ds.field("end_frame", &self.end_frame());
       ds.field("total_frame", &self.total_frame());
       ds.field("fps", &self.fps());
-      ds.field("canvas", &self.canvas());
+      ds.field("canvas_size", &self.canvas_size());
+      ds.field("pivot", &self.pivot());
       ds.finish()
   }
 }
@@ -20155,7 +20178,8 @@ pub struct AnimationDataT {
   pub end_frame: i16,
   pub total_frame: i16,
   pub fps: i16,
-  pub canvas: alloc::boxed::Box<RectT>,
+  pub canvas_size: alloc::boxed::Box<Vec2T>,
+  pub pivot: alloc::boxed::Box<Vec2T>,
 }
 impl Default for AnimationDataT {
   fn default() -> Self {
@@ -20171,7 +20195,8 @@ impl Default for AnimationDataT {
       end_frame: 0,
       total_frame: 0,
       fps: 0,
-      canvas: Default::default(),
+      canvas_size: Default::default(),
+      pivot: Default::default(),
     }
   }
 }
@@ -20206,8 +20231,12 @@ impl AnimationDataT {
     let end_frame = self.end_frame;
     let total_frame = self.total_frame;
     let fps = self.fps;
-    let canvas = Some({
-      let x = &self.canvas;
+    let canvas_size = Some({
+      let x = &self.canvas_size;
+      x.pack(_fbb)
+    });
+    let pivot = Some({
+      let x = &self.pivot;
       x.pack(_fbb)
     });
     AnimationData::create(_fbb, &AnimationDataArgs{
@@ -20222,7 +20251,8 @@ impl AnimationDataT {
       end_frame,
       total_frame,
       fps,
-      canvas,
+      canvas_size,
+      pivot,
     })
   }
 }

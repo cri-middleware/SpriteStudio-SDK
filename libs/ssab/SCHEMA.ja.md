@@ -184,7 +184,8 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 | `end_frame` | short | `settings.end_frame` | 終了フレーム |
 | `total_frame` | short | `settings.frame_count` | 総フレーム数 |
 | `fps` | short | `settings.fps` | フレームレート |
-| `canvas` | Rect | `settings.canvas_size` | キャンバスサイズ |
+| `canvas_size` | Vec2 (required) | `settings.canvas_size` | オーサリングされたキャンバスサイズ (px)。 |
+| `pivot` | Vec2 (required) | `settings.pivot` | キャンバス内でのランタイム原点の位置 (正規化)。既定は `0, 0` (キャンバス中心)。 |
 | `parts_initial_attributes` | [InitialPartAttributes] | セットアップアニメデータ | 初期属性のセクション参照 |
 | `parts_animation_data` | [PartAnimationData] | `part_animes` | アニメーションデータレイアウトのセクション参照 |
 | `events` | [EventsPerFrame] | パーツごとのイベント属性 | イベントのセクション参照 |
