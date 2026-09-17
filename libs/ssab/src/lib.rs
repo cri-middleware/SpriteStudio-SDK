@@ -90,12 +90,29 @@ pub mod ssab;
 #[path = "runtime/ssqb.rs"]
 pub mod ssqb;
 
-/// `.ssab` schema version, read from codegen so it tracks `fbs/ssab.fbs`.
+/// The `.ssab` schema version the converter stamps into every pack it emits and
+/// the runtime refuses to read anything else as.
+///
+/// Both `version` fields declare no FlatBuffers default, so this value is never
+/// equal to one and is therefore always present in the emitted bytes. A pack
+/// that reads back as `0` predates the field being written at all, which is a
+/// state the check has to be able to see — with a schema default of `1` the
+/// reader substituted its own version for the absent field and every pack ever
+/// produced passed, whatever it actually was.
+///
+/// Raise it in the same commit that changes the wire format, and
+/// `an_emitted_pack_carries_its_schema_version` proves the bytes still carry it.
+pub const SSAB_SCHEMA_VERSION: u32 = 1;
+
+/// The `.ssqb` counterpart of [`SSAB_SCHEMA_VERSION`].
+pub const SSQB_SCHEMA_VERSION: u32 = 1;
+
+/// `.ssab` schema version. See [`SSAB_SCHEMA_VERSION`].
 pub fn ssab_schema_version() -> u32 {
-    ssab::ss::format::SsAnimeBinaryArgs::default().version
+    SSAB_SCHEMA_VERSION
 }
 
-/// `.ssqb` schema version, read from codegen so it tracks `fbs/ssqb.fbs`.
+/// `.ssqb` schema version. See [`SSQB_SCHEMA_VERSION`].
 pub fn ssqb_schema_version() -> u32 {
-    ssqb::ss::format::SsSequenceBinaryArgs::default().version
+    SSQB_SCHEMA_VERSION
 }

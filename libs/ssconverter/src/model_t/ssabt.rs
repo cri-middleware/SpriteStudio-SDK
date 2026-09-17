@@ -61,6 +61,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
         .collect::<HashSet<(String, String)>>();
 
     let mut anime_binary = ssab::ssab::ss::format::SsAnimeBinaryT::default();
+    anime_binary.version = ssab::SSAB_SCHEMA_VERSION;
     anime_binary.name = anime_pack.name.to_string();
     anime_binary.name_hash = crate::utils::fnv1a_hash_str(&anime_pack.name);
     anime_binary.parts = model_t::animedata::convert_part_list(anime_pack);

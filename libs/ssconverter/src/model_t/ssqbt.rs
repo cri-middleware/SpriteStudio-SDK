@@ -40,6 +40,7 @@ fn convert_sequence_item_t_list(sequence_item_list: &[SsSequenceItem]) -> Vec<ss
 
 pub fn convert_ss_sequence_binary_t(sequence_pack: &sspj::ssqe::SsSequencePack) -> Result<ssab::ssqb::ss::format::SsSequenceBinaryT, crate::converter::converter_error::ConverterError> {
     let mut ss_sequence_binary_t = ssab::ssqb::ss::format::SsSequenceBinaryT::default();
+    ss_sequence_binary_t.version = ssab::SSQB_SCHEMA_VERSION;
     ss_sequence_binary_t.sequence_list = ssqbt::convert_sequence_t_list(&sequence_pack.sequence_list);
 
     Ok(ss_sequence_binary_t)

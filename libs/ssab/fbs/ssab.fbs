@@ -843,7 +843,7 @@ table EmbeddedAsset {
 }
 
 table SsAnimeBinary {
-  version: uint = 0x00000001;
+  version: uint;
 
   name: string (required);
   name_hash: uint32;
