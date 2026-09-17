@@ -2098,7 +2098,8 @@ impl<'a> SsabCache<'a> {
                 args.end_frame = animation_data_t.end_frame;
                 args.total_frame = animation_data_t.total_frame;
                 args.fps = animation_data_t.fps;
-                args.canvas = Some(self.create_shared_rect(fb, &animation_data_t.canvas));
+                args.canvas_size = Some(self.create_shared_vec2(fb, &animation_data_t.canvas_size));
+                args.pivot = Some(self.create_shared_vec2(fb, &animation_data_t.pivot));
 
                 ssab::ssab::ss::format::AnimationData::create(fb, &args)
             })

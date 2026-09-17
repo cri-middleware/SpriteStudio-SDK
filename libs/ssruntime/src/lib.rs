@@ -561,8 +561,8 @@ impl<'a> AnimationResource<'a> {
             }
 
             let name_hash = anim.name_hash();
-            let canvas = anim.canvas();
-            let (canvas_width, canvas_height) = (canvas.x2() - canvas.x1(), canvas.y2() - canvas.y1());
+            let canvas_size = anim.canvas_size();
+            let (canvas_width, canvas_height) = (canvas_size.v1(), canvas_size.v2());
             animations.push(AnimationMetadata {
                 name_hash,
                 start_frame: anim.start_frame() as i32,

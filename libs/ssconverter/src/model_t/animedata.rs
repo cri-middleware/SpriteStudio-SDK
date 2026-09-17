@@ -291,12 +291,14 @@ fn convert_animedatat(
     anime_data_t.end_frame = anime_data.settings.end_frame as i16;
     anime_data_t.total_frame = anime_data.settings.frame_count as i16;
     anime_data_t.fps = anime_data.settings.fps as i16;
-    let mut canvas = ssab::ssab::ss::format::RectT::default();
-    canvas.x1 = anime_data.settings.pivot.x;
-    canvas.y1 = anime_data.settings.pivot.y;
-    canvas.x2 = anime_data.settings.canvas_size.x;
-    canvas.y2 = anime_data.settings.canvas_size.y;
-    anime_data_t.canvas = Box::new(canvas);
+    let mut canvas_size = ssab::ssab::ss::format::Vec2T::default();
+    canvas_size.v1 = anime_data.settings.canvas_size.x;
+    canvas_size.v2 = anime_data.settings.canvas_size.y;
+    anime_data_t.canvas_size = Box::new(canvas_size);
+    let mut pivot = ssab::ssab::ss::format::Vec2T::default();
+    pivot.v1 = anime_data.settings.pivot.x;
+    pivot.v2 = anime_data.settings.pivot.y;
+    anime_data_t.pivot = Box::new(pivot);
 
     anime_data_t
 }
