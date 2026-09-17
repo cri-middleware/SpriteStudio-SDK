@@ -1,6 +1,30 @@
 use crate::model_t;
 use std::collections::{HashMap, HashSet};
 
+/// The attribute converters size their per-part vectors to the length of the
+/// name-keyed part map and then address them by `arrayIndex`, so the two have to
+/// describe the same set. A duplicate name shortens the map while `arrayIndex`
+/// keeps counting, and an out-of-range or repeated `arrayIndex` misses on its
+/// own. Both are malformed input, and both index out of bounds several calls
+/// deeper, where `panic = "abort"` would take the host process with them.
+fn validate_part_list(anime_pack: &sspj::ssae::SsAnimePack) -> Result<(), crate::ConverterError> {
+    let part_list = &anime_pack.model.part_list;
+    let mut seen_names = HashSet::with_capacity(part_list.len());
+    let mut seen_indices = HashSet::with_capacity(part_list.len());
+    for part in part_list {
+        if !seen_names.insert(part.name.as_str()) {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: more than one part is named \"{}\"", anime_pack.name, part.name)));
+        }
+        if part.array_index < 0 || part.array_index as usize >= part_list.len() {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: part \"{}\" has arrayIndex {}, outside 0..{}", anime_pack.name, part.name, part.array_index, part_list.len())));
+        }
+        if !seen_indices.insert(part.array_index) {
+            return Err(crate::ConverterError::ConversionFailed(format!("{}: part \"{}\" reuses arrayIndex {}", anime_pack.name, part.name, part.array_index)));
+        }
+    }
+    Ok(())
+}
+
 pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &sspj::sspj::SsProject, asset_provider: &dyn crate::asset_provider::AssetProvider, embedded: bool) -> Result<ssab::ssab::ss::format::SsAnimeBinaryT, crate::ConverterError> {
     // effect
     let using_effect_file_names = anime_pack.model.part_list.iter().filter_map(|part| if part.part_type == sspj::sstypes::SsPartType::Effect { Some(part.ref_effect_name.to_string()) } else { None }).collect::<HashSet<String>>();
@@ -65,6 +89,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     anime_binary.name = anime_pack.name.to_string();
     anime_binary.name_hash = crate::utils::fnv1a_hash_str(&anime_pack.name);
     anime_binary.parts = model_t::animedata::convert_part_list(anime_pack);
+    validate_part_list(anime_pack)?;
     let parts_map: HashMap<String, &sspj::ssae::SsPart> = anime_pack.model.part_list.iter().map(|part| (part.name.to_string(), part)).collect();
     anime_binary.animations = model_t::animedata::convert_animation_data_list(anime_pack, &parts_map, &sound_list_id_to_name_hash, &anime_pack.cellmap_names);
     anime_binary.cellmaps = if cellmaps.is_empty() { None } else { Some(model_t::cellmap::convert_cellmapt_list(sspj, &cellmaps, asset_provider)?) };
@@ -134,4 +159,54 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
     };
 
     Ok(anime_binary)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sspj::ssloader::SsLoader;
+
+    fn load_pack() -> sspj::ssae::SsAnimePack {
+        let mut path = std::env::current_dir().unwrap();
+        if path.ends_with("ssconverter") {
+            path = path.parent().unwrap().parent().unwrap().to_path_buf();
+        }
+        path.push("tests/allPartsV7/normal.ssae");
+        sspj::ssae::SsAnimePack::load_from_file(&path).expect("failed to load the fixture")
+    }
+
+    #[test]
+    fn a_well_formed_part_list_validates() {
+        validate_part_list(&load_pack()).expect("the fixture is well formed");
+    }
+
+    #[test]
+    fn a_duplicate_part_name_is_an_error() {
+        let mut pack = load_pack();
+        let taken = pack.model.part_list[0].name.clone();
+        pack.model.part_list[1].name = taken.clone();
+        let e = validate_part_list(&pack).expect_err("a duplicate name shortens the map the converters index");
+        assert!(format!("{e}").contains(&taken), "{e}");
+    }
+
+    #[test]
+    fn an_out_of_range_array_index_is_an_error() {
+        let mut pack = load_pack();
+        pack.model.part_list[1].array_index = pack.model.part_list.len() as i32;
+        validate_part_list(&pack).expect_err("an arrayIndex past the end indexes out of bounds");
+    }
+
+    #[test]
+    fn a_negative_array_index_is_an_error() {
+        let mut pack = load_pack();
+        pack.model.part_list[1].array_index = -1;
+        validate_part_list(&pack).expect_err("a negative arrayIndex wraps when cast to usize");
+    }
+
+    #[test]
+    fn a_reused_array_index_is_an_error() {
+        let mut pack = load_pack();
+        pack.model.part_list[1].array_index = pack.model.part_list[0].array_index;
+        validate_part_list(&pack).expect_err("a reused arrayIndex leaves another slot unwritten");
+    }
 }
