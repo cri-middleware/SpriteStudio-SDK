@@ -19,7 +19,10 @@ impl CharMapLoader for SsCharMapInfo {
     type Output = SsCharMapInfo;
 
     fn load(parts: &HashMap<String, String>) -> Result<Self::Output, SspjError> {
-        Ok(SsCharMapInfo { face: parts["face"].trim_matches('"').to_string(), unicode: parts["unicode"].as_str() == "1", smooth: parts["smooth"].as_str() == "1" })
+        let face = parts.get("face").ok_or_else(|| SspjError::FntParseError("Missing key: face".to_string()))?.trim_matches('"');
+        let unicode = parts.get("unicode").ok_or_else(|| SspjError::FntParseError("Missing key: unicode".to_string()))?;
+        let smooth = parts.get("smooth").ok_or_else(|| SspjError::FntParseError("Missing key: smooth".to_string()))?;
+        Ok(SsCharMapInfo { face: face.to_string(), unicode: unicode.as_str() == "1", smooth: smooth.as_str() == "1" })
     }
 }
 
@@ -224,6 +227,16 @@ mod tests {
 
     fn get_test_base_path() -> PathBuf {
         std::env::current_dir().expect("Failed to get the current directory").ancestors().nth(2).expect("Failed to get the base directory").to_path_buf()
+    }
+
+    /// A `.fnt` that is not BMFont's carries an info line without `face` /
+    /// `unicode` / `smooth`. That is malformed input, not a reason to end the
+    /// host process.
+    #[test]
+    fn an_info_line_missing_a_key_is_an_error() {
+        let fnt = "info size=12\ncommon lineHeight=1 base=1 scaleW=1 scaleH=1 pages=0\nchars count=0\nkernings count=0";
+        let e = SsCharMap::load(fnt).expect_err("a missing info key must be reported, not panic");
+        assert!(matches!(e, SspjError::FntParseError(_)), "{e:?}");
     }
 
     #[test]
