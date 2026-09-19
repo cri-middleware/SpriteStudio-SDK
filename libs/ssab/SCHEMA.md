@@ -157,7 +157,7 @@ For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into
 |-----------|------|-----------|-------|
 | `name_hash` | uint32 (key) | — | Hash for fast lookup |
 | `name` | string | `name` | Cell name |
-| `rectangle` | Rect | `pos` + `size` | ssce uses pos/size pair; ssab uses rectangle (x1,y1,x2,y2) |
+| `rectangle` | Rect | `pos` + `size` | Stored verbatim: `x1,y1` = `pos`, `x2,y2` = `size` — width and height, not the bottom-right corner |
 | `pivot` | Vec2 | `pivot` | Cell pivot point |
 | `rotated` | bool | `rotated` | Whether cell is rotated in atlas |
 | `table_coord_x` | [float] | `mesh_point_list[*].x` | SoA mesh vertex X coordinates |
