@@ -13,18 +13,17 @@ impl From<&ssab::ssab::ss::format::Vec2T> for Vec2Key {
 impl Vec2Key {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct RectKey {
-    pub x1: ordered_float::OrderedFloat<f32>,
-    pub y1: ordered_float::OrderedFloat<f32>,
-    pub x2: ordered_float::OrderedFloat<f32>,
-    pub y2: ordered_float::OrderedFloat<f32>,
+pub struct BoundsKey {
+    pub left: ordered_float::OrderedFloat<f32>,
+    pub top: ordered_float::OrderedFloat<f32>,
+    pub right: ordered_float::OrderedFloat<f32>,
+    pub bottom: ordered_float::OrderedFloat<f32>,
 }
-impl From<&ssab::ssab::ss::format::RectT> for RectKey {
-    fn from(value: &ssab::ssab::ss::format::RectT) -> Self {
-        Self { x1: ordered_float::OrderedFloat(value.x1), y1: ordered_float::OrderedFloat(value.y1), x2: ordered_float::OrderedFloat(value.x2), y2: ordered_float::OrderedFloat(value.y2) }
+impl From<&ssab::ssab::ss::format::BoundsT> for BoundsKey {
+    fn from(value: &ssab::ssab::ss::format::BoundsT) -> Self {
+        Self { left: ordered_float::OrderedFloat(value.left), top: ordered_float::OrderedFloat(value.top), right: ordered_float::OrderedFloat(value.right), bottom: ordered_float::OrderedFloat(value.bottom) }
     }
 }
-impl RectKey {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
 pub struct RegionKey {
@@ -53,14 +52,14 @@ impl From<&ssab::ssab::ss::format::MinMax2T> for MinMax2Key {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct U8RectKey {
+pub struct U8ColorKey {
     pub a: u8,
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
-impl From<&ssab::ssab::ss::format::U8RectT> for U8RectKey {
-    fn from(value: &ssab::ssab::ss::format::U8RectT) -> Self {
+impl From<&ssab::ssab::ss::format::U8ColorT> for U8ColorKey {
+    fn from(value: &ssab::ssab::ss::format::U8ColorT) -> Self {
         Self { a: value.a, r: value.r, g: value.g, b: value.b }
     }
 }
@@ -570,12 +569,12 @@ impl From<&ssab::ssab::ss::format::PartAttributeCellT> for PartAttributeCellKey 
 
 #[derive(Hash, Eq, PartialEq)]
 pub struct SsAttributePartColorKeyValueColorKey {
-    pub rgba: Option<U8RectKey>,
+    pub rgba: Option<U8ColorKey>,
     pub rate: ordered_float::OrderedFloat<f32>,
 }
 impl From<&ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT> for SsAttributePartColorKeyValueColorKey {
     fn from(value: &ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT) -> Self {
-        Self { rgba: value.rgba.as_ref().map(|r| U8RectKey::from(r.as_ref())), rate: ordered_float::OrderedFloat(value.rate) }
+        Self { rgba: value.rgba.as_ref().map(|r| U8ColorKey::from(r.as_ref())), rate: ordered_float::OrderedFloat(value.rate) }
     }
 }
 
@@ -797,13 +796,13 @@ impl From<&ssab::ssab::ss::format::PartAttributeInstanceT> for PartAttributeInst
 #[derive(Hash, Eq, PartialEq)]
 pub struct PartAttributeUserDataKey {
     pub integer: Option<IntValueEntryKey>,
-    pub rect: Option<RectKey>,
+    pub rect: Option<BoundsKey>,
     pub point: Option<Vec2Key>,
     pub str: Option<String>,
 }
 impl From<&ssab::ssab::ss::format::PartAttributeUserDataT> for PartAttributeUserDataKey {
     fn from(value: &ssab::ssab::ss::format::PartAttributeUserDataT) -> Self {
-        Self { integer: value.integer.as_ref().map(|i| IntValueEntryKey::from(i.as_ref())), rect: value.rect.as_ref().map(|r| RectKey::from(r.as_ref())), point: value.point.as_ref().map(|p| Vec2Key::from(p.as_ref())), str: value.str.clone() }
+        Self { integer: value.integer.as_ref().map(|i| IntValueEntryKey::from(i.as_ref())), rect: value.rect.as_ref().map(|r| BoundsKey::from(r.as_ref())), point: value.point.as_ref().map(|p| Vec2Key::from(p.as_ref())), str: value.str.clone() }
     }
 }
 
@@ -900,10 +899,10 @@ impl From<&ssab::ssab::ss::format::PartMeshBindingT> for PartMeshBindingKey {
 
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>>>,
-    pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Rect<'a>>>,
+    pub bounds_cache: HashMap<BoundsKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Bounds<'a>>>,
     pub region_cache: HashMap<RegionKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Region<'a>>>,
     pub min_max2_cache: HashMap<MinMax2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2<'a>>>,
-    pub u8rect_cache: HashMap<U8RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Rect<'a>>>,
+    pub u8color_cache: HashMap<U8ColorKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Color<'a>>>,
     pub none_value_table_cache: HashMap<NoneValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::NoneValueEntry<'a>>>,
     pub bool_value_table_cache: HashMap<BoolValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::BoolValueEntry<'a>>>,
     pub int_value_table_cache: HashMap<IntValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::IntValueEntry<'a>>>,
@@ -959,7 +958,7 @@ impl<'a> SsabCache<'a> {
     pub fn new() -> Self {
         Self {
             vec2_cache: HashMap::new(),
-            rect_cache: HashMap::new(),
+            bounds_cache: HashMap::new(),
             region_cache: HashMap::new(),
             min_max2_cache: HashMap::new(),
             none_value_table_cache: HashMap::new(),
@@ -969,7 +968,7 @@ impl<'a> SsabCache<'a> {
             string_value_table_cache: HashMap::new(),
             vec2_value_table_cache: HashMap::new(),
             min_max2_value_table_cache: HashMap::new(),
-            u8rect_cache: HashMap::new(),
+            u8color_cache: HashMap::new(),
 
             ss_curve_cache: HashMap::new(),
             cell_cache: HashMap::new(),
@@ -1026,14 +1025,14 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    fn create_shared_rect(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, rectt: &ssab::ssab::ss::format::RectT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::Rect<'a>> {
-        let key = RectKey::from(rectt);
-        if let Some(&offset) = self.rect_cache.get(&key) {
+    fn create_shared_bounds(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, boundst: &ssab::ssab::ss::format::BoundsT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::Bounds<'a>> {
+        let key = BoundsKey::from(boundst);
+        if let Some(&offset) = self.bounds_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::RectArgs { x1: rectt.x1, y1: rectt.y1, x2: rectt.x2, y2: rectt.y2 };
-        let offset = ssab::ssab::ss::format::Rect::create(fb, &args);
-        self.rect_cache.insert(key, offset);
+        let args = ssab::ssab::ss::format::BoundsArgs { left: boundst.left, top: boundst.top, right: boundst.right, bottom: boundst.bottom };
+        let offset = ssab::ssab::ss::format::Bounds::create(fb, &args);
+        self.bounds_cache.insert(key, offset);
         offset
     }
 
@@ -1059,14 +1058,14 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    fn create_shared_u8rect(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, u8rectt: &ssab::ssab::ss::format::U8RectT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Rect<'a>> {
-        let key = U8RectKey::from(u8rectt);
-        if let Some(&offset) = self.u8rect_cache.get(&key) {
+    fn create_shared_u8color(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, u8colort: &ssab::ssab::ss::format::U8ColorT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Color<'a>> {
+        let key = U8ColorKey::from(u8colort);
+        if let Some(&offset) = self.u8color_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::U8RectArgs { a: u8rectt.a, r: u8rectt.r, g: u8rectt.g, b: u8rectt.b };
-        let offset = ssab::ssab::ss::format::U8Rect::create(fb, &args);
-        self.u8rect_cache.insert(key, offset);
+        let args = ssab::ssab::ss::format::U8ColorArgs { a: u8colort.a, r: u8colort.r, g: u8colort.g, b: u8colort.b };
+        let offset = ssab::ssab::ss::format::U8Color::create(fb, &args);
+        self.u8color_cache.insert(key, offset);
         offset
     }
 
@@ -1623,7 +1622,7 @@ impl<'a> SsabCache<'a> {
         }
 
         let mut args = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorArgs::default();
-        args.rgba = part_attribute_cell.rgba.as_ref().map(|rgba| self.create_shared_u8rect(fb, rgba));
+        args.rgba = part_attribute_cell.rgba.as_ref().map(|rgba| self.create_shared_u8color(fb, rgba));
         args.rate = part_attribute_cell.rate;
 
         let offset = ssab::ssab::ss::format::SsAttributePartColorKeyValueColor::create(fb, &args);
@@ -1812,7 +1811,7 @@ impl<'a> SsabCache<'a> {
 
         let mut args = ssab::ssab::ss::format::PartAttributeUserDataArgs::default();
         args.integer = part_attribute_user_data.integer.as_ref().map(|integer| self.create_shared_int_value_table(fb, integer));
-        args.rect = part_attribute_user_data.rect.as_ref().map(|rect| self.create_shared_rect(fb, rect));
+        args.rect = part_attribute_user_data.rect.as_ref().map(|rect| self.create_shared_bounds(fb, rect));
         args.point = part_attribute_user_data.point.as_ref().map(|point| self.create_shared_vec2(fb, point));
         args.str = part_attribute_user_data.str.as_ref().map(|str| fb.create_shared_string(str));
 

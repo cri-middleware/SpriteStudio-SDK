@@ -561,10 +561,10 @@ All enums have a 1:1 mapping between ss*e and ssab. Key enums:
 | ssab Type | Definition | ss*e Equivalent |
 |----------|-----------|----------------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
-| `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` or pos+size pair |
+| `Bounds` | `{ left, top, right, bottom: float }` | `SsIRect { x1, y1, x2, y2 }` — the user-data rectangle, authored as four edges |
 | `Region` | `{ x, y, w, h: float }` | a `pos` + `size` pair (`.ssce`), or `x`/`y`/`width`/`height` (`.fnt`) |
 | `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | a `value` / `subvalue` pair per axis (effect randomization range) |
-| `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
+| `U8Color` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
 
 ---
 

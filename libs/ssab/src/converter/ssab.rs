@@ -2908,197 +2908,197 @@ impl Vec2T {
     })
   }
 }
-pub enum RectOffset {}
+pub enum BoundsOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct Rect<'a> {
+pub struct Bounds<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for Rect<'a> {
-  type Inner = Rect<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for Bounds<'a> {
+  type Inner = Bounds<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> Rect<'a> {
-  pub const VT_X1: ::flatbuffers::VOffsetT = 4;
-  pub const VT_Y1: ::flatbuffers::VOffsetT = 6;
-  pub const VT_X2: ::flatbuffers::VOffsetT = 8;
-  pub const VT_Y2: ::flatbuffers::VOffsetT = 10;
+impl<'a> Bounds<'a> {
+  pub const VT_LEFT: ::flatbuffers::VOffsetT = 4;
+  pub const VT_TOP: ::flatbuffers::VOffsetT = 6;
+  pub const VT_RIGHT: ::flatbuffers::VOffsetT = 8;
+  pub const VT_BOTTOM: ::flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    Rect { _tab: table }
+    Bounds { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args RectArgs
-  ) -> ::flatbuffers::WIPOffset<Rect<'bldr>> {
-    let mut builder = RectBuilder::new(_fbb);
-    builder.add_y2(args.y2);
-    builder.add_x2(args.x2);
-    builder.add_y1(args.y1);
-    builder.add_x1(args.x1);
+    args: &'args BoundsArgs
+  ) -> ::flatbuffers::WIPOffset<Bounds<'bldr>> {
+    let mut builder = BoundsBuilder::new(_fbb);
+    builder.add_bottom(args.bottom);
+    builder.add_right(args.right);
+    builder.add_top(args.top);
+    builder.add_left(args.left);
     builder.finish()
   }
 
-  pub fn unpack(&self) -> RectT {
-    let x1 = self.x1();
-    let y1 = self.y1();
-    let x2 = self.x2();
-    let y2 = self.y2();
-    RectT {
-      x1,
-      y1,
-      x2,
-      y2,
+  pub fn unpack(&self) -> BoundsT {
+    let left = self.left();
+    let top = self.top();
+    let right = self.right();
+    let bottom = self.bottom();
+    BoundsT {
+      left,
+      top,
+      right,
+      bottom,
     }
   }
 
   #[inline]
-  pub fn x1(&self) -> f32 {
+  pub fn left(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(Rect::VT_X1, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(Bounds::VT_LEFT, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn y1(&self) -> f32 {
+  pub fn top(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(Rect::VT_Y1, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(Bounds::VT_TOP, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn x2(&self) -> f32 {
+  pub fn right(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(Rect::VT_X2, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(Bounds::VT_RIGHT, Some(0.0)).unwrap()}
   }
   #[inline]
-  pub fn y2(&self) -> f32 {
+  pub fn bottom(&self) -> f32 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<f32>(Rect::VT_Y2, Some(0.0)).unwrap()}
+    unsafe { self._tab.get::<f32>(Bounds::VT_BOTTOM, Some(0.0)).unwrap()}
   }
 }
 
-impl ::flatbuffers::Verifiable for Rect<'_> {
+impl ::flatbuffers::Verifiable for Bounds<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<f32>("x1", Self::VT_X1, false)?
-     .visit_field::<f32>("y1", Self::VT_Y1, false)?
-     .visit_field::<f32>("x2", Self::VT_X2, false)?
-     .visit_field::<f32>("y2", Self::VT_Y2, false)?
+     .visit_field::<f32>("left", Self::VT_LEFT, false)?
+     .visit_field::<f32>("top", Self::VT_TOP, false)?
+     .visit_field::<f32>("right", Self::VT_RIGHT, false)?
+     .visit_field::<f32>("bottom", Self::VT_BOTTOM, false)?
      .finish();
     Ok(())
   }
 }
-pub struct RectArgs {
-    pub x1: f32,
-    pub y1: f32,
-    pub x2: f32,
-    pub y2: f32,
+pub struct BoundsArgs {
+    pub left: f32,
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
 }
-impl<'a> Default for RectArgs {
+impl<'a> Default for BoundsArgs {
   #[inline]
   fn default() -> Self {
-    RectArgs {
-      x1: 0.0,
-      y1: 0.0,
-      x2: 0.0,
-      y2: 0.0,
+    BoundsArgs {
+      left: 0.0,
+      top: 0.0,
+      right: 0.0,
+      bottom: 0.0,
     }
   }
 }
 
-pub struct RectBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct BoundsBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> RectBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> BoundsBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_x1(&mut self, x1: f32) {
-    self.fbb_.push_slot::<f32>(Rect::VT_X1, x1, 0.0);
+  pub fn add_left(&mut self, left: f32) {
+    self.fbb_.push_slot::<f32>(Bounds::VT_LEFT, left, 0.0);
   }
   #[inline]
-  pub fn add_y1(&mut self, y1: f32) {
-    self.fbb_.push_slot::<f32>(Rect::VT_Y1, y1, 0.0);
+  pub fn add_top(&mut self, top: f32) {
+    self.fbb_.push_slot::<f32>(Bounds::VT_TOP, top, 0.0);
   }
   #[inline]
-  pub fn add_x2(&mut self, x2: f32) {
-    self.fbb_.push_slot::<f32>(Rect::VT_X2, x2, 0.0);
+  pub fn add_right(&mut self, right: f32) {
+    self.fbb_.push_slot::<f32>(Bounds::VT_RIGHT, right, 0.0);
   }
   #[inline]
-  pub fn add_y2(&mut self, y2: f32) {
-    self.fbb_.push_slot::<f32>(Rect::VT_Y2, y2, 0.0);
+  pub fn add_bottom(&mut self, bottom: f32) {
+    self.fbb_.push_slot::<f32>(Bounds::VT_BOTTOM, bottom, 0.0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> RectBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> BoundsBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    RectBuilder {
+    BoundsBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<Rect<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<Bounds<'a>> {
     let o = self.fbb_.end_table(self.start_);
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for Rect<'_> {
+impl ::core::fmt::Debug for Bounds<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("Rect");
-      ds.field("x1", &self.x1());
-      ds.field("y1", &self.y1());
-      ds.field("x2", &self.x2());
-      ds.field("y2", &self.y2());
+    let mut ds = f.debug_struct("Bounds");
+      ds.field("left", &self.left());
+      ds.field("top", &self.top());
+      ds.field("right", &self.right());
+      ds.field("bottom", &self.bottom());
       ds.finish()
   }
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct RectT {
-  pub x1: f32,
-  pub y1: f32,
-  pub x2: f32,
-  pub y2: f32,
+pub struct BoundsT {
+  pub left: f32,
+  pub top: f32,
+  pub right: f32,
+  pub bottom: f32,
 }
-impl Default for RectT {
+impl Default for BoundsT {
   fn default() -> Self {
     Self {
-      x1: 0.0,
-      y1: 0.0,
-      x2: 0.0,
-      y2: 0.0,
+      left: 0.0,
+      top: 0.0,
+      right: 0.0,
+      bottom: 0.0,
     }
   }
 }
-impl RectT {
+impl BoundsT {
   pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> ::flatbuffers::WIPOffset<Rect<'b>> {
-    let x1 = self.x1;
-    let y1 = self.y1;
-    let x2 = self.x2;
-    let y2 = self.y2;
-    Rect::create(_fbb, &RectArgs{
-      x1,
-      y1,
-      x2,
-      y2,
+  ) -> ::flatbuffers::WIPOffset<Bounds<'b>> {
+    let left = self.left;
+    let top = self.top;
+    let right = self.right;
+    let bottom = self.bottom;
+    Bounds::create(_fbb, &BoundsArgs{
+      left,
+      top,
+      right,
+      bottom,
     })
   }
 }
@@ -3490,22 +3490,22 @@ impl MinMax2T {
     })
   }
 }
-pub enum U8RectOffset {}
+pub enum U8ColorOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct U8Rect<'a> {
+pub struct U8Color<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for U8Rect<'a> {
-  type Inner = U8Rect<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for U8Color<'a> {
+  type Inner = U8Color<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> U8Rect<'a> {
+impl<'a> U8Color<'a> {
   pub const VT_A: ::flatbuffers::VOffsetT = 4;
   pub const VT_R: ::flatbuffers::VOffsetT = 6;
   pub const VT_G: ::flatbuffers::VOffsetT = 8;
@@ -3513,14 +3513,14 @@ impl<'a> U8Rect<'a> {
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    U8Rect { _tab: table }
+    U8Color { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args U8RectArgs
-  ) -> ::flatbuffers::WIPOffset<U8Rect<'bldr>> {
-    let mut builder = U8RectBuilder::new(_fbb);
+    args: &'args U8ColorArgs
+  ) -> ::flatbuffers::WIPOffset<U8Color<'bldr>> {
+    let mut builder = U8ColorBuilder::new(_fbb);
     builder.add_b(args.b);
     builder.add_g(args.g);
     builder.add_r(args.r);
@@ -3528,12 +3528,12 @@ impl<'a> U8Rect<'a> {
     builder.finish()
   }
 
-  pub fn unpack(&self) -> U8RectT {
+  pub fn unpack(&self) -> U8ColorT {
     let a = self.a();
     let r = self.r();
     let g = self.g();
     let b = self.b();
-    U8RectT {
+    U8ColorT {
       a,
       r,
       g,
@@ -3546,32 +3546,32 @@ impl<'a> U8Rect<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u8>(U8Rect::VT_A, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u8>(U8Color::VT_A, Some(0)).unwrap()}
   }
   #[inline]
   pub fn r(&self) -> u8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u8>(U8Rect::VT_R, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u8>(U8Color::VT_R, Some(0)).unwrap()}
   }
   #[inline]
   pub fn g(&self) -> u8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u8>(U8Rect::VT_G, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u8>(U8Color::VT_G, Some(0)).unwrap()}
   }
   #[inline]
   pub fn b(&self) -> u8 {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<u8>(U8Rect::VT_B, Some(0)).unwrap()}
+    unsafe { self._tab.get::<u8>(U8Color::VT_B, Some(0)).unwrap()}
   }
 }
 
-impl ::flatbuffers::Verifiable for U8Rect<'_> {
+impl ::flatbuffers::Verifiable for U8Color<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
@@ -3585,16 +3585,16 @@ impl ::flatbuffers::Verifiable for U8Rect<'_> {
     Ok(())
   }
 }
-pub struct U8RectArgs {
+pub struct U8ColorArgs {
     pub a: u8,
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
-impl<'a> Default for U8RectArgs {
+impl<'a> Default for U8ColorArgs {
   #[inline]
   fn default() -> Self {
-    U8RectArgs {
+    U8ColorArgs {
       a: 0,
       r: 0,
       g: 0,
@@ -3603,45 +3603,45 @@ impl<'a> Default for U8RectArgs {
   }
 }
 
-pub struct U8RectBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct U8ColorBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> U8RectBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> U8ColorBuilder<'a, 'b, A> {
   #[inline]
   pub fn add_a(&mut self, a: u8) {
-    self.fbb_.push_slot::<u8>(U8Rect::VT_A, a, 0);
+    self.fbb_.push_slot::<u8>(U8Color::VT_A, a, 0);
   }
   #[inline]
   pub fn add_r(&mut self, r: u8) {
-    self.fbb_.push_slot::<u8>(U8Rect::VT_R, r, 0);
+    self.fbb_.push_slot::<u8>(U8Color::VT_R, r, 0);
   }
   #[inline]
   pub fn add_g(&mut self, g: u8) {
-    self.fbb_.push_slot::<u8>(U8Rect::VT_G, g, 0);
+    self.fbb_.push_slot::<u8>(U8Color::VT_G, g, 0);
   }
   #[inline]
   pub fn add_b(&mut self, b: u8) {
-    self.fbb_.push_slot::<u8>(U8Rect::VT_B, b, 0);
+    self.fbb_.push_slot::<u8>(U8Color::VT_B, b, 0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> U8RectBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> U8ColorBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    U8RectBuilder {
+    U8ColorBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<U8Rect<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<U8Color<'a>> {
     let o = self.fbb_.end_table(self.start_);
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for U8Rect<'_> {
+impl ::core::fmt::Debug for U8Color<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("U8Rect");
+    let mut ds = f.debug_struct("U8Color");
       ds.field("a", &self.a());
       ds.field("r", &self.r());
       ds.field("g", &self.g());
@@ -3651,13 +3651,13 @@ impl ::core::fmt::Debug for U8Rect<'_> {
 }
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
-pub struct U8RectT {
+pub struct U8ColorT {
   pub a: u8,
   pub r: u8,
   pub g: u8,
   pub b: u8,
 }
-impl Default for U8RectT {
+impl Default for U8ColorT {
   fn default() -> Self {
     Self {
       a: 0,
@@ -3667,16 +3667,16 @@ impl Default for U8RectT {
     }
   }
 }
-impl U8RectT {
+impl U8ColorT {
   pub fn pack<'b, A: ::flatbuffers::Allocator + 'b>(
     &self,
     _fbb: &mut ::flatbuffers::FlatBufferBuilder<'b, A>
-  ) -> ::flatbuffers::WIPOffset<U8Rect<'b>> {
+  ) -> ::flatbuffers::WIPOffset<U8Color<'b>> {
     let a = self.a;
     let r = self.r;
     let g = self.g;
     let b = self.b;
-    U8Rect::create(_fbb, &U8RectArgs{
+    U8Color::create(_fbb, &U8ColorArgs{
       a,
       r,
       g,
@@ -10614,11 +10614,11 @@ impl<'a> SsAttributePartColorKeyValueColor<'a> {
   }
 
   #[inline]
-  pub fn rgba(&self) -> Option<U8Rect<'a>> {
+  pub fn rgba(&self) -> Option<U8Color<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<U8Rect>>(SsAttributePartColorKeyValueColor::VT_RGBA, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<U8Color>>(SsAttributePartColorKeyValueColor::VT_RGBA, None)}
   }
   #[inline]
   pub fn rate(&self) -> f32 {
@@ -10635,14 +10635,14 @@ impl ::flatbuffers::Verifiable for SsAttributePartColorKeyValueColor<'_> {
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<U8Rect>>("rgba", Self::VT_RGBA, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<U8Color>>("rgba", Self::VT_RGBA, false)?
      .visit_field::<f32>("rate", Self::VT_RATE, false)?
      .finish();
     Ok(())
   }
 }
 pub struct SsAttributePartColorKeyValueColorArgs<'a> {
-    pub rgba: Option<::flatbuffers::WIPOffset<U8Rect<'a>>>,
+    pub rgba: Option<::flatbuffers::WIPOffset<U8Color<'a>>>,
     pub rate: f32,
 }
 impl<'a> Default for SsAttributePartColorKeyValueColorArgs<'a> {
@@ -10661,8 +10661,8 @@ pub struct SsAttributePartColorKeyValueColorBuilder<'a: 'b, 'b, A: ::flatbuffers
 }
 impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> SsAttributePartColorKeyValueColorBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_rgba(&mut self, rgba: ::flatbuffers::WIPOffset<U8Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<U8Rect>>(SsAttributePartColorKeyValueColor::VT_RGBA, rgba);
+  pub fn add_rgba(&mut self, rgba: ::flatbuffers::WIPOffset<U8Color<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<U8Color>>(SsAttributePartColorKeyValueColor::VT_RGBA, rgba);
   }
   #[inline]
   pub fn add_rate(&mut self, rate: f32) {
@@ -10694,7 +10694,7 @@ impl ::core::fmt::Debug for SsAttributePartColorKeyValueColor<'_> {
 #[non_exhaustive]
 #[derive(Debug, Clone, PartialEq)]
 pub struct SsAttributePartColorKeyValueColorT {
-  pub rgba: Option<alloc::boxed::Box<U8RectT>>,
+  pub rgba: Option<alloc::boxed::Box<U8ColorT>>,
   pub rate: f32,
 }
 impl Default for SsAttributePartColorKeyValueColorT {
@@ -12324,11 +12324,11 @@ impl<'a> PartAttributeUserData<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<IntValueEntry>>(PartAttributeUserData::VT_INTEGER, None)}
   }
   #[inline]
-  pub fn rect(&self) -> Option<Rect<'a>> {
+  pub fn rect(&self) -> Option<Bounds<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Rect>>(PartAttributeUserData::VT_RECT, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Bounds>>(PartAttributeUserData::VT_RECT, None)}
   }
   #[inline]
   pub fn point(&self) -> Option<Vec2<'a>> {
@@ -12353,7 +12353,7 @@ impl ::flatbuffers::Verifiable for PartAttributeUserData<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<::flatbuffers::ForwardsUOffset<IntValueEntry>>("integer", Self::VT_INTEGER, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("rect", Self::VT_RECT, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<Bounds>>("rect", Self::VT_RECT, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("point", Self::VT_POINT, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("str", Self::VT_STR, false)?
      .finish();
@@ -12362,7 +12362,7 @@ impl ::flatbuffers::Verifiable for PartAttributeUserData<'_> {
 }
 pub struct PartAttributeUserDataArgs<'a> {
     pub integer: Option<::flatbuffers::WIPOffset<IntValueEntry<'a>>>,
-    pub rect: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
+    pub rect: Option<::flatbuffers::WIPOffset<Bounds<'a>>>,
     pub point: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub str: Option<::flatbuffers::WIPOffset<&'a str>>,
 }
@@ -12388,8 +12388,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> PartAttributeUserDataBuilder<
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<IntValueEntry>>(PartAttributeUserData::VT_INTEGER, integer);
   }
   #[inline]
-  pub fn add_rect(&mut self, rect: ::flatbuffers::WIPOffset<Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Rect>>(PartAttributeUserData::VT_RECT, rect);
+  pub fn add_rect(&mut self, rect: ::flatbuffers::WIPOffset<Bounds<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Bounds>>(PartAttributeUserData::VT_RECT, rect);
   }
   #[inline]
   pub fn add_point(&mut self, point: ::flatbuffers::WIPOffset<Vec2<'b >>) {
@@ -12428,7 +12428,7 @@ impl ::core::fmt::Debug for PartAttributeUserData<'_> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartAttributeUserDataT {
   pub integer: Option<alloc::boxed::Box<IntValueEntryT>>,
-  pub rect: Option<alloc::boxed::Box<RectT>>,
+  pub rect: Option<alloc::boxed::Box<BoundsT>>,
   pub point: Option<alloc::boxed::Box<Vec2T>>,
   pub str: Option<alloc::string::String>,
 }
