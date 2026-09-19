@@ -28,9 +28,8 @@ fn convert_cellmapt(cellmap: &sspj::ssce::SsCellMap, sspj: &sspj::sspj::SsProjec
     cell_map_t.name_hash = crate::utils::fnv1a_hash_str(&cellmap.name);
     cell_map_t.name = cellmap.name.to_string();
 
-    let path = std::path::PathBuf::from(&sspj.settings.image_base_directory).join(&cellmap.image_path);
-    let path_str = path.to_str().ok_or_else(|| crate::converter::converter_error::ConverterError::ConversionFailed("Non-UTF8 path in cellmap".to_string()))?;
-    let r = asset_provider.validate_asset(path_str);
+    let path = crate::utils::join_asset_path(&sspj.settings.image_base_directory, &cellmap.image_path);
+    let r = asset_provider.validate_asset(&path);
     match r {
         Ok(_) => (),
         Err(e) => return Err(e),
