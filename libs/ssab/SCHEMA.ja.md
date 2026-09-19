@@ -157,7 +157,7 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 |---------------|------|---------------|------|
 | `name_hash` | uint32 (key) | — | 高速検索用ハッシュ |
 | `name` | string | `name` | セル名 |
-| `rectangle` | Rect | `pos` + `size` | ssce は pos/size のペア、ssab は矩形 (x1,y1,x2,y2) |
+| `rectangle` | Rect | `pos` + `size` | そのまま格納。`x1,y1` = `pos`、`x2,y2` = `size` で、右下座標ではなく幅・高さです |
 | `pivot` | Vec2 | `pivot` | セルのピボットポイント |
 | `rotated` | bool | `rotated` | アトラス内でセルが回転しているか |
 | `table_coord_x` | [float] | `mesh_point_list[*].x` | メッシュ頂点 X 座標 (SoA) |
