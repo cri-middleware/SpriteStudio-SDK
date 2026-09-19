@@ -107,7 +107,7 @@ pub fn convert_ss_anime_binary_t(anime_pack: &sspj::ssae::SsAnimePack, sspj: &ss
                 let mut external_texture = ssab::ssab::ss::format::ExternalTextureT::default();
                 external_texture.name_hash = crate::utils::fnv1a_hash_str(texture_path);
                 external_texture.name = Some(texture_path.to_string());
-                let r = asset_provider.validate_asset(std::path::PathBuf::from(&sspj.settings.image_base_directory).join(texture_path).to_str().unwrap_or(texture_path));
+                let r = asset_provider.validate_asset(&crate::utils::join_asset_path(&sspj.settings.image_base_directory, texture_path));
                 match r {
                     Ok(_) => Ok(external_texture),
                     Err(e) => Err(e),

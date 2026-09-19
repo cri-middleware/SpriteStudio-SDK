@@ -86,7 +86,7 @@ impl MemoryAssetProvider {
         let mut sspj_map = HashMap::new();
         let mut binary_map = HashMap::new();
         for (path, data) in files {
-            let rel = Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy().to_string();
+            let rel = crate::utils::normalize_asset_path(&Path::new(&path).strip_prefix(&sspj_dir).map_err(|_| crate::ConverterError::ConversionFailed(format!("Failed to strip prefix '{}' from '{}'", sspj_dir, path)))?.to_string_lossy());
             if path.ends_with(".sspj") || path.ends_with(".ssae") || path.ends_with(".ssce") || path.ends_with(".ssee") || path.ends_with(".ssqe") || path.ends_with(".ssse") || path.ends_with(".fnt") {
                 let text = String::from_utf8(data).map_err(|e| crate::ConverterError::ConversionFailed(format!("Non-UTF8 text asset '{}': {:?}", path, e)))?;
                 sspj_map.insert(rel, text);
@@ -102,18 +102,52 @@ impl MemoryAssetProvider {
 #[cfg(feature = "web")]
 impl AssetProvider for MemoryAssetProvider {
     fn validate_asset(&self, path: &str) -> Result<(), crate::ConverterError> {
-        if self.sspj_map.contains_key(path) || self.binary_map.contains_key(path) { Ok(()) } else { Err(crate::ConverterError::ConversionFailed(format!("Asset not found: {}", path))) }
+        let key = crate::utils::normalize_asset_path(path);
+        if self.sspj_map.contains_key(&key) || self.binary_map.contains_key(&key) { Ok(()) } else { Err(crate::ConverterError::ConversionFailed(format!("Asset not found: {}", path))) }
     }
     fn read_asset(&self, path: &str) -> Result<Vec<u8>, std::io::Error> {
-        if let Some(s) = self.sspj_map.get(path) {
+        let key = crate::utils::normalize_asset_path(path);
+        if let Some(s) = self.sspj_map.get(&key) {
             return Ok(s.as_bytes().to_vec());
         }
-        if let Some(b) = self.binary_map.get(path) {
+        if let Some(b) = self.binary_map.get(&key) {
             return Ok(b.clone());
         }
         Err(std::io::Error::new(std::io::ErrorKind::NotFound, format!("Asset not found: {}", path)))
     }
     fn load_sspj(&self) -> Result<sspj::sspj::SsProject, sspj::sspj_error::SspjError> {
         sspj::sspj::SsProject::load_from_maps(&self.sspj_name, &self.sspj_map)
+    }
+}
+
+#[cfg(all(test, feature = "web"))]
+mod web_test {
+    use super::*;
+
+    fn provider() -> MemoryAssetProvider {
+        MemoryAssetProvider::from_files(vec![("Doll/Doll.sspj".to_string(), b"<SpriteStudioProject/>".to_vec()), ("Doll/Doll.png".to_string(), vec![0u8; 4]), ("Doll/images/chara.png".to_string(), vec![0u8; 4])]).expect("Failed to build the provider")
+    }
+
+    #[test]
+    fn a_path_the_filesystem_would_resolve_is_found() {
+        let provider = provider();
+
+        assert!(provider.validate_asset("Doll.png").is_ok());
+        assert!(provider.validate_asset("./Doll.png").is_ok());
+        assert!(provider.validate_asset("images//chara.png").is_ok());
+        assert!(provider.validate_asset("images/./chara.png").is_ok());
+        assert!(provider.validate_asset("images/../Doll.png").is_ok());
+
+        assert!(provider.read_asset("./Doll.png").is_ok());
+        assert!(provider.read_asset("./Doll.sspj").is_ok());
+    }
+
+    #[test]
+    fn a_path_that_leaves_the_project_is_not_found() {
+        let provider = provider();
+
+        assert!(provider.validate_asset("../Doll.png").is_err());
+        assert!(provider.validate_asset("/Doll.png").is_err());
+        assert!(provider.validate_asset("missing.png").is_err());
     }
 }
