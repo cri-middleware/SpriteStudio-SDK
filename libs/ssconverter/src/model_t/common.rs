@@ -8,16 +8,6 @@ pub fn convert_flat_list_from_vec3t_list(point3_list: &[sspj::sstypes::SsPoint3]
     point3_list.iter().flat_map(|point3| [point3.x as u16, point3.y as u16, point3.z as u16]).collect::<Vec<u16>>()
 }
 
-pub fn convert_regiont(x: f32, y: f32, w: f32, h: f32) -> ssab::ssab::ss::format::RegionT {
-    let mut region = ssab::ssab::ss::format::RegionT::default();
-    region.x = x;
-    region.y = y;
-    region.w = w;
-    region.h = h;
-
-    region
-}
-
 pub fn convert_min_max2t(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> ssab::ssab::ss::format::MinMax2T {
     let mut min_max2 = ssab::ssab::ss::format::MinMax2T::default();
     min_max2.x_min = x_min;

@@ -113,7 +113,7 @@ So `LT = 0x00`, `CC = 0x11`, `RB = 0x22`. `NO = 0xFF` means "unset" — treat it
 | `name_face` | Face name of the source font. Informational; not used for drawing |
 | `base` | Baseline position in px, measured from the top of the line |
 | `height_line` | Line height of the char map in px. **The denominator of the glyph scale** |
-| `size_texture_original` | Original page-image size in px. **This is the value to normalize `atlas` with** — not the size of the texture you actually loaded |
+| `size_texture_original` | Original page-image size in px. **This is the value to normalize `pos` / `size` with** — not the size of the texture you actually loaded |
 | `name_texture[]` | Page image file names, **ordered by page id**, so `name_texture[glyph.page]` is the right lookup |
 | `name_texture_hash[]` | Hashes of the above (the asset key in embedded mode) |
 | `table_data[]` | The glyph table, sorted by ascending `id` so you can binary-search it |
@@ -121,7 +121,8 @@ So `LT = 0x00`, `CC = 0x11`, `RB = 0x22`. `NO = 0xFF` means "unset" — treat it
 | `FontGlyphBitmap` | Content |
 | :--- | :--- |
 | `id` | Character code (UTF-16 code unit) |
-| `atlas` | The glyph's region inside the page image (`x`, `y`, `w`, `h`) |
+| `pos` | Top-left of the glyph inside the page image |
+| `size` | Width and height of the glyph |
 | `offset` | Where to start drawing the glyph relative to the pen (px, Y positive downwards) |
 | `width_advance` | Advance width in px |
 | `text` | `id` rendered as a character. For debugging |
@@ -171,7 +172,7 @@ if the char map has no glyph for it:
     continue
 
 pos  = pen + (glyph.offset - base_offset) * scale
-size = (glyph.atlas.width, glyph.atlas.height) * scale
+size = glyph.size * scale
 
 // Wrapping (only when text_width > 0)
 if text_width > 0 and pos.x + size.x > text_width:
@@ -225,7 +226,7 @@ local.x =  (pos.x + shift_x[line]) - box.w / 2
 local.y = -((pos.y + shift_y)      - box.h / 2)   // flip the sign on a Y-up engine
 ```
 
-Normalize UVs by dividing `atlas` by `size_texture_original` (**not** by the size of the texture you actually loaded). Bind `name_texture[glyph.page]`, with a linear or nearest filter according to `text_smooth`.
+Normalize UVs by dividing `pos` and `size` by `size_texture_original` (**not** by the size of the texture you actually loaded). Bind `name_texture[glyph.page]`, with a linear or nearest filter according to `text_smooth`.
 
 ### Outline fonts (`text_bitmap == false`)
 

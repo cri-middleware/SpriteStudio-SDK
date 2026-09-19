@@ -157,7 +157,8 @@ For `PartTypeMesh`, the converter resolves the ssae mesh-weight description into
 |-----------|------|-----------|-------|
 | `name_hash` | uint32 (key) | — | Hash for fast lookup |
 | `name` | string | `name` | Cell name |
-| `region` | Region | `pos` + `size` | Stored verbatim: `x,y` = `pos`, `w,h` = `size` |
+| `pos` | Vec2 | `pos` | Top-left of the cell in the page image |
+| `size` | Vec2 | `size` | Width and height of the cell |
 | `pivot` | Vec2 | `pivot` | Cell pivot point |
 | `rotated` | bool | `rotated` | Whether cell is rotated in atlas |
 | `table_coord_x` | [float] | `mesh_point_list[*].x` | SoA mesh vertex X coordinates |
@@ -491,7 +492,8 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssab field | fnt field | Notes |
 |-----------|----------|-------|
 | `id` | `id` | Character ID (Unicode code point) |
-| `atlas` | `x` / `y` / `width` / `height` | The glyph's region in the page image |
+| `pos` | `x` / `y` | Top-left of the glyph in the page image |
+| `size` | `width` / `height` | Width and height of the glyph |
 | `offset` | `offset` | Glyph rendering offset |
 | `width_advance` | `xadvance` | Horizontal advance width |
 | `text` | — | Character text (derived from id in fnt) |
@@ -562,7 +564,6 @@ All enums have a 1:1 mapping between ss*e and ssab. Key enums:
 |----------|-----------|----------------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
 | `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` or pos+size pair |
-| `Region` | `{ x, y, w, h: float }` | a `pos` + `size` pair (`.ssce`), or `x`/`y`/`width`/`height` (`.fnt`) |
 | `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | a `value` / `subvalue` pair per axis (effect randomization range) |
 | `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
 

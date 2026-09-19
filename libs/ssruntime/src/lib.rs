@@ -3409,8 +3409,8 @@ impl<'a> EffectSlot<'a> {
             // SS6-style blend mapping: 0=Mix, 1=Add. Anything else falls back to Mix.
             entry.blend_byte = if blend_in == 1 { 1 } else { 0 };
 
-            let region = cell.region();
-            let (src_x, src_y, sw, sh) = (region.x(), region.y(), region.w(), region.h());
+            let (cpos, csize) = (cell.pos(), cell.size());
+            let (src_x, src_y, sw, sh) = (cpos.v1(), cpos.v2(), csize.v1(), csize.v2());
             // Pivot Y is negated to match Godot's prior emit_effect_slot behavior;
             // the Y-flip logic on the per-particle pass handles the rest of the
             // axis convention difference.
@@ -4226,8 +4226,8 @@ mod tests {
         // hashes the cellmap/cell names resolves to the same entry.
         assert_eq!(cm.name_hash(), fnv1a_hash_str(cm.name()));
         assert_eq!(c.name_hash(), fnv1a_hash_str(c.name()));
-        let r = c.region();
-        (cm.name_hash(), c.name_hash(), r.w(), r.h())
+        let s = c.size();
+        (cm.name_hash(), c.name_hash(), s.v1(), s.v2())
     }
 
     #[test]

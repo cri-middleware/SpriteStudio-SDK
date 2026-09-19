@@ -113,7 +113,7 @@ for (auto batch : *frame_data->draw_batches()) {
 | `name_face` | 元フォントのフェイス名。表示用の情報で、描画には使いません |
 | `base` | ベースライン位置（px、行の上端から） |
 | `height_line` | charmap の 1 行の高さ（px）。**拡大率の分母**です |
-| `size_texture_original` | ページ画像の元サイズ（px）。**`atlas` の正規化に使う値はこれ**で、実際にロードしたテクスチャのサイズではありません |
+| `size_texture_original` | ページ画像の元サイズ（px）。**`pos` / `size` の正規化に使う値はこれ**で、実際にロードしたテクスチャのサイズではありません |
 | `name_texture[]` | ページ画像のファイル名。**page id 順**に並んでいるので `name_texture[glyph.page]` で引けます |
 | `name_texture_hash[]` | 上記のハッシュ（埋め込みモードでのアセットキー） |
 | `table_data[]` | グリフ表。`id` 昇順にソート済みなので二分探索できます |
@@ -121,7 +121,8 @@ for (auto batch : *frame_data->draw_batches()) {
 | `FontGlyphBitmap` | 内容 |
 | :--- | :--- |
 | `id` | 文字コード（UTF-16 コードユニット） |
-| `atlas` | ページ画像内のグリフの領域（`x`, `y`, `w`, `h`） |
+| `pos` | ページ画像内のグリフの左上 |
+| `size` | グリフの幅と高さ |
 | `offset` | ペン位置からのグリフの描き出しオフセット（px、Y は下方向が正） |
 | `width_advance` | 送り幅（px） |
 | `text` | `id` を文字にしたもの。デバッグ表示用 |
@@ -171,7 +172,7 @@ if charmap に glyph が無い:
     continue
 
 pos  = pen + (glyph.offset - base_offset) * scale
-size = (glyph.atlas.width, glyph.atlas.height) * scale
+size = glyph.size * scale
 
 // 折り返し（text_width > 0 のときだけ）
 if text_width > 0 and pos.x + size.x > text_width:
@@ -225,7 +226,7 @@ local.x =  (pos.x + shift_x[line]) - box.w / 2
 local.y = -((pos.y + shift_y)      - box.h / 2)   // Y-up のエンジンでは符号を反転
 ```
 
-UV は `atlas` を `size_texture_original` で割って正規化します（実際にロードしたテクスチャのサイズでは**ありません**）。テクスチャは `name_texture[glyph.page]` を、フィルタは `text_smooth` に従って linear / nearest でバインドします。
+UV は `pos` と `size` を `size_texture_original` で割って正規化します（実際にロードしたテクスチャのサイズでは**ありません**）。テクスチャは `name_texture[glyph.page]` を、フィルタは `text_smooth` に従って linear / nearest でバインドします。
 
 ### アウトラインフォント（`text_bitmap == false`）
 

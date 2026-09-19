@@ -27,19 +27,6 @@ impl From<&ssab::ssab::ss::format::RectT> for RectKey {
 impl RectKey {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct RegionKey {
-    pub x: ordered_float::OrderedFloat<f32>,
-    pub y: ordered_float::OrderedFloat<f32>,
-    pub w: ordered_float::OrderedFloat<f32>,
-    pub h: ordered_float::OrderedFloat<f32>,
-}
-impl From<&ssab::ssab::ss::format::RegionT> for RegionKey {
-    fn from(value: &ssab::ssab::ss::format::RegionT) -> Self {
-        Self { x: ordered_float::OrderedFloat(value.x), y: ordered_float::OrderedFloat(value.y), w: ordered_float::OrderedFloat(value.w), h: ordered_float::OrderedFloat(value.h) }
-    }
-}
-
-#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct MinMax2Key {
     pub x_min: ordered_float::OrderedFloat<f32>,
     pub y_min: ordered_float::OrderedFloat<f32>,
@@ -523,7 +510,8 @@ impl From<&ssab::ssab::ss::format::PartAnimationDataT> for PartAnimationDataKey 
 pub struct CellKey {
     pub name_hash: u32,
     pub name: Option<String>,
-    pub region: Option<RegionKey>,
+    pub pos: Option<Vec2Key>,
+    pub size: Option<Vec2Key>,
     pub pivot: Option<Vec2Key>,
     pub rotated: bool,
     pub table_coord_x: Option<Vec<ordered_float::OrderedFloat<f32>>>,
@@ -535,7 +523,8 @@ impl From<&ssab::ssab::ss::format::CellT> for CellKey {
         Self {
             name_hash: value.name_hash,
             name: Some(value.name.to_string()),
-            region: Some(RegionKey::from(value.region.as_ref())),
+            pos: Some(Vec2Key::from(value.pos.as_ref())),
+            size: Some(Vec2Key::from(value.size.as_ref())),
             pivot: Some(Vec2Key::from(value.pivot.as_ref())),
             rotated: value.rotated,
             table_coord_x: value.table_coord_x.as_ref().map(|t| t.iter().map(|f| ordered_float::OrderedFloat(*f)).collect()),
@@ -901,7 +890,6 @@ impl From<&ssab::ssab::ss::format::PartMeshBindingT> for PartMeshBindingKey {
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Rect<'a>>>,
-    pub region_cache: HashMap<RegionKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Region<'a>>>,
     pub min_max2_cache: HashMap<MinMax2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2<'a>>>,
     pub u8rect_cache: HashMap<U8RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Rect<'a>>>,
     pub none_value_table_cache: HashMap<NoneValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::NoneValueEntry<'a>>>,
@@ -960,7 +948,6 @@ impl<'a> SsabCache<'a> {
         Self {
             vec2_cache: HashMap::new(),
             rect_cache: HashMap::new(),
-            region_cache: HashMap::new(),
             min_max2_cache: HashMap::new(),
             none_value_table_cache: HashMap::new(),
             bool_value_table_cache: HashMap::new(),
@@ -1034,17 +1021,6 @@ impl<'a> SsabCache<'a> {
         let args = ssab::ssab::ss::format::RectArgs { x1: rectt.x1, y1: rectt.y1, x2: rectt.x2, y2: rectt.y2 };
         let offset = ssab::ssab::ss::format::Rect::create(fb, &args);
         self.rect_cache.insert(key, offset);
-        offset
-    }
-
-    fn create_shared_region(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, regiont: &ssab::ssab::ss::format::RegionT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::Region<'a>> {
-        let key = RegionKey::from(regiont);
-        if let Some(&offset) = self.region_cache.get(&key) {
-            return offset;
-        }
-        let args = ssab::ssab::ss::format::RegionArgs { x: regiont.x, y: regiont.y, w: regiont.w, h: regiont.h };
-        let offset = ssab::ssab::ss::format::Region::create(fb, &args);
-        self.region_cache.insert(key, offset);
         offset
     }
 
@@ -1569,7 +1545,8 @@ impl<'a> SsabCache<'a> {
         let mut args = ssab::ssab::ss::format::CellArgs::default();
         args.name_hash = cell.name_hash;
         args.name = Some(fb.create_shared_string(&cell.name));
-        args.region = Some(self.create_shared_region(fb, &cell.region));
+        args.pos = Some(self.create_shared_vec2(fb, &cell.pos));
+        args.size = Some(self.create_shared_vec2(fb, &cell.size));
         args.pivot = Some(self.create_shared_vec2(fb, &cell.pivot));
         args.rotated = cell.rotated;
         args.table_coord_x = cell.table_coord_x.as_ref().map(|p| fb.create_vector(p));
@@ -2379,7 +2356,8 @@ impl<'a> SsabCache<'a> {
                         .map(|font| {
                             let mut f_args = ssab::ssab::ss::format::FontGlyphBitmapArgs::default();
                             f_args.id = font.id;
-                            f_args.atlas = font.atlas.as_ref().map(|atlas| self.create_shared_region(fb, atlas));
+                            f_args.pos = font.pos.as_ref().map(|pos| self.create_shared_vec2(fb, pos));
+                            f_args.size = font.size.as_ref().map(|size| self.create_shared_vec2(fb, size));
                             f_args.offset = font.offset.as_ref().map(|offset| self.create_shared_vec2(fb, offset));
                             f_args.width_advance = font.width_advance;
                             f_args.text = font.text.as_ref().map(|text| fb.create_shared_string(text));

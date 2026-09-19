@@ -3,7 +3,8 @@ fn convert_cellt(sscell: &sspj::ssce::SsCell) -> ssab::ssab::ss::format::CellT {
     let mut cell_t = ssab::ssab::ss::format::CellT::default();
     cell_t.name_hash = crate::utils::fnv1a_hash_str(&sscell.name);
     cell_t.name = sscell.name.to_string();
-    cell_t.region = Box::new(model_t::common::convert_regiont(sscell.pos.x, sscell.pos.y, sscell.size.x, sscell.size.y));
+    cell_t.pos = Box::new(model_t::common::convert_vec2t(&sscell.pos));
+    cell_t.size = Box::new(model_t::common::convert_vec2t(&sscell.size));
     cell_t.pivot = Box::new(model_t::common::convert_vec2t(&sscell.pivot));
     cell_t.rotated = sscell.rotated;
     if sscell.mesh_point_list.is_empty() {

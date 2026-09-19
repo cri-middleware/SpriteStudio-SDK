@@ -12,13 +12,6 @@ table Rect {
   y2: float;
 }
 
-table Region {
-  x: float;
-  y: float;
-  w: float;
-  h: float;
-}
-
 table MinMax2 {
   x_min: float;
   y_min: float;
@@ -196,7 +189,8 @@ table Cell {
   name_hash: uint32 (key);
   name: string (required);
 
-  region: Region (required);
+  pos: Vec2 (required);
+  size: Vec2 (required);
   pivot: Vec2 (required);
   rotated: bool;
 
@@ -329,7 +323,8 @@ table SoundList {
 
 table FontGlyphBitmap {
   id: ushort (key);
-  atlas: Region;
+  pos: Vec2;
+  size: Vec2;
   offset: Vec2;
   width_advance: float;
   text: string;
