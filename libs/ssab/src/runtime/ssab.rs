@@ -1989,6 +1989,153 @@ impl ::core::fmt::Debug for Rect<'_> {
       ds.finish()
   }
 }
+pub enum MinMax2Offset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct MinMax2<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for MinMax2<'a> {
+  type Inner = MinMax2<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> MinMax2<'a> {
+  pub const VT_X_MIN: ::flatbuffers::VOffsetT = 4;
+  pub const VT_Y_MIN: ::flatbuffers::VOffsetT = 6;
+  pub const VT_X_MAX: ::flatbuffers::VOffsetT = 8;
+  pub const VT_Y_MAX: ::flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    MinMax2 { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args MinMax2Args
+  ) -> ::flatbuffers::WIPOffset<MinMax2<'bldr>> {
+    let mut builder = MinMax2Builder::new(_fbb);
+    builder.add_y_max(args.y_max);
+    builder.add_x_max(args.x_max);
+    builder.add_y_min(args.y_min);
+    builder.add_x_min(args.x_min);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn x_min(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(MinMax2::VT_X_MIN, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn y_min(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(MinMax2::VT_Y_MIN, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn x_max(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(MinMax2::VT_X_MAX, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn y_max(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(MinMax2::VT_Y_MAX, Some(0.0)).unwrap()}
+  }
+}
+
+impl ::flatbuffers::Verifiable for MinMax2<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<f32>("x_min", Self::VT_X_MIN, false)?
+     .visit_field::<f32>("y_min", Self::VT_Y_MIN, false)?
+     .visit_field::<f32>("x_max", Self::VT_X_MAX, false)?
+     .visit_field::<f32>("y_max", Self::VT_Y_MAX, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct MinMax2Args {
+    pub x_min: f32,
+    pub y_min: f32,
+    pub x_max: f32,
+    pub y_max: f32,
+}
+impl<'a> Default for MinMax2Args {
+  #[inline]
+  fn default() -> Self {
+    MinMax2Args {
+      x_min: 0.0,
+      y_min: 0.0,
+      x_max: 0.0,
+      y_max: 0.0,
+    }
+  }
+}
+
+pub struct MinMax2Builder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> MinMax2Builder<'a, 'b, A> {
+  #[inline]
+  pub fn add_x_min(&mut self, x_min: f32) {
+    self.fbb_.push_slot::<f32>(MinMax2::VT_X_MIN, x_min, 0.0);
+  }
+  #[inline]
+  pub fn add_y_min(&mut self, y_min: f32) {
+    self.fbb_.push_slot::<f32>(MinMax2::VT_Y_MIN, y_min, 0.0);
+  }
+  #[inline]
+  pub fn add_x_max(&mut self, x_max: f32) {
+    self.fbb_.push_slot::<f32>(MinMax2::VT_X_MAX, x_max, 0.0);
+  }
+  #[inline]
+  pub fn add_y_max(&mut self, y_max: f32) {
+    self.fbb_.push_slot::<f32>(MinMax2::VT_Y_MAX, y_max, 0.0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> MinMax2Builder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    MinMax2Builder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<MinMax2<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for MinMax2<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("MinMax2");
+      ds.field("x_min", &self.x_min());
+      ds.field("y_min", &self.y_min());
+      ds.field("x_max", &self.x_max());
+      ds.field("y_max", &self.y_max());
+      ds.finish()
+  }
+}
 pub enum U8RectOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -2843,99 +2990,99 @@ impl ::core::fmt::Debug for Vec2ValueEntry<'_> {
       ds.finish()
   }
 }
-pub enum RectValueEntryOffset {}
+pub enum MinMax2ValueEntryOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct RectValueEntry<'a> {
+pub struct MinMax2ValueEntry<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for RectValueEntry<'a> {
-  type Inner = RectValueEntry<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for MinMax2ValueEntry<'a> {
+  type Inner = MinMax2ValueEntry<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> RectValueEntry<'a> {
+impl<'a> MinMax2ValueEntry<'a> {
   pub const VT_VALUE: ::flatbuffers::VOffsetT = 4;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    RectValueEntry { _tab: table }
+    MinMax2ValueEntry { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args RectValueEntryArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<RectValueEntry<'bldr>> {
-    let mut builder = RectValueEntryBuilder::new(_fbb);
+    args: &'args MinMax2ValueEntryArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<MinMax2ValueEntry<'bldr>> {
+    let mut builder = MinMax2ValueEntryBuilder::new(_fbb);
     if let Some(x) = args.value { builder.add_value(x); }
     builder.finish()
   }
 
 
   #[inline]
-  pub fn value(&self) -> Rect<'a> {
+  pub fn value(&self) -> MinMax2<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Rect>>(RectValueEntry::VT_VALUE, None).unwrap()}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<MinMax2>>(MinMax2ValueEntry::VT_VALUE, None).unwrap()}
   }
 }
 
-impl ::flatbuffers::Verifiable for RectValueEntry<'_> {
+impl ::flatbuffers::Verifiable for MinMax2ValueEntry<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("value", Self::VT_VALUE, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<MinMax2>>("value", Self::VT_VALUE, true)?
      .finish();
     Ok(())
   }
 }
-pub struct RectValueEntryArgs<'a> {
-    pub value: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
+pub struct MinMax2ValueEntryArgs<'a> {
+    pub value: Option<::flatbuffers::WIPOffset<MinMax2<'a>>>,
 }
-impl<'a> Default for RectValueEntryArgs<'a> {
+impl<'a> Default for MinMax2ValueEntryArgs<'a> {
   #[inline]
   fn default() -> Self {
-    RectValueEntryArgs {
+    MinMax2ValueEntryArgs {
       value: None, // required field
     }
   }
 }
 
-pub struct RectValueEntryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct MinMax2ValueEntryBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> RectValueEntryBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> MinMax2ValueEntryBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_value(&mut self, value: ::flatbuffers::WIPOffset<Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Rect>>(RectValueEntry::VT_VALUE, value);
+  pub fn add_value(&mut self, value: ::flatbuffers::WIPOffset<MinMax2<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<MinMax2>>(MinMax2ValueEntry::VT_VALUE, value);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> RectValueEntryBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> MinMax2ValueEntryBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    RectValueEntryBuilder {
+    MinMax2ValueEntryBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<RectValueEntry<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<MinMax2ValueEntry<'a>> {
     let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, RectValueEntry::VT_VALUE,"value");
+    self.fbb_.required(o, MinMax2ValueEntry::VT_VALUE,"value");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for RectValueEntry<'_> {
+impl ::core::fmt::Debug for MinMax2ValueEntry<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("RectValueEntry");
+    let mut ds = f.debug_struct("MinMax2ValueEntry");
       ds.field("value", &self.value());
       ds.finish()
   }
@@ -4321,35 +4468,35 @@ impl ::core::fmt::Debug for EffectParticlePointGravity<'_> {
       ds.finish()
   }
 }
-pub enum RectAndVec2ValueTableOffset {}
+pub enum MinMax2AndVec2ValueTableOffset {}
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct RectAndVec2ValueTable<'a> {
+pub struct MinMax2AndVec2ValueTable<'a> {
   pub _tab: ::flatbuffers::Table<'a>,
 }
 
-impl<'a> ::flatbuffers::Follow<'a> for RectAndVec2ValueTable<'a> {
-  type Inner = RectAndVec2ValueTable<'a>;
+impl<'a> ::flatbuffers::Follow<'a> for MinMax2AndVec2ValueTable<'a> {
+  type Inner = MinMax2AndVec2ValueTable<'a>;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
     Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
   }
 }
 
-impl<'a> RectAndVec2ValueTable<'a> {
+impl<'a> MinMax2AndVec2ValueTable<'a> {
   pub const VT_SIZE: ::flatbuffers::VOffsetT = 4;
   pub const VT_SCALE_FACTOR_VALUE: ::flatbuffers::VOffsetT = 6;
 
   #[inline]
   pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
-    RectAndVec2ValueTable { _tab: table }
+    MinMax2AndVec2ValueTable { _tab: table }
   }
   #[allow(unused_mut)]
   pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
     _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
-    args: &'args RectAndVec2ValueTableArgs<'args>
-  ) -> ::flatbuffers::WIPOffset<RectAndVec2ValueTable<'bldr>> {
-    let mut builder = RectAndVec2ValueTableBuilder::new(_fbb);
+    args: &'args MinMax2AndVec2ValueTableArgs<'args>
+  ) -> ::flatbuffers::WIPOffset<MinMax2AndVec2ValueTable<'bldr>> {
+    let mut builder = MinMax2AndVec2ValueTableBuilder::new(_fbb);
     if let Some(x) = args.scale_factor_value { builder.add_scale_factor_value(x); }
     if let Some(x) = args.size { builder.add_size(x); }
     builder.finish()
@@ -4357,79 +4504,79 @@ impl<'a> RectAndVec2ValueTable<'a> {
 
 
   #[inline]
-  pub fn size(&self) -> Option<Rect<'a>> {
+  pub fn size(&self) -> Option<MinMax2<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Rect>>(RectAndVec2ValueTable::VT_SIZE, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<MinMax2>>(MinMax2AndVec2ValueTable::VT_SIZE, None)}
   }
   #[inline]
   pub fn scale_factor_value(&self) -> Vec2<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(RectAndVec2ValueTable::VT_SCALE_FACTOR_VALUE, None).unwrap()}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Vec2>>(MinMax2AndVec2ValueTable::VT_SCALE_FACTOR_VALUE, None).unwrap()}
   }
 }
 
-impl ::flatbuffers::Verifiable for RectAndVec2ValueTable<'_> {
+impl ::flatbuffers::Verifiable for MinMax2AndVec2ValueTable<'_> {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("size", Self::VT_SIZE, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<MinMax2>>("size", Self::VT_SIZE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("scale_factor_value", Self::VT_SCALE_FACTOR_VALUE, true)?
      .finish();
     Ok(())
   }
 }
-pub struct RectAndVec2ValueTableArgs<'a> {
-    pub size: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
+pub struct MinMax2AndVec2ValueTableArgs<'a> {
+    pub size: Option<::flatbuffers::WIPOffset<MinMax2<'a>>>,
     pub scale_factor_value: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
 }
-impl<'a> Default for RectAndVec2ValueTableArgs<'a> {
+impl<'a> Default for MinMax2AndVec2ValueTableArgs<'a> {
   #[inline]
   fn default() -> Self {
-    RectAndVec2ValueTableArgs {
+    MinMax2AndVec2ValueTableArgs {
       size: None,
       scale_factor_value: None, // required field
     }
   }
 }
 
-pub struct RectAndVec2ValueTableBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+pub struct MinMax2AndVec2ValueTableBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
   fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
   start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> RectAndVec2ValueTableBuilder<'a, 'b, A> {
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> MinMax2AndVec2ValueTableBuilder<'a, 'b, A> {
   #[inline]
-  pub fn add_size(&mut self, size: ::flatbuffers::WIPOffset<Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Rect>>(RectAndVec2ValueTable::VT_SIZE, size);
+  pub fn add_size(&mut self, size: ::flatbuffers::WIPOffset<MinMax2<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<MinMax2>>(MinMax2AndVec2ValueTable::VT_SIZE, size);
   }
   #[inline]
   pub fn add_scale_factor_value(&mut self, scale_factor_value: ::flatbuffers::WIPOffset<Vec2<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(RectAndVec2ValueTable::VT_SCALE_FACTOR_VALUE, scale_factor_value);
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Vec2>>(MinMax2AndVec2ValueTable::VT_SCALE_FACTOR_VALUE, scale_factor_value);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> RectAndVec2ValueTableBuilder<'a, 'b, A> {
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> MinMax2AndVec2ValueTableBuilder<'a, 'b, A> {
     let start = _fbb.start_table();
-    RectAndVec2ValueTableBuilder {
+    MinMax2AndVec2ValueTableBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> ::flatbuffers::WIPOffset<RectAndVec2ValueTable<'a>> {
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<MinMax2AndVec2ValueTable<'a>> {
     let o = self.fbb_.end_table(self.start_);
-    self.fbb_.required(o, RectAndVec2ValueTable::VT_SCALE_FACTOR_VALUE,"scale_factor_value");
+    self.fbb_.required(o, MinMax2AndVec2ValueTable::VT_SCALE_FACTOR_VALUE,"scale_factor_value");
     ::flatbuffers::WIPOffset::new(o.value())
   }
 }
 
-impl ::core::fmt::Debug for RectAndVec2ValueTable<'_> {
+impl ::core::fmt::Debug for MinMax2AndVec2ValueTable<'_> {
   fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-    let mut ds = f.debug_struct("RectAndVec2ValueTable");
+    let mut ds = f.debug_struct("MinMax2AndVec2ValueTable");
       ds.field("size", &self.size());
       ds.field("scale_factor_value", &self.scale_factor_value());
       ds.finish()
@@ -5266,13 +5413,13 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn value_as_effect_particle_element_position(&self) -> Option<RectValueEntry<'a>> {
+  pub fn value_as_effect_particle_element_position(&self) -> Option<MinMax2ValueEntry<'a>> {
     if self.value_type() == EffectNodeBehavior::EffectParticleElementPosition {
       self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { RectValueEntry::init_from_table(t) }
+       unsafe { MinMax2ValueEntry::init_from_table(t) }
      })
     } else {
       None
@@ -5386,13 +5533,13 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn value_as_effect_particle_element_size(&self) -> Option<RectAndVec2ValueTable<'a>> {
+  pub fn value_as_effect_particle_element_size(&self) -> Option<MinMax2AndVec2ValueTable<'a>> {
     if self.value_type() == EffectNodeBehavior::EffectParticleElementSize {
       self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { RectAndVec2ValueTable::init_from_table(t) }
+       unsafe { MinMax2AndVec2ValueTable::init_from_table(t) }
      })
     } else {
       None
@@ -5401,13 +5548,13 @@ impl<'a> EffectNodeBehaviorWrapper<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn value_as_effect_particle_element_trans_size(&self) -> Option<RectAndVec2ValueTable<'a>> {
+  pub fn value_as_effect_particle_element_trans_size(&self) -> Option<MinMax2AndVec2ValueTable<'a>> {
     if self.value_type() == EffectNodeBehavior::EffectParticleElementTransSize {
       self.value().map(|t| {
        // Safety:
        // Created from a valid Table for this object
        // Which contains a valid union in this slot
-       unsafe { RectAndVec2ValueTable::init_from_table(t) }
+       unsafe { MinMax2AndVec2ValueTable::init_from_table(t) }
      })
     } else {
       None
@@ -5473,7 +5620,7 @@ impl ::flatbuffers::Verifiable for EffectNodeBehaviorWrapper<'_> {
           EffectNodeBehavior::EffectParticleElementRndSeedChange => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<IntValueEntry>>("EffectNodeBehavior::EffectParticleElementRndSeedChange", pos),
           EffectNodeBehavior::EffectParticleElementDelay => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<IntValueEntry>>("EffectNodeBehavior::EffectParticleElementDelay", pos),
           EffectNodeBehavior::EffectParticleElementGravity => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<Vec2ValueEntry>>("EffectNodeBehavior::EffectParticleElementGravity", pos),
-          EffectNodeBehavior::EffectParticleElementPosition => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<RectValueEntry>>("EffectNodeBehavior::EffectParticleElementPosition", pos),
+          EffectNodeBehavior::EffectParticleElementPosition => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<MinMax2ValueEntry>>("EffectNodeBehavior::EffectParticleElementPosition", pos),
           EffectNodeBehavior::EffectParticleElementRotation => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<EffectParticleElementRotation>>("EffectNodeBehavior::EffectParticleElementRotation", pos),
           EffectNodeBehavior::EffectParticleElementRotationTrans => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<EffectParticleElementRotationTrans>>("EffectNodeBehavior::EffectParticleElementRotationTrans", pos),
           EffectNodeBehavior::EffectParticleElementTransSpeed => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<Vec2ValueEntry>>("EffectNodeBehavior::EffectParticleElementTransSpeed", pos),
@@ -5481,8 +5628,8 @@ impl ::flatbuffers::Verifiable for EffectNodeBehaviorWrapper<'_> {
           EffectNodeBehavior::EffectParticleElementInitColor => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<EffectParticleElementInitColor>>("EffectNodeBehavior::EffectParticleElementInitColor", pos),
           EffectNodeBehavior::EffectParticleElementTransColor => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<EffectParticleElementTransColor>>("EffectNodeBehavior::EffectParticleElementTransColor", pos),
           EffectNodeBehavior::EffectParticleElementAlphaFade => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<Vec2ValueEntry>>("EffectNodeBehavior::EffectParticleElementAlphaFade", pos),
-          EffectNodeBehavior::EffectParticleElementSize => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<RectAndVec2ValueTable>>("EffectNodeBehavior::EffectParticleElementSize", pos),
-          EffectNodeBehavior::EffectParticleElementTransSize => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<RectAndVec2ValueTable>>("EffectNodeBehavior::EffectParticleElementTransSize", pos),
+          EffectNodeBehavior::EffectParticleElementSize => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<MinMax2AndVec2ValueTable>>("EffectNodeBehavior::EffectParticleElementSize", pos),
+          EffectNodeBehavior::EffectParticleElementTransSize => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<MinMax2AndVec2ValueTable>>("EffectNodeBehavior::EffectParticleElementTransSize", pos),
           EffectNodeBehavior::EffectParticlePointGravity => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<EffectParticlePointGravity>>("EffectNodeBehavior::EffectParticlePointGravity", pos),
           EffectNodeBehavior::EffectParticleTurnToDirectionEnabled => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<FloatValueEntry>>("EffectNodeBehavior::EffectParticleTurnToDirectionEnabled", pos),
           EffectNodeBehavior::EffectParticleInfiniteEmitEnabled => v.verify_union_variant::<::flatbuffers::ForwardsUOffset<IntValueEntry>>("EffectNodeBehavior::EffectParticleInfiniteEmitEnabled", pos),

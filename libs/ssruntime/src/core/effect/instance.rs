@@ -81,10 +81,10 @@ impl EffectEmitterInstance {
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementPosition => {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_position() {
                             particle_params.use_offset = true;
-                            let rect = p.value();
+                            let range = p.value();
 
-                            particle_params.offset = Vector2::new(rect.x1(), rect.y1());
-                            particle_params.offset2 = Vector2::new(rect.x2() - rect.x1(), rect.y2() - rect.y1());
+                            particle_params.offset = Vector2::new(range.x_min(), range.y_min());
+                            particle_params.offset2 = Vector2::new(range.x_max() - range.x_min(), range.y_max() - range.y_min());
                         }
                     }
                     ssab_fbs::EffectNodeBehavior::EffectParticleElementRotation => {
@@ -155,8 +155,8 @@ impl EffectEmitterInstance {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_size() {
                             particle_params.use_init_scale = true;
                             if let Some(size) = p.size() {
-                                particle_params.scale = Vector2::new(size.x1(), size.y1());
-                                particle_params.scale_range = Vector2::new(size.x2() - size.x1(), size.y2() - size.y1());
+                                particle_params.scale = Vector2::new(size.x_min(), size.y_min());
+                                particle_params.scale_range = Vector2::new(size.x_max() - size.x_min(), size.y_max() - size.y_min());
                             }
                             let scale = p.scale_factor_value();
 
@@ -168,8 +168,8 @@ impl EffectEmitterInstance {
                         if let Some(p) = behavior_wrapper.value_as_effect_particle_element_trans_size() {
                             particle_params.use_trans_scale = true;
                             if let Some(size) = p.size() {
-                                particle_params.transscale = Vector2::new(size.x1(), size.y1());
-                                particle_params.scale_range2 = Vector2::new(size.x2() - size.x1(), size.y2() - size.y1());
+                                particle_params.transscale = Vector2::new(size.x_min(), size.y_min());
+                                particle_params.scale_range2 = Vector2::new(size.x_max() - size.x_min(), size.y_max() - size.y_min());
                             }
                             let scale = p.scale_factor_value();
 

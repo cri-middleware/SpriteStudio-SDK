@@ -67,8 +67,8 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         Some(wrap)
                     }
                     sspj::ssee::SsEffectFunctionType::Position(p) => {
-                        let mut behavior_t = ssab::ssab::ss::format::RectValueEntryT::default();
-                        behavior_t.value = Box::new(model_t::common::convert_rectt(p.offset_x.value, p.offset_y.value, p.offset_x.subvalue, p.offset_y.subvalue));
+                        let mut behavior_t = ssab::ssab::ss::format::MinMax2ValueEntryT::default();
+                        behavior_t.value = Box::new(model_t::common::convert_min_max2t(p.offset_x.value, p.offset_y.value, p.offset_x.subvalue, p.offset_y.subvalue));
 
                         let mut wrap = ssab::ssab::ss::format::EffectNodeBehaviorWrapperT::default();
                         wrap.value = ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementPosition(Box::new(behavior_t));
@@ -150,12 +150,12 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         Some(wrap)
                     }
                     sspj::ssee::SsEffectFunctionType::Size(p) => {
-                        let mut behavior_t = ssab::ssab::ss::format::RectAndVec2ValueTableT::default();
-                        let mut size = ssab::ssab::ss::format::RectT::default();
-                        size.x1 = p.size_x.value;
-                        size.x2 = p.size_x.subvalue;
-                        size.y1 = p.size_y.value;
-                        size.y2 = p.size_y.subvalue;
+                        let mut behavior_t = ssab::ssab::ss::format::MinMax2AndVec2ValueTableT::default();
+                        let mut size = ssab::ssab::ss::format::MinMax2T::default();
+                        size.x_min = p.size_x.value;
+                        size.x_max = p.size_x.subvalue;
+                        size.y_min = p.size_y.value;
+                        size.y_max = p.size_y.subvalue;
                         behavior_t.size = Some(Box::new(size));
                         let mut scale_factor_value = ssab::ssab::ss::format::Vec2T::default();
                         scale_factor_value.v1 = p.scale_factor.value;
@@ -167,12 +167,12 @@ fn convert_effect_node_list(nodes: &[sspj::ssee::SsEffectNode]) -> Vec<ssab::ssa
                         Some(wrap)
                     }
                     sspj::ssee::SsEffectFunctionType::TransSize(p) => {
-                        let mut behavior_t = ssab::ssab::ss::format::RectAndVec2ValueTableT::default();
-                        let mut size = ssab::ssab::ss::format::RectT::default();
-                        size.x1 = p.size_x.value;
-                        size.x2 = p.size_x.subvalue;
-                        size.y1 = p.size_y.value;
-                        size.y2 = p.size_y.subvalue;
+                        let mut behavior_t = ssab::ssab::ss::format::MinMax2AndVec2ValueTableT::default();
+                        let mut size = ssab::ssab::ss::format::MinMax2T::default();
+                        size.x_min = p.size_x.value;
+                        size.x_max = p.size_x.subvalue;
+                        size.y_min = p.size_y.value;
+                        size.y_max = p.size_y.subvalue;
                         behavior_t.size = Some(Box::new(size));
                         let mut scale_factor_value = ssab::ssab::ss::format::Vec2T::default();
                         scale_factor_value.v1 = p.scale_factor.value;

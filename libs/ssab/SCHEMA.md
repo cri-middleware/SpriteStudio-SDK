@@ -412,7 +412,7 @@ ssee uses a tagged enum (`SsEffectFunctionType`) with named variants. ssab uses 
 | `"OverWriteSeed"` | `EffectParticleElementRndSeedChange` | IntValueEntry |
 | `"Delay"` | `EffectParticleElementDelay` | IntValueEntry |
 | `"Gravity"` | `EffectParticleElementGravity` | Vec2ValueEntry |
-| `"init_position"` | `EffectParticleElementPosition` | RectValueEntry |
+| `"init_position"` | `EffectParticleElementPosition` | MinMax2ValueEntry |
 | `"init_rotation"` | `EffectParticleElementRotation` | Dedicated table |
 | `"trans_rotation"` | `EffectParticleElementRotationTrans` | Dedicated table |
 | `"trans_speed"` | `EffectParticleElementTransSpeed` | Vec2ValueEntry |
@@ -420,8 +420,8 @@ ssee uses a tagged enum (`SsEffectFunctionType`) with named variants. ssab uses 
 | `"init_vertexcolor"` | `EffectParticleElementInitColor` | Dedicated table |
 | `"trans_vertexcolor"` | `EffectParticleElementTransColor` | Dedicated table |
 | `"trans_colorfade"` | `EffectParticleElementAlphaFade` | Vec2ValueEntry |
-| `"init_size"` | `EffectParticleElementSize` | RectAndVec2ValueTable |
-| `"trans_size"` | `EffectParticleElementTransSize` | RectAndVec2ValueTable |
+| `"init_size"` | `EffectParticleElementSize` | MinMax2AndVec2ValueTable |
+| `"trans_size"` | `EffectParticleElementTransSize` | MinMax2AndVec2ValueTable |
 | `"add_pointgravity"` | `EffectParticlePointGravity` | Dedicated table |
 | `"TurnToDirection"` | `EffectParticleTurnToDirectionEnabled` | FloatValueEntry |
 | `"InfiniteEmit"` | `EffectParticleInfiniteEmitEnabled` | IntValueEntry |
@@ -562,6 +562,7 @@ All enums have a 1:1 mapping between ss*e and ssab. Key enums:
 |----------|-----------|----------------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
 | `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` or pos+size pair |
+| `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | a `value` / `subvalue` pair per axis (effect randomization range) |
 | `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
 
 ---

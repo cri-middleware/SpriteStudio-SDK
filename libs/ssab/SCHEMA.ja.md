@@ -412,7 +412,7 @@ ssee ではタグ付き列挙型 (`SsEffectFunctionType`) と名前付きバリ�
 | `"OverWriteSeed"` | `EffectParticleElementRndSeedChange` | IntValueEntry |
 | `"Delay"` | `EffectParticleElementDelay` | IntValueEntry |
 | `"Gravity"` | `EffectParticleElementGravity` | Vec2ValueEntry |
-| `"init_position"` | `EffectParticleElementPosition` | RectValueEntry |
+| `"init_position"` | `EffectParticleElementPosition` | MinMax2ValueEntry |
 | `"init_rotation"` | `EffectParticleElementRotation` | 専用テーブル |
 | `"trans_rotation"` | `EffectParticleElementRotationTrans` | 専用テーブル |
 | `"trans_speed"` | `EffectParticleElementTransSpeed` | Vec2ValueEntry |
@@ -420,8 +420,8 @@ ssee ではタグ付き列挙型 (`SsEffectFunctionType`) と名前付きバリ�
 | `"init_vertexcolor"` | `EffectParticleElementInitColor` | 専用テーブル |
 | `"trans_vertexcolor"` | `EffectParticleElementTransColor` | 専用テーブル |
 | `"trans_colorfade"` | `EffectParticleElementAlphaFade` | Vec2ValueEntry |
-| `"init_size"` | `EffectParticleElementSize` | RectAndVec2ValueTable |
-| `"trans_size"` | `EffectParticleElementTransSize` | RectAndVec2ValueTable |
+| `"init_size"` | `EffectParticleElementSize` | MinMax2AndVec2ValueTable |
+| `"trans_size"` | `EffectParticleElementTransSize` | MinMax2AndVec2ValueTable |
 | `"add_pointgravity"` | `EffectParticlePointGravity` | 専用テーブル |
 | `"TurnToDirection"` | `EffectParticleTurnToDirectionEnabled` | FloatValueEntry |
 | `"InfiniteEmit"` | `EffectParticleInfiniteEmitEnabled` | IntValueEntry |
@@ -562,6 +562,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 |--------|------|---------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
 | `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` または pos+size ペア |
+| `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | 軸ごとの `value` / `subvalue` ペア（エフェクトの乱数範囲） |
 | `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
 
 ---

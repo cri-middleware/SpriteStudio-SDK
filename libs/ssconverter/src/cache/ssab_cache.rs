@@ -27,6 +27,19 @@ impl From<&ssab::ssab::ss::format::RectT> for RectKey {
 impl RectKey {}
 
 #[derive(Hash, Eq, PartialEq, Clone)]
+pub struct MinMax2Key {
+    pub x_min: ordered_float::OrderedFloat<f32>,
+    pub y_min: ordered_float::OrderedFloat<f32>,
+    pub x_max: ordered_float::OrderedFloat<f32>,
+    pub y_max: ordered_float::OrderedFloat<f32>,
+}
+impl From<&ssab::ssab::ss::format::MinMax2T> for MinMax2Key {
+    fn from(value: &ssab::ssab::ss::format::MinMax2T) -> Self {
+        Self { x_min: ordered_float::OrderedFloat(value.x_min), y_min: ordered_float::OrderedFloat(value.y_min), x_max: ordered_float::OrderedFloat(value.x_max), y_max: ordered_float::OrderedFloat(value.y_max) }
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
 pub struct U8RectKey {
     pub a: u8,
     pub r: u8,
@@ -98,12 +111,12 @@ impl From<&ssab::ssab::ss::format::Vec2ValueEntryT> for Vec2ValueEntryKey {
 }
 
 #[derive(Hash, Eq, PartialEq, Clone)]
-pub struct RectValueEntryKey {
-    pub value: Option<RectKey>,
+pub struct MinMax2ValueEntryKey {
+    pub value: Option<MinMax2Key>,
 }
-impl From<&ssab::ssab::ss::format::RectValueEntryT> for RectValueEntryKey {
-    fn from(rect_value_table_t: &ssab::ssab::ss::format::RectValueEntryT) -> Self {
-        Self { value: Some(RectKey::from(rect_value_table_t.value.as_ref())) }
+impl From<&ssab::ssab::ss::format::MinMax2ValueEntryT> for MinMax2ValueEntryKey {
+    fn from(min_max2_value_table_t: &ssab::ssab::ss::format::MinMax2ValueEntryT) -> Self {
+        Self { value: Some(MinMax2Key::from(min_max2_value_table_t.value.as_ref())) }
     }
 }
 
@@ -875,6 +888,7 @@ impl From<&ssab::ssab::ss::format::PartMeshBindingT> for PartMeshBindingKey {
 pub struct SsabCache<'a> {
     pub vec2_cache: HashMap<Vec2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2<'a>>>,
     pub rect_cache: HashMap<RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Rect<'a>>>,
+    pub min_max2_cache: HashMap<MinMax2Key, flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2<'a>>>,
     pub u8rect_cache: HashMap<U8RectKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::U8Rect<'a>>>,
     pub none_value_table_cache: HashMap<NoneValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::NoneValueEntry<'a>>>,
     pub bool_value_table_cache: HashMap<BoolValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::BoolValueEntry<'a>>>,
@@ -882,7 +896,7 @@ pub struct SsabCache<'a> {
     pub float_value_table_cache: HashMap<FloatValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::FloatValueEntry<'a>>>,
     pub string_value_table_cache: HashMap<StringValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::StringValueEntry<'a>>>,
     pub vec2_value_table_cache: HashMap<Vec2ValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Vec2ValueEntry<'a>>>,
-    pub rect_value_table_cache: HashMap<RectValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::RectValueEntry<'a>>>,
+    pub min_max2_value_table_cache: HashMap<MinMax2ValueEntryKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2ValueEntry<'a>>>,
 
     pub ss_curve_cache: HashMap<SsCurveKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::SsCurve<'a>>>,
     pub cell_cache: HashMap<CellKey, flatbuffers::WIPOffset<ssab::ssab::ss::format::Cell<'a>>>,
@@ -932,13 +946,14 @@ impl<'a> SsabCache<'a> {
         Self {
             vec2_cache: HashMap::new(),
             rect_cache: HashMap::new(),
+            min_max2_cache: HashMap::new(),
             none_value_table_cache: HashMap::new(),
             bool_value_table_cache: HashMap::new(),
             int_value_table_cache: HashMap::new(),
             float_value_table_cache: HashMap::new(),
             string_value_table_cache: HashMap::new(),
             vec2_value_table_cache: HashMap::new(),
-            rect_value_table_cache: HashMap::new(),
+            min_max2_value_table_cache: HashMap::new(),
             u8rect_cache: HashMap::new(),
 
             ss_curve_cache: HashMap::new(),
@@ -1004,6 +1019,17 @@ impl<'a> SsabCache<'a> {
         let args = ssab::ssab::ss::format::RectArgs { x1: rectt.x1, y1: rectt.y1, x2: rectt.x2, y2: rectt.y2 };
         let offset = ssab::ssab::ss::format::Rect::create(fb, &args);
         self.rect_cache.insert(key, offset);
+        offset
+    }
+
+    fn create_shared_min_max2(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, min_max2t: &ssab::ssab::ss::format::MinMax2T) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2<'a>> {
+        let key = MinMax2Key::from(min_max2t);
+        if let Some(&offset) = self.min_max2_cache.get(&key) {
+            return offset;
+        }
+        let args = ssab::ssab::ss::format::MinMax2Args { x_min: min_max2t.x_min, y_min: min_max2t.y_min, x_max: min_max2t.x_max, y_max: min_max2t.y_max };
+        let offset = ssab::ssab::ss::format::MinMax2::create(fb, &args);
+        self.min_max2_cache.insert(key, offset);
         offset
     }
 
@@ -1095,14 +1121,14 @@ impl<'a> SsabCache<'a> {
         offset
     }
 
-    fn create_shared_rect_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, rect_value_table_t: &ssab::ssab::ss::format::RectValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::RectValueEntry<'a>> {
-        let key = RectValueEntryKey::from(rect_value_table_t);
-        if let Some(&offset) = self.rect_value_table_cache.get(&key) {
+    fn create_shared_min_max2_value_table(&mut self, fb: &mut flatbuffers::FlatBufferBuilder<'a>, min_max2_value_table_t: &ssab::ssab::ss::format::MinMax2ValueEntryT) -> flatbuffers::WIPOffset<ssab::ssab::ss::format::MinMax2ValueEntry<'a>> {
+        let key = MinMax2ValueEntryKey::from(min_max2_value_table_t);
+        if let Some(&offset) = self.min_max2_value_table_cache.get(&key) {
             return offset;
         }
-        let args = ssab::ssab::ss::format::RectValueEntryArgs { value: Some(self.create_shared_rect(fb, &rect_value_table_t.value)) };
-        let offset = ssab::ssab::ss::format::RectValueEntry::create(fb, &args);
-        self.rect_value_table_cache.insert(key, offset);
+        let args = ssab::ssab::ss::format::MinMax2ValueEntryArgs { value: Some(self.create_shared_min_max2(fb, &min_max2_value_table_t.value)) };
+        let offset = ssab::ssab::ss::format::MinMax2ValueEntry::create(fb, &args);
+        self.min_max2_value_table_cache.insert(key, offset);
         offset
     }
 
@@ -2175,7 +2201,7 @@ impl<'a> SsabCache<'a> {
                 Some(offset.as_union_value())
             }
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementPosition(v) => {
-                let offset = self.create_shared_rect_value_table(fb, v.as_ref());
+                let offset = self.create_shared_min_max2_value_table(fb, v.as_ref());
                 Some(offset.as_union_value())
             }
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementRotation(v) => {
@@ -2189,17 +2215,17 @@ impl<'a> SsabCache<'a> {
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementInitColor(v) => Some(v.pack(fb).as_union_value()),
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransColor(v) => Some(v.pack(fb).as_union_value()),
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementSize(v) => {
-                let mut w_args = ssab::ssab::ss::format::RectAndVec2ValueTableArgs::default();
-                w_args.size = v.size.as_ref().map(|size| self.create_shared_rect(fb, size));
+                let mut w_args = ssab::ssab::ss::format::MinMax2AndVec2ValueTableArgs::default();
+                w_args.size = v.size.as_ref().map(|size| self.create_shared_min_max2(fb, size));
                 w_args.scale_factor_value = Some(self.create_shared_vec2(fb, &v.scale_factor_value));
-                let offset = ssab::ssab::ss::format::RectAndVec2ValueTable::create(fb, &w_args);
+                let offset = ssab::ssab::ss::format::MinMax2AndVec2ValueTable::create(fb, &w_args);
                 Some(offset.as_union_value())
             }
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticleElementTransSize(v) => {
-                let mut w_args = ssab::ssab::ss::format::RectAndVec2ValueTableArgs::default();
-                w_args.size = v.size.as_ref().map(|size| self.create_shared_rect(fb, size));
+                let mut w_args = ssab::ssab::ss::format::MinMax2AndVec2ValueTableArgs::default();
+                w_args.size = v.size.as_ref().map(|size| self.create_shared_min_max2(fb, size));
                 w_args.scale_factor_value = Some(self.create_shared_vec2(fb, &v.scale_factor_value));
-                let offset = ssab::ssab::ss::format::RectAndVec2ValueTable::create(fb, &w_args);
+                let offset = ssab::ssab::ss::format::MinMax2AndVec2ValueTable::create(fb, &w_args);
                 Some(offset.as_union_value())
             }
             ssab::ssab::ss::format::EffectNodeBehaviorT::EffectParticlePointGravity(v) => {
