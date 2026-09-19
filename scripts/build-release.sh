@@ -70,7 +70,10 @@ usage () {
   echo "  verify=<yes|no>         Re-open the finished zips and check them (default:"
   echo "                          $VERIFY)."
   echo "  clean=<yes|no>          Delete <out> before assembling (default: $CLEAN)."
-  echo "  -h | --help             Show this help"
+    echo "  sdk= skip=              Accepted and ignored here. The family's build-release"
+  echo "                          scripts share out= clean= verify= in= sdk= skip=,"
+  echo "                          so one command line drives all of them."
+echo "  -h | --help             Show this help"
   echo ""
   echo "Output: <out>/ holds the three SDK archives, one ssconverter-cli archive per"
   echo "platform, and SHA256SUMS over all of them -- the exact set release.yml attaches"
@@ -105,6 +108,9 @@ while [ $# -gt 0 ]; do
         licenses) LICENSES="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')" ;;
         verify)   VERIFY="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')" ;;
         clean)    CLEAN="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')" ;;
+        # Accepted so one command line drives build-release in every repository
+        # of the family; this one has no use for them (AGENTS.md).
+        sdk|skip) echo "$APP: ${key}= does not apply here; ignored" >&2 ;;
         *)
           echo "$APP: unknown option '$key' (see $APP --help)" >&2
           exit 2
