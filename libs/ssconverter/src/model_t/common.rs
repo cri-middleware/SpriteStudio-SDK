@@ -18,6 +18,16 @@ pub fn convert_rectt(x1: f32, y1: f32, x2: f32, y2: f32) -> ssab::ssab::ss::form
     rect
 }
 
+pub fn convert_min_max2t(x_min: f32, y_min: f32, x_max: f32, y_max: f32) -> ssab::ssab::ss::format::MinMax2T {
+    let mut min_max2 = ssab::ssab::ss::format::MinMax2T::default();
+    min_max2.x_min = x_min;
+    min_max2.y_min = y_min;
+    min_max2.x_max = x_max;
+    min_max2.y_max = y_max;
+
+    min_max2
+}
+
 pub fn convert_color(c: &sspj::sstypes::SsU8Color) -> u32 {
     ((c.a as u32) << 24) | ((c.r as u32) << 16) | ((c.g as u32) << 8) | (c.b as u32)
 }

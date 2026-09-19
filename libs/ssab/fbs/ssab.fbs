@@ -12,6 +12,13 @@ table Rect {
   y2: float;
 }
 
+table MinMax2 {
+  x_min: float;
+  y_min: float;
+  x_max: float;
+  y_max: float;
+}
+
 table U8Rect {
   a: ubyte;
   r: ubyte;
@@ -134,8 +141,8 @@ table Vec2ValueEntry {
   value: Vec2 (required);
 }
 
-table RectValueEntry {
-  value: Rect (required);
+table MinMax2ValueEntry {
+  value: MinMax2 (required);
 }
 
 table EventUserData {
@@ -216,8 +223,8 @@ table EffectParticlePointGravity {
   power: float;
 }
 
-table RectAndVec2ValueTable {
-  size: Rect;
+table MinMax2AndVec2ValueTable {
+  size: MinMax2;
   scale_factor_value: Vec2 (required); // min, max
 }
 
@@ -260,7 +267,7 @@ union EffectNodeBehavior {
   EffectParticleElementRndSeedChange: IntValueEntry,
   EffectParticleElementDelay: IntValueEntry,
   EffectParticleElementGravity: Vec2ValueEntry,
-  EffectParticleElementPosition: RectValueEntry,
+  EffectParticleElementPosition: MinMax2ValueEntry,
   EffectParticleElementRotation,
   EffectParticleElementRotationTrans,
   EffectParticleElementTransSpeed: Vec2ValueEntry,
@@ -268,8 +275,8 @@ union EffectNodeBehavior {
   EffectParticleElementInitColor,
   EffectParticleElementTransColor,
   EffectParticleElementAlphaFade: Vec2ValueEntry,
-  EffectParticleElementSize: RectAndVec2ValueTable,
-  EffectParticleElementTransSize: RectAndVec2ValueTable,
+  EffectParticleElementSize: MinMax2AndVec2ValueTable,
+  EffectParticleElementTransSize: MinMax2AndVec2ValueTable,
   EffectParticlePointGravity,
   EffectParticleTurnToDirectionEnabled: FloatValueEntry,
   EffectParticleInfiniteEmitEnabled: IntValueEntry,
