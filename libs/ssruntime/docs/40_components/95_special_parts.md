@@ -121,7 +121,7 @@ So `LT = 0x00`, `CC = 0x11`, `RB = 0x22`. `NO = 0xFF` means "unset" — treat it
 | `FontGlyphBitmap` | Content |
 | :--- | :--- |
 | `id` | Character code (UTF-16 code unit) |
-| `atlas` | Rect inside the page image. `x1,y1` = top-left, but **`x2,y2` are width and height, not the bottom-right corner** |
+| `atlas` | The glyph's region inside the page image (`x`, `y`, `w`, `h`) |
 | `offset` | Where to start drawing the glyph relative to the pen (px, Y positive downwards) |
 | `width_advance` | Advance width in px |
 | `text` | `id` rendered as a character. For debugging |

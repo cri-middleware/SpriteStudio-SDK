@@ -55,11 +55,11 @@ pub fn convert_font_bitmaps(charmap_dic: &HashMap<String, &sspj::sscharmap::SsCh
                     let mut glyph = ssab::ssab::ss::format::FontGlyphBitmapT::default();
                     glyph.id = c.id as u16;
 
-                    let mut atlas = ssab::ssab::ss::format::RectT::default();
-                    atlas.x1 = c.src_rect.x1 as f32;
-                    atlas.y1 = c.src_rect.y1 as f32;
-                    atlas.x2 = c.src_rect.x2 as f32; // width
-                    atlas.y2 = c.src_rect.y2 as f32; // height
+                    let mut atlas = ssab::ssab::ss::format::RegionT::default();
+                    atlas.x = c.src_rect.x1 as f32;
+                    atlas.y = c.src_rect.y1 as f32;
+                    atlas.w = c.src_rect.x2 as f32;
+                    atlas.h = c.src_rect.y2 as f32;
                     glyph.atlas = Some(Box::new(atlas));
 
                     let mut offset = ssab::ssab::ss::format::Vec2T::default();
@@ -132,10 +132,10 @@ mod tests {
         assert_eq!(glyph.page, 0);
 
         let atlas = glyph.atlas.as_ref().unwrap();
-        assert_eq!(atlas.x1, 205.0);
-        assert_eq!(atlas.y1, 421.0);
-        assert_eq!(atlas.x2, 7.0);
-        assert_eq!(atlas.y2, 5.0);
+        assert_eq!(atlas.x, 205.0);
+        assert_eq!(atlas.y, 421.0);
+        assert_eq!(atlas.w, 7.0);
+        assert_eq!(atlas.h, 5.0);
 
         let offset = glyph.offset.as_ref().unwrap();
         assert_eq!(offset.v1, -3.0);
@@ -208,10 +208,10 @@ mod tests {
         assert_eq!(space_glyph.page, 0);
 
         let atlas = space_glyph.atlas.as_ref().unwrap();
-        assert_eq!(atlas.x1, 205.0);
-        assert_eq!(atlas.y1, 421.0);
-        assert_eq!(atlas.x2, 7.0);
-        assert_eq!(atlas.y2, 5.0);
+        assert_eq!(atlas.x, 205.0);
+        assert_eq!(atlas.y, 421.0);
+        assert_eq!(atlas.w, 7.0);
+        assert_eq!(atlas.h, 5.0);
 
         let offset = space_glyph.offset.as_ref().unwrap();
         assert_eq!(offset.v1, -3.0);

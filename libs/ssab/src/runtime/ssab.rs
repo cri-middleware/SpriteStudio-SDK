@@ -1989,6 +1989,153 @@ impl ::core::fmt::Debug for Rect<'_> {
       ds.finish()
   }
 }
+pub enum RegionOffset {}
+#[derive(Copy, Clone, PartialEq)]
+
+pub struct Region<'a> {
+  pub _tab: ::flatbuffers::Table<'a>,
+}
+
+impl<'a> ::flatbuffers::Follow<'a> for Region<'a> {
+  type Inner = Region<'a>;
+  #[inline]
+  unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    Self { _tab: unsafe { ::flatbuffers::Table::new(buf, loc) } }
+  }
+}
+
+impl<'a> Region<'a> {
+  pub const VT_X: ::flatbuffers::VOffsetT = 4;
+  pub const VT_Y: ::flatbuffers::VOffsetT = 6;
+  pub const VT_W: ::flatbuffers::VOffsetT = 8;
+  pub const VT_H: ::flatbuffers::VOffsetT = 10;
+
+  #[inline]
+  pub unsafe fn init_from_table(table: ::flatbuffers::Table<'a>) -> Self {
+    Region { _tab: table }
+  }
+  #[allow(unused_mut)]
+  pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr, A: ::flatbuffers::Allocator + 'bldr>(
+    _fbb: &'mut_bldr mut ::flatbuffers::FlatBufferBuilder<'bldr, A>,
+    args: &'args RegionArgs
+  ) -> ::flatbuffers::WIPOffset<Region<'bldr>> {
+    let mut builder = RegionBuilder::new(_fbb);
+    builder.add_h(args.h);
+    builder.add_w(args.w);
+    builder.add_y(args.y);
+    builder.add_x(args.x);
+    builder.finish()
+  }
+
+
+  #[inline]
+  pub fn x(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(Region::VT_X, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn y(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(Region::VT_Y, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn w(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(Region::VT_W, Some(0.0)).unwrap()}
+  }
+  #[inline]
+  pub fn h(&self) -> f32 {
+    // Safety:
+    // Created from valid Table for this object
+    // which contains a valid value in this slot
+    unsafe { self._tab.get::<f32>(Region::VT_H, Some(0.0)).unwrap()}
+  }
+}
+
+impl ::flatbuffers::Verifiable for Region<'_> {
+  #[inline]
+  fn run_verifier(
+    v: &mut ::flatbuffers::Verifier, pos: usize
+  ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
+    v.visit_table(pos)?
+     .visit_field::<f32>("x", Self::VT_X, false)?
+     .visit_field::<f32>("y", Self::VT_Y, false)?
+     .visit_field::<f32>("w", Self::VT_W, false)?
+     .visit_field::<f32>("h", Self::VT_H, false)?
+     .finish();
+    Ok(())
+  }
+}
+pub struct RegionArgs {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
+impl<'a> Default for RegionArgs {
+  #[inline]
+  fn default() -> Self {
+    RegionArgs {
+      x: 0.0,
+      y: 0.0,
+      w: 0.0,
+      h: 0.0,
+    }
+  }
+}
+
+pub struct RegionBuilder<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> {
+  fbb_: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>,
+  start_: ::flatbuffers::WIPOffset<::flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> RegionBuilder<'a, 'b, A> {
+  #[inline]
+  pub fn add_x(&mut self, x: f32) {
+    self.fbb_.push_slot::<f32>(Region::VT_X, x, 0.0);
+  }
+  #[inline]
+  pub fn add_y(&mut self, y: f32) {
+    self.fbb_.push_slot::<f32>(Region::VT_Y, y, 0.0);
+  }
+  #[inline]
+  pub fn add_w(&mut self, w: f32) {
+    self.fbb_.push_slot::<f32>(Region::VT_W, w, 0.0);
+  }
+  #[inline]
+  pub fn add_h(&mut self, h: f32) {
+    self.fbb_.push_slot::<f32>(Region::VT_H, h, 0.0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut ::flatbuffers::FlatBufferBuilder<'a, A>) -> RegionBuilder<'a, 'b, A> {
+    let start = _fbb.start_table();
+    RegionBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> ::flatbuffers::WIPOffset<Region<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    ::flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+impl ::core::fmt::Debug for Region<'_> {
+  fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    let mut ds = f.debug_struct("Region");
+      ds.field("x", &self.x());
+      ds.field("y", &self.y());
+      ds.field("w", &self.w());
+      ds.field("h", &self.h());
+      ds.finish()
+  }
+}
 pub enum MinMax2Offset {}
 #[derive(Copy, Clone, PartialEq)]
 
@@ -3916,7 +4063,7 @@ impl<'a> ::flatbuffers::Follow<'a> for Cell<'a> {
 impl<'a> Cell<'a> {
   pub const VT_NAME_HASH: ::flatbuffers::VOffsetT = 4;
   pub const VT_NAME: ::flatbuffers::VOffsetT = 6;
-  pub const VT_RECTANGLE: ::flatbuffers::VOffsetT = 8;
+  pub const VT_REGION: ::flatbuffers::VOffsetT = 8;
   pub const VT_PIVOT: ::flatbuffers::VOffsetT = 10;
   pub const VT_ROTATED: ::flatbuffers::VOffsetT = 12;
   pub const VT_TABLE_COORD_X: ::flatbuffers::VOffsetT = 14;
@@ -3937,7 +4084,7 @@ impl<'a> Cell<'a> {
     if let Some(x) = args.table_coord_y { builder.add_table_coord_y(x); }
     if let Some(x) = args.table_coord_x { builder.add_table_coord_x(x); }
     if let Some(x) = args.pivot { builder.add_pivot(x); }
-    if let Some(x) = args.rectangle { builder.add_rectangle(x); }
+    if let Some(x) = args.region { builder.add_region(x); }
     if let Some(x) = args.name { builder.add_name(x); }
     builder.add_name_hash(args.name_hash);
     builder.add_rotated(args.rotated);
@@ -3970,11 +4117,11 @@ impl<'a> Cell<'a> {
     unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<&str>>(Cell::VT_NAME, None).unwrap()}
   }
   #[inline]
-  pub fn rectangle(&self) -> Rect<'a> {
+  pub fn region(&self) -> Region<'a> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Rect>>(Cell::VT_RECTANGLE, None).unwrap()}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Region>>(Cell::VT_REGION, None).unwrap()}
   }
   #[inline]
   pub fn pivot(&self) -> Vec2<'a> {
@@ -4021,7 +4168,7 @@ impl ::flatbuffers::Verifiable for Cell<'_> {
     v.visit_table(pos)?
      .visit_field::<u32>("name_hash", Self::VT_NAME_HASH, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("name", Self::VT_NAME, true)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("rectangle", Self::VT_RECTANGLE, true)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<Region>>("region", Self::VT_REGION, true)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("pivot", Self::VT_PIVOT, true)?
      .visit_field::<bool>("rotated", Self::VT_ROTATED, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<::flatbuffers::Vector<'_, f32>>>("table_coord_x", Self::VT_TABLE_COORD_X, false)?
@@ -4034,7 +4181,7 @@ impl ::flatbuffers::Verifiable for Cell<'_> {
 pub struct CellArgs<'a> {
     pub name_hash: u32,
     pub name: Option<::flatbuffers::WIPOffset<&'a str>>,
-    pub rectangle: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
+    pub region: Option<::flatbuffers::WIPOffset<Region<'a>>>,
     pub pivot: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub rotated: bool,
     pub table_coord_x: Option<::flatbuffers::WIPOffset<::flatbuffers::Vector<'a, f32>>>,
@@ -4047,7 +4194,7 @@ impl<'a> Default for CellArgs<'a> {
     CellArgs {
       name_hash: 0,
       name: None, // required field
-      rectangle: None, // required field
+      region: None, // required field
       pivot: None, // required field
       rotated: false,
       table_coord_x: None,
@@ -4071,8 +4218,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> CellBuilder<'a, 'b, A> {
     self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<_>>(Cell::VT_NAME, name);
   }
   #[inline]
-  pub fn add_rectangle(&mut self, rectangle: ::flatbuffers::WIPOffset<Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Rect>>(Cell::VT_RECTANGLE, rectangle);
+  pub fn add_region(&mut self, region: ::flatbuffers::WIPOffset<Region<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Region>>(Cell::VT_REGION, region);
   }
   #[inline]
   pub fn add_pivot(&mut self, pivot: ::flatbuffers::WIPOffset<Vec2<'b >>) {
@@ -4106,7 +4253,7 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> CellBuilder<'a, 'b, A> {
   pub fn finish(self) -> ::flatbuffers::WIPOffset<Cell<'a>> {
     let o = self.fbb_.end_table(self.start_);
     self.fbb_.required(o, Cell::VT_NAME,"name");
-    self.fbb_.required(o, Cell::VT_RECTANGLE,"rectangle");
+    self.fbb_.required(o, Cell::VT_REGION,"region");
     self.fbb_.required(o, Cell::VT_PIVOT,"pivot");
     ::flatbuffers::WIPOffset::new(o.value())
   }
@@ -4117,7 +4264,7 @@ impl ::core::fmt::Debug for Cell<'_> {
     let mut ds = f.debug_struct("Cell");
       ds.field("name_hash", &self.name_hash());
       ds.field("name", &self.name());
-      ds.field("rectangle", &self.rectangle());
+      ds.field("region", &self.region());
       ds.field("pivot", &self.pivot());
       ds.field("rotated", &self.rotated());
       ds.field("table_coord_x", &self.table_coord_x());
@@ -6600,11 +6747,11 @@ impl<'a> FontGlyphBitmap<'a> {
     key.cmp(&val)
   }
   #[inline]
-  pub fn atlas(&self) -> Option<Rect<'a>> {
+  pub fn atlas(&self) -> Option<Region<'a>> {
     // Safety:
     // Created from valid Table for this object
     // which contains a valid value in this slot
-    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Rect>>(FontGlyphBitmap::VT_ATLAS, None)}
+    unsafe { self._tab.get::<::flatbuffers::ForwardsUOffset<Region>>(FontGlyphBitmap::VT_ATLAS, None)}
   }
   #[inline]
   pub fn offset(&self) -> Option<Vec2<'a>> {
@@ -6650,7 +6797,7 @@ impl ::flatbuffers::Verifiable for FontGlyphBitmap<'_> {
   ) -> Result<(), ::flatbuffers::InvalidFlatbuffer> {
     v.visit_table(pos)?
      .visit_field::<u16>("id", Self::VT_ID, false)?
-     .visit_field::<::flatbuffers::ForwardsUOffset<Rect>>("atlas", Self::VT_ATLAS, false)?
+     .visit_field::<::flatbuffers::ForwardsUOffset<Region>>("atlas", Self::VT_ATLAS, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<Vec2>>("offset", Self::VT_OFFSET, false)?
      .visit_field::<f32>("width_advance", Self::VT_WIDTH_ADVANCE, false)?
      .visit_field::<::flatbuffers::ForwardsUOffset<&str>>("text", Self::VT_TEXT, false)?
@@ -6662,7 +6809,7 @@ impl ::flatbuffers::Verifiable for FontGlyphBitmap<'_> {
 }
 pub struct FontGlyphBitmapArgs<'a> {
     pub id: u16,
-    pub atlas: Option<::flatbuffers::WIPOffset<Rect<'a>>>,
+    pub atlas: Option<::flatbuffers::WIPOffset<Region<'a>>>,
     pub offset: Option<::flatbuffers::WIPOffset<Vec2<'a>>>,
     pub width_advance: f32,
     pub text: Option<::flatbuffers::WIPOffset<&'a str>>,
@@ -6694,8 +6841,8 @@ impl<'a: 'b, 'b, A: ::flatbuffers::Allocator + 'a> FontGlyphBitmapBuilder<'a, 'b
     self.fbb_.push_slot::<u16>(FontGlyphBitmap::VT_ID, id, 0);
   }
   #[inline]
-  pub fn add_atlas(&mut self, atlas: ::flatbuffers::WIPOffset<Rect<'b >>) {
-    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Rect>>(FontGlyphBitmap::VT_ATLAS, atlas);
+  pub fn add_atlas(&mut self, atlas: ::flatbuffers::WIPOffset<Region<'b >>) {
+    self.fbb_.push_slot_always::<::flatbuffers::WIPOffset<Region>>(FontGlyphBitmap::VT_ATLAS, atlas);
   }
   #[inline]
   pub fn add_offset(&mut self, offset: ::flatbuffers::WIPOffset<Vec2<'b >>) {

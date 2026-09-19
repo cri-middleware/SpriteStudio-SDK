@@ -103,8 +103,8 @@ pub(crate) fn resolve_single_cell(ssab: &ssab::ssab::ss::format::SsAnimeBinary, 
 
     let p = cell.pivot();
     let (pivot_x, pivot_y) = (p.v1(), p.v2());
-    let r = cell.rectangle();
-    let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
+    let r = cell.region();
+    let (rect_left, rect_top, size_w, size_h) = (r.x(), r.y(), r.w(), r.h());
     // Mirror compute_local_uvs's fallback: if the cellmap doesn't carry
     // size_original (or it's zero), treat the cell rect dimensions as the size.
     let v = cellmap.size_original();
@@ -245,8 +245,8 @@ pub fn build_mesh_cell_data<'a>(ssab: &ssab::ssab::ss::format::SsAnimeBinary<'a>
     // texture-pixel position via `(pivot.x + 0.5) * size_w` and
     // `(-pivot.y + 0.5) * size_h` — the Y pivot is negated to mirror
     // compute_local_vertices (`cpy`) so it matches the Y-down coordinates.
-    let r = cell.rectangle();
-    let (rect_left, rect_top, size_w, size_h) = (r.x1(), r.y1(), r.x2(), r.y2());
+    let r = cell.region();
+    let (rect_left, rect_top, size_w, size_h) = (r.x(), r.y(), r.w(), r.h());
     let p = cell.pivot();
     let (pivot_norm_x, pivot_norm_y) = (p.v1(), p.v2());
     let pivot_px_x = (pivot_norm_x + 0.5) * size_w;
