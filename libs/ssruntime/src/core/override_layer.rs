@@ -12,7 +12,7 @@
 use alloc::vec::Vec;
 
 use crate::core::framedata::{CachedPartData, ResolvedCellMeta, premultiply_part_color_corner};
-use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributeCell, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Rect, UpdateAttributeFlags};
+use crate::runtime::framedata::ss::runtime::{BlendType, PartAttributeCell, PartAttributePartColor, PartState, SsAttributePartColorKeyValueColor, U8Color, UpdateAttributeFlags};
 
 /// Keyframe-vs-override precedence for the attributes that conflict with the
 /// animation (Color and Cell). Visibility has no priority mode.
@@ -255,7 +255,7 @@ pub fn apply_part_overrides(
         let alpha = parts_vec[i].alpha();
         let corner = |k: usize| -> SsAttributePartColorKeyValueColor {
             let [r, g, b, a] = color.corners_rgba[k];
-            let raw = SsAttributePartColorKeyValueColor::new(&U8Rect::new(a, r, g, b), color.rate);
+            let raw = SsAttributePartColorKeyValueColor::new(&U8Color::new(a, r, g, b), color.rate);
             premultiply_part_color_corner(&raw, alpha)
         };
         let (lt, rt, lb, rb) = (corner(0), corner(1), corner(2), corner(3));

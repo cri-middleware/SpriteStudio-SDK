@@ -5,11 +5,11 @@ table Vec2 {
   v2: float;
 }
 
-table Rect {
-  x1: float;
-  y1: float;
-  x2: float;
-  y2: float;
+table Bounds {
+  left: float;
+  top: float;
+  right: float;
+  bottom: float;
 }
 
 table Region {
@@ -26,7 +26,7 @@ table MinMax2 {
   y_max: float;
 }
 
-table U8Rect {
+table U8Color {
   a: ubyte;
   r: ubyte;
   g: ubyte;
@@ -372,7 +372,7 @@ table PartAttributeCell {
 }
 
 table  SsAttributePartColorKeyValueColor {
-  rgba: U8Rect;
+  rgba: U8Color;
   rate: float;
 }
 
@@ -434,7 +434,7 @@ table PartAttributeShader {
 
 table PartAttributeUserData {
   integer: IntValueEntry;
-  rect: Rect;
+  rect: Bounds;
   point: Vec2;
   str: string;
 }

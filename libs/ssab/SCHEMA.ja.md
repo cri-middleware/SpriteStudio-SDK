@@ -561,10 +561,10 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssab 型 | 定義 | ss*e 対応 |
 |--------|------|---------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
-| `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` または pos+size ペア |
+| `Bounds` | `{ left, top, right, bottom: float }` | `SsIRect { x1, y1, x2, y2 }` — ユーザーデータの矩形。4 辺で指定される |
 | `Region` | `{ x, y, w, h: float }` | `pos` + `size` のペア（`.ssce`）、または `x`/`y`/`width`/`height`（`.fnt`） |
 | `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | 軸ごとの `value` / `subvalue` ペア（エフェクトの乱数範囲） |
-| `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
+| `U8Color` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
 
 ---
 

@@ -45,11 +45,11 @@ fn convert_events_per_frames_part(
                             Box::new(i)
                         });
                         userdata.rect = key.value.rect.as_ref().map(|v| {
-                            let mut r = ssab::ssab::ss::format::RectT::default();
-                            r.x1 = v.x1 as f32;
-                            r.x2 = v.x2 as f32;
-                            r.y1 = v.y1 as f32;
-                            r.y2 = v.y2 as f32;
+                            let mut r = ssab::ssab::ss::format::BoundsT::default();
+                            r.left = v.x1 as f32;
+                            r.right = v.x2 as f32;
+                            r.top = v.y1 as f32;
+                            r.bottom = v.y2 as f32;
                             Box::new(r)
                         });
                         userdata.point = key.value.point.as_ref().map(|v| {
@@ -663,11 +663,11 @@ fn merge_setup_attributes_to_part_event_t(p_args: &mut [ssab::ssab::ss::format::
                         Box::new(i)
                     });
                     value.rect = _key.value.rect.as_ref().map(|v| {
-                        let mut r = ssab::ssab::ss::format::RectT::default();
-                        r.x1 = v.x1 as f32;
-                        r.x2 = v.x2 as f32;
-                        r.y1 = v.y1 as f32;
-                        r.y2 = v.y2 as f32;
+                        let mut r = ssab::ssab::ss::format::BoundsT::default();
+                        r.left = v.x1 as f32;
+                        r.right = v.x2 as f32;
+                        r.top = v.y1 as f32;
+                        r.bottom = v.y2 as f32;
                         Box::new(r)
                     });
                     value.point = _key.value.point.as_ref().map(|v| {
@@ -1582,7 +1582,7 @@ fn build_part_color_key_value_color_t(
     part_type: &sspj::sstypes::SsPartType,
 ) -> ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT {
     let mut color = ssab::ssab::ss::format::SsAttributePartColorKeyValueColorT::default();
-    let mut rgba = ssab::ssab::ss::format::U8RectT::default();
+    let mut rgba = ssab::ssab::ss::format::U8ColorT::default();
     rgba.r = src.rgba.r;
     rgba.g = src.rgba.g;
     rgba.b = src.rgba.b;

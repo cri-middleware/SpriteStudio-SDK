@@ -585,18 +585,18 @@ impl<'a> Vec2 {
 
 }
 
-// struct U8Rect, aligned to 1
+// struct U8Color, aligned to 1
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct U8Rect(pub [u8; 4]);
-impl Default for U8Rect { 
+pub struct U8Color(pub [u8; 4]);
+impl Default for U8Color { 
   fn default() -> Self { 
     Self([0; 4])
   }
 }
-impl ::core::fmt::Debug for U8Rect {
+impl ::core::fmt::Debug for U8Color {
   fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-    f.debug_struct("U8Rect")
+    f.debug_struct("U8Color")
       .field("a", &self.a())
       .field("r", &self.r())
       .field("g", &self.g())
@@ -605,26 +605,26 @@ impl ::core::fmt::Debug for U8Rect {
   }
 }
 
-impl ::flatbuffers::SimpleToVerifyInSlice for U8Rect {}
-impl<'a> ::flatbuffers::Follow<'a> for U8Rect {
-  type Inner = &'a U8Rect;
+impl ::flatbuffers::SimpleToVerifyInSlice for U8Color {}
+impl<'a> ::flatbuffers::Follow<'a> for U8Color {
+  type Inner = &'a U8Color;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    unsafe { <&'a U8Rect>::follow(buf, loc) }
+    unsafe { <&'a U8Color>::follow(buf, loc) }
   }
 }
-impl<'a> ::flatbuffers::Follow<'a> for &'a U8Rect {
-  type Inner = &'a U8Rect;
+impl<'a> ::flatbuffers::Follow<'a> for &'a U8Color {
+  type Inner = &'a U8Color;
   #[inline]
   unsafe fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    unsafe { ::flatbuffers::follow_cast_ref::<U8Rect>(buf, loc) }
+    unsafe { ::flatbuffers::follow_cast_ref::<U8Color>(buf, loc) }
   }
 }
-impl<'b> ::flatbuffers::Push for U8Rect {
-    type Output = U8Rect;
+impl<'b> ::flatbuffers::Push for U8Color {
+    type Output = U8Color;
     #[inline]
     unsafe fn push(&self, dst: &mut [u8], _written_len: usize) {
-        let src = unsafe { ::core::slice::from_raw_parts(self as *const U8Rect as *const u8, <Self as ::flatbuffers::Push>::size()) };
+        let src = unsafe { ::core::slice::from_raw_parts(self as *const U8Color as *const u8, <Self as ::flatbuffers::Push>::size()) };
         dst.copy_from_slice(src);
     }
     #[inline]
@@ -633,7 +633,7 @@ impl<'b> ::flatbuffers::Push for U8Rect {
     }
 }
 
-impl<'a> ::flatbuffers::Verifiable for U8Rect {
+impl<'a> ::flatbuffers::Verifiable for U8Color {
   #[inline]
   fn run_verifier(
     v: &mut ::flatbuffers::Verifier, pos: usize
@@ -642,7 +642,7 @@ impl<'a> ::flatbuffers::Verifiable for U8Rect {
   }
 }
 
-impl<'a> U8Rect {
+impl<'a> U8Color {
   #[allow(clippy::too_many_arguments)]
   pub fn new(
     a: u8,
@@ -834,7 +834,7 @@ impl<'a> ::flatbuffers::Verifiable for SsAttributePartColorKeyValueColor {
 impl<'a> SsAttributePartColorKeyValueColor {
   #[allow(clippy::too_many_arguments)]
   pub fn new(
-    rgba: &U8Rect,
+    rgba: &U8Color,
     rate: f32,
   ) -> Self {
     let mut s = Self([0; 8]);
@@ -843,15 +843,15 @@ impl<'a> SsAttributePartColorKeyValueColor {
     s
   }
 
-  pub fn rgba(&self) -> &U8Rect {
+  pub fn rgba(&self) -> &U8Color {
     // Safety:
     // Created from a valid Table for this object
     // Which contains a valid struct in this slot
-    unsafe { &*(self.0[0..].as_ptr() as *const U8Rect) }
+    unsafe { &*(self.0[0..].as_ptr() as *const U8Color) }
   }
 
   #[allow(clippy::identity_op)]
-  pub fn set_rgba(&mut self, x: &U8Rect) {
+  pub fn set_rgba(&mut self, x: &U8Color) {
     self.0[0..0 + 4].copy_from_slice(&x.0)
   }
 

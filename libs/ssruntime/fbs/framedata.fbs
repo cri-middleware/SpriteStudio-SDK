@@ -10,7 +10,7 @@ struct Vec2 {
   y: float;
 }
 
-struct U8Rect {
+struct U8Color {
   a: ubyte;
   r: ubyte;
   g: ubyte;
@@ -18,7 +18,7 @@ struct U8Rect {
 }
 
 struct  SsAttributePartColorKeyValueColor {
-  rgba: U8Rect;
+  rgba: U8Color;
   rate: float;
 }
 

@@ -318,7 +318,7 @@ pub fn evaluate_partcolor(
 
             let create_color = |idx: usize| -> runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor {
                 let base = idx * 4;
-                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&runtime::framedata::ss::runtime::U8Rect::new(out_color[base] as u8, out_color[base + 1] as u8, out_color[base + 2] as u8, out_color[base + 3] as u8), out_rate[idx])
+                runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&runtime::framedata::ss::runtime::U8Color::new(out_color[base] as u8, out_color[base + 1] as u8, out_color[base + 2] as u8, out_color[base + 3] as u8), out_rate[idx])
             };
 
             current.set_lt(&create_color(0));
@@ -360,29 +360,29 @@ fn transfer_partcolor(source: &ssab::ssab::ss::format::PartAttributePartColor) -
 
     destination.set_blend_type(transfer_blend_type(s.blend_type()));
 
-    fn convert_u8rect(rgba: &ssab::ssab::ss::format::U8Rect) -> runtime::framedata::ss::runtime::U8Rect {
-        runtime::framedata::ss::runtime::U8Rect::new(rgba.a(), rgba.r(), rgba.g(), rgba.b())
+    fn convert_u8color(rgba: &ssab::ssab::ss::format::U8Color) -> runtime::framedata::ss::runtime::U8Color {
+        runtime::framedata::ss::runtime::U8Color::new(rgba.a(), rgba.r(), rgba.g(), rgba.b())
     }
 
     if let Some(lt) = s.lt()
         && let Some(rgba) = lt.rgba()
     {
-        destination.set_lt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lt.rate()));
+        destination.set_lt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8color(&rgba), lt.rate()));
     }
     if let Some(rt) = s.rt()
         && let Some(rgba) = rt.rgba()
     {
-        destination.set_rt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rt.rate()));
+        destination.set_rt(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8color(&rgba), rt.rate()));
     }
     if let Some(rb) = s.rb()
         && let Some(rgba) = rb.rgba()
     {
-        destination.set_rb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), rb.rate()));
+        destination.set_rb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8color(&rgba), rb.rate()));
     }
     if let Some(lb) = s.lb()
         && let Some(rgba) = lb.rgba()
     {
-        destination.set_lb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8rect(&rgba), lb.rate()));
+        destination.set_lb(&runtime::framedata::ss::runtime::SsAttributePartColorKeyValueColor::new(&convert_u8color(&rgba), lb.rate()));
     }
 
     destination
