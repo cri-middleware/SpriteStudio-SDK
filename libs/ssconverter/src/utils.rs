@@ -64,6 +64,14 @@ pub fn cellmap_basename(file_name: &str) -> &str {
 }
 
 #[cfg(feature = "native")]
+fn resolve_within(base: &std::path::Path, path: &std::path::Path) -> Result<std::path::PathBuf, std::io::Error> {
+    let base = if base.as_os_str().is_empty() { std::path::Path::new(".") } else { base };
+    let base = base.canonicalize()?;
+    let resolved = path.canonicalize()?;
+    if resolved.starts_with(&base) { Ok(resolved) } else { Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "outside the base directory")) }
+}
+
+#[cfg(feature = "native")]
 pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate::ConverterError> {
     let file_path_buf = std::path::PathBuf::from(file);
     if file_path_buf.is_absolute() {
@@ -79,8 +87,9 @@ pub fn validate_file_path(file: &str, dir: &std::path::Path) -> Result<(), crate
     if !path_buf.is_file() {
         return Err(crate::ConverterError::ConversionFailed(format!("The file is not file: {}", file)));
     }
-    if path_buf.is_symlink() {
-        return Err(crate::ConverterError::ConversionFailed(format!("The file is symlink: {}", file)));
+
+    if resolve_within(dir, &path_buf).is_err() {
+        return Err(crate::ConverterError::ConversionFailed(format!("The file resolves outside the project directory: {}", file)));
     }
 
     Ok(())
@@ -213,5 +222,78 @@ mod test {
         assert_eq!(asset_path_parent("font/RoundedMPlus.fnt"), Some("font"));
         assert_eq!(asset_path_parent("font/nested/RoundedMPlus.fnt"), Some("font/nested"));
         assert_eq!(asset_path_parent("RoundedMPlus.fnt"), None);
+    }
+
+    #[cfg(feature = "native")]
+    fn scratch_dir(tag: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("ssconverter-{}-{}", tag, std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("Failed to create the scratch directory");
+        dir
+    }
+
+    #[test]
+    #[cfg(feature = "native")]
+    fn a_path_that_leaves_the_project_directory_is_rejected() {
+        let dir = scratch_dir("leaves");
+        let project = dir.join("project");
+        std::fs::create_dir_all(project.join("nested")).expect("Failed to create the project directory");
+        std::fs::write(project.join("kept.png"), b"x").expect("Failed to write the asset");
+        let outside = dir.join("outside");
+        std::fs::create_dir_all(&outside).expect("Failed to create the outside directory");
+        std::fs::write(outside.join("escaped.png"), b"x").expect("Failed to write the asset");
+
+        assert!(validate_file_path("../outside/escaped.png", &project).is_err());
+        assert!(validate_file_path("nested/../../outside/escaped.png", &project).is_err());
+
+        assert!(validate_file_path("kept.png", &project).is_ok());
+        assert!(validate_file_path("./kept.png", &project).is_ok());
+        assert!(validate_file_path("nested/../kept.png", &project).is_ok());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(all(unix, feature = "native"))]
+    fn a_symlink_that_stays_inside_the_project_is_accepted() {
+        let dir = scratch_dir("symlink-inside");
+        let project = dir.join("project");
+        std::fs::create_dir_all(project.join("nested")).expect("Failed to create the project directory");
+        std::fs::write(project.join("real.png"), b"x").expect("Failed to write the asset");
+        std::os::unix::fs::symlink("real.png", project.join("link.png")).expect("Failed to create the symlink");
+        std::os::unix::fs::symlink("../real.png", project.join("nested").join("deep.png")).expect("Failed to create the symlink");
+
+        assert!(validate_file_path("link.png", &project).is_ok());
+        assert!(validate_file_path("nested/deep.png", &project).is_ok());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(all(unix, feature = "native"))]
+    fn a_symlink_that_points_outside_the_project_is_rejected() {
+        let dir = scratch_dir("symlink-outside");
+        let project = dir.join("project");
+        std::fs::create_dir_all(&project).expect("Failed to create the project directory");
+        let outside = dir.join("outside");
+        std::fs::create_dir_all(&outside).expect("Failed to create the outside directory");
+        std::fs::write(outside.join("escaped.png"), b"x").expect("Failed to write the asset");
+        std::os::unix::fs::symlink("../outside/escaped.png", project.join("link.png")).expect("Failed to create the symlink");
+
+        assert!(validate_file_path("link.png", &project).is_err());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    #[cfg(feature = "native")]
+    fn an_absolute_path_is_rejected() {
+        let dir = scratch_dir("absolute");
+        let asset = dir.join("real.png");
+        std::fs::write(&asset, b"x").expect("Failed to write the asset");
+
+        assert!(validate_file_path(asset.to_str().expect("Failed to render the path"), &dir).is_err());
+
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
