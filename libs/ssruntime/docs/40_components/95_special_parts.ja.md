@@ -121,7 +121,7 @@ for (auto batch : *frame_data->draw_batches()) {
 | `FontGlyphBitmap` | 内容 |
 | :--- | :--- |
 | `id` | 文字コード（UTF-16 コードユニット） |
-| `atlas` | ページ画像内の矩形。`x1,y1` = 左上、**`x2,y2` は右下ではなく幅・高さ**です |
+| `atlas` | ページ画像内のグリフの領域（`x`, `y`, `w`, `h`） |
 | `offset` | ペン位置からのグリフの描き出しオフセット（px、Y は下方向が正） |
 | `width_advance` | 送り幅（px） |
 | `text` | `id` を文字にしたもの。デバッグ表示用 |

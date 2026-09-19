@@ -157,7 +157,7 @@ ssae ではパーツタイプは単純な列挙型 (`SsPartType`) であり、�
 |---------------|------|---------------|------|
 | `name_hash` | uint32 (key) | — | 高速検索用ハッシュ |
 | `name` | string | `name` | セル名 |
-| `rectangle` | Rect | `pos` + `size` | そのまま格納。`x1,y1` = `pos`、`x2,y2` = `size` で、右下座標ではなく幅・高さです |
+| `region` | Region | `pos` + `size` | そのまま格納。`x,y` = `pos`、`w,h` = `size` |
 | `pivot` | Vec2 | `pivot` | セルのピボットポイント |
 | `rotated` | bool | `rotated` | アトラス内でセルが回転しているか |
 | `table_coord_x` | [float] | `mesh_point_list[*].x` | メッシュ頂点 X 座標 (SoA) |
@@ -491,7 +491,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 | ssab フィールド | fnt フィールド | 備考 |
 |---------------|------------|------|
 | `id` | `id` | 文字 ID（Unicode コードポイント） |
-| `atlas` | `src_rect` | アトラス内のソース矩形 |
+| `atlas` | `x` / `y` / `width` / `height` | ページ画像内のグリフの領域 |
 | `offset` | `offset` | グリフ描画オフセット |
 | `width_advance` | `xadvance` | 水平方向の送り幅 |
 | `text` | — | 文字テキスト（fnt では id から導出） |
@@ -562,6 +562,7 @@ ssab: speed_min_value: 5.0, speed_max_value: 10.0
 |--------|------|---------|
 | `Vec2` | `{ v1: float, v2: float }` | `SsPoint2 { x, y }` |
 | `Rect` | `{ x1, y1, x2, y2: float }` | `SsIRect { x1, y1, x2, y2 }` または pos+size ペア |
+| `Region` | `{ x, y, w, h: float }` | `pos` + `size` のペア（`.ssce`）、または `x`/`y`/`width`/`height`（`.fnt`） |
 | `MinMax2` | `{ x_min, y_min, x_max, y_max: float }` | 軸ごとの `value` / `subvalue` ペア（エフェクトの乱数範囲） |
 | `U8Rect` | `{ a, r, g, b: ubyte }` | `SsU8Color { a, r, g, b }` |
 

@@ -210,7 +210,7 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
 描画パフォーマンスを向上させるため、初期化時に以下の情報をキャッシュしておくことを強く推奨します。
 
 - **テクスチャのインデックス化**: `ssab->cellmaps()` の `name_hash()` と `ssab->external_textures()` の `name_hash()` の **両方** をキーとして、ロードしたテクスチャオブジェクトを 1 つのマップに紐付けます。描画時は `DrawBatch.texture_hash` をそのままキーとして引けます。
-- **セルの高速検索**: 各 CellMap 内の `cells()` を走査し、`name_hash()` をキーとして、そのセルの切り出し矩形（UV）や原点（Pivot）情報を即座に引けるようにしておきます。`Cell.rectangle` は `x1,y1` = 左上、**`x2,y2` は右下ではなく幅・高さ**です。
+- **セルの高速検索**: 各 CellMap 内の `cells()` を走査し、`name_hash()` をキーとして、そのセルの切り出し矩形（UV）や原点（Pivot）情報を即座に引けるようにしておきます。
 
 ## 4. 再生するアニメーション情報の管理
 ssab データには複数のアニメーションが格納されています。

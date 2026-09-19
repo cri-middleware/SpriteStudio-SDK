@@ -210,7 +210,7 @@ void loadTextures(const ss::format::SsAnimeBinary* binary, String base_dir) {
 To improve rendering performance, we strongly recommend caching the following at initialization.
 
 - **Indexing textures**: associate the loaded texture objects into a single map keyed by **both** `name_hash()` from `ssab->cellmaps()` and `name_hash()` from `ssab->external_textures()`. At draw time you can then look them up with `DrawBatch.texture_hash` directly.
-- **Fast cell lookup**: walk the `cells()` inside each CellMap and make their cut-out rectangle (UV) and origin (pivot) information immediately retrievable with `name_hash()` as the key. In `Cell.rectangle`, `x1,y1` = top-left, but **`x2,y2` are width and height, not the bottom-right corner**.
+- **Fast cell lookup**: walk the `cells()` inside each CellMap and make their cut-out rectangle (UV) and origin (pivot) information immediately retrievable with `name_hash()` as the key.
 
 ## 4. Managing the animations to play
 An ssab contains several animations.
