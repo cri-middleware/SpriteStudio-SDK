@@ -62,6 +62,12 @@ cargo test
 cargo run -p ssconverter-cli -- <path_to_sspj>
 ```
 
+### Generated code
+The `.fbs` schemas under `libs/ssab/fbs/` and `libs/ssruntime/fbs/` have generated Rust bindings: after changing one, run that library's `scripts/generate.sh` (or `.ps1`). `cbindgen` writes the C/C++ headers for `ssconverter` and `ssruntime`.
+
+### Documentation site
+The Player Porting Guide under `libs/ssruntime/docs` is published as a site. If you edit a page there, build both locales before you finish — see [RELEASING.md](./RELEASING.md). Nothing builds the docs on a pull request, so that local build is the only gate.
+
 ## Coding Standards
 
 ### Rust Guidelines
@@ -146,6 +152,12 @@ cargo test
 # コンバーター CLI を実行して動作確認
 cargo run -p ssconverter-cli -- <path_to_sspj>
 ```
+
+### 生成コード
+`libs/ssab/fbs/` と `libs/ssruntime/fbs/` の `.fbs` スキーマには生成された Rust バインディングがあります。変更したら、そのライブラリの `scripts/generate.sh`（または `.ps1`）を実行してください。`ssconverter` と `ssruntime` の C/C++ ヘッダーは `cbindgen` が生成します。
+
+### ドキュメントサイト
+`libs/ssruntime/docs` の Player 移植ガイドはサイトとして公開されます。ページを編集したら、仕上げる前に両ロケールをビルドしてください（手順は [RELEASING.md](./RELEASING.md)）。プルリクエストでは docs はビルドされないため、手元のビルドが唯一のゲートです。
 
 ## コーディング規約
 

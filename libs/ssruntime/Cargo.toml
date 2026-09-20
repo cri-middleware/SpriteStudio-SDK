@@ -29,13 +29,24 @@ ssconverter = { workspace = true, features = ["native"] }
 
 [features]
 default = []
+# C-API exports. Default on ssruntime-ffi, which is what the build scripts name.
 ffi = []
+# wasm-bindgen bindings for JS/TS interop.
 web = ["wasm-bindgen/std"]
+# Developer ergonomics only: pulls std into flatbuffers/ssab and lets the test
+# modules compile. Never used by a release script -- every deliverable is no_std.
 std = ["flatbuffers/std", "ssab/std", "wasm-bindgen?/std"]
+# #[global_allocator] for no_std FFI builds -- pick exactly one.
+# libc malloc/free (mobile, desktop).
 libc_alloc = ["dep:libc"]
+# dlmalloc (wasm32-unknown-unknown).
 wasm_alloc = ["dep:dlmalloc"]
+# Emscripten libc malloc/free, with manual over-alignment.
 emscripten_alloc = []
+# Host-provided ss_custom_alloc / ss_custom_free / ss_custom_abort symbols, for
+# game-console and engine allocators. Build as staticlib.
 custom_alloc = []
+# #[panic_handler] for no_std FFI builds; custom_alloc's aborts route through it.
 panic-handler = []
 
 [lints.clippy]
