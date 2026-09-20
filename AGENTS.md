@@ -2,16 +2,22 @@
 
 ## Operating rules
 
-*   Keep changes scoped to the requested task.
+*   Keep changes scoped to the requested task. Unrequested hardening is a suggestion, not a commit; a defect
+    you actually hit in the code you touched is not — fix it, or say plainly why you did not.
 *   Do not commit, push, or open PRs unless the user explicitly asks.
-*   Before editing, read enough surrounding context to understand callers and invariants; if the
-    read tool truncated the file, read the remaining ranges first.
-*   Follow existing code style in touched files (naming, type usage, control flow, error handling).
-*   Validate with the commands in [CONTRIBUTING.md](./CONTRIBUTING.md) — `cargo fmt`, `clippy` and
-    `cargo test`; for anything under `libs/ssruntime/docs`, also the both-locale build in
-    [RELEASING.md](./RELEASING.md), which is the only gate a pull request does not run.
-*   For `clippy --fix`, `git add` your own edits first and pass `--allow-staged`, never
-    `--allow-dirty`, so clippy's edits land unstaged and review apart from yours.
+*   Before editing, read enough surrounding context to understand callers and invariants, the ones below
+    included. If the read tool truncated a file, read the remaining ranges first.
+*   Follow the existing style of the file you touch (naming, type usage, control flow, error handling).
+*   **Anything that exists twice changes twice** — a page and its translation, a `.sh` and its `.ps1`. A
+    change that lands in one half is the defect this family produces most.
+*   **Finish by running this repository's checks**: the commands in [CONTRIBUTING.md](./CONTRIBUTING.md) —
+    `cargo fmt`, `clippy`, `cargo test`; for anything under `libs/ssruntime/docs`, also the both-locale
+    build in [RELEASING.md](./RELEASING.md). Read what a run says it verified rather than its exit code —
+    several checks here pass, or skip themselves, when a prerequisite is missing.
+*   **Do not restate here what another file owns.** The table below says which file that is; a fact that
+    belongs to none of them goes where it will be seen to go stale.
+*   For `clippy --fix`, `git add` your own edits first and pass `--allow-staged`, never `--allow-dirty`, so
+    clippy's edits land unstaged and review apart from yours.
 
 ## What this repo is
 
@@ -44,28 +50,26 @@ integrate. The runtime is `no_std`-first; `std` is opt-in for developer ergonomi
 | Why the docs tree is generated, and what `--strict` misses | the docstring of `scripts/build-docs-tree.py` |
 | Why a YAML sequence may live in only one config | the header comment of `mkdocs.base.yml` |
 
-Do not restate those here. This file is for what an agent would otherwise break silently.
-
 ## Invariants
 
-*   **The DrawBatch contract is the cross-engine rendering API.** `DrawBatch`, Mask batches,
-    `mask_indices`, particle quad slots and `EffectSlot` / `InstanceSlot` / `ExternalInstance` are
-    consumed by every Player, so a change here breaks all of them at once. Confirm with the user
-    before touching it, and say so in the PR.
+*   **The DrawBatch contract is the cross-engine rendering API.** `DrawBatch`, Mask batches, `mask_indices`,
+    particle quad slots and `EffectSlot` / `InstanceSlot` / `ExternalInstance` are consumed by every Player,
+    so a change here breaks all of them at once. Confirm with the user before touching it, and say so in the
+    PR.
 *   **`libssruntime` stays `#![no_std]`-compatible** — no `std::time`, `std::fs` or
-    `std::collections::HashMap`; `core` and `alloc` only. Every release deliverable is pure
-    no_std, so `cargo build -p ssruntime-ffi` on its own needs the allocator and panic features
-    spelled out: `ssconverter`, which fulfills them transitively via `std`, is not in that graph.
+    `std::collections::HashMap`; `core` and `alloc` only. Every release deliverable is pure no_std, so
+    `cargo build -p ssruntime-ffi` on its own needs the allocator and panic features spelled out:
+    `ssconverter`, which fulfills them transitively via `std`, is not in that graph.
 *   **rayon spans two crates.** `sspj::load_from_maps`, the web entry path, is itself parallel, so
-    `ssconverter`'s `parallel` feature gates rayon in `sspj` as well, each with a sequential
-    fallback in its own `parallel` module. rayon cannot spawn threads on `wasm32-unknown-unknown`,
-    which is why the `web` profile is the sequential one.
-*   **`--all-features` is load-bearing on the clippy line.** The test modules sit behind
-    `feature = "std"`, so without it they are the one body of code nothing lints.
-*   **Doctests need an allocator.** A lone `cargo test --doc -p ssruntime` fails on "no global
-    memory allocator found"; run them workspace-wide, or add `--features ssruntime/std`.
-*   **The Player Porting Guide's layout does not change.** Pages live in `libs/ssruntime/docs`
-    beside their `.ja.md` translations, readable on GitHub and deep-linked by SpriteStudio-Docs.
-    Edit the authored pages, never the generated `build/docs`.
-*   **A `> [!NOTE]` callout inside a `1. ` list item needs four spaces of indent, not three** —
-    the three a `1. ` continuation gives you render as literal `[!NOTE]` text, with no warning.
+    `ssconverter`'s `parallel` feature gates rayon in `sspj` as well, each with a sequential fallback in its
+    own `parallel` module. rayon cannot spawn threads on `wasm32-unknown-unknown`, which is why the `web`
+    profile is the sequential one.
+*   **`--all-features` is load-bearing on the clippy line.** The test modules sit behind `feature = "std"`,
+    so without it they are the one body of code nothing lints.
+*   **Doctests need an allocator.** A lone `cargo test --doc -p ssruntime` fails on "no global memory
+    allocator found"; run them workspace-wide, or add `--features ssruntime/std`.
+*   **The Player Porting Guide's layout does not change.** Pages live in `libs/ssruntime/docs` beside their
+    `.ja.md` translations, readable on GitHub and deep-linked by SpriteStudio-Docs. Edit the authored pages,
+    never the generated `build/docs`.
+*   **A `> [!NOTE]` callout inside a `1. ` list item needs four spaces of indent, not three** — the three a
+    `1. ` continuation gives you render as literal `[!NOTE]` text, with no warning.
