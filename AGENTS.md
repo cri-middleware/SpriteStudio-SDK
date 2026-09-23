@@ -12,9 +12,10 @@
     change that lands in one half is the defect this family produces most.
 *   **Never break a line between two Japanese characters**: Chrome draws that break as a visible space.
 *   **Finish by running this repository's checks**: the commands in [CONTRIBUTING.md](./CONTRIBUTING.md) —
-    `cargo fmt`, `clippy`, `cargo test`; for anything under `libs/ssruntime/docs`, also the both-locale
-    build in [RELEASING.md](./RELEASING.md). Read what a run says it verified rather than its exit code —
-    several checks here pass, or skip themselves, when a prerequisite is missing.
+    `cargo fmt`, `clippy`, `cargo test --workspace --all-features`; for anything under
+    `libs/ssruntime/docs`, also the both-locale build in [RELEASING.md](./RELEASING.md). Read what a run
+    says it verified rather than its exit code — several checks here pass, or skip themselves, when a
+    prerequisite is missing.
 *   **Do not restate here what another file owns.** The table below says which file that is; a fact that
     belongs to none of them goes where it will be seen to go stale.
 *   For `clippy --fix`, `git add` your own edits first and pass `--allow-staged`, never `--allow-dirty`, so
@@ -65,8 +66,9 @@ integrate. The runtime is `no_std`-first; `std` is opt-in for developer ergonomi
     `ssconverter`'s `parallel` feature gates rayon in `sspj` as well, each with a sequential fallback in its
     own `parallel` module. rayon cannot spawn threads on `wasm32-unknown-unknown`, which is why the `web`
     profile is the sequential one.
-*   **`--all-features` is load-bearing on the clippy line.** The test modules sit behind `feature = "std"`,
-    so without it they are the one body of code nothing lints.
+*   **`--all-features` is load-bearing on the clippy and test lines.** The test modules sit behind
+    `feature = "std"`, so without it they are the one body of code nothing lints, and a plain `cargo test`
+    passes without running them — fixture playback and every C-API test among them.
 *   **Doctests need an allocator.** A lone `cargo test --doc -p ssruntime` fails on "no global memory
     allocator found"; run them workspace-wide, or add `--features ssruntime/std`.
 *   **The Player Porting Guide's layout does not change.** Pages live in `libs/ssruntime/docs` beside their
