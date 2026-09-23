@@ -141,7 +141,7 @@ A **track** layers onto the pose the tracks below it produced. A **source** is o
 | Fade the track's own alpha | `fadeTrack` |
 | How far the fade in flight has got | `trackFadeProgress` |
 | Stop the fade in flight | `cancelTrackFade` |
-| Add another animation to a track | `trackAddSource` |
+| Add another animation to a track | `addTrackSource` |
 | A source's weight within its track | `sourceWeight` |
 | A source's playhead | `sourceFrame` |
 | The minimum weight at which a source fires events | `sourceEventThreshold` |
